@@ -1,6 +1,6 @@
 # Django settings for tester project.
 
-from os.path import dirname, join, expanduser
+from os.path import dirname, join, basename, abspath
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -11,7 +11,8 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DB_FILE = join(dirname(__file__), 'exam.db')
+CURDIR = abspath(dirname(__file__))
+DB_FILE = join(CURDIR, 'exam.db')
 
 DATABASES = {
     'default': {
@@ -104,13 +105,13 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'tester.urls'
+ROOT_URLCONF = '%s.urls'%(basename(CURDIR))
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    expanduser("~/stuff/django/tester/templates"),
+    join(CURDIR, "templates"),
 )
 
 INSTALLED_APPS = (
