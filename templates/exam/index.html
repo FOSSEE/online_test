@@ -1,0 +1,12 @@
+<p> Welcome to the Examination. </p>
+<br></br>
+
+{% if question_list %}
+    <ul> 
+    {% for question in question_list %}
+        <li> <a href="/exam/{{ question.id }}/">{{ question.summary }} </a> </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p> Lucky you, no questions available.</p>
+{% endif %}

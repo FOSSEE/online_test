@@ -1,0 +1,20 @@
+<h2> {{ question.summary }} </h2>
+
+<p>{{ question.question }} </p>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="/exam/{{ question.id }}/check/" method="post">
+{% csrf_token %}
+
+<textarea rows="20" cols="100" name="answer">
+# Enter your answer here.
+</textarea>
+
+<br/>
+
+<input type="submit" name="check" value="Check Answer" />
+<input type="submit" name="skip" value="Skip question" />
+</form>
+
+<p> You have {{quiz.questions_left}} question(s) left. </p>
