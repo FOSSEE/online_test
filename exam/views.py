@@ -146,5 +146,6 @@ def check(request, q_id):
         return show_question(request, next_q)
 
 def complete(request):
+    logout(request)
     return render_to_response('exam/complete.html')
     
