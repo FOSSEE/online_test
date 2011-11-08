@@ -1,6 +1,6 @@
 <h2> {{ question.summary }} </h2>
 
-<p>{{ question.question }} </p>
+<p>{{ question.description }} </p>
 
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
@@ -8,7 +8,7 @@
 {% csrf_token %}
 
 <textarea rows="20" cols="100" name="answer">
-# Enter your answer here.
+{% if last_attempt %}{{last_attempt}}{% else %}# Enter your answer here.{% endif %}
 </textarea>
 
 <br/>

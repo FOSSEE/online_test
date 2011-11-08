@@ -13,7 +13,7 @@ class Question(models.Model):
     # An optional one-line summary of the question.
     summary = models.CharField(max_length=256)
     # The question text.
-    question = models.TextField()
+    description = models.TextField()
     
     # Number of points for the question.
     points = models.IntegerField()

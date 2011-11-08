@@ -29,13 +29,6 @@ def index(request):
     user = request.user
     if user.is_authenticated():
         return redirect("/exam/start/")
-    else:
-        try:
-            ip = request.META['REMOTE_ADDR']
-            Quiz.objects.get(user_ip=ip)
-            return redirect("/exam/complete")
-        except Quiz.DoesNotExist:
-            pass
 
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
@@ -81,7 +74,7 @@ def start(request):
     try:
         old_quiz = Quiz.objects.get(user=user)
         q = old_quiz.current_question()
-        return show_question(request, q)
+        return redirect('/exam/%s'%q)
     except Quiz.DoesNotExist:
         ip = request.META['REMOTE_ADDR']
         key = gen_key(10)
@@ -109,8 +102,11 @@ def question(request, q_id):
                               context_instance=ci)
 
 def test_answer(func_code, test_code):
-    exec func_code
-    exec test_code
+    obj = compile(func_code, '<string>', mode='exec')
+    g = {}
+    exec obj in g
+    t = compile(test_code, '<string>', mode='exec')
+    exec t in g
 
 def check(request, q_id):
     user = request.user
@@ -125,20 +121,28 @@ def check(request, q_id):
         
     # Otherwise we were asked to check.
     retry = True
+    tb = None
     try:
         test_answer(answer, question.test)
-    except:
+    except AssertionError:
         type, value, tb = sys.exc_info()
         info = traceback.extract_tb(tb)
         fname, lineno, func, text = info[-1]
-        err = "{0}: {1} In code: {2}".format(type.__name__, str(value), text)
+        text = str(question.test).splitlines()[lineno-1]
+        err = "{0} {1} in: {2}".format(type.__name__, str(value), text)
+    except:
+        type, value = sys.exc_info()[:2]
+        err = "Error: {0}".format(repr(value))
     else:
         retry = False
         err = 'Correct answer'
-        
+    finally:
+        del tb
+
     ci = RequestContext(request)
     if retry:
-        context = {'question': question, 'error_message': err}
+        context = {'question': question, 'error_message': err,
+                   'last_attempt': answer}
         return render_to_response('exam/question.html', context, 
                                   context_instance=ci)
     else:
