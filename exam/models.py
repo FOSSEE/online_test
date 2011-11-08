@@ -1,12 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-# Create your models here.
 
 class Profile(models.Model):
-    """Profile for a user to store roll number etc."""
+    """Profile for a user to store roll number and other details."""
     user = models.ForeignKey(User)
     roll_number = models.CharField(max_length=20)
+
 
 class Question(models.Model):
     """A question in the database."""
@@ -16,7 +16,7 @@ class Question(models.Model):
     description = models.TextField()
     
     # Number of points for the question.
-    points = models.IntegerField()
+    points = models.IntegerField(default=1)
     
     # Test cases for the question in the form of code that is run.
     # This is simple Python code.
@@ -24,32 +24,41 @@ class Question(models.Model):
     
     def __unicode__(self):
         return self.summary
-    
+
 
 class Answer(models.Model):
     """Answers submitted by users.
     """
+    # The question for which we are an answer.
     question = models.ForeignKey(Question)
+    
     # The last answer submitted by the user.
     answer = models.TextField()
-    attempts = models.IntegerField()
     
-    # Is the question correct.
-    correct = models.BooleanField()
-    # Marks obtained.
-    marks = models.IntegerField()
-    
+    # Is the answer correct.
+    correct = models.BooleanField(default=False)
+        
     def __unicode__(self):
         return self.answer
+
     
 class Quiz(models.Model):
     """A quiz for a student.
     """
+    # The user taking this quiz.
     user = models.ForeignKey(User)
+    # User's IP which is logged.
     user_ip = models.CharField(max_length=15)
+    # Unused currently.
     key = models.CharField(max_length=10)
+    
+    # The questions (a list of ids separated by '|')
     questions = models.CharField(max_length=128)
+    # The questions successfully answered (a list of ids separated by '|')
     questions_answered = models.CharField(max_length=128)
+    
+    # All the submitted answers.
+    answers = models.ManyToManyField(Answer)
     
     def current_question(self):
         """Returns the current active question to display."""

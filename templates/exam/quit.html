@@ -1,0 +1,8 @@
+<p>Your current answers are saved.</p>
+<p> Are you sure you wish to quit the exam?</p>
+
+<form action="/exam/complete/" method="post">
+{% csrf_token %}
+<input type="submit" name="yes" value="Yes!" />
+<input type="submit" name="no" value="No!" />
+</form>

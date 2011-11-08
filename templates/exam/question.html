@@ -18,3 +18,9 @@
 </form>
 
 <p> You have {{quiz.questions_left}} question(s) left. </p>
+
+<hr/>
+<form action="/exam/quit/" method="post">
+{% csrf_token %}
+<input type="submit" name="quit" value="Quit exam and logout" />
+</form>

@@ -8,19 +8,13 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
-from exam.models import Question, Quiz, Profile
+from exam.models import Question, Quiz, Profile, Answer
 from exam.forms import UserRegisterForm
 
 def gen_key(no_of_chars):
+    """Generate a random key of the number of characters."""
     allowed_chars = string.digits+string.uppercase
     return ''.join([random.choice(allowed_chars) for i in range(no_of_chars)])
-
-def index_old(request):
-    """The start page.
-    """
-    question_list = Question.objects.all()
-    context = {'question_list': question_list}
-    return render_to_response('exam/index.html', context)
     
 def index(request):
     """The start page.
@@ -64,6 +58,7 @@ def index(request):
              context_instance=RequestContext(request))
 
 def show_question(request, q_id):
+    """Show a question if possible."""
     if len(q_id) == 0:
         return redirect("/exam/complete")
     else:
@@ -137,6 +132,11 @@ def check(request, q_id):
         retry = False
         err = 'Correct answer'
     finally:
+        # Add the answer submitted.
+        new_answer = Answer(question=question, answer=answer.strip())    
+        new_answer.correct = not retry
+        new_answer.save()
+        quiz.answers.add(new_answer)
         del tb
 
     ci = RequestContext(request)
@@ -148,8 +148,18 @@ def check(request, q_id):
     else:
         next_q = quiz.answered_question(question.id)
         return show_question(request, next_q)
+        
+def quit(request):
+    return render_to_response('exam/quit.html', 
+                              context_instance=RequestContext(request)) 
 
 def complete(request):
-    logout(request)
-    return render_to_response('exam/complete.html')
+    yes = True
+    if request.method == 'POST':
+        yes = request.POST.get('yes', None)
+    if yes:
+        logout(request)
+        return render_to_response('exam/complete.html')
+    else:
+        return redirect('/exam/')
     
