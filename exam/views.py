@@ -38,13 +38,11 @@ def user_register(request):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            new_user = form.save()
+            u_name, pwd = form.save()
 
-            context = {}
-            context['full_name'] = new_user.first_name.title() + " " + \
-                                   new_user.last_name.title()
-            return render_to_response('exam/register.html', context,
-                context_instance=RequestContext(request))
+            new_user = authenticate(username = u_name, password = pwd)
+            login(request, new_user)
+            return redirect("/exam/start/")
                 
         else:
             return render_to_response('exam/register.html',{'form':form},

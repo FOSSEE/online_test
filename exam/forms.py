@@ -62,7 +62,7 @@ class UserRegisterForm(forms.Form):
         new_profile.roll_number = self.cleaned_data["roll_number"]
         new_profile.save()
 
-        return new_user
+        return u_name, pwd
 
 class UserLoginForm(forms.Form):
     username = forms.CharField(max_length = 30)
