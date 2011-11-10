@@ -1,0 +1,12 @@
+<p> Welcome to the Examination.
+Please login to proceed.</p>
+
+<form action="" method="post">
+{% csrf_token %}
+
+{{ form.as_p }}
+
+<input type="submit" value="Login" />
+</form>
+<!-- <a href="/exam/forgotpassword/">Forgot Password</a> <br /> -->
+<a href="/exam/register/">New User Registration</a> 
