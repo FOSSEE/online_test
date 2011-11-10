@@ -51,6 +51,9 @@ class Quiz(models.Model):
     user_ip = models.CharField(max_length=15)
     # Unused currently.
     key = models.CharField(max_length=10)
+
+    # used to allow/stop a user from retaking the quiz
+    is_active = models.BooleanField(default = True)
     
     # The questions (a list of ids separated by '|')
     questions = models.CharField(max_length=128)
