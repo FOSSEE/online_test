@@ -39,6 +39,7 @@ def index(request):
 
             new_user.first_name = data['first_name']
             new_user.last_name = data['last_name']
+            new_user.email = data['email_address']
             new_user.save()
 
             new_profile = Profile(user=new_user)
