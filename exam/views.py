@@ -9,7 +9,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from exam.models import Question, Quiz, Profile, Answer
-from exam.forms import UserRegisterForm
+from exam.forms import UserRegisterForm, UserLoginForm
 
 def gen_key(no_of_chars):
     """Generate a random key of the number of characters."""
@@ -24,38 +24,57 @@ def index(request):
     if user.is_authenticated():
         return redirect("/exam/start/")
 
+    return redirect("/exam/login/")
+
+def user_register(request):
+    """ Register a new user.
+    Create a user and corresponding profile and store roll_number also."""
+
+    user = request.user
+    if user.is_authenticated():
+        return redirect("/exam/start/")
+
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            new_user = form.save()
 
-            while True:
-                try:
-                    username = gen_key(20)
-                    new_user = User.objects.create_user(username, "temp@temp.com", "123")
-                    break
-                except IntegrityError:
-                    pass
-
-            new_user.first_name = data['first_name']
-            new_user.last_name = data['last_name']
-            new_user.email = data['email_address']
-            new_user.save()
-
-            new_profile = Profile(user=new_user)
-            new_profile.roll_number = data['roll_number']
-            new_profile.save()
-
-            user = authenticate(username=username, password="123")
-            login(request, user)
-            return redirect("/exam/start/")
-
+            context = {}
+            context['full_name'] = new_user.first_name.title() + " " + \
+                                   new_user.last_name.title()
+            return render_to_response('exam/register.html', context,
+                context_instance=RequestContext(request))
+                
         else:
             return render_to_response('exam/register.html',{'form':form},
                 context_instance=RequestContext(request))
     else:
         form = UserRegisterForm()
         return render_to_response('exam/register.html',{'form':form},
+             context_instance=RequestContext(request))
+
+def user_login(request):
+    """Take the credentials of the user and log the user in."""
+
+    user = request.user
+    if user.is_authenticated():
+        return redirect("/exam/start/")
+
+    if request.method == "POST":
+        form = UserLoginForm(request.POST)
+        if form.is_valid():
+            user = form.cleaned_data
+            login(request, user)
+            return redirect("/exam/start/")
+        else:
+            context = {"form": form,}
+            return render_to_response('exam/login.html', context,
+                 context_instance=RequestContext(request))
+    else:
+        form = UserLoginForm()
+        context = {"form": form}
+        return render_to_response('exam/login.html', context,
              context_instance=RequestContext(request))
 
 def show_question(request, q_id):

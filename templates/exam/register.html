@@ -1,7 +1,13 @@
-Please provide the following details before you start the test.
+{% if form %}
+Please provide the following details.
 <form action="" method="post">
 {% csrf_token %}
 
 {{ form.as_p }}
-<input type="submit" value="submit">
+
+<input type="submit" value="Register" />
 </form>
+{% else %}
+Congratulations {{ full_name }}! You have successfully registered.<br />
+Please proceed to <a href="/exam/login/">Login</a>.
+{% endif %}
