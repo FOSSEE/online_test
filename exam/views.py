@@ -88,6 +88,8 @@ def start(request):
     user = request.user
     try:
         old_quiz = Quiz.objects.get(user=user)
+        if not old_quiz.is_active:
+            return redirect("/exam/complete/")
         q = old_quiz.current_question()
         return redirect('/exam/%s'%q)
     except Quiz.DoesNotExist:
@@ -186,10 +188,14 @@ def quit(request):
                               context_instance=RequestContext(request)) 
 
 def complete(request):
+    user = request.user
     yes = True
     if request.method == 'POST':
         yes = request.POST.get('yes', None)
     if yes:
+        quiz = Quiz.objects.get(user=user)
+        quiz.is_active = False
+        quiz.save()
         logout(request)
         return render_to_response('exam/complete.html')
     else:
