@@ -96,12 +96,40 @@ def question(request, q_id):
     return render_to_response('exam/question.html', context, 
                               context_instance=ci)
 
-def test_answer(func_code, test_code):
-    obj = compile(func_code, '<string>', mode='exec')
-    g = {}
-    exec obj in g
-    t = compile(test_code, '<string>', mode='exec')
-    exec t in g
+def test_python(answer, test_code):
+    """Tests given Python function with the test code supplied.
+
+    Returns
+    -------
+    
+    A tuple: (success, error message).
+    
+    """
+    success = False
+    tb = None
+    try:
+        submitted = compile(answer, '<string>', mode='exec')
+        g = {}
+        exec submitted in g
+        _tests = compile(test_code, '<string>', mode='exec')
+        exec _tests in g
+    except AssertionError:
+        type, value, tb = sys.exc_info()
+        info = traceback.extract_tb(tb)
+        fname, lineno, func, text = info[-1]
+        text = str(test_code).splitlines()[lineno-1]
+        err = "{0} {1} in: {2}".format(type.__name__, str(value), text)
+    except:
+        type, value = sys.exc_info()[:2]
+        err = "Error: {0}".format(repr(value))
+    else:
+        success = True
+        err = 'Correct answer'
+    finally:
+        del tb
+
+    return success, err
+
 
 def check(request, q_id):
     user = request.user
@@ -115,33 +143,17 @@ def check(request, q_id):
         return show_question(request, next_q)
         
     # Otherwise we were asked to check.
-    retry = True
-    tb = None
-    try:
-        test_answer(answer, question.test)
-    except AssertionError:
-        type, value, tb = sys.exc_info()
-        info = traceback.extract_tb(tb)
-        fname, lineno, func, text = info[-1]
-        text = str(question.test).splitlines()[lineno-1]
-        err = "{0} {1} in: {2}".format(type.__name__, str(value), text)
-    except:
-        type, value = sys.exc_info()[:2]
-        err = "Error: {0}".format(repr(value))
-    else:
-        retry = False
-        err = 'Correct answer'
-    finally:
-        # Add the answer submitted.
-        new_answer = Answer(question=question, answer=answer.strip())    
-        new_answer.correct = not retry
-        new_answer.save()
-        quiz.answers.add(new_answer)
-        del tb
+    success, err_msg = test_python(answer, question.test)
+
+    # Add the answer submitted.
+    new_answer = Answer(question=question, answer=answer.strip())    
+    new_answer.correct = success
+    new_answer.save()
+    quiz.answers.add(new_answer)
 
     ci = RequestContext(request)
-    if retry:
-        context = {'question': question, 'error_message': err,
+    if not success:
+        context = {'question': question, 'error_message': err_msg,
                    'last_attempt': answer}
         return render_to_response('exam/question.html', context, 
                                   context_instance=ci)
@@ -174,6 +186,7 @@ def monitor(request):
         paper = {}
         user = quiz.user
         paper['username'] = str(user.first_name) + ' ' + str(user.last_name)
+        paper['rollno'] = str(Profile.objects.get(user=user).roll_number)
         qa = quiz.questions_answered.split('|')
         answered = ', '.join(sorted(qa))
         paper['answered'] = answered if answered else 'None'

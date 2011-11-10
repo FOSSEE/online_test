@@ -3,14 +3,15 @@
 <meta http-equiv="refresh" content="30"/>
 
 {% if quiz_list %}
-<table border="1">
+<table border="1" cellpadding="3">
     <tr>
-        <th>Student </th>  <th>Questions answered</th> <th>Total marks</th>
+        <th>Student </th> <th> Roll number </th>  <th>Questions answered</th> <th>Total marks</th>
     </tr>
     {% for paper in quiz_list %}
     <tr> 
-        <td>{{ paper.username }} </td>
-        <td>{{ paper.answered }} </td> 
+        <td> {{ paper.username }} </td>
+        <td> {{ paper.rollno }} </td>
+        <td> {{ paper.answered }} </td> 
         <td> {{ paper.total }} </td>
     
     </tr>
