@@ -162,4 +162,28 @@ def complete(request):
         return render_to_response('exam/complete.html')
     else:
         return redirect('/exam/')
-    
+   
+def monitor(request):
+    """Monitor the progress of the quizzes taken so far."""
+    quizzes = Quiz.objects.all()
+    questions = Question.objects.all()
+    # Mapping from question id to points
+    marks = dict( ( (q.id, q.points) for q in questions) )
+    quiz_list = []
+    for quiz in quizzes:
+        paper = {}
+        user = quiz.user
+        paper['username'] = str(user.first_name) + ' ' + str(user.last_name)
+        qa = quiz.questions_answered.split('|')
+        answered = ', '.join(sorted(qa))
+        paper['answered'] = answered if answered else 'None'
+        total = sum( [marks[int(id)] for id in qa if id] )
+        paper['total'] = total
+        quiz_list.append(paper)
+
+    quiz_list.sort(cmp=lambda x, y: cmp(x['total'], y['total']), 
+                   reverse=True)
+
+    context = {'quiz_list': quiz_list}
+    return render_to_response('exam/monitor.html', context,
+                              context_instance=RequestContext(request)) 

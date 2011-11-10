@@ -1,0 +1,22 @@
+<h1> Current quiz results </h1>
+
+<meta http-equiv="refresh" content="30"/>
+
+{% if quiz_list %}
+<table border="1">
+    <tr>
+        <th>Student </th>  <th>Questions answered</th> <th>Total marks</th>
+    </tr>
+    {% for paper in quiz_list %}
+    <tr> 
+        <td>{{ paper.username }} </td>
+        <td>{{ paper.answered }} </td> 
+        <td> {{ paper.total }} </td>
+    
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+    <p> No quizzes so far. </p>
+{% endif %}
+
