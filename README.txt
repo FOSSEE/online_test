@@ -40,6 +40,10 @@ To install/deploy this app follow the steps below:
     http://server_ip:server_port/exam
 
     And you should be all set.
+    
+ 10. Note that the directory "output" will contain directories, one for each
+     user.  Users can potentially write output into these that can be used
+     for checking later.
 
 
 WARNING:  django is running in debug mode for this currently, CHANGE it
