@@ -4,13 +4,16 @@ and returns the output.  It *should* be run as root and will run as the user
 'nobody' so as to minimize any damange by errant code.
 """
 import sys
+import traceback
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 import pwd
 import os
+from os.path import isdir
 
 
 # Set the effective uid
 nobody = pwd.getpwnam('nobody')
+os.setegid(nobody.pw_gid)
 os.seteuid(nobody.pw_uid)
 
 
@@ -26,7 +29,7 @@ def run_code(answer, test_code, in_dir=None):
     A tuple: (success, error message).
     
     """
-    if in_dir is not None:
+    if in_dir is not None and isdir(in_dir):
         os.chdir(in_dir)
         
     success = False

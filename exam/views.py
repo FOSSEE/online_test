@@ -1,10 +1,9 @@
 import random
-import sys
-import traceback
 import string
+import os
+import stat
+from os.path import dirname, pardir, abspath, join, exists
 
-from django.db import IntegrityError
-from django.contrib.auth.models import User
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
@@ -12,10 +11,17 @@ from exam.models import Question, Quiz, Profile, Answer
 from exam.forms import UserRegisterForm, UserLoginForm
 from exam.xmlrpc_clients import python_server
 
+# The directory where user data can be saved.
+OUTPUT_DIR = abspath(join(dirname(__file__), pardir, 'output'))
+
 def gen_key(no_of_chars):
     """Generate a random key of the number of characters."""
     allowed_chars = string.digits+string.uppercase
     return ''.join([random.choice(allowed_chars) for i in range(no_of_chars)])
+    
+def get_user_dir(user):
+    """Return the output directory for the user."""
+    return join(OUTPUT_DIR, str(user.username))
     
 def index(request):
     """The start page.
@@ -95,6 +101,15 @@ def start(request):
         ip = request.META['REMOTE_ADDR']
         key = gen_key(10)
         new_quiz = Quiz(user=user, user_ip=ip, key=key)
+        
+        # Make user directory.
+        user_dir = get_user_dir(user)
+        if not exists(user_dir):
+            os.mkdir(user_dir)
+            # Make it rwx by others.
+            os.chmod(user_dir, stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH \
+                    | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR \
+                    | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
 
         questions = [ str(_.id) for _ in Question.objects.all() ]
         random.shuffle(questions)
@@ -131,7 +146,8 @@ def check(request, q_id):
     # Otherwise we were asked to check.  We obtain the results via XML-RPC
     # with the code executed safely in a separate process (the python_server.py)
     # running as nobody.
-    success, err_msg = python_server.run_code(answer, question.test)
+    user_dir = get_user_dir(user)
+    success, err_msg = python_server.run_code(answer, question.test, user_dir)
 
     # Add the answer submitted.
     new_answer = Answer(question=question, answer=answer.strip())    
