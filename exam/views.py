@@ -10,6 +10,7 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from exam.models import Question, Quiz, Profile, Answer
 from exam.forms import UserRegisterForm, UserLoginForm
+from exam.xmlrpc_clients import python_server
 
 def gen_key(no_of_chars):
     """Generate a random key of the number of characters."""
@@ -116,41 +117,6 @@ def question(request, q_id):
     return render_to_response('exam/question.html', context, 
                               context_instance=ci)
 
-def test_python(answer, test_code):
-    """Tests given Python function with the test code supplied.
-
-    Returns
-    -------
-    
-    A tuple: (success, error message).
-    
-    """
-    success = False
-    tb = None
-    try:
-        submitted = compile(answer, '<string>', mode='exec')
-        g = {}
-        exec submitted in g
-        _tests = compile(test_code, '<string>', mode='exec')
-        exec _tests in g
-    except AssertionError:
-        type, value, tb = sys.exc_info()
-        info = traceback.extract_tb(tb)
-        fname, lineno, func, text = info[-1]
-        text = str(test_code).splitlines()[lineno-1]
-        err = "{0} {1} in: {2}".format(type.__name__, str(value), text)
-    except:
-        type, value = sys.exc_info()[:2]
-        err = "Error: {0}".format(repr(value))
-    else:
-        success = True
-        err = 'Correct answer'
-    finally:
-        del tb
-
-    return success, err
-
-
 def check(request, q_id):
     user = request.user
     question = get_object_or_404(Question, pk=q_id)
@@ -162,8 +128,10 @@ def check(request, q_id):
         next_q = quiz.skip()
         return show_question(request, next_q)
         
-    # Otherwise we were asked to check.
-    success, err_msg = test_python(answer, question.test)
+    # Otherwise we were asked to check.  We obtain the results via XML-RPC
+    # with the code executed safely in a separate process (the python_server.py)
+    # running as nobody.
+    success, err_msg = python_server.run_code(answer, question.test)
 
     # Add the answer submitted.
     new_answer = Answer(question=question, answer=answer.strip())    

@@ -19,17 +19,24 @@ To install/deploy this app follow the steps below:
 
     Note that you can supply multiple xml files as arguments and all of
     those will be added to the database.
+    
+ 5. First run the python server provided.  This ensures that the code is 
+    executed in a safe environment.  Do this like so::
+    
+      $ sudo python python_server.py
+      
+    Using sudo is necessary since the server is run as the user "nobody".
 
- 5. Now, run::
+ 6. Now, run::
  
     $ python manage.py runserver <desired_ip>:<desired_port>
 
- 6. Go to http://server_ip:server_port/admin
+ 7. Go to http://server_ip:server_port/admin
 
- 7. Login with your credentials and look at the questions and modify if
+ 8. Login with your credentials and look at the questions and modify if
     needed.
 
- 7. Now ask users to login at:
+ 9. Now ask users to login at:
     http://server_ip:server_port/exam
 
     And you should be all set.
