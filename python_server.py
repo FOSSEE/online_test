@@ -3,7 +3,6 @@
 and returns the output.  It *should* be run as root and will run as the user 
 'nobody' so as to minimize any damange by errant code.
 """
-import sys
 import traceback
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 import pwd
@@ -32,28 +31,18 @@ def run_code(answer, test_code, in_dir=None):
     if in_dir is not None and isdir(in_dir):
         os.chdir(in_dir)
         
-    success = False
-    tb = None
     try:
         submitted = compile(answer, '<string>', mode='exec')
         g = {}
         exec submitted in g
         _tests = compile(test_code, '<string>', mode='exec')
         exec _tests in g
-    except AssertionError:
-        type, value, tb = sys.exc_info()
-        info = traceback.extract_tb(tb)
-        fname, lineno, func, text = info[-1]
-        text = str(test_code).splitlines()[lineno-1]
-        err = "{0} {1} in: {2}".format(type.__name__, str(value), text)
     except:
-        type, value = sys.exc_info()[:2]
-        err = "Error: {0}".format(repr(value))
+        success = False
+        err = traceback.format_exc(limit=1)
     else:
         success = True
         err = 'Correct answer'
-    finally:
-        del tb
 
     return success, err
 
