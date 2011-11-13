@@ -2,7 +2,7 @@
 
 <p>{{ question.description }} </p>
 
-{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{% if error_message %}<p><strong>ERROR:</strong></p><pre>{{ error_message }}</pre>{% endif %}
 
 <form action="/exam/{{ question.id }}/check/" method="post">
 {% csrf_token %}
@@ -17,7 +17,7 @@
 <input type="submit" name="skip" value="Skip question" />
 </form>
 
-<p> You have {{quiz.questions_left}} question(s) left. </p>
+<p> {{ user.first_name.title }} {{ user.last_name.title }}, you have {{ quiz.questions_left }} question(s) left. </p>
 
 <hr/>
 <form action="/exam/quit/" method="post">

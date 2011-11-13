@@ -122,12 +122,13 @@ def start(request):
         return show_question(request, q)
 
 def question(request, q_id):
+    user = request.user
     q = get_object_or_404(Question, pk=q_id)
     try:
         quiz = Quiz.objects.get(user=request.user)
     except Quiz.DoesNotExist:
         redirect('/exam/start')
-    context = {'question': q, 'quiz': quiz}
+    context = {'question': q, 'quiz': quiz, 'user': user}
     ci = RequestContext(request)
     return render_to_response('exam/question.html', context, 
                               context_instance=ci)
@@ -158,7 +159,7 @@ def check(request, q_id):
     ci = RequestContext(request)
     if not success:
         context = {'question': question, 'error_message': err_msg,
-                   'last_attempt': answer}
+                   'quiz': quiz, 'last_attempt': answer}
         return render_to_response('exam/question.html', context, 
                                   context_instance=ci)
     else:
