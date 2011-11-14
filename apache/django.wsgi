@@ -3,9 +3,14 @@ from os.path import dirname, abspath
 import sys
 
 # This file is inside online_test/apache/django.wsgi
-MY_DIR = abspath(dirname(dirname(dirname(__file__))))
-if MY_DIR not in sys.path:
-    sys.path.append(MY_DIR)
+# pth should be online_test
+pth = abspath(dirname(dirname(__file__)))
+if pth not in sys.path:
+    sys.path.append(pth)
+# Now add the parent of online_test also.
+pth = dirname(pth)
+if pth not in sys.path:
+    sys.path.append(pth)
     
 os.environ['DJANGO_SETTINGS_MODULE'] = 'online_test.settings'
 
