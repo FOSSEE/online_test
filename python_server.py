@@ -9,19 +9,31 @@ from SimpleXMLRPCServer import SimpleXMLRPCServer
 import pwd
 import os
 from os.path import isdir
+import signal
 
+# Timeout for the code to run in seconds.
+TIMEOUT = 3
 
 # Set the effective uid
 nobody = pwd.getpwnam('nobody')
 os.setegid(nobody.pw_gid)
 os.seteuid(nobody.pw_uid)
 
+# Raised when the code times-out.
+# c.f. http://pguides.net/python/timeout-a-function
+class TimeoutException(Exception):
+    pass
+    
+def timeout_handler(signum, frame):
+    raise TimeoutException('Code took too long to run.')
+
 
 def run_code(answer, test_code, in_dir=None):
     """Tests given Python function (`answer`) with the `test_code` supplied.  
     If the optional `in_dir` keyword argument is supplied it changes the 
     directory to that directory (it does not change it back to the original when
-    done).
+    done).  This function also timesout when the function takes more than 
+    TIMEOUT seconds to run to prevent runaway code.
 
     Returns
     -------
@@ -32,6 +44,10 @@ def run_code(answer, test_code, in_dir=None):
     if in_dir is not None and isdir(in_dir):
         os.chdir(in_dir)
         
+    # Add a new signal handler for the execution of this code.
+    old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(TIMEOUT)
+     
     success = False
     tb = None
     try:
@@ -40,6 +56,8 @@ def run_code(answer, test_code, in_dir=None):
         exec submitted in g
         _tests = compile(test_code, '<string>', mode='exec')
         exec _tests in g
+    except TimeoutException:
+        err = 'Code took more than %s seconds to run.'%TIMEOUT
     except AssertionError:
         type, value, tb = sys.exc_info()
         info = traceback.extract_tb(tb)
@@ -54,6 +72,11 @@ def run_code(answer, test_code, in_dir=None):
         err = 'Correct answer'
     finally:
         del tb
+        # Set back any original signal handler.
+        signal.signal(signal.SIGALRM, old_handler) 
+        
+    # Cancel the signal if any, see signal.alarm documentation.
+    signal.alarm(0)
 
     return success, err
 
