@@ -117,9 +117,12 @@ def start(request):
         
         new_quiz.questions = "|".join(questions)
         new_quiz.save()
-        q = new_quiz.current_question()
-
-        return show_question(request, q)
+    
+        # Show the user the intro page.    
+        context = {'user': user}
+        ci = RequestContext(request)
+        return render_to_response('exam/intro.html', context, 
+                                  context_instance=ci)
 
 def question(request, q_id):
     user = request.user
