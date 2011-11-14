@@ -113,7 +113,6 @@ def start(request):
 
         questions = [ str(_.id) for _ in Question.objects.all() ]
         random.shuffle(questions)
-        questions = questions[:3]
         
         new_quiz.questions = "|".join(questions)
         new_quiz.save()
