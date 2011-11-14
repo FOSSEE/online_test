@@ -145,18 +145,22 @@ def check(request, q_id):
     if skip is not None:
         next_q = quiz.skip()
         return show_question(request, next_q)
+
+    # Add the answer submitted, regardless of it being correct or not.
+    new_answer = Answer(question=question, answer=answer, correct=False)
+    new_answer.save()
+    quiz.answers.add(new_answer)
         
     # Otherwise we were asked to check.  We obtain the results via XML-RPC
     # with the code executed safely in a separate process (the python_server.py)
     # running as nobody.
     user_dir = get_user_dir(user)
     success, err_msg = python_server.run_code(answer, question.test, user_dir)
-
-    # Add the answer submitted.
-    new_answer = Answer(question=question, answer=answer.strip())    
-    new_answer.correct = success
-    new_answer.save()
-    quiz.answers.add(new_answer)
+    
+    if success:
+        # Note the success and save it.
+        new_answer.correct = success
+        new_answer.save()
 
     ci = RequestContext(request)
     if not success:
@@ -196,8 +200,13 @@ def monitor(request):
     for quiz in quizzes:
         paper = {}
         user = quiz.user
+        try:
+            profile = Profile.objects.get(user=user)
+        except Profile.DoesNotExist:
+            # Admin user may have a quiz by accident but no profile.
+            continue
         paper['username'] = str(user.first_name) + ' ' + str(user.last_name)
-        paper['rollno'] = str(Profile.objects.get(user=user).roll_number)
+        paper['rollno'] = str(profile.roll_number)
         qa = quiz.questions_answered.split('|')
         answered = ', '.join(sorted(qa))
         paper['answered'] = answered if answered else 'None'
