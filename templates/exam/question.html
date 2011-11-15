@@ -1,10 +1,25 @@
 <h2> {{ question.summary }} </h2>
 
+<script language="javascript">
+function submitCode()
+{
+    var x = document.getElementById("status");
+    x.innerHTML = "<strong>Checking answer ...</strong>";
+    x = document.getElementById("check");
+    x.disabled = true;
+    x.value = "Checking Answer ...";
+    document.getElementById("skip").disabled = true;
+    document.forms["code"].submit();
+}
+</script>
+
 <p>{{ question.description }} </p>
 
 {% if error_message %}<p><strong>ERROR:</strong></p><pre>{{ error_message }}</pre>{% endif %}
 
-<form action="/exam/{{ question.id }}/check/" method="post">
+<p id="status"></p>
+
+<form id="code" action="/exam/{{ question.id }}/check/" method="post">
 {% csrf_token %}
 
 <textarea rows="20" cols="100" name="answer">
@@ -13,8 +28,9 @@
 
 <br/>
 
-<input type="submit" name="check" value="Check Answer" />
-<input type="submit" name="skip" value="Skip question" />
+<input id="check" type="submit" name="check" value="Check Answer"
+onclick="javascript:submitCode();"/>
+<input id="skip" type="submit" name="skip" value="Skip question" />
 </form>
 
 <p> {{ user.first_name.title }} {{ user.last_name.title }}, you have {{ quiz.questions_left }} question(s) left. </p>
