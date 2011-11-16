@@ -7,7 +7,7 @@ from os.path import dirname, pardir, abspath, join, exists
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
-from exam.models import Question, Quiz, Profile, Answer
+from exam.models import Question, QuestionPaper, Profile, Answer
 from exam.forms import UserRegisterForm, UserLoginForm
 from exam.xmlrpc_clients import python_server
 
@@ -26,7 +26,7 @@ def get_user_dir(user):
 def index(request):
     """The start page.
     """
-    # Largely copied from Nishanth's quiz app.
+    # Largely copied from Nishanth's QuestionPaper app.
     user = request.user
     if user.is_authenticated():
         return redirect("/exam/start/")
@@ -92,15 +92,15 @@ def show_question(request, q_id):
 def start(request):
     user = request.user
     try:
-        old_quiz = Quiz.objects.get(user=user)
-        if not old_quiz.is_active:
+        old_paper = QuestionPaper.objects.get(user=user)
+        if not old_paper.is_active:
             return redirect("/exam/complete/")
-        q = old_quiz.current_question()
-        return redirect('/exam/%s'%q)
-    except Quiz.DoesNotExist:
+        p = old_paper.current_question()
+        return redirect('/exam/%s'%p)
+    except QuestionPaper.DoesNotExist:
         ip = request.META['REMOTE_ADDR']
         key = gen_key(10)
-        new_quiz = Quiz(user=user, user_ip=ip, key=key)
+        new_paper = QuestionPaper(user=user, user_ip=ip, key=key)
         
         # Make user directory.
         user_dir = get_user_dir(user)
@@ -114,8 +114,8 @@ def start(request):
         questions = [ str(_.id) for _ in Question.objects.all() ]
         random.shuffle(questions)
         
-        new_quiz.questions = "|".join(questions)
-        new_quiz.save()
+        new_paper.questions = "|".join(questions)
+        new_paper.save()
     
         # Show the user the intro page.    
         context = {'user': user}
@@ -127,10 +127,10 @@ def question(request, q_id):
     user = request.user
     q = get_object_or_404(Question, pk=q_id)
     try:
-        quiz = Quiz.objects.get(user=request.user)
-    except Quiz.DoesNotExist:
+        paper = QuestionPaper.objects.get(user=request.user)
+    except QuestionPaper.DoesNotExist:
         redirect('/exam/start')
-    context = {'question': q, 'quiz': quiz, 'user': user}
+    context = {'question': q, 'paper': paper, 'user': user}
     ci = RequestContext(request)
     return render_to_response('exam/question.html', context, 
                               context_instance=ci)
@@ -138,18 +138,18 @@ def question(request, q_id):
 def check(request, q_id):
     user = request.user
     question = get_object_or_404(Question, pk=q_id)
-    quiz = Quiz.objects.get(user=user)
+    paper = QuestionPaper.objects.get(user=user)
     answer = request.POST.get('answer')
     skip = request.POST.get('skip', None)
     
     if skip is not None:
-        next_q = quiz.skip()
+        next_q = paper.skip()
         return show_question(request, next_q)
 
     # Add the answer submitted, regardless of it being correct or not.
     new_answer = Answer(question=question, answer=answer, correct=False)
     new_answer.save()
-    quiz.answers.add(new_answer)
+    paper.answers.add(new_answer)
         
     # Otherwise we were asked to check.  We obtain the results via XML-RPC
     # with the code executed safely in a separate process (the python_server.py)
@@ -165,11 +165,11 @@ def check(request, q_id):
     ci = RequestContext(request)
     if not success:
         context = {'question': question, 'error_message': err_msg,
-                   'quiz': quiz, 'last_attempt': answer}
+                   'paper': paper, 'last_attempt': answer}
         return render_to_response('exam/question.html', context, 
                                   context_instance=ci)
     else:
-        next_q = quiz.answered_question(question.id)
+        next_q = paper.answered_question(question.id)
         return show_question(request, next_q)
         
 def quit(request):
@@ -182,41 +182,41 @@ def complete(request):
     if request.method == 'POST':
         yes = request.POST.get('yes', None)
     if yes:
-        quiz = Quiz.objects.get(user=user)
-        quiz.is_active = False
-        quiz.save()
+        paper = QuestionPaper.objects.get(user=user)
+        paper.is_active = False
+        paper.save()
         logout(request)
         return render_to_response('exam/complete.html')
     else:
         return redirect('/exam/')
    
 def monitor(request):
-    """Monitor the progress of the quizzes taken so far."""
-    quizzes = Quiz.objects.all()
+    """Monitor the progress of the papers taken so far."""
+    q_papers = QuestionPaper.objects.all()
     questions = Question.objects.all()
     # Mapping from question id to points
     marks = dict( ( (q.id, q.points) for q in questions) )
-    quiz_list = []
-    for quiz in quizzes:
+    paper_list = []
+    for q_paper in q_papers:
         paper = {}
-        user = quiz.user
+        user = q_paper.user
         try:
             profile = Profile.objects.get(user=user)
         except Profile.DoesNotExist:
-            # Admin user may have a quiz by accident but no profile.
+            # Admin user may have a paper by accident but no profile.
             continue
         paper['username'] = str(user.first_name) + ' ' + str(user.last_name)
         paper['rollno'] = str(profile.roll_number)
-        qa = quiz.questions_answered.split('|')
+        qa = q_paper.questions_answered.split('|')
         answered = ', '.join(sorted(qa))
         paper['answered'] = answered if answered else 'None'
         total = sum( [marks[int(id)] for id in qa if id] )
         paper['total'] = total
-        quiz_list.append(paper)
+        paper_list.append(paper)
 
-    quiz_list.sort(cmp=lambda x, y: cmp(x['total'], y['total']), 
+    paper_list.sort(cmp=lambda x, y: cmp(x['total'], y['total']), 
                    reverse=True)
 
-    context = {'quiz_list': quiz_list}
+    context = {'paper_list': paper_list}
     return render_to_response('exam/monitor.html', context,
                               context_instance=RequestContext(request)) 

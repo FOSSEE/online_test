@@ -1,6 +1,7 @@
 <h2> {{ question.summary }} </h2>
 
-<script language="javascript">
+<script type="text/javascript">
+<!--
 function submitCode()
 {
     document.forms["code"].submit();
@@ -11,6 +12,7 @@ function submitCode()
     x.value = "Checking Answer ...";
     document.getElementById("skip").disabled = true;
 }
+//-->
 </script>
 
 <p>{{ question.description }} </p>
@@ -29,11 +31,11 @@ function submitCode()
 <br/>
 
 <input id="check" type="submit" name="check" value="Check Answer"
-onclick="javascript:submitCode();"/>
+onclick="submitCode();"/>
 <input id="skip" type="submit" name="skip" value="Skip question" />
 </form>
 
-<p> {{ user.first_name.title }} {{ user.last_name.title }}, you have {{ quiz.questions_left }} question(s) left. </p>
+<p> {{ user.first_name.title }} {{ user.last_name.title }}, you have {{ paper.questions_left }} question(s) left. </p>
 
 <hr/>
 <form action="/exam/quit/" method="post">

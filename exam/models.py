@@ -42,17 +42,17 @@ class Answer(models.Model):
         return self.answer
 
     
-class Quiz(models.Model):
-    """A quiz for a student.
+class QuestionPaper(models.Model):
+    """A question paper for a student -- one per student typically.
     """
-    # The user taking this quiz.
+    # The user taking this question paper.
     user = models.ForeignKey(User)
     # User's IP which is logged.
     user_ip = models.CharField(max_length=15)
     # Unused currently.
     key = models.CharField(max_length=10)
 
-    # used to allow/stop a user from retaking the quiz
+    # used to allow/stop a user from retaking the question paper.
     is_active = models.BooleanField(default = True)
     
     # The questions (a list of ids separated by '|')
@@ -111,4 +111,4 @@ class Quiz(models.Model):
     
     def __unicode__(self):
         u = self.user
-        return u'Quiz for {0} {1}'.format(u.first_name, u.last_name)
+        return u'Question paper for {0} {1}'.format(u.first_name, u.last_name)

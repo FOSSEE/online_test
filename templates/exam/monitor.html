@@ -2,12 +2,12 @@
 
 <meta http-equiv="refresh" content="30"/>
 
-{% if quiz_list %}
+{% if paper_list %}
 <table border="1" cellpadding="3">
     <tr>
         <th>Student </th> <th> Roll number </th>  <th>Questions answered</th> <th>Total marks</th>
     </tr>
-    {% for paper in quiz_list %}
+    {% for paper in paper_list %}
     <tr> 
         <td> {{ paper.username }} </td>
         <td> {{ paper.rollno }} </td>
@@ -18,6 +18,6 @@
     {% endfor %}
 </table>
 {% else %}
-    <p> No quizzes so far. </p>
+    <p> No answer papers so far. </p>
 {% endif %}
 
