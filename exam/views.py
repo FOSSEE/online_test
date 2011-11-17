@@ -184,6 +184,7 @@ def check(request, q_id):
             
         context = {'question': question, 'error_message': err_msg,
                    'paper': paper, 'last_attempt': answer,
+                   'quiz_name': paper.quiz.description,
                    'time_left': time_left}
 
         return render_to_response('exam/question.html', context, 

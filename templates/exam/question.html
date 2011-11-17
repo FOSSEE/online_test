@@ -48,9 +48,11 @@ function update_time()
 {% block onload %} onload="update_time()" {% endblock %}
 
 {% block content %}
-<h2> {{ question.summary }} </h2>
+<h3> {{ question.summary }} </h3>
 
-<p>{{ question.description }} </p>
+<p>{{ question.description }}
+<br/>
+(Marks: {{ question.points }}) </p>
 
 {% if error_message %}<p><strong>ERROR:</strong></p><pre>{{ error_message }}</pre>{% endif %}
 
