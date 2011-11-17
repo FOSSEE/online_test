@@ -1,6 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %} Quiz results {% endblock title %}
+
+{% block meta %} <meta http-equiv="refresh" content="30"/> {% endblock meta %}
+
+{% block content %}
 <h1> Current quiz results </h1>
 
-<meta http-equiv="refresh" content="30"/>
 
 {% if paper_list %}
 <table border="1" cellpadding="3">
@@ -21,3 +27,4 @@
     <p> No answer papers so far. </p>
 {% endif %}
 
+{% endblock content %}

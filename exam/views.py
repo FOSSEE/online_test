@@ -94,8 +94,8 @@ def start(request):
         return complete(request, reason=msg)
     try:
         old_paper = QuestionPaper.objects.get(user=user, quiz=quiz)
-        p = old_paper.current_question()
-        return redirect('/exam/%s'%p)
+        q = old_paper.current_question()
+        return show_question(request, q)
     except QuestionPaper.DoesNotExist:
         ip = request.META['REMOTE_ADDR']
         key = gen_key(10)
@@ -198,11 +198,11 @@ def quit(request):
 
 def complete(request, reason=None):
     user = request.user
-    yes = True
+    no = False
     message = reason or 'The quiz has been completed. Thank you.'
-    if request.method == 'POST':
-        yes = request.POST.get('yes', None)
-    if yes:
+    if request.method == 'POST' and 'no' in request.POST:
+        no = request.POST.get('no', False)
+    if not no:
         # Logout the user and quit with the message given.
         logout(request)
         context = {'message': message}

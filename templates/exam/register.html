@@ -1,3 +1,8 @@
+{% extends "base.html" %}
+
+{% block title %}Registration form {% endblock %}
+
+{% block content %}
 Please provide the following details.
 <form action="" method="post">
 {% csrf_token %}
@@ -6,3 +11,5 @@ Please provide the following details.
 
 <input type="submit" value="Register" />
 </form>
+
+{% endblock content %}

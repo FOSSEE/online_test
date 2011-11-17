@@ -1,3 +1,8 @@
+{% extends "base.html" %}
+
+{% block title %}Quit exam {% endblock %}
+
+{% block content %}
 <p>Your current answers are saved.</p>
 <p> Are you sure you wish to quit the exam?</p>
 
@@ -6,3 +11,4 @@
 <input type="submit" name="yes" value="Yes!" />
 <input type="submit" name="no" value="No!" />
 </form>
+{% endblock content %}

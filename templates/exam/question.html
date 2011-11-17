@@ -1,5 +1,8 @@
-<h2> {{ question.summary }} </h2>
+{% extends "base.html" %}
 
+{% block title %} Answer question {% endblock %}
+
+{% block script %}
 <script type="text/javascript">
 <!--
 var time_left = {{ time_left }};
@@ -25,24 +28,27 @@ function secs_to_time(secs)
     return h_s + m_s + s_s;
 }
 
-function dec_time()
+function update_time()
 {
     time_left -= 1;
     if (time_left) {
         var elem = document.getElementById("time_left");
         var t_str = secs_to_time(time_left);
         elem.innerHTML = "<strong> Time left: " + t_str + "</strong>";
-        setTimeout("dec_time()", 1000);
+        setTimeout("update_time()", 1000);
     }
     else {
         document.forms["logout"].submit();
     }
 }
-
 //-->
 </script>
+{% endblock script %}
 
-<body onload="dec_time()">
+{% block onload %} onload="update_time()" {% endblock %}
+
+{% block content %}
+<h2> {{ question.summary }} </h2>
 
 <p>{{ question.description }} </p>
 
@@ -75,4 +81,4 @@ you have  {{ paper.questions_left }} question(s) left in {{ quiz_name }}.</p>
 <input type="submit" name="quit" value="Quit exam and logout" />
 </form>
 
-</body>
+{% endblock content %}
