@@ -3,11 +3,12 @@ import string
 import os
 import stat
 from os.path import dirname, pardir, abspath, join, exists
+import datetime
 
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
-from exam.models import Question, QuestionPaper, Profile, Answer
+from exam.models import Quiz, Question, QuestionPaper, Profile, Answer
 from exam.forms import UserRegisterForm, UserLoginForm
 from exam.xmlrpc_clients import python_server
 
@@ -26,7 +27,6 @@ def get_user_dir(user):
 def index(request):
     """The start page.
     """
-    # Largely copied from Nishanth's QuestionPaper app.
     user = request.user
     if user.is_authenticated():
         return redirect("/exam/start/")
@@ -82,25 +82,25 @@ def user_login(request):
         return render_to_response('exam/login.html', context,
              context_instance=RequestContext(request))
 
-def show_question(request, q_id):
-    """Show a question if possible."""
-    if len(q_id) == 0:
-        return redirect("/exam/complete")
-    else:
-        return question(request, q_id)
-    
 def start(request):
     user = request.user
     try:
-        old_paper = QuestionPaper.objects.get(user=user)
-        if not old_paper.is_active:
-            return redirect("/exam/complete/")
+        # Right now the app is designed so there is only one active quiz 
+        # at a particular time.
+        quiz = Quiz.objects.get(active=True)
+    except Quiz.DoesNotExist:
+        msg = 'No active quiz found, please contact your '\
+              'instructor/administrator. Please login again thereafter.'
+        return complete(request, reason=msg)
+    try:
+        old_paper = QuestionPaper.objects.get(user=user, quiz=quiz)
         p = old_paper.current_question()
         return redirect('/exam/%s'%p)
     except QuestionPaper.DoesNotExist:
         ip = request.META['REMOTE_ADDR']
         key = gen_key(10)
-        new_paper = QuestionPaper(user=user, user_ip=ip, key=key)
+        new_paper = QuestionPaper(user=user, user_ip=ip, key=key, quiz=quiz)
+        new_paper.start_time = datetime.datetime.now()
         
         # Make user directory.
         user_dir = get_user_dir(user)
@@ -130,10 +130,24 @@ def question(request, q_id):
         paper = QuestionPaper.objects.get(user=request.user)
     except QuestionPaper.DoesNotExist:
         redirect('/exam/start')
-    context = {'question': q, 'paper': paper, 'user': user}
+    time_left = paper.time_left()
+    if time_left == 0:
+        return complete(request, reason='Your time is up!')
+    quiz_name = paper.quiz.description
+    context = {'question': q, 'paper': paper, 'user': user, 
+               'quiz_name': quiz_name, 
+               'time_left': time_left}
     ci = RequestContext(request)
     return render_to_response('exam/question.html', context, 
                               context_instance=ci)
+
+def show_question(request, q_id):
+    """Show a question if possible."""
+    if len(q_id) == 0:
+        msg = 'Congratulations!  You have successfully completed the quiz.'
+        return complete(request, msg)
+    else:
+        return question(request, q_id)
 
 def check(request, q_id):
     user = request.user
@@ -164,8 +178,14 @@ def check(request, q_id):
 
     ci = RequestContext(request)
     if not success:
+        time_left = paper.time_left()
+        if time_left == 0:
+            return complete(request, reason='Your time is up!')
+            
         context = {'question': question, 'error_message': err_msg,
-                   'paper': paper, 'last_attempt': answer}
+                   'paper': paper, 'last_attempt': answer,
+                   'time_left': time_left}
+
         return render_to_response('exam/question.html', context, 
                                   context_instance=ci)
     else:
@@ -176,17 +196,17 @@ def quit(request):
     return render_to_response('exam/quit.html', 
                               context_instance=RequestContext(request)) 
 
-def complete(request):
+def complete(request, reason=None):
     user = request.user
     yes = True
+    message = reason or 'The quiz has been completed. Thank you.'
     if request.method == 'POST':
         yes = request.POST.get('yes', None)
     if yes:
-        paper = QuestionPaper.objects.get(user=user)
-        paper.is_active = False
-        paper.save()
+        # Logout the user and quit with the message given.
         logout(request)
-        return render_to_response('exam/complete.html')
+        context = {'message': message}
+        return render_to_response('exam/complete.html', context)
     else:
         return redirect('/exam/')
    

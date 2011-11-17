@@ -1,13 +1,14 @@
+import datetime
 from django.db import models
 from django.contrib.auth.models import User
 
-
+################################################################################
 class Profile(models.Model):
     """Profile for a user to store roll number and other details."""
     user = models.ForeignKey(User)
     roll_number = models.CharField(max_length=20)
 
-
+################################################################################
 class Question(models.Model):
     """A question in the database."""
     # An optional one-line summary of the question.
@@ -26,6 +27,7 @@ class Question(models.Model):
         return self.summary
 
 
+################################################################################
 class Answer(models.Model):
     """Answers submitted by users.
     """
@@ -41,19 +43,50 @@ class Answer(models.Model):
     def __unicode__(self):
         return self.answer
 
+################################################################################
+class Quiz(models.Model):
+    """A quiz that students will participate in.  One can think of this 
+    as the "examination" event.
+    """
     
+    # The starting/ending date of the quiz.
+    start_date = models.DateField("Date of the quiz")
+    
+    # This is always in minutes.
+    duration = models.IntegerField("Duration of quiz in minutes", default=20)
+    
+    # Is the quiz active.  The admin should deactivate the quiz once it is 
+    # complete.
+    active = models.BooleanField(default=True)
+    
+    # Description of quiz.
+    description = models.CharField(max_length=256)
+    
+    def __unicode__(self):
+        desc = self.description or 'Quiz'
+        return '%s: on %s for %d minutes'%(desc, self.start_date, self.duration)
+
+    
+################################################################################
 class QuestionPaper(models.Model):
     """A question paper for a student -- one per student typically.
     """
     # The user taking this question paper.
     user = models.ForeignKey(User)
+    
+    # The Quiz to which this question paper is attached to.
+    quiz = models.ForeignKey(Quiz)
+    
+    # The time when this paper was started by the user.
+    start_time = models.DateTimeField()
+    
     # User's IP which is logged.
     user_ip = models.CharField(max_length=15)
     # Unused currently.
     key = models.CharField(max_length=10)
 
     # used to allow/stop a user from retaking the question paper.
-    is_active = models.BooleanField(default = True)
+    active = models.BooleanField(default = True)
     
     # The questions (a list of ids separated by '|')
     questions = models.CharField(max_length=128)
@@ -108,7 +141,16 @@ class QuestionPaper(models.Model):
             self.questions = '|'.join(qs)
             self.save()
             return qs[0]
+            
+    def time_left(self):
+        """Return the time remaining for the user in seconds."""
+        dt = datetime.datetime.now() - self.start_time
+        secs = dt.total_seconds()
+        total = self.quiz.duration*60.0
+        remain = max(total - secs, 0)
+        return int(remain)
     
     def __unicode__(self):
         u = self.user
         return u'Question paper for {0} {1}'.format(u.first_name, u.last_name)
+
