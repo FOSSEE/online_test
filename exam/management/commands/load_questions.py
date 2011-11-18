@@ -1,0 +1,45 @@
+# System library imports.
+from os.path import basename
+
+# Django imports.
+from django.core.management.base import BaseCommand
+
+# Local imports.
+from exam.models import Question
+
+def clear_questions():
+    """Delete all questions from the database."""
+    for question in Question.objects.all():
+        question.delete()
+
+def load_questions(filename):
+    """Load questions from the given Python file.  The Python file should
+    declare a list of name "questions" which define all the questions in pure 
+    Python.
+    """
+    # Simply exec the given file and we are done.
+    exec(open(filename).read())
+    
+    if 'questions' not in locals():
+        msg = 'No variable named "questions" with the Questions in file.'
+        raise NameError(msg)
+    
+    for question in questions:
+        question.save()
+    
+class Command(BaseCommand):
+    args = '<q_file1.py q_file2.py>'
+    help = '''loads the questions from given Python files which declare the 
+              questions in a list called "questions".'''
+    
+    def handle(self, *args, **options):
+        """Handle the command."""
+        # Delete existing stuff.
+        clear_questions()
+        
+        # Load from files.
+        for fname in args:
+            self.stdout.write('Importing from {0} ... '.format(basename(fname)))
+            load_questions(fname)
+            self.stdout.write('Done\n')
+            
