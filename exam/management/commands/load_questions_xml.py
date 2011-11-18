@@ -22,7 +22,7 @@ def clear_questions():
     for question in Question.objects.all():
         question.delete()
 
-def load_questions(filename):
+def load_questions_xml(filename):
     """Load questions from the given XML file."""
     q_bank = parse(filename).getElementsByTagName("question")
 
@@ -59,6 +59,6 @@ class Command(BaseCommand):
         # Load from files.
         for fname in args:
             self.stdout.write('Importing from {0} ... '.format(basename(fname)))
-            load_questions(fname)
+            load_questions_xml(fname)
             self.stdout.write('Done\n')
             
