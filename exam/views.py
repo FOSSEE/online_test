@@ -125,6 +125,8 @@ def start(request):
 
 def question(request, q_id):
     user = request.user
+    if not user.is_authenticated():
+        return redirect('exam/login/')
     q = get_object_or_404(Question, pk=q_id)
     try:
         paper = QuestionPaper.objects.get(user=request.user)
@@ -151,6 +153,8 @@ def show_question(request, q_id):
 
 def check(request, q_id):
     user = request.user
+    if not user.is_authenticated():
+        return redirect('exam/login/')
     question = get_object_or_404(Question, pk=q_id)
     paper = QuestionPaper.objects.get(user=user)
     answer = request.POST.get('answer')
