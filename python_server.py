@@ -10,9 +10,8 @@ import pwd
 import os
 from os.path import isdir
 import signal
+from settings import SERVER_PORT, SERVER_TIMEOUT
 
-# Timeout for the code to run in seconds.
-TIMEOUT = 2
 
 def run_as_nobody():
     # Set the effective uid
@@ -34,7 +33,7 @@ def run_code(answer, test_code, in_dir=None):
     If the optional `in_dir` keyword argument is supplied it changes the 
     directory to that directory (it does not change it back to the original when
     done).  This function also timesout when the function takes more than 
-    TIMEOUT seconds to run to prevent runaway code.
+    SERVER_TIMEOUT seconds to run to prevent runaway code.
 
     Returns
     -------
@@ -47,7 +46,7 @@ def run_code(answer, test_code, in_dir=None):
         
     # Add a new signal handler for the execution of this code.
     old_handler = signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(TIMEOUT)
+    signal.alarm(SERVER_TIMEOUT)
      
     success = False
     tb = None
@@ -58,7 +57,7 @@ def run_code(answer, test_code, in_dir=None):
         _tests = compile(test_code, '<string>', mode='exec')
         exec _tests in g
     except TimeoutException:
-        err = 'Code took more than %s seconds to run.'%TIMEOUT
+        err = 'Code took more than %s seconds to run.'%SERVER_TIMEOUT
     except AssertionError:
         type, value, tb = sys.exc_info()
         info = traceback.extract_tb(tb)
@@ -84,7 +83,7 @@ def run_code(answer, test_code, in_dir=None):
 
 def main():
     run_as_nobody()
-    server = SimpleXMLRPCServer(("localhost", 8001))
+    server = SimpleXMLRPCServer(("localhost", SERVER_PORT))
     server.register_function(run_code)
     server.serve_forever()
     

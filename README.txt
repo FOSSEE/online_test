@@ -13,7 +13,7 @@ To install/deploy this app follow the steps below:
  3. Add questions by editing the sample_questions.xml or any other xml
     file in the same format and then run the following::
 
-      $ python manage.py load_questions sample_questions.xml
+      $ python manage.py load_questions_xml sample_questions.xml
 
     Note that you can supply multiple xml files as arguments and all of
     those will be added to the database.
@@ -23,16 +23,22 @@ To install/deploy this app follow the steps below:
     
       $ sudo python python_server.py
       
-    Using sudo is necessary since the server is run as the user "nobody".
+    Using sudo is necessary since the server is run as the user "nobody".  This
+    runs on port 8001 by default and may be changed in the settings in the 
+    variable SERVER_PORT.  The SERVER_TIMEOUT also can be changed there.  This
+    is the maximum time allowed to execute the submitted code.
 
  5. Now, run::
  
     $ python manage.py runserver <desired_ip>:<desired_port>
+    
+    For deployment use Apache or a real webserver, see below for more 
+    information.
 
- 6. Go to http://server_ip:server_port/admin
+ 6. Go to http://deserved_host_or_ip:desired_port/admin
 
  7. Login with your credentials and look at the questions and modify if
-    needed.
+    needed.  Create a new Quiz, set the date and duration.
 
  8. Now ask users to login at:
     http://server_ip:server_port/exam
