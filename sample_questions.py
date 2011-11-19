@@ -1,4 +1,4 @@
-from exam.models import Question
+from datetime import date
 
 questions = [
 Question(
@@ -24,3 +24,8 @@ assert sqr(3) == 9
 assert abs(sqr(math.sqrt(2)) - 2.0) < 1e-14 
     '''),
 ]
+
+quiz = Quiz(start_date=date.today(),
+            duration=10,
+            description='Basic Python Quiz 1'
+            )

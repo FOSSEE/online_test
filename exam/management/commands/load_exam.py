@@ -5,17 +5,21 @@ from os.path import basename
 from django.core.management.base import BaseCommand
 
 # Local imports.
-from exam.models import Question
+from exam.models import Question, Quiz
 
-def clear_questions():
+def clear_exam():
     """Delete all questions from the database."""
     for question in Question.objects.all():
         question.delete()
+        
+    for quiz in Quiz.objects.all():
+        quiz.delete()
 
-def load_questions(filename):
-    """Load questions from the given Python file.  The Python file should
-    declare a list of name "questions" which define all the questions in pure 
-    Python.
+def load_exam(filename):
+    """Load questions and quiz from the given Python file.  The Python file 
+    should declare a list of name "questions" which define all the questions 
+    in pure Python.  It can optionally load a Quiz from an optional 'quiz' 
+    object.
     """
     # Simply exec the given file and we are done.
     exec(open(filename).read())
@@ -26,6 +30,9 @@ def load_questions(filename):
     
     for question in questions:
         question.save()
+        
+    if 'quiz' in locals():
+        quiz.save()
     
 class Command(BaseCommand):
     args = '<q_file1.py q_file2.py>'
@@ -35,11 +42,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Handle the command."""
         # Delete existing stuff.
-        clear_questions()
+        clear_exam()
         
         # Load from files.
         for fname in args:
             self.stdout.write('Importing from {0} ... '.format(basename(fname)))
-            load_questions(fname)
+            load_exam(fname)
             self.stdout.write('Done\n')
             

@@ -62,6 +62,9 @@ class Quiz(models.Model):
     # Description of quiz.
     description = models.CharField(max_length=256)
     
+    class Meta:
+        verbose_name_plural = "Quizzes"
+    
     def __unicode__(self):
         desc = self.description or 'Quiz'
         return '%s: on %s for %d minutes'%(desc, self.start_date, self.duration)
