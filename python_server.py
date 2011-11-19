@@ -12,12 +12,13 @@ from os.path import isdir
 import signal
 
 # Timeout for the code to run in seconds.
-TIMEOUT = 3
+TIMEOUT = 2
 
-# Set the effective uid
-nobody = pwd.getpwnam('nobody')
-os.setegid(nobody.pw_gid)
-os.seteuid(nobody.pw_uid)
+def run_as_nobody():
+    # Set the effective uid
+    nobody = pwd.getpwnam('nobody')
+    os.setegid(nobody.pw_gid)
+    os.seteuid(nobody.pw_uid)
 
 # Raised when the code times-out.
 # c.f. http://pguides.net/python/timeout-a-function
@@ -82,6 +83,7 @@ def run_code(answer, test_code, in_dir=None):
 
 
 def main():
+    run_as_nobody()
     server = SimpleXMLRPCServer(("localhost", 8001))
     server.register_function(run_code)
     server.serve_forever()
