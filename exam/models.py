@@ -148,7 +148,11 @@ class QuestionPaper(models.Model):
     def time_left(self):
         """Return the time remaining for the user in seconds."""
         dt = datetime.datetime.now() - self.start_time
-        secs = dt.total_seconds()
+        try:
+            secs = dt.total_seconds()
+        except AttributeError:
+            # total_seconds is new in Python 2.7. :(
+            secs = dt.seconds + dt.days*24*3600
         total = self.quiz.duration*60.0
         remain = max(total - secs, 0)
         return int(remain)

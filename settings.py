@@ -8,8 +8,8 @@ TEMPLATE_DEBUG = DEBUG
 # The port the Python server should run on.
 SERVER_PORT = 8001
 
-# Timeout for the code to run in seconds.
-SERVER_TIMEOUT = 2.0
+# Timeout for the code to run in seconds.  This is an integer!
+SERVER_TIMEOUT = 2
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
