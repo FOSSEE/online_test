@@ -4,10 +4,10 @@ from exam.models import Profile
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 
-from string import letters, punctuation
+from string import letters, punctuation, digits
 
-UNAME_CHARS = letters + "."
-PWD_CHARS = letters + punctuation
+UNAME_CHARS = letters + "._" + digits
+PWD_CHARS = letters + punctuation + digits
 
 class UserRegisterForm(forms.Form):
 
@@ -23,19 +23,20 @@ class UserRegisterForm(forms.Form):
         u_name = self.cleaned_data["username"]
 
         if u_name.strip(UNAME_CHARS):
-            raise forms.ValidationError("Only letters and period character are \
-                                         allowed in username")
+            msg = "Only letters, digits, period and underscore characters are "\
+                  "allowed in username"
+            raise forms.ValidationError(msg)
 
         try:
             User.objects.get(username__iexact = u_name)
-            raise forms.ValidationError("Username already exists")
+            raise forms.ValidationError("Username already exists.")
         except User.DoesNotExist:
             return u_name
 
     def clean_password(self):
         pwd = self.cleaned_data['password']
         if pwd.strip(PWD_CHARS):
-            raise forms.ValidationError("Only letters and punctuation are \
+            raise forms.ValidationError("Only letters, digits and punctuation are \
                                          allowed in password")
         return pwd
 

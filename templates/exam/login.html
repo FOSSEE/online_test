@@ -9,7 +9,9 @@ Please login to proceed.</p>
 <form action="" method="post">
 {% csrf_token %}
 
-{{ form.as_p }}
+<table>
+{{ form.as_table }}
+</table>
 
 <input type="submit" value="Login" />
 </form>
