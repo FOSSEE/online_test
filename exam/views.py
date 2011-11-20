@@ -261,7 +261,7 @@ def monitor(request, quiz_id=None):
         
     quiz_data = {}
     try:
-        quiz = Quiz.objects.get(active=True)
+        quiz = Quiz.objects.get(id=quiz_id)
     except Quiz.DoesNotExist:
         q_papers = []
         quiz = None
