@@ -1,7 +1,19 @@
 #!/usr/bin/env python
 """This server runs an XMLRPC server that can be submitted code and tests
 and returns the output.  It *should* be run as root and will run as the user 
-'nobody' so as to minimize any damange by errant code.
+'nobody' so as to minimize any damange by errant code.  This can be configured 
+by editing settings.py to run as many servers as desired.  One can also
+specify the ports on the command line.  Here are examples::
+
+  $ sudo ./python_server.py
+  # Runs servers based on settings.py:SERVER_PORTS one server per port given.
+  
+or::
+
+  $ sudo ./python_server.py 8001 8002 8003 8004 8005
+  # Runs 5 servers on ports specified.
+
+All these servers should be running as nobody.
 """
 import sys
 import traceback
@@ -10,11 +22,15 @@ import pwd
 import os
 from os.path import isdir
 import signal
-from settings import SERVER_PORT, SERVER_TIMEOUT
+from multiprocessing import Process
+
+# Local imports.
+from settings import SERVER_PORTS, SERVER_TIMEOUT
 
 
 def run_as_nobody():
-    # Set the effective uid
+    """Runs the current process as nobody."""
+    # Set the effective uid to that of nobody.
     nobody = pwd.getpwnam('nobody')
     os.setegid(nobody.pw_gid)
     os.seteuid(nobody.pw_uid)
@@ -25,6 +41,7 @@ class TimeoutException(Exception):
     pass
     
 def timeout_handler(signum, frame):
+    """A handler for the ALARM signal."""
     raise TimeoutException('Code took too long to run.')
 
 
@@ -80,13 +97,21 @@ def run_code(answer, test_code, in_dir=None):
 
     return success, err
 
+def run_server(port):
+    server = SimpleXMLRPCServer(("localhost", port))
+    server.register_function(run_code)
+    server.serve_forever()
 
 def main():
     run_as_nobody()
-    server = SimpleXMLRPCServer(("localhost", SERVER_PORT))
-    server.register_function(run_code)
-    server.serve_forever()
+    if len(sys.argv) == 1:
+        ports = SERVER_PORTS
+    else:
+        ports = [int(x) for x in sys.argv[1:]]
+
+    for port in ports:
+        p = Process(target=run_server,  args=(port,))
+        p.start()
     
 if __name__ == '__main__':
     main()
-    
