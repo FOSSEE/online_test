@@ -4,8 +4,15 @@ from django.conf.urls.defaults import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
+from settings import URL_ROOT
+
+if URL_ROOT.startswith('/'):
+    URL_BASE = r'^%s/exam/'%URL_ROOT[1:]
+else:
+    URL_BASE = r'^exam/' 
+
 urlpatterns = patterns('',
-    url(r'^exam/', include('exam.urls')),
+    url(URL_BASE, include('exam.urls')),
     
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
