@@ -12,8 +12,10 @@ def clear_exam():
     for question in Question.objects.all():
         question.delete()
         
+    # Deactivate old quizzes.
     for quiz in Quiz.objects.all():
-        quiz.delete()
+        quiz.active = False
+        quiz.save()
 
 def load_exam(filename):
     """Load questions and quiz from the given Python file.  The Python file 
