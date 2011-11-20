@@ -12,6 +12,13 @@ SERVER_PORTS = [8001] # range(8001, 8026)
 # Timeout for the code to run in seconds.  This is an integer!
 SERVER_TIMEOUT = 2
 
+# The root of the URL, for example you might be in the situation where you
+# are not hosted as host.org/exam/  but as host.org/foo/exam/ for whatever 
+# reason set this to the root you have to serve at.  In the above example
+# host.org/foo/exam set URL_ROOT='/foo'
+URL_ROOT = ''
+
+
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )

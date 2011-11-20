@@ -45,7 +45,7 @@ carefully.
 
 <p> We hope you enjoy taking this exam.</p>
 
-<form action="/exam/start/" method="post" align="center">
+<form action="{{URL_ROOT}}/exam/start/" method="post" align="center">
 {% csrf_token %}
 <input type="submit" name="start" value="Start Exam!">
 </form>

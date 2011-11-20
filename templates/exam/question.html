@@ -58,7 +58,7 @@ function update_time()
 
 <p id="status"></p>
 
-<form id="code" action="/exam/{{ question.id }}/check/" method="post">
+<form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/" method="post">
 {% csrf_token %}
 
 <textarea rows="20" cols="100" name="answer">
@@ -78,7 +78,7 @@ you have  {{ paper.questions_left }} question(s) left in {{ quiz_name }}.</p>
 <p id="time_left"> <strong> Time left:  </strong> </p>
 
 <hr/>
-<form id="logout" action="/exam/quit/" method="post">
+<form id="logout" action="{{URL_ROOT}}/exam/quit/" method="post">
 {% csrf_token %}
 <input type="submit" name="quit" value="Quit exam and logout" />
 </form>
