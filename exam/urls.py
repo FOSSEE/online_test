@@ -8,6 +8,8 @@ urlpatterns = patterns('exam.views',
     url(r'^quit/$', 'quit'),
     url(r'^complete/$', 'complete'),
     url(r'^monitor/$', 'monitor'),
+    url(r'^monitor/(?P<quiz_id>\d+)/$', 'monitor'),    
+    url(r'^user_data/(?P<username>[a-zA-Z0-9_.]+)/$', 'user_data'),
     url(r'^(?P<q_id>\d+)/$', 'question'),
     url(r'^(?P<q_id>\d+)/check/$', 'check'),
 )

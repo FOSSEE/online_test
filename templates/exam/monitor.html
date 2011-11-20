@@ -5,26 +5,57 @@
 {% block meta %} <meta http-equiv="refresh" content="30"/> {% endblock meta %}
 
 {% block content %}
-<h1> Current quiz results </h1>
 
+{% if not quiz_data and not paper_list %}
+<h1> Quiz results </h1>
 
+<p> No quizzes available. </p>
+
+{% endif %}
+
+{# ############################################################### #}
+{# This is rendered when we are just viewing exam/monitor #}
+{% if quiz_data %}
+<h1> Available quizzes </h1>
+
+<ul>
+{% for quiz_id, quiz_name in quiz_data.items %}
+<li><a href="{{URL_ROOT}}/exam/monitor/{{quiz_id}}/">{{ quiz_name }}</a></li>
+{% endfor %}
+</ul>
+{% endif %}
+
+{# ############################################################### #}
+{# This is rendered when we are just viewing exam/monitor/quiz_num #}
 {% if paper_list %}
+<h1> {{ quiz_name }} results </h1>
+
+{# <p> Quiz: {{ quiz_name }}</p> #}
+<p>Number of papers: {{ paper_list|length }} </p>
+
 <table border="1" cellpadding="3">
     <tr>
-        <th>Student </th> <th> Roll number </th>  <th>Questions answered</th> <th>Total marks</th>
+        <th> Name </th>
+        <th> Username </th>
+        <th> Roll number </th>  
+        <th> Questions answered </th> 
+        <th> Total marks </th>
+        <th> Attempts </th>
     </tr>
     {% for paper in paper_list %}
     <tr> 
-        <td> {{ paper.username }} </td>
+        <td> <a href="{{URL_ROOT}}/exam/user_data/{{paper.username}}">{{ paper.name }}</a> </td>
+        <td> <a href="{{URL_ROOT}}/exam/user_data/{{paper.username}}">{{ paper.username }}</a> </td>
         <td> {{ paper.rollno }} </td>
         <td> {{ paper.answered }} </td> 
         <td> {{ paper.total }} </td>
-    
+        <td> {{ paper.attempts }} </td>
     </tr>
     {% endfor %}
 </table>
-{% else %}
+{% else %} {% if quiz_name  %}
     <p> No answer papers so far. </p>
+    {% endif %}
 {% endif %}
 
 {% endblock content %}

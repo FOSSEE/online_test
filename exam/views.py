@@ -8,7 +8,10 @@ import datetime
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
-from exam.models import Quiz, Question, QuestionPaper, Profile, Answer
+from django.http import Http404
+
+# Local imports.
+from exam.models import Quiz, Question, QuestionPaper, Profile, Answer, User
 from exam.forms import UserRegisterForm, UserLoginForm
 from exam.xmlrpc_clients import python_server
 from settings import URL_ROOT
@@ -150,7 +153,10 @@ def question(request, q_id):
     try:
         paper = QuestionPaper.objects.get(user=request.user)
     except QuestionPaper.DoesNotExist:
-        my_redirect('/exam/start')
+        return my_redirect('/exam/start')
+    if not paper.quiz.active:
+        return complete(request, reason='The quiz has been deactivated!')
+
     time_left = paper.time_left()
     if time_left == 0:
         return complete(request, reason='Your time is up!')
@@ -204,6 +210,8 @@ def check(request, q_id):
         time_left = paper.time_left()
         if time_left == 0:
             return complete(request, reason='Your time is up!')
+        if not paper.quiz.active:
+            return complete(request, reason='The quiz has been deactivated!')
             
         context = {'question': question, 'error_message': err_msg,
                    'paper': paper, 'last_attempt': answer,
@@ -234,13 +242,36 @@ def complete(request, reason=None):
     else:
         return my_redirect('/exam/')
    
-def monitor(request):
+def monitor(request, quiz_id=None):
     """Monitor the progress of the papers taken so far."""
-    q_papers = QuestionPaper.objects.all()
-    questions = Question.objects.all()
-    # Mapping from question id to points
-    marks = dict( ( (q.id, q.points) for q in questions) )
-    paper_list = []
+    user = request.user
+    if not user.is_authenticated() and not user.is_staff:
+        raise Http404('You are not allowed to view this page!')
+        
+    if quiz_id is None:
+        quizzes = Quiz.objects.all()
+        quiz_data = {}
+        for quiz in quizzes:
+            quiz_data[quiz.id] = quiz.description
+        context = {'paper_list': [], 
+                   'quiz_name': '', 
+                   'quiz_data':quiz_data}
+        return my_render_to_response('exam/monitor.html', context,
+                                    context_instance=RequestContext(request)) 
+        
+    quiz_data = {}
+    try:
+        quiz = Quiz.objects.get(active=True)
+    except Quiz.DoesNotExist:
+        q_papers = []
+        quiz = None
+    else:
+        q_papers = QuestionPaper.objects.filter(quiz=quiz)
+        questions = Question.objects.all()
+        # Mapping from question id to points
+        marks = dict( ( (q.id, q.points) for q in questions) )
+    
+    paper_list = []    
     for q_paper in q_papers:
         paper = {}
         user = q_paper.user
@@ -249,18 +280,79 @@ def monitor(request):
         except Profile.DoesNotExist:
             # Admin user may have a paper by accident but no profile.
             continue
-        paper['username'] = str(user.first_name) + ' ' + str(user.last_name)
+        paper['name'] = user.get_full_name()
+        paper['username'] = user.username
         paper['rollno'] = str(profile.roll_number)
         qa = q_paper.questions_answered.split('|')
         answered = ', '.join(sorted(qa))
         paper['answered'] = answered if answered else 'None'
+        paper['attempts'] = q_paper.answers.count()
         total = sum( [marks[int(id)] for id in qa if id] )
         paper['total'] = total
         paper_list.append(paper)
 
+    if quiz is None:
+        quiz_name = 'No active quiz'
+    elif len(quiz.description) > 0:
+        quiz_name = quiz.description
+    else:
+        quiz_name = 'Quiz'
+        
     paper_list.sort(cmp=lambda x, y: cmp(x['total'], y['total']), 
                    reverse=True)
 
-    context = {'paper_list': paper_list}
+    context = {'paper_list': paper_list, 'quiz_name': quiz_name}
     return my_render_to_response('exam/monitor.html', context,
                                  context_instance=RequestContext(request)) 
+
+def user_data(request, username):
+    current_user = request.user
+    if not current_user.is_authenticated() and not current_user.is_staff:
+        raise Http404('You are not allowed to view this page!')
+        
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        q_papers = []
+    else:
+        q_papers = QuestionPaper.objects.filter(user=user)
+        questions = Question.objects.all()
+        # Mapping from question id to points
+        marks = dict( ( (q.id, q.points) for q in questions) )
+
+    data = {}
+    try:
+        profile = Profile.objects.get(user=user)
+    except Profile.DoesNotExist:
+        # Admin user may have a paper by accident but no profile.
+        profile = None
+    data['username'] = user.username
+    data['email'] = user.email
+    data['rollno'] = profile.roll_number if profile else ''
+    data['name'] = user.get_full_name()
+    papers = []
+    for q_paper in q_papers:
+        paper = {}
+        paper['name'] = q_paper.quiz.description
+        qa = q_paper.questions_answered.split('|')
+        answered = ', '.join(sorted(qa))
+        paper['answered'] = answered if answered else 'None'
+        paper['attempts'] = q_paper.answers.count()
+        total = sum( [marks[int(id)] for id in qa if id] )
+        paper['total'] = total
+        answers = {}
+        for answer in q_paper.answers.all():
+            qs = answer.question.summary
+            code = '#'*80 + '\n' + str(answer.answer) + '\n'
+            if qs in answers:
+                answers[qs] += code
+            else:
+                answers[qs] = code
+        paper['answers'] = answers
+        papers.append(paper)
+    data['papers'] = papers
+        
+    context = {'user_data': data}
+    return my_render_to_response('exam/user_data.html', context,
+                                 context_instance=RequestContext(request)) 
+    
