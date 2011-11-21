@@ -28,7 +28,7 @@ class UserRegisterForm(forms.Form):
             raise forms.ValidationError(msg)
 
         try:
-            User.objects.get(username__iexact = u_name)
+            User.objects.get(username__exact = u_name)
             raise forms.ValidationError("Username already exists.")
         except User.DoesNotExist:
             return u_name
