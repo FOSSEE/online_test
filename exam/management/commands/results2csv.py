@@ -11,11 +11,12 @@ from exam.views import get_quiz_data
 from exam.models import Quiz
 
 result_template = Template('''\
-"name","username","rollno","email","answered","total","attempts"
+"name","username","rollno","email","answered","total","attempts","position","department","institute"
 {% for paper in paper_list %}\
 "{{ paper.name }}","{{ paper.username }}","{{ paper.rollno }}",\
 "{{ paper.email }}","{{ paper.answered }}",{{ paper.total }},\
-{{ paper.attempts }}
+{{ paper.attempts }},"{{ paper.position }}",\
+"{{ paper.department }}","{{ paper.institute }}"
 {% endfor %}\
 ''')
 

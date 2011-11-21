@@ -269,6 +269,7 @@ def get_quiz_data(quiz_id):
         paper['name'] = user.get_full_name()
         paper['username'] = user.username
         paper['rollno'] = str(profile.roll_number)
+        paper['institute'] = str(profile.institute)
         paper['email'] = user.email
         qa = q_paper.questions_answered.split('|')
         answered = ', '.join(sorted(qa))
@@ -342,6 +343,10 @@ def get_user_data(username):
     data['username'] = user.username
     data['email'] = user.email
     data['rollno'] = profile.roll_number if profile else ''
+    data['name'] = user.get_full_name()
+    data['institute'] = profile.institute if profile else ''
+    data['department'] = profile.department if profile else ''
+    data['position'] = profile.position if profile else ''
     data['name'] = user.get_full_name()
     data['date_joined'] = str(user.date_joined)
     data['last_login'] = str(user.last_login)

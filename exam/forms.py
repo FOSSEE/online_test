@@ -11,13 +11,23 @@ PWD_CHARS = letters + punctuation + digits
 
 class UserRegisterForm(forms.Form):
 
-    username = forms.CharField(max_length=30)
+    username = forms.CharField(max_length=30, 
+            help_text='Letters, digits, period and underscores only.')
     email = forms.EmailField()
-    password = forms.CharField(max_length=30, widget=forms.PasswordInput())
-    confirm_password = forms.CharField(max_length=30, widget=forms.PasswordInput())
+    password = forms.CharField(max_length=30, 
+                               widget=forms.PasswordInput())
+    confirm_password = forms.CharField(max_length=30, 
+                                       widget=forms.PasswordInput())
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
-    roll_number = forms.CharField(max_length=30)
+    roll_number = forms.CharField(max_length=30, 
+                             help_text="Use a dummy if you don't have one.")
+    institute = forms.CharField(max_length=128, 
+                    help_text='Institute/Organization')
+    department = forms.CharField(max_length=64, 
+                    help_text='Department you work/study at')
+    position = forms.CharField(max_length=64,
+                    help_text='Student/Faculty/Researcher/Industry/etc.')
 
     def clean_username(self):
         u_name = self.cleaned_data["username"]
@@ -59,8 +69,12 @@ class UserRegisterForm(forms.Form):
         new_user.last_name = self.cleaned_data["last_name"]
         new_user.save()
 
+        cleaned_data = self.cleaned_data
         new_profile = Profile(user=new_user)
-        new_profile.roll_number = self.cleaned_data["roll_number"]
+        new_profile.roll_number = cleaned_data["roll_number"]
+        new_profile.institute = cleaned_data["institute"]
+        new_profile.department = cleaned_data["department"]
+        new_profile.position = cleaned_data["position"]
         new_profile.save()
 
         return u_name, pwd

@@ -14,6 +14,9 @@ Name: {{ user_data.name.title }}
 Username: {{ user_data.username }}
 Roll number: {{ user_data.rollno }}
 Email: {{ user_data.email }}
+Position: {{ user_data.position }}
+Department: {{ user_data.department }}
+Institute: {{ user_data.institute }}
 Date joined: {{ user_data.date_joined }}
 Last login: {{ user_data.last_login }}
 {% for paper in user_data.papers %}

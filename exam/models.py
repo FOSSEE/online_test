@@ -7,6 +7,10 @@ class Profile(models.Model):
     """Profile for a user to store roll number and other details."""
     user = models.ForeignKey(User)
     roll_number = models.CharField(max_length=20)
+    institute = models.CharField(max_length=128)
+    department = models.CharField(max_length=64)
+    position = models.CharField(max_length=64)
+
 
 ################################################################################
 class Question(models.Model):
