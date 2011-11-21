@@ -133,7 +133,7 @@ def start(request):
                     | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR \
                     | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
 
-        questions = [ str(_.id) for _ in Question.objects.all() ]
+        questions = [ str(_.id) for _ in Question.objects.filter(active=True) ]
         random.shuffle(questions)
         
         new_paper.questions = "|".join(questions)

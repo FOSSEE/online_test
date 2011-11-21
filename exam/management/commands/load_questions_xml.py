@@ -18,9 +18,10 @@ def decode_html(html_str):
             lambda m: unichr(name2codepoint[m.group(1)]), html_str)
 
 def clear_questions():
-    """Delete all questions from the database."""
+    """Deactivate all questions from the database."""
     for question in Question.objects.all():
-        question.delete()
+        question.active = False
+        question.save()
 
 def load_questions_xml(filename):
     """Load questions from the given XML file."""

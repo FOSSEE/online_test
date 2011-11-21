@@ -15,9 +15,11 @@ class Profile(models.Model):
 ################################################################################
 class Question(models.Model):
     """A question in the database."""
-    # An optional one-line summary of the question.
+
+    # A one-line summary of the question.
     summary = models.CharField(max_length=256)
-    # The question text.
+
+    # The question text, should be valid HTML.
     description = models.TextField()
     
     # Number of points for the question.
@@ -26,7 +28,11 @@ class Question(models.Model):
     # Test cases for the question in the form of code that is run.
     # This is simple Python code.
     test = models.TextField()
-    
+
+    # Is this question active or not.  If it is inactive it will not be used
+    # when creating a QuestionPaper.
+    active = models.BooleanField(default=True)
+
     def __unicode__(self):
         return self.summary
 

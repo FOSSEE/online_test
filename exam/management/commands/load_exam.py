@@ -8,9 +8,10 @@ from django.core.management.base import BaseCommand
 from exam.models import Question, Quiz
 
 def clear_exam():
-    """Delete all questions from the database."""
+    """Deactivate all questions from the database."""
     for question in Question.objects.all():
-        question.delete()
+        question.active = False
+        question.save()
         
     # Deactivate old quizzes.
     for quiz in Quiz.objects.all():
