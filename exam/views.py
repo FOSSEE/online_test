@@ -241,30 +241,16 @@ def complete(request, reason=None):
         return my_render_to_response('exam/complete.html', context)
     else:
         return my_redirect('/exam/')
-   
-def monitor(request, quiz_id=None):
-    """Monitor the progress of the papers taken so far."""
-    user = request.user
-    if not user.is_authenticated() and not user.is_staff:
-        raise Http404('You are not allowed to view this page!')
         
-    if quiz_id is None:
-        quizzes = Quiz.objects.all()
-        quiz_data = {}
-        for quiz in quizzes:
-            quiz_data[quiz.id] = quiz.description
-        context = {'paper_list': [], 
-                   'quiz_name': '', 
-                   'quiz_data':quiz_data}
-        return my_render_to_response('exam/monitor.html', context,
-                                    context_instance=RequestContext(request)) 
-        
-    quiz_data = {}
+def get_quiz_data(quiz_id):
+    """Convenience function to get all quiz results.  This is used by other
+    functions.  Returns a list containing one dictionary for each question paper
+    of the quiz.  The dictionary contains the necessary data.
+    """
     try:
         quiz = Quiz.objects.get(id=quiz_id)
     except Quiz.DoesNotExist:
         q_papers = []
-        quiz = None
     else:
         q_papers = QuestionPaper.objects.filter(quiz=quiz)
         questions = Question.objects.all()
@@ -283,6 +269,7 @@ def monitor(request, quiz_id=None):
         paper['name'] = user.get_full_name()
         paper['username'] = user.username
         paper['rollno'] = str(profile.roll_number)
+        paper['email'] = user.email
         qa = q_paper.questions_answered.split('|')
         answered = ', '.join(sorted(qa))
         paper['answered'] = answered if answered else 'None'
@@ -290,6 +277,33 @@ def monitor(request, quiz_id=None):
         total = sum( [marks[int(id)] for id in qa if id] )
         paper['total'] = total
         paper_list.append(paper)
+        
+    return paper_list
+   
+def monitor(request, quiz_id=None):
+    """Monitor the progress of the papers taken so far."""
+    user = request.user
+    if not user.is_authenticated() and not user.is_staff:
+        raise Http404('You are not allowed to view this page!')
+        
+    if quiz_id is None:
+        quizzes = Quiz.objects.all()
+        quiz_data = {}
+        for quiz in quizzes:
+            quiz_data[quiz.id] = quiz.description
+        context = {'paper_list': [], 
+                   'quiz_name': '', 
+                   'quiz_data':quiz_data}
+        return my_render_to_response('exam/monitor.html', context,
+                                    context_instance=RequestContext(request)) 
+    # quiz_id is not None.
+    try:
+        quiz = Quiz.objects.get(id=quiz_id)
+    except Quiz.DoesNotExist:
+        quiz = None
+
+    quiz_data = {}
+    paper_list = get_quiz_data(quiz_id)
 
     if quiz is None:
         quiz_name = 'No active quiz'
@@ -304,12 +318,11 @@ def monitor(request, quiz_id=None):
     context = {'paper_list': paper_list, 'quiz_name': quiz_name}
     return my_render_to_response('exam/monitor.html', context,
                                  context_instance=RequestContext(request)) 
-
-def user_data(request, username):
-    current_user = request.user
-    if not current_user.is_authenticated() and not current_user.is_staff:
-        raise Http404('You are not allowed to view this page!')
-        
+                                 
+def get_user_data(username):
+    """For a given username, this returns a dictionary of important data
+    related to the user including all the user's answers submitted.
+    """
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
@@ -351,6 +364,16 @@ def user_data(request, username):
         paper['answers'] = answers
         papers.append(paper)
     data['papers'] = papers
+    return data
+    
+
+def user_data(request, username):
+    """Render user data."""
+    current_user = request.user
+    if not current_user.is_authenticated() and not current_user.is_staff:
+        raise Http404('You are not allowed to view this page!')
+        
+    data = get_user_data(username)
         
     context = {'user_data': data}
     return my_render_to_response('exam/user_data.html', context,
