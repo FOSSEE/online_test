@@ -8,9 +8,9 @@ from exam.models import User
 
 data_template = Template('''\
 ===============================================================================
-Data for {{ user_data.name }} ({{ user_data.username }})
+Data for {{ user_data.name.title }} ({{ user_data.username }})
 
-Name: {{ user_data.name }}
+Name: {{ user_data.name.title }}
 Username: {{ user_data.username }}
 Roll number: {{ user_data.rollno }}
 Email: {{ user_data.email }}

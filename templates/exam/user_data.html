@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %} Data for user {{ user_data.name }} {% endblock title %}
+{% block title %} Data for user {{ user_data.name.title }} {% endblock title %}
 
 {% block content %}
 
-<h1> Data for user {{ user_data.name }} </h1>
+<h1> Data for user {{ user_data.name.title }} </h1>
 
-<p> Name: {{ user_data.name }} </p>
+<p> Name: {{ user_data.name.title }} </p>
 <p> Username: {{ user_data.username }} </p>
 <p> Roll number: {{ user_data.rollno }} </p>
 <p> Email: {{ user_data.email }} </p>
@@ -28,7 +28,7 @@
 {% if paper.answers %}
 <h3> Answers </h3>
 {% for question, answer in paper.answers.items %}
-<h4> Question summary: {{ question }} </h4>
+<p><strong> Question: {{ question }} </strong> </p>
 <pre> 
 {{ answer|safe }}
 </pre>

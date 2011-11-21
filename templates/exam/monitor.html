@@ -44,7 +44,7 @@
     </tr>
     {% for paper in paper_list %}
     <tr> 
-        <td> <a href="{{URL_ROOT}}/exam/user_data/{{paper.username}}">{{ paper.name }}</a> </td>
+        <td> <a href="{{URL_ROOT}}/exam/user_data/{{paper.username}}">{{ paper.name.title }}</a> </td>
         <td> <a href="{{URL_ROOT}}/exam/user_data/{{paper.username}}">{{ paper.username }}</a> </td>
         <td> {{ paper.rollno }} </td>
         <td> {{ paper.answered }} </td> 
