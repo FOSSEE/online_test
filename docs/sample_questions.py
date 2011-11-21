@@ -5,9 +5,11 @@ Question(
     summary='Factorial',
     points=2,
     description='''
-Write a function called "fact" which takes a single integer argument (say "n") 
-and returns the factorial of the number.
-For example fact(3) -> 6''',
+Write a function called <code>fact</code> which takes a single integer argument
+(say <code>n</code>) and returns the factorial of the number. 
+For example:<br/>
+<code>fact(3) -> 6</code>
+''',
     test='''
 assert fact(0) == 1
 assert fact(5) == 120
@@ -16,8 +18,9 @@ assert fact(5) == 120
 Question(
     summary='Simple function',
     points=1,
-    description='''Create a simple function called "sqr" which takes a single 
-argument and returns the square of the argument. For example sqr(3) -> 9.''',
+    description='''Create a simple function called <code>sqr</code> which takes a single 
+argument and returns the square of the argument. For example: <br/>
+<code>sqr(3) -> 9</code>.''',
     test='''
 import math
 assert sqr(3) == 9
