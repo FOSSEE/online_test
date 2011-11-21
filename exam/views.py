@@ -359,7 +359,8 @@ def get_user_data(username):
         paper['start_time'] = str(q_paper.start_time)
         answers = {}
         for answer in q_paper.answers.all():
-            qs = answer.question.summary
+            question = answer.question
+            qs = '%d. %s'%(question.id, question.summary)
             code = '#'*80 + '\n' + str(answer.answer) + '\n'
             if qs in answers:
                 answers[qs] += code
