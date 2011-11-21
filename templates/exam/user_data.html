@@ -10,6 +10,8 @@
 <p> Username: {{ user_data.username }} </p>
 <p> Roll number: {{ user_data.rollno }} </p>
 <p> Email: {{ user_data.email }} </p>
+<p> Date joined: {{ user_data.date_joined }} </p>
+<p> Last login: {{ user_data.last_login }} </p>
 
 {% if user_data.papers %}
 
@@ -20,6 +22,8 @@
 <p> Answered questions: {{ paper.answered }} </p>
 <p> Total attempts at questions: {{ paper.attempts }} </p>
 <p> Total marks: {{ paper.total }} </p>
+<p> Start time: {{ paper.start_time }} </p>
+<p> User IP address: {{ paper.user_ip }} </p>
 
 {% if paper.answers %}
 <h3> Answers </h3>

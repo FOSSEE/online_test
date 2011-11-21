@@ -1,9 +1,39 @@
 # Django imports.
 from django.core.management.base import BaseCommand
+from django.template import Template, Context
 
 # Local imports.
 from exam.views import get_user_data
 from exam.models import User
+
+data_template = Template('''\
+===============================================================================
+Data for {{ user_data.name }} ({{ user_data.username }})
+
+Name: {{ user_data.name }}
+Username: {{ user_data.username }}
+Roll number: {{ user_data.rollno }}
+Email: {{ user_data.email }}
+Date joined: {{ user_data.date_joined }}
+Last login: {{ user_data.last_login }}
+{% for paper in user_data.papers %}
+Paper: {{ paper.name }}
+-----------------------------------------
+Total marks: {{ paper.total }}
+Questions correctly answered: {{ paper.answered }}
+Total attempts at questions: {{ paper.attempts }}
+Start time: {{ paper.start_time }} 
+User IP address: {{ paper.user_ip }} 
+{% if paper.answers %}
+Answers
+-------
+{% for question, answer in paper.answers.items %}
+Question: {{ question }}
+{{ answer|safe }}
+{% endfor %} \
+{% endif %} {# if paper.answers #} \
+{% endfor %} {# for paper in user_data.papers #}
+''')
 
 
 def dump_user_data(unames, stdout):
@@ -27,23 +57,9 @@ def dump_user_data(unames, stdout):
 
     for user in users:
         data = get_user_data(user.username)
-        stdout.write('='*80 + '\n')
-        stdout.write('Data for %s (%s)\n'%(data['name'], data['username']))
-        stdout.write('Roll Number: %s, email: %s\n'%(data['rollno'], data['email']))
-        stdout.write('-'*40 + '\n')
-        for paper in data['papers']:
-            title = "Paper: %s\n"%paper['name']
-            stdout.write(title)
-            stdout.write('-'*len(title) + '\n')
-            stdout.write('Total marks: %d\n'%paper['total'])
-            stdout.write('Questions correctly answered: %s\n'%paper['answered'])
-            stdout.write('Attempts: %d\n'%paper['attempts'])
-            stdout.write('\nAnswers\n----------\n\n')
-            for question, answer in paper['answers'].iteritems():
-                stdout.write('Question: %s\n'%question)
-                stdout.write(answer)
-                stdout.write('\n')
-
+        context = Context({'user_data': data})
+        result = data_template.render(context)
+        stdout.write(result)
 
 class Command(BaseCommand):
     args = '<username1> ... <usernamen>'

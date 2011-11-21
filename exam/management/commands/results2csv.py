@@ -4,10 +4,20 @@ from os.path import basename
 
 # Django imports.
 from django.core.management.base import BaseCommand
+from django.template import Template, Context
 
 # Local imports.
 from exam.views import get_quiz_data
 from exam.models import Quiz
+
+result_template = Template('''\
+"name","username","rollno","email","answered","total","attempts"
+{% for paper in paper_list %}\
+"{{ paper.name }}","{{ paper.username }}","{{ paper.rollno }}",\
+"{{ paper.email }}","{{ paper.answered }}",{{ paper.total }},\
+{{ paper.attempts }}
+{% endfor %}\
+''')
 
 def results2csv(filename, stdout):
     """Write exam data to a CSV file.  It prompts the user to choose the
@@ -31,16 +41,12 @@ def results2csv(filename, stdout):
     paper_list = get_quiz_data(quiz.id)
     stdout.write("Saving results of %s to %s ... "%(quiz.description,
                                                     basename(filename)))
+    # Render the data and write it out.
     f = open(filename, 'w')
-    fields = ['name', 'username', 'rollno', 'email', 'answered', 'total',
-              'attempts']
-    SEP = ','
-    f.write(SEP.join(['"%s"'%x for x in fields]) + '\n')
-    for paper in paper_list:
-        # name, username, rollno, email, answered
-        f.write(SEP.join(['"%s"'%(paper[x]) for x in fields[:5]]) + SEP) 
-        # total, attempts
-        f.write(SEP.join(['%d'%(paper[x]) for x in fields[5:]]) + '\n')
+    context = Context({'paper_list': paper_list})
+    f.write(result_template.render(context))
+    f.close()
+
     stdout.write('Done\n')
     
 class Command(BaseCommand):

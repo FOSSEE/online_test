@@ -343,6 +343,8 @@ def get_user_data(username):
     data['email'] = user.email
     data['rollno'] = profile.roll_number if profile else ''
     data['name'] = user.get_full_name()
+    data['date_joined'] = str(user.date_joined)
+    data['last_login'] = str(user.last_login)
     papers = []
     for q_paper in q_papers:
         paper = {}
@@ -353,6 +355,8 @@ def get_user_data(username):
         paper['attempts'] = q_paper.answers.count()
         total = sum( [marks[int(id)] for id in qa if id] )
         paper['total'] = total
+        paper['user_ip'] = q_paper.user_ip
+        paper['start_time'] = str(q_paper.start_time)
         answers = {}
         for answer in q_paper.answers.all():
             qs = answer.question.summary
