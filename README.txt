@@ -23,12 +23,15 @@ To install/deploy this app follow the steps below:
     
       $ sudo python python_server.py
       
-    Using sudo is necessary since the server is run as the user
-    "nobody".  This runs on the ports configured in the settings.py file
-    in the variable "SERVER_PORTS".  The "SERVER_TIMEOUT" also can be
-    changed there.  This is the maximum time allowed to execute the
-    submitted code.  Note that this will likely spawn multiple processes
-    as "nobody" depending on the number of server ports specified.
+    Put this in the background once it has started since this will not
+    return back the prompt.  It is important that the server be running
+    *before* students start attempting the exam.  Using sudo is
+    necessary since the server is run as the user "nobody".  This runs
+    on the ports configured in the settings.py file in the variable
+    "SERVER_PORTS".  The "SERVER_TIMEOUT" also can be changed there.
+    This is the maximum time allowed to execute the submitted code.
+    Note that this will likely spawn multiple processes as "nobody"
+    depending on the number of server ports specified.
 
  5. Now, run::
  
