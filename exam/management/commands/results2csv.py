@@ -7,16 +7,22 @@ from django.core.management.base import BaseCommand
 from django.template import Template, Context
 
 # Local imports.
-from exam.views import get_quiz_data
-from exam.models import Quiz
+from exam.models import Quiz, QuestionPaper
 
 result_template = Template('''\
-"name","username","rollno","email","answered","total","attempts","position","department","institute"
-{% for paper in paper_list %}\
-"{{ paper.name }}","{{ paper.username }}","{{ paper.rollno }}",\
-"{{ paper.email }}","{{ paper.answered }}",{{ paper.total }},\
-{{ paper.attempts }},"{{ paper.position }}",\
-"{{ paper.department }}","{{ paper.institute }}"
+"name","username","rollno","email","answered","total","attempts","position",\
+"department","institute"
+{% for paper in papers %}\
+"{{ paper.user.get_full_name.title }}",\
+"{{ paper.user.username }}",\
+"{{ paper.profile.roll_number }}",\
+"{{ paper.user.email }}",\
+"{{ paper.get_answered_str }}",\
+{{ paper.get_total_marks }},\
+{{ paper.answers.count }},\
+"{{ paper.profile.position }}",\
+"{{ paper.profile.department }}",\
+"{{ paper.profile.institute }}"
 {% endfor %}\
 ''')
 
@@ -39,12 +45,13 @@ def results2csv(filename, stdout):
     else:
         quiz = qs[0]
 
-    paper_list = get_quiz_data(quiz.id)
+    papers = QuestionPaper.objects.filter(quiz=quiz,
+                                          user__profile__isnull=False)
     stdout.write("Saving results of %s to %s ... "%(quiz.description,
                                                     basename(filename)))
     # Render the data and write it out.
     f = open(filename, 'w')
-    context = Context({'paper_list': paper_list})
+    context = Context({'papers': papers})
     f.write(result_template.render(context))
     f.close()
 

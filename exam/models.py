@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 ################################################################################
 class Profile(models.Model):
     """Profile for a user to store roll number and other details."""
-    user = models.ForeignKey(User)
+    user = models.OneToOneField(User)
     roll_number = models.CharField(max_length=20)
     institute = models.CharField(max_length=128)
     department = models.CharField(max_length=64)
@@ -44,8 +44,15 @@ class Answer(models.Model):
     # The question for which we are an answer.
     question = models.ForeignKey(Question)
     
-    # The last answer submitted by the user.
+    # The answer submitted by the user.
     answer = models.TextField()
+
+    # Error message when auto-checking the answer.
+    error = models.TextField()
+
+    # Marks obtained for the answer.  This can be changed by the teacher if the
+    # grading is manual.
+    marks = models.FloatField(default=0.0)
     
     # Is the answer correct.
     correct = models.BooleanField(default=False)
@@ -86,6 +93,10 @@ class QuestionPaper(models.Model):
     """
     # The user taking this question paper.
     user = models.ForeignKey(User)
+
+    # The user's profile, we store a reference to make it easier to access the
+    # data.
+    profile = models.ForeignKey(Profile)
     
     # The Quiz to which this question paper is attached to.
     quiz = models.ForeignKey(Quiz)
@@ -108,6 +119,9 @@ class QuestionPaper(models.Model):
     
     # All the submitted answers.
     answers = models.ManyToManyField(Answer)
+
+    # Teacher comments on the question paper.
+    comments = models.TextField()
     
     def current_question(self):
         """Returns the current active question to display."""
@@ -125,7 +139,7 @@ class QuestionPaper(models.Model):
         else:
             return qs.count('|') + 1
             
-    def answered_question(self, question_id):
+    def completed_question(self, question_id):
         """Removes the question from the list of questions and returns
         the next."""
         qa = self.questions_answered
@@ -141,7 +155,7 @@ class QuestionPaper(models.Model):
             return ''
         else:
             return qs[0]
-            
+
     def skip(self):
         """Skip the current question and return the next available question."""
         qs = self.questions.split('|')
@@ -166,6 +180,29 @@ class QuestionPaper(models.Model):
         total = self.quiz.duration*60.0
         remain = max(total - secs, 0)
         return int(remain)
+
+    def get_answered_str(self):
+        """Returns the answered questions, sorted and as a nice string."""
+        qa = self.questions_answered.split('|')
+        answered = ', '.join(sorted(qa))
+        return answered if answered else 'None'
+
+    def get_total_marks(self):
+        """Returns the total marks earned by student for this paper."""
+        return sum([x.marks for x in self.answers.filter(marks__gt=0.0)])
+
+    def get_question_answers(self):
+        """Return a dictionary with keys as questions and a list of the corresponding
+        answers.
+        """
+        q_a = {}
+        for answer in self.answers.all():
+            question = answer.question
+            if question in q_a:
+                q_a[question].append(answer)
+            else:
+                q_a[question] = [answer]
+        return q_a
     
     def __unicode__(self):
         u = self.user

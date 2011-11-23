@@ -8,34 +8,45 @@ from exam.models import User
 
 data_template = Template('''\
 ===============================================================================
-Data for {{ user_data.name.title }} ({{ user_data.username }})
+Data for {{ data.user.get_full_name.title }} ({{ data.user.username }})
 
-Name: {{ user_data.name.title }}
-Username: {{ user_data.username }}
-Roll number: {{ user_data.rollno }}
-Email: {{ user_data.email }}
-Position: {{ user_data.position }}
-Department: {{ user_data.department }}
-Institute: {{ user_data.institute }}
-Date joined: {{ user_data.date_joined }}
-Last login: {{ user_data.last_login }}
-{% for paper in user_data.papers %}
-Paper: {{ paper.name }}
------------------------------------------
-Total marks: {{ paper.total }}
-Questions correctly answered: {{ paper.answered }}
-Total attempts at questions: {{ paper.attempts }}
-Start time: {{ paper.start_time }} 
-User IP address: {{ paper.user_ip }} 
-{% if paper.answers %}
+Name: {{ data.user.get_full_name.title }}
+Username: {{ data.user.username }}
+{% if data.profile %}\
+Roll number: {{ data.profile.roll_number }}
+Position: {{ data.profile.position }}
+Department: {{ data.profile.department }}
+Institute: {{ data.profile.institute }}
+{% endif %}\
+Email: {{ data.user.email }}
+Date joined: {{ data.user.date_joined }}
+Last login: {{ data.user.last_login }} 
+{% for paper in data.papers %}
+Paper: {{ paper.quiz.description }}
+---------------------------------------
+Marks obtained: {{ paper.get_total_marks }}
+Questions correctly answered: {{ paper.get_answered_str }}
+Total attempts at questions: {{ paper.answers.count }}
+Start time: {{ paper.start_time }}
+User IP address: {{ paper.user_ip }}
+{% if paper.answers.count %}
 Answers
 -------
-{% for question, answer in paper.answers.items %}
-Question: {{ question }}
-{{ answer|safe }}
-{% endfor %} \
-{% endif %} {# if paper.answers #} \
-{% endfor %} {# for paper in user_data.papers #}
+{% for question, answers in paper.get_question_answers.items %}
+Question: {{ question.id }}. {{ question.summary }} (Points: {{ question.points }})
+{% for answer in answers %}\
+###############################################################################
+{{ answer.answer|safe }}
+# Autocheck: {{ answer.error|safe }}
+# Marks: {{ answer.marks }}
+{% endfor %}{# for answer in answers #}\
+{% endfor %}{# for question, answers ... #}\
+
+Teacher comments
+-----------------
+{{ paper.comments|default:"None" }}
+{% endif %}{# if paper.answers.count #}\
+{% endfor %}{# for paper in data.papers #}
 ''')
 
 
@@ -60,7 +71,7 @@ def dump_user_data(unames, stdout):
 
     for user in users:
         data = get_user_data(user.username)
-        context = Context({'user_data': data})
+        context = Context({'data': data})
         result = data_template.render(context)
         stdout.write(result)
 

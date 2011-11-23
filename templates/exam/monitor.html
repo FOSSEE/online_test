@@ -6,7 +6,7 @@
 
 {% block content %}
 
-{% if not quiz_data and not paper_list %}
+{% if not quizzes and not papers %}
 <h1> Quiz results </h1>
 
 <p> No quizzes available. </p>
@@ -15,23 +15,23 @@
 
 {# ############################################################### #}
 {# This is rendered when we are just viewing exam/monitor #}
-{% if quiz_data %}
+{% if quizzes %}
 <h1> Available quizzes </h1>
 
 <ul>
-{% for quiz_id, quiz_name in quiz_data.items %}
-<li><a href="{{URL_ROOT}}/exam/monitor/{{quiz_id}}/">{{ quiz_name }}</a></li>
+{% for quiz in quizzes %}
+<li><a href="{{URL_ROOT}}/exam/monitor/{{quiz.id}}/">{{ quiz.description }}</a></li>
 {% endfor %}
 </ul>
 {% endif %}
 
 {# ############################################################### #}
 {# This is rendered when we are just viewing exam/monitor/quiz_num #}
-{% if paper_list %}
-<h1> {{ quiz_name }} results </h1>
+{% if papers %}
+<h1> {{ quiz.description }} results </h1>
 
 {# <p> Quiz: {{ quiz_name }}</p> #}
-<p>Number of papers: {{ paper_list|length }} </p>
+<p>Number of papers: {{ papers|length }} </p>
 
 <table border="1" cellpadding="3">
     <tr>
@@ -43,19 +43,21 @@
         <th> Total marks </th>
         <th> Attempts </th>
     </tr>
-    {% for paper in paper_list %}
+    {% for paper in papers %}
     <tr> 
-        <td> <a href="{{URL_ROOT}}/exam/user_data/{{paper.username}}">{{ paper.name.title }}</a> </td>
-        <td> <a href="{{URL_ROOT}}/exam/user_data/{{paper.username}}">{{ paper.username }}</a> </td>
-        <td> {{ paper.rollno }} </td>
-        <td> {{ paper.institute }} </td>
-        <td> {{ paper.answered }} </td> 
-        <td> {{ paper.total }} </td>
-        <td> {{ paper.attempts }} </td>
+        <td> <a href="{{URL_ROOT}}/exam/user_data/{{paper.user.username}}">
+                {{ paper.user.get_full_name.title }}</a> </td>
+        <td> <a href="{{URL_ROOT}}/exam/user_data/{{paper.user.username}}">
+                {{ paper.user.username }}</a> </td>
+        <td> {{ paper.profile.roll_number }} </td>
+        <td> {{ paper.profile.institute }} </td>
+        <td> {{ paper.get_answered_str }} </td> 
+        <td> {{ paper.get_total_marks }} </td>
+        <td> {{ paper.answers.count }} </td>
     </tr>
     {% endfor %}
 </table>
-{% else %} {% if quiz_name  %}
+{% else %} {% if quiz  %}
     <p> No answer papers so far. </p>
     {% endif %}
 {% endif %}

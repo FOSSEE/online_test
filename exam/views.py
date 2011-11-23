@@ -121,7 +121,12 @@ def start(request):
     except QuestionPaper.DoesNotExist:
         ip = request.META['REMOTE_ADDR']
         key = gen_key(10)
-        new_paper = QuestionPaper(user=user, user_ip=ip, key=key, quiz=quiz)
+        try:
+            profile = user.get_profile()
+        except Profile.DoesNotExist:
+            profile = None
+        new_paper = QuestionPaper(user=user, user_ip=ip, key=key, 
+                                  quiz=quiz, profile=profile)
         new_paper.start_time = datetime.datetime.now()
         
         # Make user directory.
@@ -199,11 +204,14 @@ def check(request, q_id):
     # running as nobody.
     user_dir = get_user_dir(user)
     success, err_msg = python_server.run_code(answer, question.test, user_dir)
-    
+    new_answer.error = err_msg
+
     if success:
-        # Note the success and save it.
+        # Note the success and save it along with the marks.
         new_answer.correct = success
-        new_answer.save()
+        new_answer.marks = question.points
+
+    new_answer.save()
 
     ci = RequestContext(request)
     if not success:
@@ -221,7 +229,7 @@ def check(request, q_id):
         return my_render_to_response('exam/question.html', context, 
                                      context_instance=ci)
     else:
-        next_q = paper.answered_question(question.id)
+        next_q = paper.completed_question(question.id)
         return show_question(request, next_q)
         
 def quit(request):
@@ -241,151 +249,64 @@ def complete(request, reason=None):
         return my_render_to_response('exam/complete.html', context)
     else:
         return my_redirect('/exam/')
-        
-def get_quiz_data(quiz_id):
-    """Convenience function to get all quiz results.  This is used by other
-    functions.  Returns a list containing one dictionary for each question paper
-    of the quiz.  The dictionary contains the necessary data.
-    """
-    try:
-        quiz = Quiz.objects.get(id=quiz_id)
-    except Quiz.DoesNotExist:
-        q_papers = []
-    else:
-        q_papers = QuestionPaper.objects.filter(quiz=quiz)
-        questions = Question.objects.all()
-        # Mapping from question id to points
-        marks = dict( ( (q.id, q.points) for q in questions) )
-    
-    paper_list = []    
-    for q_paper in q_papers:
-        paper = {}
-        user = q_paper.user
-        try:
-            profile = Profile.objects.get(user=user)
-        except Profile.DoesNotExist:
-            # Admin user may have a paper by accident but no profile.
-            continue
-        paper['name'] = user.get_full_name()
-        paper['username'] = user.username
-        paper['rollno'] = str(profile.roll_number)
-        paper['institute'] = str(profile.institute)
-        paper['email'] = user.email
-        qa = q_paper.questions_answered.split('|')
-        answered = ', '.join(sorted(qa))
-        paper['answered'] = answered if answered else 'None'
-        paper['attempts'] = q_paper.answers.count()
-        total = sum( [marks[int(id)] for id in qa if id] )
-        paper['total'] = total
-        paper_list.append(paper)
-        
-    return paper_list
-   
+
 def monitor(request, quiz_id=None):
     """Monitor the progress of the papers taken so far."""
     user = request.user
     if not user.is_authenticated() and not user.is_staff:
         raise Http404('You are not allowed to view this page!')
-        
+
     if quiz_id is None:
         quizzes = Quiz.objects.all()
-        quiz_data = {}
-        for quiz in quizzes:
-            quiz_data[quiz.id] = quiz.description
-        context = {'paper_list': [], 
-                   'quiz_name': '', 
-                   'quiz_data':quiz_data}
+        context = {'papers': [], 
+                   'quiz': None, 
+                   'quizzes':quizzes}
         return my_render_to_response('exam/monitor.html', context,
                                     context_instance=RequestContext(request)) 
     # quiz_id is not None.
     try:
         quiz = Quiz.objects.get(id=quiz_id)
     except Quiz.DoesNotExist:
-        quiz = None
-
-    quiz_data = {}
-    paper_list = get_quiz_data(quiz_id)
-
-    if quiz is None:
-        quiz_name = 'No active quiz'
-    elif len(quiz.description) > 0:
-        quiz_name = quiz.description
+        papers = []
     else:
-        quiz_name = 'Quiz'
-        
-    paper_list.sort(cmp=lambda x, y: cmp(x['total'], y['total']), 
-                   reverse=True)
+        papers = QuestionPaper.objects.filter(quiz=quiz,
+                                              user__profile__isnull=False)
 
-    context = {'paper_list': paper_list, 'quiz_name': quiz_name}
+    sorted(papers, 
+           cmp=lambda x, y: cmp(x.get_total_marks(), y.get_total_marks()), 
+           reverse=True)
+
+    context = {'papers': papers, 'quiz': quiz, 'quizzes': None}
     return my_render_to_response('exam/monitor.html', context,
                                  context_instance=RequestContext(request)) 
-                                 
+
 def get_user_data(username):
     """For a given username, this returns a dictionary of important data
     related to the user including all the user's answers submitted.
     """
-    try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
-        q_papers = []
-    else:
-        q_papers = QuestionPaper.objects.filter(user=user)
-        questions = Question.objects.all()
-        # Mapping from question id to points
-        marks = dict( ( (q.id, q.points) for q in questions) )
+    user = User.objects.get(username=username)
+    papers = QuestionPaper.objects.filter(user=user)
 
     data = {}
     try:
-        profile = Profile.objects.get(user=user)
+        profile = user.get_profile()
     except Profile.DoesNotExist:
         # Admin user may have a paper by accident but no profile.
         profile = None
-    data['username'] = user.username
-    data['email'] = user.email
-    data['rollno'] = profile.roll_number if profile else ''
-    data['name'] = user.get_full_name()
-    data['institute'] = profile.institute if profile else ''
-    data['department'] = profile.department if profile else ''
-    data['position'] = profile.position if profile else ''
-    data['name'] = user.get_full_name()
-    data['date_joined'] = str(user.date_joined)
-    data['last_login'] = str(user.last_login)
-    papers = []
-    for q_paper in q_papers:
-        paper = {}
-        paper['name'] = q_paper.quiz.description
-        qa = q_paper.questions_answered.split('|')
-        answered = ', '.join(sorted(qa))
-        paper['answered'] = answered if answered else 'None'
-        paper['attempts'] = q_paper.answers.count()
-        total = sum( [marks[int(id)] for id in qa if id] )
-        paper['total'] = total
-        paper['user_ip'] = q_paper.user_ip
-        paper['start_time'] = str(q_paper.start_time)
-        answers = {}
-        for answer in q_paper.answers.all():
-            question = answer.question
-            qs = '%d. %s'%(question.id, question.summary)
-            code = '#'*80 + '\n' + str(answer.answer) + '\n'
-            if qs in answers:
-                answers[qs] += code
-            else:
-                answers[qs] = code
-        paper['answers'] = answers
-        papers.append(paper)
-    data['papers'] = papers
+    data['user'] = user
+    data['profile'] = profile
+    data['papers'] = papers 
     return data
-    
 
 def user_data(request, username):
     """Render user data."""
     current_user = request.user
     if not current_user.is_authenticated() and not current_user.is_staff:
         raise Http404('You are not allowed to view this page!')
-        
+
     data = get_user_data(username)
-        
-    context = {'user_data': data}
+
+    context = {'data': data}
     return my_render_to_response('exam/user_data.html', context,
-                                 context_instance=RequestContext(request)) 
-    
+                                 context_instance=RequestContext(request))
+
