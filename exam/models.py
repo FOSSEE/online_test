@@ -12,6 +12,11 @@ class Profile(models.Model):
     position = models.CharField(max_length=64)
 
 
+LANGUAGE_CHOICES = (
+        ("python", "Python"),
+        ("bash", "Bash"),
+        )
+
 ################################################################################
 class Question(models.Model):
     """A question in the database."""
@@ -28,6 +33,9 @@ class Question(models.Model):
     # Test cases for the question in the form of code that is run.
     # This is simple Python code.
     test = models.TextField()
+
+    # The language being tested.
+    language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES)
 
     # Is this question active or not.  If it is inactive it will not be used
     # when creating a QuestionPaper.

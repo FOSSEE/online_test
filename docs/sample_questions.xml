@@ -10,6 +10,7 @@ and returns the factorial of the number.
 For example fact(3) -> 6
 </description>
 <points>2</points>
+<language>python</language>
 <test>
 assert fact(0) == 1
 assert fact(5) == 120
@@ -26,6 +27,7 @@ returns the square of the argument
 For example sqr(3) -> 9.
 </description>
 <points>1</points>
+<language>python</language>
 <test>
 import math
 assert sqr(3) == 9

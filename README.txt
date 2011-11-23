@@ -21,7 +21,7 @@ To install/deploy this app follow the steps below:
  4. First run the python server provided.  This ensures that the code is 
     executed in a safe environment.  Do this like so::
     
-      $ sudo python python_server.py
+      $ sudo python code_server.py
       
     Put this in the background once it has started since this will not
     return back the prompt.  It is important that the server be running

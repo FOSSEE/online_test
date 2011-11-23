@@ -35,6 +35,9 @@ def load_questions_xml(filename):
         desc_node = question.getElementsByTagName("description")[0]
         description = (desc_node.childNodes[0].data).strip()
 
+        lang_node = question.getElementsByTagName("language")[0]
+        language = (lang_node.childNodes[0].data).strip()
+
         points_node = question.getElementsByTagName("points")[0]
         points = int((points_node.childNodes[0].data).strip()) \
                  if points_node else 1
@@ -45,6 +48,7 @@ def load_questions_xml(filename):
         new_question = Question(summary=summary,
                                 description=description,
                                 points=points,
+                                language=language,
                                 test=test)
         new_question.save()
     

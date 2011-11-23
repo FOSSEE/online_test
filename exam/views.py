@@ -13,7 +13,7 @@ from django.http import Http404
 # Local imports.
 from exam.models import Quiz, Question, QuestionPaper, Profile, Answer, User
 from exam.forms import UserRegisterForm, UserLoginForm
-from exam.xmlrpc_clients import python_server
+from exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
 
 # The directory where user data can be saved.
@@ -203,7 +203,8 @@ def check(request, q_id):
     # with the code executed safely in a separate process (the python_server.py)
     # running as nobody.
     user_dir = get_user_dir(user)
-    success, err_msg = python_server.run_code(answer, question.test, user_dir)
+    success, err_msg = code_server.run_code(answer, question.test, 
+                                            user_dir, question.language)
     new_answer.error = err_msg
 
     if success:
