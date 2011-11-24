@@ -33,10 +33,10 @@ MY_DIR = abspath(dirname(__file__))
 
 def run_as_nobody():
     """Runs the current process as nobody."""
-    # Set the uid and to that of nobody.
+    # Set the effective uid and to that of nobody.
     nobody = pwd.getpwnam('nobody')
-    os.setgid(nobody.pw_gid)
-    os.setuid(nobody.pw_uid)
+    os.setegid(nobody.pw_gid)
+    os.seteuid(nobody.pw_uid)
 
 ################################################################################
 # Python related code.
@@ -123,7 +123,7 @@ def run_bash_code(answer, test_code, in_dir=None):
         os.chdir(in_dir)
 
     def _set_exec(fname):
-        os.chmod(ref_fname,  stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR 
+        os.chmod(fname,  stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR 
                             |stat.S_IRGRP|stat.S_IWGRP|stat.S_IXGRP
                             |stat.S_IROTH|stat.S_IWOTH|stat.S_IXOTH)
 
@@ -138,7 +138,7 @@ def run_bash_code(answer, test_code, in_dir=None):
     _set_exec(args_f.name)
     submit_f = open('submit.sh', 'w')
     submit_f.write(answer); submit_f.close()
-    submit_fname = submit_f.name
+    submit_fname = abspath(submit_f.name)
     _set_exec(submit_fname)
 
     tester = join(MY_DIR, 'shell_script_tester.sh')
