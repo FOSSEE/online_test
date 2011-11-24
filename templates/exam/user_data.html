@@ -21,8 +21,9 @@ Last login: {{ data.user.last_login }}
 </p>
 
 {% if data.papers %}
-<a href="{{URL_ROOT}}/exam/grade_user/{{ data.user.username }}/">
+<p><a href="{{URL_ROOT}}/exam/grade_user/{{ data.user.username }}/">
     Grade/correct paper</a>
+</p>
 
 {% for paper in data.papers %}
 
@@ -60,5 +61,7 @@ User IP address: {{ paper.user_ip }}
 <hr />
 <a href="{{URL_ROOT}}/exam/grade_user/{{ data.user.username }}/">
     Grade/correct paper</a>
+<br/>
+<a href="{{URL_ROOT}}/admin/">Admin</a>
 
 {% endblock content %}

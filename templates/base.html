@@ -8,15 +8,18 @@
 {% endblock %}
 </title>
 {% block meta %}
-{% endblock%}
+{% endblock %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/base.css" type="text/css" />
+{% block css %}
+{% endblock %}
 {% block script %}
 {% endblock %}
 </head>
 
 <body {% block onload %}{% endblock %}>
-
+    <div class=box>
 {% block content %}
 {% endblock %}
-
+    </div>
 </body>
 </html>

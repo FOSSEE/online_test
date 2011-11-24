@@ -124,7 +124,9 @@ def start(request):
         try:
             profile = user.get_profile()
         except Profile.DoesNotExist:
-            profile = None
+            msg = 'You do not have a profile and cannot take the quiz!'
+            raise Http404(msg)
+
         new_paper = QuestionPaper(user=user, user_ip=ip, key=key, 
                                   quiz=quiz, profile=profile)
         new_paper.start_time = datetime.datetime.now()
