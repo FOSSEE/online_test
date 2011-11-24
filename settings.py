@@ -5,9 +5,14 @@ from os.path import dirname, join, basename, abspath
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-# The ports the Python server should run on.  This will run one separate 
+# The ports the code server should run on.  This will run one separate 
 # server for each port listed in the following list.
 SERVER_PORTS = [8001] # range(8001, 8026)
+
+# The server pool port.  This is the server which returns available server
+# ports so as to minimize load.  This is some random number where no other
+# service is running.  It should be > 1024 and less < 65535 though.
+SERVER_POOL_PORT = 53579
 
 # Timeout for the code to run in seconds.  This is an integer!
 SERVER_TIMEOUT = 2

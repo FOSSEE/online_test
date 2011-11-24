@@ -1,17 +1,24 @@
 from xmlrpclib import ServerProxy
-from settings import SERVER_PORTS
+import time
 import random
 import socket
 
+from settings import SERVER_PORTS, SERVER_POOL_PORT
 
-class CodeServer(object):
+
+class ConnectionError(Exception):
+    pass
+
+################################################################################
+# `CodeServerProxy` class.
+################################################################################
+class CodeServerProxy(object):
     """A class that manages accesing the farm of Python servers and making
     calls to them such that no one XMLRPC server is overloaded.
     """
     def __init__(self):
-        servers = [ServerProxy('http://localhost:%d'%(x)) for x in SERVER_PORTS]
-        self.servers = servers
-        self.indices = range(len(SERVER_PORTS))
+        pool_url = 'http://localhost:%d'%(SERVER_POOL_PORT)
+        self.pool_server = ServerProxy(pool_url)
         self.methods = {"python": 'run_python_code',
                         "bash": 'run_bash_code'}
     
@@ -38,27 +45,34 @@ class CodeServer(object):
         A tuple: (success, error message).
         """
         method_name = self.methods[language]
-        done = False
-        result = [False, 'Unable to connect to any code servers!']
-        # Try to connect a few times if not, quit.
-        count = 5
-        while (not done) and (count > 0):
-            try:
-                server = self._get_server()
-                method = getattr(server, method_name)
-                result = method(answer, test_code, user_dir)
-            except socket.error:
-                count -= 1
-            else:
-                done = True
+        try:
+            server = self._get_server()
+            method = getattr(server, method_name)
+            result = method(answer, test_code, user_dir)
+        except ConnectionError:
+            result = [False, 'Unable to connect to any code servers!']
         return result
 
     def _get_server(self):
-        # pick a suitable server at random from our pool of servers.
-        index = random.choice(self.indices)
-        return self.servers[index]
+        # Get a suitable server from our pool of servers.  This may block.  We
+        # try about 60 times, essentially waiting at most for about 30 seconds.
+        done, count = False, 60
+
+        while not done and count > 0:
+            try:
+                port = self.pool_server.get_server_port()
+            except socket.error:
+                # Wait a while try again.
+                time.sleep(random.random())
+                count -= 1
+            else:
+                done = True
+        if not done:
+            raise ConnectionError("Couldn't connect to a server!") 
+        proxy = ServerProxy('http://localhost:%d'%port)
+        return proxy
 
 # views.py calls this Python server which forwards the request to one
 # of the running servers.
-code_server = CodeServer()
+code_server = CodeServerProxy()
 
