@@ -311,3 +311,31 @@ def user_data(request, username):
     return my_render_to_response('exam/user_data.html', context,
                                  context_instance=RequestContext(request))
 
+def grade_user(request, username):
+    """Present an interface with which we can easily grade a user's papers
+    and update all their marks and also give comments for each paper.
+    """
+    current_user = request.user
+    if not current_user.is_authenticated() and not current_user.is_staff:
+        raise Http404('You are not allowed to view this page!')
+
+    data = get_user_data(username)
+    if request.method == 'POST':
+        papers = data['papers']
+        for paper in papers:
+            for question, answers in paper.get_question_answers().iteritems():
+                marks = float(request.POST.get('q%d_marks'%question.id))
+                last_ans = answers[-1]
+                last_ans.marks = marks
+                last_ans.save()
+            paper.comments = request.POST.get('comments_%d'%paper.quiz.id)
+            paper.save()
+
+        context = {'data': data}
+        return my_render_to_response('exam/user_data.html', context,
+                                 context_instance=RequestContext(request))
+    else:
+        context = {'data': data}
+        return my_render_to_response('exam/grade_user.html', context,
+                                 context_instance=RequestContext(request))
+
