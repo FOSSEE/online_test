@@ -55,10 +55,10 @@ To install/deploy this app follow the steps below:
 
       $ python manage.py migrate exam
 
- 3. Add questions by editing the "doc/sample_questions.py" or any other
+ 3. Add questions by editing the "docs/sample_questions.py" or any other
     file in the same format and then run the following::
 
-      $ python manage.py load_exam doc/sample_questions.py
+      $ python manage.py load_exam docs/sample_questions.py
 
     Note that you can supply multiple Python files as arguments and all of
     those will be added to the database.
@@ -112,7 +112,7 @@ WARNING:  django is running in debug mode for this currently, CHANGE it
 during deployment.  To do this, edit settings.py and set DEBUG to False.
 Also look at other settings and change them suitably.
 
-The file doc/sample_questions.py is a template that you can use for your
+The file docs/sample_questions.py is a template that you can use for your
 own questions.
 
 Additional commands available
