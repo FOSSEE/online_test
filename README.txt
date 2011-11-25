@@ -1,3 +1,46 @@
+Introduction
+============
+
+This app provides an "exam" app that lets users take an online
+programming quiz.  Currently only Python and simple Bash scripts can be
+tested.  At FOSSEE, Nishanth had implemented a nice django based app to
+test for multiple-choice questions.  However, I was inspired by a
+programming contest that I saw at PyCon APAC 2011.  Chris Boesch, who
+administered the contest, used a nice web application that he had built
+on top of GAE that basically checked your Python code, live.  This made
+it fun and interesting.  Their application can be seen at
+http://singpath.com
+
+I wanted an implementation that was not tied to GAE and decided to write
+one myself and the result is the "exam" app.  The idea being that I can
+use this to test students programming skills and not have to worry about
+grading their answers myself and I can do so on my machines.
+
+You can define fairly complicated programming problems and have users
+solve the problem and the solution is checked immediately. The system
+supports pretty much arbitrary Python and uses "test cases" to test the
+implementations of the students.  It also supports simple bash scripts
+-- see the sample questions in "docs/".  In addition it supports simple
+multiple choice questions.  Since it runs on your Python, you could
+technically test any Python based library.  It is distributed under the
+BSD license.
+
+It can use a lot more work but the basics work and the app scales to
+over 500+ simultaneous users. :)
+
+Dependencies
+=============
+
+Before you install/deploy, make sure you have the following installed:
+
+ - Django 1.3 or above.
+ - South (tested with 0.7.3).
+
+That and a running Python is pretty much all you need.  Of course, for
+serious deployment you are going to need Apache or some other decent
+webserver.
+
+
 Installation and Deployment
 =============================
 
@@ -9,6 +52,8 @@ To install/deploy this app follow the steps below:
 
       $ python manage.py syncdb
       [ enter password etc.]
+
+      $ python manage.py migrate exam
 
  3. Add questions by editing the "doc/sample_questions.py" or any other
     file in the same format and then run the following::
@@ -57,7 +102,8 @@ To install/deploy this app follow the steps below:
     for checking later.
 
  10. As admin user you can visit http://host/exam/monitor  to view
-     results and user data interactively.
+     results and user data interactively. You could also "grade" the
+     papers manually if needed.
 
  11. You may dump the results and user data using the results2csv and
      dump_user_data commands.
@@ -113,4 +159,32 @@ Sometimes you might be in the situation where you are not hosted as
 this case edit "settings.py" and set the "URL_ROOT"  to the root you
 have to serve at.  In the above example for "host.org/foo/exam" set
 URL_ROOT='/foo'.
+
+License
+=======
+
+This is distributed under the terms of the BSD license.  Copyright
+information is at the bottom of this file.
+
+Authors
+=======
+
+Main author: Prabhu Ramachandran
+
+I gratefully acknowledge help from the following:
+
+ - Nishanth Amuluru originally from FOSSEE who wrote bulk of the
+   login/registration code.  He wrote an initial first cut of a quiz app
+   which supported only simple questions which provided motivation for
+   this app.  The current codebase does not share too much from his
+   implementation although there are plenty of similarities.
+
+ - Harish Badrinath (FOSSEE) -- who provided a first cut of the bash
+   related scripts.
+
+ - Srikant Patnaik and Thomas Stephen Lee, who helped deploy and test
+   the code.
+
+
+Copyright (c) 2011 Prabhu Ramachandran and FOSSEE (fossee.in)
 
