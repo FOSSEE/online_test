@@ -34,12 +34,20 @@ Answers
 -------
 {% for question, answers in paper.get_question_answers.items %}
 Question: {{ question.id }}. {{ question.summary }} (Points: {{ question.points }})
+{% if question.type == "mcq" %}\
+###############################################################################
+Choices: {% for option in question.options.strip.splitlines %} {{option}}, {% endfor %}
+Student answer: {{ answers.0|safe }}
+{% else %}{# non-mcq questions #}\
 {% for answer in answers %}\
 ###############################################################################
-{{ answer.answer|safe }}
+{{ answer.answer.strip|safe }}
 # Autocheck: {{ answer.error|safe }}
-# Marks: {{ answer.marks }}
 {% endfor %}{# for answer in answers #}\
+{% endif %}\
+{% with answers|last as answer %}\
+Marks: {{answer.marks}}
+{% endwith %}\
 {% endfor %}{# for question, answers ... #}\
 
 Teacher comments

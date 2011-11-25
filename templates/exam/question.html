@@ -60,15 +60,20 @@ function update_time()
 
 <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/" method="post">
 {% csrf_token %}
-
-<textarea rows="20" cols="100" name="answer">
-{% if last_attempt %}{{last_attempt}}{% else %}# Enter your answer here.{% endif %}
-</textarea>
-
+{% if question.type == "mcq" %}
+{% for option in question.options.strip.splitlines %}
+<input name="answer" type="radio" value="{{option}}" />{{option}} <br/>
+{% endfor %}
+{% else %}
+<textarea rows="20" cols="100" name="answer">{% if last_attempt %}{{last_attempt.strip}}{% else %}# Enter your answer here.{% endif %}</textarea>
+{% endif %}
 <br/>
-
+{% if question.type == "mcq" %}
+<input id="check" type="submit" name="check" value="Submit answer"/>
+{% else %}
 <input id="check" type="submit" name="check" value="Check Answer"
 onclick="submitCode();"/>
+{% endif %}
 <input id="skip" type="submit" name="skip" value="Skip question" />
 </form>
 

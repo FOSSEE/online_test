@@ -200,24 +200,31 @@ def check(request, q_id):
     new_answer = Answer(question=question, answer=answer, correct=False)
     new_answer.save()
     paper.answers.add(new_answer)
-        
-    # Otherwise we were asked to check.  We obtain the results via XML-RPC
-    # with the code executed safely in a separate process (the python_server.py)
-    # running as nobody.
-    user_dir = get_user_dir(user)
-    success, err_msg = code_server.run_code(answer, question.test, 
-                                            user_dir, question.language)
-    new_answer.error = err_msg
 
-    if success:
-        # Note the success and save it along with the marks.
-        new_answer.correct = success
-        new_answer.marks = question.points
+    # If we were not skipped, we were asked to check.  For any non-mcq
+    # questions, we obtain the results via XML-RPC with the code executed
+    # safely in a separate process (the code_server.py) running as nobody.
+    if question.type == 'mcq':
+        success = True # Only one attempt allowed for MCQ's.
+        if answer.strip() == question.test.strip():
+            new_answer.correct = True
+            new_answer.marks = question.points
+            new_answer.error = 'Correct answer'
+        else:
+            new_answer.error = 'Incorrect answer'
+    else:
+        user_dir = get_user_dir(user)
+        success, err_msg = code_server.run_code(answer, question.test, 
+                                                user_dir, question.type)
+        new_answer.error = err_msg
+        if success:
+            # Note the success and save it along with the marks.
+            new_answer.correct = success
+            new_answer.marks = question.points
 
     new_answer.save()
 
-    ci = RequestContext(request)
-    if not success:
+    if not success: # Should only happen for non-mcq questions.
         time_left = paper.time_left()
         if time_left == 0:
             return complete(request, reason='Your time is up!')
@@ -228,6 +235,7 @@ def check(request, q_id):
                    'paper': paper, 'last_attempt': answer,
                    'quiz_name': paper.quiz.description,
                    'time_left': time_left}
+        ci = RequestContext(request)
 
         return my_render_to_response('exam/question.html', context, 
                                      context_instance=ci)
@@ -271,6 +279,7 @@ def monitor(request, quiz_id=None):
         quiz = Quiz.objects.get(id=quiz_id)
     except Quiz.DoesNotExist:
         papers = []
+        quiz = None
     else:
         papers = QuestionPaper.objects.filter(quiz=quiz,
                                               user__profile__isnull=False)

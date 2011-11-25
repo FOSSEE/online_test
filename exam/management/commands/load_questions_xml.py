@@ -35,20 +35,24 @@ def load_questions_xml(filename):
         desc_node = question.getElementsByTagName("description")[0]
         description = (desc_node.childNodes[0].data).strip()
 
-        lang_node = question.getElementsByTagName("language")[0]
-        language = (lang_node.childNodes[0].data).strip()
+        type_node = question.getElementsByTagName("type")[0]
+        type = (type_node.childNodes[0].data).strip()
 
         points_node = question.getElementsByTagName("points")[0]
-        points = int((points_node.childNodes[0].data).strip()) \
-                 if points_node else 1
+        points = float((points_node.childNodes[0].data).strip()) \
+                 if points_node else 1.0
 
         test_node = question.getElementsByTagName("test")[0]
         test = decode_html((test_node.childNodes[0].data).strip())
 
+        opt_node = question.getElementsByTagName("options")[0]
+        opt = decode_html((opt_node.childNodes[0].data).strip())
+
         new_question = Question(summary=summary,
                                 description=description,
                                 points=points,
-                                language=language,
+                                options=opt,
+                                type=type,
                                 test=test)
         new_question.save()
     

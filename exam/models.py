@@ -12,9 +12,10 @@ class Profile(models.Model):
     position = models.CharField(max_length=64)
 
 
-LANGUAGE_CHOICES = (
+QUESTION_TYPE_CHOICES = (
         ("python", "Python"),
         ("bash", "Bash"),
+        ("mcq", "MultipleChoice"),
         )
 
 ################################################################################
@@ -28,14 +29,16 @@ class Question(models.Model):
     description = models.TextField()
     
     # Number of points for the question.
-    points = models.IntegerField(default=1)
+    points = models.FloatField(default=1.0)
     
     # Test cases for the question in the form of code that is run.
-    # This is simple Python code.
-    test = models.TextField()
+    test = models.TextField(blank=True)
 
-    # The language being tested.
-    language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES)
+    # Any multiple choice options.  Place one option per line.
+    options = models.TextField(blank=True)
+
+    # The type of question.
+    type = models.CharField(max_length=24, choices=QUESTION_TYPE_CHOICES)
 
     # Is this question active or not.  If it is inactive it will not be used
     # when creating a QuestionPaper.

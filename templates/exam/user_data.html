@@ -41,14 +41,21 @@ User IP address: {{ paper.user_ip }}
 <h3> Answers </h3>
 {% for question, answers in paper.get_question_answers.items %}
 <p><strong> Question: {{ question.id }}. {{ question.summary }} (Points: {{ question.points }})</strong> </p>
-{% for answer in answers %}
+{% if question.type == "mcq" %}
+<p> Choices: 
+{% for option in question.options.strip.splitlines %} {{option}}, {% endfor %}
+</p>
+<p>Student answer: {{ answers.0|safe }}</p>
+{% else %}{# non-mcq questions #}
 <pre> 
-################################################################################
-{{ answer.answer|safe }}
-# Autocheck: {{ answer.error }}
-# Marks: {{ answer.marks }}
-</pre>
-{% endfor %} {# for answer in answers #}
+{% for answer in answers %}################################################################################
+{{ answer.answer.strip|safe }}
+# Autocheck: {{ answer.error|safe }}
+{% endfor %}</pre>
+{% endif %}
+{% with answers|last as answer %}
+<p><em>Marks: {{answer.marks}} </em> </p>
+{% endwith %}
 {% endfor %} {# for question, answers ... #}
 <h3>Teacher comments: </h3>
 {{ paper.comments|default:"None" }}
@@ -62,6 +69,16 @@ User IP address: {{ paper.user_ip }}
 <a href="{{URL_ROOT}}/exam/grade_user/{{ data.user.username }}/">
     Grade/correct paper</a>
 <br/>
+{% if data.papers.count > 1 %}
+<a href="{{URL_ROOT}}/exam/monitor/">
+    Monitor quiz</a>
+{% else %}
+{% with data.papers.0 as paper %}
+<a href="{{URL_ROOT}}/exam/monitor/{{paper.quiz.id}}/">
+    Monitor quiz</a>
+{% endwith %}
+{% endif %}
+<br />
 <a href="{{URL_ROOT}}/admin/">Admin</a>
 
 {% endblock content %}

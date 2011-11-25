@@ -6,7 +6,7 @@
 
 {% block content %}
 
-{% if not quizzes and not papers %}
+{% if not quizzes and not quiz %}
 <h1> Quiz results </h1>
 
 <p> No quizzes available. </p>
@@ -27,9 +27,9 @@
 
 {# ############################################################### #}
 {# This is rendered when we are just viewing exam/monitor/quiz_num #}
-{% if papers %}
+{% if quiz %}
 <h1> {{ quiz.description }} results </h1>
-
+{% if papers %}
 {# <p> Quiz: {{ quiz_name }}</p> #}
 <p>Number of papers: {{ papers|length }} </p>
 
@@ -57,9 +57,9 @@
     </tr>
     {% endfor %}
 </table>
-{% else %} {% if quiz  %}
-    <p> No answer papers so far. </p>
-    {% endif %}
+{% else %}
+<p> No answer papers so far. </p>
+{% endif %} {# if papers #}
 {% endif %}
 
 <a href="{{URL_ROOT}}/admin/">Admin</a>
