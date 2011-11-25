@@ -69,6 +69,14 @@ def test_bash():
             'docs/sample.sh\ndocs/sample.args', '/tmp', language="bash")
     check_result(result, 'error')
 
+    src = '''# Enter your code here.
+#!/bin/bash
+    while [ 1 ] ; do echo "" > /dev/null
+    '''
+    result = code_server.run_code(src, 
+            'docs/sample.sh\ndocs/sample.args', '/tmp', language="bash")
+    check_result(result, 'oserror')
+
 if __name__ == '__main__':
     test_python()
     test_bash()

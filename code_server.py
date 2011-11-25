@@ -166,11 +166,14 @@ class CodeServer(object):
         signal.alarm(SERVER_TIMEOUT)
 
         # Do whatever testing needed.
+        success = False
         try:
             success, err = self.check_bash_script(ref_path, submit_path, test_case_path)
         except TimeoutException:
-            success = False
             err = self.timeout_msg
+        except:
+            type, value = sys.exc_info()[:2]
+            err = "Error: {0}".format(repr(value))
         finally:
             # Set back any original signal handler.
             signal.signal(signal.SIGALRM, old_handler) 

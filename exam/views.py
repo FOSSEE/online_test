@@ -42,7 +42,14 @@ def gen_key(no_of_chars):
     
 def get_user_dir(user):
     """Return the output directory for the user."""
-    return join(OUTPUT_DIR, str(user.username))
+    user_dir = join(OUTPUT_DIR, str(user.username))
+    if not exists(user_dir):
+        os.mkdir(user_dir)
+        # Make it rwx by others.
+        os.chmod(user_dir, stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH \
+                | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR \
+                | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+    return user_dir
     
 def index(request):
     """The start page.
@@ -133,12 +140,6 @@ def start(request):
         
         # Make user directory.
         user_dir = get_user_dir(user)
-        if not exists(user_dir):
-            os.mkdir(user_dir)
-            # Make it rwx by others.
-            os.chmod(user_dir, stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH \
-                    | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR \
-                    | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
 
         questions = [ str(_.id) for _ in Question.objects.filter(active=True) ]
         random.shuffle(questions)
