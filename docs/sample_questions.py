@@ -35,11 +35,8 @@ Question(
     description='''Write a shell script which takes two arguments on the
     command line and prints the sum of the two on the output.''',
     test='''\
-#!/bin/bash
-[[ $# -eq 2 ]] && echo $(( $1 + $2 )) && exit $(( $1 + $2 ))
-#++++++
-1 2
-2 1
+docs/sample.sh
+docs/sample.args
 '''),
 Question(
     summary='Size of integer in Python',
