@@ -1,3 +1,5 @@
+import sys
+
 # Django imports.
 from django.core.management.base import BaseCommand
 from django.template import Template, Context
@@ -81,7 +83,7 @@ def dump_user_data(unames, stdout):
         data = get_user_data(user.username)
         context = Context({'data': data})
         result = data_template.render(context)
-        stdout.write(result)
+        stdout.write(result.encode('ascii', 'xmlcharrefreplace'))
 
 class Command(BaseCommand):
     args = '<username1> ... <usernamen>'
