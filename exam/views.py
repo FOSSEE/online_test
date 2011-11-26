@@ -159,7 +159,7 @@ def question(request, q_id):
         return my_redirect('/exam/login/')
     q = get_object_or_404(Question, pk=q_id)
     try:
-        paper = QuestionPaper.objects.get(user=request.user)
+        paper = QuestionPaper.objects.get(user=request.user, quiz__active=True)
     except QuestionPaper.DoesNotExist:
         return my_redirect('/exam/start')
     if not paper.quiz.active:
@@ -189,7 +189,7 @@ def check(request, q_id):
     if not user.is_authenticated():
         return my_redirect('/exam/login/')
     question = get_object_or_404(Question, pk=q_id)
-    paper = QuestionPaper.objects.get(user=user)
+    paper = QuestionPaper.objects.get(user=user, quiz__active=True)
     answer = request.POST.get('answer')
     skip = request.POST.get('skip', None)
     
