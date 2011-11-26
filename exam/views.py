@@ -285,7 +285,7 @@ def monitor(request, quiz_id=None):
         papers = QuestionPaper.objects.filter(quiz=quiz,
                                               user__profile__isnull=False)
 
-    sorted(papers, 
+    papers = sorted(papers, 
            cmp=lambda x, y: cmp(x.get_total_marks(), y.get_total_marks()), 
            reverse=True)
 
