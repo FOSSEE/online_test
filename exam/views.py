@@ -9,6 +9,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.http import Http404
+from django.db.models import Sum
 
 # Local imports.
 from exam.models import Quiz, Question, QuestionPaper, Profile, Answer, User
@@ -262,6 +263,7 @@ def complete(request, reason=None):
     else:
         return my_redirect('/exam/')
 
+
 def monitor(request, quiz_id=None):
     """Monitor the progress of the papers taken so far."""
     user = request.user
@@ -282,12 +284,8 @@ def monitor(request, quiz_id=None):
         papers = []
         quiz = None
     else:
-        papers = QuestionPaper.objects.filter(quiz=quiz,
-                                              user__profile__isnull=False)
-
-    papers = sorted(papers, 
-           cmp=lambda x, y: cmp(x.get_total_marks(), y.get_total_marks()), 
-           reverse=True)
+        papers = QuestionPaper.objects.all().annotate(
+                    total=Sum('answers__marks')).order_by('-total')
 
     context = {'papers': papers, 'quiz': quiz, 'quizzes': None}
     return my_render_to_response('exam/monitor.html', context,

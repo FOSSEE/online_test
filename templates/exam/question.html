@@ -65,7 +65,7 @@ function update_time()
 <input name="answer" type="radio" value="{{option}}" />{{option}} <br/>
 {% endfor %}
 {% else %}
-<textarea rows="20" cols="100" name="answer">{% if last_attempt %}{{last_attempt.strip}}{% else %}# Enter your answer here.{% endif %}</textarea>
+<textarea rows="20" cols="100" name="answer">{% if last_attempt %}{{last_attempt.strip}}{% else %}{% if question.type == "bash" %}#!/bin/bash{% else %}# Enter your answer here.{% endif %}{% endif %}</textarea>
 {% endif %}
 <br/>
 {% if question.type == "mcq" %}
