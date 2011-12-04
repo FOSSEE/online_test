@@ -45,12 +45,12 @@ User IP address: {{ paper.user_ip }}
 <p> Choices: 
 {% for option in question.options.strip.splitlines %} {{option}}, {% endfor %}
 </p>
-<p>Student answer: {{ answers.0|safe }}</p>
+<p>Student answer: {{ answers.0 }}</p>
 {% else %}{# non-mcq questions #}
 <pre> 
 {% for answer in answers %}################################################################################
-{{ answer.answer.strip|safe }}
-# Autocheck: {{ answer.error|safe }}
+{{ answer.answer.strip }}
+# Autocheck: {{ answer.error }}
 {% endfor %}</pre>
 {% endif %}
 {% with answers|last as answer %}
