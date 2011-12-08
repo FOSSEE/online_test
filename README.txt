@@ -28,37 +28,45 @@ BSD license.
 It can use a lot more work but the basics work and the app scales to
 over 500+ simultaneous users. :)
 
-Dependencies
+Pre-Requisite
 =============
 
-Before you install/deploy, make sure you have the following installed:
+ 1. Install MySql Server
+ 
+ 2. Install Python MySql support
+ 
+ 3. Install Apache Server for deployment
+ 
+Configure MySql server
+----------------------
 
- - Django 1.3 or above.
- - South (tested with 0.7.3).
+ 1. Create a database named `online_test`
+ 
+ 2. Add a user named `online_test_user` and give access to it on the database `online_test`
+ 
+ 3. Create a file named `local.py` in folder `testapp` and insert `DATABASE_PASSWORD = 'yourpassword'`
+  
 
-That and a running Python is pretty much all you need.  Of course, for
-serious deployment you are going to need Apache or some other decent
-webserver.
-
-
-Installation and Deployment
-=============================
+Production Deployment
+=====================
 
 To install/deploy this app follow the steps below:
 
  1. Clone this repository and cd to the cloned repo.
-
- 2. Run::
-
-      $ python manage.py syncdb
-      [ enter password etc.]
-
-      $ python manage.py migrate exam
-
- 3. Add questions by editing the "docs/sample_questions.py" or any other
+ 
+ 2. run python bootstrap.py
+ 
+ 3. run ./bin/buildout -c production.cfg
+ 
+ 4. run ./bin/django syncdb
+    [ enter password etc.]
+ 
+    run ./bin/django migrate exam
+    
+ 5.  Add questions by editing the "docs/sample_questions.py" or any other
     file in the same format and then run the following::
 
-      $ python manage.py load_exam docs/sample_questions.py
+      ./bin/django load_exam docs/sample_questions.py
 
     Note that you can supply multiple Python files as arguments and all of
     those will be added to the database.
@@ -66,7 +74,7 @@ To install/deploy this app follow the steps below:
  4. First run the python server provided.  This ensures that the code is 
     executed in a safe environment.  Do this like so::
     
-      $ sudo python code_server.py
+      $ sudo python testapp/code_server.py
       
     Put this in the background once it has started since this will not
     return back the prompt.  It is important that the server be running
@@ -77,14 +85,16 @@ To install/deploy this app follow the steps below:
     This is the maximum time allowed to execute the submitted code.
     Note that this will likely spawn multiple processes as "nobody"
     depending on the number of server ports specified.
-
- 5. Now, run::
- 
-    $ python manage.py runserver <desired_ip>:<desired_port>
     
-    For deployment use Apache or a real webserver, see below for more 
-    information.
+ 5. The ``bin/django.wsgi`` script should make it 
+ 	easy to deploy this using mod_wsgi.  You will need to add a line of the form:
 
+        WSGIScriptAlias / "/var/www/online_test/bin/django.wsgi"
+
+	to your apache.conf.  For more details see the Django docs here:
+
+	https://docs.djangoproject.com/en/1.3/howto/deployment/modwsgi/
+	
  6. Go to http://deserved_host_or_ip:desired_port/admin
 
  7. Login with your credentials and look at the questions and modify if
@@ -107,10 +117,73 @@ To install/deploy this app follow the steps below:
 
  11. You may dump the results and user data using the results2csv and
      dump_user_data commands.
+ 
+Development Settings
+====================
 
-WARNING:  django is running in debug mode for this currently, CHANGE it
-during deployment.  To do this, edit settings.py and set DEBUG to False.
-Also look at other settings and change them suitably.
+To install/deploy this app follow the steps below:
+
+ 1. Clone this repository and cd to the cloned repo.
+ 
+ 2. run python bootstrap.py
+ 
+ 3. run ./bin/buildout -c buildout.cfg
+ 
+ 4. run ./bin/django syncdb
+    [ enter password etc.]
+ 
+    run ./bin/django migrate exam
+    
+ 5.  Add questions by editing the "docs/sample_questions.py" or any other
+    file in the same format and then run the following::
+
+      ./bin/django load_exam docs/sample_questions.py
+
+    Note that you can supply multiple Python files as arguments and all of
+    those will be added to the database.
+    
+ 4. First run the python server provided.  This ensures that the code is 
+    executed in a safe environment.  Do this like so::
+    
+      $ sudo python testapp/code_server.py
+      
+    Put this in the background once it has started since this will not
+    return back the prompt.  It is important that the server be running
+    *before* students start attempting the exam.  Using sudo is
+    necessary since the server is run as the user "nobody".  This runs
+    on the ports configured in the settings.py file in the variable
+    "SERVER_PORTS".  The "SERVER_TIMEOUT" also can be changed there.
+    This is the maximum time allowed to execute the submitted code.
+    Note that this will likely spawn multiple processes as "nobody"
+    depending on the number of server ports specified.
+    
+ 5. Now, run::
+ 
+    $ ./bin/django runserver <desired_ip>:<desired_port>
+	
+ 6. Go to http://deserved_host_or_ip:desired_port/admin
+
+ 7. Login with your credentials and look at the questions and modify if
+    needed.  Create a new Quiz, set the date and duration or
+    activate/deactivate the quiz.
+
+ 8. Now ask users to login at:
+
+        http://host:port/exam
+
+    And you should be all set.
+    
+ 9. Note that the directory "output" will contain directories, one for each
+    user.  Users can potentially write output into these that can be used
+    for checking later.
+
+ 10. As admin user you can visit http://host/exam/monitor  to view
+     results and user data interactively. You could also "grade" the
+     papers manually if needed.
+
+ 11. You may dump the results and user data using the results2csv and
+     dump_user_data commands.
+ 
 
 The file docs/sample_questions.py is a template that you can use for your
 own questions.
@@ -139,27 +212,6 @@ For more information on these do this::
 
 where [command] is one of the above.
 
-Deploying via Apache
-=====================
-
-For any serious deployment, you will need to deploy the app using a real
-webserver like Apache.  The ``apache/django.wsgi`` script should make it
-easy to deploy this using mod_wsgi.  You will need to add a line of the
-form:
-
-        WSGIScriptAlias / "/var/www/online_test/apache/django.wsgi"
-
-to your apache.conf.  For more details see the Django docs here:
-
-https://docs.djangoproject.com/en/1.3/howto/deployment/modwsgi/
-
-
-Sometimes you might be in the situation where you are not hosted as
-"host.org/exam/"  but as "host.org/foo/exam/" for whatever reason.  In
-this case edit "settings.py" and set the "URL_ROOT"  to the root you
-have to serve at.  In the above example for "host.org/foo/exam" set
-URL_ROOT='/foo'.
-
 License
 =======
 
@@ -187,4 +239,3 @@ I gratefully acknowledge help from the following:
 
 
 Copyright (c) 2011 Prabhu Ramachandran and FOSSEE (fossee.in)
-
