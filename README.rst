@@ -31,48 +31,55 @@ over 500+ simultaneous users. :)
 Pre-Requisite
 =============
 
- 1. Install MySql Server
+ #. Install MySql Server
  
- 2. Install Python MySql support
+ #. Install Python MySql support
  
- 3. Install Apache Server for deployment
+ #. Install Apache Server for deployment
  
 Configure MySql server
 ----------------------
 
- 1. Create a database named `online_test`
+ #. Create a database named ``online_test``
  
- 2. Add a user named `online_test_user` and give access to it on the database `online_test`
+ #. Add a user named ``online_test_user`` and give access to it on the database ``online_test``
  
- 3. Create a file named `local.py` in folder `testapp` and insert `DATABASE_PASSWORD = 'yourpassword'`
+ #. Create a file named `local.py` in folder `testapp` and insert `DATABASE_PASSWORD = 'yourpassword'`
   
 
 Production Deployment
 =====================
 
-To install/deploy this app follow the steps below:
+To deploy this app follow the steps below:
 
- 1. Clone this repository and cd to the cloned repo.
+ #. Clone this repository and cd to the cloned repo.
  
- 2. run python bootstrap.py
+ #. run:: 
  
- 3. run ./bin/buildout -c production.cfg
+ python bootstrap.py
  
- 4. run ./bin/django syncdb
-    [ enter password etc.]
+ #. run::
  
-    run ./bin/django migrate exam
+  ./bin/buildout -c production.cfg
+ 
+ #. run::
+ 
+  ./bin/django syncdb
+   
+   [ enter password etc.]
+ 
+    run::
     
- 5.  Add questions by editing the "docs/sample_questions.py" or any other
-    file in the same format and then run the following::
+     ./bin/django migrate exam
+    
+ #.  Add questions by editing the "docs/sample_questions.py" or any other file in the same format and then run the following::
 
       ./bin/django load_exam docs/sample_questions.py
 
     Note that you can supply multiple Python files as arguments and all of
     those will be added to the database.
     
- 4. First run the python server provided.  This ensures that the code is 
-    executed in a safe environment.  Do this like so::
+ #. First run the python server provided. This ensures that the code is executed in a safe environment.  Do this like so::
     
       $ sudo python testapp/code_server.py
       
@@ -86,7 +93,7 @@ To install/deploy this app follow the steps below:
     Note that this will likely spawn multiple processes as "nobody"
     depending on the number of server ports specified.
     
- 5. The ``bin/django.wsgi`` script should make it 
+ #. The ``bin/django.wsgi`` script should make it 
  	easy to deploy this using mod_wsgi.  You will need to add a line of the form:
 
         WSGIScriptAlias / "/var/www/online_test/bin/django.wsgi"
@@ -95,55 +102,62 @@ To install/deploy this app follow the steps below:
 
 	https://docs.djangoproject.com/en/1.3/howto/deployment/modwsgi/
 	
- 6. Go to http://deserved_host_or_ip:desired_port/admin
+ #. Go to http://deserved_host_or_ip:desired_port/admin
 
- 7. Login with your credentials and look at the questions and modify if
+ #. Login with your credentials and look at the questions and modify if
     needed.  Create a new Quiz, set the date and duration or
     activate/deactivate the quiz.
 
- 8. Now ask users to login at:
+ #. Now ask users to login at:
 
         http://host:port/exam
 
     And you should be all set.
     
- 9. Note that the directory "output" will contain directories, one for each
+ #. Note that the directory "output" will contain directories, one for each
     user.  Users can potentially write output into these that can be used
     for checking later.
 
- 10. As admin user you can visit http://host/exam/monitor  to view
+ #. As admin user you can visit http://host/exam/monitor  to view
      results and user data interactively. You could also "grade" the
      papers manually if needed.
 
- 11. You may dump the results and user data using the results2csv and
+ #. You may dump the results and user data using the results2csv and
      dump_user_data commands.
  
 Development Settings
 ====================
 
-To install/deploy this app follow the steps below:
+To install this app follow the steps below:
 
- 1. Clone this repository and cd to the cloned repo.
+  #. Clone this repository and cd to the cloned repo.
  
- 2. run python bootstrap.py
+ #. run:: 
  
- 3. run ./bin/buildout -c buildout.cfg
+ python bootstrap.py
  
- 4. run ./bin/django syncdb
-    [ enter password etc.]
+ #. run::
  
-    run ./bin/django migrate exam
+  ./bin/buildout -c production.cfg
+ 
+ #. run::
+ 
+  ./bin/django syncdb
+   
+   [ enter password etc.]
+ 
+    run::
     
- 5.  Add questions by editing the "docs/sample_questions.py" or any other
-    file in the same format and then run the following::
+     ./bin/django migrate exam
+    
+ #.  Add questions by editing the "docs/sample_questions.py" or any other file in the same format and then run the following::
 
       ./bin/django load_exam docs/sample_questions.py
 
     Note that you can supply multiple Python files as arguments and all of
     those will be added to the database.
     
- 4. First run the python server provided.  This ensures that the code is 
-    executed in a safe environment.  Do this like so::
+ #. First run the python server provided. This ensures that the code is executed in a safe environment.  Do this like so::
     
       $ sudo python testapp/code_server.py
       
@@ -157,35 +171,35 @@ To install/deploy this app follow the steps below:
     Note that this will likely spawn multiple processes as "nobody"
     depending on the number of server ports specified.
     
- 5. Now, run::
- 
-    $ ./bin/django runserver <desired_ip>:<desired_port>
-	
- 6. Go to http://deserved_host_or_ip:desired_port/admin
+ #. Now, run::
 
- 7. Login with your credentials and look at the questions and modify if
+	$ ./bin/django runserver <desired_ip>:<desired_port>
+	
+ #. Go to http://deserved_host_or_ip:desired_port/admin
+
+ #. Login with your credentials and look at the questions and modify if
     needed.  Create a new Quiz, set the date and duration or
     activate/deactivate the quiz.
 
- 8. Now ask users to login at:
+ #. Now ask users to login at:
 
         http://host:port/exam
 
     And you should be all set.
     
- 9. Note that the directory "output" will contain directories, one for each
+ #. Note that the directory "output" will contain directories, one for each
     user.  Users can potentially write output into these that can be used
     for checking later.
 
- 10. As admin user you can visit http://host/exam/monitor  to view
+ #. As admin user you can visit http://host/exam/monitor  to view
      results and user data interactively. You could also "grade" the
      papers manually if needed.
 
- 11. You may dump the results and user data using the results2csv and
+ #. You may dump the results and user data using the results2csv and
      dump_user_data commands.
- 
-
-The file docs/sample_questions.py is a template that you can use for your
+     
+     
+     The file docs/sample_questions.py is a template that you can use for your
 own questions.
 
 Additional commands available
