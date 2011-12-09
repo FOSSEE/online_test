@@ -128,7 +128,7 @@ Development Settings
 
 To install this app follow the steps below:
 
-  #. Clone this repository and cd to the cloned repo.
+ #. Clone this repository and cd to the cloned repo.
  
  #. run:: 
  
