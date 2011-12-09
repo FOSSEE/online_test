@@ -56,7 +56,7 @@ To deploy this app follow the steps below:
  
  #. run:: 
  
- python bootstrap.py
+	python bootstrap.py
  
  #. run::
  
@@ -74,8 +74,8 @@ To deploy this app follow the steps below:
 
       ./bin/django load_exam docs/sample_questions.py
 
-    Note that you can supply multiple Python files as arguments and all of
-    those will be added to the database.
+	 Note that you can supply multiple Python files as arguments and all of
+	 those will be added to the database.
     
  #. First run the python server provided. This ensures that the code is executed in a safe environment.  Do this like so::
     
@@ -132,11 +132,11 @@ To install this app follow the steps below:
  
  #. run:: 
  
- python bootstrap.py
+	python bootstrap.py
  
  #. run::
  
-  ./bin/buildout -c production.cfg
+    ./bin/buildout -c production.cfg
  
  #. run::
  
@@ -150,8 +150,8 @@ To install this app follow the steps below:
 
       ./bin/django load_exam docs/sample_questions.py
 
-    Note that you can supply multiple Python files as arguments and all of
-    those will be added to the database.
+     Note that you can supply multiple Python files as arguments and all of
+     those will be added to the database.
     
  #. First run the python server provided. This ensures that the code is executed in a safe environment.  Do this like so::
     
