@@ -195,8 +195,7 @@ To install this app follow the steps below:
      dump_user_data commands.
      
      
-     The file docs/sample_questions.py is a template that you can use for your
-own questions.
+     The file docs/sample_questions.py is a template that you can use for your own questions.
 
 Additional commands available
 ==============================
