@@ -60,13 +60,11 @@ To deploy this app follow the steps below:
  
  #. run::
  
-  ./bin/buildout -c production.cfg
+	 ./bin/buildout -c production.cfg
  
  #. run::
  
-  ./bin/django syncdb
-   
-   [ enter password etc.]
+	 ./bin/django syncdb
  
     run::
     
