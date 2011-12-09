@@ -140,9 +140,7 @@ To install this app follow the steps below:
  
  #. run::
  
-  ./bin/django syncdb
-   
-   [ enter password etc.]
+	 ./bin/django syncdb
  
     run::
     
