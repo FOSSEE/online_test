@@ -27,9 +27,13 @@ BSD license.
 
 It can use a lot more work but the basics work and the app scales to
 over 500+ simultaneous users. :)
+  
+
+Production Deployment
+=====================
 
 Pre-Requisite
-=============
+-------------
 
  #. Install MySql Server
  
@@ -40,15 +44,19 @@ Pre-Requisite
 Configure MySql server
 ----------------------
 
- #. Create a database named ``online_test``
+ #. Create a database named ``online_test`` by following the steps below
+    
+    #. $> mysql -u root -p
+    
+    #. mysql> create database online_test
  
- #. Add a user named ``online_test_user`` and give access to it on the database ``online_test``
+ #. Add a user named ``online_test_user`` and give access to it on the database ``online_test`` by following the steps below
  
- #. Create a file named `local.py` in folder `testapp` and insert `DATABASE_PASSWORD = 'yourpassword'`
-  
-
-Production Deployment
-=====================
+    #. mysql> grant usage on online_test.* to online_test_user@localhost identified by 'mysecretpassword';
+    
+    #. mysql> grant all privileges on online_test.* to online_test_user@localhost;
+ 
+ #. Create a file named `local.py` in folder `testapp` and insert `DATABASE_PASSWORD = 'mysecretpassword'`
 
 To deploy this app follow the steps below:
 
@@ -100,7 +108,7 @@ To deploy this app follow the steps below:
 
 	https://docs.djangoproject.com/en/1.3/howto/deployment/modwsgi/
 	
- #. Go to http://deserved_host_or_ip:desired_port/admin
+ #. Go to http://desired_host_or_ip:desired_port/admin
 
  #. Login with your credentials and look at the questions and modify if
     needed.  Create a new Quiz, set the date and duration or
@@ -122,6 +130,14 @@ To deploy this app follow the steps below:
 
  #. You may dump the results and user data using the results2csv and
      dump_user_data commands.
+     
+ #. The file docs/sample_questions.py is a template that you can use for your own questions.
+     
+ #. Sometimes you might be in the situation where you are not hosted as
+    "host.org/exam/"  but as "host.org/foo/exam/" for whatever reason.  In
+    this case edit "settings.py" and set the "URL_ROOT"  to the root you
+    have to serve at.  In the above example for "host.org/foo/exam" set
+    URL_ROOT='/foo'.
  
 Development Settings
 ====================
@@ -194,8 +210,13 @@ To install this app follow the steps below:
  #. You may dump the results and user data using the results2csv and
      dump_user_data commands.
      
+ #. The file docs/sample_questions.py is a template that you can use for your own questions.
      
-     The file docs/sample_questions.py is a template that you can use for your own questions.
+ #. Sometimes you might be in the situation where you are not hosted as
+    "host.org/exam/"  but as "host.org/foo/exam/" for whatever reason.  In
+    this case edit "settings.py" and set the "URL_ROOT"  to the root you
+    have to serve at.  In the above example for "host.org/foo/exam" set
+    URL_ROOT='/foo'.
 
 Additional commands available
 ==============================
