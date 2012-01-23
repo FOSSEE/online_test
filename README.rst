@@ -152,7 +152,7 @@ To install this app follow the steps below:
  
  #. run::
  
-    ./bin/buildout -c production.cfg
+    ./bin/buildout -c buildout.cfg
  
  #. run::
  
