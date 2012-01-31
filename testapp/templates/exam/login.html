@@ -3,18 +3,49 @@
 {% block title %}Login{% endblock title %}
 
 {% block content %}
-<p> Welcome to the Examination.
-Please login to proceed.</p>
-
+<html lang="en">
+  <body>
+    <div class="container">
+     <div class="content">
+<div class="page-header">
+<h1><Strong><center>Online Test</center></strong></h1>
+</div>
+          <div class=row>
+         <div class=span14>
+<h3><center>Login</center></h3><br>
 <form action="" method="post">
 {% csrf_token %}
 
-<table>
+<style type="text/css">
+      label {
+  padding-top: 6px;
+  font-size: 13px;
+  line-height: 18px;
+  float: left;
+  width: 130px;
+  text-align: right;
+  color: #404040;
+}
+</style>
+<center><table class=span1>
 {{ form.as_table }}
-</table>
+</table></center>
 
-<input type="submit" value="Login" />
+<center><button class="btn" type="submit">Login</button>&nbsp;<button class="btn" type="reset">Cancel</button></center>
+<br><center><a href="{{URL_ROOT}}/exam/forgotpassword/">Forgot Password?</a></center><br>
+<center><a href="{{URL_ROOT}}/exam/register/">New User? Sign-Up </a></center>
 </form>
-<!-- <a href="{{URL_ROOT}}/exam/forgotpassword/">Forgot Password</a> <br /> -->
-<a href="{{URL_ROOT}}/exam/register/">New User Registration</a> 
+</div>
+          </div>
+     </div>
+<footer>
+        <p>&copy; FOSSEE group, IIT Bombay</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+  </body>
+</html>
+
+
 {% endblock content %}
