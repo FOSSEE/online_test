@@ -3,7 +3,16 @@
 {% block title %}Instructions and Rules {% endblock %}
 
 {% block content %}
-<h2>Important rules and instructions</h2>
+<html lang="en">
+  <body>
+    <div class="container">
+     <div class="content">
+<div class="page-header">
+<h1><Strong><center>Online Test</center></strong></h1>
+</div>
+          <div class=row>
+         <div class=span14>
+<h3><center>Important instructions & rules</center></h3><br>
 
 <p> Welcome <strong>{{user.first_name.title}} {{user.last_name.title}}</strong>, 
 to the programming quiz! </p>
@@ -43,11 +52,23 @@ carefully.
     
 </ul>
 
-<p> We hope you enjoy taking this exam.</p>
+<p> We hope you enjoy taking this exam !!!</p>
 
 <form action="{{URL_ROOT}}/exam/start/" method="post" align="center">
 {% csrf_token %}
-<input type="submit" name="start" value="Start Exam!">
+<center><button class="btn" type="submit" name="start">Start Exam!</button></center>
+<!--input type="submit" name="start" value="Start Exam!"-->
 </form>
+</div>
+          </div>
+     </div>
+<footer>
+        <p>&copy; FOSSEE group, IIT Bombay</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+  </body>
+</html>
 
 {% endblock content %}
