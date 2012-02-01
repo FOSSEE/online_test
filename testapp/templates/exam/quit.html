@@ -2,13 +2,36 @@
 
 {% block title %}Quit exam {% endblock %}
 
+<html lang="en">
+
 {% block content %}
-<p>Your current answers are saved.</p>
-<p> Are you sure you wish to quit the exam?</p>
+  <body>
+    <div class="container">
+     <div class="content">
+<div class="page-header">
+<h1><Strong><center>Online Test</center></strong></h1>
+</div>
+          <div class=row>
+         <div class=span14>
+
+
+<center><h4>Your current answers are saved.</h4></center>
+<center><h4> Are you sure you wish to quit the exam?</h4></center>
 
 <form action="{{URL_ROOT}}/exam/complete/" method="post">
 {% csrf_token %}
-<input type="submit" name="yes" value="Yes!" />
-<input type="submit" name="no" value="No!" />
+
+
+<center><button class="btn" type="submit" name="yes">Yes!</button>&nbsp;<button class="btn" type="submit" name="no">No!</button></center>
+
 </form>
+</div>
+</div>
+</div>
+<footer>
+        <p>&copy; FOSSEE group, IIT Bombay</p>
+      </footer>
+</div>
+</body>
+</html>
 {% endblock content %}
