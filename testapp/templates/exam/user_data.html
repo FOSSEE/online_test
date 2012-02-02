@@ -3,8 +3,18 @@
 {% block title %} Data for user {{ data.user.get_full_name.title }} {% endblock title %}
 
 {% block content %}
+<html lang="en">
+  <body>
+    <div class="container">
+     <div class="content">
+<div class="page-header">
+<h1><Strong><center>Online Test</center></strong></h1>
+</div>
+          <div class=row>
+         <div class=span14>
+<h3><center>Data for user {{ data.user.get_full_name.title }}</center></h3><br>
+<form action="" method="post">
 
-<h1> Data for user {{ data.user.get_full_name.title }} </h1>
 
 <p> 
 Name: {{ data.user.get_full_name.title }} <br/>
@@ -80,5 +90,17 @@ User IP address: {{ paper.user_ip }}
 {% endif %}
 <br />
 <a href="{{URL_ROOT}}/admin/">Admin</a>
+
+</div>
+          </div>
+     </div>
+<footer>
+        <p>&copy; FOSSEE group, IIT Bombay</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+  </body>
+</html>
 
 {% endblock content %}

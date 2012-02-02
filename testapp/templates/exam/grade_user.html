@@ -3,8 +3,17 @@
 {% block title %} Grading papers for {{ data.user.get_full_name.title }} {% endblock title %}
 
 {% block content %}
+<html lang="en">
+  <body>
+    <div class="container">
+     <div class="content">
+<div class="page-header">
+<h1><Strong><center>Online Test</center></strong></h1>
+</div>
+          <div class=row>
+         <div class=span14>
+<h3><center>Grading papers for {{ data.user.get_full_name.title }}</center></h3><br>
 
-<h1> Grading papers for {{ data.user.get_full_name.title }} </h1>
 
 <p> 
 Name: {{ data.user.get_full_name.title }}
@@ -30,7 +39,7 @@ Start time: {{ paper.start_time }} <br/>
 </p>
 
 {% if paper.answers.count %}
-<h3> Answers </h3>
+<h3> Answers </h3><br>
 <form id="q{{ paper.quiz.id }}_form"
     action="{{URL_ROOT}}/exam/grade_user/{{data.user.username}}/" method="post">
 {% csrf_token %}
@@ -54,14 +63,15 @@ Start time: {{ paper.start_time }} <br/>
 {% with answers|last as answer %}
 Marks: <input id="q{{ question.id }}" type="text" 
         name="q{{ question.id }}_marks" size="4"
-        value="{{ answer.marks }}" />
+        value="{{ answer.marks }}"><br><br>
 {% endwith %}
 {% endfor %} {# for question, answers ... #}
 <h3>Teacher comments: </h3>
 <textarea id="comments_{{paper.quiz.id}}" rows="10" cols="80" 
     name="comments_{{ paper.quiz.id }}">{{ paper.comments }}</textarea>
-<br/>
-<input type="submit" name="submit_{{paper.quiz.id}}" value="Save marks" />
+<br>
+<br><button class="btn" type="submit" name="submit_{{paper.quiz.id}}">Save Marks</button>
+
 </form>
 {% endif %} {# if paper.answers.count #}
 
@@ -80,4 +90,15 @@ Marks: <input id="q{{ question.id }}" type="text"
 {% endif %}
 <br />
 <a href="{{URL_ROOT}}/admin/">Admin</a>
+</div>
+          </div>
+     </div>
+<footer>
+        <p>&copy; FOSSEE group, IIT Bombay</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+  </body>
+</html>
 {% endblock content %}
