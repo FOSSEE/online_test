@@ -1,22 +1,35 @@
 {% extends "base.html" %}
 
+<html lang="en">
+
 {% block title %} Quiz results {% endblock title %}
 
 {% block meta %} <meta http-equiv="refresh" content="30"/> {% endblock meta %}
 
+
+  <body>
 {% block content %}
+    <div class="container">
+     <div class="content">
+<div class="page-header">
 
 {% if not quizzes and not quiz %}
-<h1> Quiz results </h1>
+<h1><center> Quiz results </center></h1>
+</div>
+  <div class=row>
+         <div class=span14>
 
-<p> No quizzes available. </p>
+<center><h5> No quizzes available. </h5></center>
 
 {% endif %}
 
 {# ############################################################### #}
 {# This is rendered when we are just viewing exam/monitor #}
 {% if quizzes %}
-<h1> Available quizzes </h1>
+<center><h1> Available quizzes </h1></center>
+</div>
+  <div class=row>
+         <div class=span14>
 
 <ul>
 {% for quiz in quizzes %}
@@ -28,11 +41,24 @@
 {# ############################################################### #}
 {# This is rendered when we are just viewing exam/monitor/quiz_num #}
 {% if quiz %}
-<h1> {{ quiz.description }} results </h1>
+<center><h1> {{ quiz.description }} results  </h1></center>
+</div>
+  <div class=row>
+         <div class=span14>
+
 {% if papers %}
 {# <p> Quiz: {{ quiz_name }}</p> #}
 <p>Number of papers: {{ papers|length }} </p>
-
+<style type="text/css">
+table td {
+  vertical-align: top;
+  border-top: 1px solid #ddd;
+}
+table tbody th {
+ border-top: 1px solid #ddd;
+  vertical-align: top;
+}
+</style>
 <table border="1" cellpadding="3">
     <tr>
         <th> Name </th>
@@ -61,7 +87,12 @@
 <p> No answer papers so far. </p>
 {% endif %} {# if papers #}
 {% endif %}
-
 <a href="{{URL_ROOT}}/admin/">Admin</a>
+</div></div></div>
 
+
+<footer>
+        <p>&copy; FOSSEE group, IIT Bombay</p>
+      </footer>
+</div>
 {% endblock content %}

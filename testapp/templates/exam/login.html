@@ -19,19 +19,20 @@
 <style type="text/css">
       label {
   padding-top: 6px;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 18px;
   float: left;
-  width: 130px;
-  text-align: right;
+  width: 80px;
+  text-align: center;
   color: #404040;
+/*  font-weight : bold;*/
 }
 </style>
 <center><table class=span1>
 {{ form.as_table }}
 </table></center>
 
-<center><button class="btn" type="submit">Login</button>&nbsp;<button class="btn" type="reset">Cancel</button></center>
+<center><button class="btn" type="submit">Login</button>&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn" type="reset">Cancel</button></center>
 <br><center><a href="{{URL_ROOT}}/exam/forgotpassword/">Forgot Password?</a></center><br>
 <center><a href="{{URL_ROOT}}/exam/register/">New User? Sign-Up </a></center>
 </form>
