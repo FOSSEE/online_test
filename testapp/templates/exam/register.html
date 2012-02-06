@@ -4,7 +4,6 @@
 
 {% block content %}
 
-<body>
     <div class="container">
       <div class="content">
         <div class="page-header">
@@ -16,8 +15,6 @@
 
 <form action="" method="post">
 {% csrf_token %}
-
-
 <center><table class=span1>
 {{ form.as_table }}
 </table></center>
@@ -33,7 +30,5 @@
 
     </div> <!-- /container -->
 
-  </body>
-</html>
 
 {% endblock content %}
