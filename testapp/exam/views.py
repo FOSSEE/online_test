@@ -5,6 +5,7 @@ import stat
 from os.path import dirname, pardir, abspath, join, exists
 import datetime
 
+from django.http import HttpResponse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
@@ -246,15 +247,15 @@ def check(request, q_id):
         return show_question(request, next_q)
         
 def quit(request):
-    return my_render_to_response('exam/quit.html', 
-                                 context_instance=RequestContext(request)) 
+   
+    return my_render_to_response('exam/quit.html',context_instance=RequestContext(request)) 
 
-def complete(request, reason=None):
+def complete(request,reason = None):
     user = request.user
     no = False
     message = reason or 'The quiz has been completed. Thank you.'
     if request.method == 'POST' and 'no' in request.POST:
-        no = request.POST.get('no', False)
+        no = True
     if not no:
         # Logout the user and quit with the message given.
         logout(request)
@@ -262,7 +263,6 @@ def complete(request, reason=None):
         return my_render_to_response('exam/complete.html', context)
     else:
         return my_redirect('/exam/')
-
 
 def monitor(request, quiz_id=None):
     """Monitor the progress of the papers taken so far."""
