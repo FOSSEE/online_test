@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 <!DOCTYPE html>
-<html lang="en">
-	<head>
+
 	{% block title %} Answer question {% endblock %}
 
 {% block script %}
@@ -46,20 +45,32 @@ function update_time()
 
 </script>
 {% endblock script %}
-</head>
-<body>
+
 {% block onload %} onload="update_time()" {% endblock onload %}
 
 {% block content %}
 
-<div class="container">
+<div class="topbar">
+      <div class="fill">
+        <div class="container">
+	  <h3 class="brand"><strong>Online Test</h3></strong>
+          <!--a class="brand" href="#">Project name</a-->
 
+          <form id="logout" action="{{URL_ROOT}}/exam/quit/" method="post" class="pull-right">
+            {% csrf_token %}
+            <button class="btn" type="submit" name="quit">Quit Exam and Logout</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+<div class="container">
       <div class="content">
         <div class="page-header">
-          <center><h1>Online Test </h1></center>
+          <br><center><h4>Test for {{ user.first_name.title }} {{ user.last_name.title }} </h4></center>
         </div>
-        <div class="row">
-          <div class="span14">
+        <div class>
+          <div class>
 
 	<h4><u> {{ question.summary }} </u></h4>
 	<h5>{{ question.description|safe }} </h5>
@@ -96,15 +107,11 @@ function update_time()
 <p id="time_left"><strong>  Time left:   </strong></p>
 
 <hr/>
-<form id="logout" action="{{URL_ROOT}}/exam/quit/" method="post">
-{% csrf_token %}
-<button class="btn" type="submit" name="quit">Quit Exam and Logout</button>
-<!--input type="submit" name="quit" value="Quit exam and logout" /-->
-</form>
+
 </div></div></div>
 <footer>
         <p>&copy; FOSSEE group, IIT Bombay</p>
       </footer>
 </div>
-</body>
+
 {% endblock content %}
