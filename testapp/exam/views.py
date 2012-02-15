@@ -90,6 +90,15 @@ def user_register(request):
                 {'form':form},
                 context_instance=RequestContext(request))
 
+def add_question(request):
+    return render_to_response('exam/add_question.html',{})
+
+def add_quiz(request):
+    return render_to_response('exam/add_quiz.html',{})
+
+def prof_manage(request):
+    return render_to_response('manage.html',{})
+
 def user_login(request):
     """Take the credentials of the user and log the user in."""
 
@@ -309,6 +318,12 @@ def get_user_data(username):
     data['papers'] = papers 
     return data
 
+def show_all_users(request):
+    user = User.objects.filter(username__contains="")
+    context = { 'user':user }
+    print context
+    return my_render_to_response('exam/showusers.html',context,context_instance=RequestContext(request))
+
 def user_data(request, username):
     """Render user data."""
     current_user = request.user
@@ -342,10 +357,12 @@ def grade_user(request, username):
             paper.save()
 
         context = {'data': data}
+	print context
         return my_render_to_response('exam/user_data.html', context,
                                  context_instance=RequestContext(request))
     else:
         context = {'data': data}
+	print context
         return my_render_to_response('exam/grade_user.html', context,
                                  context_instance=RequestContext(request))
 

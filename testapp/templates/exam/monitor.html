@@ -1,23 +1,13 @@
-{% extends "base.html" %}
-
-<html lang="en">
+{% extends "manage.html" %}
 
 {% block title %} Quiz results {% endblock title %}
 
 {% block meta %} <meta http-equiv="refresh" content="30"/> {% endblock meta %}
 
 
-  <body>
-{% block content %}
-    <div class="container">
-     <div class="content">
-<div class="page-header">
-
+{% block manage %}
 {% if not quizzes and not quiz %}
 <h1><center> Quiz results </center></h1>
-</div>
-  <div class=row>
-         <div class=span14>
 
 <center><h5> No quizzes available. </h5></center>
 
@@ -27,9 +17,6 @@
 {# This is rendered when we are just viewing exam/monitor #}
 {% if quizzes %}
 <center><h1> Available quizzes </h1></center>
-</div>
-  <div class=row>
-         <div class=span14>
 
 <ul>
 {% for quiz in quizzes %}
@@ -42,9 +29,6 @@
 {# This is rendered when we are just viewing exam/monitor/quiz_num #}
 {% if quiz %}
 <center><h1> {{ quiz.description }} results  </h1></center>
-</div>
-  <div class=row>
-         <div class=span14>
 
 {% if papers %}
 {# <p> Quiz: {{ quiz_name }}</p> #}
@@ -88,11 +72,4 @@ table tbody th {
 {% endif %} {# if papers #}
 {% endif %}
 <a href="{{URL_ROOT}}/admin/">Admin</a>
-</div></div></div>
-
-
-<footer>
-        <p>&copy; FOSSEE group, IIT Bombay</p>
-      </footer>
-</div>
-{% endblock content %}
+{% endblock %}
