@@ -1,0 +1,12 @@
+{% extends "manage.html" %}
+
+
+{% block subtitle %} 
+List of Users 
+{% endblock %}
+
+{% block manage %}
+{% for name in user %}
+<a href="{{URL_ROOT}}/exam/grade_user/{{ name }}">{{ name }}</a><br>
+{% endfor %}
+{% endblock %}
