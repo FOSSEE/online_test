@@ -96,7 +96,8 @@ def add_question(request):
        form = AddQuestionForm(request.POST)
        if form.is_valid():
            data = form.cleaned_data
-           return my_redirect("/exam/start/")
+	   form.save()
+           return my_redirect("/exam/addquestion/")
        
        else:
            return my_render_to_response('exam/add_question.html',

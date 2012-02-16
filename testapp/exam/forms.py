@@ -1,5 +1,5 @@
 from django import forms
-from exam.models import Profile,Quiz
+from exam.models import Profile,Quiz,Question
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -121,7 +121,7 @@ class QuizForm(forms.Form):
 	new_quiz.duration=duration
 	new_quiz.active=active
 	new_quiz.description=description
-	new_quiz.save();
+	new_quiz.save()
 
 class AddQuestionForm(forms.Form):
    summary = forms.CharField(max_length = 128)
@@ -131,4 +131,23 @@ class AddQuestionForm(forms.Form):
    options = forms.CharField(widget = forms.Textarea(attrs={'cols': 20, 'rows': 3}))
    type = forms.CharField(max_length=24, widget=forms.Select(choices=QUESTION_TYPE_CHOICES))
    active = forms.BooleanField(required=False)
+
+   def save(self):
+        summary = self.cleaned_data["summary"]
+        description = self.cleaned_data["description"]
+        points = self.cleaned_data['points']
+	test = self.cleaned_data["test"]
+        options = self.cleaned_data['options']
+	type = self.cleaned_data["type"]
+	active = self.cleaned_data["active"]
+
+        new_question = Question()
+	new_question.summary = summary
+	new_question.description = description
+	new_question.points = points
+	new_question.test = test
+	new_question.options = options
+	new_question.type = type
+	new_question.active = active
+	new_question.save()
 
