@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 
 from string import letters, punctuation, digits
-
+import datetime
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
 
@@ -96,3 +96,10 @@ class UserLoginForm(forms.Form):
 
         return user
 
+
+
+class QuizForm(forms.Form):
+	start_date = forms.DateField(initial=datetime.date.today)
+	duration = forms.IntegerField()
+	active = forms.BooleanField(required = False)
+	description = forms.CharField(max_length=256, widget=forms.Textarea(attrs={'cols':20,'rows':2}))

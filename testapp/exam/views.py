@@ -14,7 +14,7 @@ from django.db.models import Sum
 
 # Local imports.
 from exam.models import Quiz, Question, QuestionPaper, Profile, Answer, User
-from exam.forms import UserRegisterForm, UserLoginForm
+from exam.forms import UserRegisterForm, UserLoginForm, QuizForm
 from exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
 
@@ -94,7 +94,26 @@ def add_question(request):
     return render_to_response('exam/add_question.html',{})
 
 def add_quiz(request):
-    return render_to_response('exam/add_quiz.html',{})
+     
+    if request.method == "POST":
+        form = QuizForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            u_name, pwd = form.save()
+
+            new_user = authenticate(username = u_name, password = pwd)
+            login(request, new_user)
+            return my_redirect("/exam/manage/add_quiz")
+                
+        else:
+            return my_render_to_response('exam/add_quiz.html',
+                {'form':form},
+                context_instance=RequestContext(request))
+    else:
+        form = QuizForm()
+        return my_render_to_response('exam/add_quiz.html',
+                {'form':form},
+                context_instance=RequestContext(request))
 
 def prof_manage(request):
     return render_to_response('manage.html',{})

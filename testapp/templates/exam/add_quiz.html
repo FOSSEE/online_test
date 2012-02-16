@@ -6,5 +6,22 @@ Add Quiz
 {% endblock %}
 
 {% block manage %}
-<p>Add Quiz
+
+<style type='text/css'>
+
+table th, table td {
+  padding: 10px 10px 9px;
+  line-height: 18px;
+  text-align: left;
+}
+</style>
+<form name=frm action="" method="post">
+{% csrf_token %}
+<center>
+<table class=span1>
+{{ form.as_table }}
+</table>
+</center>
+<center><button class="btn" type="submit" name="save">Save</button></center>
+</form>
 {% endblock %}
