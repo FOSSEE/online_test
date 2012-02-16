@@ -118,12 +118,12 @@ def add_quiz(request):
 	    return my_redirect("/exam/manage/addquiz")
                 
         else:
-            return my_render_to_response('exam/addquiz.html',
+            return my_render_to_response('exam/add_quiz.html',
                 {'form':form},
                 context_instance=RequestContext(request))
     else:
         form = QuizForm()
-        return my_render_to_response('exam/addquiz.html',
+        return my_render_to_response('exam/add_quiz.html',
                 {'form':form},
                 context_instance=RequestContext(request))
 
