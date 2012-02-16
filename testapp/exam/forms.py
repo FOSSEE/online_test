@@ -1,8 +1,9 @@
 from django import forms
-from exam.models import Profile
+from exam.models import Profile,Quiz
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+
 
 from string import letters, punctuation, digits
 import datetime
@@ -104,10 +105,23 @@ class UserLoginForm(forms.Form):
         return user
 
 class QuizForm(forms.Form):
-	start_date = forms.DateField(initial=datetime.date.today)
-	duration = forms.IntegerField()
-	active = forms.BooleanField(required = False)
-	description = forms.CharField(max_length=256, widget=forms.Textarea(attrs={'cols':20,'rows':2}))
+    start_date = forms.DateField(initial=datetime.date.today)
+    duration = forms.IntegerField()
+    active = forms.BooleanField(required = False)
+    description = forms.CharField(max_length=256, widget=forms.Textarea(attrs={'cols':20,'rows':2}))
+
+    def save(self):
+        start_date = self.cleaned_data["start_date"]
+        duration = self.cleaned_data["duration"]
+        active = self.cleaned_data['active']
+	description = self.cleaned_data["description"]
+        
+	new_quiz = Quiz()
+	new_quiz.start_date=start_date
+	new_quiz.duration=duration
+	new_quiz.active=active
+	new_quiz.description=description
+	new_quiz.save();
 
 class AddQuestionForm(forms.Form):
    summary = forms.CharField(max_length = 128)

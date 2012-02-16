@@ -109,24 +109,20 @@ def add_question(request):
                context_instance=RequestContext(request))
 
 def add_quiz(request):
-     
     if request.method == "POST":
         form = QuizForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            u_name, pwd = form.save()
-
-            new_user = authenticate(username = u_name, password = pwd)
-            login(request, new_user)
-            return my_redirect("/exam/manage/add_quiz")
+            form.save()
+	    return my_redirect("/exam/manage/addquiz")
                 
         else:
-            return my_render_to_response('exam/add_quiz.html',
+            return my_render_to_response('exam/addquiz.html',
                 {'form':form},
                 context_instance=RequestContext(request))
     else:
         form = QuizForm()
-        return my_render_to_response('exam/add_quiz.html',
+        return my_render_to_response('exam/addquiz.html',
                 {'form':form},
                 context_instance=RequestContext(request))
 
