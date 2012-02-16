@@ -6,6 +6,13 @@ from django.contrib.auth.models import User
 
 from string import letters, punctuation, digits
 import datetime
+
+QUESTION_TYPE_CHOICES = (
+       ("python", "Python"),
+       ("bash", "Bash"),
+       ("mcq", "MultipleChoice"),
+       )
+
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
 
@@ -96,10 +103,18 @@ class UserLoginForm(forms.Form):
 
         return user
 
-
-
 class QuizForm(forms.Form):
 	start_date = forms.DateField(initial=datetime.date.today)
 	duration = forms.IntegerField()
 	active = forms.BooleanField(required = False)
 	description = forms.CharField(max_length=256, widget=forms.Textarea(attrs={'cols':20,'rows':2}))
+
+class AddQuestionForm(forms.Form):
+   summary = forms.CharField(max_length = 128)
+   description = forms.CharField(widget = forms.Textarea(attrs={'cols': 20, 'rows': 3}))
+   points = forms.FloatField()
+   test = forms.CharField(widget = forms.Textarea(attrs={'cols': 20, 'rows': 3}))
+   options = forms.CharField(widget = forms.Textarea(attrs={'cols': 20, 'rows': 3}))
+   type = forms.CharField(max_length=24, widget=forms.Select(choices=QUESTION_TYPE_CHOICES))
+   active = forms.BooleanField(required=False)
+
