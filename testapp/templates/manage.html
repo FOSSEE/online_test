@@ -4,20 +4,6 @@
 
 {% block content %}
 
-<div class="container-fluid">
-         <div class="sidebar">
-            <div class="well">
-          <h5>Manage</h5>
-          <ul>
-            <li><a href="{{ URL_ROOT }}/exam/manage/addquestion">Add Questions</a></li>
-            <li><a href="{{ URL_ROOT }}/exam/manage/addquiz">Add Quiz</a></li>
-            <li><a href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
-            <li><a href="{{ URL_ROOT }}/exam/manage/monitor">Monitor	</a></li>
-          </ul>
-          </div>
-      </div>
-	</div>
-
 <div class="container">
    <div class="content">
       <div class="page-header">
@@ -25,10 +11,25 @@
       </div>
 
       <div class=row>
-         <div class=span14>
+         <div class=span10>
             <h3><center>{% block subtitle %} {% endblock %}</center></h3><br>
 	    {% block manage %}
 	    {% endblock %}
+         </div>
+	<style type='text/css'>
+	.content .span4 {
+        min-height: 500px;
+      }
+	</style>
+
+	 <div class="span4">
+                 <h5>Manage</h5>
+                 <ul>
+                 <li><a href="{{ URL_ROOT }}/exam/addquestion">Add Questions</a></li>
+                 <li><a href="{{ URL_ROOT }}/exam/addquiz">Add Quiz</a></li>
+                 <li><a href="{{ URL_ROOT }}/exam/grade_user">Grade User</a></li>
+                 <li><a href="{{ URL_ROOT }}/exam/monitor">Monitor</a></li>
+                 </ul>
          </div>
       </div>
   </div>
