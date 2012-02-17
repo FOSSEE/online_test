@@ -97,7 +97,7 @@ def add_question(request):
        if form.is_valid():
            data = form.cleaned_data
 	   form.save()
-           return my_redirect("/exam/addquestion/")
+           return my_redirect("/exam/manage/addquestion/")
        
        else:
            return my_render_to_response('exam/add_question.html',
@@ -115,7 +115,7 @@ def add_quiz(request):
         if form.is_valid():
             data = form.cleaned_data
             form.save()
-	    return my_redirect("/exam/addquiz")
+	    return my_redirect("/exam/manage/addquiz")
                 
         else:
             return my_render_to_response('exam/add_quiz.html',
