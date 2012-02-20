@@ -91,23 +91,23 @@ def user_register(request):
                 context_instance=RequestContext(request))
 
 def add_question(request):
-   
-   if request.method == "POST":
-       form = AddQuestionForm(request.POST)
-       if form.is_valid():
-           data = form.cleaned_data
-	   form.save()
-           return my_redirect("/exam/manage/addquestion/")
-       
-       else:
-           return my_render_to_response('exam/add_question.html',
-               {'form':form},
-               context_instance=RequestContext(request))
-   else:
-       form = AddQuestionForm()
-       return my_render_to_response('exam/add_question.html',
-               {'form':form},
-               context_instance=RequestContext(request))
+ 
+  if request.method == "POST":
+      form = AddQuestionForm(request.POST)
+      if form.is_valid():
+          data = form.cleaned_data
+          form.save()
+          return my_redirect("/exam/manage/questions/")
+     
+      else:
+          return my_render_to_response('exam/add_question.html',
+              {'form':form},
+              context_instance=RequestContext(request))
+  else:
+      form = AddQuestionForm()
+      return my_render_to_response('exam/add_question.html',
+              {'form':form},
+              context_instance=RequestContext(request))
 
 def add_quiz(request):
     if request.method == "POST":
@@ -354,6 +354,34 @@ def show_all_users(request):
     context = { 'user':user }
     print context
     return my_render_to_response('exam/showusers.html',context,context_instance=RequestContext(request))
+
+def show_all_questions(request):
+   if request.method == 'POST':
+       data = request.POST.getlist('question')
+       if data == None:
+           questions = Question.objects.all()
+           context = {'papers': [],
+                  'question': None,
+                  'questions':questions}
+           return my_render_to_response('exam/showquestions.html', context,
+                                 context_instance=RequestContext(request))  
+       for i in data:
+               question = Question.objects.get(id=i).delete()
+       questions = Question.objects.all()
+       context = {'papers': [],
+                  'question': None,
+                  'questions':questions}
+       return my_render_to_response('exam/showquestions.html', context,
+                                   context_instance=RequestContext(request))
+               
+   else:
+       """Show the list of available quiz"""
+       questions = Question.objects.all()
+       context = {'papers': [],
+                  'question': None,
+                  'questions':questions}
+       return my_render_to_response('exam/showquestions.html', context,
+                                   context_instance=RequestContext(request))
 
 def user_data(request, username):
     """Render user data."""

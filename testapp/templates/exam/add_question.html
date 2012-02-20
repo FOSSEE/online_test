@@ -21,7 +21,7 @@ table th, table td {
 {{ form.as_table }}
 </table>
 <center><button class="btn" type="submit" name="savequestion">Save</button>
-<button class="btn" type="reset" name="reset">Clear</button> </center>
+<button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Cancel</button> </center>
 </form>
 {% endblock %}
 

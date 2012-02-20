@@ -32,7 +32,7 @@ Start time: {{ paper.start_time }} <br/>
 {% if paper.answers.count %}
 <h3> Answers </h3><br>
 <form id="q{{ paper.quiz.id }}_form"
-    action="{{URL_ROOT}}/exam/grade_user/{{data.user.username}}/" method="post">
+    action="{{URL_ROOT}}/exam/manage/grade_user/{{data.user.username}}/" method="post">
 {% csrf_token %}
 {% for question, answers in paper.get_question_answers.items %}
 <p><strong> 
@@ -71,11 +71,11 @@ Marks: <input id="q{{ question.id }}" type="text"
 {% endif %} {# if data.papers #}
 
 {% if data.papers.count > 1 %}
-<a href="{{URL_ROOT}}/exam/monitor/">
+<a href="{{URL_ROOT}}/exam/manage/monitor/">
     Monitor quiz</a>
 {% else %}
 {% with data.papers.0 as paper %}
-<a href="{{URL_ROOT}}/exam/monitor/{{paper.quiz.id}}/">
+<a href="{{URL_ROOT}}/exam/manage/monitor/{{paper.quiz.id}}/">
     Monitor quiz</a>
 {% endwith %}
 {% endif %}

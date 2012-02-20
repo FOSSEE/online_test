@@ -5,8 +5,9 @@
 List of Users 
 {% endblock %}
 
+
 {% block manage %}
 {% for name in user %}
-<a href="{{URL_ROOT}}/exam/grade_user/{{ name }}">{{ name }}</a><br>
+<a href="{{URL_ROOT}}/exam/manage/grade_user/{{ name }}">{{ name }}</a><br>
 {% endfor %}
 {% endblock %}
