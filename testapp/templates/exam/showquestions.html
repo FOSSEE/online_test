@@ -1,0 +1,35 @@
+{% extends "manage.html" %}
+
+
+{% block subtitle %} 
+List of Questions 
+{% endblock %}
+
+{% block script %}
+<script type='text/javascript'>
+function my_confirm(frm)
+{
+       var r = confirm("Are you Sure ?");
+       if(r==false)
+       {
+               for(i=0;i<frm.question.length;i++)
+               {
+                       frm.question[i].checked=false;
+               }
+               location.replace("{{URL_ROOT}}/exam/manage/showquestion");
+       }
+}
+</script>
+{% endblock %}
+
+{% block manage %}
+<form name=frm action="" method="post">
+{% csrf_token %}
+{% for i in questions %}
+<input type="checkbox" name="question" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/showquestions/{{ i.id }}">{{ i }}</a><br>
+{% endfor %}
+<br>
+<button class="btn" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question</button>&nbsp;&nbsp;
+<button class="btn" type="submit" onClick="my_confirm(frm);">Delete</button>
+</form>
+{% endblock %}
