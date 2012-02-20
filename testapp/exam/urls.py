@@ -8,6 +8,7 @@ urlpatterns = patterns('exam.views',
     url(r'^manage/addquiz/$', 'add_quiz'),
     url(r'^manage/gradeuser/$', 'show_all_users'),
     url(r'^manage/questions/$', 'show_all_questions'),
+    url(r'^manage/showquiz/$','show_all_quiz'),
     url(r'^register/$', 'user_register'),
     url(r'^start/$', 'start'),
     url(r'^quit/$', 'quit'),
@@ -19,3 +20,4 @@ urlpatterns = patterns('exam.views',
     url(r'^(?P<q_id>\d+)/$', 'question'),
     url(r'^(?P<q_id>\d+)/check/$', 'check'),
 )
+

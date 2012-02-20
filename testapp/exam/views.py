@@ -115,7 +115,7 @@ def add_quiz(request):
         if form.is_valid():
             data = form.cleaned_data
             form.save()
-	    return my_redirect("/exam/manage/addquiz")
+	    return my_redirect("/exam/manage/showquiz")
                 
         else:
             return my_render_to_response('exam/add_quiz.html',
@@ -354,6 +354,35 @@ def show_all_users(request):
     context = { 'user':user }
     print context
     return my_render_to_response('exam/showusers.html',context,context_instance=RequestContext(request))
+
+def show_all_quiz(request):
+    if request.method == 'POST':
+	data = request.POST.getlist('quiz')
+	if data == None:
+	    quizzes = Quiz.objects.all()
+            context = {'papers': [], 
+                   'quiz': None, 
+                   'quizzes':quizzes}
+            return my_render_to_response('exam/show_quiz.html', context,
+                                    context_instance=RequestContext(request))  
+	for i in data:
+		quiz = Quiz.objects.get(id=i).delete()
+	quizzes = Quiz.objects.all()
+        context = {'papers': [], 
+                   'quiz': None, 
+                   'quizzes':quizzes}
+	return my_render_to_response('exam/show_quiz.html', context,
+                                    context_instance=RequestContext(request))
+		
+    else:
+        """Show the list of available quiz"""
+        quizzes = Quiz.objects.all()
+        context = {'papers': [], 
+                   'quiz': None, 
+                   'quizzes':quizzes}
+        return my_render_to_response('exam/show_quiz.html', context,
+                                    context_instance=RequestContext(request)) 
+
 
 def show_all_questions(request):
    if request.method == 'POST':
