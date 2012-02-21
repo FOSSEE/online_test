@@ -14,7 +14,7 @@ from django.db.models import Sum
 
 # Local imports.
 from exam.models import Quiz, Question, QuestionPaper, Profile, Answer, User
-from exam.forms import UserRegisterForm, UserLoginForm, QuizForm , AddQuestionForm
+from exam.forms import UserRegisterForm, UserLoginForm, QuizForm , QuestionForm
 from exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
 
@@ -90,45 +90,95 @@ def user_register(request):
                 {'form':form},
                 context_instance=RequestContext(request))
 
-def add_question(request):
-  """To add a new question in the database. Create a new question and store it."""
-
-  if request.method == "POST":
-      form = AddQuestionForm(request.POST)
-      if form.is_valid():
-          data = form.cleaned_data
-          form.save()
-          return my_redirect("/exam/manage/questions/")
-     
-      else:
-          return my_render_to_response('exam/add_question.html',
-              {'form':form},
-              context_instance=RequestContext(request))
-  else:
-      form = AddQuestionForm()
-      return my_render_to_response('exam/add_question.html',
-              {'form':form},
-              context_instance=RequestContext(request))
-
-def add_quiz(request):
-    """To add a new quiz. Create a new quiz and store it in the database."""
+def add_question(request,question_id=None):
+    """To add a new question in the database. Create a new question and store it."""
 
     if request.method == "POST":
-        form = QuizForm(request.POST)
+	form = QuestionForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            form.save()
-	    return my_redirect("/exam/manage/showquiz")
+   	    if question_id == None:        
+                form.save()
+		return my_redirect("/exam/manage/questions")
+	    else:
+		d = Question.objects.get(id=question_id)
+		d.summary = form['summary'].data
+		d.description = form['description'].data
+		d.points = form['points'].data
+		d.test = form['test'].data
+		d.options = form['options'].data
+		d.type = form['type'].data
+		d.active = form['active'].data
+		d.save()
+	        return my_redirect("/exam/manage/questions")
+                
+        else:
+            return my_render_to_response('exam/add_question.html',
+                {'form':form},
+                context_instance=RequestContext(request))
+    else:
+	if question_id == None:
+            form = QuestionForm()
+            return my_render_to_response('exam/add_question.html',
+                {'form':form},
+                context_instance=RequestContext(request))
+	else:
+	    
+	    d = Question.objects.get(id=question_id)
+	    form = QuestionForm()
+	    form.initial['summary']= d.summary
+	    form.initial['description'] = d.description
+	    form.initial['points']= d.points
+	    form.initial['test'] = d.test
+	    form.initial['options'] = d.options
+	    form.initial['type'] = d.type
+	    form.initial['active'] = d.active
+		
+	    return my_render_to_response('exam/add_question.html',
+                {'form':form},
+                context_instance=RequestContext(request))	
+
+
+def add_quiz(request,quiz_id=None):
+    if request.method == "POST":
+	form = QuizForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+   	    if quiz_id == None:        
+                form.save()
+		return my_redirect("/exam/manage/showquiz")
+	    else:
+		d = Quiz.objects.get(id=quiz_id)
+		d.start_date = form['start_date'].data
+		d.duration = form['duration'].data
+		d.active = form['active'].data
+		d.description = form['description'].data
+		d.save()
+	        return my_redirect("/exam/manage/showquiz")
                 
         else:
             return my_render_to_response('exam/add_quiz.html',
                 {'form':form},
                 context_instance=RequestContext(request))
     else:
-        form = QuizForm()
-        return my_render_to_response('exam/add_quiz.html',
+	if quiz_id == None:
+            form = QuizForm()
+            return my_render_to_response('exam/add_quiz.html',
                 {'form':form},
                 context_instance=RequestContext(request))
+	else:
+	    
+	    d = Quiz.objects.get(id=quiz_id)
+	    form = QuizForm()
+	    form.initial['start_date']= d.start_date
+	    form.initial['duration'] = d.duration
+	    form.initial['description']= d.description
+	    form.initial['active'] = d.active
+		
+            return my_render_to_response('exam/add_quiz.html',
+                {'form':form},
+                context_instance=RequestContext(request))	
+
 
 def prof_manage(request):
     """Take credentials of the user with professor/moderator rights/permissions and log in."""

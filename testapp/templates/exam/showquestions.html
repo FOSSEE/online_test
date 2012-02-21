@@ -26,7 +26,7 @@ function my_confirm(frm)
 <form name=frm action="" method="post">
 {% csrf_token %}
 {% for i in questions %}
-<input type="checkbox" name="question" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/showquestions/{{ i.id }}">{{ i }}</a><br>
+<input type="checkbox" name="question" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{ i }}</a><br>
 {% endfor %}
 <br>
 <button class="btn" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question</button>&nbsp;&nbsp;

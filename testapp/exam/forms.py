@@ -123,7 +123,7 @@ class QuizForm(forms.Form):
 	new_quiz.description=description
 	new_quiz.save()
 
-class AddQuestionForm(forms.Form):
+class QuestionForm(forms.Form):
    summary = forms.CharField(max_length = 128)
    description = forms.CharField(widget = forms.Textarea(attrs={'cols': 20, 'rows': 3}))
    points = forms.FloatField()

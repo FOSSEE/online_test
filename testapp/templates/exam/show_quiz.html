@@ -35,7 +35,7 @@ function my_confirm(frm)
 {% csrf_token %}
 {% for quiz in quizzes %}
 
-<input type=checkbox name='quiz' value={{quiz.id}} />&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/monitor/{{quiz.id}}/">{{ quiz.description }}</a><br>
+<input type=checkbox name='quiz' value={{quiz.id}} />&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}</a><br>
 {% endfor %}
 <br><br>
 <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz");'>Add New Quiz</button>&nbsp;&nbsp;<button class="btn" type="submit" name="delete" onClick="my_confirm(frm);">Delete</button>
