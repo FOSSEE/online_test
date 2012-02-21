@@ -91,7 +91,8 @@ def user_register(request):
                 context_instance=RequestContext(request))
 
 def add_question(request):
- 
+  """To add a new question in the database. Create a new question and store it."""
+
   if request.method == "POST":
       form = AddQuestionForm(request.POST)
       if form.is_valid():
@@ -110,6 +111,8 @@ def add_question(request):
               context_instance=RequestContext(request))
 
 def add_quiz(request):
+    """To add a new quiz. Create a new quiz and store it in the database."""
+
     if request.method == "POST":
         form = QuizForm(request.POST)
         if form.is_valid():
@@ -128,6 +131,8 @@ def add_quiz(request):
                 context_instance=RequestContext(request))
 
 def prof_manage(request):
+    """Take credentials of the user with professor/moderator rights/permissions and log in."""
+
     return render_to_response('manage.html',{})
 
 def user_login(request):
@@ -154,6 +159,8 @@ def user_login(request):
                                      context_instance=RequestContext(request))
 
 def start(request):
+    """Check the user cedentials and if any quiz is available, start the exam."""
+
     user = request.user
     try:
         # Right now the app is designed so there is only one active quiz 
@@ -196,6 +203,8 @@ def start(request):
                                      context_instance=ci)
 
 def question(request, q_id):
+    """Check the credentials of the user and start the exam."""
+
     user = request.user
     if not user.is_authenticated():
         return my_redirect('/exam/login/')
@@ -227,6 +236,8 @@ def show_question(request, q_id):
         return question(request, q_id)
 
 def check(request, q_id):
+    
+
     user = request.user
     if not user.is_authenticated():
         return my_redirect('/exam/login/')
@@ -287,10 +298,13 @@ def check(request, q_id):
         return show_question(request, next_q)
         
 def quit(request):
-   
+    """Show the quit page when the user logs out."""
+
     return my_render_to_response('exam/quit.html',context_instance=RequestContext(request)) 
 
 def complete(request,reason = None):
+    """Show a page to inform user that the quiz has been compeleted."""
+
     user = request.user
     no = False
     message = reason or 'The quiz has been completed. Thank you.'
@@ -305,6 +319,7 @@ def complete(request,reason = None):
         return my_redirect('/exam/')
 
 def monitor(request, quiz_id=None):
+
     """Monitor the progress of the papers taken so far."""
     user = request.user
     if not user.is_authenticated() and not user.is_staff:
@@ -350,12 +365,16 @@ def get_user_data(username):
     return data
 
 def show_all_users(request):
+    """Shows all the users who have taken various exams/quiz."""
+
     user = User.objects.filter(username__contains="")
     context = { 'user':user }
     print context
     return my_render_to_response('exam/showusers.html',context,context_instance=RequestContext(request))
 
 def show_all_quiz(request):
+    """Generates a list of all the quizzes that are currently in the database."""
+
     if request.method == 'POST':
 	data = request.POST.getlist('quiz')
 	if data == None:
@@ -375,7 +394,6 @@ def show_all_quiz(request):
                                     context_instance=RequestContext(request))
 		
     else:
-        """Show the list of available quiz"""
         quizzes = Quiz.objects.all()
         context = {'papers': [], 
                    'quiz': None, 
@@ -385,6 +403,8 @@ def show_all_quiz(request):
 
 
 def show_all_questions(request):
+   """Show a list of all the questions currently in the databse."""
+
    if request.method == 'POST':
        data = request.POST.getlist('question')
        if data == None:
@@ -404,7 +424,7 @@ def show_all_questions(request):
                                    context_instance=RequestContext(request))
                
    else:
-       """Show the list of available quiz"""
+
        questions = Question.objects.all()
        context = {'papers': [],
                   'question': None,
