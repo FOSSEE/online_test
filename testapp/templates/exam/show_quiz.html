@@ -33,6 +33,7 @@ function my_confirm(frm)
 <center><h3>Quiz List</h3></center>
 <form method="post" action="" name='frm'>
 {% csrf_token %}
+
 {% for quiz in quizzes %}
 
 <input type=checkbox name='quiz' value={{quiz.id}} />&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}</a><br>

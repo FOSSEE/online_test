@@ -58,6 +58,8 @@ def index(request):
     """
     user = request.user
     if user.is_authenticated():
+	if user.groups.filter(name='moderator').count() > 0:
+	    return my_redirect('/exam/manage/')
         return my_redirect("/exam/start/")
 
     return my_redirect("/exam/login/")
@@ -92,7 +94,9 @@ def user_register(request):
 
 def add_question(request,question_id=None):
     """To add a new question in the database. Create a new question and store it."""
-
+    user = request.user
+    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
+	raise Http404('You are not allowed to view this page!')
     if request.method == "POST":
 	form = QuestionForm(request.POST)
         if form.is_valid():
@@ -140,6 +144,9 @@ def add_question(request,question_id=None):
 
 
 def add_quiz(request,quiz_id=None):
+    user = request.user
+    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
+	raise Http404('You are not allowed to view this page!')
     if request.method == "POST":
 	form = QuizForm(request.POST)
         if form.is_valid():
@@ -182,14 +189,18 @@ def add_quiz(request,quiz_id=None):
 
 def prof_manage(request):
     """Take credentials of the user with professor/moderator rights/permissions and log in."""
-
-    return render_to_response('manage.html',{})
+    user = request.user
+    if user.is_authenticated() and user.groups.filter(name='moderator').count() > 0:
+	return render_to_response('manage.html',{})
+    return my_redirect('/exam/login/')
 
 def user_login(request):
     """Take the credentials of the user and log the user in."""
 
     user = request.user
     if user.is_authenticated():
+	if user.groups.filter(name='moderator').count() > 0 :
+	    return my_redirect('/exam/manage/')
         return my_redirect("/exam/start/")
 
     if request.method == "POST":
@@ -197,7 +208,9 @@ def user_login(request):
         if form.is_valid():
             user = form.cleaned_data
             login(request, user)
-            return my_redirect("/exam/start/")
+	    if user.groups.filter(name='moderator').count() > 0 :
+		return my_redirect('/exam/manage/')
+            return my_redirect('/exam/start/')
         else:
             context = {"form": form}
             return my_render_to_response('exam/login.html', context,
@@ -358,6 +371,8 @@ def complete(request,reason = None):
     user = request.user
     no = False
     message = reason or 'The quiz has been completed. Thank you.'
+    if user.groups.filter(name='moderator').count() > 0:
+	message = 'You are successfully Logged out. Thanks for spending some time with the application'
     if request.method == 'POST' and 'no' in request.POST:
         no = True
     if not no:
@@ -372,7 +387,7 @@ def monitor(request, quiz_id=None):
 
     """Monitor the progress of the papers taken so far."""
     user = request.user
-    if not user.is_authenticated() and not user.is_staff:
+    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0:
         raise Http404('You are not allowed to view this page!')
 
     if quiz_id is None:
@@ -416,7 +431,9 @@ def get_user_data(username):
 
 def show_all_users(request):
     """Shows all the users who have taken various exams/quiz."""
-
+    user = request.user
+    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0:
+	raise Http404('You are not allowed to view this page !')
     user = User.objects.filter(username__contains="")
     context = { 'user':user }
     print context
@@ -424,6 +441,9 @@ def show_all_users(request):
 
 def show_all_quiz(request):
     """Generates a list of all the quizzes that are currently in the database."""
+    user = request.user
+    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0:
+	raise Http404('You are not allowed to view this page !')
 
     if request.method == 'POST':
 	data = request.POST.getlist('quiz')
@@ -453,39 +473,41 @@ def show_all_quiz(request):
 
 
 def show_all_questions(request):
-   """Show a list of all the questions currently in the databse."""
+    """Show a list of all the questions currently in the databse."""
+    user = request.user
+    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
+	raise Http404("You are not allowed to view this page !")
 
-   if request.method == 'POST':
-       data = request.POST.getlist('question')
-       if data == None:
-           questions = Question.objects.all()
-           context = {'papers': [],
-                  'question': None,
-                  'questions':questions}
-           return my_render_to_response('exam/showquestions.html', context,
+    if request.method == 'POST':
+        data = request.POST.getlist('question')
+        if data == None:
+            questions = Question.objects.all()
+            context = {'papers': [],
+                   'question': None,
+                   'questions':questions}
+            return my_render_to_response('exam/showquestions.html', context,
                                  context_instance=RequestContext(request))  
-       for i in data:
-               question = Question.objects.get(id=i).delete()
-       questions = Question.objects.all()
-       context = {'papers': [],
+        for i in data:
+            question = Question.objects.get(id=i).delete()
+        questions = Question.objects.all()
+        context = {'papers': [],
                   'question': None,
                   'questions':questions}
-       return my_render_to_response('exam/showquestions.html', context,
+        return my_render_to_response('exam/showquestions.html', context,
                                    context_instance=RequestContext(request))
                
-   else:
-
-       questions = Question.objects.all()
-       context = {'papers': [],
+    else:
+        questions = Question.objects.all()
+        context = {'papers': [],
                   'question': None,
                   'questions':questions}
-       return my_render_to_response('exam/showquestions.html', context,
+        return my_render_to_response('exam/showquestions.html', context,
                                    context_instance=RequestContext(request))
 
 def user_data(request, username):
     """Render user data."""
     current_user = request.user
-    if not current_user.is_authenticated() and not current_user.is_staff:
+    if not current_user.is_authenticated() or current_user.groups.filter(name='moderator').count() == 0:
         raise Http404('You are not allowed to view this page!')
 
     data = get_user_data(username)
@@ -499,7 +521,7 @@ def grade_user(request, username):
     and update all their marks and also give comments for each paper.
     """
     current_user = request.user
-    if not current_user.is_authenticated() and not current_user.is_staff:
+    if not current_user.is_authenticated() or current_user.groups.filter(name='moderator').count() == 0:
         raise Http404('You are not allowed to view this page!')
 
     data = get_user_data(username)
