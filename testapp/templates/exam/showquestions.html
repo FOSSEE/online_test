@@ -7,7 +7,7 @@ List of Questions
 
 {% block script %}
 <script type='text/javascript'>
-function my_confirm(frm)
+function confirm_delete(frm)
 {
        var r = confirm("Are you Sure ?");
        if(r==false)
@@ -18,6 +18,18 @@ function my_confirm(frm)
                }
                location.replace("{{URL_ROOT}}/exam/manage/showquestion");
        }
+}
+function confirm_edit(frm)
+{
+	var n = 0;
+	for(i=0;i<frm.question.length;i++)
+	{
+		if(frm.question[i].checked==true)
+			n = n+1;
+	}
+	if(n==0)
+		location.replace("{{URL_ROOT}}/exam/manage/showquestion");
+
 }
 </script>
 {% endblock %}
@@ -30,6 +42,8 @@ function my_confirm(frm)
 {% endfor %}
 <br>
 <button class="btn" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question</button>&nbsp;&nbsp;
-<button class="btn" type="submit" onClick="my_confirm(frm);">Delete</button>
+<button class="btn" type="submit" name='edit' value='edit' onClick="confirm_edit(frm);">Edit Selected</button>&nbsp;&nbsp;
+<button class="btn" type="submit" onClick="confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>
+
 </form>
 {% endblock %}

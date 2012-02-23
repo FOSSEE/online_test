@@ -13,7 +13,7 @@
       </div>
 
       <div class=row>
-         <div class=span10>
+         <div class=span10 style="overflow:auto">
             <h3><center>{% block subtitle %} {% endblock %}</center></h3><br>
 	    {% block manage %}
 	    {% endblock %}
@@ -22,6 +22,10 @@
 	.content .span4 {
         min-height: 500px;
       }
+	.textarea
+	{
+		width: 10px;
+	}
 	</style>
 
 	 <div class="span4">

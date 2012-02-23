@@ -92,6 +92,33 @@ def user_register(request):
                 {'form':form},
                 context_instance=RequestContext(request))
 
+def edit_question(request):
+   user = request.user
+   if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
+       raise Http404('You are not allowed to view this page!')
+
+   summary = request.POST.getlist('summary')
+   description = request.POST.getlist('description')
+   points = request.POST.getlist('points')
+   test = request.POST.getlist('test')
+   options = request.POST.getlist('options')
+   type = request.POST.getlist('type')
+   active = request.POST.getlist('active')
+   j = 0
+   for i in editquestionlist:
+       question = Question.objects.get(id=i)
+       question.summary = summary[j]
+       question.description = description[j]
+       question.points = points[j]
+       question.test = test[j]
+       question.options = options[j]
+       question.type = type[j]
+       question.active = active[j]
+       question.save()
+       j += 1
+   return my_redirect("/exam/manage/questions")
+   
+
 def add_question(request,question_id=None):
     """To add a new question in the database. Create a new question and store it."""
     user = request.user
@@ -478,7 +505,7 @@ def show_all_questions(request):
     if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
 	raise Http404("You are not allowed to view this page !")
 
-    if request.method == 'POST':
+    if request.method == 'POST' and request.POST.get('delete')=='delete':
         data = request.POST.getlist('question')
         if data == None:
             questions = Question.objects.all()
@@ -495,7 +522,35 @@ def show_all_questions(request):
                   'questions':questions}
         return my_render_to_response('exam/showquestions.html', context,
                                    context_instance=RequestContext(request))
-               
+    
+    elif request.method == 'POST' and request.POST.get('edit')=='edit':
+        data = request.POST.getlist('question')
+	global editquestionlist
+	editquestionlist = data
+	if data == None:
+            questions = Question.objects.all()
+            context = {'papers': [],
+                   'question': None,
+                   'questions':questions}
+            return my_render_to_response('exam/showquestions.html', context,
+                                 context_instance=RequestContext(request))
+
+        forms = []
+   	for j in data:
+            d = Question.objects.get(id=j)
+	    form = QuestionForm()
+	    form.initial['summary']= d.summary
+	    form.initial['description'] = d.description
+	    form.initial['points']= d.points
+	    form.initial['test'] = d.test
+	    form.initial['options'] = d.options
+	    form.initial['type'] = d.type
+	    form.initial['active'] = d.active
+	    forms.append(form)
+ 
+        return my_render_to_response('exam/edit_question.html',
+                {'forms':forms},
+                context_instance=RequestContext(request))	
     else:
         questions = Question.objects.all()
         context = {'papers': [],
