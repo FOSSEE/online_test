@@ -92,6 +92,27 @@ def user_register(request):
                 {'form':form},
                 context_instance=RequestContext(request))
 
+def edit_quiz(request):
+   user = request.user
+   if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
+       raise Http404('You are not allowed to view this page!')
+
+   start_date = request.POST.getlist('start_date')
+   duration = request.POST.getlist('duration')
+   active = request.POST.getlist('active')
+   description = request.POST.getlist('description')
+   
+   j = 0
+   for i in quizlist:
+       quiz = Quiz.objects.get(id=i)
+       quiz.start_date = start_date[j]
+       quiz.duration = duration[j]
+       quiz.active = active[j]
+       quiz.description = description[j]
+       quiz.save()
+       j += 1
+   return my_redirect("/exam/manage/showquiz/")
+
 def edit_question(request):
    user = request.user
    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
@@ -472,7 +493,7 @@ def show_all_quiz(request):
     if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0:
 	raise Http404('You are not allowed to view this page !')
 
-    if request.method == 'POST':
+    if request.method == 'POST' and request.POST.get('delete')=='delete':
 	data = request.POST.getlist('quiz')
 	if data == None:
 	    quizzes = Quiz.objects.all()
@@ -489,6 +510,32 @@ def show_all_quiz(request):
                    'quizzes':quizzes}
 	return my_render_to_response('exam/show_quiz.html', context,
                                     context_instance=RequestContext(request))
+
+    elif request.method == 'POST' and request.POST.get('edit')=='edit':
+        data = request.POST.getlist('quiz')
+	global quizlist
+	quizlist = data
+	if data == None:
+            quiz = Quiz.objects.all()
+            context = {'papers': [],
+                   'quiz': None,
+                   'quizzes':quiz}
+            return my_render_to_response('exam/showquiz.html', context,
+                                 context_instance=RequestContext(request))
+
+        forms = []
+   	for j in data:
+            d = Quiz.objects.get(id=j)
+	    form = QuizForm()
+	    form.initial['start_date']= d.start_date
+	    form.initial['duration'] = d.duration
+	    form.initial['active']= d.active
+	    form.initial['description'] = d.description
+	    forms.append(form)
+ 
+        return my_render_to_response('exam/edit_quiz.html',
+                {'forms':forms},
+                context_instance=RequestContext(request))
 		
     else:
         quizzes = Quiz.objects.all()

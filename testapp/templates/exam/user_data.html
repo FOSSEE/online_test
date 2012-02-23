@@ -1,20 +1,11 @@
-{% extends "base.html" %}
+{% extends "manage.html" %}
 
 {% block title %} Data for user {{ data.user.get_full_name.title }} {% endblock title %}
 
-{% block content %}
+{% block manage %}
 
-    <div class="container">
-     <div class="content">
-<div class="page-header">
-<h1><Strong><center>Online Test</center></strong></h1>
-</div>
-          <div class=row>
-         <div class=span14>
-<h3><center>Data for user {{ data.user.get_full_name.title }}</center></h3><br>
+{% block subtitle %}Data for user {{ data.user.get_full_name.title }}{% endblock %}
 <form action="" method="post">
-
-
 <p> 
 Name: {{ data.user.get_full_name.title }} <br/>
 Username: {{ data.user.username }} <br/>
@@ -87,16 +78,5 @@ User IP address: {{ paper.user_ip }}
     Monitor quiz</a>
 {% endwith %}
 {% endif %}
-<br />
-<a href="{{URL_ROOT}}/admin/">Admin</a>
 
-</div>
-          </div>
-     </div>
-<footer>
-        <p>&copy; FOSSEE group, IIT Bombay</p>
-      </footer>
-
-    </div> <!-- /container -->
-
-{% endblock content %}
+{% endblock %}

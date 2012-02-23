@@ -1,0 +1,31 @@
+{% extends "manage.html" %}
+
+
+{% block subtitle %} 
+Edit Quiz(zes)
+{% endblock %}
+
+{% block manage %}
+
+<style type='text/css'>
+
+table th, table td {
+  padding: 10px 10px 9px;
+  line-height: 18px;
+  text-align: left;
+}
+</style>
+<form name=frm action="{{URL_ROOT}}/exam/manage/editquiz/" method="post">
+{% csrf_token %}
+{% for form in forms %}
+<center>
+<table class=span1>
+{{ form.as_table }}
+</table>
+</center>
+<hr>
+{% endfor %}
+<center><button class="btn" type="submit" name="save">Save</button>
+<button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/showquiz/");'>Cancel</button> </center>
+</form>
+{% endblock %}
