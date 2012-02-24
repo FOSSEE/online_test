@@ -71,8 +71,7 @@ Marks: <input id="q{{ question.id }}" type="text"
 {% endif %} {# if data.papers #}
 
 {% if data.papers.count > 1 %}
-<a href="{{URL_ROOT}}/exam/manage/monitor/">
-    Monitor quiz</a>
+<a href="{{URL_ROOT}}/exam/manage/monitor/">Monitor quiz</a>
 {% else %}
 {% with data.papers.0 as paper %}
 <a href="{{URL_ROOT}}/exam/manage/monitor/{{paper.quiz.id}}/">
@@ -81,5 +80,4 @@ Marks: <input id="q{{ question.id }}" type="text"
 {% endif %}
 <br />
 <a href="{{URL_ROOT}}/admin/">Admin</a>
-
 {% endblock%}

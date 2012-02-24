@@ -3,47 +3,42 @@
 {% block title %}Manage{% endblock title %}
 
 {% block content %}
-
 <div class="container">
    <div class="content">
       <div class="page-header">
          <font size=6><strong>Online Test</font></strong>
 	<button class="btn pull-right" type="submit" onClick='location.replace("{{URL_ROOT}}/exam/complete/");'>Log out</button>
-	
       </div>
 
       <div class=row>
-         <div class=span10 style="overflow:auto">
-            <h3><center>{% block subtitle %} {% endblock %}</center></h3><br>
-	    {% block manage %}
-	    {% endblock %}
-         </div>
-	<style type='text/css'>
-	.content .span4 {
-        min-height: 500px;
-      }
-	.textarea
-	{
+          <div class=span10 style="overflow:auto">
+             <h3><center>{% block subtitle %} {% endblock %}</center></h3><br>
+	     {% block manage %}
+	     {% endblock %}
+          </div>
+  	    <style type='text/css'>
+	    .content .span4 
+	    {
+        	min-height: 500px;
+            }
+	    .textarea
+	    {
 		width: 10px;
-	}
-	</style>
-
-	 <div class="span4">
-                 <h5>Manage</h5>
-                 <ul>
-                 <li><a href="{{ URL_ROOT }}/exam/manage/questions">Questions</a></li>
-                 <li><a href="{{ URL_ROOT }}/exam/manage/showquiz">Quizzes</a></li>
-                 <li><a href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
-                 <li><a href="{{ URL_ROOT }}/exam/manage/monitor">Monitor</a></li>
-                 </ul>
-         </div>
+	    }
+	    </style>
+          <div class="span4">
+               <h5>Manage</h5>
+               <ul>
+               <li><a href="{{ URL_ROOT }}/exam/manage/questions">Questions</a></li>
+               <li><a href="{{ URL_ROOT }}/exam/manage/showquiz">Quizzes</a></li>
+               <li><a href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
+               <li><a href="{{ URL_ROOT }}/exam/manage/monitor">Monitor</a></li>
+               </ul>
+          </div>
       </div>
-  </div>
-<footer>
-    <p>&copy; FOSSEE group, IIT Bombay</p>
-</footer>
-
-    </div> <!-- /container -->
-
-
+   </div>
+   <footer>
+      <p>&copy; FOSSEE group, IIT Bombay</p>
+   </footer>
+</div> <!-- /container -->
 {% endblock content %}

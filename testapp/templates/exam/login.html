@@ -3,46 +3,40 @@
 {% block title %}Login{% endblock title %}
 
 {% block content %}
-
-    <div class="container">
-     <div class="content">
-<div class="page-header">
-<h1><Strong><center>Online Test</center></strong></h1>
+<div class="container">
+  <div class="content">
+    <div class="page-header">
+      <h1><Strong><center>Online Test</center></strong></h1>
+    </div>
+    <div class=row>
+      <div class=span14>
+        <h3><center>Login</center></h3><br>
+        <form action="" method="post">
+        {% csrf_token %}
+          <style type="text/css">
+            label 
+	    {
+		  padding-top: 6px;
+		  font-size: 15px;
+		  line-height: 18px;
+		  float: left;
+		  width: 80px;
+		  text-align: center;
+		  color: #404040;
+            }
+	  </style>
+        <center><table class=span1>
+        {{ form.as_table }}
+        </table></center>
+        <center><button class="btn" type="submit">Login</button>&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn" type="reset">Cancel</button></center>
+        <br><center><a href="{{URL_ROOT}}/exam/forgotpassword/">Forgot Password?</a></center><br>
+        <center><a href="{{URL_ROOT}}/exam/register/">New User? Sign-Up </a></center>
+        </form>
+      </div>
+    </div>
+  </div>
+  <footer>
+      <p>&copy; FOSSEE group, IIT Bombay</p>
+  </footer>
 </div>
-          <div class=row>
-         <div class=span14>
-<h3><center>Login</center></h3><br>
-<form action="" method="post">
-{% csrf_token %}
-
-<style type="text/css">
-      label {
-  padding-top: 6px;
-  font-size: 15px;
-  line-height: 18px;
-  float: left;
-  width: 80px;
-  text-align: center;
-  color: #404040;
-/*  font-weight : bold;*/
-}
-</style>
-<center><table class=span1>
-{{ form.as_table }}
-</table></center>
-
-<center><button class="btn" type="submit">Login</button>&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn" type="reset">Cancel</button></center>
-<br><center><a href="{{URL_ROOT}}/exam/forgotpassword/">Forgot Password?</a></center><br>
-<center><a href="{{URL_ROOT}}/exam/register/">New User? Sign-Up </a></center>
-</form>
-</div>
-          </div>
-     </div>
-<footer>
-        <p>&copy; FOSSEE group, IIT Bombay</p>
-      </footer>
-
-    </div> <!-- /container -->
-
-
 {% endblock content %}

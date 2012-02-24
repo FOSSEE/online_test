@@ -18,6 +18,7 @@ UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
 
 class UserRegisterForm(forms.Form):
+    """A Class to create new form for User's Registration. It has the various fields and functions required to register a new user to the system"""
 
     username = forms.CharField(max_length=30, 
             help_text='Letters, digits, period and underscores only.')
@@ -88,6 +89,8 @@ class UserRegisterForm(forms.Form):
         return u_name, pwd
 
 class UserLoginForm(forms.Form):
+    """Creates a form which will allow the user to log into the system."""
+
     username = forms.CharField(max_length = 30)
     password = forms.CharField(max_length=30, widget=forms.PasswordInput())
 
@@ -105,6 +108,8 @@ class UserLoginForm(forms.Form):
         return user
 
 class QuizForm(forms.Form):
+    """Creates a form to add or edit a Quiz. It has the related fields and functions required."""
+
     start_date = forms.DateField(initial=datetime.date.today)
     duration = forms.IntegerField()
     active = forms.BooleanField(required = False)
@@ -124,6 +129,8 @@ class QuizForm(forms.Form):
 	new_quiz.save()
 
 class QuestionForm(forms.Form):
+   """Creates a form to add or edit a Question. It has the related fields and functions required."""
+
    summary = forms.CharField(max_length = 128)
    description = forms.CharField(widget = forms.Textarea(attrs={'cols': 20, 'rows': 3}))
    points = forms.FloatField()

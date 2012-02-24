@@ -1,29 +1,27 @@
 {% extends "manage.html" %}
 
-{% block subtitle %}
-Edit Question
-{% endblock %}
+{% block subtitle %}Edit Question{% endblock %}
 
 
 {% block manage %}
-<style type="text/css">
-
-table th, table td {
- padding: 10px 10px 9px;
- line-height: 18px solid;
- text-align: left;
-}
-</style>
+   <style type="text/css">
+     table th, table td 
+     {
+	 padding: 10px 10px 9px;
+ 	 line-height: 18px solid;
+	 text-align: left;
+     }
+   </style>
 
 <form action="{{URL_ROOT}}/exam/manage/editquestion/" method="post">
-{% csrf_token %}
-{% for form in forms %}
-<table>
-{{ form.as_table }}
-</table>
-<hr>
-{% endfor %}
-<center><button class="btn" type="submit" name="savequestion">Save</button>
-<button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Cancel</button> </center>
+  {% csrf_token %}
+  {% for form in forms %}
+  <table>
+  {{ form.as_table }}
+  </table>
+  <hr>
+  {% endfor %}
+  <center><button class="btn" type="submit" name="savequestion">Save</button>
+  <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Cancel</button> </center>
 </form>
 {% endblock %}

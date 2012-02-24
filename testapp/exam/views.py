@@ -93,6 +93,8 @@ def user_register(request):
                 context_instance=RequestContext(request))
 
 def edit_quiz(request):
+   """Edit the list of quizzes seleted by the user for editing."""
+
    user = request.user
    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
        raise Http404('You are not allowed to view this page!')
@@ -114,6 +116,7 @@ def edit_quiz(request):
    return my_redirect("/exam/manage/showquiz/")
 
 def edit_question(request):
+   """Edit the list of quizzes seleted by the user for editing."""
    user = request.user
    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
        raise Http404('You are not allowed to view this page!')
@@ -142,6 +145,7 @@ def edit_question(request):
 
 def add_question(request,question_id=None):
     """To add a new question in the database. Create a new question and store it."""
+
     user = request.user
     if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
 	raise Http404('You are not allowed to view this page!')
@@ -192,6 +196,8 @@ def add_question(request,question_id=None):
 
 
 def add_quiz(request,quiz_id=None):
+    """To add a new quiz in the database. Create a new question and store it."""
+
     user = request.user
     if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
 	raise Http404('You are not allowed to view this page!')
@@ -237,6 +243,7 @@ def add_quiz(request,quiz_id=None):
 
 def prof_manage(request):
     """Take credentials of the user with professor/moderator rights/permissions and log in."""
+
     user = request.user
     if user.is_authenticated() and user.groups.filter(name='moderator').count() > 0:
 	return render_to_response('manage.html',{})
@@ -340,6 +347,7 @@ def question(request, q_id):
 
 def show_question(request, q_id):
     """Show a question if possible."""
+
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(request, msg)
@@ -347,7 +355,7 @@ def show_question(request, q_id):
         return question(request, q_id)
 
 def check(request, q_id):
-    
+    """Checks the answers of the user for particular question"""    
 
     user = request.user
     if not user.is_authenticated():
@@ -432,8 +440,8 @@ def complete(request,reason = None):
         return my_redirect('/exam/')
 
 def monitor(request, quiz_id=None):
-
     """Monitor the progress of the papers taken so far."""
+
     user = request.user
     if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0:
         raise Http404('You are not allowed to view this page!')
@@ -479,6 +487,7 @@ def get_user_data(username):
 
 def show_all_users(request):
     """Shows all the users who have taken various exams/quiz."""
+
     user = request.user
     if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0:
 	raise Http404('You are not allowed to view this page !')
@@ -489,6 +498,7 @@ def show_all_users(request):
 
 def show_all_quiz(request):
     """Generates a list of all the quizzes that are currently in the database."""
+
     user = request.user
     if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0:
 	raise Http404('You are not allowed to view this page !')
@@ -548,6 +558,7 @@ def show_all_quiz(request):
 
 def show_all_questions(request):
     """Show a list of all the questions currently in the databse."""
+
     user = request.user
     if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
 	raise Http404("You are not allowed to view this page !")
@@ -608,6 +619,7 @@ def show_all_questions(request):
 
 def user_data(request, username):
     """Render user data."""
+
     current_user = request.user
     if not current_user.is_authenticated() or current_user.groups.filter(name='moderator').count() == 0:
         raise Http404('You are not allowed to view this page!')

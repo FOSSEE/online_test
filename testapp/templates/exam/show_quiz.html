@@ -3,33 +3,31 @@
 {% block title %} Quiz List {% endblock title %}
 
 {% block script %}
-<script type='text/javascript'>
-function my_confirm(frm)
-{
-	var r = confirm("Are you Sure ?");
-	if(r==false)
-	{
+   <script type='text/javascript'>
+      function my_confirm(frm)
+      {
+	   var r = confirm("Are you Sure ?");
+	   if(r==false)
+	   {  
 		for(i=0;i<frm.quiz.length;i++)
 		{
 			frm.quiz[i].checked=false;
 		}
 		location.replace("{{URL_ROOT}}/exam/manage/showquiz");
-	}
-	
-}
-function confirm_edit(frm)
-{
-	var n = 0;
-	for (var i =0;i<frm.quiz.length;i++)
-	{
+	   }
+      }
+      function confirm_edit(frm)
+      {
+	   var n = 0;
+	   for (var i =0;i<frm.quiz.length;i++)
+	   {
 		if (frm.quiz[i].checked == false)
 			n = n + 1 ;
-	}
-	if(n == frm.quiz.length)
+	   }
+	   if(n == frm.quiz.length)
 			location.replace("{{URL_ROOT}}/exam/manage/showquiz");
-}
-
-</script>
+      }
+   </script>
 {% endblock %}
 
 {% block manage %}
@@ -46,13 +44,14 @@ function confirm_edit(frm)
 {% csrf_token %}
 
 {% for quiz in quizzes %}
-
 <input type=checkbox name='quiz' value={{quiz.id}} />&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}</a><br>
 {% endfor %}
+
 <br><br>
 <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz");'>Add New Quiz</button>&nbsp;&nbsp;
 <button class="btn" type="submit" name='edit' value='edit' onClick="confirm_edit(frm);" >Edit Selected</button>&nbsp;&nbsp;
 <button class="btn" type="submit" name="delete" value='delete' onClick="my_confirm(frm);">Delete Selected</button>
 </form>
 {% endif %}
+
 {% endblock %}
