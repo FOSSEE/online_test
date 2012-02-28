@@ -1,0 +1,9 @@
+table th, table td 
+    {	
+	 text-align: left;
+    }
+textarea
+{
+width : 300px;
+height : 150px;
+}

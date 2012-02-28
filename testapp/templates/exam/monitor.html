@@ -4,6 +4,9 @@
 
 {% block meta %} <meta http-equiv="refresh" content="30"/> {% endblock meta %}
 
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question_quiz.css" type="text/css" /> 
+{% endblock %}
 
 {% block manage %}
   {% if not quizzes and not quiz %}
@@ -30,18 +33,6 @@
 {% if papers %}
 {# <p> Quiz: {{ quiz_name }}</p> #}
 <p>Number of papers: {{ papers|length }} </p>
-  <style type="text/css">
-     table td 
-     {
- 	vertical-align: top;
-	border-top: 1px solid #ddd;
-     }
-     table tbody th 
-     {
-	border-top: 1px solid #ddd;
-	vertical-align: top;
-     }
-  </style>
 <table border="1" cellpadding="3">
     <tr>
     <th> Name </th>

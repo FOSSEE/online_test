@@ -2,21 +2,15 @@
 
 {% block subtitle %}Edit Question{% endblock %}
 
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question_quiz.css" type="text/css" /> 
+{% endblock %}
 
 {% block manage %}
-   <style type="text/css">
-     table th, table td 
-     {
-	 padding: 10px 10px 9px;
- 	 line-height: 18px solid;
-	 text-align: left;
-     }
-   </style>
-
 <form action="{{URL_ROOT}}/exam/manage/editquestion/" method="post">
   {% csrf_token %}
   {% for form in forms %}
-  <table>
+  <table class=span1>
   {{ form.as_table }}
   </table>
   <hr>

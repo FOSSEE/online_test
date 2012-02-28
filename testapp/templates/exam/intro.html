@@ -3,14 +3,10 @@
 {% block title %}Instructions and Rules {% endblock %}
 
 {% block content %}
-  <div class="container">
-    <div class="content">
-      <div class="page-header">
-          <h1><Strong><center>Online Test</center></strong></h1>
-      </div>
-      <div class=row>
-        <div class=span14>
-          <h3><center>Important instructions & rules</center></h3><br>
+
+{% block pagetitle %}Online Test {% endblock %}
+{% block formtitle %}Important instructions & rules {% endblock %}
+
           <p> Welcome <strong>{{user.first_name.title}} {{user.last_name.title}}</strong>, to the programming quiz! </p>
           <p>
               This examination system has been developed with the intention of making you 
@@ -35,11 +31,4 @@
            {% csrf_token %}
            <center><button class="btn" type="submit" name="start">Start Exam!</button></center>
           </form>
-        </div>
-      </div>
-    </div>
-   <footer>
-   <p>&copy; FOSSEE group, IIT Bombay</p>
-   </footer>
-  </div>
 {% endblock content %}

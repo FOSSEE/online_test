@@ -48,6 +48,7 @@
 
 {% block onload %} onload="update_time()" {% endblock onload %}
 
+{% block pagetitle %}<br><h4>Test for {{ user.first_name.title }} {{ user.last_name.title }} </h4> {% endblock %}
 {% block content %}
 <div class="topbar">
   <div class="fill">
@@ -61,16 +62,10 @@
    </div>
 </div>
 
-<div class="container">
-   <div class="content">
-      <div class="page-header">
-         <br><center><h4>Test for {{ user.first_name.title }} {{ user.last_name.title }} </h4></center>
-      </div>
-      <div class>
-         <div class>
-     	 <h4><u> {{ question.summary }} </u></h4>
-	 <h5>{{ question.description|safe }} </h5>
-	 <h5>(Marks : {{ question.points }}) </h5>
+         
+     	 <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br> 
+	 <font size=3 face=arial>	{{ question.description|safe }} </font>
+
          {% if error_message %}<h5>ERROR:<h5><pre>{{ error_message }}</pre>{% endif %}
          <p id="status"></p>
          <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/" method="post">
@@ -93,11 +88,5 @@
          <h5>{{ user.first_name.title }} {{ user.last_name.title }}, You have {{ paper.questions_left }} question(s) left in {{ quiz_name }} </h5>
          <p id="time_left"><strong>  Time left:   </strong></p>
          <hr/>
-         </div>
-      </div>
-   </div>
-   <footer>
-     <p>&copy; FOSSEE group, IIT Bombay</p>
-   </footer>
-</div>
+      
 {% endblock content %}

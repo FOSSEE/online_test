@@ -3,6 +3,10 @@
 {% block title %} Grading papers for {{ data.user.get_full_name.title }} {% endblock title %}
 
 {% block subtitle %}Grading papers for {{ data.user.get_full_name.title }}{% endblock %}
+ 
+{% block css %}
+	 <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/gradeuser.css" type="text/css" /> 
+{% endblock %}
 
 {% block manage %}
 
@@ -32,12 +36,13 @@ Start time: {{ paper.start_time }} <br/>
 {% if paper.answers.count %}
 <h3> Answers </h3><br>
 <form id="q{{ paper.quiz.id }}_form"
-    action="{{URL_ROOT}}/exam/manage/grade_user/{{data.user.username}}/" method="post">
+    action="{{URL_ROOT}}/exam/manage/gradeuser/{{data.user.username}}/" method="post">
 {% csrf_token %}
 {% for question, answers in paper.get_question_answers.items %}
 <p><strong> 
-    <a href="{{URL_ROOT}}/admin/exam/question/{{question.id}}">
-        Question: {{ question.id }}. {{ question.summary }} </a> 
+    <!--a href="{{URL_ROOT}}/admin/exam/question/{{question.id}}">
+        Question: {{ question.id }}. {{ question.summary }} </a--> 
+	<a href="{{URL_ROOT}}/admin/exam/question/{{question.id}}" rel="floatbox" rev="width:468 height:255 scrolling:no" text="{{question}}" title="{{ question.description }} Correct Answer : {{ question.test }}">        Question: {{ question.id }}. {{ question.summary }} </a>
     (Points: {{ question.points }})</strong> </p>
 {% if question.type == "mcq" %}
 <p> Choices: 

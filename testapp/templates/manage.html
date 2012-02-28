@@ -1,44 +1,56 @@
-{% extends "base.html" %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-{% block title %}Manage{% endblock title %}
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+   <head>
+     <title>
+       {% block title %}
+       {% endblock %}
+     </title>
 
-{% block content %}
-<div class="container">
-   <div class="content">
-      <div class="page-header">
-         <font size=6><strong>Online Test</font></strong>
-	<button class="btn pull-right" type="submit" onClick='location.replace("{{URL_ROOT}}/exam/complete/");'>Log out</button>
-      </div>
+   {% block meta %}
+	<meta charset="utf-8">
+   	<meta name="description" content="">
+	<meta name="author" content="">
+   {% endblock %}
+   
+   <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/base.css" type="text/css" /> 
+   {% block css %}
+   {% endblock %}
 
-      <div class=row>
-          <div class=span10 style="overflow:auto">
-             <h3><center>{% block subtitle %} {% endblock %}</center></h3><br>
-	     {% block manage %}
-	     {% endblock %}
-          </div>
-  	    <style type='text/css'>
-	    .content .span4 
-	    {
-        	min-height: 500px;
-            }
-	    .textarea
-	    {
-		width: 10px;
-	    }
-	    </style>
-          <div class="span4">
+   {% block script %}
+   {% endblock %}
+   </head>
+
+<body {% block onload %}{% endblock %}>
+
+  <div class="container">
+     <div class="content">
+         <div class="page-header">
+	    <font size=6><strong>Online Test</font></strong>
+            <button class="btn pull-right" type="submit" onClick='location.replace("{{URL_ROOT}}/exam/complete/");'>Log out</button>
+         </div>
+         <div class=row>
+            <div class=span10>
+               <h3><center>{% block subtitle %} {% endblock %}</center></h3><br>
+               {% block manage %}
+	       {% endblock %}
+            </div>
+	    <div class=span4>
                <h5>Manage</h5>
                <ul>
-               <li><a href="{{ URL_ROOT }}/exam/manage/questions">Questions</a></li>
+	       <li><a href="{{ URL_ROOT }}/exam/manage/questions">Questions</a></li>
                <li><a href="{{ URL_ROOT }}/exam/manage/showquiz">Quizzes</a></li>
-               <li><a href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
-               <li><a href="{{ URL_ROOT }}/exam/manage/monitor">Monitor</a></li>
+       	       <li><a href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
+	       <li><a href="{{ URL_ROOT }}/exam/manage/monitor">Monitor</a></li>
                </ul>
-          </div>
-      </div>
-   </div>
-   <footer>
-      <p>&copy; FOSSEE group, IIT Bombay</p>
-   </footer>
-</div> <!-- /container -->
-{% endblock content %}
+            </div>
+         </div>
+     </div>
+     <footer>
+     <p>&copy; FOSSEE group, IIT Bombay</p>
+     </footer>
+  </div>
+
+</body>
+</html>

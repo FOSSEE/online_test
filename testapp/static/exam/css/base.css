@@ -1,6 +1,8 @@
 html, body {
+  background-color: #eee;
   margin: 0;
   padding: 0;
+
 }
 h1,
 h2,
@@ -168,19 +170,52 @@ textarea {
 * Basic and global styles for generating a grid system, structural layout, and page templates
 * ------------------------------------------------------------------------------------------- */
 body {
-  background-color: #ffffff;
+  padding-top : 10px;
+  background-color: #eee;
   margin: 0;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 13px;
   font-weight: normal;
   line-height: 18px;
   color: #404040;
+
 }
 .container {
-  width: 940px;
+  width: 820px;
   margin-left: auto;
   margin-right: auto;
   zoom: 1;
+}
+.container > footer p {
+  text-align: center;
+}
+.container > .content {
+  background-color: #fff;
+  padding: 20px;
+  margin: 0 -20px;
+  -webkit-border-radius: 0 0 6px 6px;
+  -moz-border-radius: 0 0 6px 6px;
+  border-radius: 0 0 6px 6px;
+  -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.15);
+  -moz-box-shadow: 0 1px 2px rgba(0,0,0,.15);
+  box-shadow: 0 1px 2px rgba(0,0,0,.15);
+}
+.content .span10,
+.content .span14 {
+  min-height: 500px;
+}
+.content .span4 {
+  margin-left: 0;
+  padding-left: 19px;
+  border-left: 1px solid #eee;
+}
+.topbar .btn {
+  border: 0;
+}
+.page-header {
+  background-color: #f5f5f5;
+  padding: 20px 20px 10px;
+  margin: -20px -20px 20px;
 }
 .container:before, .container:after {
   display: table;
@@ -263,6 +298,7 @@ a:hover {
   width: 160px;
 }
 .span4 {
+  min-height : 500px;
   width: 220px;
 }
 .span5 {
@@ -281,7 +317,7 @@ a:hover {
   width: 520px;
 }
 .span10 {
-  width: 580px;
+  width: 560px;
 }
 .span11 {
   width: 640px;
