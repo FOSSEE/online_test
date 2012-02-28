@@ -8,6 +8,22 @@
 	 <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/gradeuser.css" type="text/css" /> 
 {% endblock %}
 
+{% block script %}
+<script type='text/javascript'>
+function hidedata(showHideDiv) {
+	var ele = document.getElementById(showHideDiv);
+	ele.style.display = "none";
+
+ 
+}
+function showdata(showHideDiv)
+{
+	var ele = document.getElementById(showHideDiv);
+	ele.style.display = "block";
+
+}
+</script>
+{% endblock %}
 {% block manage %}
 
 <p> 
@@ -35,14 +51,25 @@ Start time: {{ paper.start_time }} <br/>
 
 {% if paper.answers.count %}
 <h3> Answers </h3><br>
-<form id="q{{ paper.quiz.id }}_form"
+<form name=frm id="q{{ paper.quiz.id }}_form"
     action="{{URL_ROOT}}/exam/manage/gradeuser/{{data.user.username}}/" method="post">
 {% csrf_token %}
 {% for question, answers in paper.get_question_answers.items %}
 <p><strong> 
-    <!--a href="{{URL_ROOT}}/admin/exam/question/{{question.id}}">
-        Question: {{ question.id }}. {{ question.summary }} </a--> 
-	<a href="{{URL_ROOT}}/admin/exam/question/{{question.id}}" rel="floatbox" rev="width:468 height:255 scrolling:no" text="{{question}}" title="{{ question.description }} Correct Answer : {{ question.test }}">        Question: {{ question.id }}. {{ question.summary }} </a>
+	<a id='myHeader' href="{{URL_ROOT}}/admin/exam/question/{{question.id}}" onMouseOver="javascript:showdata('myContent{{question.id}}','myHeader');" onMouseOut="javascript:hidedata('myContent{{question.id}}','myHeader');"> Question: {{ question.id }}. {{ question.summary }} </a>
+<div style="clear:both;"></div>
+<div id="contentDiv">
+     <div id="myContent{{question.id}}" style="display: none;">
+        <p> Description : {{ question.description }} </p>
+	<p> Points : {{ question.points }} </p>
+	<p> Test : {{ question.test }} </p>
+	<p> Options : {{ question.options }} </p>
+	<p> Type : {{ question.type }} </p>
+
+     </div>
+</div> 
+
+
     (Points: {{ question.points }})</strong> </p>
 {% if question.type == "mcq" %}
 <p> Choices: 
@@ -62,6 +89,8 @@ Marks: <input id="q{{ question.id }}" type="text"
         value="{{ answer.marks }}"><br><br>
 {% endwith %}
 {% endfor %} {# for question, answers ... #}
+
+
 <h3>Teacher comments: </h3>
 <textarea id="comments_{{paper.quiz.id}}" rows="10" cols="80" 
     name="comments_{{ paper.quiz.id }}">{{ paper.comments }}</textarea>

@@ -4,3 +4,35 @@ width : 550px;
 height : 200px;
 
 }
+
+#headerDiv, #contentDiv {
+float: left;
+width: 510px;
+}
+#titleText {
+float: left;
+font-size: 1.1em;
+font-weight: bold;
+margin: 5px;
+}
+#myHeader {
+font-size: 1.1em;
+font-weight: bold;
+margin: 5px;
+}
+#headerDiv {
+background-color: #0037DB;
+color: #9EB6FF;
+}
+#contentDiv {
+background-color:#F0F8FF;
+}
+#myContent {
+margin: 5px 10px;
+}
+#headerDiv a {
+float: right;
+margin: 10px 10px 5px 5px;
+}
+#headerDiv a:hover {
+color: #FFFFFF;
