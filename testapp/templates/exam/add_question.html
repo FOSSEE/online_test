@@ -2,18 +2,31 @@
 
 {% block subtitle %}Add Question{% endblock %}
 
+{% block script %}
+<script type='text/javascript'>
+function my_render(frm)
+{
+	document.getElementById('my').innerHTML = frm.description.value;
+	
+}
+</script>
+{% endblock %}
 {% block css %}
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question_quiz.css" type="text/css" /> 
 {% endblock %}
 
 {% block manage %}
-<form action="" method="post">
+<form action="" method="post" name="frm" onKeyPress='javascript:my_render(frm);'>
   {% csrf_token %}
+<b>Look of Question in HTML Format :</b> 
+<p id='my' ></p> 
+
   <center><table class=span1>
   {{ form.as_table }}
   </table>
+
   <center><button class="btn" type="submit" name="savequestion">Save</button>
   <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Cancel</button> </center>
 </form>
-{% endblock %}
 
+{% endblock %}

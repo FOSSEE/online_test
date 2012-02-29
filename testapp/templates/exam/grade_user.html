@@ -56,7 +56,7 @@ Start time: {{ paper.start_time }} <br/>
 {% csrf_token %}
 {% for question, answers in paper.get_question_answers.items %}
 <p><strong> 
-	<a id='myHeader' href="{{URL_ROOT}}/admin/exam/question/{{question.id}}" onMouseOver="javascript:showdata('myContent{{question.id}}','myHeader');" onMouseOut="javascript:hidedata('myContent{{question.id}}','myHeader');"> Question: {{ question.id }}. {{ question.summary }} </a>
+	<a id='myHeader' href="{{URL_ROOT}}/admin/exam/question/{{question.id}}" onMouseOver="javascript:showdata('myContent{{question.id}}','myHeader');" onMouseOut="javascript:hidedata('myContent{{question.id}}','myHeader');"> Question: {{ question.id }}. {{ question.summary }} </a>    (Points: {{ question.points }})</strong> </p>
 <div style="clear:both;"></div>
 <div id="contentDiv">
      <div id="myContent{{question.id}}" style="display: none;">
@@ -70,7 +70,7 @@ Start time: {{ paper.start_time }} <br/>
 </div> 
 
 
-    (Points: {{ question.points }})</strong> </p>
+
 {% if question.type == "mcq" %}
 <p> Choices: 
 {% for option in question.options.strip.splitlines %} {{option}}, {% endfor %}

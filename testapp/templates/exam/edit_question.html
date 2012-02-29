@@ -5,11 +5,25 @@
 {% block css %}
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question_quiz.css" type="text/css" /> 
 {% endblock %}
-
+{% block script %}
+<script type='text/javascript'>
+function my_render(frm)
+{
+	for(var i=1;i<=frm.description.length;i++)
+	{
+		document.getElementById(i).innerHTML = frm.description[i-1].value;
+	}
+	
+}
+</script>
+{% endblock %}
 {% block manage %}
-<form action="{{URL_ROOT}}/exam/manage/editquestion/" method="post">
+<form name='frm' action="{{URL_ROOT}}/exam/manage/editquestion/" method="post" onKeyPress='javascript:my_render(frm);'>
   {% csrf_token %}
+
   {% for form in forms %}
+<b>Look of Question in HTML Format :</b> 
+<p id='{{forloop.counter}}'></p> 
   <table class=span1>
   {{ form.as_table }}
   </table>
@@ -19,3 +33,4 @@
   <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Cancel</button> </center>
 </form>
 {% endblock %}
+
