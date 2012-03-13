@@ -1845,8 +1845,9 @@ footer {
   -moz-box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
-.page-header h1 {
-  margin-bottom: 8px;
+.page-header h3 {
+  margin-top: 20px;
+  margin-bottom : -17px;
 }
 .btn.danger,
 .alert-message.danger,

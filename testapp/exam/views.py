@@ -246,7 +246,8 @@ def prof_manage(request):
 
     user = request.user
     if user.is_authenticated() and user.groups.filter(name='moderator').count() > 0:
-	return render_to_response('manage.html',{})
+	context = {'user':user}
+	return render_to_response('manage.html',context)
     return my_redirect('/exam/login/')
 
 def user_login(request):

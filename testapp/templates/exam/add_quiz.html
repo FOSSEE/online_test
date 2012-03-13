@@ -6,9 +6,18 @@
 {% block css %}
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question_quiz.css" type="text/css" /> 
 {% endblock %}
+{% block script %}
+<script type='text/javascript'>
+	function test()
+	{
+		document.getElementById('id_description').onFocus="javascript:test2()";
+	}
 
+</script>
+{% endblock %}
+{% block onload %} onload="javascript:test();"  {% endblock %}
 {% block manage %}
-<form name=frm action="" method="post">
+<form name=frm id=frm action="" method="post" >
   {% csrf_token %}
   <center>
   <table class=span1>
@@ -16,6 +25,7 @@
   </table>
   </center>
   <center><button class="btn" type="submit" name="save">Save</button>
-  <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/showquiz/");'>Cancel</button> </center>
+  <button class="btn" type="button" name="button" onClick="javascript:test()">Cancel</button> </center>
+  <!--button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/showquiz/");'>Cancel</button> </center-->
 </form>
 {% endblock %}

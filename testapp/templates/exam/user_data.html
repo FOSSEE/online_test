@@ -21,7 +21,7 @@ Last login: {{ data.user.last_login }}
 </p>
 
 {% if data.papers %}
-<p><a href="{{URL_ROOT}}/exam/manage/grade_user/{{ data.user.username }}/">
+<p><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{ data.user.username }}/">
     Grade/correct paper</a>
 </p>
 
@@ -66,7 +66,7 @@ User IP address: {{ paper.user_ip }}
 {% endif %} {# if data.papers #}
 <br />
 <hr />
-<a href="{{URL_ROOT}}/exam/manage/grade_user/{{ data.user.username }}/">
+<a href="{{URL_ROOT}}/exam/manage/gradeuser/{{ data.user.username }}/">
     Grade/correct paper</a>
 <br/>
 {% if data.papers.count > 1 %}

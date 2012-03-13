@@ -113,7 +113,7 @@ class QuizForm(forms.Form):
     start_date = forms.DateField(initial=datetime.date.today)
     duration = forms.IntegerField()
     active = forms.BooleanField(required = False)
-    description = forms.CharField(max_length=256, widget=forms.Textarea(attrs={'cols':20,'rows':2}))
+    description = forms.CharField(max_length=256, widget=forms.Textarea(attrs={'cols':20,'rows':1}))
 
     def save(self):
         start_date = self.cleaned_data["start_date"]

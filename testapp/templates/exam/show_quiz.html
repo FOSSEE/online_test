@@ -27,19 +27,18 @@
 	   if(n == frm.quiz.length)
 			location.replace("{{URL_ROOT}}/exam/manage/showquiz");
       }
+
    </script>
 {% endblock %}
-
+{% block subtitle %} Quiz List {% endblock %}
 {% block manage %}
 {% if not quizzes and not quiz %}
-<h5><center> Available Quiz </center></h5>
 <center><h5> No quizzes available. </h5></center>
 {% endif %}
 
 {# ############################################################### #}
 {# This is rendered when we are just viewing exam/monitor #}
 {% if quizzes %}
-<center><h3>Quiz List</h3></center>
 <form method="post" action="" name='frm'>
 {% csrf_token %}
 

@@ -15,15 +15,49 @@ function my_render(frm)
 	}
 	
 }
+function load_form()
+{
+
+}
+
+function data(showContent,showHideDiv)
+{
+	var con = document.getElementById(showContent);
+	var ele=document.getElementById(showHideDiv);
+	if (ele.style.display=="block")
+	{
+		con.style.display = "none"
+		ele.style.display = "none";
+	}
+	else
+	{
+		con.style.display = "block";
+		ele.style.display = "block";
+	}
+}
 </script>
 {% endblock %}
+{% block onload %} onload='javascript:load_form();' {% endblock %}
 {% block manage %}
 <form name='frm' action="{{URL_ROOT}}/exam/manage/editquestion/" method="post" onKeyPress='javascript:my_render(frm);'>
   {% csrf_token %}
 
-  {% for form in forms %}
-<b>Look of Question in HTML Format :</b> 
+	{% for form in forms %}
+		
+		{{ form.summary.value }}<a onClick="data('contentDiv{{forloop.counter}}','myContent{{forloop.counter}}');"  style='cursor:pointer;'>Show</a> <br>
+		<b>Look of Question in HTML Format :</b> 
 <p id='{{forloop.counter}}'></p> 
+		<div id="contentDiv{{forloop.counter}}">
+		     <div id="myContent{{forloop.counter}}" style="display: none;">
+		        <table> {{ form.as_table }} </table>
+	
+		     </div>
+		</div> 
+		<hr>
+	{% endfor %}
+
+  {% for form in forms %}
+
   <table class=span1>
   {{ form.as_table }}
   </table>
@@ -32,5 +66,7 @@ function my_render(frm)
   <center><button class="btn" type="submit" name="savequestion">Save</button>
   <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Cancel</button> </center>
 </form>
+
+
 {% endblock %}
 

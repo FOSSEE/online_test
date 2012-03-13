@@ -5,19 +5,30 @@
 
 {% block css %}
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question_quiz.css" type="text/css" /> 
+<style type='text/css'>
+table th, table td 
+    {	
+	 text-align: center;
+    }
+</style>
 {% endblock %}
 
 {% block manage %}
 <form name=frm action="{{URL_ROOT}}/exam/manage/editquiz/" method="post">
   {% csrf_token %}
-  {% for form in forms %}
   <center>
-  <table class=span1>
-  {{ form.as_table }}
+  <table>
+	<tr>
+	<td><strong> Start Date <td><strong> Duration <td> <strong>Active <td> <strong>Description </strong>
+	</tr>
+  {% for form in forms %}
+
+	<tr>
+	<td>  {{ form.start_date}} <td> {{ form.duration }} <td> {{ form.active }} <td> {{ form.description }}
+	</tr>
+  {% endfor %}
   </table>
   </center>
-  <hr>
-  {% endfor %}
   <center><button class="btn" type="submit" name="save">Save</button>
   <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/showquiz/");'>Cancel</button> </center>
 </form>

@@ -23,27 +23,30 @@
    </head>
 
 <body {% block onload %}{% endblock %}>
-
-  <div class="container">
-     <div class="content">
-         <div class="page-header">
-	    <font size=6><strong>Online Test</font></strong>
-            <button class="btn pull-right" type="submit" onClick='location.replace("{{URL_ROOT}}/exam/complete/");'>Log out</button>
-         </div>
-         <div class=row>
-            <div class=span10>
-               <h3><center>{% block subtitle %} {% endblock %}</center></h3><br>
-               {% block manage %}
-	       {% endblock %}
-            </div>
-	    <div class=span4>
-               <h5>Manage</h5>
-               <ul>
+<div class="topbar">
+  <div class="fill">
+     <div class="container">
+        <h3 class="brand"><strong>Online Test</h3></strong>
+	<ul class='pull-right'>
 	       <li><a href="{{ URL_ROOT }}/exam/manage/questions">Questions</a></li>
                <li><a href="{{ URL_ROOT }}/exam/manage/showquiz">Quizzes</a></li>
        	       <li><a href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
 	       <li><a href="{{ URL_ROOT }}/exam/manage/monitor">Monitor</a></li>
-               </ul>
+	       <li><a class='pull-right' style='cursor:pointer' onClick='location.replace("{{URL_ROOT}}/exam/complete/");'>Log out</a></li>
+        </ul>
+        
+     </div>
+   </div>
+</div>
+  <div class="container">
+     <div class="content">
+         <div class="page-header">
+		<h3><center>{% block subtitle %}Welcome {{ user.first_name.title }}  {{user.last_name.title}} {% endblock %}</center></h3><br>
+         </div>
+         <div class=row>
+            <div class=span14>
+               {% block manage %}
+	       {% endblock %}
             </div>
          </div>
      </div>

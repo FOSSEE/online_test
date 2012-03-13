@@ -10,17 +10,20 @@
 
 {% block script %}
 <script type='text/javascript'>
-function hidedata(showHideDiv) {
-	var ele = document.getElementById(showHideDiv);
-	ele.style.display = "none";
-
- 
-}
-function showdata(showHideDiv)
+function data(showContent,showHideDiv)
 {
-	var ele = document.getElementById(showHideDiv);
-	ele.style.display = "block";
-
+	var con = document.getElementById(showContent);
+	var ele=document.getElementById(showHideDiv);
+	if (ele.style.display=="block")
+	{
+		con.style.display = "none"
+		ele.style.display = "none";
+	}
+	else
+	{
+		con.style.display = "block";
+		ele.style.display = "block";
+	}
 }
 </script>
 {% endblock %}
@@ -56,9 +59,9 @@ Start time: {{ paper.start_time }} <br/>
 {% csrf_token %}
 {% for question, answers in paper.get_question_answers.items %}
 <p><strong> 
-	<a id='myHeader' href="{{URL_ROOT}}/admin/exam/question/{{question.id}}" onMouseOver="javascript:showdata('myContent{{question.id}}','myHeader');" onMouseOut="javascript:hidedata('myContent{{question.id}}','myHeader');"> Question: {{ question.id }}. {{ question.summary }} </a>    (Points: {{ question.points }})</strong> </p>
-<div style="clear:both;"></div>
-<div id="contentDiv">
+	 Question: {{ question.id }}. {{ question.summary }} <font color='red'><img style="cursor: pointer" alt='...'  onClick="data('contentDiv{{question.id}}','myContent{{question.id}}');"></font>
+   (Points: {{ question.points }})</strong> </p>
+<div id="contentDiv{{question.id}}" style="display:none;">
      <div id="myContent{{question.id}}" style="display: none;">
         <p> Description : {{ question.description }} </p>
 	<p> Points : {{ question.points }} </p>

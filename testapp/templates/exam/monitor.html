@@ -7,17 +7,25 @@
 {% block css %}
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question_quiz.css" type="text/css" /> 
 {% endblock %}
-
+{% block subtitle %}
+  {% if not quizzes and not quiz %}
+	Quiz Results
+  {% endif %}
+  {% if quizzes %}
+	Available Quizzes
+  {% endif %}
+  {% if quiz %}
+	{{ quiz.description }} Results
+  {% endif %}
+{% endblock %}
 {% block manage %}
   {% if not quizzes and not quiz %}
-  <h1><center> Quiz results </center></h1>
-  <center><h5> No quizzes available. </h5></center>
+    <center><h5> No quizzes available. </h5></center>
   {% endif %}
 
 {# ############################################################### #}
 {# This is rendered when we are just viewing exam/monitor #}
 {% if quizzes %}
-<center><h1> Available quizzes </h1></center>
 <ul>
 {% for quiz in quizzes %}
 <li><a href="{{URL_ROOT}}/exam/manage/monitor/{{quiz.id}}/">{{ quiz.description }}</a></li>
@@ -28,7 +36,6 @@
 {# ############################################################### #}
 {# This is rendered when we are just viewing exam/monitor/quiz_num #}
 {% if quiz %}
-<center><h1> {{ quiz.description }} results  </h1></center>
 
 {% if papers %}
 {# <p> Quiz: {{ quiz_name }}</p> #}
@@ -59,5 +66,4 @@
 <p> No answer papers so far. </p>
 {% endif %} {# if papers #}
 {% endif %}
-<a href="{{URL_ROOT}}/admin/">Admin</a>
 {% endblock %}
