@@ -1,10 +1,14 @@
-from project.settings import *
+from testapp.settings import *
 
 DEBUG=False
 TEMPLATE_DEBUG=DEBUG
 
-DATABASE_ENGINE = 'django.db.backends.mysql'
-DATABASE_NAME = 'online_test'
-DATABASE_USER = 'online_test_user'
-# Imports DATABASE_PASSWORD from testapp/local.py that is not part of git repo
+
+DATABASES["default"]["ENGINE"] = 'django.db.backends.mysql'
+DATABASES["default"]["NAME"] = 'online_test'
+DATABASES["default"]["USER"] = 'online_test_user'
+
 from testapp.local import DATABASE_PASSWORD
+# Imports DATABASE_PASSWORD from testapp/local.py that is not part of git repo
+DATABASES["default"]["PASSWORD"] = DATABASE_PASSWORD
+
