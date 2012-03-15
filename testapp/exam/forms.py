@@ -11,7 +11,7 @@ import datetime
 QUESTION_TYPE_CHOICES = (
        ("python", "Python"),
        ("bash", "Bash"),
-       ("mcq", "MultipleChoice"),
+       ("mcq", "MCQ"),
        )
 
 UNAME_CHARS = letters + "._" + digits
@@ -131,12 +131,12 @@ class QuizForm(forms.Form):
 class QuestionForm(forms.Form):
    """Creates a form to add or edit a Question. It has the related fields and functions required."""
 
-   summary = forms.CharField(max_length = 128)
-   description = forms.CharField(widget = forms.Textarea(attrs={'cols': 20, 'rows': 3}))
+   summary = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}))
+   description = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}))
    points = forms.FloatField()
-   test = forms.CharField(widget = forms.Textarea(attrs={'cols': 20, 'rows': 3}))
-   options = forms.CharField(widget = forms.Textarea(attrs={'cols': 20, 'rows': 3}))
-   type = forms.CharField(max_length=24, widget=forms.Select(choices=QUESTION_TYPE_CHOICES))
+   test = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}))
+   options = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}),required=False)
+   type = forms.CharField(max_length=8, widget=forms.Select(choices=QUESTION_TYPE_CHOICES))
    active = forms.BooleanField(required=False)
 
    def save(self):

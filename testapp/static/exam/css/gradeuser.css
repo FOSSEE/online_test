@@ -5,9 +5,15 @@ height : 200px;
 
 }
 
+.for-question{
+	background: none repeat scroll 0 0 #F1F1F1;
+    border-radius: 6px 6px 6px 6px;
+    margin-bottom: 10px;
+    padding: 5px;
+}
+
 #headerDiv, #contentDiv {
 float: left;
-width: 510px;
 }
 #titleText {
 float: left;
@@ -24,9 +30,14 @@ margin: 5px;
 background-color: #0037DB;
 color: #9EB6FF;
 }
+
 #contentDiv {
-background-color:#F0F8FF;
+    background-color:#F0F8FF;
+    border: 1px solid #C9C9C9;
+    border-radius: 5px 5px 5px 5px;
+    margin-bottom: 10px;
 }
+
 #myContent {
 margin: 5px 10px;
 }

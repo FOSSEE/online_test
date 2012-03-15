@@ -27,14 +27,15 @@
   <div class="fill">
      <div class="container">
         <h3 class="brand"><strong>Online Test</h3></strong>
-	<ul class='pull-right'>
+	<ul>
 	       <li><a href="{{ URL_ROOT }}/exam/manage/questions">Questions</a></li>
                <li><a href="{{ URL_ROOT }}/exam/manage/showquiz">Quizzes</a></li>
        	       <li><a href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
 	       <li><a href="{{ URL_ROOT }}/exam/manage/monitor">Monitor</a></li>
-	       <li><a class='pull-right' style='cursor:pointer' onClick='location.replace("{{URL_ROOT}}/exam/complete/");'>Log out</a></li>
         </ul>
-        
+	<ul style="float:right;">
+	<li><strong><a style='cursor:pointer' onClick='location.replace("{{URL_ROOT}}/exam/complete/");'>Log out</a></strong></li>
+        </ul>
      </div>
    </div>
 </div>

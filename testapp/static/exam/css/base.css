@@ -538,7 +538,7 @@ dl dd {
 hr {
   margin: 20px 0 19px;
   border: 0;
-  border-bottom: 10px solid;
+  border-bottom: 3px solid;
 }
 strong {
   font-style: inherit;
@@ -650,6 +650,10 @@ textarea {
   font-size: 13px;
   font-weight: normal;
   line-height: normal;
+}
+select
+{
+	width : 80px;
 }
 label {
   padding-top: 6px;
@@ -815,6 +819,10 @@ form .clearfix.success .input-prepend .add-on, form .clearfix.success .input-app
   color: #468847;
   background-color: #bcddbc;
   border-color: #468847;
+}
+textarea
+{
+	width : 290px;
 }
 .input-mini,
 input.mini,
@@ -1836,7 +1844,6 @@ a.menu:after, .dropdown-toggle:after {
 footer {
   margin-top: 17px;
   padding-top: 17px;
-  border-top: 1px solid #eee;
 }
 .page-header {
   margin-bottom: 17px;
@@ -1870,6 +1877,11 @@ footer {
 .btn .close, .alert-message .close {
   font-family: Arial, sans-serif;
   line-height: 18px;
+}
+.btn-mini {
+  padding: 2px 6px;
+  font-size: 15px;
+  line-height: 16px;
 }
 .btn.danger,
 .alert-message.danger,

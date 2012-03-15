@@ -1,0 +1,11 @@
+.time-div
+{
+    background-color:red;
+    border:2px solid black;
+    padding: 2px;
+    vertical-align:middle;
+    width:auto;
+    height:12px;
+    float:right;
+    border-radius: 6px 6px 6px 6px;
+}

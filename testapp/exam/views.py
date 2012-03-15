@@ -129,8 +129,8 @@ def edit_question(request):
    type = request.POST.getlist('type')
    active = request.POST.getlist('active')
    j = 0
-   for i in editquestionlist:
-       question = Question.objects.get(id=i)
+   for id_list in editquestionlist:
+       question = Question.objects.get(id=id_list)
        question.summary = summary[j]
        question.description = description[j]
        question.points = points[j]

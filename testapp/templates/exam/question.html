@@ -4,6 +4,10 @@
 
 {% block title %} Answer question {% endblock %}
 
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question.css" type="text/css" />
+{% endblock %}
+
 {% block script %}
    <script type="text/javascript">
       var time_left = {{ time_left }};
@@ -35,7 +39,7 @@
             {
 	            var elem = document.getElementById("time_left");
 		    var t_str = secs_to_time(time_left);
-		    elem.innerHTML = "<strong> Time left: " + t_str + "<strong>" ;
+		    elem.innerHTML = "<strong>" + t_str + "</strong>";
 	            setTimeout("update_time()", 1000);
             }
 	    else 
@@ -48,15 +52,24 @@
 
 {% block onload %} onload="update_time()" {% endblock onload %}
 
-{% block pagetitle %}<br><h4>Test for {{ user.first_name.title }} {{ user.last_name.title }} </h4> {% endblock %}
+{% block pagetitle %}<br><h5>You have {{ paper.questions_left }} question(s) left in {{ quiz_name }} </h5>
+<div class=time-div>
+         <p id="time_left" style="color:white;"></p>
+</div>
+{% endblock %}
+
 {% block content %}
 <div class="topbar">
   <div class="fill">
      <div class="container">
         <h3 class="brand"><strong>Online Test</h3></strong>
+        <ul>
+        <li> <h5><a> Hi {{user.first_name.title}} {{user.last_name.title}} !!! </a></h5>
+        </ul>
         <form id="logout" action="{{URL_ROOT}}/exam/quit/" method="post" class="pull-right">
         {% csrf_token %}
-        <button class="btn" type="submit" name="quit">Quit Exam and Logout</button>
+         <button class="btn" type="submit" name="quit">Quit Exam and Logout</button> </li>
+
         </form>
      </div>
    </div>
@@ -85,8 +98,6 @@
          {% endif %}
          <button class="btn" type="submit" name="skip" id="skip">Skip Question</button>
          </form>
-         <h5>{{ user.first_name.title }} {{ user.last_name.title }}, You have {{ paper.questions_left }} question(s) left in {{ quiz_name }} </h5>
-         <p id="time_left"><strong>  Time left:   </strong></p>
-         <hr/>
+         
       
 {% endblock content %}
