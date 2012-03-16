@@ -23,7 +23,6 @@
    </head>
 
 <body {% block onload %}{% endblock %}>
-
   <div class="container">
      <div class="content">
          <div class="page-header">
@@ -31,7 +30,8 @@
          </div>
          <div class=row>
             <div class=span14>
-               {% block content %}
+               <h3><center>{% block formtitle %} {% endblock formtitle %}</center></h3><br>
+	       {% block content %}
 	       {% endblock %}
             </div>
          </div>
@@ -44,31 +44,3 @@
 </body>
 </html>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	      
