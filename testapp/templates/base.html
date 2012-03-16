@@ -23,22 +23,52 @@
    </head>
 
 <body {% block onload %}{% endblock %}>
-	<div class="container">
-	    <div class="content">
-	        <div class="page-header">
+
+  <div class="container">
+     <div class="content">
+         <div class="page-header">
 		    <h1><Strong><center>{% block pagetitle %} {% endblock pagetitle %}</center></strong></h1>
-	        </div>
-    	        <div class=row>
-	            <div class=span14>
-        	        <h3><center>{% block formtitle %} {% endblock formtitle %}</center></h3><br>
-			{% block content %}
-			{% endblock %}
-		    </div>
-    	        </div>
+         </div>
+         <div class=row>
+            <div class=span14>
+               {% block content %}
+	       {% endblock %}
             </div>
-                <footer>
-	            <p>&copy; FOSSEE group, IIT Bombay</p>
-                </footer>
-        </div>
+         </div>
+     </div>
+     <footer>
+     <p>&copy; FOSSEE group, IIT Bombay</p>
+     </footer>
+  </div>
+
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	      

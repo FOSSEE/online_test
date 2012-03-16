@@ -52,10 +52,14 @@
 
 {% block onload %} onload="update_time()" {% endblock onload %}
 
-{% block pagetitle %}<br><h5>You have {{ paper.questions_left }} question(s) left in {{ quiz_name }} </h5>
-<div class=time-div>
-         <p id="time_left" style="color:white;"></p>
-</div>
+{% block pagetitle %}
+
+<table><h6><div>
+	<tr><td class=td1-class><h5>You have {{ paper.questions_left }} question(s) left in {{ quiz_name }} </h5>
+	<td class=td2-class><div class=time-div id="time_left">
+	</div>
+</div></h6></table>
+
 {% endblock %}
 
 {% block content %}
