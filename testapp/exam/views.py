@@ -493,7 +493,8 @@ def show_all_users(request):
     if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0:
 	raise Http404('You are not allowed to view this page !')
     user = User.objects.filter(username__contains="")
-    context = { 'user':user }
+    questionpaper = QuestionPaper.objects.all()
+    context = { 'question': questionpaper }
     print context
     return my_render_to_response('exam/showusers.html',context,context_instance=RequestContext(request))
 
