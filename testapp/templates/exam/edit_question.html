@@ -58,7 +58,6 @@ function data(showContent,showHideDiv,a,summary)
     {
         con.style.display = "block";
         ele.style.display = "block";
-	atag.text = "Hide";
     }
 }
 
@@ -179,30 +178,31 @@ function autosubmit()
 {% block manage %}
 <form name='frm' action="{{URL_ROOT}}/exam/manage/editquestion/" method="post" onSubmit="return autosubmit()" onKeyPress='javascript:render_question(frm);'>
   {% csrf_token %}
+<center><p>Click on the Question links to edit the question.</p></center>
 <table>
+
     {% for form in forms %}
         
-	<tr cellspacing=2px><td><a id='a{{forloop.counter}}' onClick="data('contentDiv{{forloop.counter}}','myContent{{forloop.counter}}','a{{forloop.counter}}','{{form.summary.value}}');" style='cursor:pointer;'>{{form.summary.value}}</a>
+	<tr><td height=10><a id='a{{forloop.counter}}' onClick="data('contentDiv{{forloop.counter}}','myContent{{forloop.counter}}','a{{forloop.counter}}','{{form.summary.value}}');" style='cursor:pointer;'>{{form.summary.value}}</a>
 	
         <div id="contentDiv{{forloop.counter}}" style="display:none;">
            <div id="myContent{{forloop.counter}}" style="display: none;">
 	      
 	      <center><table class=span1>
-                 <tr><td>Summary: <td>{{ form.summary }}{{ form.summary.errors }}
+                 <tr><td><b>Summary:</b> <td>{{ form.summary }}{{ form.summary.errors }}
  
-                 <tr><td>Points:<td><button class="btn-mini" name={{forloop.counter}} type="button" onClick="increase(frm,{{forloop.counter}});">+</button>{{ form.points }}<button class="btn-mini" type="button" onClick="decrease(frm,{{forloop.counter}});"">-</button>{{ form.points.errors }} &nbsp; Active: &nbsp; {{ form.active }}{{form.active.errors}} &nbsp; Type: &nbsp;{{ form.type }}{{form.type.errors}}
+                 <tr><td><b>Points:<td><button class="btn-mini" name={{forloop.counter}} type="button" onClick="increase(frm,{{forloop.counter}});">+</button>{{ form.points }}<button class="btn-mini" type="button" onClick="decrease(frm,{{forloop.counter}});"">-</button>{{ form.points.errors }} &nbsp; Active: &nbsp; {{ form.active }}{{form.active.errors}} &nbsp; Type: &nbsp;{{ form.type }}{{form.type.errors}}
 
                  <tr><td><strong>Rendered: </strong><td><p id='my{{forloop.counter}}'></p>
-                 <tr><td>Description: <td>{{ form.description }}  {{form.description.errors}}
-                 <tr><td>Test: <td>{{ form.test }}{{form.test.errors}}
-                 <tr><td id='label_option{{forloop.counter}}'>Options: <td>{{ form.options }}  {{form.options.errors}} {{form.options.helptext}}
+                 <tr><td><b>Description: <td>{{ form.description }}  {{form.description.errors}}
+                 <tr><td><b>Test: <td>{{ form.test }}{{form.test.errors}}
+                 <tr><td id='label_option{{forloop.counter}}'><b>Options: <td>{{ form.options }}  {{form.options.errors}} {{form.options.helptext}}
               </table></center>
 
            </div>
         </div>
-        <tr><td><hr>
     {% endfor %}
-</table>
+</table></center>
   <center><button class="btn" type="submit" name="savequestion">Save</button>
   <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Cancel</button> </center>
 </form>

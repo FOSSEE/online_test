@@ -6,7 +6,7 @@ height : 200px;
 }
 
 .for-question{
-	background: none repeat scroll 0 0 #F1F1F1;
+    background: none repeat scroll 0 0 #F1F1F1;
     border-radius: 6px 6px 6px 6px;
     margin-bottom: 10px;
     padding: 5px;
@@ -36,10 +36,13 @@ color: #9EB6FF;
     border: 1px solid #C9C9C9;
     border-radius: 5px 5px 5px 5px;
     margin-bottom: 10px;
+    min-width: 805px;
+    
 }
 
 #myContent {
 margin: 5px 10px;
+
 }
 #headerDiv a {
 float: right;

@@ -68,7 +68,7 @@
      <div class="container">
         <h3 class="brand"><strong>Online Test</h3></strong>
         <ul>
-        <li> <h5><a> Hi {{user.first_name.title}} {{user.last_name.title}} !!! </a></h5>
+        <li> <h5><a> Hi {{user.first_name.title}} {{user.last_name.title}}  </a></h5>
         </ul>
         <form id="logout" action="{{URL_ROOT}}/exam/quit/" method="post" class="pull-right">
         {% csrf_token %}
@@ -83,7 +83,7 @@
      	 <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br> 
 	 <font size=3 face=arial>	{{ question.description|safe }} </font>
 
-         {% if error_message %}<h5>ERROR:<h5><pre>{{ error_message }}</pre>{% endif %}
+         {% if error_message %}<h5>ERROR:</h5><div class="alert alert-error">{{ error_message }}</div>{% endif %}
          <p id="status"></p>
          <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/" method="post">
          {% csrf_token %}
@@ -92,7 +92,7 @@
          <input name="answer" type="radio" value="{{option}}" />{{option}} <br/>
          {% endfor %}
          {% else %}
-         <textarea rows="15" style="width:700px;" name="answer">{% if last_attempt %}{{last_attempt.strip}}{% else %}{% if question.type == "bash" %} #!/bin/bash{% else %}# Enter your answer here.{% endif %}{% endif %}</textarea>
+         <textarea rows="15" style="width:810px;margin-bottom:10px;" name="answer">{% if last_attempt %}{{last_attempt.strip}}{% else %}{% if question.type == "bash" %} #!/bin/bash{% else %}# Enter your answer here.{% endif %}{% endif %}</textarea>
          {% endif %}
 
          {% if question.type == "mcq" %}

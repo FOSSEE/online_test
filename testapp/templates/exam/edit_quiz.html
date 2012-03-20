@@ -8,7 +8,7 @@
 <style type='text/css'>
 table th, table td 
     {	
-	 text-align: center;
+	 text-align: left;
     }
 </style>
 {% endblock %}
@@ -17,15 +17,13 @@ table th, table td
 <form name=frm action="{{URL_ROOT}}/exam/manage/editquiz/" method="post">
   {% csrf_token %}
   <center>
-  <table>
-	<tr>
-	<td><strong> Start Date <td><strong> Duration <td> <strong>Active <td> <strong>Description </strong>
-	</tr>
-  {% for form in forms %}
-
-	<tr>
-	<td>  {{ form.start_date}} <td> {{ form.duration }} <td> {{ form.active }} <td> {{ form.description }}
-	</tr>
+  <table class=span1>
+	{% for form in forms %}
+ 	<tr><td><b>Start Date: <td>{{ form.start_date}} 
+	<tr><td><b>Duration: <td> {{ form.duration }} 
+	<tr><td><b>Active: <td> {{ form.active }} 
+	<tr><td><b>Description: <td> {{ form.description }}
+	<hr>
   {% endfor %}
   </table>
   </center>
