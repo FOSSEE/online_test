@@ -22,3 +22,7 @@ urlpatterns = patterns('',
     url(ADMIN_BASE, include(admin.site.urls)),
 
 )
+
+urlpatterns += patterns('',
+    url(r'^taggit_autocomplete_modified/', include('taggit_autocomplete_modified.urls')),
+)

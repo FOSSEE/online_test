@@ -1,7 +1,8 @@
 import datetime
 from django.db import models
 from django.contrib.auth.models import User
-from taggit.managers import TaggableManager
+from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
+
 ################################################################################
 class Profile(models.Model):
     """Profile for a user to store roll number and other details."""
