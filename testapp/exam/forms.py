@@ -3,7 +3,7 @@ from exam.models import Profile,Quiz,Question
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-
+from taggit.forms import *
 
 from string import letters, punctuation, digits
 import datetime
@@ -138,6 +138,7 @@ class QuestionForm(forms.Form):
    options = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}),required=False)
    type = forms.CharField(max_length=8, widget=forms.Select(choices=QUESTION_TYPE_CHOICES))
    active = forms.BooleanField(required=False)
+   tags = TagField()
 
    def save(self):
         summary = self.cleaned_data["summary"]

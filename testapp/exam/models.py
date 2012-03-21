@@ -1,7 +1,7 @@
 import datetime
 from django.db import models
 from django.contrib.auth.models import User
-
+from taggit.managers import TaggableManager
 ################################################################################
 class Profile(models.Model):
     """Profile for a user to store roll number and other details."""
@@ -43,6 +43,7 @@ class Question(models.Model):
     # Is this question active or not.  If it is inactive it will not be used
     # when creating a QuestionPaper.
     active = models.BooleanField(default=True)
+    tags = TaggableManager()
 
     def __unicode__(self):
         return self.summary

@@ -10,6 +10,7 @@ urlpatterns = patterns('exam.views',
     url(r'^(?P<q_id>\d+)/$', 'question'),
     url(r'^(?P<q_id>\d+)/check/$', 'check'),
 
+
     url(r'^manage/$', 'prof_manage'),
     url(r'^manage/addquestion/$', 'add_question'),
     url(r'^manage/addquestion/(?P<question_id>\d+)/$', 'add_question'),    
