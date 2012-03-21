@@ -42,6 +42,7 @@ function textareaformat()
 	document.getElementById('id_type').setAttribute('class','select-type');
 	
 	document.getElementById('id_points').setAttribute('class','mini-text');
+    document.getElementById('id_tags').setAttribute('class','tag-text');
 
 	$('#id_description').bind('focus', function( event ){
          document.getElementById("id_description").rows=5;
@@ -134,7 +135,10 @@ function autosubmit()
   <tr><td><strong>Rendered: </strong><td><p id='my'></p>
   <tr><td>Description: <td>{{ form.description}}  {{form.description.errors}}
   <tr><td>Test: <td>{{ form.test }}{{form.test.errors}}
-  <tr><td id='label_option'>Options: <td>{{ form.options }}  {{form.options.errors}}
+  <tr><td>Tags: <td>{{ form.tags }}
+  <tr><td id='label_option'>Options: <td>{{ form.options }}  {{form.options.errors}} 
+
+
   </table></center>
   <center><button class="btn" type="submit" name="savequestion">Save</button>
   <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Cancel</button> </center>

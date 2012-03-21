@@ -153,8 +153,10 @@ def add_question(request,question_id=None):
 	form = QuestionForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-   	    if question_id == None:        
+   	    if question_id == None:
                 form.save()
+                question = Question.objects.order_by("-id")[0]
+                question.tags.add(form['tags'].data)
 		return my_redirect("/exam/manage/questions")
 	    else:
 		d = Question.objects.get(id=question_id)
