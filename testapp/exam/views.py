@@ -111,6 +111,14 @@ def edit_quiz(request):
         quiz.active = active[j]
         quiz.description = description[j]
         quiz.save()
+        edit_tags=tags[j]
+        quiz.save()
+        for tag in quiz.tags.all():
+            quiz.tags.remove(tag)
+        tags_split = edit_tags.split(',')
+        for i in range(0,len(tags_split)-1):
+            tag = tags_split[i].strip()
+            quiz.tags.add(tag)
         j += 1
     return my_redirect("/exam/manage/showquiz/")
 
@@ -244,7 +252,14 @@ def add_quiz(request,quiz_id=None):
                 d.duration = form['duration'].data
                 d.active = form['active'].data
                 d.description = form['description'].data
-                d.save()
+                d.save()    
+                quiz = Quiz.objects.get(id=quiz_id)
+                for tag in quiz.tags.all():
+                    quiz.tags.remove(tag)
+                tags = form['tags'].data.split(',')
+            	for i in range(0,len(tags)-1):
+    	            tag = tags[i].strip()
+    	            quiz.tags.add(tag)
                 return my_redirect("/exam/manage/showquiz")
                 
         else:
@@ -264,6 +279,15 @@ def add_quiz(request,quiz_id=None):
             form.initial['duration'] = d.duration
             form.initial['description']= d.description
             form.initial['active'] = d.active
+            form_tags = d.tags.all()
+            form_tags_split = form_tags.values('name')
+            initial_tags = ""
+            
+            for tag in form_tags_split:
+                initial_tags = initial_tags + str(tag['name']).strip() + ","
+            if (initial_tags == ","):
+                initial_tags = ""
+            form.initial['tags']=initial_tags
             return my_render_to_response('exam/add_quiz.html',{'form':form},context_instance=RequestContext(request))	
 
 
@@ -582,6 +606,14 @@ def show_all_quiz(request):
     	        form.initial['duration'] = d.duration
     	        form.initial['active']= d.active
     	        form.initial['description'] = d.description
+                form_tags = d.tags.all()
+                form_tags_split = form_tags.values('name')
+                initial_tags = ""
+                for tag in form_tags_split:
+                    initial_tags = initial_tags + str(tag['name']).strip() + ","
+                if (initial_tags == ","):
+                    initial_tags = ""
+                form.initial['tags']=initial_tags
     	        forms.append(form)
             return my_render_to_response('exam/edit_quiz.html',
                 {'forms':forms},
@@ -698,12 +730,9 @@ def grade_user(request, username):
             paper.save()
 
         context = {'data': data}
-	print context
         return my_render_to_response('exam/user_data.html', context,
                                  context_instance=RequestContext(request))
     else:
         context = {'data': data}
-	print context
         return my_render_to_response('exam/grade_user.html', context,
                                  context_instance=RequestContext(request))
-

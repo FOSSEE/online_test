@@ -24,8 +24,8 @@
 
 <br><br>
 <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz");'>Add New Quiz</button>&nbsp;&nbsp;
-<button class="btn" type="submit" name='edit' value='edit' onClick="confirm_edit(frm);" >Edit Selected</button>&nbsp;&nbsp;
-<button class="btn" type="submit" name="delete" value='delete' onClick="my_confirm(frm);">Delete Selected</button>
+<button class="btn" type="submit" name='edit' value='edit' onClick="return confirm_edit(frm);" >Edit Selected</button>&nbsp;&nbsp;
+<button class="btn" type="submit" name="delete" value='delete' onClick="return confirm_delete(frm);">Delete Selected</button>
 </form>
 {% endif %}
 

@@ -5,13 +5,16 @@
 
 {% block css %}
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question_quiz.css" type="text/css" /> 
-<style type='text/css'>
-table th, table td 
-    {	
-	 text-align: left;
-    }
-</style>
+<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/exam/css/autotaggit.css" />
 {% endblock %}
+
+{% block script %}
+<script src="{{ URL_ROOT }}/static/exam/js/edit_quiz.js"></script>
+<script src="/static/taggit_autocomplete_modified/jquery.min.js" type="text/javascript"></script>
+<script src="/static/taggit_autocomplete_modified/jquery.autocomplete.js" type="text/javascript"></script>
+{% endblock %}
+
+{% block onload %} onload = 'javascript:form_load();' {% endblock %}
 
 {% block manage %}
 <form name=frm action="{{URL_ROOT}}/exam/manage/editquiz/" method="post">
@@ -22,6 +25,7 @@ table th, table td
  	<tr><td><b>Start Date: <td>{{ form.start_date}} 
 	<tr><td><b>Duration: <td> {{ form.duration }} 
 	<tr><td><b>Active: <td> {{ form.active }} 
+    <tr><td><b>Tags: <td> {{ form.tags }}
 	<tr><td><b>Description: <td> {{ form.description }}
 	<hr>
   {% endfor %}
