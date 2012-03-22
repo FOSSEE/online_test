@@ -3,7 +3,11 @@ from exam.models import Profile,Quiz,Question
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from taggit.forms import *
+from taggit.managers import TaggableManager
+from taggit.forms import TagField
+from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete
+from taggit_autocomplete_modified.widgets import TagAutocomplete
+from taggit_autocomplete_modified import settings
 
 from string import letters, punctuation, digits
 import datetime
@@ -113,6 +117,7 @@ class QuizForm(forms.Form):
     start_date = forms.DateField(initial=datetime.date.today)
     duration = forms.IntegerField()
     active = forms.BooleanField(required = False)
+    tags = TagField(widget=TagAutocomplete())
     description = forms.CharField(max_length=256, widget=forms.Textarea(attrs={'cols':20,'rows':1}))
 
     def save(self):
@@ -138,7 +143,7 @@ class QuestionForm(forms.Form):
    options = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}),required=False)
    type = forms.CharField(max_length=8, widget=forms.Select(choices=QUESTION_TYPE_CHOICES))
    active = forms.BooleanField(required=False)
-   tags = TagField()
+   tags = TagField(widget=TagAutocomplete(),required=False)
 
    def save(self):
         summary = self.cleaned_data["summary"]

@@ -44,6 +44,8 @@ class Question(models.Model):
     # Is this question active or not.  If it is inactive it will not be used
     # when creating a QuestionPaper.
     active = models.BooleanField(default=True)
+
+    #Tags for the Question.
     tags = TaggableManager()
 
     def __unicode__(self):
@@ -91,6 +93,10 @@ class Quiz(models.Model):
     
     # Description of quiz.
     description = models.CharField(max_length=256)
+
+    #Tags for the Quiz.
+    tags = TaggableManager()
+
     
     class Meta:
         verbose_name_plural = "Quizzes"
