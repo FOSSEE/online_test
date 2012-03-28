@@ -69,7 +69,7 @@ def user_register(request):
 
     user = request.user
     if user.is_authenticated():
-        return my_redirect("/exam/quizlist/")
+        return my_redirect("/exam/start/")
 
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
@@ -79,7 +79,7 @@ def user_register(request):
 
             new_user = authenticate(username = u_name, password = pwd)
             login(request, new_user)
-            return my_redirect("/exam/quizlist/")
+            return my_redirect("/exam/start/")
         
         else:
             return my_render_to_response('exam/register.html',
@@ -307,7 +307,7 @@ def user_login(request):
     if user.is_authenticated():
         if user.groups.filter(name='moderator').count() > 0 :
             return my_redirect('/exam/manage/')
-        return my_redirect("/exam/quizlist/")
+        return my_redirect("/exam/intro/")
 
     if request.method == "POST":
         form = UserLoginForm(request.POST)
@@ -327,14 +327,14 @@ def user_login(request):
         return my_render_to_response('exam/login.html', context,
                                      context_instance=RequestContext(request))
 
-def start(request,quiz_id=None):
+def start(request):
     """Check the user cedentials and if any quiz is available, start the exam."""
 
     user = request.user
     try:
         # Right now the app is designed so there is only one active quiz 
         # at a particular time.
-        quiz = Quiz.objects.get(id=quiz_id)
+        quiz = Quiz.objects.get(active=True)
     except Quiz.DoesNotExist:
         msg = 'Quiz not found, please contact your '\
         'instructor/administrator. Please login again thereafter.'
@@ -547,17 +547,6 @@ def show_all_users(request):
     questionpaper = QuestionPaper.objects.all()
     context = { 'question': questionpaper }
     return my_render_to_response('exam/showusers.html',context,context_instance=RequestContext(request))
-
-def quizlist(request):
-    """Generates a list of all the quizzes that are active for the students to attempt."""
-
-    quizzes = Quiz.objects.all()
-    context = {'papers': [], 
-               'quiz': None, 
-               'quizzes':quizzes}
-    return my_render_to_response('exam/quizlist.html', context,
-                                    context_instance=RequestContext(request)) 
-
 
 def show_all_quiz(request):
     """Generates a list of all the quizzes that are currently in the database."""
