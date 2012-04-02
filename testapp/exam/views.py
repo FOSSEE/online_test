@@ -11,7 +11,8 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.http import Http404
 from django.db.models import Sum
-
+from taggit.models import Tag
+from itertools import chain
 # Local imports.
 from exam.models import Quiz, Question, QuestionPaper, Profile, Answer, User
 from exam.forms import UserRegisterForm, UserLoginForm, QuizForm , QuestionForm
@@ -20,6 +21,8 @@ from settings import URL_ROOT
 
 # The directory where user data can be saved.
 OUTPUT_DIR = abspath(join(dirname(__file__), pardir, 'output'))
+set1 = set()
+set2 = set()
 
 def my_redirect(url):
     """An overridden redirect to deal with URL_ROOT-ing.  See settings.py 
@@ -245,7 +248,7 @@ def add_quiz(request,quiz_id=None):
                 for tag in tags:
                     tag = tag.strip()
                     quiz.tags.add(tag)
-                return my_redirect("/exam/manage/showquiz")
+                return my_redirect("/exam/manage/designquestionpaper")
             else:
                 d = Quiz.objects.get(id=quiz_id)
                 d.start_date = form['start_date'].data
@@ -289,6 +292,107 @@ def add_quiz(request,quiz_id=None):
                 initial_tags = ""
             form.initial['tags']=initial_tags
             return my_render_to_response('exam/add_quiz.html',{'form':form},context_instance=RequestContext(request))	
+
+
+def design_questionpaper(request,questionpaper_id=None):
+    user=request.user
+    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
+        raise Http404('You are not allowed to view this page!')
+    return my_render_to_response('exam/add_questionpaper.html',{},context_instance=RequestContext(request))
+    
+        
+def show_all_questionpapers(request,questionpaper_id=None):
+    user=request.user
+    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
+        raise Http404('You are not allowed to view this page!')
+
+    if request.method=="POST" and request.POST.get('add') == "add":
+        return my_redirect("/exam/manage/designquestionpaper/" + questionpaper_id)
+    
+    if questionpaper_id == None:
+        qu_papers = QuestionPaper.objects.all()
+        context = {'papers':qu_papers}
+        return my_render_to_response('exam/showquestionpapers.html',context,context_instance=RequestContext(request))
+    else:
+        qu_papers = QuestionPaper.objects.get(id=questionpaper_id)
+        quiz = qu_papers.quiz
+        questions = qu_papers.questions.all()
+        q = []
+        for i in questions:
+            q.append(i)
+        context = {'papers':{'quiz':quiz,'questions':q}}
+        return my_render_to_response('exam/editquestionpaper.html',context,context_instance=RequestContext(request))
+
+
+def automatic_questionpaper(request,questionpaper_id=None):
+
+    user=request.user
+    global set1
+    global set2
+    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
+        raise Http404('You are not allowed to view this page!')
+
+    if questionpaper_id == None:
+        if request.method=="POST":
+            if request.POST.get('save') == 'save' :
+                quiz = Quiz.objects.order_by("-id")[0]
+                quest_paper = QuestionPaper()
+                quest_paper.quiz = quiz
+                quest_paper.save()
+                for i in set2:
+                    print str(i.id) + "   " + i.summary
+                    q = Question.objects.get(summary=i)
+                    quest_paper.questions.add(q)
+                return my_redirect('/exam/manage/showquiz')
+            else:
+                set1 = set()
+                set2 = set()
+                no_questions = int(request.POST.get('questions'))
+                first_tag = request.POST.get('first_tag')
+                first_condition = request.POST.get('first_condition')
+                second_tag =  request.POST.get('second_tag')
+                second_condition = request.POST.get('second_condition')
+                third_tag = request.POST.get('third_tag')
+                question1 = set(Question.objects.filter(tags__name__in=[first_tag]))
+                question2 = set(Question.objects.filter(tags__name__in=[second_tag]))
+                question3 = set(Question.objects.filter(tags__name__in=[third_tag]))
+                if first_condition == 'and':
+                    set1 = question1.intersection(question2)
+                    if second_condition == 'and':
+                        set2 = set1.intersection(question3)
+                    else:
+                        set2 = set1.union(question3)
+                else:
+                    set1 = question1.union(question2)
+                    if second_condition == 'and':
+                        set2 = set1.intersection(question3)
+                    else:
+                        set2 = set1.union(question3)
+                n = len(set2)
+                msg = ''
+                if (no_questions < n ) :
+                    i = n - no_questions
+                    for i in range(0,i):
+                        set2.pop()
+                elif( no_questions > n):
+                    msg = 'The given Criteria does not satisfy the number of Questions...'
+                tags = Tag.objects.all()
+                context = {'data':{'questions':set2,'tags':tags,'msg':msg}}
+                return my_render_to_response('exam/automatic_questionpaper.html',context,context_instance=RequestContext(request))
+        else:
+            tags = Tag.objects.all()
+            context = {'data':{'tags':tags}}
+            return my_render_to_response('exam/automatic_questionpaper.html',context,context_instance=RequestContext(request))
+
+    else:
+        return HttpResponse("eni mane pochi gaya ayan... ")
+
+def manual_questionpaper(request):
+    user=request.user
+    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
+        raise Http404('You are not allowed to view this page!')
+    return my_render_to_response('exam/manual_questionpaper.html',{},context_instance=RequestContext(request))
+
 
 
 def prof_manage(request):

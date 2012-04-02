@@ -123,6 +123,8 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+
 )
 
 ROOT_URLCONF = '%s.urls'%(basename(CURDIR))
@@ -149,6 +151,8 @@ INSTALLED_APPS = (
     'south',
     'exam',
     'taggit_autocomplete_modified',
+    'debug_toolbar',
+    'django_extensions',	
 )
 
 # A sample logging configuration. The only tangible logging
@@ -188,3 +192,6 @@ LOGGING = {
 }
 
 AUTH_PROFILE_MODULE = 'exam.Profile'
+
+INTERNAL_IPS = ('127.0.0.1',)
+

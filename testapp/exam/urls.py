@@ -24,9 +24,15 @@ urlpatterns = patterns('exam.views',
     url(r'^manage/questions/$', 'show_all_questions'),
     url(r'^manage/showquiz/$','show_all_quiz'),   
     url(r'^manage/monitor/$', 'monitor'),
+    url(r'^manage/showquestionpapers/$','show_all_questionpapers'),  
+    url(r'^manage/showquestionpapers/(?P<questionpaper_id>\d+)/$', 'show_all_questionpapers'),
     url(r'^manage/monitor/(?P<quiz_id>\d+)/$', 'monitor'),    
     url(r'^manage/user_data/(?P<username>[a-zA-Z0-9_.]+)/$', 'user_data'),
-
+    url(r'^manage/designquestionpaper/$','design_questionpaper'),
+    url(r'^manage/designquestionpaper/(?P<questionpaper_id>\d+)/$', 'design_questionpaper'),
+    url(r'^manage/designquestionpaper/automatic/(?P<questionpaper_id>\d+)/$','automatic_questionpaper'),
+    url(r'^manage/designquestionpaper/automatic$','automatic_questionpaper'),
+    url(r'^manage/designquestionpaper/manual$','manual_questionpaper'),
 
 )
 

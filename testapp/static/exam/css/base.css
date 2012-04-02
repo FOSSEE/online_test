@@ -631,7 +631,7 @@ textarea {
 }
 select
 {
-	width : 80px;
+	width : auto;
 }
 label {
   padding-top: 6px;

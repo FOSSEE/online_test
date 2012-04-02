@@ -105,9 +105,13 @@ class Quiz(models.Model):
         desc = self.description or 'Quiz'
         return '%s: on %s for %d minutes'%(desc, self.start_date, self.duration)
 
-    
 ################################################################################
 class QuestionPaper(models.Model):
+    quiz = models.ForeignKey(Quiz)
+    questions = models.ManyToManyField(Question)
+    
+################################################################################
+class AnswerPaper(models.Model):
     """A question paper for a student -- one per student typically.
     """
     # The user taking this question paper.
@@ -118,21 +122,14 @@ class QuestionPaper(models.Model):
     profile = models.ForeignKey(Profile)
     
     # The Quiz to which this question paper is attached to.
-    quiz = models.ForeignKey(Quiz)
+    question_paper = models.ForeignKey(QuestionPaper)
     
     # The time when this paper was started by the user.
     start_time = models.DateTimeField()
     
     # User's IP which is logged.
     user_ip = models.CharField(max_length=15)
-    # Unused currently.
-    key = models.CharField(max_length=10)
 
-    # used to allow/stop a user from retaking the question paper.
-    active = models.BooleanField(default = True)
-    
-    # The questions (a list of ids separated by '|')
-    questions = models.CharField(max_length=128)
     # The questions successfully answered (a list of ids separated by '|')
     questions_answered = models.CharField(max_length=128)
     
