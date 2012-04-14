@@ -148,7 +148,7 @@ INSTALLED_APPS = (
     'taggit',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-    'south',
+#    'south',
     'exam',
     'taggit_autocomplete_modified',
     'debug_toolbar',

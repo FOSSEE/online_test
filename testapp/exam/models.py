@@ -2,7 +2,7 @@ import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
-
+from django.http import HttpResponse
 ################################################################################
 class Profile(models.Model):
     """Profile for a user to store roll number and other details."""
@@ -120,7 +120,10 @@ class AnswerPaper(models.Model):
     # The user's profile, we store a reference to make it easier to access the
     # data.
     profile = models.ForeignKey(Profile)
-    
+
+    # All questions that remains to attempt to perticular Student
+    questions = models.CharField(max_length=128)
+
     # The Quiz to which this question paper is attached to.
     question_paper = models.ForeignKey(QuestionPaper)
     
@@ -157,7 +160,7 @@ class AnswerPaper(models.Model):
             
     def completed_question(self, question_id):
         """Removes the question from the list of questions and returns
-        the next."""
+the next."""
         qa = self.questions_answered
         if len(qa) > 0:
             self.questions_answered = '|'.join([qa, str(question_id)])
@@ -193,7 +196,7 @@ class AnswerPaper(models.Model):
         except AttributeError:
             # total_seconds is new in Python 2.7. :(
             secs = dt.seconds + dt.days*24*3600
-        total = self.quiz.duration*60.0
+        total = self.question_paper.quiz.duration*60.0
         remain = max(total - secs, 0)
         return int(remain)
 

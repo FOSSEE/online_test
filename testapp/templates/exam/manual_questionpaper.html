@@ -6,6 +6,12 @@
 {% block css %}
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question_quiz.css" type="text/css" /> 
 <link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/exam/css/autotaggit.css" />
+<style>
+select
+{
+    width:auto;
+}
+</style>
 {% endblock %}
 {% block script %}
 <script src="/static/taggit_autocomplete_modified/jquery.min.js" type="text/javascript"></script>
@@ -28,15 +34,60 @@ function load_data()
 {% endblock %}
 
 {% block manage %}
-<form >
-{% csrf_token %}
-Select mode to design Question Paper: 
-<select name='mode' id='mode' onChange='javascript:load_data();'>
-  <option>Manual</option>
-  <option>Automatic</option>
-</select> 
+<center><b>Manual mode to design the Question Paper</center><br>
+
+<form action="" method="post" name=frm>
+    {% csrf_token %}
+    <center>
+    Tag Conditions:
+    <select name='first_tag'>
+    <option value="">Select Tag </option>
+    {% for tag in data.tags %}
+       <option value={{tag}}>{{tag}}</option>
+    {% endfor %}
+    </select>
+    <select name='first_condition'>
+    <option value="or">OR</option>
+    <option value="and">AND</option>
+    </select>
+    <select name='second_tag'>
+    <option value="">Select Tag </option>
+    {% for tag in data.tags %}
+       <option value={{tag}}>{{tag}}</option>
+    {% endfor %}
+    </select>
+    <select name='second_condition'>
+    <option value="or">OR</option>
+    <option value="and">AND</option>
+    </select>
+    <select name='third_tag'>
+    <option value="null">Select Tag </option>
+    {% for tag in data.tags %}
+       <option value={{tag}}>{{tag}}</option>
+    {% endfor %}
+    </select>
+    </center>
+    <br>
+    <center><button class=btn type=submit  name='fetch' value='fetch'>Fetch Questions</button>
+    <br><br><b>Below is the list of Questions fetched according to the given tag conditions</b></center>
+    <hr>
+    <center><table class=span10>
+    <th> &nbsp; 
+    <th>Summary
+    <th>Type
+    <th>Points
+    <th>Tags
+    {% for question in data.questions %}
+    <tr><td><input type=checkbox name=questions value={{question.id}}> <td> {{ question.summary }} <td>{{ question.type }} <td>{{ question.points }} <td>
+        {% for tag in question.tags.all %}
+         {{ tag }}
+        {% endfor %}
+    </tr>
+    <br>
+    {% endfor %}
+    </table>
+    {% if data.msg %}<div class="alert alert-error">{{ data.msg }}</div>{% endif %}
+    <center><button class=btn type=submit name='save' value='save'>Save Question Paper</button></center>
 </form>
-
-
 
 {% endblock %}

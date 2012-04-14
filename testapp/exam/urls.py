@@ -33,6 +33,7 @@ urlpatterns = patterns('exam.views',
     url(r'^manage/designquestionpaper/automatic/(?P<questionpaper_id>\d+)/$','automatic_questionpaper'),
     url(r'^manage/designquestionpaper/automatic$','automatic_questionpaper'),
     url(r'^manage/designquestionpaper/manual$','manual_questionpaper'),
+    url(r'^manage/designquestionpaper/manual/(?P<questionpaper_id>\d+)/$','manual_questionpaper'),
 
 )
 

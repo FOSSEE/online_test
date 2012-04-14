@@ -14,8 +14,6 @@
 <input type="checkbox" name="papers" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/showquestionpapers/{{ i.id }}">{{ i.quiz.description }}</a><br>
 {% endfor %}
 <br>
-<button class="btn" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question</button>&nbsp;&nbsp;
-<button class="btn" type="submit" name='edit' value='edit' onClick="return confirm_edit(frm);">Edit Selected</button>&nbsp;&nbsp;
 <button class="btn" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>
 </form>
 {% endblock %}

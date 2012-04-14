@@ -14,7 +14,7 @@ from django.db.models import Sum
 from taggit.models import Tag
 from itertools import chain
 # Local imports.
-from exam.models import Quiz, Question, QuestionPaper, Profile, Answer, User
+from exam.models import Quiz, Question, QuestionPaper, Profile, Answer, AnswerPaper, User
 from exam.forms import UserRegisterForm, UserLoginForm, QuizForm , QuestionForm
 from exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
@@ -308,7 +308,19 @@ def show_all_questionpapers(request,questionpaper_id=None):
 
     if request.method=="POST" and request.POST.get('add') == "add":
         return my_redirect("/exam/manage/designquestionpaper/" + questionpaper_id)
-    
+
+    if request.method=="POST" and request.POST.get('delete') == "delete":
+        data = request.POST.getlist('papers')
+        for i in data:
+            q_paper = QuestionPaper.objects.get(id=i).delete()
+        question_paper= QuestionPaper.objects.all()
+        context = {'papers': question_paper, }
+        return my_render_to_response('exam/showquestionpapers.html', context,
+                                        context_instance=RequestContext(request))
+        qu_papers = QuestionPaper.objects.all()
+        context = {'papers':qu_papers}
+        return my_render_to_response('exam/showquestionpapers.html',context,context_instance=RequestContext(request))    
+
     if questionpaper_id == None:
         qu_papers = QuestionPaper.objects.all()
         context = {'papers':qu_papers}
@@ -339,6 +351,54 @@ def automatic_questionpaper(request,questionpaper_id=None):
                 quest_paper = QuestionPaper()
                 quest_paper.quiz = quiz
                 quest_paper.save()
+                for i in set2:
+                    q = Question.objects.get(summary=i)
+                    quest_paper.questions.add(q)
+                return my_redirect('/exam/manage/showquiz')
+            else:
+                set1 = set()
+                set2 = set()
+                no_questions = int(request.POST.get('questions'))
+                first_tag = request.POST.get('first_tag')
+                first_condition = request.POST.get('first_condition')
+                second_tag =  request.POST.get('second_tag')
+                second_condition = request.POST.get('second_condition')
+                third_tag = request.POST.get('third_tag')
+                question1 = set(Question.objects.filter(tags__name__in=[first_tag]))
+                question2 = set(Question.objects.filter(tags__name__in=[second_tag]))
+                question3 = set(Question.objects.filter(tags__name__in=[third_tag]))
+                if first_condition == 'and':
+                    set1 = question1.intersection(question2)
+                    if second_condition == 'and':
+                        set2 = set1.intersection(question3)
+                    else:
+                        set2 = set1.union(question3)
+                else:
+                    set1 = question1.union(question2)
+                    if second_condition == 'and':
+                        set2 = set1.intersection(question3)
+                    else:
+                        set2 = set1.union(question3)
+                n = len(set2)
+                msg = ''
+                if (no_questions < n ) :
+                    i = n - no_questions
+                    for i in range(0,i):
+                        set2.pop()
+                elif( no_questions > n):
+                    msg = 'The given Criteria does not satisfy the number of Questions...'
+                tags = Tag.objects.all()
+                context = {'data':{'questions':set2,'tags':tags,'msg':msg}}
+                return my_render_to_response('exam/automatic_questionpaper.html',context,context_instance=RequestContext(request))
+        else:
+            tags = Tag.objects.all()
+            context = {'data':{'tags':tags}}
+            return my_render_to_response('exam/automatic_questionpaper.html',context,context_instance=RequestContext(request))
+
+    else:
+        if request.method=="POST":
+            if request.POST.get('save') == 'save' :
+                quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
                 for i in set2:
                     print str(i.id) + "   " + i.summary
                     q = Question.objects.get(summary=i)
@@ -384,14 +444,104 @@ def automatic_questionpaper(request,questionpaper_id=None):
             context = {'data':{'tags':tags}}
             return my_render_to_response('exam/automatic_questionpaper.html',context,context_instance=RequestContext(request))
 
-    else:
-        return HttpResponse("eni mane pochi gaya ayan... ")
-
-def manual_questionpaper(request):
+def manual_questionpaper(request,questionpaper_id=None):
     user=request.user
+    global set1
+    global set2
     if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
         raise Http404('You are not allowed to view this page!')
-    return my_render_to_response('exam/manual_questionpaper.html',{},context_instance=RequestContext(request))
+
+    if questionpaper_id == None:
+        if request.method=="POST":
+            if request.POST.get('save') == 'save' :
+                questions = request.POST.getlist('questions')
+                quiz = Quiz.objects.order_by("-id")[0]
+                quest_paper = QuestionPaper()
+                quest_paper.quiz = quiz
+                quest_paper.save()
+                for i in questions:
+                    q = Question.objects.get(id=i)
+                    quest_paper.questions.add(q)
+                return my_redirect('/exam/manage/showquiz')
+            else:
+                set1 = set()
+                set2 = set()
+                first_tag = request.POST.get('first_tag')
+                first_condition = request.POST.get('first_condition')
+                second_tag =  request.POST.get('second_tag')
+                second_condition = request.POST.get('second_condition')
+                third_tag = request.POST.get('third_tag')
+                question1 = set(Question.objects.filter(tags__name__in=[first_tag]))
+                question2 = set(Question.objects.filter(tags__name__in=[second_tag]))
+                question3 = set(Question.objects.filter(tags__name__in=[third_tag]))
+                if first_condition == 'and':
+                    set1 = question1.intersection(question2)
+                    if second_condition == 'and':
+                        set2 = set1.intersection(question3)
+                    else:
+                        set2 = set1.union(question3)
+                else:
+                    set1 = question1.union(question2)
+                    if second_condition == 'and':
+                        set2 = set1.intersection(question3)
+                    else:
+                        set2 = set1.union(question3)
+                n = len(set2)
+                msg = ''
+                if (n == 0) :
+                    msg = 'No matching Question found...'
+                tags = Tag.objects.all()
+                context = {'data':{'questions':set2,'tags':tags,'msg':msg}}
+                return my_render_to_response('exam/manual_questionpaper.html',context,context_instance=RequestContext(request))
+        else:
+            tags = Tag.objects.all()
+            context = {'data':{'tags':tags}}
+            return my_render_to_response('exam/manual_questionpaper.html',context,context_instance=RequestContext(request))
+
+    else:
+        if request.method=="POST":
+            if request.POST.get('save') == 'save' :
+                quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
+                questions = request.POST.getlist('questions')
+                for i in questions:                    
+                    q = Question.objects.get(id=i)
+                    quest_paper.questions.add(q)
+                return my_redirect('/exam/manage/showquiz')
+            else:
+                set1 = set()
+                set2 = set()
+                first_tag = request.POST.get('first_tag')
+                first_condition = request.POST.get('first_condition')
+                second_tag =  request.POST.get('second_tag')
+                second_condition = request.POST.get('second_condition')
+                third_tag = request.POST.get('third_tag')
+                question1 = set(Question.objects.filter(tags__name__in=[first_tag]))
+                question2 = set(Question.objects.filter(tags__name__in=[second_tag]))
+                question3 = set(Question.objects.filter(tags__name__in=[third_tag]))
+                if first_condition == 'and':
+                    set1 = question1.intersection(question2)
+                    if second_condition == 'and':
+                        set2 = set1.intersection(question3)
+                    else:
+                        set2 = set1.union(question3)
+                else:
+                    set1 = question1.union(question2)
+                    if second_condition == 'and':
+                        set2 = set1.intersection(question3)
+                    else:
+                        set2 = set1.union(question3)
+                n = len(set2)
+                msg = ''
+                if (n == 0) :
+                    msg = 'No matching Question found...'
+                tags = Tag.objects.all()
+                context = {'data':{'questions':set2,'tags':tags,'msg':msg}}
+                return my_render_to_response('exam/manual_questionpaper.html',context,context_instance=RequestContext(request))
+        else:
+            tags = Tag.objects.all()
+            context = {'data':{'tags':tags}}
+            return my_render_to_response('exam/manual_questionpaper.html',context,context_instance=RequestContext(request))
+
 
 
 
@@ -438,17 +588,17 @@ def start(request):
     try:
         # Right now the app is designed so there is only one active quiz 
         # at a particular time.
-        quiz = Quiz.objects.get(active=True)
-    except Quiz.DoesNotExist:
+        questionpaper = QuestionPaper.objects.all()[0]
+    except QuestionPaper.DoesNotExist:
         msg = 'Quiz not found, please contact your '\
         'instructor/administrator. Please login again thereafter.'
         return complete(request, reason=msg)
 
     try:
-        old_paper = QuestionPaper.objects.get(user=user, quiz=quiz)
+        old_paper = AnswerPaper.objects.get(user=user, question_paper=questionpaper)
         q = old_paper.current_question()
         return show_question(request, q)
-    except QuestionPaper.DoesNotExist:
+    except AnswerPaper.DoesNotExist:
         ip = request.META['REMOTE_ADDR']
         key = gen_key(10)
         try:
@@ -457,16 +607,18 @@ def start(request):
             msg = 'You do not have a profile and cannot take the quiz!'
             raise Http404(msg)
 
-        new_paper = QuestionPaper(user=user, user_ip=ip, key=key, 
-                                  quiz=quiz, profile=profile)
+        new_paper = AnswerPaper(user=user, user_ip=ip, 
+                                  question_paper=questionpaper, profile=profile)
         new_paper.start_time = datetime.datetime.now()
         
         # Make user directory.
         user_dir = get_user_dir(user)
 
-        questions = [ str(_.id) for _ in Question.objects.filter(active=True) ]
+        questions = [ str(_.id) for _ in questionpaper.questions.all() ]
         random.shuffle(questions)
-        
+
+        #questions = questionpaper.questions
+        #random.shuffle(questions)
         new_paper.questions = "|".join(questions)
         new_paper.save()
     
@@ -484,16 +636,17 @@ def question(request, q_id):
         return my_redirect('/exam/login/')
     q = get_object_or_404(Question, pk=q_id)
     try:
-        paper = QuestionPaper.objects.get(user=request.user, quiz__active=True)
-    except QuestionPaper.DoesNotExist:
+        q_paper = QuestionPaper.objects.get(quiz__active=True)
+        paper = AnswerPaper.objects.get(user=request.user, question_paper=q_paper)
+    except AnswerPaper.DoesNotExist:
         return my_redirect('/exam/start')
-    if not paper.quiz.active:
+    if not paper.question_paper.quiz.active:
         return complete(request, reason='The quiz has been deactivated!')
 
     time_left = paper.time_left()
     if time_left == 0:
         return complete(request, reason='Your time is up!')
-    quiz_name = paper.quiz.description
+    quiz_name = paper.question_paper.quiz.description
     context = {'question': q, 'paper': paper, 'user': user, 
                'quiz_name': quiz_name, 
                'time_left': time_left}
@@ -503,7 +656,6 @@ def question(request, q_id):
 
 def show_question(request, q_id):
     """Show a question if possible."""
-
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(request, msg)
@@ -517,7 +669,8 @@ def check(request, q_id):
     if not user.is_authenticated():
         return my_redirect('/exam/login/')
     question = get_object_or_404(Question, pk=q_id)
-    paper = QuestionPaper.objects.get(user=user, quiz__active=True)
+    q_paper = QuestionPaper.objects.get(quiz__active=True)
+    paper = AnswerPaper.objects.get(user=request.user,question_paper = q_paper)
     answer = request.POST.get('answer')
     skip = request.POST.get('skip', None)
     
@@ -557,12 +710,12 @@ def check(request, q_id):
         time_left = paper.time_left()
         if time_left == 0:
             return complete(request, reason='Your time is up!')
-        if not paper.quiz.active:
+        if not paper.question_paper.quiz.active:
             return complete(request, reason='The quiz has been deactivated!')
             
         context = {'question': question, 'error_message': err_msg,
                    'paper': paper, 'last_attempt': answer,
-                   'quiz_name': paper.quiz.description,
+                   'quiz_name': paper.question_paper.quiz.description,
                    'time_left': time_left}
         ci = RequestContext(request)
 
