@@ -27,8 +27,8 @@
 {# This is rendered when we are just viewing exam/monitor #}
 {% if quizzes %}
 <ul>
-{% for quiz in quizzes %}
-<li><a href="{{URL_ROOT}}/exam/manage/monitor/{{quiz.id}}/">{{ quiz.description }}</a></li>
+{% for q in quizzes %}
+<li><a href="{{URL_ROOT}}/exam/manage/monitor/{{q.id}}/">{{ q.quiz.description }}</a></li>
 {% endfor %}
 </ul>
 {% endif %}

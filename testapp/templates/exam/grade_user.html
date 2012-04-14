@@ -92,8 +92,8 @@ Marks: <input id="q{{ question.id }}" type="text"
 
 
 <h3>Teacher comments: </h3>
-<textarea id="comments_{{paper.quiz.id}}" rows="10" cols="80" 
-    name="comments_{{ paper.quiz.id }}">{{ paper.comments }}</textarea>
+<textarea id="comments_{{paper.question_paper.id}}" rows="10" cols="80" 
+    name="comments_{{ paper.question_paper.id }}">{{ paper.comments }}</textarea>
 <br>
 <br><button class="btn" type="submit" name="submit_{{paper.quiz.id}}">Save Marks</button>
 

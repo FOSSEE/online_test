@@ -756,20 +756,20 @@ def monitor(request, quiz_id=None):
         raise Http404('You are not allowed to view this page!')
 
     if quiz_id is None:
-        quizzes = Quiz.objects.all()
+        q_paper = QuestionPaper.objects.all()
         context = {'papers': [], 
                    'quiz': None, 
-                   'quizzes':quizzes}
+                   'quizzes':q_paper}
         return my_render_to_response('exam/monitor.html', context,
                                     context_instance=RequestContext(request)) 
     # quiz_id is not None.
     try:
-        quiz = Quiz.objects.get(id=quiz_id)
-    except Quiz.DoesNotExist:
+        quiz = QuestionPaper.objects.get(id=quiz_id)
+    except QuestionPaper.DoesNotExist:
         papers = []
         quiz = None
     else:
-        papers = QuestionPaper.objects.all().annotate(
+        papers = AnswerPaper.objects.all().annotate(
                     total=Sum('answers__marks')).order_by('-total')
 
     context = {'papers': papers, 'quiz': quiz, 'quizzes': None}
@@ -781,7 +781,7 @@ def get_user_data(username):
     related to the user including all the user's answers submitted.
     """
     user = User.objects.get(username=username)
-    papers = QuestionPaper.objects.filter(user=user)
+    papers = AnswerPaper.objects.filter(user=user)
 
     data = {}
     try:
@@ -801,7 +801,7 @@ def show_all_users(request):
     if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0:
         raise Http404('You are not allowed to view this page !')
     user = User.objects.filter(username__contains="")
-    questionpaper = QuestionPaper.objects.all()
+    questionpaper = AnswerPaper.objects.all()
     context = { 'question': questionpaper }
     return my_render_to_response('exam/showusers.html',context,context_instance=RequestContext(request))
 
@@ -972,7 +972,7 @@ def grade_user(request, username):
                 last_ans = answers[-1]
                 last_ans.marks = marks
                 last_ans.save()
-            paper.comments = request.POST.get('comments_%d'%paper.quiz.id)
+            paper.comments = request.POST.get('comments_%d'%paper.question_paper.id)
             paper.save()
 
         context = {'data': data}
