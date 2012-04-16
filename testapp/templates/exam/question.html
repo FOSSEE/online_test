@@ -1,91 +1,107 @@
 {% extends "base.html" %}
 
+<!DOCTYPE html>
+
 {% block title %} Answer question {% endblock %}
 
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question.css" type="text/css" />
+{% endblock %}
+
 {% block script %}
-<script type="text/javascript">
-<!--
-var time_left = {{ time_left }};
+   <script type="text/javascript">
+      var time_left = {{ time_left }};
+      function submitCode()
+      {
+	    document.forms["code"].submit();
+	    var x = document.getElementById("status");
+	    x.innerHTML = "<strong>Checking answer ...</strong>";
+	    x = document.getElementById("check");
+	    x.disabled = true;
+	    x.value = "Checking Answer ...";
+	    document.getElementById("skip").disabled = true;
+      }
+      
+      function secs_to_time(secs)
+      {
+	    var h = Math.floor(secs/3600);
+	    var h_s = (h > 0) ? h+'h:' : '';
+    	    var m = Math.floor((secs%3600)/60);
+	    var m_s = (m > 0) ? m+'m:' : '';
+	    var s_s = Math.floor(secs%60) + 's';
+	    return h_s + m_s + s_s;
+      }
 
-function submitCode()
-{
-    document.forms["code"].submit();
-    var x = document.getElementById("status");
-    x.innerHTML = "<strong>Checking answer ...</strong>";
-    x = document.getElementById("check");
-    x.disabled = true;
-    x.value = "Checking Answer ...";
-    document.getElementById("skip").disabled = true;
-}
-
-function secs_to_time(secs)
-{
-    var h = Math.floor(secs/3600);
-    var h_s = (h > 0) ? h+'h:' : '';
-    var m = Math.floor((secs%3600)/60);
-    var m_s = (m > 0) ? m+'m:' : '';
-    var s_s = Math.floor(secs%60) + 's';
-    return h_s + m_s + s_s;
-}
-
-function update_time()
-{
-    time_left -= 1;
-    if (time_left) {
-        var elem = document.getElementById("time_left");
-        var t_str = secs_to_time(time_left);
-        elem.innerHTML = "<strong> Time left: " + t_str + "</strong>";
-        setTimeout("update_time()", 1000);
-    }
-    else {
-        document.forms["code"].submit();
-    }
-}
-//-->
-</script>
+      function update_time()
+      {
+	    time_left -= 1;
+	    if (time_left) 
+            {
+	            var elem = document.getElementById("time_left");
+		    var t_str = secs_to_time(time_left);
+		    elem.innerHTML = "<strong>" + t_str + "</strong>";
+	            setTimeout("update_time()", 1000);
+            }
+	    else 
+            {
+		    document.forms["code"].submit();
+    	    }	
+      }
+   </script>
 {% endblock script %}
 
-{% block onload %} onload="update_time()" {% endblock %}
+{% block onload %} onload="update_time()" {% endblock onload %}
+
+{% block pagetitle %}
+
+<table><h6><div>
+	<tr><td class=td1-class><h5>You have {{ paper.questions_left }} question(s) left in {{ quiz_name }} </h5>
+	<td class=td2-class><div class=time-div id="time_left">
+	</div>
+</div></h6></table>
+
+{% endblock %}
 
 {% block content %}
-<h3> {{ question.summary }} </h3>
+<div class="topbar">
+  <div class="fill">
+     <div class="container">
+        <h3 class="brand"><strong>Online Test</h3></strong>
+        <ul>
+        <li> <h5><a> Hi {{user.first_name.title}} {{user.last_name.title}}  </a></h5>
+        </ul>
+        <form id="logout" action="{{URL_ROOT}}/exam/quit/" method="post" class="pull-right">
+        {% csrf_token %}
+         <button class="btn" type="submit" name="quit">Quit Exam and Logout</button> </li>
 
-<p>{{ question.description|safe }}
-<br/>
-(Marks: {{ question.points }}) </p>
+        </form>
+     </div>
+   </div>
+</div>
 
-{% if error_message %}<p><strong>ERROR:</strong></p><pre>{{ error_message }}</pre>{% endif %}
+         
+     	 <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br> 
+	 <font size=3 face=arial>	{{ question.description|safe }} </font>
 
-<p id="status"></p>
+         {% if error_message %}<h5>ERROR:</h5><div class="alert alert-error">{{ error_message }}</div>{% endif %}
+         <p id="status"></p>
+         <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/" method="post">
+         {% csrf_token %}
+         {% if question.type == "mcq" %}
+         {% for option in question.options.strip.splitlines %}
+         <input name="answer" type="radio" value="{{option}}" />{{option}} <br/>
+         {% endfor %}
+         {% else %}
+         <textarea rows="15" style="width:810px;margin-bottom:10px;" name="answer">{% if last_attempt %}{{last_attempt.strip}}{% else %}{% if question.type == "bash" %} #!/bin/bash{% else %}# Enter your answer here.{% endif %}{% endif %}</textarea>
+         {% endif %}
 
-<form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/" method="post">
-{% csrf_token %}
-{% if question.type == "mcq" %}
-{% for option in question.options.strip.splitlines %}
-<input name="answer" type="radio" value="{{option}}" />{{option}} <br/>
-{% endfor %}
-{% else %}
-<textarea rows="20" cols="100" name="answer">{% if last_attempt %}{{last_attempt.strip}}{% else %}{% if question.type == "bash" %}#!/bin/bash{% else %}# Enter your answer here.{% endif %}{% endif %}</textarea>
-{% endif %}
-<br/>
-{% if question.type == "mcq" %}
-<input id="check" type="submit" name="check" value="Submit answer"/>
-{% else %}
-<input id="check" type="submit" name="check" value="Check Answer"
-onclick="submitCode();"/>
-{% endif %}
-<input id="skip" type="submit" name="skip" value="Skip question" />
-</form>
-
-<p> {{ user.first_name.title }} {{ user.last_name.title }}, 
-you have  {{ paper.questions_left }} question(s) left in {{ quiz_name }}.</p>
-
-<p id="time_left"> <strong> Time left:  </strong> </p>
-
-<hr/>
-<form id="logout" action="{{URL_ROOT}}/exam/quit/" method="post">
-{% csrf_token %}
-<input type="submit" name="quit" value="Quit exam and logout" />
-</form>
-
+         {% if question.type == "mcq" %}
+         <br><button class="btn" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
+         {% else %}
+         <button class="btn" type="submit" name="check" id="check" onClick="submitCode();">Check Answer</button>&nbsp;&nbsp;
+         {% endif %}
+         <button class="btn" type="submit" name="skip" id="skip">Skip Question</button>
+         </form>
+         
+      
 {% endblock content %}

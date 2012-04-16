@@ -1,20 +1,22 @@
 {% extends "base.html" %}
 
 {% block title %}Login{% endblock title %}
-
+{% block pagetitle %} Online Test {% endblock %}
+{% block formtitle %}Login{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/login.css" type="text/css" /> 
+{% endblock %}
 {% block content %}
-<p> Welcome to the Examination.
-Please login to proceed.</p>
 
-<form action="" method="post">
-{% csrf_token %}
-
-<table>
-{{ form.as_table }}
-</table>
-
-<input type="submit" value="Login" />
-</form>
-<!-- <a href="{{URL_ROOT}}/exam/forgotpassword/">Forgot Password</a> <br /> -->
-<a href="{{URL_ROOT}}/exam/register/">New User Registration</a> 
+        <form action="" method="post">
+        {% csrf_token %}
+          
+        <center><table class=span1>
+        {{ form.as_table }}
+        </table></center>
+        <center><button class="btn" type="submit">Login</button>&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn" type="reset">Cancel</button></center>
+        <br><center><a href="{{URL_ROOT}}/exam/forgotpassword/">Forgot Password?</a></center><br>
+        <center><a href="{{URL_ROOT}}/exam/register/">New User? Sign-Up </a></center>
+        </form>
+      
 {% endblock content %}

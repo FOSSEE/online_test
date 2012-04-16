@@ -2,16 +2,19 @@
 
 {% block title %}Registration form {% endblock %}
 
+{% block pagetitle %}Online Test {% endblock %}
+{% block formtitle %}Please fill in the following details {% endblock %}
+
 {% block content %}
-Please provide the following details.
+
+
+
 <form action="" method="post">
-{% csrf_token %}
-
-<table>
-{{ form.as_table }}
-</table>
-
-<input type="submit" value="Register" />
+    {% csrf_token %}
+    <center><table class=span1>
+    {{ form.as_table }}
+    </table></center>
+    <center><button class="btn" type="submit">Register</button>&nbsp;&nbsp;<button class="btn" type="reset">Cancel</button></center>
 </form>
 
 {% endblock content %}

@@ -1,0 +1,56 @@
+{% extends "manage.html" %}
+
+{% block title %} Quiz List {% endblock title %}
+
+{% block script %}
+   <script type='text/javascript'>
+      function my_confirm(frm)
+      {
+	   var r = confirm("Are you Sure ?");
+	   if(r==false)
+	   {  
+		for(i=0;i<frm.quiz.length;i++)
+		{
+			frm.quiz[i].checked=false;
+		}
+		location.replace("{{URL_ROOT}}/exam/manage/showquiz");
+	   }
+      }
+      function confirm_edit(frm)
+      {
+	   var n = 0;
+	   for (var i =0;i<frm.quiz.length;i++)
+	   {
+		if (frm.quiz[i].checked == false)
+			n = n + 1 ;
+	   }
+	   if(n == frm.quiz.length)
+			location.replace("{{URL_ROOT}}/exam/manage/showquiz");
+      }
+
+   </script>
+{% endblock %}
+{% block subtitle %} Quiz List {% endblock %}
+{% block manage %}
+{% if not quizzes and not quiz %}
+<center><h5> No quizzes available. </h5></center>
+{% endif %}
+
+{# ############################################################### #}
+{# This is rendered when we are just viewing exam/monitor #}
+{% if quizzes %}
+<form method="post" action="" name='frm'>
+{% csrf_token %}
+
+{% for quiz in quizzes %}
+<input type=checkbox name='quiz' value={{quiz.id}} />&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}</a><br>
+{% endfor %}
+
+<br><br>
+<button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz");'>Add New Quiz</button>&nbsp;&nbsp;
+<button class="btn" type="submit" name='edit' value='edit' onClick="confirm_edit(frm);" >Edit Selected</button>&nbsp;&nbsp;
+<button class="btn" type="submit" name="delete" value='delete' onClick="my_confirm(frm);">Delete Selected</button>
+</form>
+{% endif %}
+
+{% endblock %}

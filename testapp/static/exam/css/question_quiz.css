@@ -1,0 +1,14 @@
+table th, table td 
+    {	
+	 text-align: left;
+    }
+
+.mini-text
+{
+	height : 9px;
+	width : 30px;
+}
+.select-type
+{
+	width : 80px;
+}

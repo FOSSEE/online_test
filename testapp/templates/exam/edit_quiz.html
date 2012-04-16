@@ -1,0 +1,33 @@
+{% extends "manage.html" %}
+
+
+{% block subtitle %}Edit Quiz(zes){% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question_quiz.css" type="text/css" /> 
+<style type='text/css'>
+table th, table td 
+    {	
+	 text-align: left;
+    }
+</style>
+{% endblock %}
+
+{% block manage %}
+<form name=frm action="{{URL_ROOT}}/exam/manage/editquiz/" method="post">
+  {% csrf_token %}
+  <center>
+  <table class=span1>
+	{% for form in forms %}
+ 	<tr><td><b>Start Date: <td>{{ form.start_date}} 
+	<tr><td><b>Duration: <td> {{ form.duration }} 
+	<tr><td><b>Active: <td> {{ form.active }} 
+	<tr><td><b>Description: <td> {{ form.description }}
+	<hr>
+  {% endfor %}
+  </table>
+  </center>
+  <center><button class="btn" type="submit" name="save">Save</button>
+  <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/showquiz/");'>Cancel</button> </center>
+</form>
+{% endblock %}

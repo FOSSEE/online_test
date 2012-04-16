@@ -1,0 +1,52 @@
+textarea
+{
+width : 550px;
+height : 200px;
+
+}
+
+.for-question{
+    background: none repeat scroll 0 0 #F1F1F1;
+    border-radius: 6px 6px 6px 6px;
+    margin-bottom: 10px;
+    padding: 5px;
+}
+
+#headerDiv, #contentDiv {
+float: left;
+}
+#titleText {
+float: left;
+font-size: 1.1em;
+font-weight: bold;
+margin: 5px;
+}
+#myHeader {
+font-size: 1.1em;
+font-weight: bold;
+margin: 5px;
+}
+#headerDiv {
+background-color: #0037DB;
+color: #9EB6FF;
+}
+
+#contentDiv {
+    background-color:#F0F8FF;
+    border: 1px solid #C9C9C9;
+    border-radius: 5px 5px 5px 5px;
+    margin-bottom: 10px;
+    min-width: 805px;
+    
+}
+
+#myContent {
+margin: 5px 10px;
+
+}
+#headerDiv a {
+float: right;
+margin: 10px 10px 5px 5px;
+}
+#headerDiv a:hover {
+color: #FFFFFF;

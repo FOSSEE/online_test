@@ -1,15 +1,24 @@
 from django import forms
-from exam.models import Profile
+from exam.models import Profile,Quiz,Question
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 
+
 from string import letters, punctuation, digits
+import datetime
+
+QUESTION_TYPE_CHOICES = (
+       ("python", "Python"),
+       ("bash", "Bash"),
+       ("mcq", "MCQ"),
+       )
 
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
 
 class UserRegisterForm(forms.Form):
+    """A Class to create new form for User's Registration. It has the various fields and functions required to register a new user to the system"""
 
     username = forms.CharField(max_length=30, 
             help_text='Letters, digits, period and underscores only.')
@@ -80,16 +89,72 @@ class UserRegisterForm(forms.Form):
         return u_name, pwd
 
 class UserLoginForm(forms.Form):
+    """Creates a form which will allow the user to log into the system."""
+
     username = forms.CharField(max_length = 30)
     password = forms.CharField(max_length=30, widget=forms.PasswordInput())
 
     def clean(self):
         super(UserLoginForm, self).clean()
-        u_name, pwd = self.cleaned_data["username"], self.cleaned_data["password"]
-        user = authenticate(username = u_name, password = pwd)
+	try:
+	        u_name, pwd = self.cleaned_data["username"], self.cleaned_data["password"]
+	        user = authenticate(username = u_name, password = pwd)
+	except Exception:
+		raise forms.ValidationError("Username and/or Password is not entered")
 
         if not user:
             raise forms.ValidationError("Invalid username/password")
 
         return user
+
+class QuizForm(forms.Form):
+    """Creates a form to add or edit a Quiz. It has the related fields and functions required."""
+
+    start_date = forms.DateField(initial=datetime.date.today)
+    duration = forms.IntegerField()
+    active = forms.BooleanField(required = False)
+    description = forms.CharField(max_length=256, widget=forms.Textarea(attrs={'cols':20,'rows':1}))
+
+    def save(self):
+        start_date = self.cleaned_data["start_date"]
+        duration = self.cleaned_data["duration"]
+        active = self.cleaned_data['active']
+	description = self.cleaned_data["description"]
+        
+	new_quiz = Quiz()
+	new_quiz.start_date=start_date
+	new_quiz.duration=duration
+	new_quiz.active=active
+	new_quiz.description=description
+	new_quiz.save()
+
+class QuestionForm(forms.Form):
+   """Creates a form to add or edit a Question. It has the related fields and functions required."""
+
+   summary = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}))
+   description = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}))
+   points = forms.FloatField()
+   test = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}))
+   options = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}),required=False)
+   type = forms.CharField(max_length=8, widget=forms.Select(choices=QUESTION_TYPE_CHOICES))
+   active = forms.BooleanField(required=False)
+
+   def save(self):
+        summary = self.cleaned_data["summary"]
+        description = self.cleaned_data["description"]
+        points = self.cleaned_data['points']
+	test = self.cleaned_data["test"]
+        options = self.cleaned_data['options']
+	type = self.cleaned_data["type"]
+	active = self.cleaned_data["active"]
+
+        new_question = Question()
+	new_question.summary = summary
+	new_question.description = description
+	new_question.points = points
+	new_question.test = test
+	new_question.options = options
+	new_question.type = type
+	new_question.active = active
+	new_question.save()
 
