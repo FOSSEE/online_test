@@ -4,7 +4,7 @@
 
 {% block pagetitle %}Online Test{% endblock %}
 {% block content %}
-
+{% csrf_token %}
         <center><h2> Good bye! </h2></center>
         <center><h4> {{message}} </h4></center>
         <center><h4>You may now close the browser.</h4></center><br>

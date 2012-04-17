@@ -94,6 +94,38 @@ def user_register(request):
                 {'form':form},
                 context_instance=RequestContext(request))
 
+def quizlist_user(request):
+    """Show All Quizzes that is available to logged-in user."""
+    user=request.user
+    avail_quiz = list(QuestionPaper.objects.filter(quiz__active=True))
+    user_answerpapers = AnswerPaper.objects.filter(user=user)
+    user_quiz = []
+
+    if user_answerpapers.count() == 0:
+        context = {'quizzes':avail_quiz}
+        return my_render_to_response("exam/quizzes_user.html",context)
+
+    for paper in user_answerpapers:
+        for quiz in avail_quiz:
+            if paper.question_paper.id == quiz.id and paper.end_time != paper.start_time:
+                avail_quiz.remove(quiz)
+
+    context = {'quizzes':avail_quiz,'user':user}
+    return my_render_to_response("exam/quizzes_user.html",context)
+
+def results_user(request):
+    """Show list of Results of Quizzes that is taken by logged-in user."""
+    user = request.user
+    papers = AnswerPaper.objects.filter(user=user)
+    quiz_marks = []
+    for paper in papers:
+        temp = []
+        temp.append(paper.question_paper.quiz.description)
+        temp.append(paper.get_total_marks())
+        quiz_marks.append(temp)
+    context = {'papers':quiz_marks}
+    return my_render_to_response("exam/results_user.html",context)
+
 def edit_quiz(request):
     """Edit the list of quizzes seleted by the user for editing."""
 
@@ -128,7 +160,7 @@ def edit_quiz(request):
 def edit_question(request):
     """Edit the list of questions seleted by the user for editing."""
     user = request.user
-    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
+    if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0:
         raise Http404('You are not allowed to view this page!')
 
     summary = request.POST.getlist('summary')
@@ -581,23 +613,24 @@ def user_login(request):
         return my_render_to_response('exam/login.html', context,
                                      context_instance=RequestContext(request))
 
-def start(request):
+def start(request,questionpaper_id=None):
     """Check the user cedentials and if any quiz is available, start the exam."""
-
     user = request.user
+    if questionpaper_id == None:
+        return my_redirect('/exam/quizzes/')
     try:
         # Right now the app is designed so there is only one active quiz 
         # at a particular time.
-        questionpaper = QuestionPaper.objects.all()[0]
+        questionpaper = QuestionPaper.objects.get(id=questionpaper_id)
     except QuestionPaper.DoesNotExist:
         msg = 'Quiz not found, please contact your '\
         'instructor/administrator. Please login again thereafter.'
         return complete(request, reason=msg)
 
     try:
-        old_paper = AnswerPaper.objects.get(user=user, question_paper=questionpaper)
+        old_paper = AnswerPaper.objects.get(question_paper=questionpaper, user=user)
         q = old_paper.current_question()
-        return show_question(request, q)
+        return show_question(request, q,questionpaper_id)
     except AnswerPaper.DoesNotExist:
         ip = request.META['REMOTE_ADDR']
         key = gen_key(10)
@@ -610,7 +643,7 @@ def start(request):
         new_paper = AnswerPaper(user=user, user_ip=ip, 
                                   question_paper=questionpaper, profile=profile)
         new_paper.start_time = datetime.datetime.now()
-        
+        new_paper.end_time = datetime.datetime.now()
         # Make user directory.
         user_dir = get_user_dir(user)
 
@@ -623,12 +656,12 @@ def start(request):
         new_paper.save()
     
         # Show the user the intro page.    
-        context = {'user': user}
+        context = {'user': user,'paper_id':questionpaper_id}
         ci = RequestContext(request)
         return my_render_to_response('exam/intro.html', context, 
                                      context_instance=ci)
 
-def question(request, q_id):
+def question(request, q_id, questionpaper_id):
     """Check the credentials of the user and start the exam."""
 
     user = request.user
@@ -636,10 +669,10 @@ def question(request, q_id):
         return my_redirect('/exam/login/')
     q = get_object_or_404(Question, pk=q_id)
     try:
-        q_paper = QuestionPaper.objects.get(quiz__active=True)
+        q_paper = QuestionPaper.objects.get(id=questionpaper_id)
         paper = AnswerPaper.objects.get(user=request.user, question_paper=q_paper)
     except AnswerPaper.DoesNotExist:
-        return my_redirect('/exam/start')
+        return my_redirect('/exam/start/')
     if not paper.question_paper.quiz.active:
         return complete(request, reason='The quiz has been deactivated!')
 
@@ -654,29 +687,29 @@ def question(request, q_id):
     return my_render_to_response('exam/question.html', context, 
                                  context_instance=ci)
 
-def show_question(request, q_id):
+def show_question(request, q_id, questionpaper_id):
     """Show a question if possible."""
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(request, msg)
     else:
-        return question(request, q_id)
+        return question(request, q_id, questionpaper_id)
 
-def check(request, q_id):
+def check(request, q_id, questionpaper_id=None):
     """Checks the answers of the user for particular question"""    
 
     user = request.user
     if not user.is_authenticated():
         return my_redirect('/exam/login/')
     question = get_object_or_404(Question, pk=q_id)
-    q_paper = QuestionPaper.objects.get(quiz__active=True)
+    q_paper = QuestionPaper.objects.get(id=questionpaper_id)
     paper = AnswerPaper.objects.get(user=request.user,question_paper = q_paper)
     answer = request.POST.get('answer')
     skip = request.POST.get('skip', None)
     
     if skip is not None:
         next_q = paper.skip()
-        return show_question(request, next_q)
+        return show_question(request, next_q,questionpaper_id)
 
     # Add the answer submitted, regardless of it being correct or not.
     new_answer = Answer(question=question, answer=answer, correct=False)
@@ -723,17 +756,22 @@ def check(request, q_id):
                                      context_instance=ci)
     else:
         next_q = paper.completed_question(question.id)
-        return show_question(request, next_q)
+        return show_question(request, next_q,questionpaper_id)
         
-def quit(request):
+def quit(request, answerpaper_id=None):
     """Show the quit page when the user logs out."""
+    context = { 'id':answerpaper_id}
+    return my_render_to_response('exam/quit.html',context,context_instance=RequestContext(request)) 
 
-    return my_render_to_response('exam/quit.html',context_instance=RequestContext(request)) 
-
-def complete(request,reason = None):
+def complete(request,reason = None,answerpaper_id=None):
     """Show a page to inform user that the quiz has been compeleted."""
 
     user = request.user
+
+    if answerpaper_id == None:
+        logout(request)
+        context = {'message': "You are successfully Logged out."}
+        return my_render_to_response('exam/complete.html', context)
     no = False
     message = reason or 'The quiz has been completed. Thank you.'
     if user.groups.filter(name='moderator').count() > 0:
@@ -742,9 +780,10 @@ def complete(request,reason = None):
         no = True
     if not no:
         # Logout the user and quit with the message given.
-        logout(request)
-        context = {'message': message}
-        return my_render_to_response('exam/complete.html', context)
+        answer_paper = AnswerPaper.objects.get(id=answerpaper_id)
+        answer_paper.endtime = datetime.datetime.now()
+        answer_paper.save()
+        return my_redirect('/exam/quizzes/')
     else:
         return my_redirect('/exam/')
 

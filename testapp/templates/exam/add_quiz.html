@@ -13,7 +13,11 @@
 <script type='text/javascript'>
 	function test()
 	{
-		document.getElementById('id_description').onFocus="javascript:test2()";
+        
+		if (document.getElementById("id_description").value != "")
+        {
+            document.getElementById("submit").innerHTML = "Save";
+        }
 	}
 
 </script>
@@ -28,7 +32,7 @@
   </table>
   </center>
     
-  <center><button class="btn" type="submit" name="questionpaper">Design Question Paper</button>
+  <center><button class="btn" type="submit" id="submit" name="questionpaper">Design Question Paper</button>
   <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/showquiz/");'>Cancel</button> </center>
 </form>
 {% endblock %}

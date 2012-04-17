@@ -129,6 +129,9 @@ class AnswerPaper(models.Model):
     
     # The time when this paper was started by the user.
     start_time = models.DateTimeField()
+
+    # The time when this paper was ended by the user.
+    end_time = models.DateTimeField()
     
     # User's IP which is logged.
     user_ip = models.CharField(max_length=15)

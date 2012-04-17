@@ -70,9 +70,9 @@
         <ul>
         <li> <h5><a> Hi {{user.first_name.title}} {{user.last_name.title}}  </a></h5>
         </ul>
-        <form id="logout" action="{{URL_ROOT}}/exam/quit/" method="post" class="pull-right">
+        <form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.question_paper.id }}/" method="post" class="pull-right">
         {% csrf_token %}
-         <button class="btn" type="submit" name="quit">Quit Exam and Logout</button> </li>
+         <button class="btn" type="submit" name="quit">Quit Exam</button> </li>
 
         </form>
      </div>
@@ -85,7 +85,7 @@
 
          {% if error_message %}<h5>ERROR:</h5><div class="alert alert-error">{{ error_message }}</div>{% endif %}
          <p id="status"></p>
-         <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/" method="post">
+         <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.question_paper.id }}/" method="post">
          {% csrf_token %}
          {% if question.type == "mcq" %}
          {% for option in question.options.strip.splitlines %}

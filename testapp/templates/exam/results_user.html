@@ -1,0 +1,23 @@
+{% extends "user.html" %}
+
+
+{% block subtitle %}Results for {{ papers.user.first_name }}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question_quiz.css" type="text/css" />
+{% endblock %}
+
+{% block manage %}
+<form action="" method="post" name=frm>
+  {% csrf_token %}
+  <center>
+    {% for paper in papers %}
+        {% for i in paper %}
+            {{ i }}
+        {% endfor %}
+        <br>
+    {% endfor %}
+  </center>
+</form>
+{% endblock %}
+
