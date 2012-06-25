@@ -23,3 +23,20 @@
   padding: 35px 20px 10px;
   margin: -20px -20px 20px;
 }
+#codeTextarea{
+         
+       }
+       .textAreaWithLines{
+          font-family:courier;      
+          border:1px solid #eee;
+          
+       }
+       .textAreaWithLines textarea,.textAreaWithLines div{
+          border:0px;
+          line-height:120%;
+          font-size:12px;
+       }
+       .lineObj{
+          color: grey;
+       }
+
