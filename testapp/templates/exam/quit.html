@@ -9,6 +9,6 @@
    	<center><h4> Be sure, as you won't be able to restart this exam.</h4></center>
 	<form action="{{URL_ROOT}}/exam/complete/{{ id }}/" method="post">
 	{% csrf_token %}
-	<center><button class="btn" type="submit" name="yes">Yes!</button>&nbsp;<button class="btn" type="submit" name="no">No!</button></center>
+	<center><button class="btn" type="submit" name="yes">Yes!</button>&nbsp;<button class="btn" type="button" name="no" onClick="window.location='{{ URL_ROOT }}/exam/start/{{ id }}/'">No!</button></center>
 	</form>
 {% endblock content %}
