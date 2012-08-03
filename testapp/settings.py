@@ -2,7 +2,7 @@
 
 from os.path import dirname, join, basename, abspath
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 # The ports the code server should run on.  This will run one separate 
