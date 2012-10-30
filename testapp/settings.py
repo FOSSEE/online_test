@@ -2,7 +2,7 @@
 
 from os.path import dirname, join, basename, abspath
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 # The ports the code server should run on.  This will run one separate 
@@ -192,6 +192,3 @@ LOGGING = {
 }
 
 AUTH_PROFILE_MODULE = 'exam.Profile'
-
-INTERNAL_IPS = ('127.0.0.1',)
-
