@@ -1,91 +1,228 @@
 {% extends "base.html" %}
 
+<!DOCTYPE html>
+
 {% block title %} Answer question {% endblock %}
 
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question.css" type="text/css" />
+
+{% endblock %}
+
 {% block script %}
+
 <script type="text/javascript">
-<!--
-var time_left = {{ time_left }};
-
-function submitCode()
-{
-    document.forms["code"].submit();
-    var x = document.getElementById("status");
-    x.innerHTML = "<strong>Checking answer ...</strong>";
-    x = document.getElementById("check");
-    x.disabled = true;
-    x.value = "Checking Answer ...";
-    document.getElementById("skip").disabled = true;
+function setSelectionRange(input, selectionStart, selectionEnd) {
+  if (input.setSelectionRange) {
+    input.focus();
+    input.setSelectionRange(selectionStart, selectionEnd);
+  }
+  else if (input.createTextRange) {
+    var range = input.createTextRange();
+    range.collapse(true);
+    range.moveEnd('character', selectionEnd);
+    range.moveStart('character', selectionStart);
+    range.select();
+  }
 }
 
-function secs_to_time(secs)
-{
-    var h = Math.floor(secs/3600);
-    var h_s = (h > 0) ? h+'h:' : '';
-    var m = Math.floor((secs%3600)/60);
-    var m_s = (m > 0) ? m+'m:' : '';
-    var s_s = Math.floor(secs%60) + 's';
-    return h_s + m_s + s_s;
+function replaceSelection (input, replaceString) {
+	if (input.setSelectionRange) {
+		var selectionStart = input.selectionStart;
+		var selectionEnd = input.selectionEnd;
+		input.value = input.value.substring(0, selectionStart)+ replaceString + input.value.substring(selectionEnd);
+    
+		if (selectionStart != selectionEnd){ 
+			setSelectionRange(input, selectionStart, selectionStart + 	replaceString.length);
+		}else{
+			setSelectionRange(input, selectionStart + replaceString.length, selectionStart + replaceString.length);
+		}
+
+	}else if (document.selection) {
+		var range = document.selection.createRange();
+
+		if (range.parentElement() == input) {
+			var isCollapsed = range.text == '';
+			range.text = replaceString;
+
+			 if (!isCollapsed)  {
+				range.moveStart('character', -replaceString.length);
+				range.select();
+			}
+		}
+	}
 }
 
-function update_time()
-{
-    time_left -= 1;
-    if (time_left) {
-        var elem = document.getElementById("time_left");
-        var t_str = secs_to_time(time_left);
-        elem.innerHTML = "<strong> Time left: " + t_str + "</strong>";
-        setTimeout("update_time()", 1000);
-    }
-    else {
-        document.forms["code"].submit();
-    }
+
+// We are going to catch the TAB key so that we can use it, Hooray!
+function catchTab(item,e){
+
+	if(navigator.userAgent.match("Gecko")){
+		c=e.which;
+	}else{
+		c=e.keyCode;
+	}
+	if(c==9){
+		replaceSelection(item,String.fromCharCode(9));
+		setTimeout("document.getElementById('"+item.id+"').focus();",0);	
+		return false;
+	}
+		    
 }
-//-->
+</script>
+
+<script type="text/javascript">
+       
+       var lineObjOffsetTop = 2;
+       
+       function createTextAreaWithLines(id)
+       {
+          var el = document.createElement('DIV');
+          var ta = document.getElementById(id);
+          ta.parentNode.insertBefore(el,ta);
+          el.appendChild(ta);
+         
+          el.className='textAreaWithLines';
+          el.style.width = (ta.offsetWidth + 30) + 'px';
+          ta.style.position = 'absolute';
+          ta.style.left = '30px';
+          el.style.height = (ta.offsetHeight + 2) + 'px';
+          el.style.overflow='hidden';
+          el.style.position = 'relative';
+          el.style.width = (ta.offsetWidth + 30) + 'px';
+          var lineObj = document.createElement('DIV');
+          lineObj.style.position = 'absolute';
+          lineObj.style.top = lineObjOffsetTop + 'px';
+          lineObj.style.left = '0px';
+          lineObj.style.width = '27px';
+          el.insertBefore(lineObj,ta);
+          lineObj.style.textAlign = 'right';
+          lineObj.className='lineObj';
+          var string = '';
+          for(var no=1;no<200;no++){
+             if(string.length>0)string = string + '<br>';
+             string = string + no;
+          }
+         
+          //ta.onkeydown = function() { positionLineObj(lineObj,ta); };
+          ta.onmousedown = function() { positionLineObj(lineObj,ta); };
+          ta.onscroll = function() { positionLineObj(lineObj,ta); };
+          ta.onblur = function() { positionLineObj(lineObj,ta); };
+          ta.onfocus = function() { positionLineObj(lineObj,ta); };
+          ta.onmouseover = function() { positionLineObj(lineObj,ta); };
+          lineObj.innerHTML = string;
+         
+       }
+       
+       function positionLineObj(obj,ta)
+       {
+          obj.style.top = (ta.scrollTop * -1 + lineObjOffsetTop) + 'px';  
+       
+         
+       }
+       
+       </script>
+
+<script>
+      var time_left = {{ time_left }};
+      function submitCode()
+      {
+	    document.forms["code"].submit();
+	    var x = document.getElementById("status");
+	    x.innerHTML = "<strong>Checking answer ...</strong>";
+	    x = document.getElementById("check");
+	    x.disabled = true;
+	    x.value = "Checking Answer ...";
+	    document.getElementById("skip").disabled = true;
+      }
+      
+      function secs_to_time(secs)
+      {
+	    var h = Math.floor(secs/3600);
+	    var h_s = (h > 0) ? h+'h:' : '';
+    	    var m = Math.floor((secs%3600)/60);
+	    var m_s = (m > 0) ? m+'m:' : '';
+	    var s_s = Math.floor(secs%60) + 's';
+	    return h_s + m_s + s_s;
+      }
+
+      function update_time()
+      {
+	    time_left -= 1;
+	    if (time_left) 
+            {
+	            var elem = document.getElementById("time_left");
+		    var t_str = secs_to_time(time_left);
+		    elem.innerHTML = "<strong>" + t_str + "</strong>";
+	            setTimeout("update_time()", 1000);
+            }
+	    else 
+            {
+		    document.forms["code"].submit();
+    	    }	
+      }
 </script>
 {% endblock script %}
 
-{% block onload %} onload="update_time()" {% endblock %}
+
+{% block onload %} onload="update_time()" {% endblock onload %}
+
+{% block pagetitle %}
+
+<table><h6><div>
+	<tr><td class=td1-class><h5>You have {{ paper.questions_left }} question(s) left in {{ quiz_name }} </h5>
+	<td class=td2-class><div class=time-div id="time_left">
+	</div>
+</div></h6></table>
+
+{% endblock %}
 
 {% block content %}
-<h3> {{ question.summary }} </h3>
+<div class="topbar">
+  <div class="fill">
+     <div class="container">
+        <h3 class="brand"><strong>Online Test</h3></strong>
+        <ul>
+        <li> <h5><a> Hi {{user.first_name.title}} {{user.last_name.title}}  </a></h5>
+        </ul>
+        <form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.question_paper.id }}/" method="post" class="pull-right">
+        {% csrf_token %}
+         <button class="btn" type="submit" name="quit">Quit Exam</button> </li>
 
-<p>{{ question.description|safe }}
-<br/>
-(Marks: {{ question.points }}) </p>
+        </form>
+     </div>
+   </div>
+</div>
 
-{% if error_message %}<p><strong>ERROR:</strong></p><pre>{{ error_message }}</pre>{% endif %}
+         
+     	 <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br> 
+	 <font size=3 face=arial>	{{ question.description|safe }} </font>
 
-<p id="status"></p>
+         {% if error_message %}<h5>ERROR:</h5><div class="alert alert-error">{{ error_message }}</div>{% endif %}
+         <p id="status"></p>
+         <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.question_paper.id }}/" method="post">
+         {% csrf_token %}
+         {% if question.type == "mcq" %}
+         {% for option in question.options.strip.splitlines %}
+         <input name="answer" type="radio" value="{{option}}" />{{option}} <br/>
+         {% endfor %}
+         {% else %}
 
-<form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/" method="post">
-{% csrf_token %}
-{% if question.type == "mcq" %}
-{% for option in question.options.strip.splitlines %}
-<input name="answer" type="radio" value="{{option}}" />{{option}} <br/>
-{% endfor %}
-{% else %}
-<textarea rows="20" cols="100" name="answer">{% if last_attempt %}{{last_attempt.strip}}{% else %}{% if question.type == "bash" %}#!/bin/bash{% else %}# Enter your answer here.{% endif %}{% endif %}</textarea>
-{% endif %}
-<br/>
-{% if question.type == "mcq" %}
-<input id="check" type="submit" name="check" value="Submit answer"/>
-{% else %}
-<input id="check" type="submit" name="check" value="Check Answer"
-onclick="submitCode();"/>
-{% endif %}
-<input id="skip" type="submit" name="skip" value="Skip question" />
-</form>
+         <textarea tabindex=1 rows="15" style="width:750px;margin-bottom:10px;" name="answer" id="answer" wrap="off" onkeydown="return catchTab(this,event)">{% if last_attempt %}{{last_attempt.strip}}{% else %}{% if question.type == "bash" %} #!/bin/bash{% else %}# Enter your answer here.{% endif %}{% endif %}</textarea>
+<br>
 
-<p> {{ user.first_name.title }} {{ user.last_name.title }}, 
-you have  {{ paper.questions_left }} question(s) left in {{ quiz_name }}.</p>
+ <script type="text/javascript">
+       createTextAreaWithLines('answer');
+       </script>
+         {% endif %}
 
-<p id="time_left"> <strong> Time left:  </strong> </p>
-
-<hr/>
-<form id="logout" action="{{URL_ROOT}}/exam/quit/" method="post">
-{% csrf_token %}
-<input type="submit" name="quit" value="Quit exam and logout" />
-</form>
-
+         {% if question.type == "mcq" %}
+         <br><button class="btn" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
+         {% else %}
+         <button class="btn" type="submit" name="check" id="check" onClick="submitCode();">Check Answer</button>&nbsp;&nbsp;
+         {% endif %}
+         <button class="btn" type="submit" name="skip" id="skip">Skip Question</button>
+         </form>
+         
+      
 {% endblock content %}

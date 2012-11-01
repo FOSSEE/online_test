@@ -35,6 +35,28 @@ def test_python():
             language="python")
     check_result(result, 'nameerror')
 
+def test_c():
+    """Test if server runs Python code as expected."""
+    src = 'while True: pass'
+    result = code_server.run_code(src, '', '/tmp', language="c")
+    check_result(result, 'more than ')
+
+    src = 'x = 1'
+    result = code_server.run_code(src, 'assert x == 1', '/tmp', 
+                language="c")
+    check_result(result, 'correct answer')
+
+    result = code_server.run_code(src, 'assert x == 0', '/tmp', 
+                language="c")
+    check_result(result, 'assertionerror')
+
+    src = 'C lang. Code'
+    result = code_server.run_code(src, 'assert x == 0', '/tmp', 
+            language="c")
+    check_result(result, 'nameerror')
+
+
+
 def test_bash():
     """Test if server runs Bash code as expected."""
     src = """
@@ -80,4 +102,4 @@ def test_bash():
 if __name__ == '__main__':
     test_python()
     test_bash()
-
+    test_c()

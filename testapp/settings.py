@@ -123,6 +123,8 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+
 )
 
 ROOT_URLCONF = '%s.urls'%(basename(CURDIR))
@@ -143,10 +145,14 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
+    'taggit',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-    'south',
+#    'south',
     'exam',
+    'taggit_autocomplete_modified',
+    'debug_toolbar',
+    'django_extensions',	
 )
 
 # A sample logging configuration. The only tangible logging

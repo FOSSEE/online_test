@@ -1,7 +1,8 @@
 import datetime
 from django.db import models
 from django.contrib.auth.models import User
-
+from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
+from django.http import HttpResponse
 ################################################################################
 class Profile(models.Model):
     """Profile for a user to store roll number and other details."""
@@ -43,6 +44,9 @@ class Question(models.Model):
     # Is this question active or not.  If it is inactive it will not be used
     # when creating a QuestionPaper.
     active = models.BooleanField(default=True)
+
+    #Tags for the Question.
+    tags = TaggableManager()
 
     def __unicode__(self):
         return self.summary
@@ -89,6 +93,10 @@ class Quiz(models.Model):
     
     # Description of quiz.
     description = models.CharField(max_length=256)
+
+    #Tags for the Quiz.
+    tags = TaggableManager()
+
     
     class Meta:
         verbose_name_plural = "Quizzes"
@@ -97,9 +105,13 @@ class Quiz(models.Model):
         desc = self.description or 'Quiz'
         return '%s: on %s for %d minutes'%(desc, self.start_date, self.duration)
 
-    
 ################################################################################
 class QuestionPaper(models.Model):
+    quiz = models.ForeignKey(Quiz)
+    questions = models.ManyToManyField(Question)
+    
+################################################################################
+class AnswerPaper(models.Model):
     """A question paper for a student -- one per student typically.
     """
     # The user taking this question paper.
@@ -108,23 +120,22 @@ class QuestionPaper(models.Model):
     # The user's profile, we store a reference to make it easier to access the
     # data.
     profile = models.ForeignKey(Profile)
-    
+
+    # All questions that remains to attempt to perticular Student
+    questions = models.CharField(max_length=128)
+
     # The Quiz to which this question paper is attached to.
-    quiz = models.ForeignKey(Quiz)
+    question_paper = models.ForeignKey(QuestionPaper)
     
     # The time when this paper was started by the user.
     start_time = models.DateTimeField()
+
+    # The time when this paper was ended by the user.
+    end_time = models.DateTimeField()
     
     # User's IP which is logged.
     user_ip = models.CharField(max_length=15)
-    # Unused currently.
-    key = models.CharField(max_length=10)
 
-    # used to allow/stop a user from retaking the question paper.
-    active = models.BooleanField(default = True)
-    
-    # The questions (a list of ids separated by '|')
-    questions = models.CharField(max_length=128)
     # The questions successfully answered (a list of ids separated by '|')
     questions_answered = models.CharField(max_length=128)
     
@@ -152,7 +163,7 @@ class QuestionPaper(models.Model):
             
     def completed_question(self, question_id):
         """Removes the question from the list of questions and returns
-        the next."""
+the next."""
         qa = self.questions_answered
         if len(qa) > 0:
             self.questions_answered = '|'.join([qa, str(question_id)])
@@ -188,7 +199,7 @@ class QuestionPaper(models.Model):
         except AttributeError:
             # total_seconds is new in Python 2.7. :(
             secs = dt.seconds + dt.days*24*3600
-        total = self.quiz.duration*60.0
+        total = self.question_paper.quiz.duration*60.0
         remain = max(total - secs, 0)
         return int(remain)
 
