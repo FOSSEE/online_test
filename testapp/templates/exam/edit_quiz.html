@@ -31,6 +31,9 @@
   {% endfor %}
   </table>
   </center>
+{% for i in data %}
+    <input type=hidden name='quizzes' value="{{ i }}" /> 
+{% endfor %}
   <center><button class="btn" type="submit" name="save">Save</button>
   <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/showquiz/");'>Cancel</button> </center>
 </form>

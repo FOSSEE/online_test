@@ -18,6 +18,7 @@
 <form name='frm' action="{{URL_ROOT}}/exam/manage/editquestion/" method="post" onSubmit="return autosubmit()" onKeyPress='javascript:render_question(frm);'>
   {% csrf_token %}
 <center><p>Click on the Question links to edit the question.</p></center>
+
 <table>
 
     {% for form in forms %}
@@ -42,6 +43,10 @@
         </div>
     {% endfor %}
 </table></center>
+{% for i in data %}
+    <input type=hidden name='questions' value="{{ i }}" /> 
+{% endfor %}
+
   <center><button class="btn" type="submit" name="savequestion">Save</button>
   <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Cancel</button> </center>
 </form>
