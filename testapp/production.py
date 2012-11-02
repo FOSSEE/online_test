@@ -1,4 +1,4 @@
-from project.settings import *
+from testapp.settings import *
 
 DEBUG=False
 TEMPLATE_DEBUG=DEBUG
