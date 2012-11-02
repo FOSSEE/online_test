@@ -152,7 +152,7 @@ INSTALLED_APPS = (
     'exam',
     'taggit_autocomplete_modified',
     'debug_toolbar',
-    'django_extensions',	
+    #'django_extensions',	
 )
 
 # A sample logging configuration. The only tangible logging
