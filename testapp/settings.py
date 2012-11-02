@@ -151,7 +151,7 @@ INSTALLED_APPS = (
 #    'south',
     'exam',
     'taggit_autocomplete_modified',
-    'debug_toolbar',
+    #'debug_toolbar',
     #'django_extensions',	
 )
 
