@@ -15,11 +15,11 @@ else:
 
 urlpatterns = patterns('',
     url(URL_BASE, include('exam.urls')),
-    
+    (r'^admin/', include(admin.site.urls)),
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     # Uncomment the next line to enable the admin:
-    url(ADMIN_BASE, include(admin.site.urls)),
+    #url(ADMIN_BASE, include(admin.site.urls)),
 
 )
 
