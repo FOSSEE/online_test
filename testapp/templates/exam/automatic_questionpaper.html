@@ -86,6 +86,7 @@ function load_data()
     <th>Points
     <th>Tags
     {% for question in data.questions %}
+    <input type=hidden name='questions' value={{ question.id }} />
     <tr><td>{{ question.summary }} <td>{{ question.type }} <td>{{ question.points }} <td>
         {% for tag in question.tags.all %}
          {{ tag }}

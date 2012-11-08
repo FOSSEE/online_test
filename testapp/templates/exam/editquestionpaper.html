@@ -12,7 +12,7 @@
 {% csrf_token %}
 
 {% for i in papers.questions %}
-<input type="checkbox" name="papers" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/editquestionpaper/{{ i.id }}">{{ i.summary}}</a><br>
+<input type="checkbox" name="papers" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{ i.summary}}</a><br>
 {% endfor %}
 <br>
 <button class="btn" type="submit" name=add value=add>Add Question</button>&nbsp;&nbsp;

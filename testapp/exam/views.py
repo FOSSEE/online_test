@@ -21,8 +21,6 @@ from settings import URL_ROOT
 
 # The directory where user data can be saved.
 OUTPUT_DIR = abspath(join(dirname(__file__), pardir, 'output'))
-set1 = set()
-set2 = set()
 
 def my_redirect(url):
     """An overridden redirect to deal with URL_ROOT-ing. See settings.py
@@ -344,16 +342,13 @@ def show_all_questionpapers(request,questionpaper_id=None):
 
     if request.method=="POST" and request.POST.get('delete') == "delete":
         data = request.POST.getlist('papers')
+        q_paper = QuestionPaper.objects.get(id=questionpaper_id)
         for i in data:
-            q_paper = QuestionPaper.objects.get(id=i).delete()
+            q_paper.questions.remove(Question.objects.get(id=i))
         question_paper= QuestionPaper.objects.all()
-        context = {'papers': question_paper, }
+        context = {'papers': question_paper }
         return my_render_to_response('exam/showquestionpapers.html', context,
                                         context_instance=RequestContext(request))
-        qu_papers = QuestionPaper.objects.all()
-        context = {'papers':qu_papers}
-        return my_render_to_response('exam/showquestionpapers.html',context,context_instance=RequestContext(request))    
-
     if questionpaper_id == None:
         qu_papers = QuestionPaper.objects.all()
         context = {'papers':qu_papers}
@@ -372,8 +367,8 @@ def show_all_questionpapers(request,questionpaper_id=None):
 def automatic_questionpaper(request,questionpaper_id=None):
 
     user=request.user
-    global set1
-    global set2
+    set1 = set()
+    set2 = set()
     if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
         raise Http404('You are not allowed to view this page!')
 
@@ -384,13 +379,13 @@ def automatic_questionpaper(request,questionpaper_id=None):
                 quest_paper = QuestionPaper()
                 quest_paper.quiz = quiz
                 quest_paper.save()
-                for i in set2:
-                    q = Question.objects.get(summary=i)
-                    quest_paper.questions.add(q)
+                questions = request.POST.getlist('questions')
+                for i in questions:
+                    if i.isdigit():
+                        q = Question.objects.get(id=i)
+                        quest_paper.questions.add(q)
                 return my_redirect('/exam/manage/showquiz')
             else:
-                set1 = set()
-                set2 = set()
                 no_questions = int(request.POST.get('questions'))
                 first_tag = request.POST.get('first_tag')
                 first_condition = request.POST.get('first_condition')
@@ -432,14 +427,13 @@ def automatic_questionpaper(request,questionpaper_id=None):
         if request.method=="POST":
             if request.POST.get('save') == 'save' :
                 quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
-                for i in set2:
-                    print str(i.id) + "   " + i.summary
-                    q = Question.objects.get(summary=i)
-                    quest_paper.questions.add(q)
+                questions = request.POST.getlist('questions')
+                for i in questions:
+                    if i.isdigit():
+                        q = Question.objects.get(id=i)
+                        quest_paper.questions.add(q)
                 return my_redirect('/exam/manage/showquiz')
             else:
-                set1 = set()
-                set2 = set()
                 no_questions = int(request.POST.get('questions'))
                 first_tag = request.POST.get('first_tag')
                 first_condition = request.POST.get('first_condition')
@@ -479,8 +473,8 @@ def automatic_questionpaper(request,questionpaper_id=None):
 
 def manual_questionpaper(request,questionpaper_id=None):
     user=request.user
-    global set1
-    global set2
+    set1 = set()
+    set2 = set()
     if not user.is_authenticated() or user.groups.filter(name='moderator').count() == 0 :
         raise Http404('You are not allowed to view this page!')
 
@@ -497,8 +491,6 @@ def manual_questionpaper(request,questionpaper_id=None):
                     quest_paper.questions.add(q)
                 return my_redirect('/exam/manage/showquiz')
             else:
-                set1 = set()
-                set2 = set()
                 first_tag = request.POST.get('first_tag')
                 first_condition = request.POST.get('first_condition')
                 second_tag =  request.POST.get('second_tag')
@@ -541,8 +533,6 @@ def manual_questionpaper(request,questionpaper_id=None):
                     quest_paper.questions.add(q)
                 return my_redirect('/exam/manage/showquiz')
             else:
-                set1 = set()
-                set2 = set()
                 first_tag = request.POST.get('first_tag')
                 first_condition = request.POST.get('first_condition')
                 second_tag =  request.POST.get('second_tag')
