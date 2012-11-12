@@ -21,7 +21,7 @@ SERVER_TIMEOUT = 2
 # are not hosted as host.org/exam/  but as host.org/foo/exam/ for whatever 
 # reason set this to the root you have to serve at.  In the above example
 # host.org/foo/exam set URL_ROOT='/foo'
-URL_ROOT = ''
+URL_ROOT = '/online_test'
 
 
 ADMINS = (
@@ -89,7 +89,7 @@ STATIC_URL = '/static/'
 # URL prefix for admin static files -- CSS, JavaScript and images.
 # Make sure to use a trailing slash.
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
-ADMIN_MEDIA_PREFIX = URL_ROOT + '/static/admin/'
+ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
