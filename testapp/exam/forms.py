@@ -133,6 +133,7 @@ class QuestionForm(forms.Form):
     type = forms.CharField(max_length=8, widget=forms.Select(choices=QUESTION_TYPE_CHOICES))
     active = forms.BooleanField(required=False)
     tags = TagField(widget=TagAutocomplete(),required=False)
+    snippet = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}),required=False)
 
     def save(self):
         summary = self.cleaned_data["summary"]

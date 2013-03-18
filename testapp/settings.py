@@ -21,7 +21,7 @@ SERVER_TIMEOUT = 2
 # are not hosted as host.org/exam/  but as host.org/foo/exam/ for whatever 
 # reason set this to the root you have to serve at.  In the above example
 # host.org/foo/exam set URL_ROOT='/foo'
-URL_ROOT = '/online_test'
+URL_ROOT = ''
 
 
 ADMINS = (

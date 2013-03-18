@@ -44,6 +44,9 @@ class Question(models.Model):
     # Is this question active or not.  If it is inactive it will not be used
     # when creating a QuestionPaper.
     active = models.BooleanField(default=True)
+        
+    #Code Snippet
+    snippet = models.CharField(max_length=256)
 
     #Tags for the Question.
     tags = TaggableManager()

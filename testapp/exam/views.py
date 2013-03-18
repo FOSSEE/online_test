@@ -169,6 +169,7 @@ def edit_question(request):
     options = request.POST.getlist('options')
     type = request.POST.getlist('type')
     active = request.POST.getlist('active')
+    snippet = request.POST.getlist('snippet')
     tags = request.POST.getlist('tags')
     j = 0
     for id_list in questions:
@@ -181,6 +182,7 @@ def edit_question(request):
         question.type = type[j]
         edit_tags=tags[j]
         question.active = active[j]
+        question.snippet = snippet[j]
         question.save()
         for tag in question.tags.all():
             question.tags.remove(tag)
@@ -219,6 +221,7 @@ def add_question(request,question_id=None):
                 d.options = form['options'].data
                 d.type = form['type'].data
                 d.active = form['active'].data
+                d.snippet = form['snippet'].data
                 d.save()
                 question = Question.objects.get(id=question_id)
                 for tag in question.tags.all():
@@ -250,6 +253,7 @@ def add_question(request,question_id=None):
     	    form.initial['options'] = d.options
     	    form.initial['type'] = d.type
     	    form.initial['active'] = d.active
+            form.initial['snippet'] = d.snippet
             form_tags = d.tags.all()
             form_tags_split = form_tags.values('name')
             initial_tags = ""

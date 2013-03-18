@@ -208,7 +208,7 @@ function catchTab(item,e){
          {% endfor %}
          {% else %}
 
-         <textarea tabindex=1 rows="15" style="width:750px;margin-bottom:10px;" name="answer" id="answer" wrap="off" onkeydown="return catchTab(this,event)">{% if last_attempt %}{{last_attempt.strip}}{% else %}{% if question.type == "bash" %} #!/bin/bash{% else %}# Enter your answer here.{% endif %}{% endif %}</textarea>
+         <textarea tabindex=1 rows="15" style="width:750px;margin-bottom:10px;" name="answer" id="answer" wrap="off" onkeydown="return catchTab(this,event)">{% if last_attempt %}{{last_attempt.strip}}{% else %}{% if question.type == "bash" %} #!/bin/bash{% else %}{{ question.snippet }}{% endif %}{% endif %}</textarea>
 <br>
 
  <script type="text/javascript">
