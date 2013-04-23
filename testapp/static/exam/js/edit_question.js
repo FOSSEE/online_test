@@ -156,11 +156,9 @@ function autosubmit()
 		}
 		else
 		{
-			alert("hello")
 			count_mcq = count_mcq + 1;
 			var options = document.getElementById('id_options' + i).value;
 			var total_words = options.split("\n").length ;
-			alert(total_words)
 			if ( total_words < 4)
 				empty_options = empty_options + 1 ;
 		}

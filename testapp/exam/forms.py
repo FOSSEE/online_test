@@ -22,18 +22,27 @@ UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
 
 class UserRegisterForm(forms.Form):
-    """A Class to create new form for User's Registration. It has the various fields and functions required to register a new user to the system"""
+    """A Class to create new form for User's Registration.
+    It has the various fields and functions required to register
+    a new user to the system"""
 
-    username = forms.CharField(max_length=30, help_text='Letters, digits, period and underscores only.')
+    username = forms.CharField\
+               (max_length=30, help_text='Letters, digits,\
+               period and underscores only.')
     email = forms.EmailField()
     password = forms.CharField(max_length=30, widget=forms.PasswordInput())
-    confirm_password = forms.CharField(max_length=30, widget=forms.PasswordInput())
+    confirm_password = forms.CharField\
+                       (max_length=30, widget=forms.PasswordInput())
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
-    roll_number = forms.CharField(max_length=30, help_text="Use a dummy if you don't have one.")
-    institute = forms.CharField(max_length=128, help_text='Institute/Organization')
-    department = forms.CharField(max_length=64, help_text='Department you work/study at')
-    position = forms.CharField(max_length=64, help_text='Student/Faculty/Researcher/Industry/etc.')
+    roll_number = forms.CharField\
+                (max_length=30, help_text="Use a dummy if you don't have one.")
+    institute = forms.CharField\
+                (max_length=128, help_text='Institute/Organization')
+    department = forms.CharField\
+                (max_length=64, help_text='Department you work/study at')
+    position = forms.CharField\
+        (max_length=64, help_text='Student/Faculty/Researcher/Industry/etc.')
 
     def clean_username(self):
         u_name = self.cleaned_data["username"]
@@ -42,7 +51,7 @@ class UserRegisterForm(forms.Form):
                   "allowed in username"
             raise forms.ValidationError(msg)
         try:
-            User.objects.get(username__exact = u_name)
+            User.objects.get(username__exact=u_name)
             raise forms.ValidationError("Username already exists.")
         except User.DoesNotExist:
             return u_name
@@ -50,8 +59,8 @@ class UserRegisterForm(forms.Form):
     def clean_password(self):
         pwd = self.cleaned_data['password']
         if pwd.strip(PWD_CHARS):
-            raise forms.ValidationError("Only letters, digits and punctuation are \
-                                         allowed in password")
+            raise forms.ValidationError("Only letters, digits and punctuation\
+                                        are allowed in password")
         return pwd
 
     def clean_confirm_password(self):
@@ -86,28 +95,32 @@ class UserRegisterForm(forms.Form):
 class UserLoginForm(forms.Form):
     """Creates a form which will allow the user to log into the system."""
 
-    username = forms.CharField(max_length = 30)
+    username = forms.CharField(max_length=30)
     password = forms.CharField(max_length=30, widget=forms.PasswordInput())
 
     def clean(self):
         super(UserLoginForm, self).clean()
         try:
-            u_name, pwd = self.cleaned_data["username"], self.cleaned_data["password"]
-            user = authenticate(username = u_name, password = pwd)
+            u_name, pwd = self.cleaned_data["username"],\
+                          self.cleaned_data["password"]
+            user = authenticate(username=u_name, password=pwd)
         except Exception:
-            raise forms.ValidationError("Username and/or Password is not entered")
+            raise forms.ValidationError\
+                        ("Username and/or Password is not entered")
         if not user:
             raise forms.ValidationError("Invalid username/password")
         return user
 
 class QuizForm(forms.Form):
-    """Creates a form to add or edit a Quiz. It has the related fields and functions required."""
+    """Creates a form to add or edit a Quiz.
+    It has the related fields and functions required."""
     
     start_date = forms.DateField(initial=datetime.date.today)
     duration = forms.IntegerField()
     active = forms.BooleanField(required = False)
     tags = TagField(widget=TagAutocomplete())
-    description = forms.CharField(max_length=256, widget=forms.Textarea(attrs={'cols':20,'rows':1}))
+    description = forms.CharField(max_length=256, widget=forms.Textarea\
+                                                (attrs={'cols':20,'rows':1}))
 
     def save(self):
         start_date = self.cleaned_data["start_date"]
@@ -116,24 +129,31 @@ class QuizForm(forms.Form):
         description = self.cleaned_data["description"]
         
         new_quiz = Quiz()
-        new_quiz.start_date=start_date
-        new_quiz.duration=duration
-        new_quiz.active=active
-        new_quiz.description=description
+        new_quiz.start_date = start_date
+        new_quiz.duration = duration
+        new_quiz.active = active
+        new_quiz.description = description
         new_quiz.save()
 
 class QuestionForm(forms.Form):
-    """Creates a form to add or edit a Question. It has the related fields and functions required."""
+    """Creates a form to add or edit a Question. 
+    It has the related fields and functions required."""
 
-    summary = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}))
-    description = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}))
+    summary = forms.CharField(widget=forms.Textarea\
+                                        (attrs={'cols': 40, 'rows': 1}))
+    description = forms.CharField(widget=forms.Textarea\
+                                            (attrs={'cols': 40, 'rows': 1}))
     points = forms.FloatField()
-    test = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}))
-    options = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}),required=False)
-    type = forms.CharField(max_length=8, widget=forms.Select(choices=QUESTION_TYPE_CHOICES))
+    test = forms.CharField(widget=forms.Textarea\
+                                    (attrs={'cols': 40, 'rows': 1}))
+    options = forms.CharField(widget=forms.Textarea\
+                                (attrs={'cols': 40, 'rows': 1}),required=False)
+    type = forms.CharField(max_length=8, widget=forms.Select\
+                                        (choices=QUESTION_TYPE_CHOICES))
     active = forms.BooleanField(required=False)
     tags = TagField(widget=TagAutocomplete(),required=False)
-    snippet = forms.CharField(widget = forms.Textarea(attrs={'cols': 40, 'rows': 1}),required=False)
+    snippet = forms.CharField(widget=forms.Textarea\
+                                (attrs={'cols': 40, 'rows': 1}),required=False)
 
     def save(self):
         summary = self.cleaned_data["summary"]
