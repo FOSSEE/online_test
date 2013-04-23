@@ -77,6 +77,8 @@ def is_moderator(user):
 def fetch_questions(request):
     """Fetch questions from database based on the given search conditions &
     tags"""
+    set1 = set()
+    set2 = set()
     first_tag = request.POST.get('first_tag')
     first_condition = request.POST.get('first_condition')
     second_tag = request.POST.get('second_tag')
@@ -418,8 +420,6 @@ def show_all_questionpapers(request, questionpaper_id=None):
 
 def automatic_questionpaper(request, questionpaper_id=None):
     user = request.user
-    set1 = set()
-    set2 = set()
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
@@ -438,18 +438,18 @@ def automatic_questionpaper(request, questionpaper_id=None):
                 return my_redirect('/exam/manage/showquiz')
             else:
                 no_questions = int(request.POST.get('questions'))
-                fetch_questions(request)
-                n = len(set2)
+                fetched_questions = fetch_questions(request)
+                n = len(fetched_questions)
                 msg = ''
                 if (no_questions < n ):
                     i = n - no_questions
                     for i in range(0, i):
-                        set2.pop()
+                        fetched_questions.pop()
                 elif ( no_questions > n):
                     msg = 'The given Criteria does not satisfy the number\
                      of Questions...'
                 tags = Tag.objects.all()
-                context = {'data': {'questions': set2, 'tags': tags, 
+                context = {'data': {'questions': fetched_questions, 'tags': tags, 
                                     'msg': msg}}
                 return my_render_to_response\
                 ('exam/automatic_questionpaper.html',context,
@@ -474,18 +474,18 @@ def automatic_questionpaper(request, questionpaper_id=None):
                 questionpaper_id)
             else:
                 no_questions = int(request.POST.get('questions'))
-                fetch_questions(request)
-                n = len(set2)
+                fetched_questions = fetch_questions(request)
+                n = len(fetched_questions)
                 msg = ''
                 if (no_questions < n ):
                     i = n - no_questions
                     for i in range(0, i):
-                        set2.pop()
+                        fetched_questions.pop()
                 elif ( no_questions > n):
                     msg = 'The given Criteria does not satisfy the number of \
                     Questions...'
                 tags = Tag.objects.all()
-                context = {'data': {'questions': set2, 'tags': tags, \
+                context = {'data': {'questions': fetched_questions, 'tags': tags, \
                         'msg': msg}}
                 return my_render_to_response\
                 ('exam/automatic_questionpaper.html', context,
@@ -519,13 +519,14 @@ def manual_questionpaper(request, questionpaper_id=None):
                     quest_paper.questions.add(q)
                 return my_redirect('/exam/manage/showquiz')
             else:
-                fetch_questions(request)
-                n = len(set2)
+                fetched_questions = fetch_questions(request)
+                n = len(fetched_questions)
                 msg = ''
                 if (n == 0):
                     msg = 'No matching Question found...'
                 tags = Tag.objects.all()
-                context = {'data': {'questions': set2, 'tags': tags,'msg': msg}}
+                context = {'data': {'questions': fetched_questions,\
+                                    'tags': tags,'msg': msg}}
                 return my_render_to_response('exam/manual_questionpaper.html',
                                             context,
                                             context_instance=RequestContext\
@@ -548,13 +549,14 @@ def manual_questionpaper(request, questionpaper_id=None):
                 return my_redirect('/exam/manage/showquestionpapers/'+\
                 questionpaper_id)
             else:
-                fetch_questions(request)
-                n = len(set2)
+                fetched_questions = fetch_questions(request)
+                n = len(fetched_questions)
                 msg = ''
                 if (n == 0):
                     msg = 'No matching Question found...'
                 tags = Tag.objects.all()
-                context = {'data': {'questions': set2, 'tags': tags,'msg': msg}}
+                context = {'data': {'questions': fetched_questions,\
+                                    'tags': tags,'msg': msg}}
                 return my_render_to_response('exam/manual_questionpaper.html',
                                             context,
                                             context_instance=RequestContext\
