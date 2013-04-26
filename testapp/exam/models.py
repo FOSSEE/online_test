@@ -1,7 +1,8 @@
 import datetime
 from django.db import models
 from django.contrib.auth.models import User
-from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete as TaggableManager
+from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete\
+as TaggableManager
 from django.http import HttpResponse
 ################################################################################
 class Profile(models.Model):

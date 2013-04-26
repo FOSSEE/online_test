@@ -24,5 +24,6 @@ urlpatterns = patterns('',
 )
 
 urlpatterns += patterns('',
-    url(r'^taggit_autocomplete_modified/', include('taggit_autocomplete_modified.urls')),
+    url(r'^taggit_autocomplete_modified/', include\
+                                        ('taggit_autocomplete_modified.urls')),
 )

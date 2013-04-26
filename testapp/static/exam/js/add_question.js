@@ -98,9 +98,9 @@ function autosubmit()
 	if (document.getElementById('id_type').value == 'mcq')
 	{
 		var value = document.getElementById('id_options').value;
-		if(value.split('\n').length != 4)
+		if(value.split('\n').length < 4)
 		{
-			alert("Enter 4 options. One option per line.");
+			alert("Please Enter 4 options. One option per line.");
 			return false;
 		}
 		return true;
