@@ -58,6 +58,33 @@ def is_moderator(user):
     """Check if the user is having moderator rights"""
     if user.groups.filter(name='moderator').count() == 1:
         return True
+        
+def fetch_questions(request):
+    """Fetch questions from database based on the given search conditions &
+    tags"""
+    set1 = set()
+    set2 = set()
+    first_tag = request.POST.get('first_tag')
+    first_condition = request.POST.get('first_condition')
+    second_tag = request.POST.get('second_tag')
+    second_condition = request.POST.get('second_condition')
+    third_tag = request.POST.get('third_tag')
+    question1 = set(Question.objects.filter(tags__name__in=[first_tag]))
+    question2 = set(Question.objects.filter(tags__name__in=[second_tag]))
+    question3 = set(Question.objects.filter(tags__name__in=[third_tag]))
+    if first_condition == 'and':
+        set1 = question1.intersection(question2)
+        if second_condition == 'and':
+            set2 = set1.intersection(question3)
+        else:
+            set2 = set1.union(question3)
+    else:
+        set1 = question1.union(question2)
+        if second_condition == 'and':
+            set2 = set1.intersection(question3)
+        else:
+            set2 = set1.union(question3)
+    return set2
     
 def index(request):
     """The start page.
@@ -124,9 +151,7 @@ def results_user(request):
     papers = AnswerPaper.objects.filter(user=user)
     quiz_marks = []
     for paper in papers:
-        temp = []
-        temp.append(paper.question_paper.quiz.description)
-        temp.append(paper.get_total_marks())
+        temp = paper.question_paper.quiz.description, paper.get_total_marks()
         quiz_marks.append(temp)
     context = {'papers':quiz_marks}
     return my_render_to_response("exam/results_user.html",context)
@@ -137,16 +162,15 @@ def edit_quiz(request):
     user = request.user
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    quizzes = request.POST.getlist('quizzes')
+    quiz_list = request.POST.getlist('quizzes')
     start_date = request.POST.getlist('start_date')
     duration = request.POST.getlist('duration')
     active = request.POST.getlist('active')
     description = request.POST.getlist('description')
     tags = request.POST.getlist('tags')
 
-    j = 0
-    for i in quizzes:
-        quiz = Quiz.objects.get(id=i)
+    for j, quiz_id in enumerate(quiz_list):
+        quiz = Quiz.objects.get(id=quiz_id)
         quiz.start_date = start_date[j]
         quiz.duration = duration[j]
         quiz.active = active[j]
@@ -160,7 +184,6 @@ def edit_quiz(request):
         for i in range(0,len(tags_split)-1):
             tag = tags_split[i].strip()
             quiz.tags.add(tag)
-        j += 1
     return my_redirect("/exam/manage/showquiz/")
 
 def edit_question(request):
@@ -169,7 +192,7 @@ def edit_question(request):
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
-    questions = request.POST.getlist('questions')
+    question_list = request.POST.getlist('questions')
     summary = request.POST.getlist('summary')
     description = request.POST.getlist('description')
     points = request.POST.getlist('points')
@@ -179,9 +202,9 @@ def edit_question(request):
     active = request.POST.getlist('active')
     snippet = request.POST.getlist('snippet')
     tags = request.POST.getlist('tags')
-    j = 0
-    for id_list in questions:
-        question = Question.objects.get(id=id_list)
+    
+    for j, question_id in enumerate(question_list):
+        question = Question.objects.get(id=question_id)
         question.summary = summary[j]
         question.description = description[j]
         question.points = points[j]
@@ -198,7 +221,6 @@ def edit_question(request):
         for i in range(0,len(tags_split)-1):
             tag = tags_split[i].strip()
             question.tags.add(tag)
-        j += 1
     return my_redirect("/exam/manage/questions")
    
 
@@ -375,10 +397,7 @@ def show_all_questionpapers(request,questionpaper_id=None):
         qu_papers = QuestionPaper.objects.get(id=questionpaper_id)
         quiz = qu_papers.quiz
         questions = qu_papers.questions.all()
-        q = []
-        for i in questions:
-            q.append(i)
-        context = {'papers':{'quiz':quiz,'questions':q}}
+        context = {'papers':{'quiz':quiz,'questions':questions}}
         return my_render_to_response('exam/editquestionpaper.html',context,
                                     context_instance=RequestContext(request))
 
@@ -386,8 +405,6 @@ def show_all_questionpapers(request,questionpaper_id=None):
 def automatic_questionpaper(request,questionpaper_id=None):
 
     user=request.user
-    set1 = set()
-    set2 = set()
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
@@ -406,41 +423,23 @@ def automatic_questionpaper(request,questionpaper_id=None):
                 return my_redirect('/exam/manage/showquiz')
             else:
                 no_questions = int(request.POST.get('questions'))
-                first_tag = request.POST.get('first_tag')
-                first_condition = request.POST.get('first_condition')
-                second_tag =  request.POST.get('second_tag')
-                second_condition = request.POST.get('second_condition')
-                third_tag = request.POST.get('third_tag')
-                question1 = set(Question.objects.filter(tags__name__in=[first_tag]))
-                question2 = set(Question.objects.filter(tags__name__in=[second_tag]))
-                question3 = set(Question.objects.filter(tags__name__in=[third_tag]))
-                if first_condition == 'and':
-                    set1 = question1.intersection(question2)
-                    if second_condition == 'and':
-                        set2 = set1.intersection(question3)
-                    else:
-                        set2 = set1.union(question3)
-                else:
-                    set1 = question1.union(question2)
-                    if second_condition == 'and':
-                        set2 = set1.intersection(question3)
-                    else:
-                        set2 = set1.union(question3)
-                n = len(set2)
+                fetched_questions = fetch_questions(request)
+                n = len(fetched_questions)
                 msg = ''
-                if (no_questions < n ) :
+                if (no_questions < n ):
                     i = n - no_questions
-                    for i in range(0,i):
-                        set2.pop()
-                elif( no_questions > n):
-                    msg = 'The given Criteria does not satisfy the \
-                                                        number of Questions...'
+                    for i in range(0, i):
+                        fetched_questions.pop()
+                elif ( no_questions > n):
+                    msg = 'The given Criteria does not satisfy the number\
+                                                                of Questions...'
                 tags = Tag.objects.all()
-                context = {'data':{'questions':set2,'tags':tags,'msg':msg}}
+                context = {'data': {'questions': fetched_questions, 
+                                    'tags': tags,
+                                    'msg': msg}}
                 return my_render_to_response\
-                                ('exam/automatic_questionpaper.html',
-                                context,
-                                context_instance=RequestContext(request))
+                ('exam/automatic_questionpaper.html',context,
+                                    context_instance=RequestContext(request))
         else:
             tags = Tag.objects.all()
             context = {'data':{'tags':tags}}
@@ -459,39 +458,22 @@ def automatic_questionpaper(request,questionpaper_id=None):
                 return my_redirect('/exam/manage/showquiz')
             else:
                 no_questions = int(request.POST.get('questions'))
-                first_tag = request.POST.get('first_tag')
-                first_condition = request.POST.get('first_condition')
-                second_tag =  request.POST.get('second_tag')
-                second_condition = request.POST.get('second_condition')
-                third_tag = request.POST.get('third_tag')
-                question1 = set(Question.objects.filter(tags__name__in=[first_tag]))
-                question2 = set(Question.objects.filter(tags__name__in=[second_tag]))
-                question3 = set(Question.objects.filter(tags__name__in=[third_tag]))
-                if first_condition == 'and':
-                    set1 = question1.intersection(question2)
-                    if second_condition == 'and':
-                        set2 = set1.intersection(question3)
-                    else:
-                        set2 = set1.union(question3)
-                else:
-                    set1 = question1.union(question2)
-                    if second_condition == 'and':
-                        set2 = set1.intersection(question3)
-                    else:
-                        set2 = set1.union(question3)
-                n = len(set2)
+                fetched_questions = fetch_questions(request)
+                n = len(fetched_questions)
                 msg = ''
-                if (no_questions < n ) :
+                if (no_questions < n ):
                     i = n - no_questions
-                    for i in range(0,i):
-                        set2.pop()
-                elif( no_questions > n):
-                    msg = 'The given Criteria does not satisfy \
-                                                the number of Questions...'
+                    for i in range(0, i):
+                        fetched_questions.pop()
+                elif ( no_questions > n):
+                    msg = 'The given Criteria does not satisfy the number of \
+                                                                Questions...'
                 tags = Tag.objects.all()
-                context = {'data':{'questions':set2,'tags':tags,'msg':msg}}
-                return my_render_to_response('exam/automatic_questionpaper.html',
-                                            context,
+                context = {'data': {'questions': fetched_questions, 
+                                    'tags': tags,
+                                    'msg': msg}}
+                return my_render_to_response\
+                ('exam/automatic_questionpaper.html', context,
                                     context_instance=RequestContext(request))
         else:
             tags = Tag.objects.all()
@@ -501,8 +483,6 @@ def automatic_questionpaper(request,questionpaper_id=None):
 
 def manual_questionpaper(request,questionpaper_id=None):
     user=request.user
-    set1 = set()
-    set2 = set()
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
@@ -519,34 +499,18 @@ def manual_questionpaper(request,questionpaper_id=None):
                     quest_paper.questions.add(q)
                 return my_redirect('/exam/manage/showquiz')
             else:
-                first_tag = request.POST.get('first_tag')
-                first_condition = request.POST.get('first_condition')
-                second_tag =  request.POST.get('second_tag')
-                second_condition = request.POST.get('second_condition')
-                third_tag = request.POST.get('third_tag')
-                question1 = set(Question.objects.filter(tags__name__in=[first_tag]))
-                question2 = set(Question.objects.filter(tags__name__in=[second_tag]))
-                question3 = set(Question.objects.filter(tags__name__in=[third_tag]))
-                if first_condition == 'and':
-                    set1 = question1.intersection(question2)
-                    if second_condition == 'and':
-                        set2 = set1.intersection(question3)
-                    else:
-                        set2 = set1.union(question3)
-                else:
-                    set1 = question1.union(question2)
-                    if second_condition == 'and':
-                        set2 = set1.intersection(question3)
-                    else:
-                        set2 = set1.union(question3)
-                n = len(set2)
+                fetched_questions = fetch_questions(request)
+                n = len(fetched_questions)
                 msg = ''
-                if (n == 0) :
+                if (n == 0):
                     msg = 'No matching Question found...'
                 tags = Tag.objects.all()
-                context = {'data':{'questions':set2,'tags':tags,'msg':msg}}
+                context = {'data': {'questions': fetched_questions,\
+                                    'tags': tags,'msg': msg}}
                 return my_render_to_response('exam/manual_questionpaper.html',
-                            context,context_instance=RequestContext(request))
+                                            context,
+                                            context_instance=RequestContext\
+                                            (request))
         else:
             tags = Tag.objects.all()
             context = {'data':{'tags':tags}}
@@ -563,34 +527,18 @@ def manual_questionpaper(request,questionpaper_id=None):
                     quest_paper.questions.add(q)
                 return my_redirect('/exam/manage/showquiz')
             else:
-                first_tag = request.POST.get('first_tag')
-                first_condition = request.POST.get('first_condition')
-                second_tag =  request.POST.get('second_tag')
-                second_condition = request.POST.get('second_condition')
-                third_tag = request.POST.get('third_tag')
-                question1 = set(Question.objects.filter(tags__name__in=[first_tag]))
-                question2 = set(Question.objects.filter(tags__name__in=[second_tag]))
-                question3 = set(Question.objects.filter(tags__name__in=[third_tag]))
-                if first_condition == 'and':
-                    set1 = question1.intersection(question2)
-                    if second_condition == 'and':
-                        set2 = set1.intersection(question3)
-                    else:
-                        set2 = set1.union(question3)
-                else:
-                    set1 = question1.union(question2)
-                    if second_condition == 'and':
-                        set2 = set1.intersection(question3)
-                    else:
-                        set2 = set1.union(question3)
-                n = len(set2)
+                fetched_questions = fetch_questions(request)
+                n = len(fetched_questions)
                 msg = ''
-                if (n == 0) :
+                if (n == 0):
                     msg = 'No matching Question found...'
                 tags = Tag.objects.all()
-                context = {'data':{'questions':set2,'tags':tags,'msg':msg}}
+                context = {'data': {'questions': fetched_questions,\
+                                    'tags': tags,'msg': msg}}
                 return my_render_to_response('exam/manual_questionpaper.html',
-                            context,context_instance=RequestContext(request))
+                                            context,
+                                            context_instance=RequestContext\
+                                            (request))
         else:
             tags = Tag.objects.all()
             context = {'data':{'tags':tags}}
@@ -1013,7 +961,7 @@ def grade_user(request, username):
     and update all their marks and also give comments for each paper.
     """
     current_user = request.user
-    if not current_user.is_authenticated() or not is_moderator(user):
+    if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
 
     data = get_user_data(username)
