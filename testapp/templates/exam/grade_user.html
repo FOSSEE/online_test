@@ -9,20 +9,7 @@
 {% endblock %}
 
 {% block script %}
-<script type='text/javascript'>
-function data(showHideDiv)
-{
-       var ele=document.getElementById(showHideDiv);
-       if (ele.style.display=="block")
-       {
-               ele.style.display = "none";
-       }
-       else
-       {
-               ele.style.display = "block";
-       }
-}
-</script>
+<script src= "{{ URL_ROOT }}/static/exam/js/edit_question.js"></script>
 {% endblock %}
 {% block manage %}
 
@@ -59,7 +46,7 @@ Start time: {{ paper.start_time }} <br/>
 <p><strong> 
 	Question: {{ question.id }}. {{ question.summary }} (Points: {{ question.points }})
 </strong>
-<strong><a href="" onClick="data('myContent{{question.id}}'); return false;" style="cursor:pointer;" />Details</strong></p></a>
+<strong><a href="" onClick="grade_data('myContent{{question.id}}'); return false;" style="cursor:pointer;" />Details</strong></p></a>
 <div id="contentDiv">
      <div id="myContent{{question.id}}" style="padding:5px; display:none;">
         <p> Description : {{ question.description }} </p>

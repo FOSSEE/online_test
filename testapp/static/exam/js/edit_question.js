@@ -33,6 +33,19 @@ function decrease(frm,n)
 	}
 }
 
+function grade_data(showHideDiv)
+{
+       var ele=document.getElementById(showHideDiv);
+       if (ele.style.display=="block")
+       {
+               ele.style.display = "none";
+       }
+       else
+       {
+               ele.style.display = "block";
+       }
+}
+
 
 function data(showContent,showHideDiv,a,summary)
 {

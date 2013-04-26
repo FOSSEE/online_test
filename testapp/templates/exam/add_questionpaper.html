@@ -10,36 +10,11 @@
 {% block script %}
 <script src="/static/taggit_autocomplete_modified/jquery.min.js" type="text/javascript"></script>
 <script src="/static/taggit_autocomplete_modified/jquery.autocomplete.js" type="text/javascript"></script>
-
-<script>
-function load_data()
-{
-    var value = document.getElementById('mode').value;
-    var pathArray = window.location.pathname.split( '/' );
-    length = pathArray.length;
-    var digit = parseInt(pathArray[length-2]);
-
-    if (! isNaN(digit) && value == 'Automatic') 
-    {
-         window.location = "{{ URL_ROOT }}/exam/manage/designquestionpaper/automatic/" + digit;
-    }
-    else if(!isNaN(digit) && value == 'Manual')
-    {
-         window.location = "{{ URL_ROOT }}/exam/manage/designquestionpaper/manual/" + digit;
-    }
-    else if(value == 'Automatic')
-    {
-         window.location = "{{ URL_ROOT }}/exam/manage/designquestionpaper/automatic"; 
-    }
-    else if( value == 'Manual')
-    {
-         window.location = "{{ URL_ROOT }}/exam/manage/designquestionpaper/manual";
-    }
-}
-</script>
+<script src="{{ URL_ROOT }}/static/exam/js/add_questionpaper.js"></script>
 {% endblock %}
 
 {% block manage %}
+<input type=hidden id="url_root" value={{ URL_ROOT }}>
 <form>
 {% csrf_token %}
 Select mode to design Question Paper: 
@@ -49,6 +24,5 @@ Select mode to design Question Paper:
   <option>Manual</option>
 </select> 
 </form>
-
 
 {% endblock %}
