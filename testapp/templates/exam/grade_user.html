@@ -1,10 +1,17 @@
-{% extends "base.html" %}
+{% extends "manage.html" %}
 
 {% block title %} Grading papers for {{ data.user.get_full_name.title }} {% endblock title %}
 
-{% block content %}
+{% block subtitle %}Grading papers for {{ data.user.get_full_name.title }}{% endblock %}
+ 
+{% block css %}
+	 <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/gradeuser.css" type="text/css" /> 
+{% endblock %}
 
-<h1> Grading papers for {{ data.user.get_full_name.title }} </h1>
+{% block script %}
+<script src= "{{ URL_ROOT }}/static/exam/js/edit_question.js"></script>
+{% endblock %}
+{% block manage %}
 
 <p> 
 Name: {{ data.user.get_full_name.title }}
@@ -30,16 +37,26 @@ Start time: {{ paper.start_time }} <br/>
 </p>
 
 {% if paper.answers.count %}
-<h3> Answers </h3>
-<form id="q{{ paper.quiz.id }}_form"
-    action="{{URL_ROOT}}/exam/grade_user/{{data.user.username}}/" method="post">
+<h3> Answers </h3><br>
+<form name=frm id="q{{ paper.quiz.id }}_form"
+    action="{{URL_ROOT}}/exam/manage/gradeuser/{{data.user.username}}/" method="post">
 {% csrf_token %}
 {% for question, answers in paper.get_question_answers.items %}
+<div class="for-question">
 <p><strong> 
-    <a href="{{URL_ROOT}}/admin/exam/question/{{question.id}}">
-        Question: {{ question.id }}. {{ question.summary }} </a> 
-    (Points: {{ question.points }})</strong> </p>
+	Question: {{ question.id }}. {{ question.summary }} (Points: {{ question.points }})
+</strong>
+<strong><a href="" onClick="grade_data('myContent{{question.id}}'); return false;" style="cursor:pointer;" />Details</strong></p></a>
+<div id="contentDiv">
+     <div id="myContent{{question.id}}" style="padding:5px; display:none;">
+        <p> Description : {{ question.description }} </p>
+    	<p> Test : {{ question.test }} </p>
+     </div>
+</div> 
+<div class="question-form">
+
 {% if question.type == "mcq" %}
+<br>
 <p> Choices: 
 {% for option in question.options.strip.splitlines %} {{option}}, {% endfor %}
 </p>
@@ -54,14 +71,19 @@ Start time: {{ paper.start_time }} <br/>
 {% with answers|last as answer %}
 Marks: <input id="q{{ question.id }}" type="text" 
         name="q{{ question.id }}_marks" size="4"
-        value="{{ answer.marks }}" />
+        value="{{ answer.marks }}"><br><br>
 {% endwith %}
+</div>
+</div>
 {% endfor %} {# for question, answers ... #}
+
+
 <h3>Teacher comments: </h3>
-<textarea id="comments_{{paper.quiz.id}}" rows="10" cols="80" 
-    name="comments_{{ paper.quiz.id }}">{{ paper.comments }}</textarea>
-<br/>
-<input type="submit" name="submit_{{paper.quiz.id}}" value="Save marks" />
+<textarea id="comments_{{paper.question_paper.id}}" rows="10" cols="80" 
+    name="comments_{{ paper.question_paper.id }}">{{ paper.comments }}</textarea>
+<br>
+<br><button class="btn" type="submit" name="submit_{{paper.quiz.id}}">Save Marks</button>
+
 </form>
 {% endif %} {# if paper.answers.count #}
 
@@ -69,15 +91,4 @@ Marks: <input id="q{{ question.id }}" type="text"
 
 {% endif %} {# if data.papers #}
 
-{% if data.papers.count > 1 %}
-<a href="{{URL_ROOT}}/exam/monitor/">
-    Monitor quiz</a>
-{% else %}
-{% with data.papers.0 as paper %}
-<a href="{{URL_ROOT}}/exam/monitor/{{paper.quiz.id}}/">
-    Monitor quiz</a>
-{% endwith %}
-{% endif %}
-<br />
-<a href="{{URL_ROOT}}/admin/">Admin</a>
-{% endblock content %}
+{% endblock%}

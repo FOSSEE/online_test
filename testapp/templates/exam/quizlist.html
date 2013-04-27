@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %} Quiz List {% endblock title %}
+
+{% block formtitle %} Quiz List {% endblock %}
+
+{% block pagetitle %} Online Test {% endblock %}
+
+{% block content %}
+{% if not quizzes and not quiz %}
+<center><h5> No quizzes available. </h5></center>
+{% endif %}
+
+{% if quizzes %}
+<form method="post" action="" name='frm'>
+{% csrf_token %}
+
+{% for quiz in quizzes %}
+<a href="{{URL_ROOT}}/exam/start/{{quiz.id}}/">{{ quiz.description }}</a><br>
+{% endfor %}
+</form>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,11 @@
+     table td 
+     {
+ 	vertical-align: top;
+	border-top: 1px solid #ddd;
+     }
+     table tbody th 
+     {
+	border-top: 1px solid #ddd;
+	vertical-align: top;
+     }
+

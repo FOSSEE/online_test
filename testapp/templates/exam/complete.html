@@ -2,11 +2,11 @@
 
 {% block title %}Good bye!{% endblock %}
 
+{% block pagetitle %}Online Test{% endblock %}
 {% block content %}
-<h2> Good bye! </h2>
-
-<p> {{message}} </p>
-<br />
-<p>You may now close the browser.</p>
-
+{% csrf_token %}
+        <center><h2> Good bye! </h2></center>
+        <center><h4> {{message}} </h4></center>
+        <center><h4>You may now close the browser.</h4></center><br>
+	<center><a href="{{URL_ROOT}}/exam/"> Login Again </a></center>
 {% endblock content %}

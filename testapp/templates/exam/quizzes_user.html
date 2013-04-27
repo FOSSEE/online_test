@@ -1,0 +1,18 @@
+{% extends "user.html" %}
+
+
+{% block subtitle %}Available Quizzes{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question_quiz.css" type="text/css" />
+{% endblock %}
+
+{% block manage %}
+    {% if not quizzes %}
+        <center><h4>No active quizzes for you</h4></center>
+    {% endif %}
+    {% for paper in quizzes %}
+     <a href="{{ URL_ROOT }}/exam/start/{{paper.id}}">{{ paper.quiz.description }}</a><br>
+    {% endfor %}
+{% endblock %}
+
