@@ -476,8 +476,8 @@ def automatic_questionpaper(request, questionpaper_id=None):
                 context = {'data': {'questions': fetched_questions,
                                     'tags': tags,
                                     'msg': msg}}
-                return my_render_to_response\(
-                                'exam/automatic_questionpaper.html', context,
+                return my_render_to_response\
+                                ('exam/automatic_questionpaper.html', context,
                                 context_instance=RequestContext(request))
         else:
             tags = Tag.objects.all()
