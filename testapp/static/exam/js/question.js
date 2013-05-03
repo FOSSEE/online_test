@@ -78,11 +78,12 @@ function catchTab(item,e)
 }
 
 var lineObjOffsetTop = 2;
-       
-function createTextAreaWithLines(id)
+
+function createTextAreaWithLines2(id)
 {
     var el = document.createElement('DIV');
     var ta = document.getElementById(id);
+    var content = document.getElementById('snippet').value;
     ta.parentNode.insertBefore(el,ta);
     el.appendChild(ta);
     el.className='textAreaWithLines';
@@ -102,7 +103,8 @@ function createTextAreaWithLines(id)
     lineObj.style.textAlign = 'right';
     lineObj.className='lineObj';
     var string = '';
-    for(var no=1;no<200;no++)
+    split_content = content.split('\n');
+    for(var no=split_content.length+1;no<1000;no++)
     {
 	if(string.length>0)string = string + '<br>';
 	string = string + no;
@@ -113,7 +115,55 @@ function createTextAreaWithLines(id)
     ta.onblur = function() { positionLineObj(lineObj,ta); };
     ta.onfocus = function() { positionLineObj(lineObj,ta); };
     ta.onmouseover = function() { positionLineObj(lineObj,ta); };
-    lineObj.innerHTML = string;    
+    lineObj.innerHTML = string;
+}
+       
+function createTextAreaWithLines(id)
+{
+    var el = document.createElement('DIV');
+    var ta = document.getElementById(id);
+    var content = document.getElementById('snippet').value;
+    ta.parentNode.insertBefore(el,ta);
+    el.appendChild(ta);
+    el.className='textAreaWithLines';
+    el.style.width = (ta.offsetWidth + 30) + 'px';
+    ta.style.position = 'absolute';
+    ta.style.left = '30px';
+    el.style.height = (ta.offsetHeight + 2) + 'px';
+    el.style.overflow='hidden';
+    el.style.position = 'relative';
+    el.style.width = (ta.offsetWidth + 30) + 'px';
+    var lineObj = document.createElement('DIV');
+    lineObj.style.position = 'absolute';
+    lineObj.style.top = lineObjOffsetTop + 'px';
+    lineObj.style.left = '0px';
+    lineObj.style.width = '27px';
+    el.insertBefore(lineObj,ta);
+    lineObj.style.textAlign = 'right';
+    lineObj.className='lineObj';
+    var string = '';
+    split_content = content.split('\n');
+    for(var no=1;no<=split_content.length;no++)
+    {
+	if(string.length>0)string = string + '<br>';
+	string = string + no;
+    }
+    /*for(var no=1;no<200;no++)
+    {
+	if(string.length>0)string = string + '<br>';
+	string = string + no;
+	if (content.trim.length == 0)
+	{
+		alert(string);
+	}
+    }*/
+    //ta.onkeydown = function() { positionLineObj(lineObj,ta); };
+    ta.onmousedown = function() { positionLineObj(lineObj,ta); };
+    ta.onscroll = function() { positionLineObj(lineObj,ta); };
+    ta.onblur = function() { positionLineObj(lineObj,ta); };
+    ta.onfocus = function() { positionLineObj(lineObj,ta); };
+    ta.onmouseover = function() { positionLineObj(lineObj,ta); };
+    lineObj.innerHTML = string;
 }
        
 function positionLineObj(obj,ta)
