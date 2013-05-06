@@ -76,8 +76,13 @@ function update_time()
          
      	 <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br> 
 	 <font size=3 face=arial>	{{ question.description|safe }} </font>
-
-         {% if error_message %}<h5>ERROR:</h5><div class="alert alert-error">{{ error_message }}</div>{% endif %}
+         {% if error_message %}
+	 <div class="alert alert-error">
+	 {% for e in error_message.splitlines %}
+	 {{ e|join:"" }} 
+	 <br/>
+	 {% endfor%}
+	 </div>{% endif %}
          <p id="status"></p>
          <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.question_paper.id }}/" method="post">
          {% csrf_token %}
