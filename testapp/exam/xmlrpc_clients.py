@@ -9,19 +9,24 @@ from settings import SERVER_PORTS, SERVER_POOL_PORT
 class ConnectionError(Exception):
     pass
 
-################################################################################
+###############################################################################
 # `CodeServerProxy` class.
-################################################################################
+###############################################################################
+
+
 class CodeServerProxy(object):
     """A class that manages accesing the farm of Python servers and making
     calls to them such that no one XMLRPC server is overloaded.
     """
     def __init__(self):
-        pool_url = 'http://localhost:%d'%(SERVER_POOL_PORT)
+        pool_url = 'http://localhost:%d' % (SERVER_POOL_PORT)
         self.pool_server = ServerProxy(pool_url)
         self.methods = {"python": 'run_python_code',
-                        "bash": 'run_bash_code'}
-    
+                        "bash": 'run_bash_code',
+                        "C": "run_c_code",
+                        "C++": "run_cplus_code",
+                        }
+
     def run_code(self, answer, test_code, user_dir, language):
         """Tests given code (`answer`) with the `test_code` supplied.  If the
         optional `in_dir` keyword argument is supplied it changes the directory
@@ -68,11 +73,10 @@ class CodeServerProxy(object):
             else:
                 done = True
         if not done:
-            raise ConnectionError("Couldn't connect to a server!") 
-        proxy = ServerProxy('http://localhost:%d'%port)
+            raise ConnectionError("Couldn't connect to a server!")
+        proxy = ServerProxy('http://localhost:%d' % port)
         return proxy
 
 # views.py calls this Python server which forwards the request to one
 # of the running servers.
 code_server = CodeServerProxy()
-
