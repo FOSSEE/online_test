@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding: utf-8
 """This server runs an XMLRPC server that can be submitted code and tests
 and returns the output.  It *should* be run as root and will run as the user
 'nobody' so as to minimize any damange by errant code.  This can be configured
@@ -201,6 +202,7 @@ class CodeServer(object):
         try:
             proc = subprocess.Popen(cmd_args, *args, **kw)
             stdout, stderr = proc.communicate()
+            print stdout, stderr
         except TimeoutException:
             # Runaway code, so kill it.
             proc.kill()
@@ -361,16 +363,16 @@ class CodeServer(object):
         stderr.
         """
         try:
-            proc_compile = subprocess.Popen(cmd, shell=True, stdin=None,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
+            proc_compile = subprocess.Popen(cmd, *args, **kw)
+                                           
             out, err = proc_compile.communicate()
+            stripped_err = self._remove_null_substitute_char(err)
         except TimeoutException:
             # Runaway code, so kill it.
             proc_compile.kill()
             # Re-raise exception.
             raise
-        return proc_compile, err
+        return proc_compile, stripped_err
 
     def _check_c_cpp_code(self, ref_code_path, submit_code_path):
         """ Function validates student code using instructor code as
@@ -400,7 +402,7 @@ class CodeServer(object):
         success = False
         output_path = os.getcwd() + '/output'
         compile_command = "g++  %s -c -o %s" % (submit_code_path, output_path)
-        ret = self._compile_command(compile_command, stdin=None,
+        ret = self._compile_command(compile_command, shell=True, stdin=None,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
         proc, inst_stderr = ret
@@ -411,7 +413,7 @@ class CodeServer(object):
             executable = os.getcwd() + '/executable'
             compile_main = "g++ %s %s -o %s" % (ref_code_path, output_path,
                                                 executable)
-            ret = self._compile_command(compile_main, stdin=None,
+            ret = self._compile_command(compile_main, shell=True, stdin=None,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
             proc, main_err = ret
@@ -432,10 +434,12 @@ class CodeServer(object):
                 try:
                     error_lines = main_err.splitlines()
                     for e in error_lines:
-                        err = err + "\n" + e.split(":", 1)[1]
+                        if ':' in e:
+                            err = err + "\n" + e.split(":", 1)[1]
+                        else:
+                            err = err + "\n" + e
                 except:
                         err = err + "\n" + main_err
-                        success = False
             os.remove(output_path)
         else:
             err = "Compilation Error:"
@@ -511,6 +515,168 @@ class CodeServer(object):
         self.queue.put(self.port)
 
         return success, err
+
+    def run_java_code(self, answer, test_code, in_dir=None):
+        """Tests given java code  (`answer`) with the `test_code` supplied.
+
+        The testcode is a path to the reference code.
+        The reference code will call the function submitted by the student.
+        The reference code will check for the expected output.
+
+        If the path's start with a "/" then we assume they are absolute paths.
+        If not, we assume they are relative paths w.r.t. the location of this
+        code_server script.
+
+        If the optional `in_dir` keyword argument is supplied it changes the
+        directory to that directory (it does not change it back to the original
+        when done).
+
+        Returns
+        -------
+
+        A tuple: (success, error message).
+
+        """
+        if in_dir is not None and isdir(in_dir):
+            os.chdir(in_dir)
+
+        # The file extension must be .java
+        # The class name and file name must be same in java
+        submit_f = open('Test.java', 'w')
+        submit_f.write(answer.lstrip())
+        submit_f.close()
+        submit_path = abspath(submit_f.name)
+
+        ref_path = test_code.strip()
+        if not ref_path.startswith('/'):
+            ref_path = join(MY_DIR, ref_path)
+
+        # Add a new signal handler for the execution of this code.
+        old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(SERVER_TIMEOUT)
+
+        # Do whatever testing needed.
+        success = False
+        try:
+            success, err = self._check_java_code(ref_path, submit_path)
+        except TimeoutException:
+            err = self.timeout_msg
+        except:
+            type, value = sys.exc_info()[:2]
+            err = "Error: {0}".format(repr(value))
+        finally:
+            # Set back any original signal handler.
+            signal.signal(signal.SIGALRM, old_handler)
+
+        # Delete the created file.
+        os.remove(submit_path)
+
+        # Cancel the signal if any, see signal.alarm documentation.
+        signal.alarm(0)
+
+        # Put us back into the server pool queue since we are free now.
+        self.queue.put(self.port)
+
+        return success, err
+
+    def _check_java_code(self, ref_code_path, submit_code_path):
+        """ Function validates student code using instructor code as
+        reference.The first argument ref_code_path, is the path to
+        instructor code, it is assumed to have executable permission.
+        The second argument submit_code_path, is the path to the student
+        code, it is assumed to have executable permission.
+
+        Returns
+        --------
+
+        returns (True, "Correct answer") : If the student function returns
+        expected output when called by reference code.
+
+        returns (False, error_msg): If the student function fails to return
+        expected output when called by reference code.
+
+        Returns (False, error_msg): If mandatory arguments are not files or
+        if the required permissions are not given to the file(s).
+
+        """
+        if not isfile(ref_code_path):
+            return False, "No file at %s" % ref_code_path
+        if not isfile(submit_code_path):
+            return False, 'No file at %s' % submit_code_path
+
+        success = False
+        compile_command = "javac  %s" % (submit_code_path)
+        print compile_command
+        ret = self._compile_command(compile_command, shell = True, stdin=None,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        proc, inst_stderr = ret
+
+        # Only if compilation is successful, the program is executed
+        # And tested with testcases
+        if inst_stderr == '':
+            student_directory = os.getcwd() + '/'
+            student_file_name = "Test"
+            compile_main = "javac %s -classpath %s  -d %s" % (ref_code_path,
+                                                              student_directory,
+                                                              student_directory)
+            print compile_main
+            ret = self._compile_command(compile_main, stdin=None,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
+            proc, main_err = ret
+            if main_err == '':
+                main_file_name = (ref_code_path.split('/')[-1]).split('.')[0]
+                run_command = "java -cp %s %s" % (student_directory,
+                                                  main_file_name)
+                print run_command
+                ret = self._run_command(run_command,
+                                        stdin=None,
+                                        shell=True,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
+                proc, stdout, stderr = ret
+                if proc.returncode == 0:
+                    success, err = True, "Correct answer"
+                else:
+                    err = stdout + "\n" + stderr
+                    success = False
+                os.remove("%s%s.class" % (student_directory, main_file_name))
+                print "remove %s%s.class" % (student_directory, main_file_name)
+            else:
+                err = "Error:\n"
+                try:
+                    error_lines = main_err.splitlines()
+                    for e in error_lines:
+                        if ':' in e:
+                            err = err + "\n" + e.split(":", 1)[1]
+                        else:
+                           err = err + "\n" + e
+                except:
+                        err = err + "\n" + main_err
+            os.remove("%s%s.class" % (student_directory, student_file_name))
+            print "remove %s%s.class" % (student_directory, student_file_name)
+        else:
+            err = "Compilation Error:\n"
+            try:
+                error_lines = inst_stderr.splitlines()
+                for e in error_lines:
+                    if ':' in e:
+                        err = err + "\n" + e.split(":", 1)[1]
+                    else:
+                        err = err + "\n" + e
+            except:
+                err = err + "\n" + inst_stderr
+        print success, err
+        return success, err
+
+    def _remove_null_substitute_char(self,string):
+        """Returns a string without any null and substitute characters"""
+        stripped = ""
+        for c in string:
+            if ord(c) is not 26 and ord(c) is not 0:
+                stripped = stripped + c
+        return ''.join(stripped)
 
     def run(self):
         """Run XMLRPC server, serving our methods.

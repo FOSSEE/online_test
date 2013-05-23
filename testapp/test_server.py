@@ -1,3 +1,4 @@
+# coding: utf-8
 """Simple test suite for the code server.  Running this requires that one start
 up the code server as::
 
@@ -6,6 +7,12 @@ up the code server as::
 """
 from exam.xmlrpc_clients import code_server
 
+
+def strip_non_ascii(string):
+    ''' Returns the string without non ASCII characters'''
+    if "▒" in string:
+        stripped = (c for c in string if 0 < ord(c) < 127)
+        return ''.join(stripped)
 
 def check_result(result, check='correct answer'):
 #   if check != 'correct answer':
@@ -47,49 +54,49 @@ def test_c():
                 int ad(int a, int b)
                 {return a+b;}
           """
-    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
-    check_result(result)
+#    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
+#    check_result(result)
 
     src = """
                 int add(int a, int b)
                 {return a+b}
           """
-    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
-    check_result(result)
+#    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
+#    check_result(result)
 
     src = """
                 int add(int a, int b)
                 {while(1>0){}
                 return a+b;}
           """
-    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
-    check_result(result)
+#    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
+#    check_result(result)
 
     src = """
                 int add(int a, int b)
                 {return a+b;}
           """
-    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
-    check_result(result)
+#    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
+#    check_result(result)
 
     src = """
                 #include<stdio.h>
                 int add(int a, int b)
                 {printf("All Correct");}
           """
-    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
-    check_result(result)
+#    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
+#    check_result(result)
 
 
 def test_cpp():
     """Test if server runs c code as expected."""
     src = """
-                int add(int a, int b)
+                int addd(int a, int b)
                 {
-                     return a+b
+                     return a+b;
                 }
           """
-    result = code_server.run_code(src, 'docs/main.cpp', '/tmp', language="C++")
+    result = code_server.run_code(src, 'cpp_files/main.cpp', '/tmp', language="C++")
     check_result(result)
 
     src = """
@@ -98,8 +105,8 @@ def test_cpp():
                      return a+b;
                 }
           """
-    result = code_server.run_code(src, 'docs/main.cpp', '/tmp', language="C++")
-    check_result(result)
+#    result = code_server.run_code(src, 'docs/main.cpp', '/tmp', language="C++")
+#    check_result(result)
 
     src = """
                 int dd(int a, int b)
@@ -107,8 +114,8 @@ def test_cpp():
                       return a+b;
                 }
           """
-    result = code_server.run_code(src, 'docs/main.cpp', '/tmp', language="C++")
-    check_result(result)
+#    result = code_server.run_code(src, 'docs/main.cpp', '/tmp', language="C++")
+#    check_result(result)
 
     src = """
                 int add(int a, int b)
@@ -118,25 +125,92 @@ def test_cpp():
                       return a+b;
                 }
           """
-    result = code_server.run_code(src, 'docs/main.cpp', '/tmp', language="C++")
-    check_result(result)
+#    result = code_server.run_code(src, 'docs/main.cpp', '/tmp', language="C++")
+#    check_result(result)
 
 
 def test_java():
     """Test if server runs c code as expected."""
     src = """class Test
-{
-        public static void main(String arg[])
-        {
-                int sum =Integer.parseInt(arg[0])+Integer.parseInt(arg[1]);
-                System.out.print(sum);
-        }
-}
+             {
+                int square_num(int a)
+                {
+                    return a-a;
+                }
+             }
     """
 
-#    result = code_server.run_code(src, 'docs/sample.java',\
-#    '/tmp', language="Java")
-#    check_result(result)
+    result = code_server.run_code(src, 'java_files/Main.java',\
+    '/tmp', language="java")
+    check_result(result)
+
+    src = """class Test
+             {
+                int square_num(int a)
+                {
+                    return a+a
+                }
+             }
+    """
+
+    result = code_server.run_code(src, 'java_files/Main.java',\
+    '/tmp', language="java")
+    check_result(result)
+
+    src = """class Test
+             {
+                int squae_num(int a)
+                {
+                    return a+a;
+                }
+             }
+    """
+
+    result = code_server.run_code(src, 'java_files/Main.java',\
+    '/tmp', language="java")
+    check_result(result)
+
+    src = """class Test
+             {
+                int square_num(int a)
+                {
+                    return a+a;
+                }
+             }
+    """
+
+    result = code_server.run_code(src, 'java_files/Main.java',\
+    '/tmp', language="java")
+    check_result(result)
+
+    src = """class Test
+             {
+                int square_num(int a)
+                {
+                    return 
+                }
+            }
+             
+    """
+
+    result = code_server.run_code(src, 'java_files/Main.java',\
+    '/tmp', language="java")
+    check_result(result)
+
+    src = """class Test
+             {
+                int square_num(int a)
+                {
+                    return a+a;
+                }
+             
+    """
+
+   # result = code_server.run_code(src, 'java_files/Main.java',\
+   # '/tmp', language="java")
+    result = '}▒'
+    #result = strip_non_ascii(result)
+    check_result(result)
 
 
 def test_scilab():

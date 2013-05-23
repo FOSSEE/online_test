@@ -25,6 +25,7 @@ class CodeServerProxy(object):
                         "bash": 'run_bash_code',
                         "C": "run_c_code",
                         "C++": "run_cplus_code",
+                        "java": "run_java_code",
                         }
 
     def run_code(self, answer, test_code, user_dir, language):
