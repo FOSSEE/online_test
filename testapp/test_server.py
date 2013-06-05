@@ -47,14 +47,14 @@ def test_c():
                 int ad(int a, int b)
                 {return a+b;}
           """
-    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C")
     check_result(result)
 
     src = """
                 int add(int a, int b)
                 {return a+b}
           """
-    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C")
     check_result(result)
 
     src = """
@@ -62,14 +62,14 @@ def test_c():
                 {while(1>0){}
                 return a+b;}
           """
-    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C")
     check_result(result)
 
     src = """
                 int add(int a, int b)
                 {return a+b;}
           """
-    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C")
     check_result(result)
 
     src = """
@@ -77,7 +77,7 @@ def test_c():
                 int add(int a, int b)
                 {printf("All Correct");}
           """
-    result = code_server.run_code(src, '/tmp/main.c', '/tmp', language="C")
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C")
     check_result(result)
 
 
@@ -89,7 +89,7 @@ def test_cpp():
                      return a+b
                 }
           """
-    result = code_server.run_code(src, 'docs/main.cpp', '/tmp', language="C++")
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C++")
     check_result(result)
 
     src = """
@@ -98,7 +98,7 @@ def test_cpp():
                      return a+b;
                 }
           """
-    result = code_server.run_code(src, 'docs/main.cpp', '/tmp', language="C++")
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C++")
     check_result(result)
 
     src = """
@@ -107,7 +107,7 @@ def test_cpp():
                       return a+b;
                 }
           """
-    result = code_server.run_code(src, 'docs/main.cpp', '/tmp', language="C++")
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C++")
     check_result(result)
 
     src = """
@@ -118,42 +118,8 @@ def test_cpp():
                       return a+b;
                 }
           """
-    result = code_server.run_code(src, 'docs/main.cpp', '/tmp', language="C++")
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C++")
     check_result(result)
-
-
-def test_java():
-    """Test if server runs c code as expected."""
-    src = """class Test
-{
-        public static void main(String arg[])
-        {
-                int sum =Integer.parseInt(arg[0])+Integer.parseInt(arg[1]);
-                System.out.print(sum);
-        }
-}
-    """
-
-#    result = code_server.run_code(src, 'docs/sample.java',\
-#    '/tmp', language="Java")
-#    check_result(result)
-
-
-def test_scilab():
-    """Test if server runs c code as expected."""
-    src = """
-
-A=sciargs(
-a=strtod(A(6))
-b=strtod(A(7))
-c=a+b
-disp(c)
-exit()
-          """
-#    result = code_server.run_code(src, '/tmp/sample.sce',\
-#    '/tmp', language="Scilab")
-#    check_result(result)
-
 
 def test_bash():
     """Test if server runs Bash code as expected."""
@@ -202,5 +168,3 @@ if __name__ == '__main__':
     test_bash()
     test_c()
     test_cpp()
-    test_java()
-    test_scilab()
