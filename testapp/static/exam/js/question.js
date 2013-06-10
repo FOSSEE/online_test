@@ -58,7 +58,6 @@ function replaceSelection (input, replaceString)
     }
 }
 
-// We are going to catch the TAB key so that we can use it, Hooray!
 function catchTab(item,e)
 {
     if(navigator.userAgent.match("Gecko"))
@@ -79,7 +78,7 @@ function catchTab(item,e)
 
 var lineObjOffsetTop = 2;
 
-function createTextAreaWithLines2(id)
+function addLineNumbers(id)
 {
     var el = document.createElement('DIV');
     var ta = document.getElementById(id);
@@ -104,13 +103,23 @@ function createTextAreaWithLines2(id)
     lineObj.className='lineObj';
     var string = '';
     split_content = content.split('\n');
-    for(var no=split_content.length+1;no<1000;no++)
+    if(id == "answer")
     {
-	if(string.length>0)string = string + '<br>';
-	string = string + no;
-    }
-    //ta.onkeydown = function() { positionLineObj(lineObj,ta); };
-    ta.onmousedown = function() { positionLineObj(lineObj,ta); };
+		for(var no=split_content.length+1;no<1000;no++)
+		{
+			if(string.length>0)string = string + '<br>';
+			string = string + no;
+		}
+	}
+	else
+	{
+		for(var no=1;no<=split_content.length;no++)
+		{
+			if(string.length>0)string = string + '<br>';
+			string = string + no;
+		}
+	}
+	ta.onmousedown = function() { positionLineObj(lineObj,ta); };
     ta.onscroll = function() { positionLineObj(lineObj,ta); };
     ta.onblur = function() { positionLineObj(lineObj,ta); };
     ta.onfocus = function() { positionLineObj(lineObj,ta); };
@@ -118,7 +127,7 @@ function createTextAreaWithLines2(id)
     lineObj.innerHTML = string;
 }
        
-function createTextAreaWithLines(id)
+/*function snippetTextArea(id)
 {
     var el = document.createElement('DIV');
     var ta = document.getElementById(id);
@@ -148,23 +157,8 @@ function createTextAreaWithLines(id)
 	if(string.length>0)string = string + '<br>';
 	string = string + no;
     }
-    /*for(var no=1;no<200;no++)
-    {
-	if(string.length>0)string = string + '<br>';
-	string = string + no;
-	if (content.trim.length == 0)
-	{
-		alert(string);
-	}
-    }*/
-    //ta.onkeydown = function() { positionLineObj(lineObj,ta); };
-    ta.onmousedown = function() { positionLineObj(lineObj,ta); };
-    ta.onscroll = function() { positionLineObj(lineObj,ta); };
-    ta.onblur = function() { positionLineObj(lineObj,ta); };
-    ta.onfocus = function() { positionLineObj(lineObj,ta); };
-    ta.onmouseover = function() { positionLineObj(lineObj,ta); };
     lineObj.innerHTML = string;
-}
+}*/
        
 function positionLineObj(obj,ta)
 {
