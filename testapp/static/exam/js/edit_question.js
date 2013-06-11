@@ -46,6 +46,54 @@ function grade_data(showHideDiv)
        }
 }
 
+function setSelectionRange(input, selectionStart, selectionEnd) 
+{
+    if (input.setSelectionRange) 
+    {
+	input.focus();
+	input.setSelectionRange(selectionStart, selectionEnd);
+    }
+    else if (input.createTextRange) 
+    {
+	var range = input.createTextRange();
+	range.collapse(true);
+	range.moveEnd('character', selectionEnd);
+	range.moveStart('character', selectionStart);
+	range.select();
+    }
+}
+
+function replaceSelection (input, replaceString) 
+{
+    if (input.setSelectionRange) 
+    {
+	var selectionStart = input.selectionStart;
+	var selectionEnd = input.selectionEnd;
+	input.value = input.value.substring(0, selectionStart)+ replaceString + input.value.substring(selectionEnd);
+	if (selectionStart != selectionEnd)
+	{ 
+	    setSelectionRange(input, selectionStart, selectionStart + 	replaceString.length);
+	}
+	else
+	{
+	    setSelectionRange(input, selectionStart + replaceString.length, selectionStart + replaceString.length);
+	}
+    }
+    else if (document.selection) 
+    {
+	var range = document.selection.createRange();
+	if (range.parentElement() == input) 
+	{
+	    var isCollapsed = range.text == '';
+	    range.text = replaceString;
+	    if (!isCollapsed)  
+	    {
+		range.moveStart('character', -replaceString.length);
+		range.select();
+	    }
+	}
+    }
+}
 
 function data(showContent,showHideDiv,a,summary)
 {
@@ -71,59 +119,82 @@ function textareaformat()
 	var test =  document.getElementsByName('test');
 	var option =  document.getElementsByName('options');
 	var descriptions = document.getElementsByName('description');
+	var snippets = document.getElementsByName('snippet');
 	var type = document.getElementsByName('type');
     var tags = document.getElementsByName('tags');
-	
 	for (var i=0;i<point.length;i++)
 	{
 		point[i].id = point[i].id + i;
 		descriptions[i+1].id=descriptions[i+1].id + i;
 		test[i].id=test[i].id + i;
+		snippets[i].id=snippets[i].id + i; 
 		option[i].id=option[i].id + i;
 		type[i].id = type[i].id + i;
         tags[i].id = tags[i].id + i;
 	}
-
 	for(var i=0;i<point.length;i++)
 	{
 		var point_id = document.getElementById('id_points'+i);
 		point_id.setAttribute('class','mini-text');
-    
         var tags_id = document.getElementById('id_tags'+i);
 		tags_id.setAttribute('class','ac_input');
         tags_id.setAttribute('autocomplete','off');
-       
-        jQuery().ready(function() 
-        { 
-            jQuery("#id_tags" + i).autocomplete("/taggit_autocomplete_modified/json", { multiple: true }); 
-        });
-    		
         var type_id = document.getElementById('id_type'+i);
 		type_id.setAttribute('class','select-type');
 		type_id.onchange = showOptions;
 		var value = type_id.value;
-	
 		var desc_id = document.getElementById('id_description'+i);
 		desc_id.onfocus = gainfocus;
 		desc_id.onblur = lostfocus;
-
 		var test_id = document.getElementById('id_test' + i);
 		test_id.onfocus = gainfocus;
 		test_id.onblur = lostfocus;
-
+		var snippet_id = document.getElementById('id_snippet'+i);
+		$(snippet_id).bind('focus',function(event){
+			this.rows = 5;
+			$(snippet_id).val("");
+		});
+		$(snippet_id).bind('blur',function(event){
+			this.rows = 1;
+			$(snippet_id).val("#To avoid indentation errors use tab for indentation for Python questions");
+		});
+		$(snippet_id).bind('keydown', function (event){
+			catchTab(snippet_id,event);
+		});
 		var option_id = document.getElementById('id_options' + i);
 		option_id.onfocus = gainfocus;
-		option_id.onblur = lostfocus;
-		
+		option_id.onblur = lostfocus;		
 		if(value != 'mcq')
 		{
 			document.getElementById('id_options'+i).style.visibility='hidden';
 			document.getElementById('label_option'+(i+1)).innerHTML = "";
 
 		}
-
 		document.getElementById('my'+ (i+1)).innerHTML = desc_id.value;
+		jQuery().ready(function() 
+        { 
+            jQuery("#id_tags" + i).autocomplete("/taggit_autocomplete_modified/json", { multiple: true });
+            $(snippet_id).val("#To avoid indentation errors use tab for indentation for Python questions");
+        });
 	}
+}
+
+function catchTab(item,e)
+{
+    if(navigator.userAgent.match("Gecko"))
+    {
+	c=e.which;
+    }
+    else
+    {
+	c=e.keyCode;
+    }
+    if(c==9)
+    {
+	replaceSelection(item,String.fromCharCode(9));
+	setTimeout("document.getElementById('"+item.id+"').focus();",0);	
+	return false;
+    }
 }
 
 function showOptions(e)
@@ -141,9 +212,6 @@ function showOptions(e)
 			document.getElementById('id_options'+no).style.visibility = 'hidden';
 			document.getElementById('label_option'+ (no+1)).innerHTML = "";
 		}
-		
-
-
 }
 
 function gainfocus(e)

@@ -127,39 +127,6 @@ function addLineNumbers(id)
     lineObj.innerHTML = string;
 }
        
-/*function snippetTextArea(id)
-{
-    var el = document.createElement('DIV');
-    var ta = document.getElementById(id);
-    var content = document.getElementById('snippet').value;
-    ta.parentNode.insertBefore(el,ta);
-    el.appendChild(ta);
-    el.className='textAreaWithLines';
-    el.style.width = (ta.offsetWidth + 30) + 'px';
-    ta.style.position = 'absolute';
-    ta.style.left = '30px';
-    el.style.height = (ta.offsetHeight + 2) + 'px';
-    el.style.overflow='hidden';
-    el.style.position = 'relative';
-    el.style.width = (ta.offsetWidth + 30) + 'px';
-    var lineObj = document.createElement('DIV');
-    lineObj.style.position = 'absolute';
-    lineObj.style.top = lineObjOffsetTop + 'px';
-    lineObj.style.left = '0px';
-    lineObj.style.width = '27px';
-    el.insertBefore(lineObj,ta);
-    lineObj.style.textAlign = 'right';
-    lineObj.className='lineObj';
-    var string = '';
-    split_content = content.split('\n');
-    for(var no=1;no<=split_content.length;no++)
-    {
-	if(string.length>0)string = string + '<br>';
-	string = string + no;
-    }
-    lineObj.innerHTML = string;
-}*/
-       
 function positionLineObj(obj,ta)
 {
     obj.style.top = (ta.scrollTop * -1 + lineObjOffsetTop) + 'px';  
