@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
+!/usr/bin/env python
 """This server runs an XMLRPC server that can be submitted code and tests
 and returns the output.  It *should* be run as root and will run as the user
 'nobody' so as to minimize any damange by errant code.  This can be configured
@@ -202,7 +201,6 @@ class CodeServer(object):
         try:
             proc = subprocess.Popen(cmd_args, *args, **kw)
             stdout, stderr = proc.communicate()
-            print stdout, stderr
         except TimeoutException:
             # Runaway code, so kill it.
             proc.kill()
@@ -606,7 +604,6 @@ class CodeServer(object):
 
         success = False
         compile_command = "javac  %s" % (submit_code_path)
-        print compile_command
         ret = self._compile_command(compile_command, shell = True, stdin=None,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
@@ -620,7 +617,6 @@ class CodeServer(object):
             compile_main = "javac %s -classpath %s  -d %s" % (ref_code_path,
                                                               student_directory,
                                                               student_directory)
-            print compile_main
             ret = self._compile_command(compile_main, stdin=None,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
@@ -629,7 +625,6 @@ class CodeServer(object):
                 main_file_name = (ref_code_path.split('/')[-1]).split('.')[0]
                 run_command = "java -cp %s %s" % (student_directory,
                                                   main_file_name)
-                print run_command
                 ret = self._run_command(run_command,
                                         stdin=None,
                                         shell=True,
@@ -642,7 +637,6 @@ class CodeServer(object):
                     err = stdout + "\n" + stderr
                     success = False
                 os.remove("%s%s.class" % (student_directory, main_file_name))
-                print "remove %s%s.class" % (student_directory, main_file_name)
             else:
                 err = "Error:\n"
                 try:
@@ -655,7 +649,6 @@ class CodeServer(object):
                 except:
                         err = err + "\n" + main_err
             os.remove("%s%s.class" % (student_directory, student_file_name))
-            print "remove %s%s.class" % (student_directory, student_file_name)
         else:
             err = "Compilation Error:\n"
             try:
@@ -667,7 +660,6 @@ class CodeServer(object):
                         err = err + "\n" + e
             except:
                 err = err + "\n" + inst_stderr
-        print success, err
         return success, err
 
     def _remove_null_substitute_char(self,string):

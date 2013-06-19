@@ -1,4 +1,3 @@
-# coding: utf-8
 """Simple test suite for the code server.  Running this requires that one start
 up the code server as::
 
@@ -6,13 +5,6 @@ up the code server as::
 
 """
 from exam.xmlrpc_clients import code_server
-
-
-def strip_non_ascii(string):
-    ''' Returns the string without non ASCII characters'''
-    if "▒" in string:
-        stripped = (c for c in string if 0 < ord(c) < 127)
-        return ''.join(stripped)
 
 def check_result(result, check='correct answer'):
 #   if check != 'correct answer':
@@ -96,7 +88,7 @@ def test_cpp():
                      return a+b;
                 }
           """
-    result = code_server.run_code(src, 'cpp_files/main.cpp', '/tmp', language="C++")
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C++")
     check_result(result)
 
     src = """
