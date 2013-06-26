@@ -603,7 +603,7 @@ class CodeServer(object):
 
         success = False
         compile_command = "javac  %s" % (submit_code_path)
-        ret = self._compile_command(compile_command, shell = True, stdin=None,
+        ret = self._compile_command(compile_command, shell=True, stdin=None,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
         proc, inst_stderr = ret
@@ -613,9 +613,9 @@ class CodeServer(object):
         if inst_stderr == '':
             student_directory = os.getcwd() + '/'
             student_file_name = "Test"
-            compile_main = "javac %s -classpath %s  -d %s" % (ref_code_path,
-                                                              student_directory,
-                                                              student_directory)
+            compile_main = "javac %s -classpath %s -d %s" % (ref_code_path,
+                                                             student_directory,
+                                                             student_directory)
             ret = self._compile_command(compile_main, stdin=None,
                                         shell=True,
                                         stdout=subprocess.PIPE,
@@ -645,7 +645,7 @@ class CodeServer(object):
                         if ':' in e:
                             err = err + "\n" + e.split(":", 1)[1]
                         else:
-                           err = err + "\n" + e
+                            err = err + "\n" + e
                 except:
                         err = err + "\n" + main_err
             os.remove("%s%s.class" % (student_directory, student_file_name))
@@ -662,7 +662,7 @@ class CodeServer(object):
                 err = err + "\n" + inst_stderr
         return success, err
 
-    def _remove_null_substitute_char(self,string):
+    def _remove_null_substitute_char(self, string):
         """Returns a string without any null and substitute characters"""
         stripped = ""
         for c in string:
