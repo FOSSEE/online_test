@@ -4,23 +4,29 @@ class main_square
     {
         if(result.equals(expect))
         {
-            System.out.println("Output expected "+expect+" and got "+result);
+            System.out.println("Correct:\nOutput expected "+expect+" and got "+result);
         }
 	else
 	{
-	    System.out.println("Output expected "+expect+" but got "+result);
+	    System.out.println("Incorrect:\nOutput expected "+expect+" but got "+result);
 	    System.exit(1);
 	}
     }
     public static void main(String arg[])
     {
        Test t = new Test();
-       int result;
-       result = t.square_num(0);
-       check(0, result);
-       result = t.square_num(5);
-       check(25, result);
-       result = t.square_num(6);
-       check(36, result);
+       int result, input, output;
+       input = 0; output = 0;
+       result = t.square_num(input);
+       System.out.println("Input submitted to the function: "+input);
+       check(output, result);
+       input = 5; output = 25;
+       result = t.square_num(input);
+       System.out.println("Input submitted to the function: "+input);
+       check(output, result);
+       input = 6; output = 36;
+       result = t.square_num(input);
+       System.out.println("Input submitted to the function: "+input);
+       check(output, result);
     }
 }

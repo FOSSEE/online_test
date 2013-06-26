@@ -1,4 +1,4 @@
-#include <stdbooll.h>
+#include <stdbool.h>
 bool palindrome(int a)
 {
   int n1, rev = 0, rem;

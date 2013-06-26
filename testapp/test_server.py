@@ -47,38 +47,44 @@ def test_c():
                 int ad(int a, int b)
                 {return a+b;}
           """
-#    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C")
-#    check_result(result)
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
+                                  '/tmp', language="C")
+    check_result(result)
 
     src = """
                 int add(int a, int b)
                 {return a+b}
           """
-#    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C")
-#    check_result(result)
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
+                                  '/tmp', language="C")
+    check_result(result)
 
     src = """
                 int add(int a, int b)
                 {while(1>0){}
                 return a+b;}
           """
-#    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C")
-#    check_result(result)
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
+                                  '/tmp', language="C")
+    check_result(result)
 
     src = """
                 int add(int a, int b)
                 {return a+b;}
           """
-#    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C")
-#    check_result(result)
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
+                                  '/tmp', language="C")
+    check_result(result)
 
     src = """
                 #include<stdio.h>
                 int add(int a, int b)
                 {printf("All Correct");}
           """
-#    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C")
-#    check_result(result)
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
+                                  '/tmp', language="C")
+    check_result(result)
+
 
 def test_cpp():
     """Test if server runs c code as expected."""
@@ -88,8 +94,9 @@ def test_cpp():
                      return a+b
                 }
           """
-#    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C++")
-#    check_result(result)
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
+                                  '/tmp', language="C++")
+    check_result(result)
 
     src = """
                 int add(int a, int b)
@@ -97,8 +104,9 @@ def test_cpp():
                      return a+b;
                 }
           """
-#    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C++")
-#    check_result(result)
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
+                                  '/tmp', language="C++")
+    check_result(result)
 
     src = """
                 int dd(int a, int b)
@@ -106,8 +114,9 @@ def test_cpp():
                       return a+b;
                 }
           """
-#    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C++")
-#    check_result(result)
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
+                                  '/tmp', language="C++")
+    check_result(result)
 
     src = """
                 int add(int a, int b)
@@ -117,8 +126,10 @@ def test_cpp():
                       return a+b;
                 }
           """
-#    result = code_server.run_code(src, 'c_cpp_files/main.cpp', '/tmp', language="C++")
-#    check_result(result)
+    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
+                                  '/tmp', language="C++")
+    check_result(result)
+
 
 def test_java():
     """Test if server runs java code as expected."""
@@ -131,7 +142,8 @@ def test_java():
                 }
                 }
           """
-    result = code_server.run_code(src, 'java_files/Main.java', '/tmp', language="java")
+    result = code_server.run_code(src, 'java_files/Main.java',
+                                  '/tmp', language="java")
     check_result(result)
 
     src = """
@@ -143,7 +155,8 @@ def test_java():
                 }
                 }
           """
-    result = code_server.run_code(src, 'java_files/Main.java', '/tmp', language="java")
+    result = code_server.run_code(src, 'java_files/Main.java',
+                                  '/tmp', language="java")
     check_result(result)
 
     src = """
@@ -155,7 +168,8 @@ def test_java():
                 }
                 }
           """
-    result = code_server.run_code(src, 'java_files/Main.java', '/tmp', language="java")
+    result = code_server.run_code(src, 'java_files/Main.java',
+                                  '/tmp', language="java")
     check_result(result)
 
     src = """
@@ -169,7 +183,8 @@ def test_java():
                 }
                 }
           """
-    result = code_server.run_code(src, 'java_files/Main.java', '/tmp', language="java")
+    result = code_server.run_code(src, 'java_files/Main.java',
+                                  '/tmp', language="java")
     check_result(result)
 
     src = """
@@ -181,8 +196,10 @@ def test_java():
                 }
                 }
           """
-    result = code_server.run_code(src, 'java_files/Main.java', '/tmp', language="java")
+    result = code_server.run_code(src, 'java_files/Main.java',
+                                  '/tmp', language="java")
     check_result(result)
+
 
 def test_bash():
     """Test if server runs Bash code as expected."""

@@ -4,11 +4,11 @@ class main_great
     {
         if(result.equals(expect))
         {
-            System.out.println("Output expected "+expect+" and got "+result);
+            System.out.println("Correct:\nOutput expected "+expect+" and got "+result);
         }
 	else
 	{
-	    System.out.println("Output expected "+expect+" but got "+result);
+	    System.out.println("Incorrect:\nOutput expected "+expect+" but got "+result);
 	    System.exit(1);
 	}
     }
@@ -17,16 +17,23 @@ class main_great
        Test t = new Test();
        int result;
        result = t.greatest(1, 3, 4);
+       System.out.println("Input submitted to the function: 1, 3, 4");
        check(4, result);
        result = t.greatest(5, 10, 3);
+       System.out.println("Input submitted to the function: 5, 10, 3");
        check(10, result);
        result = t.greatest(6, 1, 4);
+       System.out.println("Input submitted to the function: 6, 1, 4");
        check(6, result);
-       result = t.greatest(16, 1, 4);
-       check(16, result);
-       result = t.greatest(6, 61, 4);
-       check(61, result);
-       result = t.greatest(2, 1, 3);
-       check(3, result);
+       result = t.greatest(6, 11, 14);
+       System.out.println("Input submitted to the function: 6, 11, 14");
+       check(14, result);
+       result = t.greatest(3, 31, 4);
+       System.out.println("Input submitted to the function: 3, 31, 4");
+       check(31, result);
+       result = t.greatest(26, 13, 3);
+       System.out.println("Input submitted to the function: 26, 13, 3");
+       check(26, result);
+
     }
 }

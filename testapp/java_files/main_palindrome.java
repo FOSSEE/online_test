@@ -4,11 +4,11 @@ class main_palindrome
     {
         if(result.equals(expect))
         {
-            System.out.println("Output expected "+expect+" and got "+result);
+            System.out.println("Correct\n:Output expected "+expect+" and got "+result);
         }
 	else
 	{
-	    System.out.println("Output expected "+expect+" but got "+result);
+	    System.out.println("Incorrect:\nOutput expected "+expect+" but got "+result);
 	    System.exit(1);
 	}
     }
@@ -17,10 +17,13 @@ class main_palindrome
        Test t = new Test();
        boolean result;
        result= t.palindrome(123);
+       System.out.println("Input submitted to the function: 123");
        check(false, result);
        result = t.palindrome(151);
+       System.out.println("Input submitted to the function: 151");   
        check(true, result);
        result = t.palindrome(23432);
+       System.out.println("Input submitted to the function: 23432");
        check(true, result);
     }
 }
