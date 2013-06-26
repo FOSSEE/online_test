@@ -21,7 +21,7 @@ void check(T expect,T result)
 int main(void)
 {
 	int result;
-        int a[55555] = {1,2,3,0,0};
+        int a[] = {1,2,3,0,0};
 	result = array_sum(a);
 	check(6, result);
 	int b[] = {1,2,3,4,5};

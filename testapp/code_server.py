@@ -1,4 +1,4 @@
-!/usr/bin/env python
+#!/usr/bin/env python
 """This server runs an XMLRPC server that can be submitted code and tests
 and returns the output.  It *should* be run as root and will run as the user
 'nobody' so as to minimize any damange by errant code.  This can be configured
@@ -362,7 +362,6 @@ class CodeServer(object):
         """
         try:
             proc_compile = subprocess.Popen(cmd, *args, **kw)
-                                           
             out, err = proc_compile.communicate()
             stripped_err = self._remove_null_substitute_char(err)
         except TimeoutException:
@@ -618,6 +617,7 @@ class CodeServer(object):
                                                               student_directory,
                                                               student_directory)
             ret = self._compile_command(compile_main, stdin=None,
+                                        shell=True,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
             proc, main_err = ret
