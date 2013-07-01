@@ -684,14 +684,24 @@ def check(request, q_id, questionpaper_id=None):
     question = get_object_or_404(Question, pk=q_id)
     q_paper = QuestionPaper.objects.get(id=questionpaper_id)
     paper = AnswerPaper.objects.get(user=request.user, question_paper=q_paper)
-    answer = request.POST.get('answer')
+    snippet_code = request.POST.get('snippet')
+    user_answer = request.POST.get('answer')
     skip = request.POST.get('skip', None)
     if skip is not None:
         next_q = paper.skip()
         return show_question(request, next_q, questionpaper_id)
+    
+    if question.type == 'mcq':
+        # Add the answer submitted, regardless of it being correct or not.
+        new_answer = Answer(question=question, answer=user_answer,
+                            correct=False)
 
-    # Add the answer submitted, regardless of it being correct or not.
-    new_answer = Answer(question=question, answer=answer, correct=False)
+    else:
+        # Add the answer submitted with the Snippet code (correct or incorrect)
+        answer_check = snippet_code + "\n" + user_answer
+        new_answer = Answer(question=question, answer=answer_check,
+                            correct=False)
+
     new_answer.save()
     paper.answers.add(new_answer)
 
@@ -700,7 +710,7 @@ def check(request, q_id, questionpaper_id=None):
     # safely in a separate process (the code_server.py) running as nobody.
     if question.type == 'mcq':
         success = True  # Only one attempt allowed for MCQ's.
-        if answer.strip() == question.test.strip():
+        if user_answer.strip() == question.test.strip():
             new_answer.correct = True
             new_answer.marks = question.points
             new_answer.error = 'Correct answer'
@@ -708,7 +718,7 @@ def check(request, q_id, questionpaper_id=None):
             new_answer.error = 'Incorrect answer'
     else:
         user_dir = get_user_dir(user)
-        success, err_msg = code_server.run_code(answer, question.test, 
+        success, err_msg = code_server.run_code(answer_check, question.test, 
                                                 user_dir, question.type)
         new_answer.error = err_msg
         if success:
@@ -725,7 +735,7 @@ def check(request, q_id, questionpaper_id=None):
         if not paper.question_paper.quiz.active:
             return complete(request, reason='The quiz has been deactivated!')
         context = {'question': question, 'error_message': err_msg,
-                   'paper': paper, 'last_attempt': answer,
+                   'paper': paper, 'last_attempt': user_answer,
                    'quiz_name': paper.question_paper.quiz.description,
                    'time_left': time_left}
         ci = RequestContext(request)

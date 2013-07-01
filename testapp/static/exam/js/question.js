@@ -58,7 +58,6 @@ function replaceSelection (input, replaceString)
     }
 }
 
-// We are going to catch the TAB key so that we can use it, Hooray!
 function catchTab(item,e)
 {
     if(navigator.userAgent.match("Gecko"))
@@ -78,11 +77,12 @@ function catchTab(item,e)
 }
 
 var lineObjOffsetTop = 2;
-       
-function createTextAreaWithLines(id)
+
+function addLineNumbers(id)
 {
     var el = document.createElement('DIV');
     var ta = document.getElementById(id);
+    var content = document.getElementById('snippet').value;
     ta.parentNode.insertBefore(el,ta);
     el.appendChild(ta);
     el.className='textAreaWithLines';
@@ -102,18 +102,29 @@ function createTextAreaWithLines(id)
     lineObj.style.textAlign = 'right';
     lineObj.className='lineObj';
     var string = '';
-    for(var no=1;no<200;no++)
+    split_content = content.split('\n');
+    if(id == "answer")
     {
-	if(string.length>0)string = string + '<br>';
-	string = string + no;
-    }
-    //ta.onkeydown = function() { positionLineObj(lineObj,ta); };
-    ta.onmousedown = function() { positionLineObj(lineObj,ta); };
+		for(var no=split_content.length+1;no<1000;no++)
+		{
+			if(string.length>0)string = string + '<br>';
+			string = string + no;
+		}
+	}
+	else
+	{
+		for(var no=1;no<=split_content.length;no++)
+		{
+			if(string.length>0)string = string + '<br>';
+			string = string + no;
+		}
+	}
+	ta.onmousedown = function() { positionLineObj(lineObj,ta); };
     ta.onscroll = function() { positionLineObj(lineObj,ta); };
     ta.onblur = function() { positionLineObj(lineObj,ta); };
     ta.onfocus = function() { positionLineObj(lineObj,ta); };
     ta.onmouseover = function() { positionLineObj(lineObj,ta); };
-    lineObj.innerHTML = string;    
+    lineObj.innerHTML = string;
 }
        
 function positionLineObj(obj,ta)

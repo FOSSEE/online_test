@@ -31,7 +31,7 @@
 	      <center><table class=span1>
                  <tr><td><b>Summary:</b> <td>{{ form.summary }}{{ form.summary.errors }}
  
-                 <tr><td><b>Points:<td><button class="btn-mini" name={{forloop.counter}} type="button" onClick="increase(frm,{{forloop.counter}});">+</button>{{ form.points }}<button class="btn-mini" type="button" onClick="decrease(frm,{{forloop.counter}});"">-</button>{{ form.points.errors }} &nbsp; Active: &nbsp; {{ form.active }}{{form.active.errors}} &nbsp; Type: &nbsp;{{ form.type }}{{form.type.errors}}
+                 <tr><td><b>Points:<td><button class="btn-mini" name={{forloop.counter}} type="button" onClick="increase(frm,{{forloop.counter}});">+</button>{{ form.points }}<button class="btn-mini" type="button" onClick="decrease(frm,{{forloop.counter}});">-</button>{{ form.points.errors }} &nbsp; Active: &nbsp; {{ form.active }}{{form.active.errors}} &nbsp; Type: &nbsp;{{ form.type }}{{form.type.errors}}
 
                  <tr><td><strong>Rendered: </strong><td><p id='my{{forloop.counter}}'></p>
                  <tr><td><b>Description: <td>{{ form.description }}  {{form.description.errors}}
