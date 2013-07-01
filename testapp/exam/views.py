@@ -695,16 +695,15 @@ def check(request, q_id, questionpaper_id=None):
         # Add the answer submitted, regardless of it being correct or not.
         new_answer = Answer(question=question, answer=user_answer,
                             correct=False)
-        new_answer.save()
-        paper.answers.add(new_answer)
+
     else:
-        """Add the answer submitted with the Snippet code,
-        regardless of it being correct or not."""
+        # Add the answer submitted with the Snippet code (correct or incorrect)
         answer_check = snippet_code + "\n" + user_answer
         new_answer = Answer(question=question, answer=answer_check,
                             correct=False)
-        new_answer.save()
-        paper.answers.add(new_answer)
+
+    new_answer.save()
+    paper.answers.add(new_answer)
 
     # If we were not skipped, we were asked to check.  For any non-mcq
     # questions, we obtain the results via XML-RPC with the code executed
