@@ -218,10 +218,10 @@ def edit_question(request):
         question.points = points[j]
         question.test = test[j]
         question.options = options[j]
-        question.type = type[j]
-        edit_tags = tags[j]
         question.active = active[j]
         question.snippet = snippet[j]
+        question.type = type[j]
+        edit_tags = tags[j]
         question.save()
         for tag in question.tags.all():
             question.tags.remove(tag)
@@ -264,7 +264,7 @@ def add_question(request, question_id=None):
                 question = Question.objects.get(id=question_id)
                 for tag in question.tags.all():
                     question.tags.remove(tag)
-                tags = form['tags'].data.split(', ')
+                tags = form['tags'].data.split(',')
                 for i in range(0, len(tags)-1):
                     tag = tags[i].strip()
                     question.tags.add(tag)
@@ -303,7 +303,7 @@ def add_question(request, question_id=None):
 
 def add_quiz(request, quiz_id=None):
     """To add a new quiz in the database.
-    Create a new question and store it."""
+    Create a new quiz and store it."""
 
     user = request.user
     if not user.is_authenticated() or not is_moderator(user):
@@ -638,7 +638,7 @@ def start(request, questionpaper_id=None):
                                     context_instance=ci)
 
 
-def question(request, q_id, questionpaper_id):
+def question(request, q_id, questionpaper_id,success_msg=None):
     """Check the credentials of the user and start the exam."""
 
     user = request.user
@@ -658,21 +658,29 @@ def question(request, q_id, questionpaper_id):
     if time_left == 0:
         return complete(request, reason='Your time is up!')
     quiz_name = paper.question_paper.quiz.description
-    context = {'question': q, 'paper': paper, 'user': user,
-               'quiz_name': quiz_name,
-               'time_left': time_left}
+    if success_msg is None:
+        context = {'question': q, 'paper': paper, 'user': user,
+                   'quiz_name': quiz_name,
+                   'time_left': time_left,}
+    
+    else:
+        context = {'question': q, 'paper': paper, 'user': user,
+                   'quiz_name': quiz_name,
+                   'time_left': time_left,
+                   'success_msg':success_msg}
+    
     ci = RequestContext(request)
     return my_render_to_response('exam/question.html', context, 
         context_instance=ci)
 
 
-def show_question(request, q_id, questionpaper_id):
+def show_question(request, q_id, questionpaper_id,success_msg=None):
     """Show a question if possible."""
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(request, msg)
     else:
-        return question(request, q_id, questionpaper_id)
+        return question(request, q_id, questionpaper_id,success_msg)
 
 
 def check(request, q_id, questionpaper_id=None):
@@ -745,7 +753,8 @@ def check(request, q_id, questionpaper_id=None):
                                      context_instance=ci)
     else:
         next_q = paper.completed_question(question.id)
-        return show_question(request, next_q, questionpaper_id)
+        success_msg = True
+        return show_question(request, next_q, questionpaper_id,success_msg)
 
 
 def quit(request, answerpaper_id=None):

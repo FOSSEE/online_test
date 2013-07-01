@@ -154,10 +154,6 @@ function textareaformat()
 			this.rows = 5;
 			$(snippet_id).val("");
 		});
-		$(snippet_id).bind('blur',function(event){
-			this.rows = 1;
-			$(snippet_id).val("#To avoid indentation errors use tab for indentation for Python questions");
-		});
 		$(snippet_id).bind('keydown', function (event){
 			catchTab(snippet_id,event);
 		});
