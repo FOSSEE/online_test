@@ -252,7 +252,7 @@ class CodeServer(object):
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
             proc, stdnt_stdout, stdnt_stderr = ret
-            if inst_stdout in stdnt_stdout:
+            if inst_stdout == stdnt_stdout:
                 return True, 'Correct answer'
             else:
                 err = "Error: expected %s, got %s" % (inst_stderr,
