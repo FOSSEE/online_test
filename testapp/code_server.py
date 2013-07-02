@@ -284,7 +284,7 @@ class CodeServer(object):
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE)
                     proc, stdnt_stdout, stdnt_stderr = ret
-                    valid_answer = inst_stdout in stdnt_stdout
+                    valid_answer = inst_stdout == stdnt_stdout
             if valid_answer and (num_lines == loop_count):
                 return True, "Correct answer"
             else:
