@@ -293,7 +293,7 @@ class CodeServer(object):
                 return False, err
 
     def run_c_code(self, answer, test_code, in_dir=None):
-        """Tests given C code<F12>  (`answer`) with the `test_code` supplied.
+        """Tests given C code  (`answer`) with the `test_code` supplied.
 
         The testcode is a path to the reference code.
         The reference code will call the function submitted by the student.
