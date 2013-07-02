@@ -252,7 +252,7 @@ class CodeServer(object):
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
             proc, stdnt_stdout, stdnt_stderr = ret
-            if inst_stdout in stdnt_stdout:
+            if inst_stdout == stdnt_stdout:
                 return True, 'Correct answer'
             else:
                 err = "Error: expected %s, got %s" % (inst_stderr,
@@ -284,7 +284,7 @@ class CodeServer(object):
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE)
                     proc, stdnt_stdout, stdnt_stderr = ret
-                    valid_answer = inst_stdout in stdnt_stdout
+                    valid_answer = inst_stdout == stdnt_stdout
             if valid_answer and (num_lines == loop_count):
                 return True, "Correct answer"
             else:
@@ -293,7 +293,7 @@ class CodeServer(object):
                 return False, err
 
     def run_c_code(self, answer, test_code, in_dir=None):
-        """Tests given C code  (`answer`) with the `test_code` supplied.
+        """Tests given C code<F12>  (`answer`) with the `test_code` supplied.
 
         The testcode is a path to the reference code.
         The reference code will call the function submitted by the student.
