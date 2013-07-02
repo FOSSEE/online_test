@@ -204,8 +204,6 @@ class CodeServer(object):
         except TimeoutException:
             # Runaway code, so kill it.
             proc.kill()
-            # Re-raise exception.
-            #raise
             stderr = self.timeout_msg
             stdout = ''
         return proc, stdout, stderr

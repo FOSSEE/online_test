@@ -9,7 +9,7 @@ void check(T expect, T result)
 {
     if (expect == result)
     {
-	//printf("Correct:\n Expected %d got %d \n",expect,result);
+	printf("\nCorrect:\n Expected %d got %d \n",expect,result);
     }
     else 
     {
@@ -22,8 +22,10 @@ int main(void)
 {
 	bool result;
 	result = palindrome(123);
+        printf("Input submitted to the function: 123");
 	check(false, result);
 	result = palindrome(121);
+        printf("Input submitted to the function: 121");
 	check(true, result);
 	printf("All Correct\n");
 	return 0;

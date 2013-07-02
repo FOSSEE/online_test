@@ -9,7 +9,7 @@ void check(T expect,T result)
 {
     if (expect == result)
     {
-	//printf("Correct:\n Expected %d got %d \n",expect,result);
+	printf("\nCorrect:\n Expected %d got %d \n",expect,result);
     }
     else 
     {
@@ -21,11 +21,13 @@ void check(T expect,T result)
 int main(void)
 {
 	int result;
-        int a[55555] = {1,2,3,0,0};
+        int a[] = {1,2,3,0,0};
 	result = array_sum(a);
+        printf("Input submitted to the function: {1, 2, 3, 0, 0}");
 	check(6, result);
 	int b[] = {1,2,3,4,5};
-	result = array_sum(b);
+       	result = array_sum(b);
+        printf("Input submitted to the function: {1, 2, 3, 4, 5}");
 	check(15,result);
 	printf("All Correct\n");
 	return 0;
