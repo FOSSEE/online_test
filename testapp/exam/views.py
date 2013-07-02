@@ -417,12 +417,18 @@ def automatic_questionpaper(request, questionpaper_id=None):
             if request.POST.get('save') == 'save':
                 quiz = Quiz.objects.order_by("-id")[0]
                 quest_paper = QuestionPaper()
-                quest_paper.quiz = quiz
-                quest_paper.save()
                 questions = request.POST.getlist('questions')
-                for i in questions:
-                    if i.isdigit():
-                        q = Question.objects.get(id=i)
+                tot_marks = 0
+                for quest in questions:
+					if quest.isdigit():
+						q = Question.objects.get(id=quest)
+						tot_marks += q.points
+                quest_paper.quiz = quiz
+                quest_paper.total_marks = tot_marks
+                quest_paper.save()
+                for quest in questions:
+                    if quest.isdigit():
+                        q = Question.objects.get(id=quest)
                         quest_paper.questions.add(q)
                 return my_redirect('/exam/manage/showquiz')
             else:
@@ -455,9 +461,16 @@ def automatic_questionpaper(request, questionpaper_id=None):
             if request.POST.get('save') == 'save':
                 quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
                 questions = request.POST.getlist('questions')
-                for i in questions:
-                    if i.isdigit():
-                        q = Question.objects.get(id=i)
+                tot_marks = quest_paper.total_marks
+                for quest in questions:
+                    if quest.isdigit():
+                        q = Question.objects.get(id=quest)
+                        tot_marks += q.points
+                quest_paper.total_marks = tot_marks
+                quest_paper.save()
+                for quest in questions:
+                    if quest.isdigit():
+                        q = Question.objects.get(id=quest)
                         quest_paper.questions.add(q)
                 return my_redirect('/exam/manage/showquiz')
             else:
@@ -495,9 +508,15 @@ def manual_questionpaper(request, questionpaper_id=None):
         if request.method == "POST":
             if request.POST.get('save') == 'save':
                 questions = request.POST.getlist('questions')
-                quiz = Quiz.objects.order_by("-id")[0]
                 quest_paper = QuestionPaper()
+                quiz = Quiz.objects.order_by("-id")[0]
+                tot_marks = 0
+                for quest in questions:
+					if quest.isdigit():
+						q = Question.objects.get(id=quest)
+						tot_marks += q.points
                 quest_paper.quiz = quiz
+                quest_paper.total_marks = tot_marks
                 quest_paper.save()
                 for i in questions:
                     q = Question.objects.get(id=i)
@@ -524,12 +543,18 @@ def manual_questionpaper(request, questionpaper_id=None):
     else:
         if request.method == "POST":
             if request.POST.get('save') == 'save':
-                quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
-                questions = request.POST.getlist('questions')
-                for i in questions:
-                    q = Question.objects.get(id=i)
-                    quest_paper.questions.add(q)
-                return my_redirect('/exam/manage/showquiz')
+				quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
+				questions = request.POST.getlist('questions')
+				tot_marks = quest_paper.total_marks
+				for quest in questions:
+					q = Question.objects.get(id=quest)
+					tot_marks += q.points
+				quest_paper.total_marks = tot_marks
+				quest_paper.save()
+				for i in questions:
+					q = Question.objects.get(id=i)
+					quest_paper.questions.add(q)
+				return my_redirect('/exam/manage/showquiz')
             else:
                 fetched_questions = fetch_questions(request)
                 n = len(fetched_questions)
@@ -547,6 +572,7 @@ def manual_questionpaper(request, questionpaper_id=None):
             context = {'data': {'tags': tags}}
             return my_render_to_response('exam/manual_questionpaper.html',
                             context, context_instance=RequestContext(request))
+
 
 
 def prof_manage(request):
@@ -674,11 +700,12 @@ def question(request, q_id, questionpaper_id,success_msg=None):
         context_instance=ci)
 
 
-def show_question(request, q_id, questionpaper_id,success_msg=None):
+def show_question(request, q_id, questionpaper_id,success_msg=None,
+				  answerpaper_id=None):
     """Show a question if possible."""
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
-        return complete(request, msg)
+        return complete(request, msg,answerpaper_id)
     else:
         return question(request, q_id, questionpaper_id,success_msg)
 
@@ -754,7 +781,8 @@ def check(request, q_id, questionpaper_id=None):
     else:
         next_q = paper.completed_question(question.id)
         success_msg = True
-        return show_question(request, next_q, questionpaper_id,success_msg)
+        return show_question(request, next_q, questionpaper_id,success_msg,
+							paper.id)
 
 
 def quit(request, answerpaper_id=None):
@@ -766,17 +794,30 @@ def quit(request, answerpaper_id=None):
 
 def complete(request, reason=None, answerpaper_id=None):
     """Show a page to inform user that the quiz has been compeleted."""
-
+    
     user = request.user
-
     if answerpaper_id is None:
-        logout(request)
-        context = {'message': "You are successfully Logged out."}
-        return my_render_to_response('exam/complete.html', context)
+		logout(request)
+		context = {'message': "You are successfully Logged out."}
+		return my_render_to_response('exam/complete.html', context)
+    else:
+		paper = AnswerPaper.objects.get(id=answerpaper_id)
+		obt_marks = paper.get_total_marks()
+		tot_marks = paper.question_paper.total_marks
+		print tot_marks
+		if obt_marks == paper.question_paper.total_marks:
+			context = {'message': "Hurray ! You did an excellent job.\
+			you answered all the questions correctly.\
+			You have been logged out successfully,\
+			Thank You !"}
+		else:
+			context = {'message': reason}
+		logout(request)
+		return my_render_to_response('exam/complete.html',context)
     no = False
     message = reason or 'The quiz has been completed. Thank you.'
     if user.groups.filter(name='moderator').count() > 0:
-        message = 'You are successfully Logged out.'
+		message = 'You are successfully Logged out.'
     if request.method == 'POST' and 'no' in request.POST:
         no = True
     if not no:

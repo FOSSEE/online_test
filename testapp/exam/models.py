@@ -113,6 +113,7 @@ class Quiz(models.Model):
 class QuestionPaper(models.Model):
     quiz = models.ForeignKey(Quiz)
     questions = models.ManyToManyField(Question)
+    total_marks = models.FloatField()
     
 ################################################################################
 class AnswerPaper(models.Model):
