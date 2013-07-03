@@ -18,6 +18,7 @@ QUESTION_TYPE_CHOICES = (
         ("mcq", "MCQ"),
         ("C", "C Language"),
         ("C++", "C++ Language"),
+        ("java", "Java Language"),
                         )
 
 UNAME_CHARS = letters + "._" + digits
