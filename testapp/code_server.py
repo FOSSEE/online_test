@@ -204,8 +204,8 @@ class CodeServer(object):
         except TimeoutException:
             # Runaway code, so kill it.
             proc.kill()
-            stderr = self.timeout_msg
-            stdout = ''
+            # Re-raise exception.
+            raise
         return proc, stdout, stderr
 
     def check_bash_script(self, ref_script_path, submit_script_path,
@@ -398,9 +398,7 @@ class CodeServer(object):
         success = False
         output_path = os.getcwd() + '/output'
         compile_command = "g++  %s -c -o %s" % (submit_code_path, output_path)
-        ret = self._compile_command(compile_command, stdin=None,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+        ret = self._compile_command(compile_command)
         proc, inst_stderr = ret
 
         # Only if compilation is successful, the program is executed
@@ -409,9 +407,7 @@ class CodeServer(object):
             executable = os.getcwd() + '/executable'
             compile_main = "g++ %s %s -o %s" % (ref_code_path, output_path,
                                                 executable)
-            ret = self._compile_command(compile_main, stdin=None,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE)
+            ret = self._compile_command(compile_main)
             proc, main_err = ret
             if main_err == '':
                 args = [executable]
@@ -423,7 +419,6 @@ class CodeServer(object):
                     success, err = True, "Correct answer"
                 else:
                     err = stdout + "\n" + stderr
-                    success = False
                 os.remove(executable)
             else:
                 err = "Error:"
@@ -433,7 +428,6 @@ class CodeServer(object):
                         err = err + "\n" + e.split(":", 1)[1]
                 except:
                         err = err + "\n" + main_err
-                        success = False
             os.remove(output_path)
         else:
             err = "Compilation Error:"
