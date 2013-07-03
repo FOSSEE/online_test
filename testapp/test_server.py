@@ -16,6 +16,7 @@ def check_result(result, check='correct answer'):
         assert result[0], result[1]
     assert check in result[1].lower(), result[1]
 
+
 def test_python():
     """Test if server runs Python code as expected."""
     src = 'while True: pass'

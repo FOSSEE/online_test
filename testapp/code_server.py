@@ -399,11 +399,11 @@ class CodeServer(object):
         output_path = os.getcwd() + '/output'
         compile_command = "g++  %s -c -o %s" % (submit_code_path, output_path)
         ret = self._compile_command(compile_command)
-        proc, inst_stderr = ret
+        proc, stdnt_stderr = ret
 
         # Only if compilation is successful, the program is executed
         # And tested with testcases
-        if inst_stderr == '':
+        if stdnt_stderr == '':
             executable = os.getcwd() + '/executable'
             compile_main = "g++ %s %s -o %s" % (ref_code_path, output_path,
                                                 executable)
@@ -432,14 +432,14 @@ class CodeServer(object):
         else:
             err = "Compilation Error:"
             try:
-                error_lines = inst_stderr.splitlines()
+                error_lines = stdnt_stderr.splitlines()
                 for e in error_lines:
                     if ':' in e:
                         err = err + "\n" + e.split(":", 1)[1]
                     else:
                         err = err + "\n" + e
             except:
-                err = err + "\n" + inst_stderr
+                err = err + "\n" + stdnt_stderr
         return success, err
 
     def run_cplus_code(self, answer, test_code, in_dir=None):
