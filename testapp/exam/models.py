@@ -18,7 +18,9 @@ QUESTION_TYPE_CHOICES = (
         ("python", "Python"),
         ("bash", "Bash"),
         ("mcq", "MultipleChoice"),
-        )
+        ("C", "C Language"),
+        ("C++", "C++ Language"),
+                        )
 
 ################################################################################
 class Question(models.Model):
@@ -233,4 +235,3 @@ the next."""
     def __unicode__(self):
         u = self.user
         return u'Question paper for {0} {1}'.format(u.first_name, u.last_name)
-
