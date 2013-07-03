@@ -140,9 +140,7 @@ function textareaformat()
 	$('#id_snippet').bind('blur', function( event ){
          document.getElementById("id_snippet").rows=1;
          document.getElementById("id_snippet").cols=40;
-         $('#id_snippet').val("#To avoid indentation errors use tabs for indentation for Python questions");
-      });
-	
+      });	
 	$('#id_type').bind('change',function(event){
 		var value = document.getElementById('id_type').value;
 		if(value == 'mcq')
