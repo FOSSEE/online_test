@@ -810,6 +810,8 @@ def complete(request, reason=None, answerpaper_id=None):
 			you answered all the questions correctly.\
 			You have been logged out successfully,\
 			Thank You !"}
+            logout(request)
+            return my_render_to_response('exam/complete.html',context)
         else:
             context = {'message': reason}
             logout(request)
