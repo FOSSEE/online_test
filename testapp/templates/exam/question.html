@@ -76,8 +76,13 @@ function update_time()
          
      	 <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br> 
 	 <font size=3 face=arial>	{{ question.description|safe }} </font>
-
-         {% if error_message %}<h5>ERROR:</h5><div class="alert alert-error">{{ error_message }}</div>{% endif %}
+         {% if error_message %}
+	 <div class="alert alert-error">
+	 {% for e in error_message.splitlines %}
+	 {{ e|join:"" }} 
+	 <br/>
+	 {% endfor%}
+	 </div>{% endif %}
          <p id="status"></p>
          <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.question_paper.id }}/" method="post">
          {% csrf_token %}
@@ -87,7 +92,7 @@ function update_time()
          {% endfor %}
          {% else %}
 
-         <textarea tabindex=1 rows="3" style="width:750px;margin-bottom:15px;height:auto;" readonly=yes name="snippet" id="snippet" wrap="off">{% if last_attempt %}{% else %}{% if question.type == "bash" %} #!/bin/bash{% else %} #To avoid errors use tabs for indentation for Python questions &#13;&#10; {{ question.snippet }}{% endif %}{% endif %}</textarea>
+         <textarea tabindex=1 rows="3" style="width:750px;margin-bottom:15px;height:auto;" readonly=yes name="snippet" id="snippet" wrap="off">{% if last_attempt %}{{ question.snippet }}{% else %}{% if question.type == "bash" %} #!/bin/bash{% else %}{% if question.type == "python "%} #To avoid errors use tabs for indentation for Python questions &#13;&#10; {{ question.snippet }} {% else %} {{ question.snippet }} {% endif %}{% endif %}{% endif %}</textarea>
         
          <textarea tabindex=1 rows="10" style="width:750px;margin-bottom:10px;" name="answer" id="answer" wrap="off" onkeydown="return catchTab(this,event)">{% if last_attempt %}{{last_attempt.strip}}{% else %}{% if question.type == "bash" %}{% else %}{% endif %}{% endif %}</textarea>
 <br>
