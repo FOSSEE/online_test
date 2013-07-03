@@ -1,5 +1,5 @@
 from django import forms
-from exam.models import Profile,Quiz,Question
+from exam.models import Profile, Quiz, Question
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -13,13 +13,17 @@ from string import letters, punctuation, digits
 import datetime
 
 QUESTION_TYPE_CHOICES = (
-       ("python", "Python"),
-       ("bash", "Bash"),
-       ("mcq", "MCQ"),
-       )
+        ("python", "Python"),
+        ("bash", "Bash"),
+        ("mcq", "MCQ"),
+        ("C", "C Language"),
+        ("C++", "C++ Language"),
+        ("java", "Java Language"),
+                        )
 
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
+
 
 class UserRegisterForm(forms.Form):
     """A Class to create new form for User's Registration.
@@ -28,7 +32,7 @@ class UserRegisterForm(forms.Form):
 
     username = forms.CharField\
                (max_length=30, help_text='Letters, digits,\
-               period and underscores only.')
+                period and underscores only.')
     email = forms.EmailField()
     password = forms.CharField(max_length=30, widget=forms.PasswordInput())
     confirm_password = forms.CharField\
@@ -114,20 +118,20 @@ class UserLoginForm(forms.Form):
 class QuizForm(forms.Form):
     """Creates a form to add or edit a Quiz.
     It has the related fields and functions required."""
-    
+
     start_date = forms.DateField(initial=datetime.date.today)
     duration = forms.IntegerField()
-    active = forms.BooleanField(required = False)
+    active = forms.BooleanField(required=False)
     tags = TagField(widget=TagAutocomplete())
     description = forms.CharField(max_length=256, widget=forms.Textarea\
-                                                (attrs={'cols':20,'rows':1}))
+                                  (attrs={'cols': 20, 'rows': 1}))
 
     def save(self):
         start_date = self.cleaned_data["start_date"]
         duration = self.cleaned_data["duration"]
         active = self.cleaned_data['active']
         description = self.cleaned_data["description"]
-        
+
         new_quiz = Quiz()
         new_quiz.start_date = start_date
         new_quiz.duration = duration
@@ -136,7 +140,7 @@ class QuizForm(forms.Form):
         new_quiz.save()
 
 class QuestionForm(forms.Form):
-    """Creates a form to add or edit a Question. 
+    """Creates a form to add or edit a Question.
     It has the related fields and functions required."""
 
     summary = forms.CharField(widget=forms.Textarea\
@@ -147,13 +151,13 @@ class QuestionForm(forms.Form):
     test = forms.CharField(widget=forms.Textarea\
                                     (attrs={'cols': 40, 'rows': 1}))
     options = forms.CharField(widget=forms.Textarea\
-                                (attrs={'cols': 40, 'rows': 1}),required=False)
+                              (attrs={'cols': 40, 'rows': 1}), required=False)
     type = forms.CharField(max_length=8, widget=forms.Select\
-                                        (choices=QUESTION_TYPE_CHOICES))
+                           (choices=QUESTION_TYPE_CHOICES))
     active = forms.BooleanField(required=False)
-    tags = TagField(widget=TagAutocomplete(),required=False)
+    tags = TagField(widget=TagAutocomplete(), required=False)
     snippet = forms.CharField(widget=forms.Textarea\
-                                (attrs={'cols': 40, 'rows': 1}),required=False)
+                              (attrs={'cols': 40, 'rows': 1}), required=False)
 
     def save(self):
         summary = self.cleaned_data["summary"]

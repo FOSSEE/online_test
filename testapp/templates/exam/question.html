@@ -76,8 +76,14 @@ function update_time()
          
      	 <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br> 
 	 <font size=3 face=arial>	{{ question.description|safe }} </font>
+         {% if error_message %}
+	 <div class="alert alert-error">
+	 {% for e in error_message.splitlines %}
+	 {{ e|join:"" }} 
+	 <br/>
+	 {% endfor%}
+	 </div>{% endif %}
 
-         {% if error_message %}<h5>ERROR:</h5><div class="alert alert-error">{{ error_message }}</div>{% endif %}
          {% if success_msg %}
          <script type="text/javascript">
             alert("Congratulations, that's correct. Let's go to next question");
