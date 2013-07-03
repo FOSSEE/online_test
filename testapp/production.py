@@ -2,6 +2,7 @@ from testapp.settings import *
 
 DEBUG=False
 TEMPLATE_DEBUG=DEBUG
+from testapp.local import *
 
 DATABASE_ENGINE = 'django.db.backends.mysql'
 DATABASE_NAME = 'online_test'

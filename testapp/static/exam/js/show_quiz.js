@@ -38,6 +38,4 @@ function confirm_edit(frm)
     }
     else
         return true;
-    
-
 }
