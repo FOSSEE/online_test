@@ -67,7 +67,7 @@ class Answer(models.Model):
     question = models.ForeignKey(Question)
     
     # The answer submitted by the user.
-    answer = models.TextField()
+    answer = models.TextField(null=True, blank=True)
 
     # Error message when auto-checking the answer.
     error = models.TextField()
@@ -120,7 +120,7 @@ class QuestionPaper(models.Model):
     
 ################################################################################
 class AnswerPaper(models.Model):
-    """A question paper for a student -- one per student typically.
+    """A answer paper for a student -- one per student typically.
     """
     # The user taking this question paper.
     user = models.ForeignKey(User)

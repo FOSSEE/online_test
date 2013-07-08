@@ -77,10 +77,6 @@ function textareaformat()
 	document.getElementById('id_points').setAttribute('class','mini-text');
     document.getElementById('id_tags').setAttribute('class','tag-text');
     
-    jQuery().ready(function() 
-        { 
-            $("#id_snippet").val("#To avoid indentation errors use tabs for indentation for Python questions");
-        });
 	
 	$('#id_snippet').bind('keydown', function( event ){
          if(navigator.userAgent.match("Gecko"))
@@ -135,7 +131,6 @@ function textareaformat()
       $('#id_snippet').bind('focus', function( event ){
          document.getElementById("id_snippet").rows=5;
          document.getElementById("id_snippet").cols=40;
-         $('#id_snippet').val("");
       });
 	$('#id_snippet').bind('blur', function( event ){
          document.getElementById("id_snippet").rows=1;

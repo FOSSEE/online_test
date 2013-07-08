@@ -627,7 +627,7 @@ def start(request, questionpaper_id=None):
     except QuestionPaper.DoesNotExist:
         msg = 'Quiz not found, please contact your '\
             'instructor/administrator. Please login again thereafter.'
-        return complete(request, reason=msg)
+        return complete(request, msg, questionpaper_id)
 
     try:
         old_paper = AnswerPaper.objects.get(\
@@ -678,7 +678,8 @@ def question(request, q_id, questionpaper_id,success_msg=None):
     except AnswerPaper.DoesNotExist:
         return my_redirect('/exam/start/')
     if not paper.question_paper.quiz.active:
-        return complete(request, reason='The quiz has been deactivated!')
+        reason='The quiz has been deactivated!'
+        return complete(request, reason, questionpaper_id)
 
     time_left = paper.time_left()
     if time_left == 0:
@@ -700,12 +701,11 @@ def question(request, q_id, questionpaper_id,success_msg=None):
                                  context_instance=ci)
 
 
-def show_question(request, q_id, questionpaper_id,success_msg=None,
-                  answerpaper_id=None):
+def show_question(request, q_id, questionpaper_id,success_msg=None):
     """Show a question if possible."""
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
-        return complete(request, msg,answerpaper_id)
+        return complete(request, msg,questionpaper_id)
     else:
         return question(request, q_id, questionpaper_id,success_msg)
 
@@ -722,16 +722,21 @@ def check(request, q_id, questionpaper_id=None):
     snippet_code = request.POST.get('snippet')
     user_answer = request.POST.get('answer')
     skip = request.POST.get('skip', None)
+    success_msg = False
+    success = True
     if skip is not None:
         next_q = paper.skip()
         return show_question(request, next_q, questionpaper_id)
     
     if question.type == 'mcq':
         # Add the answer submitted, regardless of it being correct or not.
-        new_answer = Answer(question=question, answer=user_answer,
-                            correct=False)
-        new_answer.save()
-        paper.answers.add(new_answer)
+        if user_answer is not None :
+            print "EEERRRROOOORRRRRRR :P"
+            new_answer = Answer(question=question, answer=user_answer,
+                                correct=False)
+            new_answer.save()
+            paper.answers.add(new_answer)
+
     else:
         """Add the answer submitted with the Snippet code,
         regardless of it being correct or not."""
@@ -745,13 +750,16 @@ def check(request, q_id, questionpaper_id=None):
     # questions, we obtain the results via XML-RPC with the code executed
     # safely in a separate process (the code_server.py) running as nobody.
     if question.type == 'mcq':
-        success = True  # Only one attempt allowed for MCQ's.
-        if user_answer.strip() == question.test.strip():
-            new_answer.correct = True
-            new_answer.marks = question.points
-            new_answer.error = 'Correct answer'
-        else:
-            new_answer.error = 'Incorrect answer'
+        if  user_answer is not None:
+            success = True  # Only one attempt allowed for MCQ's.
+            if user_answer.strip() == question.test.strip():
+                new_answer.correct = True
+                new_answer.marks = question.points
+                new_answer.error = 'Correct answer'
+                success_msg = True
+            else:
+                new_answer.error = 'Incorrect answer'
+            new_answer.save() 
     else:
         user_dir = get_user_dir(user)
         success, err_msg = code_server.run_code(answer_check, question.test, 
@@ -761,15 +769,17 @@ def check(request, q_id, questionpaper_id=None):
             # Note the success and save it along with the marks.
             new_answer.correct = success
             new_answer.marks = question.points
+            success_msg = True
+        new_answer.save()
 
-    new_answer.save()
-
+    time_left = paper.time_left()
     if not success:  # Should only happen for non-mcq questions.
-        time_left = paper.time_left()
         if time_left == 0:
-            return complete(request, reason='Your time is up!')
+            reason='Your time is up!'
+            return complete(request, reason, questionpaper_id)
         if not paper.question_paper.quiz.active:
-            return complete(request, reason='The quiz has been deactivated!')
+            reason='The quiz has been deactivated!'
+            return complete(request, reason, questionpaper_id)
         context = {'question': question, 'error_message': err_msg,
                    'paper': paper, 'last_attempt': user_answer,
                    'quiz_name': paper.question_paper.quiz.description,
@@ -779,32 +789,39 @@ def check(request, q_id, questionpaper_id=None):
         return my_render_to_response('exam/question.html', context, 
                                      context_instance=ci)
     else:
-        next_q = paper.completed_question(question.id)
-        success_msg = True
-        return show_question(request, next_q, questionpaper_id,success_msg,
-                             paper.id)
+        if time_left <= 0:
+            print "success"
+            print str(time_left)
+            reason='Your time is up!'
+            return complete(request, reason, questionpaper_id)
+        else:
+            print "fail"
+            print time_left
+            next_q = paper.completed_question(question.id)
+            return show_question(request, next_q, questionpaper_id,success_msg)
 
 
-def quit(request, answerpaper_id=None):
+def quit(request, questionpaper_id=None):
     """Show the quit page when the user logs out."""
-    context = {'id': answerpaper_id}
+    context = {'id': questionpaper_id}
     return my_render_to_response('exam/quit.html', context,
                                  context_instance=RequestContext(request)) 
 
 
-def complete(request, reason=None, answerpaper_id=None):
+def complete(request, reason=None, questionpaper_id=None):
     """Show a page to inform user that the quiz has been compeleted."""
     
     user = request.user
-    if answerpaper_id is None:
+    if questionpaper_id is None:
         logout(request)
-        context = {'message': "You are successfully Logged out."}
+        message = reason or "You are successfully logged out."
+        context = {'message': message}
         return my_render_to_response('exam/complete.html', context)
     else:
-        paper = AnswerPaper.objects.get(id=answerpaper_id)
+        q_paper = QuestionPaper.objects.get(id=questionpaper_id)
+        paper = AnswerPaper.objects.get(user=user, question_paper=q_paper)
         obt_marks = paper.get_total_marks()
         tot_marks = paper.question_paper.total_marks
-        print tot_marks
         if obt_marks == paper.question_paper.total_marks:
             context = {'message': "Hurray ! You did an excellent job.\
 			you answered all the questions correctly.\
@@ -813,7 +830,8 @@ def complete(request, reason=None, answerpaper_id=None):
             logout(request)
             return my_render_to_response('exam/complete.html',context)
         else:
-            context = {'message': reason}
+            message = reason or "You are successfully logged out"
+            context = {'message':  message }
             logout(request)
             return my_render_to_response('exam/complete.html',context)
     no = False
@@ -991,6 +1009,7 @@ def show_all_questions(request):
             form.initial['options'] = d.options
             form.initial['type'] = d.type
             form.initial['active'] = d.active
+            form.initial['snippet'] = d.snippet
             form_tags = d.tags.all()
             form_tags_split = form_tags.values('name')
             initial_tags = ""

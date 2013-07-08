@@ -152,7 +152,6 @@ function textareaformat()
 		var snippet_id = document.getElementById('id_snippet'+i);
 		$(snippet_id).bind('focus',function(event){
 			this.rows = 5;
-			$(snippet_id).val("");
 		});
 		$(snippet_id).bind('keydown', function (event){
 			catchTab(snippet_id,event);
@@ -170,7 +169,6 @@ function textareaformat()
 		jQuery().ready(function() 
         { 
             jQuery("#id_tags" + i).autocomplete("/taggit_autocomplete_modified/json", { multiple: true });
-            $(snippet_id).val("#To avoid indentation errors use tab for indentation for Python questions");
         });
 	}
 }

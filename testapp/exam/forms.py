@@ -167,6 +167,7 @@ class QuestionForm(forms.Form):
         options = self.cleaned_data['options']
         type = self.cleaned_data["type"]
         active = self.cleaned_data["active"]
+        snippet = self.cleaned_data["snippet"]
 
         new_question = Question()
         new_question.summary = summary
@@ -176,4 +177,5 @@ class QuestionForm(forms.Form):
         new_question.options = options
         new_question.type = type
         new_question.active = active
+        new_question.snippet = snippet
         new_question.save()
