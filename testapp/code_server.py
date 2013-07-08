@@ -353,7 +353,7 @@ class CodeServer(object):
         return success, err
 
     def _compile_command(self, cmd, *args, **kw):
-        """Compiles C/C++ code and returns errors if any.
+        """Compiles C/C++/java code and returns errors if any.
         Run a command in a subprocess while blocking, the process is killed
         if it takes more than 2 seconds to run.  Return the Popen object, the
         stderr.
@@ -369,6 +369,7 @@ class CodeServer(object):
             # Re-raise exception.
             raise
         return proc_compile, err
+
 
     def _check_c_cpp_code(self, ref_code_path, submit_code_path):
         """ Function validates student code using instructor code as
@@ -503,6 +504,161 @@ class CodeServer(object):
         self.queue.put(self.port)
 
         return success, err
+
+    def run_java_code(self, answer, test_code, in_dir=None):
+        """Tests given java code  (`answer`) with the `test_code` supplied.
+
+        The testcode is a path to the reference code.
+        The reference code will call the function submitted by the student.
+        The reference code will check for the expected output.
+
+        If the path's start with a "/" then we assume they are absolute paths.
+        If not, we assume they are relative paths w.r.t. the location of this
+        code_server script.
+
+        If the optional `in_dir` keyword argument is supplied it changes the
+        directory to that directory (it does not change it back to the original
+        when done).
+
+        Returns
+        -------
+
+        A tuple: (success, error message).
+
+        """
+        if in_dir is not None and isdir(in_dir):
+            os.chdir(in_dir)
+
+        # The file extension must be .java
+        # The class name and file name must be same in java
+        submit_f = open('Test.java', 'w')
+        submit_f.write(answer.lstrip())
+        submit_f.close()
+        submit_path = abspath(submit_f.name)
+
+        ref_path = test_code.strip()
+        if not ref_path.startswith('/'):
+            ref_path = join(MY_DIR, ref_path)
+
+        # Add a new signal handler for the execution of this code.
+        old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(SERVER_TIMEOUT)
+
+        # Do whatever testing needed.
+        success = False
+        try:
+            success, err = self._check_java_code(ref_path, submit_path)
+        except TimeoutException:
+            err = self.timeout_msg
+        except:
+            type, value = sys.exc_info()[:2]
+            err = "Error: {0}".format(repr(value))
+        finally:
+            # Set back any original signal handler.
+            signal.signal(signal.SIGALRM, old_handler)
+
+        # Delete the created file.
+        os.remove(submit_path)
+
+        # Cancel the signal if any, see signal.alarm documentation.
+        signal.alarm(0)
+
+        # Put us back into the server pool queue since we are free now.
+        self.queue.put(self.port)
+
+        return success, err
+
+    def _check_java_code(self, ref_code_path, submit_code_path):
+        """ Function validates student code using instructor code as
+        reference.The first argument ref_code_path, is the path to
+        instructor code, it is assumed to have executable permission.
+        The second argument submit_code_path, is the path to the student
+        code, it is assumed to have executable permission.
+
+        Returns
+        --------
+
+        returns (True, "Correct answer") : If the student function returns
+        expected output when called by reference code.
+
+        returns (False, error_msg): If the student function fails to return
+        expected output when called by reference code.
+
+        Returns (False, error_msg): If mandatory arguments are not files or
+        if the required permissions are not given to the file(s).
+
+        """
+        if not isfile(ref_code_path):
+            return False, "No file at %s" % ref_code_path
+        if not isfile(submit_code_path):
+            return False, 'No file at %s' % submit_code_path
+
+        success = False
+        compile_command = "javac  %s" % (submit_code_path)
+        ret = self._compile_command(compile_command)
+        proc, stdnt_stderr = ret
+        stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
+
+        # Only if compilation is successful, the program is executed
+        # And tested with testcases
+        if stdnt_stderr == '':
+            student_directory = os.getcwd() + '/'
+            student_file_name = "Test"
+            compile_main = "javac %s -classpath %s -d %s" % (ref_code_path,
+                                                             student_directory,
+                                                             student_directory)
+            ret = self._compile_command(compile_main)
+            proc, main_err = ret            
+            main_err = self._remove_null_substitute_char(main_err)
+
+            if main_err == '':
+                main_file_name = (ref_code_path.split('/')[-1]).split('.')[0]
+                run_command = "java -cp %s %s" % (student_directory,
+                                                  main_file_name)
+                ret = self._run_command(run_command,
+                                        stdin=None,
+                                        shell=True,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
+                proc, stdout, stderr = ret
+                if proc.returncode == 0:
+                    success, err = True, "Correct answer"
+                else:
+                    err = stdout + "\n" + stderr
+                    success = False
+                os.remove("%s%s.class" % (student_directory, main_file_name))
+            else:
+                err = "Error:\n"
+                try:
+                    error_lines = main_err.splitlines()
+                    for e in error_lines:
+                        if ':' in e:
+                            err = err + "\n" + e.split(":", 1)[1]
+                        else:
+                            err = err + "\n" + e
+                except:
+                        err = err + "\n" + main_err
+            os.remove("%s%s.class" % (student_directory, student_file_name))
+        else:
+            err = "Compilation Error:\n"
+            try:
+                error_lines = stdnt_stderr.splitlines()
+                for e in error_lines:
+                    if ':' in e:
+                        err = err + "\n" + e.split(":", 1)[1]
+                    else:
+                        err = err + "\n" + e
+            except:
+                err = err + "\n" + stdnt_stderr
+        return success, err
+
+    def _remove_null_substitute_char(self, string):
+        """Returns a string without any null and substitute characters"""
+        stripped = ""
+        for c in string:
+            if ord(c) is not 26 and ord(c) is not 0:
+                stripped = stripped + c
+        return ''.join(stripped)
 
     def run(self):
         """Run XMLRPC server, serving our methods.

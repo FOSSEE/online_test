@@ -20,6 +20,7 @@ QUESTION_TYPE_CHOICES = (
         ("mcq", "MultipleChoice"),
         ("C", "C Language"),
         ("C++", "C++ Language"),
+        ("java", "Java Language"),
                         )
 
 ################################################################################
