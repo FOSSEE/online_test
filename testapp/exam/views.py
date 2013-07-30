@@ -963,7 +963,7 @@ def user_data(request, username):
     """Render user data."""
 
     current_user = request.user
-    if not current_user.is_authenticated() or not is_moderator(user):
+    if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
 
     data = get_user_data(username)
