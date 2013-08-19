@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block manage %}
+{% if papers %}
 <form name=frm action="" method="post">
 {% csrf_token %}
 {% for i in papers %}
@@ -16,4 +17,7 @@
 <br>
 <button class="btn" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>
 </form>
+{% else %}
+<center><h3>No Question Papers available</h3></center>
+{% endif %}
 {% endblock %}
