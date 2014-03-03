@@ -28,7 +28,7 @@ from os.path import isdir, dirname, abspath, join, isfile
 import signal
 from multiprocessing import Process, Queue
 import subprocess
-
+import re
 # Local imports.
 from settings import SERVER_PORTS, SERVER_TIMEOUT, SERVER_POOL_PORT
 
@@ -659,6 +659,132 @@ class CodeServer(object):
             if ord(c) is not 26 and ord(c) is not 0:
                 stripped = stripped + c
         return ''.join(stripped)
+ 
+    def run_scilab_code(self, answer, test_code, in_dir=None):
+        """Tests given Scilab function (`answer`) with the `test_code`
+        supplied. If the optional `in_dir` keyword argument is supplied
+        it changes the directory to that directory (it does not change
+        it back to the original when done). This function also timesout
+        when the function takes more than SERVER_TIMEOUT seconds to run
+        to prevent runaway code.
+
+        The testcode is a path to the reference code.
+        The reference code will call the function submitted by the student.
+        The reference code will check for the expected output.
+
+        If the path's start with a "/" then we assume they are absolute paths.
+        If not, we assume they are relative paths w.r.t. the location of this
+        code_server script.
+
+        Returns
+        -------
+
+        A tuple: (success, error message).
+
+        """
+        if in_dir is not None and isdir(in_dir):
+            os.chdir(in_dir)
+        
+        # Removes all the commands that terminates scilab
+        answer,i = self._remove_scilab_exit(answer.lstrip())
+
+        # Throw message if there are commmands that terminates scilab
+        add_err=""
+        if i > 0:
+            add_err = "Please do not use exit, quit and abort commands in your\
+                        code.\n Otherwise your code will not be evaluated\
+                        correctly.\n"
+
+        # The file extension should be .sci
+        submit_f = open('function.sci','w')
+        submit_f.write(answer)
+        submit_f.close()
+        submit_path = abspath(submit_f.name)
+
+        ref_path = test_code.strip()
+        if not ref_path.startswith('/'):
+            ref_path = join(MY_DIR, ref_path)
+
+        # Add a new signal handler for the execution of this code.
+        old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(SERVER_TIMEOUT)
+
+        # Do whatever testing needed.
+        success = False
+        try:
+            cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(ref_path)
+            cmd += ' | scilab-cli -nb'
+            ret = self._run_command(cmd,
+                                    shell=True,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            proc, stdout, stderr = ret
+
+            # Get only the error.
+            stderr = self._get_error(stdout)
+            if stderr is None:
+                # Clean output
+                stdout = self._strip_output(stdout)
+                if proc.returncode == 5:
+                    success, err = True, "Correct answer"
+                else:
+                    err = add_err + stdout
+            else:
+                err = add_err + stderr
+        except TimeoutException:
+            err = self.timeout_msg
+        except:
+            type, value = sys.exc_info()[:2]
+            err = "Error: {0}".format(repr(value))
+        finally:
+            # Set back any original signal handler.
+            signal.signal(signal.SIGALRM, old_handler)
+
+        # Delete the created file.
+        os.remove(submit_path)
+
+        # Cancel the signal if any, see signal.alarm documentation.
+        signal.alarm(0)
+
+        # Put us back into the server pool queue since we are free now.
+        self.queue.put(self.port)
+
+        return success, err
+
+    def _remove_scilab_exit(self, string):
+        """
+            Removes exit, quit and abort from the scilab code
+        """
+        new_string = ""
+        i=0
+        for line in string.splitlines():
+            new_line = re.sub(r"exit.*$","",line)
+            new_line = re.sub(r"quit.*$","",new_line)
+            new_line = re.sub(r"abort.*$","",new_line)
+            if line != new_line:
+                i=i+1
+            new_string = new_string +'\n'+ new_line
+        return new_string, i
+
+    def _get_error(self, string):
+        """
+            Fetches only the error from the string.
+            Returns None if no error.
+        """
+        obj =  re.search("!.+\n.+",string);
+        if obj:         
+            return obj.group()
+        return None
+
+    def _strip_output(self, out):
+        """
+            Cleans whitespace from the output
+        """
+        strip_out = "Message"
+        for l in out.split('\n'):
+            if l.strip():
+                strip_out = strip_out+"\n"+l.strip()
+        return strip_out
 
     def run(self):
         """Run XMLRPC server, serving our methods.
