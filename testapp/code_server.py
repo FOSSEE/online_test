@@ -713,7 +713,7 @@ class CodeServer(object):
         success = False
         try:
             cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(ref_path)
-            cmd += ' | scilab-cli -nb'
+            cmd += ' | timeout 8 scilab-cli -nb'
             ret = self._run_command(cmd,
                                     shell=True,
                                     stdout=subprocess.PIPE,
