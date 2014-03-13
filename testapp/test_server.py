@@ -222,6 +222,16 @@ endfunction
     src = """
                 funcprot(0)
 function[c]=add(a,b)
+    c=a-b;
+endfunction
+          """
+    result = code_server.run_code(src, 'scilab_files/test_add.sce',
+                                  '/tmp', language="scilab")
+    check_result(result, 'correct answer')
+
+    src = """
+                funcprot(0)
+function[c]=add(a,b)
     c=a+b;
 dis(
 endfunction
