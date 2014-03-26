@@ -5,6 +5,14 @@ from os.path import dirname, join, basename, abspath
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+# Authentication using other database table.
+# Comment the line below if you want the authentication to be done
+# using django user table.
+AUTHENTICATION_BACKENDS = ('myauthentication.backend.MyBackend',)
+
+# Router for database
+DATABASE_ROUTERS = ['myauthentication.router.MyDatabaseRouter',]
+
 # The ports the code server should run on.  This will run one separate 
 # server for each port listed in the following list.
 SERVER_PORTS = [8001] # range(8001, 8026)
@@ -41,6 +49,14 @@ DATABASES = {
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+    },
+    'spoken' : {
+        'ENGINE' : 'django.db.backends.mysql',
+        'NAME'   : 'YOUR DATABASE',
+        'USER'   : 'YOUR USERNAME',
+        'PASSWORD': 'YOUR PASSWORD',
+        'HOST'    :'',
+        'PORT'    :'',
     }
 }
 
