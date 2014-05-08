@@ -1,7 +1,7 @@
 from datetime import date
 
 questions = [
-Question(
+[Question(
     summary='Factorial',
     points=2,
     type="python",
@@ -15,8 +15,11 @@ For example:<br/>
 assert fact(0) == 1
 assert fact(5) == 120
 '''),
-    
-Question(
+#Add tags here as a list of string.
+['Python','function','factorial'],
+],
+
+[Question(
     summary='Simple function',
     points=1,
     type="python",
@@ -28,7 +31,11 @@ import math
 assert sqr(3) == 9
 assert abs(sqr(math.sqrt(2)) - 2.0) < 1e-14 
     '''),
-Question(
+#Add tags here as a list of string.
+['Python','function'],
+],
+
+[Question(
     summary='Bash addition',
     points=2,
     type="bash",
@@ -38,7 +45,11 @@ Question(
 docs/sample.sh
 docs/sample.args
 '''),
-Question(
+#Add tags here as a list of string.
+[''],
+],
+
+[Question(
     summary='Size of integer in Python',
     points=0.5,
     type="mcq",
@@ -51,7 +62,11 @@ None of the above
 ''',
     test = "No Limit"
     ),
-]
+#Add tags here as a list of string.
+['mcq'],
+],
+
+] #list of questions ends here
 
 quiz = Quiz(start_date=date.today(),
             duration=10,

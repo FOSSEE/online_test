@@ -32,7 +32,9 @@ def load_exam(filename):
         raise NameError(msg)
     
     for question in questions:
-        question.save()
+        question[0].save()
+        for tag in question[1]:
+            question[0].tags.add(tag)
         
     if 'quiz' in locals():
         quiz.save()
