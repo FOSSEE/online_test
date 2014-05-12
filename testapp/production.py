@@ -1,7 +1,7 @@
 from testapp.settings import *
 
-DEBUG=False
-TEMPLATE_DEBUG=DEBUG
+DEBUG = False
+TEMPLATE_DEBUG = DEBUG
 from testapp.local import *
 
 DATABASE_ENGINE = 'django.db.backends.mysql'

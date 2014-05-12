@@ -5,6 +5,8 @@ from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete\
 as TaggableManager
 from django.http import HttpResponse
 ################################################################################
+
+
 class Profile(models.Model):
     """Profile for a user to store roll number and other details."""
     user = models.OneToOneField(User)
@@ -22,8 +24,9 @@ QUESTION_TYPE_CHOICES = (
         ("C++", "C++ Language"),
         ("java", "Java Language"),
                         )
-
 ################################################################################
+
+
 class Question(models.Model):
     """A question in the database."""
 
@@ -32,10 +35,10 @@ class Question(models.Model):
 
     # The question text, should be valid HTML.
     description = models.TextField()
-    
+
     # Number of points for the question.
     points = models.FloatField(default=1.0)
-    
+
     # Test cases for the question in the form of code that is run.
     test = models.TextField(blank=True)
 
@@ -48,7 +51,7 @@ class Question(models.Model):
     # Is this question active or not.  If it is inactive it will not be used
     # when creating a QuestionPaper.
     active = models.BooleanField(default=True)
-        
+
     #Code Snippet
     snippet = models.CharField(max_length=256)
 
@@ -65,7 +68,7 @@ class Answer(models.Model):
     """
     # The question for which we are an answer.
     question = models.ForeignKey(Question)
-    
+
     # The answer submitted by the user.
     answer = models.TextField(null=True, blank=True)
 
@@ -75,49 +78,51 @@ class Answer(models.Model):
     # Marks obtained for the answer.  This can be changed by the teacher if the
     # grading is manual.
     marks = models.FloatField(default=0.0)
-    
+
     # Is the answer correct.
     correct = models.BooleanField(default=False)
-        
+
     def __unicode__(self):
         return self.answer
 
+
 ################################################################################
 class Quiz(models.Model):
-    """A quiz that students will participate in.  One can think of this 
+    """A quiz that students will participate in. One can think of this
     as the "examination" event.
     """
-    
+
     # The starting/ending date of the quiz.
     start_date = models.DateField("Date of the quiz")
-    
+
     # This is always in minutes.
     duration = models.IntegerField("Duration of quiz in minutes", default=20)
-    
-    # Is the quiz active.  The admin should deactivate the quiz once it is 
+
+    # Is the quiz active.  The admin should deactivate the quiz once it is
     # complete.
     active = models.BooleanField(default=True)
-    
+
     # Description of quiz.
     description = models.CharField(max_length=256)
 
     #Tags for the Quiz.
     tags = TaggableManager()
 
-    
     class Meta:
         verbose_name_plural = "Quizzes"
-    
+
     def __unicode__(self):
         desc = self.description or 'Quiz'
-        return '%s: on %s for %d minutes'%(desc, self.start_date, self.duration)
+        return '%s: on %s for %d minutes' % (desc, self.start_date, self.duration)
+
 
 ################################################################################
 class QuestionPaper(models.Model):
     quiz = models.ForeignKey(Quiz)
     questions = models.ManyToManyField(Question)
     total_marks = models.FloatField()
-    
+
+
 ################################################################################
 class AnswerPaper(models.Model):
     """A answer paper for a student -- one per student typically.
@@ -134,25 +139,25 @@ class AnswerPaper(models.Model):
 
     # The Quiz to which this question paper is attached to.
     question_paper = models.ForeignKey(QuestionPaper)
-    
+
     # The time when this paper was started by the user.
     start_time = models.DateTimeField()
 
     # The time when this paper was ended by the user.
     end_time = models.DateTimeField()
-    
+
     # User's IP which is logged.
     user_ip = models.CharField(max_length=15)
 
     # The questions successfully answered (a list of ids separated by '|')
     questions_answered = models.CharField(max_length=128)
-    
+
     # All the submitted answers.
     answers = models.ManyToManyField(Answer)
 
     # Teacher comments on the question paper.
     comments = models.TextField()
-    
+
     def current_question(self):
         """Returns the current active question to display."""
         qs = self.questions.split('|')
@@ -160,7 +165,7 @@ class AnswerPaper(models.Model):
             return qs[0]
         else:
             return ''
-            
+
     def questions_left(self):
         """Returns the number of questions left."""
         qs = self.questions
@@ -168,7 +173,7 @@ class AnswerPaper(models.Model):
             return 0
         else:
             return qs.count('|') + 1
-            
+
     def completed_question(self, question_id):
         """Removes the question from the list of questions and returns
 the next."""
@@ -198,7 +203,7 @@ the next."""
             self.questions = '|'.join(qs)
             self.save()
             return qs[0]
-            
+
     def time_left(self):
         """Return the time remaining for the user in seconds."""
         dt = datetime.datetime.now() - self.start_time
@@ -233,7 +238,7 @@ the next."""
             else:
                 q_a[question] = [answer]
         return q_a
-    
+
     def __unicode__(self):
         u = self.user
         return u'Question paper for {0} {1}'.format(u.first_name, u.last_name)

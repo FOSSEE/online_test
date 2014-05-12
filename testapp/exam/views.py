@@ -52,10 +52,10 @@ def get_user_dir(user):
     user_dir = join(OUTPUT_DIR, str(user.username))
     if not exists(user_dir):
         os.mkdir(user_dir)
-    # Make it rwx by others.
-        os.chmod(user_dir, stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH\
-                     | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR\
-                     | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        # Make it rwx by others.
+        os.chmod(user_dir, stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH
+                 | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+                 | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
     return user_dir
 
 
@@ -110,6 +110,7 @@ def user_register(request):
     Create a user and corresponding profile and store roll_number also."""
 
     user = request.user
+    ci = RequestContext(request)
     if user.is_authenticated():
         return my_redirect("/exam/start/")
 
@@ -122,13 +123,11 @@ def user_register(request):
             login(request, new_user)
             return my_redirect("/exam/start/")
         else:
-            return my_render_to_response('exam/register.html',
-                                         {'form': form},
-                                         context_instance=RequestContext(request))
+            return my_render_to_response('exam/register.html', {'form': form},
+                                         context_instance=ci)
     else:
         form = UserRegisterForm()
-        return my_render_to_response('exam/register.html',
-                                     {'form': form}, context_instance=RequestContext(request))
+        return my_render_to_response('exam/register.html', {'form': form})
 
 
 def quizlist_user(request):
@@ -151,14 +150,15 @@ def quizlist_user(request):
     context = {'quizzes': avail_quiz, 'user': user}
     return my_render_to_response("exam/quizzes_user.html", context)
 
+
 def intro(request, questionpaper_id):
     """Show introduction page before quiz starts"""
     user = request.user
-    context = {'user': user, 'paper_id': questionpaper_id }
+    context = {'user': user, 'paper_id': questionpaper_id}
     ci = RequestContext(request)
     return my_render_to_response('exam/intro.html', context,
-                                  context_instance=ci)
-   
+                                 context_instance=ci)
+
 
 def results_user(request):
     """Show list of Results of Quizzes that is taken by logged-in user."""
@@ -168,7 +168,7 @@ def results_user(request):
     for paper in papers:
         marks_obtained = paper.get_total_marks()
         max_marks = paper.question_paper.total_marks
-        percentage = round((marks_obtained/max_marks)*100,2)
+        percentage = round((marks_obtained/max_marks)*100, 2)
         temp = paper.question_paper.quiz.description, marks_obtained,\
                max_marks, percentage
         quiz_marks.append(temp)
@@ -248,6 +248,7 @@ def add_question(request, question_id=None):
     """To add a new question in the database.
     Create a new question and store it."""
     user = request.user
+    ci = RequestContext(request)
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     if request.method == "POST":
@@ -283,12 +284,14 @@ def add_question(request, question_id=None):
                 return my_redirect("/exam/manage/questions")
         else:
             return my_render_to_response('exam/add_question.html',
-                                         {'form': form}, context_instance=RequestContext(request))
+                                         {'form': form},
+                                         context_instance=ci)
     else:
         if question_id is None:
             form = QuestionForm()
             return my_render_to_response('exam/add_question.html',
-                                         {'form': form}, context_instance=RequestContext(request))
+                                         {'form': form},
+                                         context_instance=ci)
         else:
             d = Question.objects.get(id=question_id)
             form = QuestionForm()
@@ -310,7 +313,7 @@ def add_question(request, question_id=None):
             form.initial['tags'] = initial_tags
             return my_render_to_response('exam/add_question.html',
                                          {'form': form},
-                                         context_instance=RequestContext(request))
+                                         context_instance=ci)
 
 
 def add_quiz(request, quiz_id=None):
@@ -318,6 +321,7 @@ def add_quiz(request, quiz_id=None):
     Create a new quiz and store it."""
 
     user = request.user
+    ci = RequestContext(request)
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     if request.method == "POST":
@@ -350,13 +354,13 @@ def add_quiz(request, quiz_id=None):
         else:
             return my_render_to_response('exam/add_quiz.html',
                                          {'form': form},
-                                         context_instance=RequestContext(request))
+                                         context_instance=ci)
     else:
         if quiz_id is None:
             form = QuizForm()
             return my_render_to_response('exam/add_quiz.html',
                                          {'form': form},
-                                         context_instance=RequestContext(request))
+                                         context_instance=ci)
         else:
             d = Quiz.objects.get(id=quiz_id)
             form = QuizForm()
@@ -374,24 +378,26 @@ def add_quiz(request, quiz_id=None):
             form.initial['tags'] = initial_tags
             return my_render_to_response('exam/add_quiz.html',
                                          {'form': form},
-                                         context_instance=RequestContext(request))
+                                         context_instance=ci)
 
 
 def design_questionpaper(request, questionpaper_id=None):
     user = request.user
+    ci = RequestContext(request)
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     return my_render_to_response('exam/add_questionpaper.html', {},
-                                 context_instance=RequestContext(request))
+                                 context_instance=ci)
 
 
 def show_all_questionpapers(request, questionpaper_id=None):
     user = request.user
+    ci = RequestContext(request)
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
     if request.method == "POST" and request.POST.get('add') == "add":
-        return my_redirect("/exam/manage/designquestionpaper/" + \
+        return my_redirect("/exam/manage/designquestionpaper/" +
                                questionpaper_id)
 
     if request.method == "POST" and request.POST.get('delete') == "delete":
@@ -402,25 +408,26 @@ def show_all_questionpapers(request, questionpaper_id=None):
         question_paper = QuestionPaper.objects.all()
         context = {'papers': question_paper}
         return my_render_to_response('exam/showquestionpapers.html', context,
-                                     context_instance=RequestContext(request))
+                                     context_instance=ci)
     if questionpaper_id is None:
         qu_papers = QuestionPaper.objects.all()
         context = {'papers': qu_papers}
         return my_render_to_response('exam/showquestionpapers.html', context,
-                                     context_instance=RequestContext(request))
+                                     context_instance=ci)
     else:
         qu_papers = QuestionPaper.objects.get(id=questionpaper_id)
         quiz = qu_papers.quiz
         questions = qu_papers.questions.all()
         context = {'papers': {'quiz': quiz, 'questions': questions}}
         return my_render_to_response('exam/editquestionpaper.html', context,
-                                     context_instance=RequestContext(request))
+                                     context_instance=ci)
 
 
 def automatic_questionpaper(request, questionpaper_id=None):
     """Generate automatic question paper for a particular quiz"""
 
     user = request.user
+    ci = RequestContext(request)
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
@@ -459,14 +466,14 @@ def automatic_questionpaper(request, questionpaper_id=None):
                 context = {'data': {'questions': fetched_questions,
                                     'tags': tags,
                                     'msg': msg}}
-                return my_render_to_response(\
+                return my_render_to_response(
                     'exam/automatic_questionpaper.html', context,
-                    context_instance=RequestContext(request))
+                    context_instance=ci)
         else:
             tags = Tag.objects.all()
             context = {'data': {'tags': tags}}
             return my_render_to_response('exam/automatic_questionpaper.html',
-                                         context, context_instance=RequestContext(request))
+                                         context, context_instance=ci)
 
     else:
         if request.method == "POST":
@@ -501,18 +508,19 @@ def automatic_questionpaper(request, questionpaper_id=None):
                 context = {'data': {'questions': fetched_questions,
                                     'tags': tags,
                                     'msg': msg}}
-                return my_render_to_response\
-                    ('exam/automatic_questionpaper.html', context,
-                     context_instance=RequestContext(request))
+                return my_render_to_response(
+                    'exam/automatic_questionpaper.html', context,
+                    context_instance=ci)
         else:
             tags = Tag.objects.all()
             context = {'data': {'tags': tags}}
             return my_render_to_response('exam/automatic_questionpaper.html',
-                                         context, context_instance=RequestContext(request))
+                                         context, context_instance=ci)
 
 
 def manual_questionpaper(request, questionpaper_id=None):
     user = request.user
+    ci = RequestContext(request)
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
@@ -541,16 +549,16 @@ def manual_questionpaper(request, questionpaper_id=None):
                 if (n == 0):
                     msg = 'No matching Question found...'
                 tags = Tag.objects.all()
-                context = {'data': {'questions': fetched_questions,\
+                context = {'data': {'questions': fetched_questions,
                                         'tags': tags, 'msg': msg}}
                 return my_render_to_response('exam/manual_questionpaper.html',
                                              context,
-                                             context_instance=RequestContext(request))
+                                             context_instance=ci)
         else:
             tags = Tag.objects.all()
             context = {'data': {'tags': tags}}
             return my_render_to_response('exam/manual_questionpaper.html',
-                                         context, context_instance=RequestContext(request))
+                                         context, context_instance=ci)
 
     else:
         if request.method == "POST":
@@ -574,17 +582,16 @@ def manual_questionpaper(request, questionpaper_id=None):
                 if (n == 0):
                     msg = 'No matching Question found...'
                 tags = Tag.objects.all()
-                context = {'data': {'questions': fetched_questions,\
+                context = {'data': {'questions': fetched_questions,
                                         'tags': tags, 'msg': msg}}
                 return my_render_to_response('exam/manual_questionpaper.html',
                                              context,
-                                             context_instance=RequestContext(request))
+                                             context_instance=ci)
         else:
             tags = Tag.objects.all()
             context = {'data': {'tags': tags}}
             return my_render_to_response('exam/manual_questionpaper.html',
-                                         context, context_instance=RequestContext(request))
-
+                                         context, context_instance=ci)
 
 
 def prof_manage(request):
@@ -602,6 +609,7 @@ def user_login(request):
     """Take the credentials of the user and log the user in."""
 
     user = request.user
+    ci = RequestContext(request)
     if user.is_authenticated():
         if user.groups.filter(name='moderator').count() > 0:
             return my_redirect('/exam/manage/')
@@ -618,12 +626,12 @@ def user_login(request):
         else:
             context = {"form": form}
             return my_render_to_response('exam/login.html', context,
-                                         context_instance=RequestContext(request))
+                                         context_instance=ci)
     else:
         form = UserLoginForm()
         context = {"form": form}
         return my_render_to_response('exam/login.html', context,
-                                     context_instance=RequestContext(request))
+                                     context_instance=ci)
 
 
 def start(request, questionpaper_id=None):
@@ -642,7 +650,7 @@ def start(request, questionpaper_id=None):
         return complete(request, msg, questionpaper_id)
 
     try:
-        old_paper = AnswerPaper.objects.get(\
+        old_paper = AnswerPaper.objects.get(
             question_paper=questionpaper, user=user)
         q = old_paper.current_question()
         return show_question(request, q, questionpaper_id)
@@ -669,7 +677,8 @@ def start(request, questionpaper_id=None):
         new_paper.save()
         return start(request, questionpaper_id)
 
-def question(request, q_id, questionpaper_id,success_msg=None):
+
+def question(request, q_id, questionpaper_id, success_msg=None):
     """Check the credentials of the user and start the exam."""
 
     user = request.user
@@ -678,12 +687,12 @@ def question(request, q_id, questionpaper_id,success_msg=None):
     q = get_object_or_404(Question, pk=q_id)
     try:
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
-        paper = AnswerPaper.objects.get(\
+        paper = AnswerPaper.objects.get(
             user=request.user, question_paper=q_paper)
     except AnswerPaper.DoesNotExist:
         return my_redirect('/exam/start/')
     if not paper.question_paper.quiz.active:
-        reason='The quiz has been deactivated!'
+        reason = 'The quiz has been deactivated!'
         return complete(request, reason, questionpaper_id)
     #if new:
      #   paper.start_time = datetime.datetime.now()
@@ -695,30 +704,28 @@ def question(request, q_id, questionpaper_id,success_msg=None):
     if success_msg is None:
         context = {'question': q, 'paper': paper, 'user': user,
                    'quiz_name': quiz_name,
-                   'time_left': time_left,}
-    
+                   'time_left': time_left, }
     else:
         context = {'question': q, 'paper': paper, 'user': user,
                    'quiz_name': quiz_name,
                    'time_left': time_left,
-                   'success_msg':success_msg}
-    
+                   'success_msg': success_msg}
     ci = RequestContext(request)
-    return my_render_to_response('exam/question.html', context, 
+    return my_render_to_response('exam/question.html', context,
                                  context_instance=ci)
 
 
-def show_question(request, q_id, questionpaper_id,success_msg=None):
+def show_question(request, q_id, questionpaper_id, success_msg=None):
     """Show a question if possible."""
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
-        return complete(request, msg,questionpaper_id)
+        return complete(request, msg, questionpaper_id)
     else:
-        return question(request, q_id, questionpaper_id,success_msg)
+        return question(request, q_id, questionpaper_id, success_msg)
 
 
 def check(request, q_id, questionpaper_id=None):
-    """Checks the answers of the user for particular question"""    
+    """Checks the answers of the user for particular question"""
 
     user = request.user
     if not user.is_authenticated():
@@ -734,10 +741,10 @@ def check(request, q_id, questionpaper_id=None):
     if skip is not None:
         next_q = paper.skip()
         return show_question(request, next_q, questionpaper_id)
-    
+
     if question.type == 'mcq':
         # Add the answer submitted, regardless of it being correct or not.
-        if user_answer is not None :
+        if user_answer is not None:
             new_answer = Answer(question=question, answer=user_answer,
                                 correct=False)
             new_answer.save()
@@ -756,7 +763,7 @@ def check(request, q_id, questionpaper_id=None):
     # questions, we obtain the results via XML-RPC with the code executed
     # safely in a separate process (the code_server.py) running as nobody.
     if question.type == 'mcq':
-        if  user_answer is not None:
+        if user_answer is not None:
             success = True  # Only one attempt allowed for MCQ's.
             if user_answer.strip() == question.test.strip():
                 new_answer.correct = True
@@ -765,10 +772,10 @@ def check(request, q_id, questionpaper_id=None):
                 success_msg = True
             else:
                 new_answer.error = 'Incorrect answer'
-            new_answer.save() 
+            new_answer.save()
     else:
         user_dir = get_user_dir(user)
-        success, err_msg = code_server.run_code(answer_check, question.test, 
+        success, err_msg = code_server.run_code(answer_check, question.test,
                                                 user_dir, question.type)
         new_answer.error = err_msg
         if success:
@@ -781,10 +788,10 @@ def check(request, q_id, questionpaper_id=None):
     time_left = paper.time_left()
     if not success:  # Should only happen for non-mcq questions.
         if time_left == 0:
-            reason='Your time is up!'
+            reason = 'Your time is up!'
             return complete(request, reason, questionpaper_id)
         if not paper.question_paper.quiz.active:
-            reason='The quiz has been deactivated!'
+            reason = 'The quiz has been deactivated!'
             return complete(request, reason, questionpaper_id)
         context = {'question': question, 'error_message': err_msg,
                    'paper': paper, 'last_attempt': user_answer,
@@ -792,27 +799,28 @@ def check(request, q_id, questionpaper_id=None):
                    'time_left': time_left}
         ci = RequestContext(request)
 
-        return my_render_to_response('exam/question.html', context, 
+        return my_render_to_response('exam/question.html', context,
                                      context_instance=ci)
     else:
         if time_left <= 0:
-            reason='Your time is up!'
+            reason = 'Your time is up!'
             return complete(request, reason, questionpaper_id)
         else:
             next_q = paper.completed_question(question.id)
-            return show_question(request, next_q, questionpaper_id,success_msg)
+            return show_question(request, next_q,
+                                 questionpaper_id, success_msg)
 
 
 def quit(request, questionpaper_id=None):
     """Show the quit page when the user logs out."""
     context = {'id': questionpaper_id}
     return my_render_to_response('exam/quit.html', context,
-                                 context_instance=RequestContext(request)) 
+                                 context_instance=RequestContext(request))
 
 
 def complete(request, reason=None, questionpaper_id=None):
     """Show a page to inform user that the quiz has been compeleted."""
-    
+
     user = request.user
     if questionpaper_id is None:
         logout(request)
@@ -826,16 +834,16 @@ def complete(request, reason=None, questionpaper_id=None):
         tot_marks = paper.question_paper.total_marks
         if obt_marks == paper.question_paper.total_marks:
             context = {'message': "Hurray ! You did an excellent job.\
-			you answered all the questions correctly.\
-			You have been logged out successfully,\
-			Thank You !"}
+                       you answered all the questions correctly.\
+                       You have been logged out successfully,\
+                       Thank You !"}
             logout(request)
-            return my_render_to_response('exam/complete.html',context)
+            return my_render_to_response('exam/complete.html', context)
         else:
             message = reason or "You are successfully logged out"
-            context = {'message':  message }
+            context = {'message':  message}
             logout(request)
-            return my_render_to_response('exam/complete.html',context)
+            return my_render_to_response('exam/complete.html', context)
     no = False
     message = reason or 'The quiz has been completed. Thank you.'
     if user.groups.filter(name='moderator').count() > 0:
@@ -856,16 +864,17 @@ def monitor(request, questionpaper_id=None):
     """Monitor the progress of the papers taken so far."""
 
     user = request.user
+    ci = RequestContext(request)
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
     if questionpaper_id is None:
         q_paper = QuestionPaper.objects.all()
-        context = {'papers': [], 
-                   'quiz': None, 
+        context = {'papers': [],
+                   'quiz': None,
                    'quizzes': q_paper}
         return my_render_to_response('exam/monitor.html', context,
-                                     context_instance=RequestContext(request)) 
+                                     context_instance=ci)
     # quiz_id is not None.
     try:
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
@@ -878,7 +887,7 @@ def monitor(request, questionpaper_id=None):
 
     context = {'papers': papers, 'quiz': q_paper, 'quizzes': None}
     return my_render_to_response('exam/monitor.html', context,
-                                 context_instance=RequestContext(request)) 
+                                 context_instance=ci)
 
 
 def get_user_data(username):
@@ -896,7 +905,7 @@ def get_user_data(username):
         profile = None
     data['user'] = user
     data['profile'] = profile
-    data['papers'] = papers 
+    data['papers'] = papers
     return data
 
 
@@ -918,6 +927,7 @@ def show_all_quiz(request):
     that are currently in the database."""
 
     user = request.user
+    ci = RequestContext(request)
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page !')
 
@@ -926,20 +936,20 @@ def show_all_quiz(request):
 
         if data is None:
             quizzes = Quiz.objects.all()
-            context = {'papers': [], 
-                       'quiz': None, 
+            context = {'papers': [],
+                       'quiz': None,
                        'quizzes': quizzes}
             return my_render_to_response('exam/show_quiz.html', context,
-                                         context_instance=RequestContext(request))  
+                                         context_instance=ci)
         else:
             for i in data:
                 quiz = Quiz.objects.get(id=i).delete()
             quizzes = Quiz.objects.all()
-            context = {'papers': [], 
-                       'quiz': None, 
+            context = {'papers': [],
+                       'quiz': None,
                        'quizzes': quizzes}
             return my_render_to_response('exam/show_quiz.html', context,
-                                         context_instance=RequestContext(request))
+                                         context_instance=ci)
 
     elif request.method == 'POST' and request.POST.get('edit') == 'edit':
         data = request.POST.getlist('quiz')
@@ -962,20 +972,21 @@ def show_all_quiz(request):
             forms.append(form)
         return my_render_to_response('exam/edit_quiz.html',
                                      {'forms': forms, 'data': data},
-                                     context_instance=RequestContext(request))
+                                     context_instance=ci)
     else:
         quizzes = Quiz.objects.all()
-        context = {'papers': [], 
-                   'quiz': None, 
+        context = {'papers': [],
+                   'quiz': None,
                    'quizzes': quizzes}
         return my_render_to_response('exam/show_quiz.html', context,
-                                     context_instance=RequestContext(request)) 
+                                     context_instance=ci)
 
 
 def show_all_questions(request):
     """Show a list of all the questions currently in the databse."""
 
     user = request.user
+    ci = RequestContext(request)
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404("You are not allowed to view this page !")
 
@@ -987,7 +998,7 @@ def show_all_questions(request):
                        'question': None,
                        'questions': questions}
             return my_render_to_response('exam/showquestions.html', context,
-                                         context_instance=RequestContext(request))  
+                                         context_instance=ci)
         else:
             for i in data:
                 question = Question.objects.get(id=i).delete()
@@ -996,7 +1007,7 @@ def show_all_questions(request):
                        'question': None,
                        'questions': questions}
             return my_render_to_response('exam/showquestions.html', context,
-                                         context_instance=RequestContext(request))
+                                         context_instance=ci)
     elif request.method == 'POST' and request.POST.get('edit') == 'edit':
         data = request.POST.getlist('question')
 
@@ -1023,14 +1034,14 @@ def show_all_questions(request):
             forms.append(form)
         return my_render_to_response('exam/edit_question.html',
                                      {'forms': forms, 'data': data},
-                                     context_instance=RequestContext(request))
+                                     context_instance=ci)
     else:
         questions = Question.objects.all()
         context = {'papers': [],
                    'question': None,
                    'questions': questions}
         return my_render_to_response('exam/showquestions.html', context,
-                                     context_instance=RequestContext(request))
+                                     context_instance=ci)
 
 
 def user_data(request, username):
@@ -1052,6 +1063,7 @@ def grade_user(request, username):
     and update all their marks and also give comments for each paper.
     """
     current_user = request.user
+    ci = RequestContext(request)
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
 
@@ -1064,14 +1076,14 @@ def grade_user(request, username):
                 last_ans = answers[-1]
                 last_ans.marks = marks
                 last_ans.save()
-            paper.comments = request.POST.get(\
+            paper.comments = request.POST.get(
                 'comments_%d' % paper.question_paper.id)
             paper.save()
 
         context = {'data': data}
         return my_render_to_response('exam/user_data.html', context,
-                                     context_instance=RequestContext(request))
+                                     context_instance=ci)
     else:
         context = {'data': data}
         return my_render_to_response('exam/grade_user.html', context,
-                                     context_instance=RequestContext(request))
+                                     context_instance=ci)

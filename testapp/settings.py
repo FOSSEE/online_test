@@ -5,9 +5,9 @@ from os.path import dirname, join, basename, abspath
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-# The ports the code server should run on.  This will run one separate 
+# The ports the code server should run on.  This will run one separate
 # server for each port listed in the following list.
-SERVER_PORTS = [8001] # range(8001, 8026)
+SERVER_PORTS = [8001]  # range(8001, 8026)
 
 # The server pool port.  This is the server which returns available server
 # ports so as to minimize load.  This is some random number where no other
@@ -18,7 +18,7 @@ SERVER_POOL_PORT = 53579
 SERVER_TIMEOUT = 2
 
 # The root of the URL, for example you might be in the situation where you
-# are not hosted as host.org/exam/  but as host.org/foo/exam/ for whatever 
+# are not hosted as host.org/exam/  but as host.org/foo/exam/ for whatever
 # reason set this to the root you have to serve at.  In the above example
 # host.org/foo/exam set URL_ROOT='/foo'
 URL_ROOT = ''
@@ -35,7 +35,7 @@ DB_FILE = join(CURDIR, 'exam.db')
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': DB_FILE,                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
@@ -104,7 +104,7 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    #'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -114,7 +114,7 @@ SECRET_KEY = '9h*01@*#3ok+lbj5k=ym^eb)e=rf-g70&n0^nb_q6mtk!r(qr)'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
+    #'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -127,7 +127,7 @@ MIDDLEWARE_CLASSES = (
 
 )
 
-ROOT_URLCONF = '%s.urls'%(basename(CURDIR))
+ROOT_URLCONF = '%s.urls' % (basename(CURDIR))
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -150,7 +150,7 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
     'exam',
     'taggit_autocomplete_modified',
-    'debug_toolbar',	
+    'debug_toolbar',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -170,9 +170,9 @@ LOGGING = {
         },
     },
     'handlers': {
-        'console':{
-            'level':'DEBUG',
-            'class':'logging.StreamHandler',
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
         'mail_admins': {
