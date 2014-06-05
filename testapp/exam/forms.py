@@ -13,13 +13,13 @@ from string import letters, punctuation, digits
 import datetime
 
 QUESTION_TYPE_CHOICES = (
-        ("python", "Python"),
-        ("bash", "Bash"),
-        ("mcq", "MCQ"),
-        ("C", "C Language"),
-        ("C++", "C++ Language"),
-        ("java", "Java Language"),
-        ("scilab", "Scilab"),
+    ("python", "Python"),
+    ("bash", "Bash"),
+    ("mcq", "MCQ"),
+    ("C", "C Language"),
+    ("C++", "C++ Language"),
+    ("java", "Java Language"),
+    ("scilab", "Scilab"),
                         )
 
 UNAME_CHARS = letters + "._" + digits
