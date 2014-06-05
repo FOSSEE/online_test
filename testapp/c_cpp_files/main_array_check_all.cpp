@@ -21,13 +21,13 @@ void check(T expect,T result)
 int main(void)
 {
 	bool result;
-        int a[] = {1,2,3,2,8};
+	int a[] = {1,2,3,2,8};
 	result = array_check_all(a);
-        printf("Input submitted to the function: {1, 2, 3, 2, 8}");
+	printf("Input submitted to the function: {1, 2, 3, 2, 8}");
 	check(false, result);
 	int b[] = {4,2,32,4,56};
-       	result = array_check_all(b);
-        printf("Input submitted to the function: {4, 2, 32, 4, 56}");
+	result = array_check_all(b);
+	printf("Input submitted to the function: {4, 2, 32, 4, 56}");
 	check(true, result);
 	printf("All Correct\n");
 	return 0;

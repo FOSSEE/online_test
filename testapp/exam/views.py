@@ -439,19 +439,17 @@ def automatic_questionpaper(request, questionpaper_id=None):
                 questions = request.POST.getlist('questions')
                 tot_marks = 0
                 for quest in questions:
-                    if quest.isdigit():
-                        q = Question.objects.get(id=quest)
-                        tot_marks += q.points
+                    q = Question.objects.get(id=quest)
+                    tot_marks += q.points
                 quest_paper.quiz = quiz
                 quest_paper.total_marks = tot_marks
                 quest_paper.save()
                 for quest in questions:
-                    if quest.isdigit():
-                        q = Question.objects.get(id=quest)
-                        quest_paper.questions.add(q)
+                    q = Question.objects.get(id=quest)
+                    quest_paper.questions.add(q)
                 return my_redirect('/exam/manage/showquiz')
             else:
-                no_questions = int(request.POST.get('questions'))
+                no_questions = int(request.POST.get('num_questions'))
                 fetched_questions = fetch_questions(request)
                 n = len(fetched_questions)
                 msg = ''
@@ -482,18 +480,16 @@ def automatic_questionpaper(request, questionpaper_id=None):
                 questions = request.POST.getlist('questions')
                 tot_marks = quest_paper.total_marks
                 for quest in questions:
-                    if quest.isdigit():
-                        q = Question.objects.get(id=quest)
-                        tot_marks += q.points
+                    q = Question.objects.get(id=quest)
+                    tot_marks += q.points
                 quest_paper.total_marks = tot_marks
                 quest_paper.save()
                 for quest in questions:
-                    if quest.isdigit():
-                        q = Question.objects.get(id=quest)
-                        quest_paper.questions.add(q)
+                    q = Question.objects.get(id=quest)
+                    quest_paper.questions.add(q)
                 return my_redirect('/exam/manage/showquiz')
             else:
-                no_questions = int(request.POST.get('questions'))
+                no_questions = int(request.POST.get('num_questions'))
                 fetched_questions = fetch_questions(request)
                 n = len(fetched_questions)
                 msg = ''
@@ -532,9 +528,8 @@ def manual_questionpaper(request, questionpaper_id=None):
                 quiz = Quiz.objects.order_by("-id")[0]
                 tot_marks = 0
                 for quest in questions:
-                    if quest.isdigit():
-                        q = Question.objects.get(id=quest)
-                        tot_marks += q.points
+                    q = Question.objects.get(id=quest)
+                    tot_marks += q.points
                 quest_paper.quiz = quiz
                 quest_paper.total_marks = tot_marks
                 quest_paper.save()
@@ -694,9 +689,6 @@ def question(request, q_id, questionpaper_id, success_msg=None):
     if not paper.question_paper.quiz.active:
         reason = 'The quiz has been deactivated!'
         return complete(request, reason, questionpaper_id)
-    #if new:
-     #   paper.start_time = datetime.datetime.now()
-      #  paper.end_time = datetime.datetime.now()
     time_left = paper.time_left()
     if time_left == 0:
         return complete(request, reason='Your time is up!')

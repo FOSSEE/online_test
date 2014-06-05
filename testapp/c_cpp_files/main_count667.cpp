@@ -21,22 +21,22 @@ void check(T expect, T result)
 int main(void)
 {
 	int result;
-        int arr[5] = {2,6,4,5,6};
+	int arr[5] = {2,6,4,5,6};
 	result = count667(arr);
-        printf("Input submitted to the function: [2, 6, 4, 5,6]");
+	printf("Input submitted to the function: [2, 6, 4, 5,6]");
 	check(0, result);
-        int arr2[5] = {6,6,2,17,9};
+	int arr2[5] = {6,6,2,17,9};
 	result = count667(arr2);
-        printf("Input submitted to the function: [6, 6, 2, 17, 9]");
+	printf("Input submitted to the function: [6, 6, 2, 17, 9]");
 	check(1, result);
-        int arr3[5] = {6,6,6,7,1};
+	int arr3[5] = {6,6,6,7,1};
 	result = count667(arr3);
-        printf("Input submitted to the function: [6, 6, 7, 2, 1]");
+	printf("Input submitted to the function: [6, 6, 7, 2, 1]");
 	check(3, result);
-        int arr4[5] = {6,7,7,6,6};
+	int arr4[5] = {6,7,7,6,6};
 	result = count667(arr4);
-        printf("Input submitted to the function: [6, 7, 7, 6, 6]");
+	printf("Input submitted to the function: [6, 7, 7, 6, 6]");
 	check(2, result);
-        printf("All Correct\n");
+	printf("All Correct\n");
 	return 0;
 }
