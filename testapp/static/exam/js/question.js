@@ -120,7 +120,6 @@ function addLineNumbers(id)
                 el.className='AnswerWithLines';
                 el.id='AnswerWithLines';
                 el.style.height = (ta.scrollHeight) + 'px';
-
 		for(var no=split_content.length+1;no<1000;no++)
 		{
 			if(string.length>0)string = string + '<br>';
@@ -132,7 +131,6 @@ function addLineNumbers(id)
                 el.className='SnippetWithLines';
                 el.id='SnippetWithLines';
                 el.style.height = (ta.scrollHeight) + 'px';
-
 		for(var no=1;no<=split_content.length;no++)
 		{
 			if(string.length>0)string = string + '<br>';
