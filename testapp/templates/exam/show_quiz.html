@@ -10,6 +10,7 @@
 {% block manage %}
 {% if not quizzes and not quiz %}
 <center><h5> No quizzes available. </h5></center>
+<button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz");'>Add New Quiz</button>&nbsp;&nbsp;
 {% endif %}
 
 {# ############################################################### #}

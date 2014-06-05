@@ -13,12 +13,12 @@ from string import letters, punctuation, digits
 import datetime
 
 QUESTION_TYPE_CHOICES = (
-        ("python", "Python"),
-        ("bash", "Bash"),
-        ("mcq", "MCQ"),
-        ("C", "C Language"),
-        ("C++", "C++ Language"),
-        ("java", "Java Language"),
+    ("python", "Python"),
+    ("bash", "Bash"),
+    ("mcq", "MCQ"),
+    ("C", "C Language"),
+    ("C++", "C++ Language"),
+    ("java", "Java Language"),
                         )
 
 UNAME_CHARS = letters + "._" + digits
@@ -30,8 +30,7 @@ class UserRegisterForm(forms.Form):
     It has the various fields and functions required to register
     a new user to the system"""
 
-    username = forms.CharField\
-               (max_length=30, help_text='Letters, digits,\
+    username = forms.CharField(max_length=30, help_text='Letters, digits,\
                 period and underscores only.')
     email = forms.EmailField()
     password = forms.CharField(max_length=30, widget=forms.PasswordInput())
@@ -167,6 +166,7 @@ class QuestionForm(forms.Form):
         options = self.cleaned_data['options']
         type = self.cleaned_data["type"]
         active = self.cleaned_data["active"]
+        snippet = self.cleaned_data["snippet"]
 
         new_question = Question()
         new_question.summary = summary
@@ -176,4 +176,5 @@ class QuestionForm(forms.Form):
         new_question.options = options
         new_question.type = type
         new_question.active = active
+        new_question.snippet = snippet
         new_question.save()

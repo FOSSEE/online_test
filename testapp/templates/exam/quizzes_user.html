@@ -12,7 +12,7 @@
         <center><h4>No active quizzes for you</h4></center>
     {% endif %}
     {% for paper in quizzes %}
-     <a href="{{ URL_ROOT }}/exam/start/{{paper.id}}">{{ paper.quiz.description }}</a><br>
+     <a href="{{ URL_ROOT }}/exam/intro/{{paper.id}}">{{ paper.quiz.description }}</a><br>
     {% endfor %}
 {% endblock %}
 

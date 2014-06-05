@@ -370,7 +370,6 @@ class CodeServer(object):
             raise
         return proc_compile, err
 
-
     def _check_c_cpp_code(self, ref_code_path, submit_code_path):
         """ Function validates student code using instructor code as
         reference.The first argument ref_code_path, is the path to
@@ -608,7 +607,7 @@ class CodeServer(object):
                                                              student_directory,
                                                              student_directory)
             ret = self._compile_command(compile_main)
-            proc, main_err = ret            
+            proc, main_err = ret
             main_err = self._remove_null_substitute_char(main_err)
 
             if main_err == '':
