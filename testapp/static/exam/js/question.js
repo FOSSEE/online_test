@@ -58,6 +58,17 @@ function replaceSelection (input, replaceString)
     }
 }
 
+function autoresize()
+{
+    var ta = document.getElementById('answer');
+    var divta = document.getElementById('AnswerWithLines');
+    ta.style.height="";
+    var height = ta.scrollHeight;
+    ta.style.height = 'auto';
+    ta.style.height = height+'px';
+    divta.style.height = height+'px';
+}
+
 function catchTab(item,e)
 {
     if(navigator.userAgent.match("Gecko"))
@@ -76,7 +87,7 @@ function catchTab(item,e)
     }
 }
 
-var lineObjOffsetTop = 2;
+var lineObjOffsetTop = 0;
 
 function addLineNumbers(id)
 {
@@ -85,19 +96,20 @@ function addLineNumbers(id)
     var content = document.getElementById('snippet').value;
     ta.parentNode.insertBefore(el,ta);
     el.appendChild(ta);
-    el.className='textAreaWithLines';
     el.style.width = (ta.offsetWidth + 30) + 'px';
     ta.style.position = 'absolute';
     ta.style.left = '30px';
-    el.style.height = (ta.offsetHeight + 2) + 'px';
+    ta.scrollHeight=""
+    el.style.border = 'none';
     el.style.overflow='hidden';
     el.style.position = 'relative';
     el.style.width = (ta.offsetWidth + 30) + 'px';
     var lineObj = document.createElement('DIV');
     lineObj.style.position = 'absolute';
     lineObj.style.top = lineObjOffsetTop + 'px';
-    lineObj.style.left = '0px';
     lineObj.style.width = '27px';
+    lineObj.style.fontSize= '18px';
+    lineObj.style.foregroundColor='black';
     el.insertBefore(lineObj,ta);
     lineObj.style.textAlign = 'right';
     lineObj.className='lineObj';
@@ -105,6 +117,10 @@ function addLineNumbers(id)
     split_content = content.split('\n');
     if(id == "answer")
     {
+                el.className='AnswerWithLines';
+                el.id='AnswerWithLines';
+                el.style.height = (ta.scrollHeight) + 'px';
+
 		for(var no=split_content.length+1;no<1000;no++)
 		{
 			if(string.length>0)string = string + '<br>';
@@ -113,6 +129,10 @@ function addLineNumbers(id)
 	}
 	else
 	{
+                el.className='SnippetWithLines';
+                el.id='SnippetWithLines';
+                el.style.height = (ta.scrollHeight) + 'px';
+
 		for(var no=1;no<=split_content.length;no++)
 		{
 			if(string.length>0)string = string + '<br>';
@@ -124,6 +144,7 @@ function addLineNumbers(id)
     ta.onblur = function() { positionLineObj(lineObj,ta); };
     ta.onfocus = function() { positionLineObj(lineObj,ta); };
     ta.onmouseover = function() { positionLineObj(lineObj,ta); };
+    ta.onkeyup = function(){autoresize();};
     lineObj.innerHTML = string;
 }
        
