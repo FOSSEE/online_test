@@ -23,6 +23,7 @@ QUESTION_TYPE_CHOICES = (
         ("C", "C Language"),
         ("C++", "C++ Language"),
         ("java", "Java Language"),
+        ("scilab", "Scilab"),
                         )
 ################################################################################
 
