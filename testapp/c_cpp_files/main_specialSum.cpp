@@ -22,21 +22,20 @@ int main(void)
 {
 	int result;
 	result = specialSum(10, 2, 9);
-        printf("Input submitted to the function: 10, 2, 9");
+	printf("Input submitted to the function: 10, 2, 9");
 	check(21, result);
 	result = specialSum(1, 21, 9);
-        printf("Input submitted to the function: 1, 21, 9");
+	printf("Input submitted to the function: 1, 21, 9");
 	check(1, result);
-        result = specialSum(21, 2, 3);
-        printf("Input submitted to the function: 21, 2, 3");
+	result = specialSum(21, 2, 3);
+	printf("Input submitted to the function: 21, 2, 3");
 	check(0, result);
-        result = specialSum(10, 2, 21);
-        printf("Input submitted to the function: 10, 2, 21");
+	result = specialSum(10, 2, 21);
+	printf("Input submitted to the function: 10, 2, 21");
 	check(12, result);
-        result = specialSum(10, 2, 6);
-        printf("Input submitted to the function: 10, 2, 6");
+	result = specialSum(10, 2, 6);
+	printf("Input submitted to the function: 10, 2, 6");
 	check(18, result);
-
-        printf("All Correct\n");
+	printf("All Correct\n");
 	return 0;
 }

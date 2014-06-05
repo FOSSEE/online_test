@@ -22,16 +22,16 @@ int main(void)
 {
 	bool result;
 	result = within(12, 3, 20);
-        printf("Input submitted to the function: 12, 3, 20");
+	printf("Input submitted to the function: 12, 3, 20");
 	check(true, result);
-        result = within(12, 13, 20);
-        printf("Input submitted to the function: 12, 13, 20");
+	result = within(12, 13, 20);
+	printf("Input submitted to the function: 12, 13, 20");
 	check(false, result);
-        result = within(29, 13, 120);
-        printf("Input submitted to the function: 29, 13, 120");
+	result = within(29, 13, 120);
+	printf("Input submitted to the function: 29, 13, 120");
 	check(true, result);
-        result = within(12, 12, 20);
-        printf("Input submitted to the function: 12, 3, 20");
+	result = within(12, 12, 20);
+	printf("Input submitted to the function: 12, 3, 20");
 	check(false, result);
 	printf("All Correct\n");
 	return 0;

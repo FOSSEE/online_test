@@ -22,16 +22,16 @@ int main(void)
 {
 	bool result;
 	result = lessThan9(10);
-        printf("Input submitted to the function: 10");
+	printf("Input submitted to the function: 10");
 	check(false, result);
 	result = lessThan9(17);
-        printf("Input submitted to the function: 17");
+	printf("Input submitted to the function: 17");
 	check(true, result);
 	result = lessThan9(16);
-        printf("Input submitted to the function: 16");
+	printf("Input submitted to the function: 16");
 	check(true, result);
 	result = lessThan9(15);
-        printf("Input submitted to the function: 15");
+	printf("Input submitted to the function: 15");
 	check(false, result);
 	printf("All Correct\n");
 	return 0;

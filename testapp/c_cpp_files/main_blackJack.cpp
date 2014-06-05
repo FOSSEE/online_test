@@ -22,20 +22,20 @@ int main(void)
 {
 	int result;
 	result = blackJack(11, 12);
-        printf("Input submitted to the function: 11, 12");
+	printf("Input submitted to the function: 11, 12");
 	check(12, result);
 	result = blackJack(15, 19);
-        printf("Input submitted to the function: 15, 19");
+	printf("Input submitted to the function: 15, 19");
 	check(19, result);
 	result = blackJack(10, 21);
-        printf("Input submitted to the function: 10, 21");
+	printf("Input submitted to the function: 10, 21");
 	check(21, result);
-        result = blackJack(31, 22);
-        printf("Input submitted to the function: 31, 22");
-        check(0, result);
-        result = blackJack(91, 61);
-        printf("Input submitted to the function: 91, 61");
-        check(0, result);
+	result = blackJack(31, 22);
+	printf("Input submitted to the function: 31, 22");
+	check(0, result);
+	result = blackJack(91, 61);
+	printf("Input submitted to the function: 91, 61");
+	check(0, result);
 	printf("All Correct\n");
 	return 0;
 }

@@ -22,10 +22,10 @@ int main(void)
 {
 	bool result;
 	result = check_digit(12, 23);
-        printf("Input submitted to the function: 12, 23");
+	printf("Input submitted to the function: 12, 23");
 	check(true, result);
 	result = check_digit(22, 11);
-        printf("Input submitted to the function: 121");
+	printf("Input submitted to the function: 121");
 	check(false, result);
 	printf("All Correct\n");
 	return 0;

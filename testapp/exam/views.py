@@ -694,9 +694,6 @@ def question(request, q_id, questionpaper_id, success_msg=None):
     if not paper.question_paper.quiz.active:
         reason = 'The quiz has been deactivated!'
         return complete(request, reason, questionpaper_id)
-    #if new:
-     #   paper.start_time = datetime.datetime.now()
-      #  paper.end_time = datetime.datetime.now()
     time_left = paper.time_left()
     if time_left == 0:
         return complete(request, reason='Your time is up!')
