@@ -207,7 +207,7 @@ def test_java():
     check_result(result, 'error')
 
 def test_scilab():
-    """Test if server runs java code as expected."""
+    """Test if server runs scilab code as expected."""
     src = """
                 funcprot(0)
 function[c]=add(a,b)
