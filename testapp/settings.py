@@ -5,14 +5,6 @@ from os.path import dirname, join, basename, abspath
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-# Authentication using other database table.
-# Comment the line below if you want the authentication to be done
-# using django user table.
-#AUTHENTICATION_BACKENDS = ('myauthentication.backend.MyBackend',)
-
-# Router for database
-#DATABASE_ROUTERS = ['myauthentication.router.MyDatabaseRouter',]
-
 # The ports the code server should run on.  This will run one separate 
 # server for each port listed in the following list.
 SERVER_PORTS = [8001] # range(8001, 8026)
@@ -31,6 +23,13 @@ SERVER_TIMEOUT = 2
 # host.org/foo/exam set URL_ROOT='/foo'
 URL_ROOT = ''
 
+# Authentication using other database table.
+# Comment the line below if you want the authentication to be done
+# using django user table.
+#AUTHENTICATION_BACKENDS = ('myauthentication.backend.MyBackend',)
+
+# Router for database
+#DATABASE_ROUTERS = ['myauthentication.router.MyDatabaseRouter',]
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
