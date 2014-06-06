@@ -9,7 +9,7 @@
 
 from django.db import models
 
-class MdlUser(models.Model):
+class MoodleUser(models.Model):
     id = models.BigIntegerField(primary_key=True)
     username = models.CharField(unique=True, max_length=300)
     password = models.CharField(max_length=96)

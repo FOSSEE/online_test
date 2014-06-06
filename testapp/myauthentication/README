@@ -3,7 +3,7 @@ To use authentication from external source, follow the instructions given below:
 1.  In settings.py, 
     Uncomment AUTHENTICATION_BACKENDS = ('myauthentication.backend.MyBackend',)
     Uncomment AUTHENTICATION_BACKENDS = ('myauthentication.backend.MyBackend',)
-    Enter database name, username and password for the spoken database.
+    Enter database name, username and password for the spoken tutorial database.
 
 2. From login.html template comment 'New User? Sign-Up' link.
    This is to be done so that user will register only from external

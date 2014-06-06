@@ -8,5 +8,5 @@ class MyDatabaseRouter(object):
             database.
         """
         if model._meta.app_label == 'myauthentication':
-            return 'spoken'
+            return 'spoken_tutorial'
         return None
