@@ -23,6 +23,13 @@ SERVER_TIMEOUT = 2
 # host.org/foo/exam set URL_ROOT='/foo'
 URL_ROOT = ''
 
+# Authentication using other database table.
+# Comment the line below if you want the authentication to be done
+# using django user table.
+#AUTHENTICATION_BACKENDS = ('myauthentication.backend.MyBackend',)
+
+# Router for database
+#DATABASE_ROUTERS = ['myauthentication.router.MyDatabaseRouter',]
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -41,6 +48,14 @@ DATABASES = {
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+    },
+    'spoken' : {
+        'ENGINE' : 'django.db.backends.mysql',
+        'NAME'   : 'YOUR DATABASE',
+        'USER'   : 'YOUR USERNAME',
+        'PASSWORD': 'YOUR PASSWORD',
+        'HOST'    :'',
+        'PORT'    :'',
     }
 }
 
