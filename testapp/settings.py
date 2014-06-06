@@ -8,10 +8,10 @@ TEMPLATE_DEBUG = DEBUG
 # Authentication using other database table.
 # Comment the line below if you want the authentication to be done
 # using django user table.
-AUTHENTICATION_BACKENDS = ('myauthentication.backend.MyBackend',)
+#AUTHENTICATION_BACKENDS = ('myauthentication.backend.MyBackend',)
 
 # Router for database
-DATABASE_ROUTERS = ['myauthentication.router.MyDatabaseRouter',]
+#DATABASE_ROUTERS = ['myauthentication.router.MyDatabaseRouter',]
 
 # The ports the code server should run on.  This will run one separate 
 # server for each port listed in the following list.
