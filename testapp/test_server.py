@@ -16,7 +16,6 @@ def check_result(result, check='correct answer'):
         assert result[0], result[1]
     assert check in result[1].lower(), result[1]
 
-
 def test_python():
     """Test if server runs Python code as expected."""
     src = 'while True: pass'
@@ -207,6 +206,50 @@ def test_java():
                                   '/tmp', language="java")
     check_result(result, 'error')
 
+def test_scilab():
+    """Test if server runs scilab code as expected."""
+    src = """
+                funcprot(0)
+function[c]=add(a,b)
+    c=a+b;
+endfunction
+          """
+    result = code_server.run_code(src, 'scilab_files/test_add.sce',
+                                  '/tmp', language="scilab")
+    check_result(result, 'correct answer')
+
+    src = """
+                funcprot(0)
+function[c]=add(a,b)
+    c=a-b;
+endfunction
+          """
+    result = code_server.run_code(src, 'scilab_files/test_add.sce',
+                                  '/tmp', language="scilab")
+    check_result(result, 'correct answer')
+
+    src = """
+                funcprot(0)
+function[c]=add(a,b)
+    c=a+b;
+dis(
+endfunction
+          """
+    result = code_server.run_code(src, 'scilab_files/test_add.sce',
+                                  '/tmp', language="scilab")
+    check_result(result, 'error')
+
+    src = """
+               funcprot(0)
+function[c]=add(a,b)
+    c=a
+    while(1==1)
+    end
+endfunction
+          """
+    result = code_server.run_code(src, 'scilab_files/test_add.sce',
+                                  '/tmp', language="scilab")
+    check_result(result, 'error')
 
 def test_bash():
     """Test if server runs Bash code as expected."""
@@ -256,3 +299,4 @@ if __name__ == '__main__':
     test_c()
     test_cpp()
     test_java()
+    test_scilab()
