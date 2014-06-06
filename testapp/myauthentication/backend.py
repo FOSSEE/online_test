@@ -10,8 +10,8 @@ class MyBackend:
     def authenticate(self, username=None, password=None):
         '''
             Checks username and password with external User table.
-            If valid then adds the user detail in django User table
-            and authenticates user.
+            If valid then adds the user details in django User table
+            and authenticates the user.
         '''
         try:
             user = MdlUser.objects.get(username=username)
