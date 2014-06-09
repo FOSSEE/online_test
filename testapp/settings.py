@@ -49,7 +49,7 @@ DATABASES = {
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     },
-    'spoken' : {
+    'spoken_tutorial' : {
         'ENGINE' : 'django.db.backends.mysql',
         'NAME'   : 'YOUR DATABASE',
         'USER'   : 'YOUR USERNAME',
