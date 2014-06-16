@@ -135,7 +135,19 @@ function textareaformat()
 	$('#id_snippet').bind('blur', function( event ){
          document.getElementById("id_snippet").rows=1;
          document.getElementById("id_snippet").cols=40;
-      });	
+      });
+
+
+        $('#id_type').bind('focus', function(event){
+            var type = document.getElementById('id_type');
+            type.style.border = '1px solid #ccc';
+        });
+
+        $('#id_language').bind('focus', function(event){
+            var language = document.getElementById('id_language');
+            language.style.border = '1px solid #ccc';
+        });
+	
 	$('#id_type').bind('change',function(event){
 		var value = document.getElementById('id_type').value;
 		if(value == 'mcq')
@@ -167,7 +179,20 @@ function textareaformat()
 
 function autosubmit()
 {
-	if (document.getElementById('id_type').value == 'mcq')
+        var language = document.getElementById('id_language');
+        if(language.value == 'select')
+        {
+            language.style.border="solid red";
+            return false;
+        }
+        var type = document.getElementById('id_type');
+        if(type.value == 'select')
+        {
+            type.style.border = 'solid red';
+	    return false;
+	}
+
+	if (type.value == 'mcq')
 	{
 		var value = document.getElementById('id_options').value;
 		if(value.split('\n').length < 4)

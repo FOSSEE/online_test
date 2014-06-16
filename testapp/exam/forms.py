@@ -12,7 +12,8 @@ from taggit_autocomplete_modified import settings
 from string import letters, punctuation, digits
 import datetime
 
-QUESTION_TYPE_CHOICES = (
+QUESTION_LANGUAGE_CHOICES = (
+    ("select", "Select"),
     ("python", "Python"),
     ("bash", "Bash"),
     ("mcq", "MCQ"),
@@ -20,7 +21,13 @@ QUESTION_TYPE_CHOICES = (
     ("C++", "C++ Language"),
     ("java", "Java Language"),
     ("scilab", "Scilab"),
-                        )
+    )
+
+QUESTION_TYPE_CHOICES = (
+    ("select", "Select"),
+    ("mcq", "Multiple Choice"),
+    ("code", "Code"),
+    )
 
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
@@ -51,8 +58,8 @@ class UserRegisterForm(forms.Form):
     def clean_username(self):
         u_name = self.cleaned_data["username"]
         if u_name.strip(UNAME_CHARS):
-            msg = "Only letters, digits, period and underscore characters are "\
-                  "allowed in username"
+            msg = "Only letters, digits, period and underscore characters are"\
+                  " allowed in username"
             raise forms.ValidationError(msg)
         try:
             User.objects.get(username__exact=u_name)
@@ -96,6 +103,7 @@ class UserRegisterForm(forms.Form):
 
         return u_name, pwd
 
+
 class UserLoginForm(forms.Form):
     """Creates a form which will allow the user to log into the system."""
 
@@ -115,6 +123,7 @@ class UserLoginForm(forms.Form):
             raise forms.ValidationError("Invalid username/password")
         return user
 
+
 class QuizForm(forms.Form):
     """Creates a form to add or edit a Quiz.
     It has the related fields and functions required."""
@@ -122,7 +131,6 @@ class QuizForm(forms.Form):
     start_date = forms.DateField(initial=datetime.date.today)
     duration = forms.IntegerField()
     active = forms.BooleanField(required=False)
-    tags = TagField(widget=TagAutocomplete())
     description = forms.CharField(max_length=256, widget=forms.Textarea\
                                   (attrs={'cols': 20, 'rows': 1}))
 
@@ -139,6 +147,7 @@ class QuizForm(forms.Form):
         new_quiz.description = description
         new_quiz.save()
 
+
 class QuestionForm(forms.Form):
     """Creates a form to add or edit a Question.
     It has the related fields and functions required."""
@@ -152,6 +161,8 @@ class QuestionForm(forms.Form):
                                     (attrs={'cols': 40, 'rows': 1}))
     options = forms.CharField(widget=forms.Textarea\
                               (attrs={'cols': 40, 'rows': 1}), required=False)
+    language = forms.CharField(max_length=20, widget=forms.Select\
+                               (choices=QUESTION_LANGUAGE_CHOICES))
     type = forms.CharField(max_length=8, widget=forms.Select\
                            (choices=QUESTION_TYPE_CHOICES))
     active = forms.BooleanField(required=False)
@@ -165,6 +176,7 @@ class QuestionForm(forms.Form):
         points = self.cleaned_data['points']
         test = self.cleaned_data["test"]
         options = self.cleaned_data['options']
+        language = self.cleaned_data['language']
         type = self.cleaned_data["type"]
         active = self.cleaned_data["active"]
         snippet = self.cleaned_data["snippet"]
@@ -175,6 +187,7 @@ class QuestionForm(forms.Form):
         new_question.points = points
         new_question.test = test
         new_question.options = options
+        new_question.language = language
         new_question.type = type
         new_question.active = active
         new_question.snippet = snippet

@@ -30,15 +30,15 @@
 	      
 	      <center><table class=span1>
                  <tr><td><b>Summary:</b> <td>{{ form.summary }}{{ form.summary.errors }}
- 
-                 <tr><td><b>Points:<td><button class="btn-mini" name={{forloop.counter}} type="button" onClick="increase(frm,{{forloop.counter}});">+</button>{{ form.points }}<button class="btn-mini" type="button" onClick="decrease(frm,{{forloop.counter}});">-</button>{{ form.points.errors }} &nbsp; Active: &nbsp; {{ form.active }}{{form.active.errors}} &nbsp; Type: &nbsp;{{ form.type }}{{form.type.errors}}
-
+		 <tr><td><b> Language: </b><td> {{form.language}}{{form.language.errors}} 
+ 		 <tr><td><b> Active: </b><td>&nbsp; {{ form.active }}{{form.active.errors}} &nbsp; Type: &nbsp;{{ form.type }}{{form.type.errors}}
+		 <tr><td><b>Points:<td><button class="btn-mini" name={{forloop.counter}} type="button" onClick="increase(frm,{{forloop.counter}});">+</button>{{ form.points }}<button class="btn-mini" type="button" onClick="decrease(frm,{{forloop.counter}});">-</button>{{ form.points.errors }}
                  <tr><td><strong>Rendered: </strong><td><p id='my{{forloop.counter}}'></p>
                  <tr><td><b>Description: <td>{{ form.description }}  {{form.description.errors}}
-                 <tr><td><b>Test: <td>{{ form.test }}{{form.test.errors}}
+		 <tr><td><b>Test: <td>{{ form.test }}{{form.test.errors}}
                  <tr><td><b>Snippet: <td>{{ form.snippet }}{{ form.snippet.errors }}</td></b></td></tr>
-                 <tr><td>Tags: <td>{{ form.tags }}
-                 <tr><td id='label_option{{forloop.counter}}'><b>Options: <td>{{ form.options }}  {{form.options.errors}} {{form.options.helptext}}
+		 <tr><td><b>Tags: </b><td>{{ form.tags }}
+		 <tr><td id='label_option{{forloop.counter}}'><b>Options:<td>{{ form.options }}  {{form.options.errors}} {{form.options.helptext}}
               </table></center>
            </div>
         </div>
