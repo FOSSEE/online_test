@@ -127,7 +127,7 @@ def user_register(request):
                                          context_instance=ci)
     else:
         form = UserRegisterForm()
-        return my_render_to_response('exam/register.html', {'form': form})
+        return my_render_to_response('exam/register.html', {'form': form}, context_instance=ci)
 
 
 def quizlist_user(request):
