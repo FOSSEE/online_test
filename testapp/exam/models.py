@@ -1,5 +1,5 @@
 import datetime
-from random import sample
+from random import sample, shuffle
 from django.db import models
 from django.contrib.auth.models import User
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete\
@@ -16,7 +16,7 @@ class Profile(models.Model):
     position = models.CharField(max_length=64)
 
 
-QUESTION_LANGUAGE_CHOICES = (
+LANGUAGES = (
         ("python", "Python"),
         ("bash", "Bash"),
         ("C", "C Language"),
@@ -26,7 +26,7 @@ QUESTION_LANGUAGE_CHOICES = (
                             )
 
 
-QUESTION_TYPE_CHOICES = (
+QUESTION_TYPES = (
         ("mcq", "Multiple Choice"),
         ("code", "Code"),
                         )
@@ -34,12 +34,12 @@ QUESTION_TYPE_CHOICES = (
 
 ###############################################################################
 class Question(models.Model):
-    """A question details in the database."""
+    """Question for a quiz."""
 
     # A one-line summary of the question.
     summary = models.CharField(max_length=256)
 
-    # The question text, should be a valid HTML.
+    # The question text, should be valid HTML.
     description = models.TextField()
 
     # Number of points for the question.
@@ -53,16 +53,16 @@ class Question(models.Model):
 
     # The language for question.
     language = models.CharField(max_length=24,
-                                choices=QUESTION_LANGUAGE_CHOICES)
+                                choices=LANGUAGES)
 
     # The type of question.
-    type = models.CharField(max_length=24, choices=QUESTION_TYPE_CHOICES)
+    type = models.CharField(max_length=24, choices=QUESTION_TYPES)
 
     # Is this question active or not. If it is inactive it will not be used
     # when creating a QuestionPaper.
     active = models.BooleanField(default=True)
 
-    # Code Snippet
+    # Snippet of code provided to the user.
     snippet = models.CharField(max_length=256)
 
     # Tags for the Question.
@@ -140,7 +140,7 @@ class QuestionPaper(models.Model):
     # Total marks for the question paper.
     total_marks = models.FloatField()
 
-    def get_total_marks(self):
+    def update_total_marks(self):
         """ Returns the total marks for the Question Paper"""
         marks = 0.0
         questions = self.fixed_questions.all()
@@ -158,15 +158,16 @@ class QuestionPaper(models.Model):
             questions += question_set.get_random_questions()
         return questions
 
-    def make_answerpaper(self, user, profile, ip):
+    def make_answerpaper(self, user, ip):
         """Creates an  answer paper for the user to attempt the quiz"""
-        ans_paper = AnswerPaper(user=user, profile=profile, user_ip=ip)
+        ans_paper = AnswerPaper(user=user, profile=user.profile, user_ip=ip)
         ans_paper.start_time = datetime.datetime.now()
         ans_paper.end_time = ans_paper.start_time \
                              + datetime.timedelta(minutes=self.quiz.duration)
         ans_paper.question_paper = self
         questions = self._get_questions_for_answerpaper()
-        question_ids = [str(_.id) for _ in questions]
+        question_ids = [str(x.id) for x in questions]	
+        shuffle(questions)
         ans_paper.questions = "|".join(question_ids)
         ans_paper.save()
         return ans_paper
@@ -174,7 +175,7 @@ class QuestionPaper(models.Model):
 
 ###############################################################################
 class QuestionSet(models.Model):
-    """Question set contains set of questions from which random questions
+    """Question set contains a set of questions from which random questions
        will be selected for the quiz.
     """
 
@@ -203,7 +204,7 @@ class AnswerPaper(models.Model):
     # data.
     profile = models.ForeignKey(Profile)
 
-    # All questions that are left to attempt for a particular Student
+    # All questions that remain to be attempted for a particular Student
     # (a list of ids separated by '|')
     questions = models.CharField(max_length=128)
 

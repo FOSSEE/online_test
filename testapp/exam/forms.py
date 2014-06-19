@@ -12,18 +12,17 @@ from taggit_autocomplete_modified import settings
 from string import letters, punctuation, digits
 import datetime
 
-QUESTION_LANGUAGE_CHOICES = (
+LANGUAGES = (
     ("select", "Select"),
     ("python", "Python"),
     ("bash", "Bash"),
-    ("mcq", "MCQ"),
     ("C", "C Language"),
     ("C++", "C++ Language"),
     ("java", "Java Language"),
     ("scilab", "Scilab"),
     )
 
-QUESTION_TYPE_CHOICES = (
+QUESTION_TYPES = (
     ("select", "Select"),
     ("mcq", "Multiple Choice"),
     ("code", "Code"),
@@ -162,9 +161,9 @@ class QuestionForm(forms.Form):
     options = forms.CharField(widget=forms.Textarea\
                               (attrs={'cols': 40, 'rows': 1}), required=False)
     language = forms.CharField(max_length=20, widget=forms.Select\
-                               (choices=QUESTION_LANGUAGE_CHOICES))
+                               (choices=LANGUAGES))
     type = forms.CharField(max_length=8, widget=forms.Select\
-                           (choices=QUESTION_TYPE_CHOICES))
+                           (choices=QUESTION_TYPES))
     active = forms.BooleanField(required=False)
     tags = TagField(widget=TagAutocomplete(), required=False)
     snippet = forms.CharField(widget=forms.Textarea\

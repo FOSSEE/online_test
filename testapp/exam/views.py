@@ -127,7 +127,8 @@ def user_register(request):
                                          context_instance=ci)
     else:
         form = UserRegisterForm()
-        return my_render_to_response('exam/register.html', {'form': form})
+        return my_render_to_response('exam/register.html', {'form': form},
+                                      context_instance=ci)
 
 
 def quizlist_user(request):
@@ -623,19 +624,9 @@ def start(request, questionpaper_id=None):
             msg = 'You do not have a profile and cannot take the quiz!'
             raise Http404(msg)
 
-        new_paper = AnswerPaper(user=user, user_ip=ip,
-                                question_paper=questionpaper, profile=profile)
-        new_paper.start_time = datetime.datetime.now()
-        new_paper.end_time = datetime.datetime.now()
+        new_paper = questionpaper.make_answerpaper(user, ip,)
         # Make user directory.
         user_dir = get_user_dir(user)
-
-        questions = [str(_.id) for _ in\
-                     questionpaper._get_questions_for_answerpaper()]
-        random.shuffle(questions)
-
-        new_paper.questions = "|".join(questions)
-        new_paper.save()
         return start(request, questionpaper_id)
 
 
