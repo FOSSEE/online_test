@@ -142,18 +142,22 @@ class QuestionPaperTestCases(unittest.TestCase):
 
     def test_get_random_questions(self):
         """ Test get_random_questions() method of Question Paper"""
-        random_questions_set_1 = set(self.question_set_1.
-                                     get_random_questions())
-        random_questions_set_2 = set(self.question_set_2.
-                                     get_random_questions())
+        random_questions_set_1 = self.question_set_1.get_random_questions()
+        random_questions_set_2 = self.question_set_2.get_random_questions()
 
         # To check whether random questions are from random_question_set
-        boolean = set(self.question_set_1.questions.all()).\
-                  intersection(random_questions_set_1)\
-                  == random_questions_set_1
+        questions_set_1 = set(self.question_set_1.questions.all())
+        random_set_1 = set(random_questions_set_1)
+        random_set_2 = set(random_questions_set_2)
+        boolean = questions_set_1.intersection(random_set_1) == random_set_1
         self.assertTrue(boolean)
-        self.assertEqual(len(random_questions_set_1), 2)
-        self.assertFalse(random_questions_set_1 == random_questions_set_2)
+        self.assertEqual(len(random_set_1), 2)
+        # To check that the questions are random.
+        # If incase not random then check that the order is diferent
+        try:
+            self.assertFalse(random_set_1 == random_set_2)
+        except AssertionError:
+            self.assertTrue(random_questions_set_1 != random_questions_set_2)
 
     def test_get_questions_for_answerpaper(self):
         """ Test get_questions_for_answerpaper() method of Question Paper"""
