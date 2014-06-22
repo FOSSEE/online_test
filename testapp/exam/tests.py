@@ -138,7 +138,9 @@ class QuestionPaperTestCases(unittest.TestCase):
 
     def test_update_total_marks(self):
         """ Test update_total_marks() method of Question Paper"""
-        self.assertEqual(self.question_paper.update_total_marks(), 15)
+        self.assertEqual(self.question_paper.total_marks, 0)
+        self.question_paper.update_total_marks()
+        self.assertEqual(self.question_paper.total_marks, 15)
 
     def test_get_random_questions(self):
         """ Test get_random_questions() method of Question Paper"""

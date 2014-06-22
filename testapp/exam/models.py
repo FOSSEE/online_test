@@ -148,7 +148,8 @@ class QuestionPaper(models.Model):
             marks += question.points
         for question_set in self.random_questions.all():
             marks += question_set.marks * question_set.num_questions
-        return marks
+        self.total_marks = marks
+        return None
 
     def _get_questions_for_answerpaper(self):
         """ Returns fixed and random questions for the answer paper"""
