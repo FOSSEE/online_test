@@ -31,7 +31,6 @@
 	<ul>
 	       <li><a href="{{ URL_ROOT }}/exam/manage/questions">Questions</a></li>
                <li><a href="{{ URL_ROOT }}/exam/manage/showquiz">Quizzes</a></li>
-               <li><a href="{{ URL_ROOT }}/exam/manage/showquestionpapers">Question Papers</a></li>
        	       <li><a href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
 	           <li><a href="{{ URL_ROOT }}/exam/manage/monitor">Monitor</a></li>
         </ul>
@@ -49,7 +48,6 @@
          <div class=row>
             <div class=span14>
             {% block manage %}
-                <center><h4>Select a language to view the quiz list</h4></center>
 		<br>
 	    	<div id="manage">
 			<div class="row">
@@ -81,7 +79,14 @@
 					<div class="descp">Bash</div></a>
 				</div> <!-- /.span4 -->
 			</div> <!-- /.row -->
+			<hr>
 		</div> <!-- /#manage -->
+		    <center>
+			    <h4>Moderator's dashboard! Select a language to view quiz list</h4>
+			    <h5>To add a new quiz, click the button given below</h5>
+			    <br>
+			    <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz");'>Add New Quiz</button>&nbsp;&nbsp;
+			</center>
 	        {% endblock %}
             </div>
          </div>
