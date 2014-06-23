@@ -120,6 +120,7 @@ function textareaformat()
 	var option =  document.getElementsByName('options');
 	var descriptions = document.getElementsByName('description');
 	var snippets = document.getElementsByName('snippet');
+	var language = document.getElementsByName('language')
 	var type = document.getElementsByName('type');
     var tags = document.getElementsByName('tags');
 	for (var i=0;i<point.length;i++)
@@ -130,16 +131,18 @@ function textareaformat()
 		snippets[i].id=snippets[i].id + i; 
 		option[i].id=option[i].id + i;
 		type[i].id = type[i].id + i;
+		language[i].id = language[i].id + i;
         tags[i].id = tags[i].id + i;
 	}
 	for(var i=0;i<point.length;i++)
 	{
 		var point_id = document.getElementById('id_points'+i);
 		point_id.setAttribute('class','mini-text');
-        var tags_id = document.getElementById('id_tags'+i);
+	        var tags_id = document.getElementById('id_tags'+i);
 		tags_id.setAttribute('class','ac_input');
-        tags_id.setAttribute('autocomplete','off');
-        var type_id = document.getElementById('id_type'+i);
+        	tags_id.setAttribute('autocomplete','off');
+		var language_id = document.getElementById('id_language'+i);
+		var type_id = document.getElementById('id_type'+i);
 		type_id.setAttribute('class','select-type');
 		type_id.onchange = showOptions;
 		var value = type_id.value;
@@ -150,12 +153,21 @@ function textareaformat()
 		test_id.onfocus = gainfocus;
 		test_id.onblur = lostfocus;
 		var snippet_id = document.getElementById('id_snippet'+i);
-		$(snippet_id).bind('focus',function(event){
+		$(snippet_id).bind('focus', function(event){
+			console.log("dv")
 			this.rows = 5;
 		});
 		$(snippet_id).bind('keydown', function (event){
 			catchTab(snippet_id,event);
 		});
+
+		$(language_id).bind('focus', function(event){
+		this.style.border = '1px solid #ccc';
+		});
+		$(type_id).bind('focus', function(event){
+		this.style.border = '1px solid #ccc';
+		});
+
 		var option_id = document.getElementById('id_options' + i);
 		option_id.onfocus = gainfocus;
 		option_id.onblur = lostfocus;		
@@ -163,13 +175,12 @@ function textareaformat()
 		{
 			document.getElementById('id_options'+i).style.visibility='hidden';
 			document.getElementById('label_option'+(i+1)).innerHTML = "";
-
 		}
 		document.getElementById('my'+ (i+1)).innerHTML = desc_id.value;
-		jQuery().ready(function() 
-        { 
-            jQuery("#id_tags" + i).autocomplete("/taggit_autocomplete_modified/json", { multiple: true });
-        });
+		jQuery().ready(function(){ 
+          		  jQuery("#id_tags" + i).autocomplete("/taggit_autocomplete_modified/json", { multiple: true });
+        	});
+
 	}
 }
 
@@ -199,6 +210,7 @@ function showOptions(e)
 		{	
 			document.getElementById('id_options'+no).style.visibility = 'visible';
 			document.getElementById('label_option'+ (no+1)).innerHTML = "Options : "
+			document.getElementById('label_option'+ (no+1)).style.fontWeight = 'bold';
 		}
 		else
 		{
@@ -217,14 +229,33 @@ function lostfocus(e)
 	this.rows = 1;
 }
 
+function changeColor(element)
+{
+	element.style.border = 'solid red';
+}
 function autosubmit()
 {
 	var total_form = document.getElementsByName('summary').length;
 	var empty_options = 0 ;
 	var count_mcq = 0;
-		
+	var language;
+	var type;
+
 	for (var i=0;i<total_form;i++)
 	{
+		language = document.getElementById('id_language'+i);
+	 	type = document.getElementById('id_type'+i);
+		if(language.value == 'select')
+		{
+			changeColor(language);
+			return false;
+		}
+		if(type.value == 'select')
+		{
+			changeColor(type);
+			return false;
+		}
+
 		if (document.getElementById('id_type' + i).value != 'mcq')
 		{
 			continue;

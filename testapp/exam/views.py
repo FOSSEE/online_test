@@ -127,7 +127,8 @@ def user_register(request):
                                          context_instance=ci)
     else:
         form = UserRegisterForm()
-        return my_render_to_response('exam/register.html', {'form': form})
+        return my_render_to_response('exam/register.html', {'form': form},
+                                      context_instance=ci)
 
 
 def quizlist_user(request):
@@ -166,7 +167,7 @@ def results_user(request):
     papers = AnswerPaper.objects.filter(user=user)
     quiz_marks = []
     for paper in papers:
-        marks_obtained = paper.get_total_marks()
+        marks_obtained = paper.get_marks_obtained()
         max_marks = paper.question_paper.total_marks
         percentage = round((marks_obtained/max_marks)*100, 2)
         temp = paper.question_paper.quiz.description, marks_obtained,\
@@ -187,7 +188,6 @@ def edit_quiz(request):
     duration = request.POST.getlist('duration')
     active = request.POST.getlist('active')
     description = request.POST.getlist('description')
-    tags = request.POST.getlist('tags')
 
     for j, quiz_id in enumerate(quiz_list):
         quiz = Quiz.objects.get(id=quiz_id)
@@ -196,14 +196,6 @@ def edit_quiz(request):
         quiz.active = active[j]
         quiz.description = description[j]
         quiz.save()
-        edit_tags = tags[j]
-        quiz.save()
-        for tag in quiz.tags.all():
-            quiz.tags.remove(tag)
-        tags_split = edit_tags.split(', ')
-        for i in range(0, len(tags_split)-1):
-            tag = tags_split[i].strip()
-            quiz.tags.add(tag)
     return my_redirect("/exam/manage/showquiz/")
 
 
@@ -222,7 +214,6 @@ def edit_question(request):
     type = request.POST.getlist('type')
     active = request.POST.getlist('active')
     snippet = request.POST.getlist('snippet')
-    tags = request.POST.getlist('tags')
     for j, question_id in enumerate(question_list):
         question = Question.objects.get(id=question_id)
         question.summary = summary[j]
@@ -233,14 +224,7 @@ def edit_question(request):
         question.active = active[j]
         question.snippet = snippet[j]
         question.type = type[j]
-        edit_tags = tags[j]
         question.save()
-        for tag in question.tags.all():
-            question.tags.remove(tag)
-        tags_split = edit_tags.split(',')
-        for i in range(0, len(tags_split)-1):
-            tag = tags_split[i].strip()
-            question.tags.add(tag)
     return my_redirect("/exam/manage/questions")
 
 
@@ -331,10 +315,6 @@ def add_quiz(request, quiz_id=None):
             if quiz_id is None:
                 form.save()
                 quiz = Quiz.objects.order_by("-id")[0]
-                tags = form['tags'].data.split(',')
-                for tag in tags:
-                    tag = tag.strip()
-                    quiz.tags.add(tag)
                 return my_redirect("/exam/manage/designquestionpaper")
             else:
                 d = Quiz.objects.get(id=quiz_id)
@@ -344,12 +324,6 @@ def add_quiz(request, quiz_id=None):
                 d.description = form['description'].data
                 d.save()
                 quiz = Quiz.objects.get(id=quiz_id)
-                for tag in quiz.tags.all():
-                    quiz.tags.remove(tag)
-                tags = form['tags'].data.split(',')
-                for i in range(0, len(tags)-1):
-                    tag = tags[i].strip()
-                    quiz.tags.add(tag)
                 return my_redirect("/exam/manage/showquiz")
         else:
             return my_render_to_response('exam/add_quiz.html',
@@ -368,14 +342,6 @@ def add_quiz(request, quiz_id=None):
             form.initial['duration'] = d.duration
             form.initial['description'] = d.description
             form.initial['active'] = d.active
-            form_tags = d.tags.all()
-            form_tags_split = form_tags.values('name')
-            initial_tags = ""
-            for tag in form_tags_split:
-                initial_tags = initial_tags + str(tag['name']).strip() + ","
-            if (initial_tags == ","):
-                initial_tags = ""
-            form.initial['tags'] = initial_tags
             return my_render_to_response('exam/add_quiz.html',
                                          {'form': form},
                                          context_instance=ci)
@@ -398,7 +364,7 @@ def show_all_questionpapers(request, questionpaper_id=None):
 
     if request.method == "POST" and request.POST.get('add') == "add":
         return my_redirect("/exam/manage/designquestionpaper/" +
-                               questionpaper_id)
+                           questionpaper_id)
 
     if request.method == "POST" and request.POST.get('delete') == "delete":
         data = request.POST.getlist('papers')
@@ -545,7 +511,7 @@ def manual_questionpaper(request, questionpaper_id=None):
                     msg = 'No matching Question found...'
                 tags = Tag.objects.all()
                 context = {'data': {'questions': fetched_questions,
-                                        'tags': tags, 'msg': msg}}
+                                    'tags': tags, 'msg': msg}}
                 return my_render_to_response('exam/manual_questionpaper.html',
                                              context,
                                              context_instance=ci)
@@ -578,7 +544,7 @@ def manual_questionpaper(request, questionpaper_id=None):
                     msg = 'No matching Question found...'
                 tags = Tag.objects.all()
                 context = {'data': {'questions': fetched_questions,
-                                        'tags': tags, 'msg': msg}}
+                                    'tags': tags, 'msg': msg}}
                 return my_render_to_response('exam/manual_questionpaper.html',
                                              context,
                                              context_instance=ci)
@@ -658,18 +624,9 @@ def start(request, questionpaper_id=None):
             msg = 'You do not have a profile and cannot take the quiz!'
             raise Http404(msg)
 
-        new_paper = AnswerPaper(user=user, user_ip=ip,
-                                question_paper=questionpaper, profile=profile)
-        new_paper.start_time = datetime.datetime.now()
-        new_paper.end_time = datetime.datetime.now()
+        new_paper = questionpaper.make_answerpaper(user, ip,)
         # Make user directory.
         user_dir = get_user_dir(user)
-
-        questions = [str(_.id) for _ in questionpaper.questions.all()]
-        random.shuffle(questions)
-
-        new_paper.questions = "|".join(questions)
-        new_paper.save()
         return start(request, questionpaper_id)
 
 
@@ -822,7 +779,7 @@ def complete(request, reason=None, questionpaper_id=None):
     else:
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
         paper = AnswerPaper.objects.get(user=user, question_paper=q_paper)
-        obt_marks = paper.get_total_marks()
+        obt_marks = paper.get_marks_obtained()
         tot_marks = paper.question_paper.total_marks
         if obt_marks == paper.question_paper.total_marks:
             context = {'message': "Hurray ! You did an excellent job.\
@@ -953,14 +910,6 @@ def show_all_quiz(request):
             form.initial['duration'] = d.duration
             form.initial['active'] = d.active
             form.initial['description'] = d.description
-            form_tags = d.tags.all()
-            form_tags_split = form_tags.values('name')
-            initial_tags = ""
-            for tag in form_tags_split:
-                initial_tags = initial_tags + str(tag['name']).strip() + ","
-            if (initial_tags == ","):
-                initial_tags = ""
-            form.initial['tags'] = initial_tags
             forms.append(form)
         return my_render_to_response('exam/edit_quiz.html',
                                      {'forms': forms, 'data': data},
