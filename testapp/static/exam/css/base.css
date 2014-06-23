@@ -295,7 +295,7 @@ a:hover {
   width: 160px;
 }
 .span4 {
-  min-height : 500px;
+  /* min-height : 500px; */
   width: 220px;
 }
 .span5 {

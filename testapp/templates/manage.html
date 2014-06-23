@@ -15,6 +15,7 @@
    {% endblock %}
    
    <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/base.css" type="text/css" /> 
+   <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/manage.css" type="text/css" /> 
    {% block css %}
    {% endblock %}
 
@@ -47,8 +48,41 @@
          </div>
          <div class=row>
             <div class=span14>
-               {% block manage %}
-	       {% endblock %}
+            {% block manage %}
+                <center><h4>Select a language to view the quiz list</h4></center>
+		<br>
+	    	<div id="manage">
+			<div class="row">
+				<div class="span4">
+					<a href="{{ URL_ROOT }}/exam/manage/quizlist/python"><img src="{{ URL_ROOT }}/static/exam/images/python.jpg" width=125 height=100>
+					<div class="descp">Python</div></a>
+				</div> <!-- /.span4 -->
+				<div class="span4">
+					<a href="{{ URL_ROOT }}/exam/manage/quizlist/c"><img src="{{ URL_ROOT }}/static/exam/images/c.jpg" width=125 height=100>
+					<div class="descp">C</div></a>
+				</div> <!-- /.span4 -->
+				<div class="span4">
+					<a href="{{ URL_ROOT }}/exam/manage/quizlist/c++"><img src="{{ URL_ROOT }}/static/exam/images/c++.jpg" width=125 height=100>
+					<div class="descp">C++</div></a>
+				</div> <!-- /.span4 -->
+			</div> <!-- /.row --> 
+			<hr>
+			<div class="row">
+				<div class="span4">
+					<a href="{{ URL_ROOT }}/exam/manage/quizlist/java"><img src="{{ URL_ROOT }}/static/exam/images/java.jpg" width=125 height=100>
+					<div class="descp">Java</div></a>
+				</div> <!-- /.span4 -->
+				<div class="span4">
+					<a href="{{ URL_ROOT }}/exam/manage/quizlist/scilab"><img src="{{ URL_ROOT }}/static/exam/images/scilab.jpg" width=125 height=100>
+					<div class="descp">Scilab</div></a>
+				</div> <!-- /.span4 -->
+				<div class="span4">
+					<a href="{{ URL_ROOT }}/exam/manage/quizlist/bash"><img src="{{ URL_ROOT }}/static/exam/images/bash.jpg" width=125 height=100>
+					<div class="descp">Bash</div></a>
+				</div> <!-- /.span4 -->
+			</div> <!-- /.row -->
+		</div> <!-- /#manage -->
+	        {% endblock %}
             </div>
          </div>
      </div>

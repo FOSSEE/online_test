@@ -1028,3 +1028,13 @@ def grade_user(request, username):
         context = {'data': data}
         return my_render_to_response('exam/grade_user.html', context,
                                      context_instance=ci)
+                                     
+
+def lang_quiz_list(request, language=None):
+    curr_user = request.user
+    if not curr_user.is_authenticated() or not is_moderator(curr_user):
+        raise Http404('You are not allowed to view this page!')
+    quiz_list = Quiz.objects.filter(language=language)
+    context = {'quiz_list':quiz_list, 'language':language.title()}
+    return my_render_to_response('exam/lang_quiz_list.html', context,
+                                     context_instance=ci)

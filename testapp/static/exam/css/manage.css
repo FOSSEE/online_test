@@ -1,0 +1,9 @@
+hr {
+	border-bottom: 1px solid #cccccc;
+}
+#manage {
+	text-align: center;
+}
+#manage .descp {
+	font-weight: bolder;
+}
