@@ -27,9 +27,7 @@ QUESTION_TYPES = (
     ("mcq", "Multiple Choice"),
     ("code", "Code"),
     )
-QUIZZES =[('select', 'Select a prerequisite quiz')]
-quizzes = Quiz.objects.all()
-QUIZZES = QUIZZES+[(quiz.id, quiz) for quiz in quizzes]
+
 
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
@@ -129,6 +127,9 @@ class UserLoginForm(forms.Form):
 class QuizForm(forms.Form):
     """Creates a form to add or edit a Quiz.
     It has the related fields and functions required."""
+    QUIZZES =[('select', 'Select a prerequisite quiz')]
+    quizzes = Quiz.objects.all()
+    QUIZZES = QUIZZES+[(quiz.id, quiz.description) for quiz in quizzes]
 
     start_date = forms.DateField(initial=datetime.date.today)
     duration = forms.IntegerField()
@@ -158,7 +159,7 @@ class QuizForm(forms.Form):
         new_quiz.description = description
         new_quiz.pass_criteria = pass_criteria
         new_quiz.language = language
-        if isinstance(prerequisite, int):
+        if prerequisite != 'select':
             new_quiz.prerequisite_id = prerequisite
         new_quiz.save()
 

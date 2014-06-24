@@ -134,21 +134,25 @@ def user_register(request):
 def quizlist_user(request):
     """Show All Quizzes that is available to logged-in user."""
     user = request.user
-    avail_quiz = list(QuestionPaper.objects.filter(quiz__active=True))
+    avail_quizzes = list(QuestionPaper.objects.filter(quiz__active=True))
     user_answerpapers = AnswerPaper.objects.filter(user=user)
-    user_quiz = []
+    quizzes_taken = []
+    pre_requisites = []
 
     if user_answerpapers.count() == 0:
-        context = {'quizzes': avail_quiz}
+        context = {'quizzes': avail_quizzes, 'user':user, 
+                   'quizzes_taken':None}
         return my_render_to_response("exam/quizzes_user.html", context)
 
-    for paper in user_answerpapers:
-        for quiz in avail_quiz:
-            if paper.question_paper.id == quiz.id and \
-                    paper.end_time != paper.start_time:
-                avail_quiz.remove(quiz)
-
-    context = {'quizzes': avail_quiz, 'user': user}
+    for answer_paper in user_answerpapers:
+        for quiz in avail_quizzes:
+            if answer_paper.question_paper.id == quiz.id and \
+                    answer_paper.end_time != answer_paper.start_time:
+                avail_quizzes.remove(quiz)
+                quizzes_taken.append(answer_paper)
+    
+    context = {'quizzes': avail_quizzes, 'user': user,
+               'quizzes_taken': quizzes_taken}
     return my_render_to_response("exam/quizzes_user.html", context)
 
 
@@ -322,6 +326,8 @@ def add_quiz(request, quiz_id=None):
                 d.duration = form['duration'].data
                 d.active = form['active'].data
                 d.description = form['description'].data
+                d.language = form['language'].data
+                d.prerequizite = form['prerequisite'].data
                 d.save()
                 quiz = Quiz.objects.get(id=quiz_id)
                 return my_redirect("/exam/manage/showquiz")
@@ -341,6 +347,8 @@ def add_quiz(request, quiz_id=None):
             form.initial['start_date'] = d.start_date
             form.initial['duration'] = d.duration
             form.initial['description'] = d.description
+            form.initial['language'] = d.language
+            form.initial['prerequisite'] = d.prerequisite_id
             form.initial['active'] = d.active
             return my_render_to_response('exam/add_quiz.html',
                                          {'form': form},
@@ -1032,6 +1040,7 @@ def grade_user(request, username):
 
 def lang_quiz_list(request, language=None):
     curr_user = request.user
+    ci = RequestContext(request)
     if not curr_user.is_authenticated() or not is_moderator(curr_user):
         raise Http404('You are not allowed to view this page!')
     quiz_list = Quiz.objects.filter(language=language)
