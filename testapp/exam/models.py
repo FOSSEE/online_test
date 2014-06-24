@@ -115,6 +115,15 @@ class Quiz(models.Model):
     # Description of quiz.
     description = models.CharField(max_length=256)
 
+    # Mininum passing percentage condition.
+    pass_criteria = models.FloatField("Passing percentage", default=40)
+
+    # List of prerequisite quizzes to be passed to take this quiz
+    prerequisite = models.ForeignKey("self", null=True)
+
+    # Programming language for a quiz
+    language = models.CharField(max_length=20, choices=LANGUAGES)
+
     class Meta:
         verbose_name_plural = "Quizzes"
 
@@ -136,6 +145,9 @@ class QuestionPaper(models.Model):
 
     # Questions that will be fetched randomly from the Question Set.
     random_questions = models.ManyToManyField("QuestionSet")
+
+    # Option to shuffle questions, each time a new question paper is created.
+    shuffle_questions = models.BooleanField(default=False)
 
     # Total marks for the question paper.
     total_marks = models.FloatField()
@@ -167,8 +179,9 @@ class QuestionPaper(models.Model):
                              + datetime.timedelta(minutes=self.quiz.duration)
         ans_paper.question_paper = self
         questions = self._get_questions_for_answerpaper()
-        question_ids = [str(x.id) for x in questions]	
-        shuffle(questions)
+        question_ids = [str(x.id) for x in questions]
+        if self.shuffle_questions:
+            shuffle(question_ids)
         ans_paper.questions = "|".join(question_ids)
         ans_paper.save()
         return ans_paper
@@ -229,6 +242,12 @@ class AnswerPaper(models.Model):
 
     # Teacher comments on the question paper.
     comments = models.TextField()
+
+    # Result of the quiz, either PASS or FAIL.
+    result = models.CharField(max_length=4)
+
+    # Marks percent scored by the user
+    percent = models.FloatField(null=True)
 
     def current_question(self):
         """Returns the current active question to display."""
