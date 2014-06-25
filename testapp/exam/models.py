@@ -153,7 +153,7 @@ class QuestionPaper(models.Model):
     total_marks = models.FloatField()
 
     def update_total_marks(self):
-        """ Returns the total marks for the Question Paper"""
+        """ Updates the total marks for the Question Paper"""
         marks = 0.0
         questions = self.fixed_questions.all()
         for question in questions:
@@ -243,11 +243,14 @@ class AnswerPaper(models.Model):
     # Teacher comments on the question paper.
     comments = models.TextField()
 
-    # Result of the quiz, either PASS or FAIL.
-    result = models.CharField(max_length=4)
+    # Total marks earned by the student in this paper.
+    marks_obtained = models.FloatField(null=True, default=None)
 
     # Marks percent scored by the user
-    percent = models.FloatField(null=True)
+    percent = models.FloatField(null=True, default=None)
+
+    # Result of the quiz, either PASSED or FAILED.
+    result = models.CharField(max_length=8, null=True, default=None)
 
     def current_question(self):
         """Returns the current active question to display."""
@@ -317,9 +320,31 @@ class AnswerPaper(models.Model):
         answered = ', '.join(sorted(qa))
         return answered if answered else 'None'
 
-    def get_marks_obtained(self):
-        """Returns the total marks earned by student for this paper."""
-        return sum([x.marks for x in self.answers.filter(marks__gt=0.0)])
+    def update_marks_obtained(self):
+        """Updates the total marks earned by student for this paper."""
+        marks = sum([x.marks for x in self.answers.filter(marks__gt=0.0)])
+        self.marks_obtained = marks
+        return None
+
+    def update_percent(self):
+        """Updates the percent gained by the student for this paper."""
+        total_marks = self.question_paper.total_marks
+        if self.marks_obtained is not None:
+            percent = self.marks_obtained/self.question_paper.total_marks*100
+            self.percent = round(percent, 2)
+        return None
+
+    def update_result(self):
+        """
+            Updates the result.
+            It is either passed or failed, as per the quiz passing criteria
+        """
+        if self.percent is not None: 
+            if self.percent >= self.question_paper.quiz.pass_criteria:
+                self.result = "PASSED"
+            else:
+                self.result = "FAILED"
+        return None
 
     def get_question_answers(self):
         """
