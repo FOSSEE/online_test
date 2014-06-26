@@ -564,7 +564,9 @@ def prof_manage(request):
         users_per_paper = []
         for paper in question_papers:
             answer_papers = AnswerPaper.objects.filter(question_paper=paper)
-            temp = paper, answer_papers
+            users_passed = AnswerPaper.objects.filter(question_paper=paper, result=True).count()
+            users_failed = AnswerPaper.objects.filter(question_paper=paper, result=False).count()
+            temp = paper, answer_papers, users_passed, users_failed
             users_per_paper.append(temp)
         context = {'user': user, 'users_per_paper':users_per_paper}
         return my_render_to_response('manage.html', context)

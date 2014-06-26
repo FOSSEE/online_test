@@ -43,17 +43,19 @@
   <div class="container">
      <div class="content">
          <div class="page-header">
-		<h3><center>{% block subtitle %}Welcome {{ user.first_name.title }}  {{user.last_name.title}} {% endblock %}</center></h3><br>
+		<h3><center>{% block subtitle %}Welcome {{ user.first_name.title }}  {{user.last_name.title}} !{% endblock %}</center></h3><br>
          </div>
          <div class=row>
             <div class=span14>
             {% block manage %}
-                <center><h5>List of quizzes! Click on the given links to have a look at answer papers for a quiz !</h5></center>
+                <center><h4>List of quizzes! Click on the given links to have a look at answer papers for a quiz.</h4></center>
                 <hr>
-                <table>
+                <table class="bordered-table zebra-striped">
                     <th>Quiz</th>
                     <th>Taken By</th>
-                    {% for paper, answer_papers in users_per_paper %}
+                    <th>No. of users Passed</th>
+                    <th>No. of users Failed</th>
+                    {% for paper, answer_papers, users_passed, users_failed in users_per_paper %}
                         <tr>
                             <td>
                                 <a href="{{URL_ROOT}}/exam/manage/monitor/{{paper.id}}/">{{ paper.quiz.description }}</a>
@@ -61,12 +63,19 @@
                             <td>
                                 {{ answer_papers|length }} user(s)
                             </td>
+                            <td>
+                                {{ users_passed }}
+                            </td>
+                            <td>
+                                {{ users_failed }}
+                            </td>
                         </tr>
                     {% endfor %}
                 </table>
                 <hr>
                 <center>
-                    <h5>Moderator's Dashboard! Click on the button given below to add a new quiz.</h5>
+                    <h4>Moderator's Dashboard!</h4>
+                    <h5>Click on the button given below to add a new quiz.</h5>
                     <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz");'>Add New Quiz</button>
                 </center>
 	        {% endblock %}
