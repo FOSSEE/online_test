@@ -128,12 +128,11 @@ class QuizForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(QuizForm, self).__init__(*args, **kwargs)
-        self.QUIZZES = [('', 'Select a prerequisite quiz')]
-        self.QUIZZES = self.QUIZZES + \
+        QUIZZES = [('', 'Select a prerequisite quiz')]
+        QUIZZES = QUIZZES + \
                        list(Quiz.objects.values_list('id','description'))
         self.fields['prerequisite'] = forms.CharField(required=False,
-                                   widget=forms.Select(choices=self.QUIZZES))
-
+                                   widget=forms.Select(choices=QUIZZES))
 
     start_date = forms.DateField(initial=datetime.date.today)
     duration = forms.IntegerField(help_text='Will be taken in minutes')
@@ -143,7 +142,6 @@ class QuizForm(forms.Form):
     pass_criteria = forms.FloatField(initial=40,
                                      help_text='Will be taken as percentage')
     language = forms.CharField(widget=forms.Select(choices=LANGUAGES))
-
 
     def save(self):
         start_date = self.cleaned_data["start_date"]

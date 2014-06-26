@@ -119,7 +119,7 @@ class Quiz(models.Model):
     pass_criteria = models.FloatField("Passing percentage", default=40)
 
     # List of prerequisite quizzes to be passed to take this quiz
-    prerequisite = models.ForeignKey("self", null=True)
+    prerequisite = models.ForeignKey("Quiz", null=True)
 
     # Programming language for a quiz
     language = models.CharField(max_length=20, choices=LANGUAGES)
@@ -161,7 +161,6 @@ class QuestionPaper(models.Model):
         for question_set in self.random_questions.all():
             marks += question_set.marks * question_set.num_questions
         self.total_marks = marks
-        return None
 
     def _get_questions_for_answerpaper(self):
         """ Returns fixed and random questions for the answer paper"""
@@ -324,7 +323,6 @@ class AnswerPaper(models.Model):
         """Updates the total marks earned by student for this paper."""
         marks = sum([x.marks for x in self.answers.filter(marks__gt=0.0)])
         self.marks_obtained = marks
-        return None
 
     def update_percent(self):
         """Updates the percent gained by the student for this paper."""
@@ -332,7 +330,6 @@ class AnswerPaper(models.Model):
         if self.marks_obtained is not None:
             percent = self.marks_obtained/self.question_paper.total_marks*100
             self.percent = round(percent, 2)
-        return None
 
     def update_result(self):
         """
@@ -344,7 +341,6 @@ class AnswerPaper(models.Model):
                 self.result = "PASSED"
             else:
                 self.result = "FAILED"
-        return None
 
     def get_question_answers(self):
         """
