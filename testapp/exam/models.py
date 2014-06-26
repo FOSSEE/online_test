@@ -16,7 +16,7 @@ class Profile(models.Model):
     position = models.CharField(max_length=64)
 
 
-LANGUAGES = (
+languages = (
         ("python", "Python"),
         ("bash", "Bash"),
         ("C", "C Language"),
@@ -26,7 +26,7 @@ LANGUAGES = (
                             )
 
 
-QUESTION_TYPES = (
+question_types = (
         ("mcq", "Multiple Choice"),
         ("code", "Code"),
                         )
@@ -53,10 +53,10 @@ class Question(models.Model):
 
     # The language for question.
     language = models.CharField(max_length=24,
-                                choices=LANGUAGES)
+                                choices=languages)
 
     # The type of question.
-    type = models.CharField(max_length=24, choices=QUESTION_TYPES)
+    type = models.CharField(max_length=24, choices=question_types)
 
     # Is this question active or not. If it is inactive it will not be used
     # when creating a QuestionPaper.
@@ -122,7 +122,7 @@ class Quiz(models.Model):
     prerequisite = models.ForeignKey("Quiz", null=True)
 
     # Programming language for a quiz
-    language = models.CharField(max_length=20, choices=LANGUAGES)
+    language = models.CharField(max_length=20, choices=languages)
 
     class Meta:
         verbose_name_plural = "Quizzes"
@@ -248,8 +248,8 @@ class AnswerPaper(models.Model):
     # Marks percent scored by the user
     percent = models.FloatField(null=True, default=None)
 
-    # Result of the quiz, either PASSED or FAILED.
-    result = models.CharField(max_length=8, null=True, default=None)
+    # Result of the quiz, pass if True.
+    result = models.NullBooleanField()
 
     def current_question(self):
         """Returns the current active question to display."""
@@ -338,9 +338,9 @@ class AnswerPaper(models.Model):
         """
         if self.percent is not None: 
             if self.percent >= self.question_paper.quiz.pass_criteria:
-                self.result = "PASSED"
+                self.result = True
             else:
-                self.result = "FAILED"
+                self.result = False
 
     def get_question_answers(self):
         """

@@ -276,7 +276,7 @@ class AnswerPaperTestCases(unittest.TestCase):
     def test_update_result(self):
         """ Test update_result() method of AnswerPaper"""
         self.answerpaper.update_result()
-        self.assertEqual(self.answerpaper.result, "FAILED")
+        self.assertFalse(self.answerpaper.result)
 
     def test_get_question_answer(self):
         """ Test get_question_answer() method of Answer Paper"""

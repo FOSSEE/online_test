@@ -12,7 +12,7 @@ from taggit_autocomplete_modified import settings
 from string import letters, punctuation, digits
 import datetime
 
-LANGUAGES = (
+languages = (
     ("select", "Select"),
     ("python", "Python"),
     ("bash", "Bash"),
@@ -22,7 +22,7 @@ LANGUAGES = (
     ("scilab", "Scilab"),
     )
 
-QUESTION_TYPES = (
+question_types = (
     ("select", "Select"),
     ("mcq", "Multiple Choice"),
     ("code", "Code"),
@@ -128,11 +128,11 @@ class QuizForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(QuizForm, self).__init__(*args, **kwargs)
-        QUIZZES = [('', 'Select a prerequisite quiz')]
-        QUIZZES = QUIZZES + \
+        quizzes = [('', 'Select a prerequisite quiz')]
+        quizzes = quizzes + \
                        list(Quiz.objects.values_list('id','description'))
         self.fields['prerequisite'] = forms.CharField(required=False,
-                                   widget=forms.Select(choices=QUIZZES))
+                                   widget=forms.Select(choices=quizzes))
 
     start_date = forms.DateField(initial=datetime.date.today)
     duration = forms.IntegerField(help_text='Will be taken in minutes')
@@ -141,7 +141,7 @@ class QuizForm(forms.Form):
                                   (attrs={'cols': 20, 'rows': 1}))
     pass_criteria = forms.FloatField(initial=40,
                                      help_text='Will be taken as percentage')
-    language = forms.CharField(widget=forms.Select(choices=LANGUAGES))
+    language = forms.CharField(widget=forms.Select(choices=languages))
 
     def save(self):
         start_date = self.cleaned_data["start_date"]
@@ -176,9 +176,9 @@ class QuestionForm(forms.Form):
     options = forms.CharField(widget=forms.Textarea\
                               (attrs={'cols': 40, 'rows': 1}), required=False)
     language = forms.CharField(max_length=20, widget=forms.Select\
-                               (choices=LANGUAGES))
+                               (choices=languages))
     type = forms.CharField(max_length=8, widget=forms.Select\
-                           (choices=QUESTION_TYPES))
+                           (choices=question_types))
     active = forms.BooleanField(required=False)
     tags = TagField(widget=TagAutocomplete(), required=False)
     snippet = forms.CharField(widget=forms.Textarea\
