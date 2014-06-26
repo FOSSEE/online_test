@@ -559,9 +559,14 @@ def prof_manage(request):
     """Take credentials of the user with professor/moderator
     rights/permissions and log in."""
     user = request.user
-    if user.is_authenticated()\
-            and user.groups.filter(name='moderator').count() > 0:
-        context = {'user': user}
+    if user.is_authenticated() and is_moderator(user):
+        question_papers = QuestionPaper.objects.all()
+        users_per_paper = []
+        for paper in question_papers:
+            answer_papers = AnswerPaper.objects.filter(question_paper=paper)
+            temp = paper, answer_papers
+            users_per_paper.append(temp)
+        context = {'user': user, 'users_per_paper':users_per_paper}
         return my_render_to_response('manage.html', context)
     return my_redirect('/exam/login/')
 
