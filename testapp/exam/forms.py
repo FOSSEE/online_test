@@ -27,6 +27,9 @@ QUESTION_TYPES = (
     ("mcq", "Multiple Choice"),
     ("code", "Code"),
     )
+QUIZZES =[('select', 'Select a prerequisite quiz')]
+quizzes = Quiz.objects.all()
+QUIZZES = QUIZZES+[(quiz.id, quiz) for quiz in quizzes]
 
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
@@ -132,18 +135,31 @@ class QuizForm(forms.Form):
     active = forms.BooleanField(required=False)
     description = forms.CharField(max_length=256, widget=forms.Textarea\
                                   (attrs={'cols': 20, 'rows': 1}))
+    pass_criteria = forms.FloatField(initial=40,
+                                     help_text='Will be taken as percentage')
+    language = forms.CharField(widget=forms.Select(choices=LANGUAGES))
+    prerequisite = forms.CharField(required=False,
+                                   widget=forms.Select(choices=QUIZZES))
 
     def save(self):
         start_date = self.cleaned_data["start_date"]
         duration = self.cleaned_data["duration"]
         active = self.cleaned_data['active']
         description = self.cleaned_data["description"]
+        pass_criteria = self.cleaned_data["pass_criteria"]
+        language = self.cleaned_data["language"]
+        prerequisite = self.cleaned_data["prerequisite"]
+
 
         new_quiz = Quiz()
         new_quiz.start_date = start_date
         new_quiz.duration = duration
         new_quiz.active = active
         new_quiz.description = description
+        new_quiz.pass_criteria = pass_criteria
+        new_quiz.language = language
+        if isinstance(prerequisite, int):
+            new_quiz.prerequisite_id = prerequisite
         new_quiz.save()
 
 
@@ -191,3 +207,10 @@ class QuestionForm(forms.Form):
         new_question.active = active
         new_question.snippet = snippet
         new_question.save()
+
+
+    class RandomQuestionForm(forms.Form):
+        question_type = forms.CharField(max_length=8, widget=forms.Select\
+                                                    (choices=QUESTION_TYPES))
+        shuffle_questions = forms.BooleanField(required=False)
+
