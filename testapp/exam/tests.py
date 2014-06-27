@@ -273,10 +273,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.answerpaper.update_percent()
         self.assertEqual(self.answerpaper.percent, 33.33)
 
-    def test_update_result(self):
-        """ Test update_result() method of AnswerPaper"""
-        self.answerpaper.update_result()
-        self.assertFalse(self.answerpaper.result)
+    def test_update_passed(self):
+        """ Test update_passed method of AnswerPaper"""
+        self.answerpaper.update_passed()
+        self.assertFalse(self.answerpaper.passed)
 
     def test_get_question_answer(self):
         """ Test get_question_answer() method of Answer Paper"""

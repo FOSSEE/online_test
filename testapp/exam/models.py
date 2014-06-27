@@ -248,8 +248,8 @@ class AnswerPaper(models.Model):
     # Marks percent scored by the user
     percent = models.FloatField(null=True, default=None)
 
-    # Result of the quiz, pass if True.
-    result = models.NullBooleanField()
+    # Result of the quiz, True if student passes the exam.
+    passed = models.NullBooleanField()
 
     def current_question(self):
         """Returns the current active question to display."""
@@ -331,16 +331,16 @@ class AnswerPaper(models.Model):
             percent = self.marks_obtained/self.question_paper.total_marks*100
             self.percent = round(percent, 2)
 
-    def update_result(self):
+    def update_passed(self):
         """
-            Updates the result.
-            It is either passed or failed, as per the quiz passing criteria
+            Checks whether student passed or failed, as per the quiz
+            passing criteria.
         """
         if self.percent is not None: 
             if self.percent >= self.question_paper.quiz.pass_criteria:
-                self.result = True
+                self.passed = True
             else:
-                self.result = False
+                self.passed = False
 
     def get_question_answers(self):
         """
