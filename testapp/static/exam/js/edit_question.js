@@ -171,7 +171,7 @@ function textareaformat()
 		var option_id = document.getElementById('id_options' + i);
 		option_id.onfocus = gainfocus;
 		option_id.onblur = lostfocus;		
-		if(value != 'mcq')
+		if(value == 'code' )
 		{
 			document.getElementById('id_options'+i).style.visibility='hidden';
 			document.getElementById('label_option'+(i+1)).innerHTML = "";
@@ -206,7 +206,7 @@ function showOptions(e)
 {
 		var value = this.value;
 		var no = parseInt(this.id.substring(this.id.length-1));
-		if( value == 'mcq')
+		if( value == 'mcq' || value == 'mcc')
 		{	
 			document.getElementById('id_options'+no).style.visibility = 'visible';
 			document.getElementById('label_option'+ (no+1)).innerHTML = "Options : "
@@ -256,7 +256,7 @@ function autosubmit()
 			return false;
 		}
 
-		if (document.getElementById('id_type' + i).value != 'mcq')
+		if (document.getElementById('id_type' + i).value == 'code')
 		{
 			continue;
 		}

@@ -167,7 +167,7 @@ def results_user(request):
     papers = AnswerPaper.objects.filter(user=user)
     quiz_marks = []
     for paper in papers:
-        marks_obtained = paper.get_marks_obtained()
+        marks_obtained = paper.update_marks_obtained()
         max_marks = paper.question_paper.total_marks
         percentage = round((marks_obtained/max_marks)*100, 2)
         temp = paper.question_paper.quiz.description, marks_obtained,\
@@ -424,7 +424,7 @@ def automatic_questionpaper(request, questionpaper_id=None):
                 quest_paper.save()
                 for quest in questions:
                     q = Question.objects.get(id=quest)
-                    quest_paper.questions.add(q)
+                    quest_paper.fixed_questions.add(q)
                 return my_redirect('/exam/manage/showquiz')
             else:
                 no_questions = int(request.POST.get('num_questions'))
@@ -695,7 +695,6 @@ def check(request, q_id, questionpaper_id=None):
     q_paper = QuestionPaper.objects.get(id=questionpaper_id)
     paper = AnswerPaper.objects.get(user=request.user, question_paper=q_paper)
     snippet_code = request.POST.get('snippet')
-    user_answer = request.POST.get('answer')
     skip = request.POST.get('skip', None)
     success_msg = False
     success = True
@@ -703,48 +702,32 @@ def check(request, q_id, questionpaper_id=None):
         next_q = paper.skip()
         return show_question(request, next_q, questionpaper_id)
 
+    # Add the answer submitted, regardless of it being correct or not.
     if question.type == 'mcq':
-        # Add the answer submitted, regardless of it being correct or not.
-        if user_answer is not None:
-            new_answer = Answer(question=question, answer=user_answer,
-                                correct=False)
-            new_answer.save()
-            paper.answers.add(new_answer)
-
+        user_answer = request.POST.get('answer')
+    elif question.type == 'mcc':
+        user_answer = request.POST.getlist('answer')
     else:
-        """Add the answer submitted with the Snippet code,
-        regardless of it being correct or not."""
-        answer_check = snippet_code + "\n" + user_answer
-        new_answer = Answer(question=question, answer=answer_check,
-                            correct=False)
-        new_answer.save()
-        paper.answers.add(new_answer)
+        user_code = request.POST.get('answer')
+        user_answer = snippet_code + "\n" + user_code
+
+    new_answer = Answer(question=question, answer=user_answer,
+                        correct=False)
+    new_answer.save()
+    paper.answers.add(new_answer)
 
     # If we were not skipped, we were asked to check.  For any non-mcq
     # questions, we obtain the results via XML-RPC with the code executed
     # safely in a separate process (the code_server.py) running as nobody.
-    if question.type == 'mcq':
-        if user_answer is not None:
-            success = True  # Only one attempt allowed for MCQ's.
-            if user_answer.strip() == question.test.strip():
-                new_answer.correct = True
-                new_answer.marks = question.points
-                new_answer.error = 'Correct answer'
-                success_msg = True
-            else:
-                new_answer.error = 'Incorrect answer'
-            new_answer.save()
-    else:
-        user_dir = get_user_dir(user)
-        success, err_msg = code_server.run_code(answer_check, question.test,
-                                                user_dir, question.type)
+    correct, success, err_msg = validate_answer(user, user_answer, question)
+    if correct:
+        new_answer.correct = correct
+        new_answer.marks = question.points
         new_answer.error = err_msg
-        if success:
-            # Note the success and save it along with the marks.
-            new_answer.correct = success
-            new_answer.marks = question.points
-            success_msg = True
-        new_answer.save()
+        success_msg = True
+    else:
+        new_answer.error = err_msg
+    new_answer.save()
 
     time_left = paper.time_left()
     if not success:  # Should only happen for non-mcq questions.
@@ -755,7 +738,7 @@ def check(request, q_id, questionpaper_id=None):
             reason = 'The quiz has been deactivated!'
             return complete(request, reason, questionpaper_id)
         context = {'question': question, 'error_message': err_msg,
-                   'paper': paper, 'last_attempt': user_answer,
+                   'paper': paper, 'last_attempt': user_code,
                    'quiz_name': paper.question_paper.quiz.description,
                    'time_left': time_left}
         ci = RequestContext(request)
@@ -770,6 +753,38 @@ def check(request, q_id, questionpaper_id=None):
             next_q = paper.completed_question(question.id)
             return show_question(request, next_q,
                                  questionpaper_id, success_msg)
+
+
+def validate_answer(user, user_answer, question):
+    """
+        Checks whether the answer submitted by the user is right or wrong.
+        If right then returns correct = True, success and
+        message = Correct answer.
+        success is True for MCQ's and multiple correct choices because
+        only one attempt are allowed for them.
+        For code questions success is True only if the answer is correct.
+    """
+    success = True
+    correct = False
+    message = 'Incorrect answer'
+
+    if user_answer is not None:
+        if question.type == 'mcq':
+            if user_answer.strip() == question.test.strip():
+                correct = True
+                message = 'Correct answer'
+        elif question.type == 'mcc':
+            answers = set(question.test.splitlines())
+            if set(user_answer) == answers:
+                correct = True
+                message = 'Correct answer'
+        elif question.type == 'code':
+            user_dir = get_user_dir(user)
+            success, message = code_server.run_code(user_answer, question.test,
+                                                user_dir, question.language)
+            if success:
+                 correct = True
+    return correct, success, message
 
 
 def quit(request, questionpaper_id=None):
@@ -791,7 +806,7 @@ def complete(request, reason=None, questionpaper_id=None):
     else:
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
         paper = AnswerPaper.objects.get(user=user, question_paper=q_paper)
-        obt_marks = paper.get_marks_obtained()
+        obt_marks = paper.update_marks_obtained()
         tot_marks = paper.question_paper.total_marks
         if obt_marks == paper.question_paper.total_marks:
             context = {'message': "Hurray ! You did an excellent job.\

@@ -28,6 +28,7 @@ languages = (
 
 question_types = (
         ("mcq", "Multiple Choice"),
+        ("mcc", "Multiple Correct Choices"),
         ("code", "Code"),
                         )
 
