@@ -150,7 +150,7 @@ function textareaformat()
 	
 	$('#id_type').bind('change',function(event){
 		var value = document.getElementById('id_type').value;
-		if(value == 'mcq')
+		if(value == 'mcq' || value == 'mcc')
 		{
 			document.getElementById('id_options').style.visibility='visible';
 			document.getElementById('label_option').innerHTML="Options :"
@@ -164,7 +164,7 @@ function textareaformat()
 	});
 		document.getElementById('my').innerHTML = document.getElementById('id_description').value ;
 		var value = document.getElementById('id_type').value;
-		if(value == 'mcq')
+		if(value == 'mcq' || value == 'mcc')
 		{
 			document.getElementById('id_options').style.visibility='visible';
 			document.getElementById('label_option').innerHTML="Options :"
@@ -192,7 +192,7 @@ function autosubmit()
 	    return false;
 	}
 
-	if (type.value == 'mcq')
+	if (type.value == 'mcq' || type.value == 'mcc')
 	{
 		var value = document.getElementById('id_options').value;
 		if(value.split('\n').length < 4)
