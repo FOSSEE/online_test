@@ -188,6 +188,9 @@ def edit_quiz(request):
     duration = request.POST.getlist('duration')
     active = request.POST.getlist('active')
     description = request.POST.getlist('description')
+    pass_criteria = request.POST.getlist('pass_criteria')
+    language = request.POST.getlist('language')
+    prerequisite = request.POST.getlist('prerequisite')
 
     for j, quiz_id in enumerate(quiz_list):
         quiz = Quiz.objects.get(id=quiz_id)
@@ -195,6 +198,9 @@ def edit_quiz(request):
         quiz.duration = duration[j]
         quiz.active = active[j]
         quiz.description = description[j]
+        quiz.pass_criteria = pass_criteria[j]
+        quiz.language = language[j]
+        quiz.prerequisite_id = prerequisite[j]
         quiz.save()
     return my_redirect("/exam/manage/showquiz/")
 
@@ -322,6 +328,9 @@ def add_quiz(request, quiz_id=None):
                 d.duration = form['duration'].data
                 d.active = form['active'].data
                 d.description = form['description'].data
+                d.pass_criteria = form['pass_criteria'].data
+                d.language = form['language'].data
+                d.prerequisite_id = form['prerequisite'].data
                 d.save()
                 quiz = Quiz.objects.get(id=quiz_id)
                 return my_redirect("/exam/manage/showquiz")
@@ -342,6 +351,9 @@ def add_quiz(request, quiz_id=None):
             form.initial['duration'] = d.duration
             form.initial['description'] = d.description
             form.initial['active'] = d.active
+            form.initial['pass_criteria'] = d.pass_criteria
+            form.initial['language'] = d.language
+            form.initial['prerequisite'] =  d.prerequisite_id
             return my_render_to_response('exam/add_quiz.html',
                                          {'form': form},
                                          context_instance=ci)
@@ -910,6 +922,9 @@ def show_all_quiz(request):
             form.initial['duration'] = d.duration
             form.initial['active'] = d.active
             form.initial['description'] = d.description
+            form.initial['pass_criteria'] = d.pass_criteria
+            form.initial['language'] = d.language
+            form.initial['prerequisite'] = d.prerequisite_id
             forms.append(form)
         return my_render_to_response('exam/edit_quiz.html',
                                      {'forms': forms, 'data': data},

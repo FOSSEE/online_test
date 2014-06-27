@@ -12,7 +12,7 @@ from taggit_autocomplete_modified import settings
 from string import letters, punctuation, digits
 import datetime
 
-LANGUAGES = (
+languages = (
     ("select", "Select"),
     ("python", "Python"),
     ("bash", "Bash"),
@@ -22,7 +22,7 @@ LANGUAGES = (
     ("scilab", "Scilab"),
     )
 
-QUESTION_TYPES = (
+question_types = (
     ("select", "Select"),
     ("mcq", "Multiple Choice"),
     ("code", "Code"),
@@ -30,7 +30,6 @@ QUESTION_TYPES = (
 
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
-
 
 class UserRegisterForm(forms.Form):
     """A Class to create new form for User's Registration.
@@ -127,23 +126,39 @@ class QuizForm(forms.Form):
     """Creates a form to add or edit a Quiz.
     It has the related fields and functions required."""
 
+    def __init__(self, *args, **kwargs):
+        super(QuizForm, self).__init__(*args, **kwargs)
+        quizzes = [('', 'Select a prerequisite quiz')]
+        quizzes = quizzes + \
+                       list(Quiz.objects.values_list('id','description'))
+        self.fields['prerequisite'] = forms.CharField(required=False,
+                                   widget=forms.Select(choices=quizzes))
+
     start_date = forms.DateField(initial=datetime.date.today)
-    duration = forms.IntegerField()
+    duration = forms.IntegerField(help_text='Will be taken in minutes')
     active = forms.BooleanField(required=False)
     description = forms.CharField(max_length=256, widget=forms.Textarea\
                                   (attrs={'cols': 20, 'rows': 1}))
+    pass_criteria = forms.FloatField(initial=40,
+                                     help_text='Will be taken as percentage')
+    language = forms.CharField(widget=forms.Select(choices=languages))
 
     def save(self):
         start_date = self.cleaned_data["start_date"]
         duration = self.cleaned_data["duration"]
         active = self.cleaned_data['active']
         description = self.cleaned_data["description"]
-
+        pass_criteria = self.cleaned_data["pass_criteria"]
+        language = self.cleaned_data["language"]
+        prerequisite = self.cleaned_data["prerequisite"]
         new_quiz = Quiz()
         new_quiz.start_date = start_date
         new_quiz.duration = duration
         new_quiz.active = active
         new_quiz.description = description
+        new_quiz.pass_criteria = pass_criteria
+        new_quiz.language = language
+        new_quiz.prerequisite_id = prerequisite
         new_quiz.save()
 
 
@@ -161,9 +176,9 @@ class QuestionForm(forms.Form):
     options = forms.CharField(widget=forms.Textarea\
                               (attrs={'cols': 40, 'rows': 1}), required=False)
     language = forms.CharField(max_length=20, widget=forms.Select\
-                               (choices=LANGUAGES))
+                               (choices=languages))
     type = forms.CharField(max_length=8, widget=forms.Select\
-                           (choices=QUESTION_TYPES))
+                           (choices=question_types))
     active = forms.BooleanField(required=False)
     tags = TagField(widget=TagAutocomplete(), required=False)
     snippet = forms.CharField(widget=forms.Textarea\

@@ -21,7 +21,8 @@ def setUpModule():
 
     # create a quiz
     Quiz.objects.create(start_date='2014-06-16', duration=30, active=False,
-                        description='demo quiz')
+                        description='demo quiz', pass_criteria=40,
+                        language='Python', prerequisite=None)
 
 
 def tearDownModule():
@@ -86,6 +87,9 @@ class QuizTestCases(unittest.TestCase):
         self.assertEqual(self.quiz.duration, 30)
         self.assertTrue(self.quiz.active is False)
         self.assertEqual(self.quiz.description, 'demo quiz')
+        self.assertEqual(self.quiz.language, 'Python')
+        self.assertEqual(self.quiz.pass_criteria, 40)
+        self.assertEqual(self.quiz.prerequisite, None)
 
 
 ###############################################################################
@@ -98,7 +102,8 @@ class QuestionPaperTestCases(unittest.TestCase):
 
         # create question paper
         self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
-                                                           total_marks=0.0)
+                                  total_marks=0.0, shuffle_questions=True)
+
         # add fixed set of questions to the question paper
         self.question_paper.fixed_questions.add(self.questions[3],
                                                 self.questions[5])
@@ -135,6 +140,7 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.assertEqual(self.question_paper.quiz.description, 'demo quiz')
         self.assertEqual(list(self.question_paper.fixed_questions.all()),
                          [self.questions[3], self.questions[5]])
+        self.assertTrue(self.question_paper.shuffle_questions)
 
     def test_update_total_marks(self):
         """ Test update_total_marks() method of Question Paper"""
@@ -257,9 +263,20 @@ class AnswerPaperTestCases(unittest.TestCase):
         answered_question = self.answerpaper.get_answered_str()
         self.assertEqual(answered_question, '1')
 
-    def test_get_marks_obtained(self):
+    def test_update_marks_obtained(self):
         """ Test get_marks_obtained() method of Answer Paper"""
-        self.assertEqual(self.answerpaper.get_marks_obtained(), 1.0)
+        self.answerpaper.update_marks_obtained()
+        self.assertEqual(self.answerpaper.marks_obtained, 1.0)
+
+    def test_update_percent(self):
+        """ Test update_percent() method of Answerpaper"""
+        self.answerpaper.update_percent()
+        self.assertEqual(self.answerpaper.percent, 33.33)
+
+    def test_update_passed(self):
+        """ Test update_passed method of AnswerPaper"""
+        self.answerpaper.update_passed()
+        self.assertFalse(self.answerpaper.passed)
 
     def test_get_question_answer(self):
         """ Test get_question_answer() method of Answer Paper"""

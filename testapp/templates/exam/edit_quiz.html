@@ -20,9 +20,12 @@
   <table class=span1>
 	{% for form in forms %}
  	<tr><td><b>Start Date: <td>{{ form.start_date}} 
-	<tr><td><b>Duration: <td> {{ form.duration }} 
+    <tr><td><b>Duration: <td> {{ form.duration }}<br>{{form.duration.help_text}} 
 	<tr><td><b>Active: <td> {{ form.active }} 
 	<tr><td><b>Description: <td> {{ form.description }}
+    <tr><td><b>Passing Criteria: <td> {{ form.pass_criteria }}<br>{{form.pass_criteria.help_text}}
+	<tr><td><b>Language: <td> {{ form.language }}
+	<tr><td><b>Prerequisite: <td> {{ form.prerequisite }}
 	<hr>
   {% endfor %}
   </table>

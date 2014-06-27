@@ -16,7 +16,7 @@ class Profile(models.Model):
     position = models.CharField(max_length=64)
 
 
-LANGUAGES = (
+languages = (
         ("python", "Python"),
         ("bash", "Bash"),
         ("C", "C Language"),
@@ -26,7 +26,7 @@ LANGUAGES = (
                             )
 
 
-QUESTION_TYPES = (
+question_types = (
         ("mcq", "Multiple Choice"),
         ("code", "Code"),
                         )
@@ -53,10 +53,10 @@ class Question(models.Model):
 
     # The language for question.
     language = models.CharField(max_length=24,
-                                choices=LANGUAGES)
+                                choices=languages)
 
     # The type of question.
-    type = models.CharField(max_length=24, choices=QUESTION_TYPES)
+    type = models.CharField(max_length=24, choices=question_types)
 
     # Is this question active or not. If it is inactive it will not be used
     # when creating a QuestionPaper.
@@ -115,6 +115,15 @@ class Quiz(models.Model):
     # Description of quiz.
     description = models.CharField(max_length=256)
 
+    # Mininum passing percentage condition.
+    pass_criteria = models.FloatField("Passing percentage", default=40)
+
+    # List of prerequisite quizzes to be passed to take this quiz
+    prerequisite = models.ForeignKey("Quiz", null=True)
+
+    # Programming language for a quiz
+    language = models.CharField(max_length=20, choices=languages)
+
     class Meta:
         verbose_name_plural = "Quizzes"
 
@@ -137,11 +146,14 @@ class QuestionPaper(models.Model):
     # Questions that will be fetched randomly from the Question Set.
     random_questions = models.ManyToManyField("QuestionSet")
 
+    # Option to shuffle questions, each time a new question paper is created.
+    shuffle_questions = models.BooleanField(default=False)
+
     # Total marks for the question paper.
     total_marks = models.FloatField()
 
     def update_total_marks(self):
-        """ Returns the total marks for the Question Paper"""
+        """ Updates the total marks for the Question Paper"""
         marks = 0.0
         questions = self.fixed_questions.all()
         for question in questions:
@@ -149,7 +161,6 @@ class QuestionPaper(models.Model):
         for question_set in self.random_questions.all():
             marks += question_set.marks * question_set.num_questions
         self.total_marks = marks
-        return None
 
     def _get_questions_for_answerpaper(self):
         """ Returns fixed and random questions for the answer paper"""
@@ -167,8 +178,9 @@ class QuestionPaper(models.Model):
                              + datetime.timedelta(minutes=self.quiz.duration)
         ans_paper.question_paper = self
         questions = self._get_questions_for_answerpaper()
-        question_ids = [str(x.id) for x in questions]	
-        shuffle(questions)
+        question_ids = [str(x.id) for x in questions]
+        if self.shuffle_questions:
+            shuffle(question_ids)
         ans_paper.questions = "|".join(question_ids)
         ans_paper.save()
         return ans_paper
@@ -229,6 +241,15 @@ class AnswerPaper(models.Model):
 
     # Teacher comments on the question paper.
     comments = models.TextField()
+
+    # Total marks earned by the student in this paper.
+    marks_obtained = models.FloatField(null=True, default=None)
+
+    # Marks percent scored by the user
+    percent = models.FloatField(null=True, default=None)
+
+    # Result of the quiz, True if student passes the exam.
+    passed = models.NullBooleanField()
 
     def current_question(self):
         """Returns the current active question to display."""
@@ -298,9 +319,28 @@ class AnswerPaper(models.Model):
         answered = ', '.join(sorted(qa))
         return answered if answered else 'None'
 
-    def get_marks_obtained(self):
-        """Returns the total marks earned by student for this paper."""
-        return sum([x.marks for x in self.answers.filter(marks__gt=0.0)])
+    def update_marks_obtained(self):
+        """Updates the total marks earned by student for this paper."""
+        marks = sum([x.marks for x in self.answers.filter(marks__gt=0.0)])
+        self.marks_obtained = marks
+
+    def update_percent(self):
+        """Updates the percent gained by the student for this paper."""
+        total_marks = self.question_paper.total_marks
+        if self.marks_obtained is not None:
+            percent = self.marks_obtained/self.question_paper.total_marks*100
+            self.percent = round(percent, 2)
+
+    def update_passed(self):
+        """
+            Checks whether student passed or failed, as per the quiz
+            passing criteria.
+        """
+        if self.percent is not None: 
+            if self.percent >= self.question_paper.quiz.pass_criteria:
+                self.passed = True
+            else:
+                self.passed = False
 
     def get_question_answers(self):
         """
