@@ -569,14 +569,20 @@ def manual_questionpaper(request, questionpaper_id=None):
 
 def prof_manage(request):
     """Take credentials of the user with professor/moderator
-    rights/permissions and log in."""
+rights/permissions and log in."""
     user = request.user
-    if user.is_authenticated()\
-            and user.groups.filter(name='moderator').count() > 0:
-        context = {'user': user}
+    if user.is_authenticated() and is_moderator(user):
+        question_papers = QuestionPaper.objects.all()
+        users_per_paper = []
+        for paper in question_papers:
+            answer_papers = AnswerPaper.objects.filter(question_paper=paper)
+            users_passed = AnswerPaper.objects.filter(question_paper=paper, passed=True).count()
+            users_failed = AnswerPaper.objects.filter(question_paper=paper, passed=False).count()
+            temp = paper, answer_papers, users_passed, users_failed
+            users_per_paper.append(temp)
+        context = {'user': user, 'users_per_paper':users_per_paper}
         return my_render_to_response('manage.html', context)
     return my_redirect('/exam/login/')
-
 
 def user_login(request):
     """Take the credentials of the user and log the user in."""
