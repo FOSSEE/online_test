@@ -1,18 +1,69 @@
 {% extends "user.html" %}
 
 
-{% block subtitle %}Available Quizzes{% endblock %}
+{% block subtitle %}Hello {{ user.first_name }}, welcome to your dashboard !{% endblock %}
 
 {% block css %}
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/exam/css/question_quiz.css" type="text/css" />
 {% endblock %}
 
+{% block script %}
+<script src="{{ URL_ROOT }}/static/exam/js/bootstrap-alert.js"></script>
+<script src="{{ URL_ROOT }}/static/exam/js/quizzes_user.js"></script>
+{% endblock %}
+
+
 {% block manage %}
-    {% if not quizzes %}
-        <center><h4>No active quizzes for you</h4></center>
+    {% if cannot_attempt %}
+        <p>You have not passed the prerequisite & hence you cannot take the quiz.</p>
     {% endif %}
+    <h4>List of quizzes availbale for you</h4>
+    {% if not quizzes %}
+        <h5>No active quizzes for you</h5>
+    {% endif %}
+    <table>
+    <th>Quiz</th>
+    <th>Pre requisite quiz</th>
     {% for paper in quizzes %}
-     <a href="{{ URL_ROOT }}/exam/intro/{{paper.id}}">{{ paper.quiz.description }}</a><br>
+        <tr>
+            <td>
+                <a href="{{ URL_ROOT }}/exam/intro/{{paper.id}}">{{ paper.quiz.description }}</a><br>
+            </td>
+            <td>
+                {% if paper.quiz.prerequisite %}
+                    You have to pass <a href="{{ URL_ROOT }}/exam/intro/{{paper.quiz.prerequisite.id}}">{{ paper.quiz.prerequisite.description }}</a> for taking <a href="{{ URL_ROOT }}/exam/intro/{{paper.id}}">{{ paper.quiz.description }}</a>
+                {% else %}
+                    No pre requisites for {{ paper.quiz.description }}
+                {% endif %}
+            </td>
+        </tr>
     {% endfor %}
+    </table>
+    <hr>    
+    <h4>List of quizzes taken by you so far</h4>
+    {% if quizzes_taken %}
+        <table>
+            <th>Quiz</th>
+            <th>Result</th>
+        {% for paper in quizzes_taken %}
+            <tr>
+                <td>
+                    {{ paper.question_paper.quiz.description }}
+                </td>
+                <td>
+                    {% if paper.passed %}
+                        <p>Pass</p>
+                    {% else %}
+                        <p>Fail</p>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </table>
+    {% else %}
+        <p>You have not taken any quiz yet !!</p>
+    {% endif %}
+
+
 {% endblock %}
 

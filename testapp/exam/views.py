@@ -131,30 +131,58 @@ def user_register(request):
                                       context_instance=ci)
 
 
-def quizlist_user(request):
-    """Show All Quizzes that is available to logged-in user."""
-    user = request.user
-    avail_quiz = list(QuestionPaper.objects.filter(quiz__active=True))
-    user_answerpapers = AnswerPaper.objects.filter(user=user)
-    user_quiz = []
+def quizlist_user(request):                                                    
+    """Show All Quizzes that is available to logged-in user."""                
+    user = request.user                                                        
+    avail_quizzes = list(QuestionPaper.objects.filter(quiz__active=True))      
+    user_answerpapers = AnswerPaper.objects.filter(user=user)                  
+    quizzes_taken = []                                                         
+    pre_requisites = []
+    context = {}                                       
+                                          
 
-    if user_answerpapers.count() == 0:
-        context = {'quizzes': avail_quiz}
-        return my_render_to_response("exam/quizzes_user.html", context)
-
-    for paper in user_answerpapers:
-        for quiz in avail_quiz:
-            if paper.question_paper.id == quiz.id and \
-                    paper.end_time != paper.start_time:
-                avail_quiz.remove(quiz)
-
-    context = {'quizzes': avail_quiz, 'user': user}
+    if 'cannot_attempt' in request.GET:
+        context['cannot_attempt'] = True
+                                                                               
+    if user_answerpapers.count() == 0:                                         
+        context['quizzes'] = avail_quizzes
+        context['user'] = user                      
+        context['quizzes_taken'] = None
+        return my_render_to_response("exam/quizzes_user.html", context)        
+                                                                               
+    for answer_paper in user_answerpapers:                                     
+        for quiz in avail_quizzes:                                             
+            if answer_paper.question_paper.id == quiz.id and \
+                answer_paper.end_time != answer_paper.start_time:          
+                avail_quizzes.remove(quiz)
+                quizzes_taken.append(answer_paper)                             
+                                                                               
+    context['quizzes'] = avail_quizzes
+    context['user'] = user
+    context['quizzes_taken'] = quizzes_taken
     return my_render_to_response("exam/quizzes_user.html", context)
 
 
 def intro(request, questionpaper_id):
     """Show introduction page before quiz starts"""
     user = request.user
+    ci = RequestContext(request)
+    quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
+    if quest_paper.quiz.prerequisite:
+        try:
+            answer_paper = AnswerPaper.objects.get(
+                                            id=quest_paper.quiz.prerequisite.id)
+            if answer_paper.passed:
+                context = {'user': user, 'paper_id': questionpaper_id}
+                return my_render_to_response('exam/intro.html', context,
+                                             context_instance=ci)
+            else:
+                context = {'user': user, 'cannot_attempt':True}
+                return my_redirect("/exam/quizzes/?cannot_attempt=True")
+                
+        except:
+            context = {'user': user, 'cannot_attempt':True}
+            return my_redirect("/exam/quizzes/?cannot_attempt=True")
     context = {'user': user, 'paper_id': questionpaper_id}
     ci = RequestContext(request)
     return my_render_to_response('exam/intro.html', context,
