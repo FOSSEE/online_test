@@ -45,6 +45,9 @@
         <table>
             <th>Quiz</th>
             <th>Result</th>
+            <th>Mraks Obtained</th>
+            <th>Total Marks</th>
+            <th>Percentage</th>
         {% for paper in quizzes_taken %}
             <tr>
                 <td>
@@ -56,6 +59,15 @@
                     {% else %}
                         <p>Fail</p>
                     {% endif %}
+                </td>
+                <td>
+                    {{ paper.marks_obtained }}
+                </td>
+                <td>
+                    {{ paper.question_paper.total_marks }}
+                </td>
+                <td>
+                    {{ paper.percent }}
                 </td>
             </tr>
         {% endfor %}
