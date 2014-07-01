@@ -571,9 +571,16 @@ def prof_manage(request):
     """Take credentials of the user with professor/moderator
     rights/permissions and log in."""
     user = request.user
-    if user.is_authenticated()\
-            and user.groups.filter(name='moderator').count() > 0:
-        context = {'user': user}
+    if user.is_authenticated() and is_moderator(user):
+        question_papers = QuestionPaper.objects.all()
+        users_per_paper = []
+        for paper in question_papers:
+            answer_papers = AnswerPaper.objects.filter(question_paper=paper)
+            users_passed = AnswerPaper.objects.filter(question_paper=paper, result=True).count()
+            users_failed = AnswerPaper.objects.filter(question_paper=paper, result=False).count()
+            temp = paper, answer_papers, users_passed, users_failed
+            users_per_paper.append(temp)
+        context = {'user': user, 'users_per_paper':users_per_paper}
         return my_render_to_response('manage.html', context)
     return my_redirect('/exam/login/')
 
@@ -1057,4 +1064,14 @@ def grade_user(request, username):
     else:
         context = {'data': data}
         return my_render_to_response('exam/grade_user.html', context,
+                                     context_instance=ci)
+                                     
+
+def lang_quiz_list(request, language=None):
+    curr_user = request.user
+    if not curr_user.is_authenticated() or not is_moderator(curr_user):
+        raise Http404('You are not allowed to view this page!')
+    quiz_list = Quiz.objects.filter(language=language)
+    context = {'quiz_list':quiz_list, 'language':language.title()}
+    return my_render_to_response('exam/lang_quiz_list.html', context,
                                      context_instance=ci)
