@@ -168,16 +168,18 @@ def intro(request, questionpaper_id):
     user = request.user
     ci = RequestContext(request)
     quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
+    print quest_paper.quiz.prerequisite
     if quest_paper.quiz.prerequisite:
         try:
+            pre_quest = QuestionPaper.objects.get(quiz=quest_paper.quiz.prerequisite)
             answer_paper = AnswerPaper.objects.get(
-                           quest_paper.quiz=quest_paper.quiz.prerequisite,
+                           question_paper=pre_quest,
                            user=user)
             if answer_paper.passed:
                 context = {'user': user, 'paper_id': questionpaper_id}
                 return my_render_to_response('exam/intro.html', context,
                                              context_instance=ci)
-            else:
+            else:            else:
                 context = {'user': user, 'cannot_attempt':True}
                 return my_redirect("/exam/quizzes/?cannot_attempt=True")
                 
