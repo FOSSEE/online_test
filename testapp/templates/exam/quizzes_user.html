@@ -31,7 +31,7 @@
             </td>
             <td>
                 {% if paper.quiz.prerequisite %}
-                    You have to pass <a href="{{ URL_ROOT }}/exam/intro/{{paper.quiz.prerequisite.id}}">{{ paper.quiz.prerequisite.description }}</a> for taking <a href="{{ URL_ROOT }}/exam/intro/{{paper.id}}">{{ paper.quiz.description }}</a>
+                    You have to pass {{ paper.quiz.prerequisite.description }} for taking {{ paper.quiz.description }}
                 {% else %}
                     No pre requisites for {{ paper.quiz.description }}
                 {% endif %}
