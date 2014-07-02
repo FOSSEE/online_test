@@ -171,7 +171,7 @@ def intro(request, questionpaper_id):
     if quest_paper.quiz.prerequisite:
         try:
             answer_paper = AnswerPaper.objects.get(
-                           quest_paper.quiz.id=quest_paper.quiz.prerequisite.id,
+                           quest_paper.quiz=quest_paper.quiz.prerequisite,
                            user=user)
             if answer_paper.passed:
                 context = {'user': user, 'paper_id': questionpaper_id}
