@@ -168,7 +168,6 @@ def intro(request, questionpaper_id):
     user = request.user
     ci = RequestContext(request)
     quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
-    print quest_paper.quiz.prerequisite
     if quest_paper.quiz.prerequisite:
         try:
             pre_quest = QuestionPaper.objects.get(quiz=quest_paper.quiz.prerequisite)
