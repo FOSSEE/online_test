@@ -179,7 +179,7 @@ def intro(request, questionpaper_id):
                 context = {'user': user, 'paper_id': questionpaper_id}
                 return my_render_to_response('exam/intro.html', context,
                                              context_instance=ci)
-            else:            else:
+            else:
                 context = {'user': user, 'cannot_attempt':True}
                 return my_redirect("/exam/quizzes/?cannot_attempt=True")
                 
