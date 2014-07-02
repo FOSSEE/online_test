@@ -171,7 +171,8 @@ def intro(request, questionpaper_id):
     if quest_paper.quiz.prerequisite:
         try:
             answer_paper = AnswerPaper.objects.get(
-                                            id=quest_paper.quiz.prerequisite.id)
+                           quest_paper.quiz.id=quest_paper.quiz.prerequisite.id,
+                           user=user)
             if answer_paper.passed:
                 context = {'user': user, 'paper_id': questionpaper_id}
                 return my_render_to_response('exam/intro.html', context,
