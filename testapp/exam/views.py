@@ -203,7 +203,7 @@ def results_user(request):
         max_marks = paper.question_paper.total_marks
         percentage = round((marks_obtained/max_marks)*100, 2)
         temp = paper.question_paper.quiz.description, marks_obtained,\
-               max_marks, percetage
+               max_marks, percentage
         quiz_marks.append(temp)
     context = {'papers': quiz_marks}
     return my_render_to_response("exam/results_user.html", context)
