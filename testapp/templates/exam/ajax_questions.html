@@ -1,0 +1,31 @@
+<div id="questions">
+    {% if questions %}
+    <input type="checkbox" id="checkall" class="ignore">
+        <span><b> <font size="3"> Select All </font></b></span>
+    {% endif %}
+    <ul class="inputs-list">
+
+       {% for question in questions %}
+            <li>
+                <label>
+                    <input type="checkbox" name="questions" data-qid="{{question.id}}">
+                    <span> {{ question.summary }} </span>
+                </label>
+             </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div id="num">
+    <select id="numbers">
+        <option value="">Number of questions to be picked from the pool</option>
+            {% for q in questions %}
+                {% if forloop.counter0 != 0 %}
+                     <option value={{forloop.counter0}}>{{ forloop.counter0}}</option>
+                     {% endif %}
+                 {% if questions|length == 1%}
+                     <option value=1>1</option>
+                 {% endif %}
+            {% endfor %}
+    </select>
+</div>

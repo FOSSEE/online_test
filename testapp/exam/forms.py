@@ -13,7 +13,7 @@ from string import letters, punctuation, digits
 import datetime
 
 languages = (
-    ("select", "Select"),
+    ("select", "Select Language"),
     ("python", "Python"),
     ("bash", "Bash"),
     ("C", "C Language"),
@@ -23,7 +23,7 @@ languages = (
     )
 
 question_types = (
-    ("select", "Select"),
+    ("select", "Select Question Type"),
     ("mcq", "Multiple Choice"),
     ("mcc", "Multiple Correct Choices"),
     ("code", "Code"),
@@ -207,3 +207,11 @@ class QuestionForm(forms.Form):
         new_question.active = active
         new_question.snippet = snippet
         new_question.save()
+
+
+class RandomQuestionForm(forms.Form):
+    question_type = forms.CharField(max_length=8, widget=forms.Select\
+                                    (choices=question_types))
+    marks = forms.CharField(max_length=8, widget=forms.Select\
+            (choices=(('select', 'Select Marks'),)))
+    shuffle_questions = forms.BooleanField(required=False)

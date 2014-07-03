@@ -11,12 +11,14 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.http import Http404
 from django.db.models import Sum
+from django.views.decorators.csrf import csrf_exempt
 from taggit.models import Tag
 from itertools import chain
 # Local imports.
-from exam.models import Quiz, Question, QuestionPaper
+from exam.models import Quiz, Question, QuestionPaper, QuestionSet
 from exam.models import Profile, Answer, AnswerPaper, User
-from exam.forms import UserRegisterForm, UserLoginForm, QuizForm, QuestionForm
+from exam.forms import UserRegisterForm, UserLoginForm, QuizForm,\
+                QuestionForm, RandomQuestionForm
 from exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
 
@@ -131,32 +133,32 @@ def user_register(request):
                                       context_instance=ci)
 
 
-def quizlist_user(request):                                                    
-    """Show All Quizzes that is available to logged-in user."""                
-    user = request.user                                                        
-    avail_quizzes = list(QuestionPaper.objects.filter(quiz__active=True))      
-    user_answerpapers = AnswerPaper.objects.filter(user=user)                  
-    quizzes_taken = []                                                         
+def quizlist_user(request):
+    """Show All Quizzes that is available to logged-in user."""
+    user = request.user
+    avail_quizzes = list(QuestionPaper.objects.filter(quiz__active=True))
+    user_answerpapers = AnswerPaper.objects.filter(user=user)
+    quizzes_taken = []
     pre_requisites = []
-    context = {}                                       
-                                          
+    context = {}
+
 
     if 'cannot_attempt' in request.GET:
         context['cannot_attempt'] = True
-                                                                               
-    if user_answerpapers.count() == 0:                                         
+
+    if user_answerpapers.count() == 0:
         context['quizzes'] = avail_quizzes
-        context['user'] = user                      
+        context['user'] = user
         context['quizzes_taken'] = None
-        return my_render_to_response("exam/quizzes_user.html", context)        
-                                                                               
-    for answer_paper in user_answerpapers:                                     
-        for quiz in avail_quizzes:                                             
+        return my_render_to_response("exam/quizzes_user.html", context)
+
+    for answer_paper in user_answerpapers:
+        for quiz in avail_quizzes:
             if answer_paper.question_paper.id == quiz.id and \
-                answer_paper.end_time != answer_paper.start_time:          
+                answer_paper.end_time != answer_paper.start_time:
                 avail_quizzes.remove(quiz)
-                quizzes_taken.append(answer_paper)                             
-                                                                               
+                quizzes_taken.append(answer_paper)
+
     context['quizzes'] = avail_quizzes
     context['user'] = user
     context['quizzes_taken'] = quizzes_taken
@@ -181,7 +183,7 @@ def intro(request, questionpaper_id):
             else:
                 context = {'user': user, 'cannot_attempt':True}
                 return my_redirect("/exam/quizzes/?cannot_attempt=True")
-                
+
         except:
             context = {'user': user, 'cannot_attempt':True}
             return my_redirect("/exam/quizzes/?cannot_attempt=True")
@@ -197,7 +199,7 @@ def results_user(request):
     papers = AnswerPaper.objects.filter(user=user)
     quiz_marks = []
     for paper in papers:
-        marks_obtained = paper.update_marks_obtained()
+        marks_obtained = paper.marks_obtained
         max_marks = paper.question_paper.total_marks
         percentage = round((marks_obtained/max_marks)*100, 2)
         temp = paper.question_paper.quiz.description, marks_obtained,\
@@ -249,6 +251,7 @@ def edit_question(request):
     options = request.POST.getlist('options')
     type = request.POST.getlist('type')
     active = request.POST.getlist('active')
+    language = request.POST.getlist('language')
     snippet = request.POST.getlist('snippet')
     for j, question_id in enumerate(question_list):
         question = Question.objects.get(id=question_id)
@@ -258,6 +261,7 @@ def edit_question(request):
         question.test = test[j]
         question.options = options[j]
         question.active = active[j]
+        question.language = language[j]
         question.snippet = snippet[j]
         question.type = type[j]
         question.save()
@@ -292,6 +296,7 @@ def add_question(request, question_id=None):
                 d.options = form['options'].data
                 d.type = form['type'].data
                 d.active = form['active'].data
+                d.language = form['language'].data
                 d.snippet = form['snippet'].data
                 d.save()
                 question = Question.objects.get(id=question_id)
@@ -322,6 +327,7 @@ def add_question(request, question_id=None):
             form.initial['options'] = d.options
             form.initial['type'] = d.type
             form.initial['active'] = d.active
+            form.initial['language'] = d.language
             form.initial['snippet'] = d.snippet
             form_tags = d.tags.all()
             form_tags_split = form_tags.values('name')
@@ -387,15 +393,6 @@ def add_quiz(request, quiz_id=None):
             return my_render_to_response('exam/add_quiz.html',
                                          {'form': form},
                                          context_instance=ci)
-
-
-def design_questionpaper(request, questionpaper_id=None):
-    user = request.user
-    ci = RequestContext(request)
-    if not user.is_authenticated() or not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-    return my_render_to_response('exam/add_questionpaper.html', {},
-                                 context_instance=ci)
 
 
 def show_all_questionpapers(request, questionpaper_id=None):
@@ -842,7 +839,11 @@ def complete(request, reason=None, questionpaper_id=None):
     else:
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
         paper = AnswerPaper.objects.get(user=user, question_paper=q_paper)
-        obt_marks = paper.update_marks_obtained()
+        paper.update_marks_obtained()
+        paper.update_percent()
+        paper.update_passed()
+        paper.save()
+        obt_marks = paper.marks_obtained
         tot_marks = paper.question_paper.total_marks
         if obt_marks == paper.question_paper.total_marks:
             context = {'message': "Hurray ! You did an excellent job.\
@@ -1029,6 +1030,7 @@ def show_all_questions(request):
             form.initial['options'] = d.options
             form.initial['type'] = d.type
             form.initial['active'] = d.active
+            form.initial['language'] = d.language
             form.initial['snippet'] = d.snippet
             form_tags = d.tags.all()
             form_tags_split = form_tags.values('name')
@@ -1094,3 +1096,74 @@ def grade_user(request, username):
         context = {'data': data}
         return my_render_to_response('exam/grade_user.html', context,
                                      context_instance=ci)
+
+
+@csrf_exempt
+def ajax_questionpaper(request, query):
+    """
+        During question paper creation, ajax call made to get question details.
+    """
+    if query == 'marks':
+        question_type = request.POST.get('question_type')
+        questions = Question.objects.filter(type=question_type)
+        marks = questions.values_list('points').distinct()
+        return my_render_to_response('exam/ajax_marks.html', {'marks': marks})
+    elif query == 'questions':
+        question_type = request.POST['question_type']
+        marks_selected = request.POST['marks']
+        fixed_questions = request.POST.getlist('fixed_list[]')
+        fixed_question_list = ",".join(fixed_questions).split(',')
+        random_questions = request.POST.getlist('random_list[]')
+        random_question_list = ",".join(random_questions).split(',')
+        question_list = fixed_question_list + random_question_list
+        questions = list(Question.objects.filter(type=question_type,
+                                            points=marks_selected))
+        questions = [ question for question in questions \
+                if not str(question.id) in question_list ]
+        return my_render_to_response('exam/ajax_questions.html',
+                              {'questions': questions})
+
+
+def design_questionpaper(request):
+    user = request.user
+    ci = RequestContext(request)
+
+    if not user.is_authenticated() or not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+
+    if request.method == 'POST':
+        fixed_questions = request.POST.getlist('fixed')
+        random_questions = request.POST.getlist('random')
+        random_number = request.POST.getlist('number')
+        is_shuffle = request.POST.get('shuffle_questions', False)
+        if is_shuffle == 'on':
+            is_shuffle = True
+
+        question_paper = QuestionPaper(shuffle_questions=is_shuffle)
+        quiz = Quiz.objects.order_by("-id")[0]
+        tot_marks = 0
+        question_paper.quiz = quiz
+        question_paper.total_marks = tot_marks
+        question_paper.save()
+        if fixed_questions:
+            fixed_questions_ids = ",".join(fixed_questions)
+            fixed_questions_ids_list =  fixed_questions_ids.split(',')
+            for question_id in fixed_questions_ids_list:
+                question_paper.fixed_questions.add(question_id)
+        if random_questions:
+            for random_question, num in zip(random_questions, random_number):
+                question = Question.objects.get(id=random_question[0])
+                marks = question.points
+                question_set = QuestionSet(marks=marks, num_questions=num)
+                question_set.save()
+                for question_id in random_question.split(','):
+                    question_set.questions.add(question_id)
+                    question_paper.random_questions.add(question_set)
+        question_paper.update_total_marks()
+        question_paper.save()
+        return my_redirect('/exam/manage/showquiz')
+    else:
+        form = RandomQuestionForm()
+        context = {'form': form}
+        return my_render_to_response('exam/design_questionpaper.html',
+                                     context, context_instance=ci)
