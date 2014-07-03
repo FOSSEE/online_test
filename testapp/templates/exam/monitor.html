@@ -47,7 +47,7 @@
     <th> Roll number </th>  
     <th> Institute </th>
     <th> Questions answered </th> 
-    <th> Total marks </th>
+    <th> Marks obtained </th>
     <th> Attempts </th>
     </tr>
     {% for paper in papers %}
@@ -57,7 +57,7 @@
         <td> {{ paper.profile.roll_number }} </td>
         <td> {{ paper.profile.institute }} </td>
         <td> {{ paper.get_answered_str }} </td> 
-        <td> {{ paper.get_total_marks }} </td>
+        <td> {{ paper.marks_obtained }} </td>
         <td> {{ paper.answers.count }} </td>
     </tr>
     {% endfor %}
