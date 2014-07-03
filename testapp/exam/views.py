@@ -133,32 +133,32 @@ def user_register(request):
                                       context_instance=ci)
 
 
-def quizlist_user(request):                                                    
-    """Show All Quizzes that is available to logged-in user."""                
-    user = request.user                                                        
-    avail_quizzes = list(QuestionPaper.objects.filter(quiz__active=True))      
-    user_answerpapers = AnswerPaper.objects.filter(user=user)                  
-    quizzes_taken = []                                                         
+def quizlist_user(request):
+    """Show All Quizzes that is available to logged-in user."""
+    user = request.user
+    avail_quizzes = list(QuestionPaper.objects.filter(quiz__active=True))
+    user_answerpapers = AnswerPaper.objects.filter(user=user)
+    quizzes_taken = []
     pre_requisites = []
-    context = {}                                       
-                                          
+    context = {}
+
 
     if 'cannot_attempt' in request.GET:
         context['cannot_attempt'] = True
-                                                                               
-    if user_answerpapers.count() == 0:                                         
+
+    if user_answerpapers.count() == 0:
         context['quizzes'] = avail_quizzes
-        context['user'] = user                      
+        context['user'] = user
         context['quizzes_taken'] = None
-        return my_render_to_response("exam/quizzes_user.html", context)        
-                                                                               
-    for answer_paper in user_answerpapers:                                     
-        for quiz in avail_quizzes:                                             
+        return my_render_to_response("exam/quizzes_user.html", context)
+
+    for answer_paper in user_answerpapers:
+        for quiz in avail_quizzes:
             if answer_paper.question_paper.id == quiz.id and \
-                answer_paper.end_time != answer_paper.start_time:          
+                answer_paper.end_time != answer_paper.start_time:
                 avail_quizzes.remove(quiz)
-                quizzes_taken.append(answer_paper)                             
-                                                                               
+                quizzes_taken.append(answer_paper)
+
     context['quizzes'] = avail_quizzes
     context['user'] = user
     context['quizzes_taken'] = quizzes_taken
@@ -183,7 +183,7 @@ def intro(request, questionpaper_id):
             else:
                 context = {'user': user, 'cannot_attempt':True}
                 return my_redirect("/exam/quizzes/?cannot_attempt=True")
-                
+
         except:
             context = {'user': user, 'cannot_attempt':True}
             return my_redirect("/exam/quizzes/?cannot_attempt=True")
