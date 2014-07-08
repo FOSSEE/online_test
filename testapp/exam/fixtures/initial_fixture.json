@@ -1,0 +1,91 @@
+[
+    {
+        "fields": {
+            "active": true,
+            "description": "\nWrite a function called <code>fact</code> which takes a single integer argument\n(say <code>n</code>) and returns the factorial of the number. \nFor example:<br/>\n<code>fact(3) -> 6</code>\n",
+            "options": "",
+            "points": 2.0,
+            "summary": "Factorial",
+            "test": "\nassert fact(0) == 1\nassert fact(5) == 120\n",
+            "type": "python"
+        },
+        "model": "exam.question",
+        "pk": 1
+    },
+    {
+        "fields": {
+            "active": true,
+            "description": "Create a simple function called <code>sqr</code> which takes a single \nargument and returns the square of the argument. For example: <br/>\n<code>sqr(3) -> 9</code>.",
+            "options": "",
+            "points": 1.0,
+            "summary": "Simple function",
+            "test": "\nimport math\nassert sqr(3) == 9\nassert abs(sqr(math.sqrt(2)) - 2.0) < 1e-14 \n    ",
+            "type": "python"
+        },
+        "model": "exam.question",
+        "pk": 2
+    },
+    {
+        "fields": {
+            "active": true,
+            "description": "Write a shell script which takes two arguments on the\ncommand line and prints the sum of the two on the output.",
+            "options": "",
+            "points": 2.0,
+            "summary": "Bash addition",
+            "test": "docs/sample.sh\ndocs/sample.args\n",
+            "type": "bash"
+        },
+        "model": "exam.question",
+        "pk": 3
+    },
+    {
+        "fields": {
+            "active": true,
+            "description": "What is the largest integer value that can be represented\nin Python?",
+            "options": "No Limit\n2**32\n2**32 - 1\nNone of the above\n",
+            "points": 0.5,
+            "summary": "Size of integer in Python",
+            "test": "No Limit",
+            "type": "mcq"
+        },
+        "model": "exam.question",
+        "pk": 4
+    },
+    {
+        "fields": {
+            "active": true,
+            "description": "Basic Python Quiz 1",
+            "duration": 10,
+            "start_date": "2012-03-29"
+        },
+        "model": "exam.quiz",
+        "pk": 1
+    },
+    {
+        "fields": {
+            "name": "moderator",
+            "permissions": [
+                31,
+                37,
+                43,
+                32,
+                38,
+                44,
+                33,
+                39,
+                45,
+                34,
+                40,
+                46,
+                35,
+                41,
+                47,
+                36,
+                42,
+                48
+            ]
+        },
+        "model": "auth.group",
+        "pk": 1
+    }
+]
