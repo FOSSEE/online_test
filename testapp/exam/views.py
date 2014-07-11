@@ -23,7 +23,7 @@ from exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
 
 # The directory where user data can be saved.
-OUTPUT_DIR = abspath(join(dirname(__file__), pardir, 'output'))
+OUTPUT_DIR = abspath(join(dirname(__file__), 'output'))
 
 
 def my_redirect(url):
