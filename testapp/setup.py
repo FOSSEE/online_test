@@ -17,9 +17,9 @@ setup(
     description='A django app to conduct online test.',
     long_description=README,
     install_requires=[
-          'django',
-          'django-taggit',
-          'django-taggit-autocomplete-modified',
+        'django',
+        'django-taggit',
+        'django-taggit-autocomplete-modified',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
