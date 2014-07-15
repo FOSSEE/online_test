@@ -304,7 +304,7 @@ class AnswerPaper(models.Model):
 
     def time_left(self):
         """Return the time remaining for the user in seconds."""
-        dt = datetime.datetime.now() - self.start_time
+        dt = datetime.datetime.now() - self.start_time.replace(tzinfo=None)
         try:
             secs = dt.total_seconds()
         except AttributeError:
