@@ -3,8 +3,8 @@
    the objects in the exam app.
    We can modify this command to add more groups by providing arguments.
    Arguments like group-name, app-name can be passed.
-
 '''
+
 # django imports
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import Group, Permission
