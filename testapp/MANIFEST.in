@@ -1,0 +1,7 @@
+include LICENSE
+include README.rst
+recursive-include exam/static *
+recursive-include exam/templates *
+recursive-include exam/management *
+recursive-include exam/output *
+recursive-include exam/fixtures *
