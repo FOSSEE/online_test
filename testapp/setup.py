@@ -14,6 +14,8 @@ setup(
     packages=['exam'],
     include_package_data=True,
     license='BSD License',
+    entry_points = {
+            'console_scripts': ['exam = exam:code_server.py', ],},
     description='A django app to conduct online test.',
     long_description=README,
     install_requires=[
