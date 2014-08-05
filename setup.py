@@ -22,6 +22,7 @@ setup(
     description='A django app to conduct online test.',
     long_description=README,
     install_requires=[
+        'django-exam',
         'django',
         'django-taggit',
         'django-taggit-autocomplete-modified',
