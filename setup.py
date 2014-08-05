@@ -1,5 +1,5 @@
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
@@ -11,7 +11,7 @@ setup(
     author='Prabhu Ramachandran',
     author_email='prabhu.ramachandran@gmail.com',
     version='0.1',
-    packages=['testapp.exam'],
+    packages=find_packages(),
     include_package_data=True,
     license='BSD License',
     entry_points = {

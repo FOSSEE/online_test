@@ -1,5 +1,11 @@
 include LICENSE
 include README.rst
+exclude testapp/production.py
+exclude testapp/settings.py
+exclude testapp/urls.py
+exclude testapp/test_server.py
+exclude testapp/manage.py
+recursive-exclude testapp/myauthentication *
 recursive-include testapp/exam/static *
 recursive-include testapp/exam/templates *
 recursive-include testapp/exam/management *
