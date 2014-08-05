@@ -15,11 +15,11 @@ from django.views.decorators.csrf import csrf_exempt
 from taggit.models import Tag
 from itertools import chain
 # Local imports.
-from exam.models import Quiz, Question, QuestionPaper, QuestionSet
-from exam.models import Profile, Answer, AnswerPaper, User
-from exam.forms import UserRegisterForm, UserLoginForm, QuizForm,\
+from testapp.exam.models import Quiz, Question, QuestionPaper, QuestionSet
+from testapp.exam.models import Profile, Answer, AnswerPaper, User
+from testapp.exam.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm
-from exam.xmlrpc_clients import code_server
+from testapp.exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
 
 # The directory where user data can be saved.
