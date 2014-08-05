@@ -11,12 +11,12 @@ setup(
     author='Prabhu Ramachandran',
     author_email='prabhu.ramachandran@gmail.com',
     version='0.1',
-    packages=['exam'],
+    packages=['testapp.exam'],
     include_package_data=True,
     license='BSD License',
     entry_points = {
             'console_scripts': [
-                'code_server = exam.code_server:main', 
+                'code_server = exam.code_server:main',
             ],
     },
     description='A django app to conduct online test.',

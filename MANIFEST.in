@@ -1,0 +1,7 @@
+include LICENSE
+include README.rst
+recursive-include testapp/exam/static *
+recursive-include testapp/exam/templates *
+recursive-include testapp/exam/management *
+recursive-include testapp/exam/output *
+recursive-include testapp/exam/fixtures *
