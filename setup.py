@@ -27,9 +27,9 @@ setup(
     install_requires=[
         'django',
         'django-taggit',
-        'django-taggit-autocomplete-modified>=0.1.0b5',
+        'django-taggit-autocomplete-modified>=0.2',
     ],
-    dependency_links=[link+'#egg=django_taggit_autocomplete_modified-0.1.0b5'],
+    dependency_links=[link+'#egg=django_taggit_autocomplete_modified-0.2'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
