@@ -6,6 +6,9 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
+link = 'git+https://github.com/prathamesh920/\
+django-taggit-autocomplete-modified.git'
+
 setup(
     name='django-exam',
     author='Prabhu Ramachandran',
@@ -24,8 +27,9 @@ setup(
     install_requires=[
         'django',
         'django-taggit',
-        'django-taggit-autocomplete-modified',
+        'django-taggit-autocomplete-modified>=0.1.0b5',
     ],
+    dependency_links=[link+'#egg=django_taggit_autocomplete_modified-0.1.0b5'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
