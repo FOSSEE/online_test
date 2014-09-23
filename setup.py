@@ -25,8 +25,9 @@ setup(
     description='A django app to conduct online test.',
     long_description=README,
     install_requires=[
-        'django',
-        'django-taggit',
+        'django==1.6',
+        'mysql-python==1.2.5',
+        'django-taggit==0.12.2',
         'django-taggit-autocomplete-modified>=0.2',
     ],
     dependency_links=[link+'#egg=django_taggit_autocomplete_modified-0.2'],
