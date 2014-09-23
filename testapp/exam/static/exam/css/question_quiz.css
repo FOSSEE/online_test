@@ -5,14 +5,20 @@ table th, table td
 
 .mini-text
 {
-	height : 9px;
-	width : 30px;
+	height : 25px;
+	width : 70px;
 }
 .select-type
 {
-	width : 80px;
+	width : 225px;
 }
 .tag-text
 {
+    height : 30px;
     width : 290px;
+}
+.date-text
+{
+    height : 30px;
+    width : 100px;
 }
