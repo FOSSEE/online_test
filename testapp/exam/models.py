@@ -31,7 +31,15 @@ question_types = (
         ("mcc", "Multiple Correct Choices"),
         ("code", "Code"),
                         )
+attempts = [(i, i) for i in range(1, 6)]
+attempts.append((-1, 'Infinite'))
 
+days_between_attempts = ((j, j) for j in range(401))
+
+test_status = (
+                ('inprogress', 'Inprogress'),
+                ('completed', 'Completed'),
+              )
 
 ###############################################################################
 class Question(models.Model):
@@ -125,6 +133,12 @@ class Quiz(models.Model):
     # Programming language for a quiz
     language = models.CharField(max_length=20, choices=languages)
 
+    # Number of attempts for the quiz
+    attempts_allowed = models.IntegerField(default=1, choices=attempts)
+
+    time_between_attempts = models.IntegerField("Number of Days",\
+            choices=days_between_attempts)
+
     class Meta:
         verbose_name_plural = "Quizzes"
 
@@ -171,9 +185,9 @@ class QuestionPaper(models.Model):
             questions += question_set.get_random_questions()
         return questions
 
-    def make_answerpaper(self, user, ip):
+    def make_answerpaper(self, user, ip, attempt_no):
         """Creates an  answer paper for the user to attempt the quiz"""
-        ans_paper = AnswerPaper(user=user, profile=user.profile, user_ip=ip)
+        ans_paper = AnswerPaper(user=user, user_ip=ip, attempt_number=attempt_no)
         ans_paper.start_time = datetime.datetime.now()
         ans_paper.end_time = ans_paper.start_time \
                              + datetime.timedelta(minutes=self.quiz.duration)
@@ -214,16 +228,15 @@ class AnswerPaper(models.Model):
     # The user taking this question paper.
     user = models.ForeignKey(User)
 
-    # The user's profile, we store a reference to make it easier to access the
-    # data.
-    profile = models.ForeignKey(Profile)
-
     # All questions that remain to be attempted for a particular Student
     # (a list of ids separated by '|')
     questions = models.CharField(max_length=128)
 
     # The Quiz to which this question paper is attached to.
     question_paper = models.ForeignKey(QuestionPaper)
+
+    # The attempt number for the question paper.
+    attempt_number = models.IntegerField()
 
     # The time when this paper was started by the user.
     start_time = models.DateTimeField()
@@ -251,6 +264,10 @@ class AnswerPaper(models.Model):
 
     # Result of the quiz, True if student passes the exam.
     passed = models.NullBooleanField()
+
+    # Status of the quiz attempt
+    status = models.CharField(max_length=20, choices=test_status,\
+            default='inprogress')
 
     def current_question(self):
         """Returns the current active question to display."""
@@ -342,6 +359,10 @@ class AnswerPaper(models.Model):
                 self.passed = True
             else:
                 self.passed = False
+
+    def update_status(self):
+        """ Sets status to completed """
+        self.status = 'completed'
 
     def get_question_answers(self):
         """
