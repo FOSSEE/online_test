@@ -19,7 +19,7 @@ setup(
     license='BSD License',
     entry_points = {
             'console_scripts': [
-                'code_server = exam.code_server:main',
+                'code_server = testapp.exam.code_server:main',
             ],
     },
     description='A django app to conduct online test.',
