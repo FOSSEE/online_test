@@ -5,8 +5,8 @@ from django.core.management.base import BaseCommand
 from django.template import Template, Context
 
 # Local imports.
-from exam.views import get_user_data
-from exam.models import User
+from testapp.exam.views import get_user_data
+from testapp.exam.models import User
 
 data_template = Template('''\
 ===============================================================================
