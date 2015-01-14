@@ -41,6 +41,9 @@ test_status = (
                 ('completed', 'Completed'),
               )
 
+def get_assignment_dir(instance, filename):
+    return '%s/%s/' % (instance.user.roll_number, instance.assignment.description)
+
 ###############################################################################
 class Question(models.Model):
     """Question for a quiz."""
@@ -381,3 +384,11 @@ class AnswerPaper(models.Model):
     def __unicode__(self):
         u = self.user
         return u'Question paper for {0} {1}'.format(u.first_name, u.last_name)
+        
+
+################################################################################
+class AssignmentUpload(models.Model):
+    user = models.ForeignKey(Profile)
+    assignment = models.ForeignKey(Quiz)
+    assignmentQuestion = models.ForeignKey(Question)
+    assignmentFile = models.FileField(upload_to=get_assignment_dir)
