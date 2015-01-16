@@ -1189,3 +1189,19 @@ def design_questionpaper(request):
         context = {'form': form}
         return my_render_to_response('exam/design_questionpaper.html',
                                      context, context_instance=ci)
+
+
+def submit_assignment(request, question_id=None):
+    user = request.user
+    skip = request.POST.get('skip', None)
+    if request.method == "POST" and skip is not None:
+        question = Question.objects.get(id=question_id)
+        assignment = AssignmentUpload()
+        assignment.user = user
+        assignment.assignmentQuestion = question
+        assignment.assignmentFile = request.FILES['assignment']
+        assignment.save()
+        #next question ke liye code idhar
+    else:
+        #code for skipping the question
+        

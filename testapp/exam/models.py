@@ -389,6 +389,5 @@ class AnswerPaper(models.Model):
 ################################################################################
 class AssignmentUpload(models.Model):
     user = models.ForeignKey(Profile)
-    assignment = models.ForeignKey(Quiz)
     assignmentQuestion = models.ForeignKey(Question)
     assignmentFile = models.FileField(upload_to=get_assignment_dir)

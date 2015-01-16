@@ -95,6 +95,17 @@ function setSnippetHeight()
 	 </div>{% endif %}
 
          <p id="status"></p>
+         
+         {% if question.type == "bash assignment" %}
+         <form action="{{URL_ROOT}}/exam/submit-assignment/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post">
+         <p>Upload assignment file for the said question<p>
+         <input type=file id=assignment name=assignment>
+         <hr>
+         <br><button class="btn" type="submit" name="submitassign" id="submitassign">Upload</button>&nbsp;&nbsp;
+         <button class="btn" type="submit" name="skip" id="skip">Skip</button>
+         </form>         
+         {% endif %}
+         
          <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post">
          {% csrf_token %}
          {% if question.type == "mcq" %}
