@@ -21,7 +21,7 @@ from testapp.exam.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm
 from testapp.exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
-
+from testapp.exam.models import AssignmentUpload
 
 # The directory where user data can be saved.
 OUTPUT_DIR = abspath(join(dirname(__file__), 'output'))
@@ -760,6 +760,13 @@ def check(request, q_id, attempt_no=None, questionpaper_id=None):
         user_answer = request.POST.get('answer')
     elif question.type == 'mcc':
         user_answer = request.POST.getlist('answer')
+    elif question.type == 'basgn':
+        assign = AssignmentUpload()
+        assign.user = user.profile
+        assign.assignmentQuestion = question
+        assign.assignmentFile = request.FILES['assignment']
+        assign.save()
+        user_answer = 'ASSIGNMENT UPLOADED'
     else:
         user_code = request.POST.get('answer')
         user_answer = snippet_code + "\n" + user_code
@@ -772,15 +779,16 @@ def check(request, q_id, attempt_no=None, questionpaper_id=None):
     # If we were not skipped, we were asked to check.  For any non-mcq
     # questions, we obtain the results via XML-RPC with the code executed
     # safely in a separate process (the code_server.py) running as nobody.
-    correct, success, err_msg = validate_answer(user, user_answer, question)
-    if correct:
-        new_answer.correct = correct
-        new_answer.marks = question.points
-        new_answer.error = err_msg
-        success_msg = True
-    else:
-        new_answer.error = err_msg
-    new_answer.save()
+    if not question.type == 'basgn':
+        correct, success, err_msg = validate_answer(user, user_answer, question)
+        if correct:
+            new_answer.correct = correct
+            new_answer.marks = question.points
+            new_answer.error = err_msg
+            success_msg = True
+        else:
+            new_answer.error = err_msg
+        new_answer.save()
 
     time_left = paper.time_left()
     if not success:  # Should only happen for non-mcq questions.
@@ -1204,4 +1212,4 @@ def submit_assignment(request, question_id=None):
         #next question ke liye code idhar
     else:
         #code for skipping the question
-        
+        pass

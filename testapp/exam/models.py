@@ -30,6 +30,7 @@ question_types = (
         ("mcq", "Multiple Choice"),
         ("mcc", "Multiple Correct Choices"),
         ("code", "Code"),
+        ("basgn", "Bash Assignment"),
                         )
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
@@ -42,7 +43,7 @@ test_status = (
               )
 
 def get_assignment_dir(instance, filename):
-    return '%s/%s/' % (instance.user.roll_number, instance.assignment.description)
+    return '%s/%s' % (instance.user.roll_number, instance.assignmentQuestion.id)
 
 ###############################################################################
 class Question(models.Model):

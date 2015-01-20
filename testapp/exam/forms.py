@@ -27,6 +27,7 @@ question_types = (
     ("mcq", "Multiple Choice"),
     ("mcc", "Multiple Correct Choices"),
     ("code", "Code"),
+    ("basgn", "Bash Assignment"),
     )
 
 UNAME_CHARS = letters + "._" + digits

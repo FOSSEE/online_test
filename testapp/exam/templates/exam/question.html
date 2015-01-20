@@ -96,22 +96,17 @@ function setSnippetHeight()
 
          <p id="status"></p>
          
-         {% if question.type == "bash assignment" %}
-         <form action="{{URL_ROOT}}/exam/submit-assignment/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post">
-         <p>Upload assignment file for the said question<p>
-         <input type=file id=assignment name=assignment>
-         <hr>
-         <br><button class="btn" type="submit" name="submitassign" id="submitassign">Upload</button>&nbsp;&nbsp;
-         <button class="btn" type="submit" name="skip" id="skip">Skip</button>
-         </form>         
-         {% endif %}
-         
-         <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post">
+         <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" enctype="multipart/form-data">
          {% csrf_token %}
          {% if question.type == "mcq" %}
          {% for option in question.options.strip.splitlines %}
          <input name="answer" type="radio" value="{{option}}" />{{option}} <br/>
          {% endfor %}
+         {% endif %}
+         {% if question.type == "basgn" %}
+         <p>Upload assignment file for the said question<p>
+         <input type=file id="assignment" name="assignment">
+         <hr>
          {% endif %}
          {% if question.type == "mcc" %}
          {% for option in question.options.strip.splitlines %}
@@ -133,6 +128,8 @@ function setSnippetHeight()
          {% endif %}
 
          {% if question.type == "mcq" or question.type == "mcc "%}
+         <br><button class="btn" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
+         {% elif question.type == "basgn" %}
          <br><button class="btn" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
          {% else %}
          <button class="btn" type="submit" name="check" id="check" onClick="submitCode();">Check Answer</button>&nbsp;&nbsp;
