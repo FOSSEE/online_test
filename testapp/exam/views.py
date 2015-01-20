@@ -189,7 +189,7 @@ def intro(request, questionpaper_id):
                 'attempt_no': already_attempted + 1}
         return my_render_to_response('exam/intro.html', context,
                                      context_instance=ci)
-    if already_attempted < attempt_number:
+    if already_attempted < attempt_number or attempt_number < 0:
         previous_attempt_day = attempted_papers[already_attempted-1].start_time
         today = datetime.datetime.today()
         days_after_attempt = (today - previous_attempt_day).days
