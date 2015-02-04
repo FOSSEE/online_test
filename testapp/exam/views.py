@@ -959,9 +959,18 @@ def validate_answer(user, user_answer, question):
         elif question.type == 'code':
             user_dir = get_user_dir(user)
             success, message = code_server.run_code(user_answer, question.test,
-                                                user_dir, question.language)
+                                                question.test_keyword_args, question.test_pos_args,
+                                                question.test_expected_answer, user_dir, question.language) ####
             if success:
                 correct = True
+    
+    ####                
+    print "MESS>>>", question.test
+    print "POS>>>", question.test_pos_args
+    print "KEY>>>", question.test_keyword_args
+    print "EXP>>>", question.test_expected_answer
+    ####
+
     return correct, success, message
 
 

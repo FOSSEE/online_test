@@ -62,6 +62,15 @@ class Question(models.Model):
     # Test cases for the question in the form of code that is run.
     test = models.TextField(blank=True)
 
+    #Test case Keyword arguments in dict form
+    test_keyword_args = models.TextField(blank=True) ####
+
+    #Test case Positional arguments in list form
+    test_pos_args = models.TextField(blank=True) ####
+
+    #Test case Expected answer in list form
+    test_expected_answer = models.TextField(blank=True) ####
+
     # Any multiple choice options. Place one option per line.
     options = models.TextField(blank=True)
 
@@ -396,3 +405,22 @@ class AssignmentUpload(models.Model):
     user = models.ForeignKey(Profile)
     assignmentQuestion = models.ForeignKey(Question)
     assignmentFile = models.FileField(upload_to=get_assignment_dir)
+
+
+################################################################################
+class TestCase(models.Model):
+    question = models.ForeignKey(Question)
+
+    # Test case Keyword arguments in dict form
+    test_keyword_args = models.TextField(blank=True)
+
+    # Test case Positional arguments in list form
+    test_pos_args = models.TextField(blank=True)
+
+    # Test case Expected answer in list form
+    test_expected_answer = models.TextField(blank=True)
+
+    # Is this Test Case public or not. If it is not 
+    # public it will not be visible to the user
+    # public = models.BooleanField(default=False)
+
