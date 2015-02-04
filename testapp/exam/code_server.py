@@ -68,7 +68,7 @@ class CodeServer(object):
               'have an infinite loop in your code.' % SERVER_TIMEOUT
         self.timeout_msg = msg
 
-    def run_python_code(self, answer, test_code, in_dir=None):
+    def run_python_code(self, answer, test_code, test_obj, in_dir=None): ####
         """Tests given Python function (`answer`) with the `test_code`
         supplied. If the optional `in_dir` keyword argument is supplied
         it changes the directory to that directory (it does not change
@@ -123,7 +123,7 @@ class CodeServer(object):
 
         return success, err
 
-    def run_bash_code(self, answer, test_code, in_dir=None):
+    def run_bash_code(self, answer, test_code, test_obj, in_dir=None): ####
         """Tests given Bash code  (`answer`) with the `test_code` supplied.
 
         The testcode should typically contain two lines, the first is a path to
@@ -290,7 +290,7 @@ class CodeServer(object):
                                                      stdnt_stdout+stdnt_stderr)
                 return False, err
 
-    def run_c_code(self, answer, test_code, in_dir=None):
+    def run_c_code(self, answer, test_code, test_obj, in_dir=None): ####
         """Tests given C code  (`answer`) with the `test_code` supplied.
 
         The testcode is a path to the reference code.
@@ -442,7 +442,7 @@ class CodeServer(object):
                 err = err + "\n" + stdnt_stderr
         return success, err
 
-    def run_cplus_code(self, answer, test_code, in_dir=None):
+    def run_cplus_code(self, answer, test_code, test_obj, in_dir=None): ####
         """Tests given C++ code  (`answer`) with the `test_code` supplied.
 
         The testcode is a path to the reference code.
@@ -504,7 +504,7 @@ class CodeServer(object):
 
         return success, err
 
-    def run_java_code(self, answer, test_code, in_dir=None):
+    def run_java_code(self, answer, test_code, test_obj, in_dir=None): ####
         """Tests given java code  (`answer`) with the `test_code` supplied.
 
         The testcode is a path to the reference code.
@@ -659,7 +659,7 @@ class CodeServer(object):
                 stripped = stripped + c
         return ''.join(stripped)
  
-    def run_scilab_code(self, answer, test_code, in_dir=None):
+    def run_scilab_code(self, answer, test_code, test_obj, in_dir=None): ####
         """Tests given Scilab function (`answer`) with the `test_code`
         supplied. If the optional `in_dir` keyword argument is supplied
         it changes the directory to that directory (it does not change
