@@ -16,7 +16,7 @@ from taggit.models import Tag
 from itertools import chain
 # Local imports.
 from testapp.exam.models import Quiz, Question, QuestionPaper, QuestionSet
-from testapp.exam.models import Profile, Answer, AnswerPaper, User
+from testapp.exam.models import Profile, Answer, AnswerPaper, User, TestCase
 from testapp.exam.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm
 from testapp.exam.xmlrpc_clients import code_server
@@ -848,6 +848,49 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     if not user.is_authenticated() or paper.end_time < datetime.datetime.now():
         return my_redirect('/exam/login/')
     question = get_object_or_404(Question, pk=q_id)
+    q_paper = QuestionPaper.objects.get(id=questionpaper_id)
+    paper = AnswerPaper.objects.get(user=request.user, question_paper=q_paper)
+    test = TestCase.objects.filter(question=question)
+    test_parameter = question.consolidate_test_cases(test)
+
+    # ####
+    # for i in TestCase.objects.all():
+    #     print "=====$$$$$=====KEY", i.kw_args
+    #     print "=====$$$$$=====POS", i.pos_args
+    #     print "=====$$$$$=====FUNC", i.func_name
+
+    # test_case_parameters = {}
+    # kw_args_dict = {}
+    # pos_args_list = []
+
+    # for i in TestCase.objects.all():
+    #         test_case_parameters.setdefault(i.id, {})
+    #         test_case_parameters[i.id]['func_name'] = i.func_name
+    #         test_case_parameters[i.id]['expected_answer'] = i.expected_answer
+
+    #         for args in i.kw_args.split(","):
+    #             key, val = args.split("=")
+    #             kw_args_dict[key.strip()] = val.strip()
+
+
+    #         for args in i.pos_args.split(","):
+    #             pos_args_list.append(args.strip())
+
+    #         test_case_parameters[i.id]['kw_args'] = kw_args_dict
+    #         test_case_parameters[i.id]['pos_args'] = pos_args_list
+
+    # print "######-----####-----", test_case_parameters
+
+    # test_obj = TestCase.objects.filter(question=question)
+    # test_parameter = []
+    # for i in test_obj:
+    #     d = {}
+    #     d['test_func_name'] = i.test_func_name
+    #     d['test_keyword_args'] = i.test_keyword_args
+    #     d['test_pos_args'] = i.test_pos_args
+    #     d['test_expected_answer'] = i.test_expected_answer
+    #     test_parameter.append(d)
+    # ####
     snippet_code = request.POST.get('snippet')
     user_code = request.POST.get('answer')
     skip = request.POST.get('skip', None)
@@ -859,6 +902,19 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             _save_skipped_answer(old_skipped, user_code, paper, question)
         next_q = paper.skip()
         return show_question(request, next_q, attempt_num, questionpaper_id)
+
+    # ### of the form addnum(1, 2, one=2, two=2)
+    # test_code_eval = ""
+    # for param in test_parameter:
+    #     # print "TESTCASE----OUTLOOP", literal_eval(test_case['test_keyword_args'])
+
+    #     tcode = "assert {0}({1}, {2})\n""" \
+    #         .format(param.get('test_func_name'), param.get('test_pos_args'), param.get('test_keyword_args'))
+    #         # .format(", ".join(str(i) for i in test_case['test_pos_args']),
+    #         #     ", ".join(str(key+"="+arg) for key, arg in eval(test_case['test_keyword_args']).iteritems()))
+    # test_code_eval = "\n".join(tcode)
+
+    # print test_code_eval
 
     # Add the answer submitted, regardless of it being correct or not.
     if question.type == 'mcq':
@@ -876,7 +932,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         assign.save()
         user_answer = 'ASSIGNMENT UPLOADED'
     else:
-        user_answer = snippet_code + "\n" + user_code
+        user_code = request.POST.get('answer')
+        user_answer = user_code #snippet_code + "\n" + user_code
 
     new_answer = Answer(question=question, answer=user_answer,
                         correct=False)
@@ -887,7 +944,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     # questions, we obtain the results via XML-RPC with the code executed
     # safely in a separate process (the code_server.py) running as nobody.
     if not question.type == 'upload':
-        correct, success, err_msg = validate_answer(user, user_answer, question)
+        correct, success, err_msg = validate_answer(user, user_answer, question, test_parameter)
         if correct:
             new_answer.correct = correct
             new_answer.marks = question.points
@@ -933,7 +990,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                                  questionpaper_id, success_msg)
 
 
-def validate_answer(user, user_answer, question):
+def validate_answer(user, user_answer, question, test_parameter):####
     """
         Checks whether the answer submitted by the user is right or wrong.
         If right then returns correct = True, success and
@@ -958,18 +1015,9 @@ def validate_answer(user, user_answer, question):
                 message = 'Correct answer'
         elif question.type == 'code':
             user_dir = get_user_dir(user)
-            success, message = code_server.run_code(user_answer, question.test,
-                                                question.test_keyword_args, question.test_pos_args,
-                                                question.test_expected_answer, user_dir, question.language) ####
+            success, message = code_server.run_code(user_answer, question.test, test_parameter, user_dir, question.language) ####
             if success:
                 correct = True
-    
-    ####                
-    print "MESS>>>", question.test
-    print "POS>>>", question.test_pos_args
-    print "KEY>>>", question.test_keyword_args
-    print "EXP>>>", question.test_expected_answer
-    ####
 
     return correct, success, message
 

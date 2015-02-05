@@ -62,15 +62,6 @@ class Question(models.Model):
     # Test cases for the question in the form of code that is run.
     test = models.TextField(blank=True)
 
-    #Test case Keyword arguments in dict form
-    test_keyword_args = models.TextField(blank=True) ####
-
-    #Test case Positional arguments in list form
-    test_pos_args = models.TextField(blank=True) ####
-
-    #Test case Expected answer in list form
-    test_expected_answer = models.TextField(blank=True) ####
-
     # Any multiple choice options. Place one option per line.
     options = models.TextField(blank=True)
 
@@ -90,6 +81,34 @@ class Question(models.Model):
 
     # Tags for the Question.
     tags = TaggableManager()
+
+    def consolidate_test_cases(self, test):
+        test_case_parameter= []
+
+        for i in test:
+            kw_args_dict = {}
+            pos_args_list = []
+
+            parameter_dict = {}
+            parameter_dict['test_id'] = i.id
+            parameter_dict['func_name'] = i.func_name
+            parameter_dict['expected_answer'] = i.expected_answer
+            parameter_dict['ref_code_path'] = i.ref_code_path
+
+            if i.kw_args:
+                for args in i.kw_args.split(","):
+                    key, val = args.split("=")
+                    kw_args_dict[key.strip()] = val.strip()
+
+            if i.pos_args:
+                for args in i.pos_args.split(","):
+                    pos_args_list.append(args.strip())
+
+            parameter_dict['kw_args'] = kw_args_dict
+            parameter_dict['pos_args'] = pos_args_list
+            test_case_parameter.append(parameter_dict)
+
+        return test_case_parameter
 
     def __unicode__(self):
         return self.summary
@@ -411,16 +430,48 @@ class AssignmentUpload(models.Model):
 class TestCase(models.Model):
     question = models.ForeignKey(Question)
 
+    # Test case function name
+    func_name = models.CharField(max_length=200)
+
     # Test case Keyword arguments in dict form
-    test_keyword_args = models.TextField(blank=True)
+    kw_args = models.TextField(blank=True)
 
     # Test case Positional arguments in list form
-    test_pos_args = models.TextField(blank=True)
+    pos_args = models.TextField(blank=True)
 
     # Test case Expected answer in list form
-    test_expected_answer = models.TextField(blank=True)
+    expected_answer = models.TextField(blank=True)
+
+    # Test case path to system test code applicable for CPP, C, Java and Scilab
+    ref_code_path = models.TextField(blank=True)
 
     # Is this Test Case public or not. If it is not 
     # public it will not be visible to the user
     # public = models.BooleanField(default=False)
+
+    # def consolidate_test_cases(self):
+    #     test_case_parameter= {}
+    #     kw_args_dict = {}
+    #     pos_args_list = []
+
+    #     for i in self:
+    #         test_case_parameter.setdefault(i.id, {})
+    #         test_case_parameter[i.id]['func_name'] = i.func_name
+    #         test_case_parameter[i.id]['expected_answer'] = i.expected_answer
+
+    #         for args in i.kw_args.split(","):
+    #             key, val = args.split("=")
+    #             kw_args_dict[key.strip()] = val.strip()
+
+
+    #         for args in i.pos_args.split(","):
+    #             pos_args_list.append(args.strip())
+
+    #         test_case_parameter[i.id]['kw_args'] = kw_args_dict
+    #         test_case_parameter[i.id]['pos_args'] = pos_args_list
+
+    #         # test_case_parameter[i.id]['kw_args'] = i.kw_args
+    #         # test_case_parameter[i.id]['pos_args'] = i.pos_args
+
+    #         return test_case_parameter
 
