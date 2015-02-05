@@ -68,7 +68,8 @@ class CodeServer(object):
               'have an infinite loop in your code.' % SERVER_TIMEOUT
         self.timeout_msg = msg
 
-    def run_python_code(self, answer, test_code, test_obj, in_dir=None): ####
+    def run_python_code(self, answer, test_code, test_parameter, in_dir=None): ####
+    # def run_python_code(self, answer, test_code, in_dir=None): ####
         """Tests given Python function (`answer`) with the `test_code`
         supplied. If the optional `in_dir` keyword argument is supplied
         it changes the directory to that directory (it does not change
@@ -90,11 +91,23 @@ class CodeServer(object):
 
         success = False
         tb = None
+
+        test_code_eval = ""
+        for test_case in test_parameter:
+            # for key, val in test_case.iteritems():
+            pos_args = ", ".join(str(i) for i in test_case.get('pos_args')) if test_case.get('pos_args') \
+                            else ""
+            kw_args = ", ".join(str(k+"="+a) for k, a in test_case.get('kw_args').iteritems()) \
+                            if test_case.get('kw_args') else ""
+            args = pos_args + ", " + kw_args if pos_args and kw_args else pos_args or kw_args
+            tcode = "assert {0}({1}) == {2}" \
+                .format(test_case.get('func_name'), args, test_case.get('expected_answer'))
+            test_code_eval += tcode + "\n"
         try:
             submitted = compile(answer, '<string>', mode='exec')
             g = {}
             exec submitted in g
-            _tests = compile(test_code, '<string>', mode='exec')
+            _tests = compile(test_code_eval, '<string>', mode='exec')
             exec _tests in g
         except TimeoutException:
             err = self.timeout_msg
@@ -123,7 +136,8 @@ class CodeServer(object):
 
         return success, err
 
-    def run_bash_code(self, answer, test_code, test_obj, in_dir=None): ####
+    # def run_bash_code(self, answer, test_code, test_parameter, in_dir=None): ####
+    def run_bash_code(self, answer, test_code, in_dir=None): ####
         """Tests given Bash code  (`answer`) with the `test_code` supplied.
 
         The testcode should typically contain two lines, the first is a path to
@@ -290,7 +304,8 @@ class CodeServer(object):
                                                      stdnt_stdout+stdnt_stderr)
                 return False, err
 
-    def run_c_code(self, answer, test_code, test_obj, in_dir=None): ####
+    # def run_c_code(self, answer, test_code, test_parameter, in_dir=None): ####
+    def run_c_code(self, answer, test_code, in_dir=None): ####
         """Tests given C code  (`answer`) with the `test_code` supplied.
 
         The testcode is a path to the reference code.
@@ -442,7 +457,8 @@ class CodeServer(object):
                 err = err + "\n" + stdnt_stderr
         return success, err
 
-    def run_cplus_code(self, answer, test_code, test_obj, in_dir=None): ####
+    # def run_cplus_code(self, answer, test_code, test_parameter, in_dir=None): ####
+    def run_cplus_code(self, answer, test_code, in_dir=None): ####
         """Tests given C++ code  (`answer`) with the `test_code` supplied.
 
         The testcode is a path to the reference code.
@@ -504,7 +520,8 @@ class CodeServer(object):
 
         return success, err
 
-    def run_java_code(self, answer, test_code, test_obj, in_dir=None): ####
+    # def run_java_code(self, answer, test_code, test_parameter, in_dir=None): ####
+    def run_java_code(self, answer, test_code, in_dir=None): ####
         """Tests given java code  (`answer`) with the `test_code` supplied.
 
         The testcode is a path to the reference code.
@@ -659,7 +676,8 @@ class CodeServer(object):
                 stripped = stripped + c
         return ''.join(stripped)
  
-    def run_scilab_code(self, answer, test_code, test_obj, in_dir=None): ####
+    # def run_scilab_code(self, answer, test_code, test_parameter, in_dir=None): ####
+    def run_scilab_code(self, answer, test_code, in_dir=None): ####
         """Tests given Scilab function (`answer`) with the `test_code`
         supplied. If the optional `in_dir` keyword argument is supplied
         it changes the directory to that directory (it does not change
