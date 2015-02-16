@@ -94,6 +94,7 @@ class Question(models.Model):
             parameter_dict['func_name'] = i.func_name
             parameter_dict['expected_answer'] = i.expected_answer
             parameter_dict['ref_code_path'] = i.ref_code_path
+            parameter_dict['language'] = self.language
 
             if i.kw_args:
                 for args in i.kw_args.split(","):
@@ -444,34 +445,3 @@ class TestCase(models.Model):
 
     # Test case path to system test code applicable for CPP, C, Java and Scilab
     ref_code_path = models.TextField(blank=True)
-
-    # Is this Test Case public or not. If it is not 
-    # public it will not be visible to the user
-    # public = models.BooleanField(default=False)
-
-    # def consolidate_test_cases(self):
-    #     test_case_parameter= {}
-    #     kw_args_dict = {}
-    #     pos_args_list = []
-
-    #     for i in self:
-    #         test_case_parameter.setdefault(i.id, {})
-    #         test_case_parameter[i.id]['func_name'] = i.func_name
-    #         test_case_parameter[i.id]['expected_answer'] = i.expected_answer
-
-    #         for args in i.kw_args.split(","):
-    #             key, val = args.split("=")
-    #             kw_args_dict[key.strip()] = val.strip()
-
-
-    #         for args in i.pos_args.split(","):
-    #             pos_args_list.append(args.strip())
-
-    #         test_case_parameter[i.id]['kw_args'] = kw_args_dict
-    #         test_case_parameter[i.id]['pos_args'] = pos_args_list
-
-    #         # test_case_parameter[i.id]['kw_args'] = i.kw_args
-    #         # test_case_parameter[i.id]['pos_args'] = i.pos_args
-
-    #         return test_case_parameter
-

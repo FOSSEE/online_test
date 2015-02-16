@@ -29,7 +29,7 @@ class CodeServerProxy(object):
                         "scilab": "run_scilab_code",
                         }
 
-    def run_code(self, answer, test_code, test_parameter, user_dir, language): ####
+    def run_code(self, answer, test_parameter, user_dir, language):
         """Tests given code (`answer`) with the `test_code` supplied.  If the
         optional `in_dir` keyword argument is supplied it changes the directory
         to that directory (it does not change it back to the original when
@@ -55,9 +55,9 @@ class CodeServerProxy(object):
         try:
             server = self._get_server()
             method = getattr(server, method_name)
-            result = method(answer, test_code, test_parameter, user_dir) ####
+            result = method(answer, test_parameter, user_dir) ####
         except ConnectionError:
-            result = [False, 'Unable to connect to any code servers!']
+            result = {'success': False, 'error': 'Unable to connect to any code servers!'}
         return result
 
     def _get_server(self):
