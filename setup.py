@@ -11,8 +11,8 @@ django-taggit-autocomplete-modified.git'
 
 setup(
     name='django-exam',
-    author='Prabhu Ramachandran',
-    author_email='prabhu.ramachandran@gmail.com',
+    author='python team at IIT Bombay',
+    author_email='python@fossee.in',
     version='0.1',
     packages=find_packages(),
     include_package_data=True,
@@ -22,13 +22,13 @@ setup(
                 'code_server = testapp.exam.code_server:main',
             ],
     },
-    description='A django app to conduct online test.',
+    description='A django app to conduct online tests.',
     long_description=README,
     install_requires=[
         'django==1.6',
         'mysql-python==1.2.5',
         'django-taggit==0.12.2',
-        'django-taggit-autocomplete-modified>=0.2',
+        'django-taggit-autocomplete-modified > 0.1.0b4',
     ],
     dependency_links=[link+'#egg=django_taggit_autocomplete_modified-0.2'],
     classifiers=[
