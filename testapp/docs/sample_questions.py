@@ -4,7 +4,8 @@ questions = [
 [Question(
     summary='Factorial',
     points=2,
-    type="python",
+    language='python',
+    type='code',
     description='''
 Write a function called <code>fact</code> which takes a single integer argument
 (say <code>n</code>) and returns the factorial of the number. 
@@ -14,7 +15,9 @@ For example:<br/>
     test='''
 assert fact(0) == 1
 assert fact(5) == 120
-'''),
+''',
+    snippet="def fact(num):"
+    ),
 #Add tags here as a list of string.
 ['Python','function','factorial'],
 ],
@@ -22,7 +25,8 @@ assert fact(5) == 120
 [Question(
     summary='Simple function',
     points=1,
-    type="python",
+    language='python',
+    type='code',
     description='''Create a simple function called <code>sqr</code> which takes a single 
 argument and returns the square of the argument. For example: <br/>
 <code>sqr(3) -> 9</code>.''',
@@ -30,7 +34,9 @@ argument and returns the square of the argument. For example: <br/>
 import math
 assert sqr(3) == 9
 assert abs(sqr(math.sqrt(2)) - 2.0) < 1e-14 
-    '''),
+    ''',
+    snippet="def sqr(num):"
+    ),
 #Add tags here as a list of string.
 ['Python','function'],
 ],
@@ -38,13 +44,16 @@ assert abs(sqr(math.sqrt(2)) - 2.0) < 1e-14
 [Question(
     summary='Bash addition',
     points=2,
-    type="bash",
+    language='bash',
+    type='code',
     description='''Write a shell script which takes two arguments on the
     command line and prints the sum of the two on the output.''',
     test='''\
 docs/sample.sh
 docs/sample.args
-'''),
+''',
+    snippet="#!/bin/bash"
+    ),
 #Add tags here as a list of string.
 [''],
 ],
@@ -52,7 +61,8 @@ docs/sample.args
 [Question(
     summary='Size of integer in Python',
     points=0.5,
-    type="mcq",
+    language='python',
+    type='mcq',
     description='''What is the largest integer value that can be represented
 in Python?''',
     options='''No Limit

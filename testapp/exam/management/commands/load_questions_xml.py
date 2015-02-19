@@ -8,7 +8,7 @@ import re
 from django.core.management.base import BaseCommand
 
 # Local imports.
-from exam.models import Question
+from testapp.exam.models import Question
 
 def decode_html(html_str):
     """Un-escape or decode HTML strings to more usable Python strings.

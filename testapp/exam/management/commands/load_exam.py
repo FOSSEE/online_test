@@ -5,7 +5,7 @@ from os.path import basename
 from django.core.management.base import BaseCommand
 
 # Local imports.
-from exam.models import Question, Quiz
+from testapp.exam.models import Question, Quiz
 
 def clear_exam():
     """Deactivate all questions from the database."""

@@ -1,4 +1,4 @@
-from exam.models import Question, Quiz
+from testapp.exam.models import Question, Quiz
 from django.contrib import admin
 
 admin.site.register(Question)

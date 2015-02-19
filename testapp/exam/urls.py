@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, include, url
 
-urlpatterns = patterns('exam.views',
+urlpatterns = patterns('testapp.exam.views',
     url(r'^$', 'index'),
     url(r'^login/$', 'user_login'),
     url(r'^quizzes/$','quizlist_user'),
