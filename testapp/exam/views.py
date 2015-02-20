@@ -18,8 +18,8 @@ from itertools import chain
 from testapp.exam.models import Quiz, Question, QuestionPaper, QuestionSet
 from testapp.exam.models import Profile, Answer, AnswerPaper, User, TestCase
 from testapp.exam.forms import UserRegisterForm, UserLoginForm, QuizForm,\
-                QuestionForm, RandomQuestionForm
-from testapp.exam.xmlrpc_clients import code_server
+                QuestionForm, RandomQuestionForm, TestCaseFormSet
+from exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from testapp.exam.models import AssignmentUpload
 
@@ -281,7 +281,7 @@ def edit_quiz(request):
 
 
 def edit_question(request):
-    """Edit the list of questions seleted by the user for editing."""
+    """Edit the list of questions selected by the user for editing."""
     user = request.user
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
@@ -290,7 +290,6 @@ def edit_question(request):
     summary = request.POST.getlist('summary')
     description = request.POST.getlist('description')
     points = request.POST.getlist('points')
-    test = request.POST.getlist('test')
     options = request.POST.getlist('options')
     type = request.POST.getlist('type')
     active = request.POST.getlist('active')
@@ -298,10 +297,15 @@ def edit_question(request):
     snippet = request.POST.getlist('snippet')
     for j, question_id in enumerate(question_list):
         question = Question.objects.get(id=question_id)
+        test_case_formset = TestCaseFormSet(request.POST, prefix='test', instance=question)
+        if test_case_formset.is_valid():
+            test_case_instance = test_case_formset.save(commit=False)
+            for i in test_case_instance:
+                i.save()
+
         question.summary = summary[j]
         question.description = description[j]
         question.points = points[j]
-        question.test = test[j]
         question.options = options[j]
         question.active = active[j]
         question.language = language[j]
@@ -314,6 +318,16 @@ def edit_question(request):
 def add_question(request, question_id=None):
     """To add a new question in the database.
     Create a new question and store it."""
+
+    def add_or_delete_test_form(post_request, instance):
+        request_copy = post_request.copy()
+        if 'add_test' in post_request:
+                    request_copy['test-TOTAL_FORMS'] = int(request_copy['test-TOTAL_FORMS']) + 1
+        elif 'delete_test' in post_request:
+            request_copy['test-TOTAL_FORMS'] = int(request_copy['test-TOTAL_FORMS']) - 1
+        test_case_formset = TestCaseFormSet(request_copy, prefix='test', instance=instance)
+        return test_case_formset
+
     user = request.user
     ci = RequestContext(request)
     if not user.is_authenticated() or not is_moderator(user):
@@ -321,44 +335,84 @@ def add_question(request, question_id=None):
     if request.method == "POST":
         form = QuestionForm(request.POST)
         if form.is_valid():
-            data = form.cleaned_data
             if question_id is None:
-                form.save()
-                question = Question.objects.order_by("-id")[0]
-                tags = form['tags'].data.split(',')
-                for i in range(0, len(tags)-1):
-                    tag = tags[i].strip()
-                    question.tags.add(tag)
-                return my_redirect("/exam/manage/questions")
+                test_case_formset = add_or_delete_test_form(request.POST, form.save(commit=False))
+                if 'save_question' in request.POST:
+                    qtn = form.save(commit=False)
+                    test_case_formset = TestCaseFormSet(request.POST, prefix='test',  instance=qtn)
+                    form.save()
+                    question = Question.objects.order_by("-id")[0]
+                    tags = form['tags'].data.split(',')
+                    for i in range(0, len(tags)-1):
+                        tag = tags[i].strip()
+                        question.tags.add(tag)
+                    if test_case_formset.is_valid():
+                        test_case_formset.save()
+                    else:
+                        return my_render_to_response('exam/add_question.html',
+                                                     {'form': form,
+                                                     'formset': test_case_formset},
+                                                     context_instance=ci)
+
+                    return my_redirect("/exam/manage/questions")
+
+                return my_render_to_response('exam/add_question.html',
+                                             {'form': form,
+                                             'formset': test_case_formset},
+                                             context_instance=ci)
+                
             else:
                 d = Question.objects.get(id=question_id)
-                d.summary = form['summary'].data
-                d.description = form['description'].data
-                d.points = form['points'].data
-                d.test = form['test'].data
-                d.options = form['options'].data
-                d.type = form['type'].data
-                d.active = form['active'].data
-                d.language = form['language'].data
-                d.snippet = form['snippet'].data
-                d.save()
-                question = Question.objects.get(id=question_id)
-                for tag in question.tags.all():
-                    question.tags.remove(tag)
-                tags = form['tags'].data.split(',')
-                for i in range(0, len(tags)-1):
-                    tag = tags[i].strip()
-                    question.tags.add(tag)
-                return my_redirect("/exam/manage/questions")
+                test_case_formset = add_or_delete_test_form(request.POST, d)
+                if 'save_question' in request.POST:
+                    d.summary = form['summary'].data
+                    d.description = form['description'].data
+                    d.points = form['points'].data
+                    d.options = form['options'].data
+                    d.type = form['type'].data
+                    d.active = form['active'].data
+                    d.language = form['language'].data
+                    d.snippet = form['snippet'].data
+                    d.save()
+                    question = Question.objects.get(id=question_id)
+                    for tag in question.tags.all():
+                        question.tags.remove(tag)
+                    tags = form['tags'].data.split(',')
+                    for i in range(0, len(tags)-1):
+                        tag = tags[i].strip()
+                        question.tags.add(tag)
+
+                    test_case_formset = TestCaseFormSet(request.POST, prefix='test', instance=question)
+                    if test_case_formset.is_valid():
+                        test_case_instance = test_case_formset.save(commit=False)
+                        for i in test_case_instance:
+                            i.save()
+                    else:
+                        return my_render_to_response('exam/add_question.html',
+                                                     {'form': form,
+                                                     'formset': test_case_formset},
+                                                     context_instance=ci)
+
+
+                    return my_redirect("/exam/manage/questions")
+                return my_render_to_response('exam/add_question.html',
+                                             {'form': form,
+                                             'formset': test_case_formset},
+                                             context_instance=ci)
+
         else:
             return my_render_to_response('exam/add_question.html',
                                          {'form': form},
                                          context_instance=ci)
     else:
+        form = QuestionForm()
+        test_case_formset = TestCaseFormSet(prefix='test', instance=Question())
         if question_id is None:
             form = QuestionForm()
+            test_case_formset = TestCaseFormSet(prefix='test', instance=Question())
             return my_render_to_response('exam/add_question.html',
-                                         {'form': form},
+                                         {'form': form,
+                                         'formset': test_case_formset},
                                          context_instance=ci)
         else:
             d = Question.objects.get(id=question_id)
@@ -366,7 +420,6 @@ def add_question(request, question_id=None):
             form.initial['summary'] = d.summary
             form.initial['description'] = d.description
             form.initial['points'] = d.points
-            form.initial['test'] = d.test
             form.initial['options'] = d.options
             form.initial['type'] = d.type
             form.initial['active'] = d.active
@@ -380,8 +433,13 @@ def add_question(request, question_id=None):
             if (initial_tags == ","):
                 initial_tags = ""
             form.initial['tags'] = initial_tags
+
+            test_case_formset = TestCaseFormSet(prefix='test', 
+                                                    instance=d)
+
             return my_render_to_response('exam/add_question.html',
-                                         {'form': form},
+                                         {'form': form,
+                                         'formset': test_case_formset},
                                          context_instance=ci)
 
 
@@ -1172,13 +1230,13 @@ def show_all_questions(request):
         data = request.POST.getlist('question')
 
         forms = []
+        formsets = []
         for j in data:
             d = Question.objects.get(id=j)
             form = QuestionForm()
             form.initial['summary'] = d.summary
             form.initial['description'] = d.description
             form.initial['points'] = d.points
-            form.initial['test'] = d.test
             form.initial['options'] = d.options
             form.initial['type'] = d.type
             form.initial['active'] = d.active
@@ -1193,8 +1251,13 @@ def show_all_questions(request):
                 initial_tags = ""
             form.initial['tags'] = initial_tags
             forms.append(form)
+            test_case_formset = TestCaseFormSet(prefix='test', instance=d)
+            formsets.append(test_case_formset)
+            data_list = zip(forms, formsets)
+
         return my_render_to_response('exam/edit_question.html',
-                                     {'forms': forms, 'data': data},
+                                     {'data': data,
+                                     'data_list': data_list},
                                      context_instance=ci)
     else:
         questions = Question.objects.all()
