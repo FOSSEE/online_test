@@ -28,6 +28,9 @@
     <tr><td><strong>Rendered: </strong><td><p id='my'></p>
   <tr><td>Description: <td>{{ form.description}}  {{form.description.errors}}
   <tr><td>Test: <td>{{ form.test }}{{form.test.errors}}
+  <tr><td>Test Keyword Arguments: <td>{{ form.test_keyword_args }}{{form.test.errors}} <!--  -->
+  <tr><td>Test Positional Arguments: <td>{{ form.test_pos_args }}{{form.test.errors}} <!--  -->
+  <tr><td>Test Expected Answer: <td>{{ form.test_expected_answer }}{{form.test.errors}} <!--  -->
   <tr><td>Snippet: <td>{{ form.snippet }}{{ form.snippet.errors }}</td></tD></td></tr>
   <tr><td>Tags: <td>{{ form.tags }}
   <tr><td id='label_option'>Options: <td>{{ form.options }}  {{form.options.errors}} 

@@ -15,9 +15,9 @@ from django.views.decorators.csrf import csrf_exempt
 from taggit.models import Tag
 from itertools import chain
 # Local imports.
-from exam.models import Quiz, Question, QuestionPaper, QuestionSet
-from exam.models import Profile, Answer, AnswerPaper, User
-from exam.forms import UserRegisterForm, UserLoginForm, QuizForm,\
+from testapp.exam.models import Quiz, Question, QuestionPaper, QuestionSet
+from testapp.exam.models import Profile, Answer, AnswerPaper, User, TestCase
+from testapp.exam.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm
 from exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
@@ -727,6 +727,9 @@ def check(request, q_id, questionpaper_id=None):
     question = get_object_or_404(Question, pk=q_id)
     q_paper = QuestionPaper.objects.get(id=questionpaper_id)
     paper = AnswerPaper.objects.get(user=request.user, question_paper=q_paper)
+    test = TestCase.objects.filter(question=question)
+    test_parameter = question.consolidate_test_cases(test)
+
     snippet_code = request.POST.get('snippet')
     skip = request.POST.get('skip', None)
     success_msg = False
@@ -742,7 +745,7 @@ def check(request, q_id, questionpaper_id=None):
         user_answer = request.POST.getlist('answer')
     else:
         user_code = request.POST.get('answer')
-        user_answer = snippet_code + "\n" + user_code
+        user_answer = user_code #snippet_code + "\n" + user_code
 
     new_answer = Answer(question=question, answer=user_answer,
                         correct=False)
@@ -752,25 +755,26 @@ def check(request, q_id, questionpaper_id=None):
     # If we were not skipped, we were asked to check.  For any non-mcq
     # questions, we obtain the results via XML-RPC with the code executed
     # safely in a separate process (the code_server.py) running as nobody.
-    correct, success, err_msg = validate_answer(user, user_answer, question)
+    # correct, success, err_msg = validate_answer(user, user_answer, question, test_parameter)
+    correct, result = validate_answer(user, user_answer, question, test_parameter)
     if correct:
         new_answer.correct = correct
         new_answer.marks = question.points
-        new_answer.error = err_msg
+        new_answer.error = result.get('error')
         success_msg = True
     else:
-        new_answer.error = err_msg
+        new_answer.error = result.get('error')
     new_answer.save()
 
     time_left = paper.time_left()
-    if not success:  # Should only happen for non-mcq questions.
+    if not result.get('success'):  # Should only happen for non-mcq questions.
         if time_left == 0:
             reason = 'Your time is up!'
             return complete(request, reason, questionpaper_id)
         if not paper.question_paper.quiz.active:
             reason = 'The quiz has been deactivated!'
             return complete(request, reason, questionpaper_id)
-        context = {'question': question, 'error_message': err_msg,
+        context = {'question': question, 'error_message': result.get('error'),
                    'paper': paper, 'last_attempt': user_code,
                    'quiz_name': paper.question_paper.quiz.description,
                    'time_left': time_left}
@@ -788,7 +792,7 @@ def check(request, q_id, questionpaper_id=None):
                                  questionpaper_id, success_msg)
 
 
-def validate_answer(user, user_answer, question):
+def validate_answer(user, user_answer, question, test_parameter):
     """
         Checks whether the answer submitted by the user is right or wrong.
         If right then returns correct = True, success and
@@ -797,9 +801,9 @@ def validate_answer(user, user_answer, question):
         only one attempt are allowed for them.
         For code questions success is True only if the answer is correct.
     """
-    success = True
+
+    result = {'success': True, 'error': 'Incorrect answer'}
     correct = False
-    message = 'Incorrect answer'
 
     if user_answer is not None:
         if question.type == 'mcq':
@@ -813,11 +817,11 @@ def validate_answer(user, user_answer, question):
                 message = 'Correct answer'
         elif question.type == 'code':
             user_dir = get_user_dir(user)
-            success, message = code_server.run_code(user_answer, question.test,
-                                                user_dir, question.language)
-            if success:
-                 correct = True
-    return correct, success, message
+            result = code_server.run_code(user_answer, test_parameter, user_dir, question.language)
+            if result.get('success'):
+                correct = True
+
+    return correct, result
 
 
 def quit(request, questionpaper_id=None):

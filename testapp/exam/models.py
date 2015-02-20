@@ -69,6 +69,35 @@ class Question(models.Model):
     # Tags for the Question.
     tags = TaggableManager()
 
+    def consolidate_test_cases(self, test):
+        test_case_parameter= []
+
+        for i in test:
+            kw_args_dict = {}
+            pos_args_list = []
+
+            parameter_dict = {}
+            parameter_dict['test_id'] = i.id
+            parameter_dict['func_name'] = i.func_name
+            parameter_dict['expected_answer'] = i.expected_answer
+            parameter_dict['ref_code_path'] = i.ref_code_path
+            parameter_dict['language'] = self.language
+
+            if i.kw_args:
+                for args in i.kw_args.split(","):
+                    key, val = args.split("=")
+                    kw_args_dict[key.strip()] = val.strip()
+
+            if i.pos_args:
+                for args in i.pos_args.split(","):
+                    pos_args_list.append(args.strip())
+
+            parameter_dict['kw_args'] = kw_args_dict
+            parameter_dict['pos_args'] = pos_args_list
+            test_case_parameter.append(parameter_dict)
+
+        return test_case_parameter
+
     def __unicode__(self):
         return self.summary
 
@@ -360,3 +389,23 @@ class AnswerPaper(models.Model):
     def __unicode__(self):
         u = self.user
         return u'Question paper for {0} {1}'.format(u.first_name, u.last_name)
+
+
+################################################################################
+class TestCase(models.Model):
+    question = models.ForeignKey(Question)
+
+    # Test case function name
+    func_name = models.CharField(max_length=200)
+
+    # Test case Keyword arguments in dict form
+    kw_args = models.TextField(blank=True)
+
+    # Test case Positional arguments in list form
+    pos_args = models.TextField(blank=True)
+
+    # Test case Expected answer in list form
+    expected_answer = models.TextField(blank=True)
+
+    # Test case path to system test code applicable for CPP, C, Java and Scilab
+    ref_code_path = models.TextField(blank=True)
