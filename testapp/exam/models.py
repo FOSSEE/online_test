@@ -46,8 +46,8 @@ class Question(models.Model):
     # Number of points for the question.
     points = models.FloatField(default=1.0)
 
-    # Test cases for the question in the form of code that is run.
-    test = models.TextField(blank=True)
+    # # Test cases for the question in the form of code that is run.
+    # test = models.TextField(blank=True)
 
     # Any multiple choice options. Place one option per line.
     options = models.TextField(blank=True)
@@ -393,19 +393,19 @@ class AnswerPaper(models.Model):
 
 ################################################################################
 class TestCase(models.Model):
-    question = models.ForeignKey(Question)
+    question = models.ForeignKey(Question, blank=True, null = True)
 
     # Test case function name
-    func_name = models.CharField(max_length=200)
+    func_name = models.CharField(blank=True, null = True, max_length=200)
 
     # Test case Keyword arguments in dict form
-    kw_args = models.TextField(blank=True)
+    kw_args = models.TextField(blank=True, null = True)
 
     # Test case Positional arguments in list form
-    pos_args = models.TextField(blank=True)
+    pos_args = models.TextField(blank=True, null = True)
 
     # Test case Expected answer in list form
-    expected_answer = models.TextField(blank=True)
+    expected_answer = models.TextField(blank=True, null = True)
 
     # Test case path to system test code applicable for CPP, C, Java and Scilab
-    ref_code_path = models.TextField(blank=True)
+    ref_code_path = models.TextField(blank=True, null = True)
