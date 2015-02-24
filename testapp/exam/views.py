@@ -193,15 +193,10 @@ def intro(request, questionpaper_id):
         previous_attempt = attempted_papers[already_attempted-1]
         previous_attempt_day = previous_attempt.start_time
         today = datetime.datetime.today()
-        print "not in"
         if previous_attempt.status == 'inprogress':
-            print "here"
             end_time = previous_attempt.end_time
             quiz_time = previous_attempt.question_paper.quiz.duration*60
-            print quiz_time
-            print (today - previous_attempt_day).seconds
             if quiz_time > (today-previous_attempt_day).seconds:
-                print "h"
                 return show_question(request,
                         previous_attempt.current_question(),
                         previous_attempt.attempt_number,
