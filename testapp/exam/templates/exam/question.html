@@ -82,9 +82,29 @@ function setSnippetHeight()
      </div>
    </div>
 </div>
+<div class = container>
+<div class="sidebar">
+    <p>Question Navigator </p>
+    <div class="pagination">
+        <ul>
+            {% for qid, num in questions.items %}
+                {% if qid in to_attempt %}
+                    {% if qid == question.id|slugify %}
+                        <li class="active"><a href="{{ URL_ROOT }}/exam/{{ qid }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/">{{ num }}</a></li>
+                    {% else %}
+                        <li><a href="{{ URL_ROOT }}/exam/{{ qid }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/">{{ num }}</a></li>
+                    {% endif %}
+                {% endif %}
+                {% if qid in submitted %}
+                    <li class="done"><a href="#">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+</div>
 
-         
-     	 <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br> 
+     <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br>
 	 <font size=3 face=arial>	{{ question.description|safe }} </font>
          {% if error_message %}
 	 <div class="alert alert-error">
