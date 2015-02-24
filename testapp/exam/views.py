@@ -190,8 +190,22 @@ def intro(request, questionpaper_id):
         return my_render_to_response('exam/intro.html', context,
                                      context_instance=ci)
     if already_attempted < attempt_number or attempt_number < 0:
-        previous_attempt_day = attempted_papers[already_attempted-1].start_time
+        previous_attempt = attempted_papers[already_attempted-1]
+        previous_attempt_day = previous_attempt.start_time
         today = datetime.datetime.today()
+        print "not in"
+        if previous_attempt.status == 'inprogress':
+            print "here"
+            end_time = previous_attempt.end_time
+            quiz_time = previous_attempt.question_paper.quiz.duration*60
+            print quiz_time
+            print (today - previous_attempt_day).seconds
+            if quiz_time > (today-previous_attempt_day).seconds:
+                print "h"
+                return show_question(request,
+                        previous_attempt.current_question(),
+                        previous_attempt.attempt_number,
+                        previous_attempt.question_paper.id)
         days_after_attempt = (today - previous_attempt_day).days
         if days_after_attempt >= time_lag:
             context = {'user': user, 'paper_id': questionpaper_id,\
@@ -791,6 +805,10 @@ def check(request, q_id, attempt_no=None, questionpaper_id=None):
     q_paper = QuestionPaper.objects.get(id=questionpaper_id)
     paper = AnswerPaper.objects.get(user=request.user, attempt_number=attempt_no,
             question_paper=q_paper)
+    if q_id in paper.questions_answered:
+        next_q = paper.skip()
+        return show_question(request, next_q, attempt_no, questionpaper_id)
+
     if not user.is_authenticated() or paper.end_time < datetime.datetime.now():
         return my_redirect('/exam/login/')
     question = get_object_or_404(Question, pk=q_id)
