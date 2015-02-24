@@ -743,6 +743,10 @@ def question(request, q_id, attempt_no, questionpaper_id, success_msg=None):
         context = {'question': q, 'questions' : questions, 'paper': paper,
                    'user': user, 'quiz_name': quiz_name, 'time_left': time_left,
                    'success_msg': success_msg, 'to_attempt' : to_attempt, 'submitted' : submitted}
+    if q.type == 'code':
+        skipped_answer = paper.answers.filter(question=q, skipped=True)
+        if skipped_answer:
+            context['last_attempt'] = skipped_answer[0].answer
     ci = RequestContext(request)
     return my_render_to_response('exam/question.html', context,
                                  context_instance=ci)
@@ -768,10 +772,23 @@ def check(request, q_id, attempt_no=None, questionpaper_id=None):
         return my_redirect('/exam/login/')
     question = get_object_or_404(Question, pk=q_id)
     snippet_code = request.POST.get('snippet')
+    user_code = request.POST.get('answer')
     skip = request.POST.get('skip', None)
     success_msg = False
     success = True
     if skip is not None:
+        if  question.type == 'code':
+            user_answer = user_code # not taking snippet here.
+            old_skipped = paper.answers.filter(question=question, skipped=True)
+            if old_skipped:
+                skipped_answer = old_skipped[0]
+                skipped_answer.answer=user_answer
+                skipped_answer.save()
+            else:
+                skipped_answer = Answer(question=question, answer=user_answer,
+                    correct=False, skipped=True)
+                skipped_answer.save()
+                paper.answers.add(skipped_answer)
         next_q = paper.skip()
         return show_question(request, next_q, attempt_no, questionpaper_id)
 
@@ -788,7 +805,6 @@ def check(request, q_id, attempt_no=None, questionpaper_id=None):
         assign.save()
         user_answer = 'ASSIGNMENT UPLOADED'
     else:
-        user_code = request.POST.get('answer')
         user_answer = snippet_code + "\n" + user_code
 
     new_answer = Answer(question=question, answer=user_answer,
@@ -839,6 +855,10 @@ def check(request, q_id, attempt_no=None, questionpaper_id=None):
         for num, value in enumerate(all_questions, 1):
             questions[value] = num
         questions = collections.OrderedDict(sorted(questions.items()))
+        old_answer = paper.answers.filter(question=question, skipped=True)
+        if old_answer:
+            old_answer[0].answer = user_code
+            old_answer[0].save()
         context = {'question': question, 'questions': questions,
                    'error_message': err_msg,
                    'paper': paper, 'last_attempt': user_code,
