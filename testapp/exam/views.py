@@ -733,7 +733,6 @@ def question(request, q_id, attempt_no, questionpaper_id, success_msg=None):
         all_questions = q_append
     questions = {}
     for num, value in enumerate(all_questions, 1):
-        print num, value
         questions[value] = num
     questions = collections.OrderedDict(sorted(questions.items()))
     if success_msg is None:
