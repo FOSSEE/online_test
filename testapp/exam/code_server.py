@@ -68,7 +68,7 @@ class CodeServer(object):
               'have an infinite loop in your code.' % SERVER_TIMEOUT
         self.timeout_msg = msg
 
-    def run_python_code(self, answer, test_code, in_dir=None):
+    def run_python_code(self, answer, test_parameter, in_dir=None):
         """Tests given Python function (`answer`) with the `test_code`
         supplied. If the optional `in_dir` keyword argument is supplied
         it changes the directory to that directory (it does not change
@@ -90,6 +90,17 @@ class CodeServer(object):
 
         success = False
         tb = None
+
+        test_code = ""
+        for test_case in test_parameter:
+            pos_args = ", ".join(str(i) for i in test_case.get('pos_args')) if test_case.get('pos_args') \
+                            else ""
+            kw_args = ", ".join(str(k+"="+a) for k, a in test_case.get('kw_args').iteritems()) \
+                            if test_case.get('kw_args') else ""
+            args = pos_args + ", " + kw_args if pos_args and kw_args else pos_args or kw_args
+            tcode = "assert {0}({1}) == {2}" \
+                .format(test_case.get('func_name'), args, test_case.get('expected_answer'))
+            test_code += tcode + "\n"
         try:
             submitted = compile(answer, '<string>', mode='exec')
             g = {}
@@ -121,9 +132,10 @@ class CodeServer(object):
         # Put us back into the server pool queue since we are free now.
         self.queue.put(self.port)
 
-        return success, err
+        result = {'success': success, 'error': err}
+        return result
 
-    def run_bash_code(self, answer, test_code, in_dir=None):
+    def run_bash_code(self, answer, test_parameter, in_dir=None):
         """Tests given Bash code  (`answer`) with the `test_code` supplied.
 
         The testcode should typically contain two lines, the first is a path to
@@ -158,7 +170,12 @@ class CodeServer(object):
         submit_path = abspath(submit_f.name)
         _set_exec(submit_path)
 
-        ref_path, test_case_path = test_code.strip().splitlines()
+        # ref path and path to arguments is a comma seperated string obtained 
+        #from ref_code_path field in TestCase Mode
+        path_list = test_parameter.get('ref_code_path').split(',')
+        ref_path = path_list[0].strip() if path_list[0] else ""
+        test_case_path = path_list[1].strip() if path_list[1] else ""
+
         if not ref_path.startswith('/'):
             ref_path = join(MY_DIR, ref_path)
         if not test_case_path.startswith('/'):
@@ -191,7 +208,8 @@ class CodeServer(object):
         # Put us back into the server pool queue since we are free now.
         self.queue.put(self.port)
 
-        return success, err
+        result = {'success': success, 'error': err}
+        return result
 
     def _run_command(self, cmd_args, *args, **kw):
         """Run a command in a subprocess while blocking, the process is killed
@@ -232,6 +250,8 @@ class CodeServer(object):
         the required permissions are not given to the file(s).
 
         """
+        if not ref_script_path:
+            return False, "No Test Script path found"
         if not isfile(ref_script_path):
             return False, "No file at %s" % ref_script_path
         if not isfile(submit_script_path):
@@ -241,7 +261,7 @@ class CodeServer(object):
         if not os.access(submit_script_path, os.X_OK):
             return False, 'Script %s is not executable' % submit_script_path
 
-        if test_case_path is None:
+        if test_case_path is None or "":
             ret = self._run_command(ref_script_path, stdin=None,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
@@ -290,7 +310,7 @@ class CodeServer(object):
                                                      stdnt_stdout+stdnt_stderr)
                 return False, err
 
-    def run_c_code(self, answer, test_code, in_dir=None):
+    def run_c_code(self, answer, test_parameter, in_dir=None):
         """Tests given C code  (`answer`) with the `test_code` supplied.
 
         The testcode is a path to the reference code.
@@ -320,7 +340,7 @@ class CodeServer(object):
         submit_f.close()
         submit_path = abspath(submit_f.name)
 
-        ref_path = test_code.strip()
+        ref_path = test_parameter.get('ref_code_path').strip()
         if not ref_path.startswith('/'):
             ref_path = join(MY_DIR, ref_path)
 
@@ -350,7 +370,8 @@ class CodeServer(object):
         # Put us back into the server pool queue since we are free now.
         self.queue.put(self.port)
 
-        return success, err
+        result = {'success': success, 'error': err}
+        return result
 
     def _compile_command(self, cmd, *args, **kw):
         """Compiles C/C++/java code and returns errors if any.
@@ -442,7 +463,7 @@ class CodeServer(object):
                 err = err + "\n" + stdnt_stderr
         return success, err
 
-    def run_cplus_code(self, answer, test_code, in_dir=None):
+    def run_cplus_code(self, answer, test_parameter, in_dir=None):
         """Tests given C++ code  (`answer`) with the `test_code` supplied.
 
         The testcode is a path to the reference code.
@@ -472,7 +493,7 @@ class CodeServer(object):
         submit_f.close()
         submit_path = abspath(submit_f.name)
 
-        ref_path = test_code.strip()
+        ref_path = test_parameter.get('ref_code_path').strip()
         if not ref_path.startswith('/'):
             ref_path = join(MY_DIR, ref_path)
 
@@ -502,9 +523,10 @@ class CodeServer(object):
         # Put us back into the server pool queue since we are free now.
         self.queue.put(self.port)
 
-        return success, err
+        result = {'success': success, 'error': err}
+        return result
 
-    def run_java_code(self, answer, test_code, in_dir=None):
+    def run_java_code(self, answer, test_parameter, in_dir=None):
         """Tests given java code  (`answer`) with the `test_code` supplied.
 
         The testcode is a path to the reference code.
@@ -535,7 +557,7 @@ class CodeServer(object):
         submit_f.close()
         submit_path = abspath(submit_f.name)
 
-        ref_path = test_code.strip()
+        ref_path = test_parameter.get('ref_code_path').strip()
         if not ref_path.startswith('/'):
             ref_path = join(MY_DIR, ref_path)
 
@@ -649,7 +671,8 @@ class CodeServer(object):
                         err = err + "\n" + e
             except:
                 err = err + "\n" + stdnt_stderr
-        return success, err
+        result = {'success': success, 'error': err}
+        return result
 
     def _remove_null_substitute_char(self, string):
         """Returns a string without any null and substitute characters"""
@@ -659,7 +682,7 @@ class CodeServer(object):
                 stripped = stripped + c
         return ''.join(stripped)
  
-    def run_scilab_code(self, answer, test_code, in_dir=None):
+    def run_scilab_code(self, answer, test_parameter, in_dir=None):
         """Tests given Scilab function (`answer`) with the `test_code`
         supplied. If the optional `in_dir` keyword argument is supplied
         it changes the directory to that directory (it does not change
@@ -700,7 +723,7 @@ class CodeServer(object):
         submit_f.close()
         submit_path = abspath(submit_f.name)
 
-        ref_path = test_code.strip()
+        ref_path = test_parameter.get('ref_code_path').strip()
         if not ref_path.startswith('/'):
             ref_path = join(MY_DIR, ref_path)
 
@@ -748,7 +771,8 @@ class CodeServer(object):
         # Put us back into the server pool queue since we are free now.
         self.queue.put(self.port)
 
-        return success, err
+        result = {'success': success, 'error': err}
+        return result
 
     def _remove_scilab_exit(self, string):
         """

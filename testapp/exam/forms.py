@@ -1,5 +1,5 @@
 from django import forms
-from exam.models import Profile, Quiz, Question
+from exam.models import Profile, Quiz, Question, TestCase
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -8,6 +8,7 @@ from taggit.forms import TagField
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete
 from taggit_autocomplete_modified.widgets import TagAutocomplete
 from taggit_autocomplete_modified import settings
+from django.forms.models import inlineformset_factory
 
 from string import letters, punctuation, digits
 import datetime
@@ -163,7 +164,7 @@ class QuizForm(forms.Form):
         new_quiz.save()
 
 
-class QuestionForm(forms.Form):
+class QuestionForm(forms.ModelForm):
     """Creates a form to add or edit a Question.
     It has the related fields and functions required."""
 
@@ -172,8 +173,8 @@ class QuestionForm(forms.Form):
     description = forms.CharField(widget=forms.Textarea\
                                             (attrs={'cols': 40, 'rows': 1}))
     points = forms.FloatField()
-    test = forms.CharField(widget=forms.Textarea\
-                                    (attrs={'cols': 40, 'rows': 1}))
+    # test = forms.CharField(widget=forms.Textarea\
+                                    # (attrs={'cols': 40, 'rows': 1}), required=False)
     options = forms.CharField(widget=forms.Textarea\
                               (attrs={'cols': 40, 'rows': 1}), required=False)
     language = forms.CharField(max_length=20, widget=forms.Select\
@@ -185,11 +186,11 @@ class QuestionForm(forms.Form):
     snippet = forms.CharField(widget=forms.Textarea\
                               (attrs={'cols': 40, 'rows': 1}), required=False)
 
-    def save(self):
+    def save(self, commit=True):
         summary = self.cleaned_data["summary"]
         description = self.cleaned_data["description"]
         points = self.cleaned_data['points']
-        test = self.cleaned_data["test"]
+        # test = self.cleaned_data["test"]
         options = self.cleaned_data['options']
         language = self.cleaned_data['language']
         type = self.cleaned_data["type"]
@@ -200,13 +201,20 @@ class QuestionForm(forms.Form):
         new_question.summary = summary
         new_question.description = description
         new_question.points = points
-        new_question.test = test
+        # new_question.test = test
         new_question.options = options
         new_question.language = language
         new_question.type = type
         new_question.active = active
         new_question.snippet = snippet
-        new_question.save()
+        new_question = super(QuestionForm, self).save(commit=False)
+        if commit:
+            new_question.save()
+
+        return new_question
+
+    class Meta:
+        model = Question
 
 
 class RandomQuestionForm(forms.Form):
@@ -215,3 +223,6 @@ class RandomQuestionForm(forms.Form):
     marks = forms.CharField(max_length=8, widget=forms.Select\
             (choices=(('select', 'Select Marks'),)))
     shuffle_questions = forms.BooleanField(required=False)
+
+TestCaseFormSet = inlineformset_factory(Question, TestCase,\
+                        can_order=False, can_delete=False, extra=1)
