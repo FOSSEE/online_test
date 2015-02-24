@@ -754,6 +754,29 @@ def question(request, q_id, attempt_no, questionpaper_id, success_msg=None):
 
 def show_question(request, q_id, attempt_no, questionpaper_id, success_msg=None):
     """Show a question if possible."""
+    user = request.user
+    q_paper = QuestionPaper.objects.get(id=questionpaper_id)
+    paper = AnswerPaper.objects.get(user=request.user, attempt_number=attempt_no,
+            question_paper=q_paper)
+    if not user.is_authenticated() or paper.end_time < datetime.datetime.now():
+        return my_redirect('/exam/login/')
+    old_qid = request.POST.get('question_id')
+    if old_qid is not None:
+
+        quest = Question.objects.get(pk=old_qid)
+        user_code = request.POST.get('answer')
+        if  quest.type == 'code':
+            user_answer = user_code # not taking snippet here.
+            old_skipped = paper.answers.filter(question=quest, skipped=True)
+            if old_skipped:
+                skipped_answer = old_skipped[0]
+                skipped_answer.answer=user_answer
+                skipped_answer.save()
+            else:
+                skipped_answer = Answer(question=quest, answer=user_answer,
+                    correct=False, skipped=True)
+                skipped_answer.save()
+                paper.answers.add(skipped_answer)
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(request, msg, attempt_no, questionpaper_id)
