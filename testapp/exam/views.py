@@ -189,6 +189,23 @@ def intro(request, questionpaper_id):
                 'attempt_no': already_attempted + 1}
         return my_render_to_response('exam/intro.html', context,
                                      context_instance=ci)
+    if already_attempted == attempt_number:
+        previous_attempt = attempted_papers[already_attempted-1]
+        previous_attempt_day = previous_attempt.start_time
+        today = datetime.datetime.today()
+        if previous_attempt.status == 'inprogress':
+            end_time = previous_attempt.end_time
+            quiz_time = previous_attempt.question_paper.quiz.duration*60
+            if quiz_time > (today-previous_attempt_day).seconds:
+                return show_question(request,
+                        previous_attempt.current_question(),
+                        previous_attempt.attempt_number,
+                        previous_attempt.question_paper.id)
+            else:
+                return my_redirect("/exam/quizzes")
+        else:
+            return my_redirect("/exam/quizzes/")
+
     if already_attempted < attempt_number or attempt_number < 0:
         previous_attempt = attempted_papers[already_attempted-1]
         previous_attempt_day = previous_attempt.start_time
