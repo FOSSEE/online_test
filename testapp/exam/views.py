@@ -1155,7 +1155,8 @@ def design_questionpaper(request):
                 question_paper.fixed_questions.add(question_id)
         if random_questions:
             for random_question, num in zip(random_questions, random_number):
-                question = Question.objects.get(id=random_question[0])
+                qid = random_question.split(',')[0]
+                question = Question.objects.get(id=int(qid))
                 marks = question.points
                 question_set = QuestionSet(marks=marks, num_questions=num)
                 question_set.save()
