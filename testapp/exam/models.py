@@ -1,4 +1,5 @@
 import datetime
+import json
 from random import sample, shuffle
 from django.db import models
 from django.contrib.auth.models import User
@@ -82,8 +83,9 @@ class Question(models.Model):
     # Tags for the Question.
     tags = TaggableManager()
 
-    def consolidate_test_cases(self, test):
-        test_case_parameter= []
+    def consolidate_answer_data(self, test, user_answer):
+        test_case_parameter = []
+        info_parameter = {}
 
         for i in test:
             kw_args_dict = {}
@@ -94,7 +96,6 @@ class Question(models.Model):
             parameter_dict['func_name'] = i.func_name
             parameter_dict['expected_answer'] = i.expected_answer
             parameter_dict['ref_code_path'] = i.ref_code_path
-            parameter_dict['language'] = self.language
 
             if i.kw_args:
                 for args in i.kw_args.split(","):
@@ -109,7 +110,12 @@ class Question(models.Model):
             parameter_dict['pos_args'] = pos_args_list
             test_case_parameter.append(parameter_dict)
 
-        return test_case_parameter
+            info_parameter['language'] = self.language
+            info_parameter['id'] = self.id
+            info_parameter['user_answer'] = user_answer
+            info_parameter['test_parameter'] = test_case_parameter
+
+        return json.dumps(info_parameter)
 
     def __unicode__(self):
         return self.summary

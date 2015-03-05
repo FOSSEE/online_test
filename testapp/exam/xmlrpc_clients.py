@@ -29,7 +29,7 @@ class CodeServerProxy(object):
                         "scilab": "run_scilab_code",
                         }
 
-    def run_code(self, answer, test_parameter, user_dir, language):
+    def run_code(self, info_parameter, user_dir):
         """Tests given code (`answer`) with the `test_code` supplied.  If the
         optional `in_dir` keyword argument is supplied it changes the directory
         to that directory (it does not change it back to the original when
@@ -38,26 +38,28 @@ class CodeServerProxy(object):
 
         Parameters
         ----------
-        answer : str
-            The user's answer for the question.
+        info_parameter contains;
+        user_answer : str
+            The user's answer for the question. 
         test_code : str
             The test code to check the user code with.
-        user_dir : str (directory)
-            The directory to run the tests inside.
         language : str
             The programming language to use.
 
+        user_dir : str (directory)
+            The directory to run the tests inside.
+
+
         Returns
         -------
-        A tuple: (success, error message).
+        A json string of a dict: {success: success, err: error message}.
         """
-        method_name = self.methods[language]
+        # method_name = self.methods[language]
         try:
             server = self._get_server()
-            method = getattr(server, method_name)
-            result = method(answer, test_parameter, user_dir) ####
+            result = server.checker(info_parameter, user_dir)
         except ConnectionError:
-            result = {'success': False, 'error': 'Unable to connect to any code servers!'}
+            result = json.dumps({'success': False, 'error': 'Unable to connect to any code servers!'})
         return result
 
     def _get_server(self):

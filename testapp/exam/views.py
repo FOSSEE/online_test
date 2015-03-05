@@ -14,6 +14,7 @@ from django.db.models import Sum
 from django.views.decorators.csrf import csrf_exempt
 from taggit.models import Tag
 from itertools import chain
+import json
 # Local imports.
 from testapp.exam.models import Quiz, Question, QuestionPaper, QuestionSet
 from testapp.exam.models import Profile, Answer, AnswerPaper, User, TestCase
@@ -909,7 +910,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     q_paper = QuestionPaper.objects.get(id=questionpaper_id)
     paper = AnswerPaper.objects.get(user=request.user, question_paper=q_paper)
     test = TestCase.objects.filter(question=question)
-    test_parameter = question.consolidate_test_cases(test)
 
     snippet_code = request.POST.get('snippet')
     user_code = request.POST.get('answer')
@@ -940,7 +940,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         user_answer = 'ASSIGNMENT UPLOADED'
     else:
         user_code = request.POST.get('answer')
-        user_answer = user_code #snippet_code + "\n" + user_code
+        user_answer = snippet_code + "\n" + user_code if snippet_code else user_code
 
     new_answer = Answer(question=question, answer=user_answer,
                         correct=False)
@@ -951,14 +951,16 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     # questions, we obtain the results via XML-RPC with the code executed
     # safely in a separate process (the code_server.py) running as nobody.
     if not question.type == 'upload':
-        correct, result = validate_answer(user, user_answer, question, test_parameter)
+        if question.type == 'code':
+            info_parameter = question.consolidate_answer_data(test, user_answer)
+        correct, result = validate_answer(user, user_answer, question, info_parameter)
         if correct:
             new_answer.correct = correct
             new_answer.marks = question.points
-            new_answer.error = err_msg
+            new_answer.error = result.get('error')
             success_msg = True
         else:
-            new_answer.error = err_msg
+            new_answer.error = result.get('error')
         new_answer.save()
 
     time_left = paper.time_left()
@@ -996,7 +998,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                                  questionpaper_id, success_msg)
 
 
-def validate_answer(user, user_answer, question, test_parameter):
+def validate_answer(user, user_answer, question, info_parameter=None):
     """
         Checks whether the answer submitted by the user is right or wrong.
         If right then returns correct = True, success and
@@ -1011,17 +1013,18 @@ def validate_answer(user, user_answer, question, test_parameter):
 
     if user_answer is not None:
         if question.type == 'mcq':
-            if user_answer.strip() == question.test.strip():
+            if user_answer.strip() == question.test.strip(): ####add question.answer/question.solution instead of test
                 correct = True
                 message = 'Correct answer'
         elif question.type == 'mcc':
-            answers = set(question.test.splitlines())
+            answers = set(question.test.splitlines()) ####add question.answer/question.solution instead of test
             if set(user_answer) == answers:
                 correct = True
                 message = 'Correct answer'
         elif question.type == 'code':
             user_dir = get_user_dir(user)
-            result = code_server.run_code(user_answer, test_parameter, user_dir, question.language)
+            json_result = code_server.run_code(info_parameter, user_dir)
+            result = json.loads(json_result)
             if result.get('success'):
                 correct = True
 
