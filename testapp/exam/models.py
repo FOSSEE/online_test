@@ -60,8 +60,11 @@ class Question(models.Model):
     # Number of points for the question.
     points = models.FloatField(default=1.0)
 
-    # # Test cases for the question in the form of code that is run.
-    # test = models.TextField(blank=True)
+    # Answer for MCQs.
+    solution = models.TextField(blank=True)
+
+    # Test cases file paths
+    ref_code_path = models.TextField(blank=True)
 
     # Any multiple choice options. Place one option per line.
     options = models.TextField(blank=True)
@@ -114,6 +117,7 @@ class Question(models.Model):
             info_parameter['id'] = self.id
             info_parameter['user_answer'] = user_answer
             info_parameter['test_parameter'] = test_case_parameter
+            info_parameter['ref_code_path'] = self.ref_code_path
 
         return json.dumps(info_parameter)
 
@@ -449,5 +453,5 @@ class TestCase(models.Model):
     # Test case Expected answer in list form
     expected_answer = models.TextField(blank=True, null = True)
 
-    # Test case path to system test code applicable for CPP, C, Java and Scilab
-    ref_code_path = models.TextField(blank=True, null = True)
+    # # Test case path to system test code applicable for CPP, C, Java and Scilab
+    # ref_code_path = models.TextField(blank=True, null = True)

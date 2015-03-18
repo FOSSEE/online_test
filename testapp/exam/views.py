@@ -323,7 +323,7 @@ def add_question(request, question_id=None):
     def add_or_delete_test_form(post_request, instance):
         request_copy = post_request.copy()
         if 'add_test' in post_request:
-                    request_copy['test-TOTAL_FORMS'] = int(request_copy['test-TOTAL_FORMS']) + 1
+            request_copy['test-TOTAL_FORMS'] = int(request_copy['test-TOTAL_FORMS']) + 1
         elif 'delete_test' in post_request:
             request_copy['test-TOTAL_FORMS'] = int(request_copy['test-TOTAL_FORMS']) - 1
         test_case_formset = TestCaseFormSet(request_copy, prefix='test', instance=instance)
@@ -402,8 +402,10 @@ def add_question(request, question_id=None):
                                              context_instance=ci)
 
         else:
+            test_case_formset = add_or_delete_test_form(request.POST, form.save(commit=False))
             return my_render_to_response('exam/add_question.html',
-                                         {'form': form},
+                                         {'form': form,
+                                         'formset': test_case_formset},
                                          context_instance=ci)
     else:
         form = QuestionForm()
@@ -951,8 +953,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     # questions, we obtain the results via XML-RPC with the code executed
     # safely in a separate process (the code_server.py) running as nobody.
     if not question.type == 'upload':
-        if question.type == 'code':
-            info_parameter = question.consolidate_answer_data(test, user_answer)
+        info_parameter = question.consolidate_answer_data(test, user_answer) \
+                            if question.type == 'code' else None
         correct, result = validate_answer(user, user_answer, question, info_parameter)
         if correct:
             new_answer.correct = correct
@@ -1013,11 +1015,11 @@ def validate_answer(user, user_answer, question, info_parameter=None):
 
     if user_answer is not None:
         if question.type == 'mcq':
-            if user_answer.strip() == question.test.strip(): ####add question.answer/question.solution instead of test
+            if user_answer.strip() == question.solution.strip():
                 correct = True
                 message = 'Correct answer'
         elif question.type == 'mcc':
-            answers = set(question.test.splitlines()) ####add question.answer/question.solution instead of test
+            answers = set(question.solution.splitlines())
             if set(user_answer) == answers:
                 correct = True
                 message = 'Correct answer'

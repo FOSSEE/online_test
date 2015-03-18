@@ -153,13 +153,17 @@ function textareaformat()
 		if(value == 'mcq' || value == 'mcc')
 		{
 			document.getElementById('id_options').style.visibility='visible';
-			document.getElementById('label_option').innerHTML="Options :"
+			document.getElementById('label_option').innerHTML="Options :";
+			document.getElementById('id_solution').style.visibility='visible';
+			document.getElementById('label_solution').innerHTML="Solutions :";
 
 		}
 		else
 		{
 			document.getElementById('id_options').style.visibility='hidden';
 			document.getElementById('label_option').innerHTML = "";
+			document.getElementById('id_solution').style.visibility='hidden';
+			document.getElementById('label_solution').innerHTML=""
 		}
 	});
 		document.getElementById('my').innerHTML = document.getElementById('id_description').value ;
@@ -168,12 +172,16 @@ function textareaformat()
 		{
 			document.getElementById('id_options').style.visibility='visible';
 			document.getElementById('label_option').innerHTML="Options :"
+			document.getElementById('id_solution').style.visibility='visible';
+			document.getElementById('label_solution').innerHTML="Solutions :";
 
 		}
 		else
 		{
 			document.getElementById('id_options').style.visibility='hidden';
 			document.getElementById('label_option').innerHTML = "";
+			document.getElementById('id_solution').style.visibility='hidden';
+			document.getElementById('label_solution').innerHTML=""
 		}	
 }
 
@@ -189,8 +197,9 @@ function autosubmit()
         if(type.value == 'select')
         {
             type.style.border = 'solid red';
-	    return false;
-	}
+            return false;
+		}
+
 
 	if (type.value == 'mcq' || type.value == 'mcc')
 	{

@@ -187,8 +187,8 @@ class QuestionForm(forms.ModelForm):
     description = forms.CharField(widget=forms.Textarea\
                                             (attrs={'cols': 40, 'rows': 1}))
     points = forms.FloatField()
-    # test = forms.CharField(widget=forms.Textarea\
-                                    # (attrs={'cols': 40, 'rows': 1}), required=False)
+    solution = forms.CharField(widget=forms.Textarea\
+                                    (attrs={'cols': 40, 'rows': 1}), required=False)
     options = forms.CharField(widget=forms.Textarea\
                               (attrs={'cols': 40, 'rows': 1}), required=False)
     language = forms.CharField(max_length=20, widget=forms.Select\
@@ -199,17 +199,18 @@ class QuestionForm(forms.ModelForm):
     tags = TagField(widget=TagAutocomplete(), required=False)
     snippet = forms.CharField(widget=forms.Textarea\
                               (attrs={'cols': 40, 'rows': 1}), required=False)
+    ref_code_path = forms.CharField(widget=forms.Textarea\
+                          (attrs={'cols': 40, 'rows': 1}), required=False)
 
     def save(self, commit=True):
-        summary = self.cleaned_data["summary"]
-        description = self.cleaned_data["description"]
-        points = self.cleaned_data['points']
-        # test = self.cleaned_data["test"]
-        options = self.cleaned_data['options']
-        language = self.cleaned_data['language']
-        type = self.cleaned_data["type"]
-        active = self.cleaned_data["active"]
-        snippet = self.cleaned_data["snippet"]
+        summary = self.cleaned_data.get("summary")
+        description = self.cleaned_data.get("description")
+        points = self.cleaned_data.get("points")
+        options = self.cleaned_data.get("options")
+        language = self.cleaned_data.get("language")
+        type = self.cleaned_data.get("type")
+        active = self.cleaned_data.get("active")
+        snippet = self.cleaned_data.get("snippet")
 
         new_question = Question()
         new_question.summary = summary
