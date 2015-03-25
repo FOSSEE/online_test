@@ -10,7 +10,7 @@ conduct online test and monitor the test.
 Quick start
 ------------
 
-1. In yourterminal run the following command::
+1. In your terminal run the following command::
     $ easy_install git+https://github.com/FOSSEE/online_test.git#egg=django_exam-0.1
 
 2. Add "testapp.exam", "taggit" and "taggit_autocomplete_modified" apps 
@@ -35,9 +35,10 @@ Quick start
 
 5. Run 'python manage.py syncdb' to create models for the new installed apps.
 
-6. Start the development server and visit http://localhost:8000/exam/
+6. Run 'python manage.py runserver' to start the development server
+   and visit http://localhost:8000/exam/
 
-7. In exam app run code_sever command  as superuser as follows::
+7. Run code_server command as superuser as follows::
 
        $ code_server
 
