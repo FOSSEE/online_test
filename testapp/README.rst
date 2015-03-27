@@ -40,6 +40,9 @@ Quick start
 
 7. Run code_server command as superuser as follows::
 
-       $ code_server
+       $ sudo code_server
 
-   Note: You must have a sudo access to run the above command.
+   Note: If you are using virtual python environment, then activate the environment
+         using sudo. Then simply run the code_server command as follows::
+
+         $ code_server
