@@ -10,7 +10,10 @@ conduct online test and monitor the test.
 Quick start
 ------------
 
-1. Add "testapp.exam", "taggit" and "taggit_autocomplete_modified" apps 
+1. In your terminal run the following command::
+    $ easy_install git+https://github.com/FOSSEE/online_test.git#egg=django_exam-0.1
+
+2. Add "testapp.exam", "taggit" and "taggit_autocomplete_modified" apps 
    to your INSTALLED_APPS setting as follows::
 
     INSTALLED_APPS =(
@@ -19,10 +22,10 @@ Quick start
         'taggit_autocomplete_modified',
     )
 
-2. In project settings, add AUTH_PROFILE_MODULE = 'testapp.exam.Profile'
+3. In project settings, add AUTH_PROFILE_MODULE = 'testapp.exam.Profile'
    You can change the testapp.exam.Profile to your desired app user profile.
 
-3. Include the "testapp.exam" and taggit_autocomplete_modified URL configuration
+4. Include the "testapp.exam" and taggit_autocomplete_modified URL configuration
    in your project urls.py as follows::
 
     url(r'^exam/', include('testapp.exam.urls')),
@@ -30,12 +33,16 @@ Quick start
                                         ('taggit_autocomplete_modified.urls'))
 
 
-4. Run 'python manage.py syncdb' to create models for the new installed apps.
+5. Run 'python manage.py syncdb' to create models for the new installed apps.
 
-5. Start the development server and visit http://localhost:8000/exam/
+6. Run 'python manage.py runserver' to start the development server
+   and visit http://localhost:8000/exam/
 
-6. In exam app run code_sever command  as superuser as follows::
+7. Run code_server command as superuser as follows::
 
-       $ code_server
+       $ sudo code_server
 
-   Note: You must have a sudo access to run the above command.
+   Note: If you are using virtual python environment, then activate the environment
+         using sudo. Then simply run the code_server command as follows::
+
+         $ code_server

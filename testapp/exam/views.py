@@ -22,6 +22,7 @@ from testapp.exam.forms import UserRegisterForm, UserLoginForm, QuizForm,\
 from testapp.exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
 
+
 # The directory where user data can be saved.
 OUTPUT_DIR = abspath(join(dirname(__file__), 'output'))
 
@@ -142,7 +143,6 @@ def quizlist_user(request):
     pre_requisites = []
     context = {}
 
-
     if 'cannot_attempt' in request.GET:
         context['cannot_attempt'] = True
 
@@ -155,7 +155,7 @@ def quizlist_user(request):
     for answer_paper in user_answerpapers:
         for quiz in avail_quizzes:
             if answer_paper.question_paper.id == quiz.id and \
-                answer_paper.end_time != answer_paper.start_time:
+            answer_paper.end_time != answer_paper.start_time:
                 avail_quizzes.remove(quiz)
                 quizzes_taken.append(answer_paper)
 
@@ -181,11 +181,11 @@ def intro(request, questionpaper_id):
                 return my_render_to_response('exam/intro.html', context,
                                              context_instance=ci)
             else:
-                context = {'user': user, 'cannot_attempt':True}
+                context = {'user': user, 'cannot_attempt': True}
                 return my_redirect("/exam/quizzes/?cannot_attempt=True")
 
         except:
-            context = {'user': user, 'cannot_attempt':True}
+            context = {'user': user, 'cannot_attempt': True}
             return my_redirect("/exam/quizzes/?cannot_attempt=True")
     context = {'user': user, 'paper_id': questionpaper_id}
     ci = RequestContext(request)
@@ -389,7 +389,7 @@ def add_quiz(request, quiz_id=None):
             form.initial['active'] = d.active
             form.initial['pass_criteria'] = d.pass_criteria
             form.initial['language'] = d.language
-            form.initial['prerequisite'] =  d.prerequisite_id
+            form.initial['prerequisite'] = d.prerequisite_id
             return my_render_to_response('exam/add_quiz.html',
                                          {'form': form},
                                          context_instance=ci)
@@ -607,9 +607,10 @@ rights/permissions and log in."""
             users_failed = AnswerPaper.objects.filter(question_paper=paper, passed=False).count()
             temp = paper, answer_papers, users_passed, users_failed
             users_per_paper.append(temp)
-        context = {'user': user, 'users_per_paper':users_per_paper}
+        context = {'user': user, 'users_per_paper': users_per_paper}
         return my_render_to_response('manage.html', context)
     return my_redirect('/exam/login/')
+
 
 def user_login(request):
     """Take the credentials of the user and log the user in."""
@@ -691,6 +692,9 @@ def question(request, q_id, questionpaper_id, success_msg=None):
     if not paper.question_paper.quiz.active:
         reason = 'The quiz has been deactivated!'
         return complete(request, reason, questionpaper_id)
+    elif paper.end_time < datetime.datetime.now():
+        reason = 'You have already attempted the quiz'
+        return complete(request, reason, questionpaper_id)
     time_left = paper.time_left()
     if time_left == 0:
         return complete(request, reason='Your time is up!')
@@ -722,11 +726,11 @@ def check(request, q_id, questionpaper_id=None):
     """Checks the answers of the user for particular question"""
 
     user = request.user
-    if not user.is_authenticated():
-        return my_redirect('/exam/login/')
-    question = get_object_or_404(Question, pk=q_id)
     q_paper = QuestionPaper.objects.get(id=questionpaper_id)
     paper = AnswerPaper.objects.get(user=request.user, question_paper=q_paper)
+    if not user.is_authenticated() or paper.end_time < datetime.datetime.now():
+        return my_redirect('/exam/login/')
+    question = get_object_or_404(Question, pk=q_id)
     snippet_code = request.POST.get('snippet')
     skip = request.POST.get('skip', None)
     success_msg = False
@@ -816,7 +820,7 @@ def validate_answer(user, user_answer, question):
             success, message = code_server.run_code(user_answer, question.test,
                                                 user_dir, question.language)
             if success:
-                 correct = True
+                correct = True
     return correct, success, message
 
 
@@ -842,6 +846,7 @@ def complete(request, reason=None, questionpaper_id=None):
         paper.update_marks_obtained()
         paper.update_percent()
         paper.update_passed()
+        paper.end_time = datetime.datetime.now()
         paper.save()
         obt_marks = paper.marks_obtained
         tot_marks = paper.question_paper.total_marks
@@ -850,12 +855,10 @@ def complete(request, reason=None, questionpaper_id=None):
                        you answered all the questions correctly.\
                        You have been logged out successfully,\
                        Thank You !"}
-            logout(request)
             return my_render_to_response('exam/complete.html', context)
         else:
             message = reason or "You are successfully logged out"
             context = {'message':  message}
-            logout(request)
             return my_render_to_response('exam/complete.html', context)
     no = False
     message = reason or 'The quiz has been completed. Thank you.'
@@ -866,7 +869,7 @@ def complete(request, reason=None, questionpaper_id=None):
     if not no:
         # Logout the user and quit with the message given.
         answer_paper = AnswerPaper.objects.get(id=answerpaper_id)
-        answer_paper.endtime = datetime.datetime.now()
+        answer_paper.end_time = datetime.datetime.now()
         answer_paper.save()
         return my_redirect('/exam/quizzes/')
     else:
@@ -1118,8 +1121,8 @@ def ajax_questionpaper(request, query):
         question_list = fixed_question_list + random_question_list
         questions = list(Question.objects.filter(type=question_type,
                                             points=marks_selected))
-        questions = [ question for question in questions \
-                if not str(question.id) in question_list ]
+        questions = [question for question in questions \
+                if not str(question.id) in question_list]
         return my_render_to_response('exam/ajax_questions.html',
                               {'questions': questions})
 
@@ -1147,12 +1150,13 @@ def design_questionpaper(request):
         question_paper.save()
         if fixed_questions:
             fixed_questions_ids = ",".join(fixed_questions)
-            fixed_questions_ids_list =  fixed_questions_ids.split(',')
+            fixed_questions_ids_list = fixed_questions_ids.split(',')
             for question_id in fixed_questions_ids_list:
                 question_paper.fixed_questions.add(question_id)
         if random_questions:
             for random_question, num in zip(random_questions, random_number):
-                question = Question.objects.get(id=random_question[0])
+                qid = random_question.split(',')[0]
+                question = Question.objects.get(id=int(qid))
                 marks = question.points
                 question_set = QuestionSet(marks=marks, num_questions=num)
                 question_set.save()
