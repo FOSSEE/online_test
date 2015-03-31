@@ -690,6 +690,34 @@ def start(request, attempt_no=None, questionpaper_id=None):
         user_dir = get_user_dir(user)
         return start(request, attempt_no, questionpaper_id)
 
+def get_questions(paper):
+    '''
+        Takes answerpaper as an argument. Returns the total questions as
+        ordered dictionary, the questions yet to attempt and the questions
+        attempted
+    '''
+    to_attempt = []
+    submitted = []
+    all_questions = []
+    questions = {}
+    if paper.questions:
+        to_attempt = (paper.questions).split('|')
+    if paper.questions_answered:
+        submitted = (paper.questions_answered).split('|')
+    if not to_attempt:
+        submitted.sort()
+        all_questions = submitted
+    if not submitted:
+        to_attempt.sort()
+        all_questions = to_attempt
+    if to_attempt and submitted:
+        q_append = to_attempt + submitted
+        q_append.sort()
+        all_questions = q_append
+    for num, value in enumerate(all_questions, 1):
+        questions[value] = num
+    questions = collections.OrderedDict(sorted(questions.items()))
+    return questions, to_attempt, submitted
 
 def question(request, q_id, attempt_no, questionpaper_id, success_msg=None):
     """Check the credentials of the user and start the exam."""
@@ -714,27 +742,7 @@ def question(request, q_id, attempt_no, questionpaper_id, success_msg=None):
     if time_left == 0:
         return complete(request, reason='Your time is up!')
     quiz_name = paper.question_paper.quiz.description
-    to_attempt = []
-    submitted = []
-    if paper.questions:
-        to_attempt = (paper.questions).split('|')
-    if paper.questions_answered:
-        submitted = (paper.questions_answered).split('|')
-    all_questions = []
-    if not to_attempt:
-        submitted.sort()
-        all_questions = submitted
-    if not submitted:
-        to_attempt.sort()
-        all_questions = to_attempt
-    if to_attempt and submitted:
-        q_append = to_attempt + submitted
-        q_append.sort()
-        all_questions = q_append
-    questions = {}
-    for num, value in enumerate(all_questions, 1):
-        questions[value] = num
-    questions = collections.OrderedDict(sorted(questions.items()))
+    questions, to_attempt, submitted = get_questions(paper)
     if success_msg is None:
         context = {'question': q, 'questions' : questions, 'paper': paper,
                    'user': user, 'quiz_name': quiz_name, 'time_left': time_left,
@@ -818,27 +826,7 @@ def check(request, q_id, attempt_no=None, questionpaper_id=None):
         if not paper.question_paper.quiz.active:
             reason = 'The quiz has been deactivated!'
             return complete(request, reason, attempt_no, questionpaper_id)
-        to_attempt = []
-        submitted = []
-        if paper.questions:
-            to_attempt = (paper.questions).split('|')
-        if paper.questions_answered:
-            submitted = (paper.questions_answered).split('|')
-        all_questions = []
-        if not to_attempt:
-            submitted.sort()
-            all_questions = submitted
-        if not submitted:
-            to_attempt.sort()
-            all_questions = to_attempt
-        if to_attempt and submitted:
-            q_append = to_attempt + submitted
-            q_append.sort()
-            all_questions = q_append
-        questions = {}
-        for num, value in enumerate(all_questions, 1):
-            questions[value] = num
-        questions = collections.OrderedDict(sorted(questions.items()))
+        questions, to_attempt, submitted = get_questions(paper)
         context = {'question': question, 'questions': questions,
                    'error_message': err_msg,
                    'paper': paper, 'last_attempt': user_code,
