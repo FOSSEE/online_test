@@ -762,27 +762,31 @@ def show_question(request, q_id, attempt_no, questionpaper_id, success_msg=None)
         return my_redirect('/exam/login/')
     old_qid = request.POST.get('question_id')
     if old_qid is not None:
-
         quest = Question.objects.get(pk=old_qid)
         user_code = request.POST.get('answer')
         if  quest.type == 'code':
-            user_answer = user_code # not taking snippet here.
             old_skipped = paper.answers.filter(question=quest, skipped=True)
-            if old_skipped:
-                skipped_answer = old_skipped[0]
-                skipped_answer.answer=user_answer
-                skipped_answer.save()
-            else:
-                skipped_answer = Answer(question=quest, answer=user_answer,
-                    correct=False, skipped=True)
-                skipped_answer.save()
-                paper.answers.add(skipped_answer)
+            _save_skipped_answer(old_skipped, user_code, paper)
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(request, msg, attempt_no, questionpaper_id)
     else:
         return question(request, q_id, attempt_no, questionpaper_id, success_msg)
 
+def _save_skipped_answer(old_skipped, user_answer, paper):
+    """
+        Saves the answer on skip. Only the code questions are saved.
+        Snippet is not saved with the answer.
+    """
+    if old_skipped:
+        skipped_answer = old_skipped[0]
+        skipped_answer.answer=user_answer
+        skipped_answer.save()
+    else:
+        skipped_answer = Answer(question=quest, answer=user_answer,
+            correct=False, skipped=True)
+        skipped_answer.save()
+        paper.answers.add(skipped_answer)
 
 def check(request, q_id, attempt_no=None, questionpaper_id=None):
     """Checks the answers of the user for particular question"""
@@ -801,17 +805,8 @@ def check(request, q_id, attempt_no=None, questionpaper_id=None):
     success = True
     if skip is not None:
         if  question.type == 'code':
-            user_answer = user_code # not taking snippet here.
             old_skipped = paper.answers.filter(question=question, skipped=True)
-            if old_skipped:
-                skipped_answer = old_skipped[0]
-                skipped_answer.answer=user_answer
-                skipped_answer.save()
-            else:
-                skipped_answer = Answer(question=question, answer=user_answer,
-                    correct=False, skipped=True)
-                skipped_answer.save()
-                paper.answers.add(skipped_answer)
+            _save_skipped_answer(old_skipped, user_code, paper)
         next_q = paper.skip()
         return show_question(request, next_q, attempt_no, questionpaper_id)
 
