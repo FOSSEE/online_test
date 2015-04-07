@@ -106,6 +106,9 @@ class Answer(models.Model):
     # Is the answer correct.
     correct = models.BooleanField(default=False)
 
+    # Whether skipped or not.
+    skipped = models.BooleanField(default=False)
+
     def __unicode__(self):
         return self.answer
 

@@ -64,6 +64,13 @@ function validate(){
     }
 }
 
+function call_skip(url)
+{
+    form = document.forms["code"]
+    form.action = url
+    form.submit();
+}
+
 </script>
 {% endblock script %}
 
@@ -97,17 +104,18 @@ function validate(){
      </div>
    </div>
 </div>
+
 <div class = container>
-<div class="sidebar">
+  <div class="sidebar">
     <p>Question Navigator </p>
     <div class="pagination">
         <ul>
             {% for qid, num in questions.items %}
                 {% if qid in to_attempt %}
                     {% if qid == question.id|slugify %}
-                        <li class="active"><a href="{{ URL_ROOT }}/exam/{{ qid }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/">{{ num }}</a></li>
+                        <li class="active"><a href="#" onclick="call_skip('{{ URL_ROOT }}/exam/{{ qid }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ num }}</a></li>
                     {% else %}
-                        <li><a href="{{ URL_ROOT }}/exam/{{ qid }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/">{{ num }}</a></li>
+                        <li><a href="#" onclick="call_skip('{{ URL_ROOT }}/exam/{{ qid }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ num }}</a></li>
                     {% endif %}
                 {% endif %}
                 {% if qid in submitted %}
@@ -116,7 +124,7 @@ function validate(){
             {% endfor %}
         </ul>
     </div>
-</div>
+  </div>
 </div>
 
      <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br>
@@ -132,7 +140,9 @@ function validate(){
          <p id="status"></p>
 
          <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" enctype="multipart/form-data">
-         {% csrf_token %}
+             {% csrf_token %}
+             <input type=hidden name="question_id" id="question_id" value={{ question.id }}></input>
+
          {% if question.type == "mcq" %}
          {% for option in question.options.strip.splitlines %}
          <input name="answer" type="radio" value="{{option}}" />{{option}} <br/>
