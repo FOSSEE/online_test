@@ -54,7 +54,7 @@ class CodeServerProxy(object):
         -------
         A json string of a dict: {success: success, err: error message}.
         """
-        # method_name = self.methods[language]
+
         try:
             server = self._get_server()
             result = server.checker(info_parameter, user_dir)

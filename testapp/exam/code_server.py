@@ -54,22 +54,24 @@ def timeout_handler(signum, frame):
     """A handler for the ALARM signal."""
     raise TimeoutException('Code took too long to run.')
 
-def create_delete_signal_handler(action=None, old_handler=None):
-    if action == "new": # Add a new signal handler for the execution of this code.
-        prev_handler = signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(SERVER_TIMEOUT)
-        return prev_handler
-    elif action == "original": # Set back any original signal handler.
-        if old_handler is not None:
-            signal.signal(signal.SIGALRM, old_handler)
-            return
-        else:
-            raise Exception("Signal Handler: object cannot be NoneType")
-    elif action == "delete": # Cancel the signal if any, see signal.alarm documentation.
-        signal.alarm(0)
+def create_signal_handler():
+    """Add a new signal handler for the execution of this code."""
+    prev_handler = signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(SERVER_TIMEOUT)
+    return prev_handler
+
+def set_original_signal_handler(old_handler=None):
+    """Set back any original signal handler."""
+    if old_handler is not None:
+        signal.signal(signal.SIGALRM, old_handler)
         return
     else:
-        raise Exception("Signal Handler: action not specified")
+        raise Exception("Signal Handler: object cannot be NoneType")
+
+def delete_signal_handler():
+    signal.alarm(0)
+    return
+
 
 
 ###############################################################################
@@ -77,15 +79,16 @@ def create_delete_signal_handler(action=None, old_handler=None):
 ###############################################################################
 class TestCode(object):
     """Evaluates and tests the code obtained from Code Server"""
-    def __init__(self, info_parameter, in_dir=None):
-        info_parameter = json.loads(info_parameter)
-        self.test_parameter = info_parameter.get("test_parameter")
-        self.language = info_parameter.get("language")
-        self.user_answer = info_parameter.get("user_answer")
+    def __init__(self, test_parameter, language, user_answer, ref_code_path=None, in_dir=None):
+        self.test_parameter = test_parameter
+        self.language = language
+        self.user_answer = user_answer
+        self.ref_code_path = ref_code_path
         self.in_dir = in_dir
 
     def run_code(self):
-        """Tests given code  (`answer`) with the `test_code` supplied.
+        """Tests given code  (`answer`) with the test cases based on
+        given arguments.
 
         The ref_code_path is a path to the reference code.
         The reference code will call the function submitted by the student.
@@ -113,7 +116,7 @@ class TestCode(object):
             tb = None
             test_code = self.create_test_case()
             # Add a new signal handler for the execution of this code.
-            prev_handler = create_delete_signal_handler("new")
+            prev_handler = create_signal_handler()
 
             try:
                 submitted = compile(self.user_answer, '<string>', mode='exec')
@@ -138,10 +141,10 @@ class TestCode(object):
             finally:
                 del tb
                 # Set back any original signal handler.
-                create_delete_signal_handler("original", prev_handler)
+                set_original_signal_handler(prev_handler)
 
             # Cancel the signal
-            create_delete_signal_handler("delete")
+            delete_signal_handler()
 
         else:
             user_answer_file = {'C': 'submit.c', 'java': 'Test.java', 'scilab': 'function.sci',
@@ -165,7 +168,7 @@ class TestCode(object):
 
             if self.language in ["C++", "C", "java"]:
                 # Add a new signal handler for the execution of this code.
-                prev_handler = create_delete_signal_handler("new")
+                prev_handler = create_signal_handler()
 
                 # Do whatever testing needed.
                 try:
@@ -176,12 +179,12 @@ class TestCode(object):
                     type, value = sys.exc_info()[:2]
                     err = "Error: {0}".format(repr(value))
                 finally:
-                    # # Set back any original signal handler.
-                    create_delete_signal_handler("original", prev_handler)
+                    # Set back any original signal handler.
+                    set_original_signal_handler(prev_handler)
 
             elif self.language == "scilab":
                 # Add a new signal handler for the execution of this code.
-                prev_handler = create_delete_signal_handler("new")
+                prev_handler = create_signal_handler()
 
                 # Do whatever testing needed.
                 try:
@@ -211,11 +214,11 @@ class TestCode(object):
                     err = "Error: {0}".format(repr(value))
                 finally:
                     # Set back any original signal handler.
-                    create_delete_signal_handler("original", prev_handler)
+                    set_original_signal_handler(prev_handler)
 
             elif self.language == "bash":
                 # Add a new signal handler for the execution of this code.
-                prev_handler = create_delete_signal_handler("new")
+                prev_handler = create_signal_handler()
 
                 try:
                     success, err = self.check_bash_script(ref_path, submit_path,
@@ -227,13 +230,13 @@ class TestCode(object):
                     err = "Error: {0}".format(repr(value))
                 finally:
                     # Set back any original signal handler.
-                    create_delete_signal_handler("original", prev_handler)
+                    set_original_signal_handler(prev_handler)
 
             # Delete the created file.
             os.remove(submit_path)
 
             # Cancel the signal
-            create_delete_signal_handler("delete")
+            delete_signal_handler()
 
         result = {'success': success, 'error': err}
         return result
@@ -554,7 +557,13 @@ class CodeServer(object):
 
     def checker(self, info_parameter, in_dir=None):
         """Calls the TestCode Class to test the current code"""
-        tc = TestCode(info_parameter, in_dir)
+        info_parameter = json.loads(info_parameter)
+        test_parameter = info_parameter.get("test_parameter")
+        language = info_parameter.get("language")
+        user_answer = info_parameter.get("user_answer")
+        ref_code_path = info_parameter.get("ref_code_path")
+
+        tc = TestCode(test_parameter, language, user_answer, ref_code_path, in_dir)
         result = tc.run_code()
         # Put us back into the server pool queue since we are free now.
         self.queue.put(self.port)

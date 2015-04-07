@@ -63,7 +63,7 @@ class Question(models.Model):
     # Answer for MCQs.
     solution = models.TextField(blank=True)
 
-    # Test cases file paths
+    # Test cases file paths (comma seperated for reference code path and test case code path)
     ref_code_path = models.TextField(blank=True)
 
     # Any multiple choice options. Place one option per line.
@@ -86,27 +86,26 @@ class Question(models.Model):
     # Tags for the Question.
     tags = TaggableManager()
 
-    def consolidate_answer_data(self, test, user_answer):
+    def consolidate_answer_data(self, test_cases, user_answer): #test
         test_case_parameter = []
         info_parameter = {}
 
-        for i in test:
+        for test_case in test_cases:
             kw_args_dict = {}
             pos_args_list = []
 
             parameter_dict = {}
-            parameter_dict['test_id'] = i.id
-            parameter_dict['func_name'] = i.func_name
-            parameter_dict['expected_answer'] = i.expected_answer
-            parameter_dict['ref_code_path'] = i.ref_code_path
+            parameter_dict['test_id'] = test_case.id
+            parameter_dict['func_name'] = test_case.func_name
+            parameter_dict['expected_answer'] = test_case.expected_answer
 
-            if i.kw_args:
-                for args in i.kw_args.split(","):
-                    key, val = args.split("=")
-                    kw_args_dict[key.strip()] = val.strip()
+            if test_case.kw_args:
+                for args in test_case.kw_args.split(","):
+                    arg_name, arg_value = args.split("=")
+                    kw_args_dict[arg_name.strip()] = arg_value.strip()
 
-            if i.pos_args:
-                for args in i.pos_args.split(","):
+            if test_case.pos_args:
+                for args in test_case.pos_args.split(","):
                     pos_args_list.append(args.strip())
 
             parameter_dict['kw_args'] = kw_args_dict
