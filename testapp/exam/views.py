@@ -766,7 +766,10 @@ def check(request, q_id, attempt_no=None, questionpaper_id=None):
         assign = AssignmentUpload()
         assign.user = user.profile
         assign.assignmentQuestion = question
-        assign.assignmentFile = request.FILES['assignment']
+        # if time-up at upload question then the form is submitted without
+        # validation
+        if 'assignment' in request.FILES:
+            assign.assignmentFile = request.FILES['assignment']
         assign.save()
         user_answer = 'ASSIGNMENT UPLOADED'
     else:
