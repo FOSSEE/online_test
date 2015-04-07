@@ -190,9 +190,9 @@ class QuestionPaper(models.Model):
             questions += question_set.get_random_questions()
         return questions
 
-    def make_answerpaper(self, user, ip, attempt_no):
+    def make_answerpaper(self, user, ip, attempt_num):
         """Creates an  answer paper for the user to attempt the quiz"""
-        ans_paper = AnswerPaper(user=user, user_ip=ip, attempt_number=attempt_no)
+        ans_paper = AnswerPaper(user=user, user_ip=ip, attempt_number=attempt_num)
         ans_paper.start_time = datetime.datetime.now()
         ans_paper.end_time = ans_paper.start_time \
                              + datetime.timedelta(minutes=self.quiz.duration)
