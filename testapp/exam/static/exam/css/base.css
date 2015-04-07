@@ -245,7 +245,30 @@ body {
 .container:after {
   clear: both;
 }
-
+.container-fluid {
+  position: relative;
+  min-width: 940px;
+  padding-left: 20px;
+  padding-right: 20px;
+  zoom: 1;
+}
+.container-fluid:before, .container-fluid:after {
+  display: table;
+  content: "";
+  zoom: 1;
+}
+.container-fluid:after {
+  clear: both;
+}
+.container-fluid > .sidebar {
+  position: absolute;
+  top: 0;
+  left: 20px;
+  width: 220px;
+}
+.container-fluid > .content {
+  margin-left: 240px;
+}
 a {
   color: #0069d6;
   text-decoration: none;
@@ -2256,4 +2279,49 @@ button.btn::-moz-focus-inner, input[type=submit].btn::-moz-focus-inner {
 }
 .tab-content > .active, .pill-content > .active {
   display: block;
+}
+.pagination {
+  height: 36px;
+  margin: 18px 0;
+}
+.pagination ul {
+  float: left;
+  margin: 0;
+  border: 1px solid #ddd;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.pagination li {
+  display: inline;
+}
+.pagination a {
+  float: left;
+  padding: 0 14px;
+  line-height: 34px;
+  border-right: 1px solid;
+  border-right-color: #ddd;
+  border-right-color: rgba(0, 0, 0, 0.15);
+  *border-right-color: #ddd;
+  /* IE6-7 */
+
+  text-decoration: none;
+}
+.pagination a:hover, .pagination .active a {
+  background-color: #c7eefe;
+}
+/*custom classes*/
+.pagination .done a {
+  background-color: #00CC66;
+}
+.pagination .disabled a, .pagination .disabled a:hover {
+  background-color: transparent;
+  color: #bfbfbf;
+}
+.pagination .next a {
+  border: 0;
 }
