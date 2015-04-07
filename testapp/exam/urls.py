@@ -6,16 +6,16 @@ urlpatterns = patterns('testapp.exam.views',
     url(r'^quizzes/$', 'quizlist_user'),
     url(r'^results/$', 'results_user'),
     url(r'^start/$', 'start'),
-    url(r'^start/(?P<attempt_no>\d+)/(?P<questionpaper_id>\d+)/$', 'start'),
-    url(r'^quit/(?P<attempt_no>\d+)/(?P<questionpaper_id>\d+)/$', 'quit'),
+    url(r'^start/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$', 'start'),
+    url(r'^quit/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$', 'quit'),
     url(r'^intro/(?P<questionpaper_id>\d+)/$', 'intro'),
     url(r'^complete/$', 'complete'),
-    url(r'^complete/(?P<attempt_no>\d+)/(?P<questionpaper_id>\d+)/$',\
+    url(r'^complete/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$',\
             'complete'),
     url(r'^register/$', 'user_register'),
     url(r'^(?P<q_id>\d+)/$', 'question'),
     url(r'^(?P<q_id>\d+)/check/$', 'check'),
-    url(r'^(?P<q_id>\d+)/check/(?P<attempt_no>\d+)/(?P<questionpaper_id>\d+)/$',\
+    url(r'^(?P<q_id>\d+)/check/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$',\
             'check'),
     url(r'^intro/$', 'start'),
 

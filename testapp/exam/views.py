@@ -186,7 +186,7 @@ def intro(request, questionpaper_id):
     already_attempted = attempted_papers.count()
     if already_attempted == 0:
         context = {'user': user, 'paper_id': questionpaper_id,\
-                'attempt_no': already_attempted + 1}
+                'attempt_num': already_attempted + 1}
         return my_render_to_response('exam/intro.html', context,
                                      context_instance=ci)
     if already_attempted < attempt_number or attempt_number < 0:
@@ -195,7 +195,7 @@ def intro(request, questionpaper_id):
         days_after_attempt = (today - previous_attempt_day).days
         if days_after_attempt >= time_lag:
             context = {'user': user, 'paper_id': questionpaper_id,\
-                    'attempt_no': already_attempted + 1}
+                    'attempt_num': already_attempted + 1}
             return my_render_to_response('exam/intro.html', context,
                                          context_instance=ci)
         else:
@@ -658,7 +658,7 @@ def user_login(request):
                                      context_instance=ci)
 
 
-def start(request, attempt_no=None, questionpaper_id=None):
+def start(request, attempt_num=None, questionpaper_id=None):
     """Check the user cedentials and if any quiz is available,
     start the exam."""
     user = request.user
@@ -671,13 +671,13 @@ def start(request, attempt_no=None, questionpaper_id=None):
     except QuestionPaper.DoesNotExist:
         msg = 'Quiz not found, please contact your '\
             'instructor/administrator. Please login again thereafter.'
-        return complete(request, msg, attempt_no, questionpaper_id)
+        return complete(request, msg, attempt_num, questionpaper_id)
 
     try:
         old_paper = AnswerPaper.objects.get(
-            question_paper=questionpaper, user=user, attempt_number=attempt_no)
+            question_paper=questionpaper, user=user, attempt_number=attempt_num)
         q = old_paper.current_question()
-        return show_question(request, q, attempt_no, questionpaper_id)
+        return show_question(request, q, attempt_num, questionpaper_id)
     except AnswerPaper.DoesNotExist:
         ip = request.META['REMOTE_ADDR']
         key = gen_key(10)
@@ -687,13 +687,13 @@ def start(request, attempt_no=None, questionpaper_id=None):
             msg = 'You do not have a profile and cannot take the quiz!'
             raise Http404(msg)
 
-        new_paper = questionpaper.make_answerpaper(user, ip, attempt_no)
+        new_paper = questionpaper.make_answerpaper(user, ip, attempt_num)
         # Make user directory.
         user_dir = get_user_dir(user)
-        return start(request, attempt_no, questionpaper_id)
+        return start(request, attempt_num, questionpaper_id)
 
 
-def question(request, q_id, attempt_no, questionpaper_id, success_msg=None):
+def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     """Check the credentials of the user and start the exam."""
 
     user = request.user
@@ -703,7 +703,7 @@ def question(request, q_id, attempt_no, questionpaper_id, success_msg=None):
     try:
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
         paper = AnswerPaper.objects.get(
-            user=request.user, attempt_number=attempt_no, question_paper=q_paper)
+            user=request.user, attempt_number=attempt_num, question_paper=q_paper)
     except AnswerPaper.DoesNotExist:
         return my_redirect('/exam/start/')
     if not paper.question_paper.quiz.active:
@@ -730,21 +730,21 @@ def question(request, q_id, attempt_no, questionpaper_id, success_msg=None):
                                  context_instance=ci)
 
 
-def show_question(request, q_id, attempt_no, questionpaper_id, success_msg=None):
+def show_question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     """Show a question if possible."""
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
-        return complete(request, msg, attempt_no, questionpaper_id)
+        return complete(request, msg, attempt_num, questionpaper_id)
     else:
-        return question(request, q_id, attempt_no, questionpaper_id, success_msg)
+        return question(request, q_id, attempt_num, questionpaper_id, success_msg)
 
 
-def check(request, q_id, attempt_no=None, questionpaper_id=None):
+def check(request, q_id, attempt_num=None, questionpaper_id=None):
     """Checks the answers of the user for particular question"""
 
     user = request.user
     q_paper = QuestionPaper.objects.get(id=questionpaper_id)
-    paper = AnswerPaper.objects.get(user=request.user, attempt_number=attempt_no,
+    paper = AnswerPaper.objects.get(user=request.user, attempt_number=attempt_num,
             question_paper=q_paper)
     if not user.is_authenticated() or paper.end_time < datetime.datetime.now():
         return my_redirect('/exam/login/')
@@ -755,7 +755,7 @@ def check(request, q_id, attempt_no=None, questionpaper_id=None):
     success = True
     if skip is not None:
         next_q = paper.skip()
-        return show_question(request, next_q, attempt_no, questionpaper_id)
+        return show_question(request, next_q, attempt_num, questionpaper_id)
 
     # Add the answer submitted, regardless of it being correct or not.
     if question.type == 'mcq':
@@ -799,10 +799,10 @@ def check(request, q_id, attempt_no=None, questionpaper_id=None):
     if not success:  # Should only happen for non-mcq questions.
         if time_left == 0:
             reason = 'Your time is up!'
-            return complete(request, reason, attempt_no, questionpaper_id)
+            return complete(request, reason, attempt_num, questionpaper_id)
         if not paper.question_paper.quiz.active:
             reason = 'The quiz has been deactivated!'
-            return complete(request, reason, attempt_no, questionpaper_id)
+            return complete(request, reason, attempt_num, questionpaper_id)
         context = {'question': question, 'error_message': err_msg,
                    'paper': paper, 'last_attempt': user_code,
                    'quiz_name': paper.question_paper.quiz.description,
@@ -814,10 +814,10 @@ def check(request, q_id, attempt_no=None, questionpaper_id=None):
     else:
         if time_left <= 0:
             reason = 'Your time is up!'
-            return complete(request, reason, attempt_no, questionpaper_id)
+            return complete(request, reason, attempt_num, questionpaper_id)
         else:
             next_q = paper.completed_question(question.id)
-            return show_question(request, next_q, attempt_no,
+            return show_question(request, next_q, attempt_num,
                                  questionpaper_id, success_msg)
 
 
@@ -853,15 +853,15 @@ def validate_answer(user, user_answer, question):
     return correct, success, message
 
 
-def quit(request, attempt_no=None, questionpaper_id=None):
+def quit(request, attempt_num=None, questionpaper_id=None):
     """Show the quit page when the user logs out."""
     context = {'id': questionpaper_id,
-               'attempt_no': attempt_no}
+               'attempt_num': attempt_num}
     return my_render_to_response('exam/quit.html', context,
                                  context_instance=RequestContext(request))
 
 
-def complete(request, reason=None, attempt_no=None, questionpaper_id=None):
+def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
     """Show a page to inform user that the quiz has been compeleted."""
 
     user = request.user
@@ -873,7 +873,7 @@ def complete(request, reason=None, attempt_no=None, questionpaper_id=None):
     else:
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
         paper = AnswerPaper.objects.get(user=user, question_paper=q_paper,
-                attempt_number=attempt_no)
+                attempt_number=attempt_num)
         paper.update_marks_obtained()
         paper.update_percent()
         paper.update_passed()
