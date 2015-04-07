@@ -165,7 +165,6 @@ def intro(request, questionpaper_id):
     quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
     attempt_number = quest_paper.quiz.attempts_allowed
     time_lag = quest_paper.quiz.time_between_attempts
-
     if quest_paper.quiz.prerequisite:
         try:
             pre_quest = QuestionPaper.objects.get(
@@ -189,10 +188,29 @@ def intro(request, questionpaper_id):
                 'attempt_num': already_attempted + 1}
         return my_render_to_response('exam/intro.html', context,
                                      context_instance=ci)
+
+    if already_attempted == attempt_number:
+        inprogress, previous_attempt = _check_previous_attempt(attempted_papers,
+                already_attempted)
+        if inprogress:
+            return show_question(request,
+                    previous_attempt.current_question(),
+                    previous_attempt.attempt_number,
+                    previous_attempt.question_paper.id)
+        else:
+            return my_redirect("/exam/quizzes")
+
+
     if already_attempted < attempt_number or attempt_number < 0:
-        previous_attempt_day = attempted_papers[already_attempted-1].start_time
-        today = datetime.datetime.today()
-        days_after_attempt = (today - previous_attempt_day).days
+        inprogress, previous_attempt = _check_previous_attempt(attempted_papers,
+                already_attempted)
+        if inprogress:
+            return show_question(request,
+                    previous_attempt.current_question(),
+                    previous_attempt.attempt_number,
+                    previous_attempt.question_paper.id)
+        days_after_attempt = (datetime.datetime.today() - \
+                previous_attempt.start_time).days
         if days_after_attempt >= time_lag:
             context = {'user': user, 'paper_id': questionpaper_id,\
                     'attempt_num': already_attempted + 1}
@@ -203,6 +221,20 @@ def intro(request, questionpaper_id):
     else:
         return my_redirect("/exam/quizzes/")
 
+
+def _check_previous_attempt(attempted_papers, already_attempted):
+    previous_attempt = attempted_papers[already_attempted-1]
+    previous_attempt_day = previous_attempt.start_time
+    today = datetime.datetime.today()
+    if previous_attempt.status == 'inprogress':
+        end_time = previous_attempt.end_time
+        quiz_time = previous_attempt.question_paper.quiz.duration*60
+        if quiz_time > (today-previous_attempt_day).seconds:
+            return True, previous_attempt
+        else:
+            return False, previous_attempt
+    else:
+        return False, previous_attempt
 
 def results_user(request):
     """Show list of Results of Quizzes that is taken by logged-in user."""
@@ -809,6 +841,10 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     q_paper = QuestionPaper.objects.get(id=questionpaper_id)
     paper = AnswerPaper.objects.get(user=request.user, attempt_number=attempt_num,
             question_paper=q_paper)
+    if q_id in paper.questions_answered:
+        next_q = paper.skip()
+        return show_question(request, next_q, attempt_num, questionpaper_id)
+
     if not user.is_authenticated() or paper.end_time < datetime.datetime.now():
         return my_redirect('/exam/login/')
     question = get_object_or_404(Question, pk=q_id)
