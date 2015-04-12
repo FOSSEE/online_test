@@ -756,6 +756,10 @@ def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
                    'user': user, 'quiz_name': quiz_name, 'time_left': time_left,
                    'success_msg': success_msg, 'to_attempt': to_attempt,
                    'submitted': submitted}
+    if q.type == 'code':
+        skipped_answer = paper.answers.filter(question=q, skipped=True)
+        if skipped_answer:
+            context['last_attempt'] = skipped_answer[0].answer
     ci = RequestContext(request)
     return my_render_to_response('exam/question.html', context,
                                  context_instance=ci)
@@ -763,12 +767,40 @@ def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
 
 def show_question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     """Show a question if possible."""
+    user = request.user
+    q_paper = QuestionPaper.objects.get(id=questionpaper_id)
+    paper = AnswerPaper.objects.get(user=request.user, attempt_number=attempt_num,
+            question_paper=q_paper)
+    if not user.is_authenticated() or paper.end_time < datetime.datetime.now():
+        return my_redirect('/exam/login/')
+    old_qid = request.POST.get('question_id')
+    if old_qid is not None:
+        quest = Question.objects.get(pk=old_qid)
+        user_code = request.POST.get('answer')
+        if  quest.type == 'code':
+            old_skipped = paper.answers.filter(question=quest, skipped=True)
+            _save_skipped_answer(old_skipped, user_code, paper, quest)
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(request, msg, attempt_num, questionpaper_id)
     else:
         return question(request, q_id, attempt_num, questionpaper_id, success_msg)
 
+
+def _save_skipped_answer(old_skipped, user_answer, paper, question):
+    """
+        Saves the answer on skip. Only the code questions are saved.
+        Snippet is not saved with the answer.
+    """
+    if old_skipped:
+        skipped_answer = old_skipped[0]
+        skipped_answer.answer=user_answer
+        skipped_answer.save()
+    else:
+        skipped_answer = Answer(question=question, answer=user_answer,
+            correct=False, skipped=True)
+        skipped_answer.save()
+        paper.answers.add(skipped_answer)
 
 def check(request, q_id, attempt_num=None, questionpaper_id=None):
     """Checks the answers of the user for particular question"""
@@ -781,10 +813,14 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         return my_redirect('/exam/login/')
     question = get_object_or_404(Question, pk=q_id)
     snippet_code = request.POST.get('snippet')
+    user_code = request.POST.get('answer')
     skip = request.POST.get('skip', None)
     success_msg = False
     success = True
     if skip is not None:
+        if  question.type == 'code':
+            old_skipped = paper.answers.filter(question=question, skipped=True)
+            _save_skipped_answer(old_skipped, user_code, paper, question)
         next_q = paper.skip()
         return show_question(request, next_q, attempt_num, questionpaper_id)
 
@@ -804,7 +840,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         assign.save()
         user_answer = 'ASSIGNMENT UPLOADED'
     else:
-        user_code = request.POST.get('answer')
         user_answer = snippet_code + "\n" + user_code
 
     new_answer = Answer(question=question, answer=user_answer,
@@ -838,6 +873,10 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             reason = 'The quiz has been deactivated!'
             return complete(request, reason, attempt_num, questionpaper_id)
         questions, to_attempt, submitted = get_questions(paper)
+        old_answer = paper.answers.filter(question=question, skipped=True)
+        if old_answer:
+            old_answer[0].answer = user_code
+            old_answer[0].save()
         context = {'question': question, 'questions': questions,
                    'error_message': err_msg,
                    'paper': paper, 'last_attempt': user_code,
