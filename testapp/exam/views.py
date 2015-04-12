@@ -4,7 +4,7 @@ import os
 import stat
 from os.path import dirname, pardir, abspath, join, exists
 import datetime
-
+import collections
 from django.http import HttpResponse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
@@ -693,6 +693,36 @@ def start(request, attempt_num=None, questionpaper_id=None):
         return start(request, attempt_num, questionpaper_id)
 
 
+def get_questions(paper):
+    '''
+        Takes answerpaper as an argument. Returns the total questions as
+        ordered dictionary, the questions yet to attempt and the questions
+        attempted
+    '''
+    to_attempt = []
+    submitted = []
+    all_questions = []
+    questions = {}
+    if paper.questions:
+        to_attempt = (paper.questions).split('|')
+    if paper.questions_answered:
+        submitted = (paper.questions_answered).split('|')
+    if not to_attempt:
+        submitted.sort()
+        all_questions = submitted
+    if not submitted:
+        to_attempt.sort()
+        all_questions = to_attempt
+    if to_attempt and submitted:
+        q_append = to_attempt + submitted
+        q_append.sort()
+        all_questions = q_append
+    for num, value in enumerate(all_questions, 1):
+        questions[value] = num
+    questions = collections.OrderedDict(sorted(questions.items()))
+    return questions, to_attempt, submitted
+
+
 def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     """Check the credentials of the user and start the exam."""
 
@@ -716,15 +746,16 @@ def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     if time_left == 0:
         return complete(request, reason='Your time is up!')
     quiz_name = paper.question_paper.quiz.description
+    questions, to_attempt, submitted = get_questions(paper)
     if success_msg is None:
-        context = {'question': q, 'paper': paper, 'user': user,
-                   'quiz_name': quiz_name,
-                   'time_left': time_left, }
+        context = {'question': q, 'questions': questions, 'paper': paper,
+                   'user': user, 'quiz_name': quiz_name, 'time_left': time_left,
+                   'to_attempt': to_attempt, 'submitted': submitted}
     else:
-        context = {'question': q, 'paper': paper, 'user': user,
-                   'quiz_name': quiz_name,
-                   'time_left': time_left,
-                   'success_msg': success_msg}
+        context = {'question': q, 'questions': questions, 'paper': paper,
+                   'user': user, 'quiz_name': quiz_name, 'time_left': time_left,
+                   'success_msg': success_msg, 'to_attempt': to_attempt,
+                   'submitted': submitted}
     ci = RequestContext(request)
     return my_render_to_response('exam/question.html', context,
                                  context_instance=ci)
@@ -803,10 +834,16 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         if not paper.question_paper.quiz.active:
             reason = 'The quiz has been deactivated!'
             return complete(request, reason, attempt_num, questionpaper_id)
-        context = {'question': question, 'error_message': err_msg,
+        if not paper.question_paper.quiz.active:
+            reason = 'The quiz has been deactivated!'
+            return complete(request, reason, attempt_num, questionpaper_id)
+        questions, to_attempt, submitted = get_questions(paper)
+        context = {'question': question, 'questions': questions,
+                   'error_message': err_msg,
                    'paper': paper, 'last_attempt': user_code,
                    'quiz_name': paper.question_paper.quiz.description,
-                   'time_left': time_left}
+                   'time_left': time_left, 'to_attempt': to_attempt,
+                   'submitted': submitted}
         ci = RequestContext(request)
 
         return my_render_to_response('exam/question.html', context,
