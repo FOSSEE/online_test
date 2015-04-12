@@ -21,7 +21,7 @@ from testapp.exam.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm
 from testapp.exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
-
+from testapp.exam.models import AssignmentUpload
 
 # The directory where user data can be saved.
 OUTPUT_DIR = abspath(join(dirname(__file__), 'output'))
@@ -139,7 +139,7 @@ def quizlist_user(request):
     user = request.user
     avail_quizzes = list(QuestionPaper.objects.filter(quiz__active=True))
     user_answerpapers = AnswerPaper.objects.filter(user=user)
-    quizzes_taken = []
+    quizzes_taken = user_answerpapers
     pre_requisites = []
     context = {}
 
@@ -152,13 +152,6 @@ def quizlist_user(request):
         context['quizzes_taken'] = None
         return my_render_to_response("exam/quizzes_user.html", context)
 
-    for answer_paper in user_answerpapers:
-        for quiz in avail_quizzes:
-            if answer_paper.question_paper.id == quiz.id and \
-            answer_paper.end_time != answer_paper.start_time:
-                avail_quizzes.remove(quiz)
-                quizzes_taken.append(answer_paper)
-
     context['quizzes'] = avail_quizzes
     context['user'] = user
     context['quizzes_taken'] = quizzes_taken
@@ -170,27 +163,45 @@ def intro(request, questionpaper_id):
     user = request.user
     ci = RequestContext(request)
     quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
+    attempt_number = quest_paper.quiz.attempts_allowed
+    time_lag = quest_paper.quiz.time_between_attempts
+
     if quest_paper.quiz.prerequisite:
         try:
-            pre_quest = QuestionPaper.objects.get(quiz=quest_paper.quiz.prerequisite)
-            answer_paper = AnswerPaper.objects.get(
-                           question_paper=pre_quest,
-                           user=user)
-            if answer_paper.passed:
-                context = {'user': user, 'paper_id': questionpaper_id}
-                return my_render_to_response('exam/intro.html', context,
-                                             context_instance=ci)
-            else:
+            pre_quest = QuestionPaper.objects.get(
+                    quiz=quest_paper.quiz.prerequisite)
+            answer_papers = AnswerPaper.objects.filter(
+                    question_paper=pre_quest, user=user)
+            answer_papers_failed = AnswerPaper.objects.filter(
+                    question_paper=pre_quest, user=user, passed=False)
+            if answer_papers.count() == answer_papers_failed.count():
                 context = {'user': user, 'cannot_attempt': True}
                 return my_redirect("/exam/quizzes/?cannot_attempt=True")
-
         except:
             context = {'user': user, 'cannot_attempt': True}
             return my_redirect("/exam/quizzes/?cannot_attempt=True")
-    context = {'user': user, 'paper_id': questionpaper_id}
-    ci = RequestContext(request)
-    return my_render_to_response('exam/intro.html', context,
-                                 context_instance=ci)
+
+    attempted_papers = AnswerPaper.objects.filter(question_paper=quest_paper,
+            user=user)
+    already_attempted = attempted_papers.count()
+    if already_attempted == 0:
+        context = {'user': user, 'paper_id': questionpaper_id,\
+                'attempt_num': already_attempted + 1}
+        return my_render_to_response('exam/intro.html', context,
+                                     context_instance=ci)
+    if already_attempted < attempt_number or attempt_number < 0:
+        previous_attempt_day = attempted_papers[already_attempted-1].start_time
+        today = datetime.datetime.today()
+        days_after_attempt = (today - previous_attempt_day).days
+        if days_after_attempt >= time_lag:
+            context = {'user': user, 'paper_id': questionpaper_id,\
+                    'attempt_num': already_attempted + 1}
+            return my_render_to_response('exam/intro.html', context,
+                                         context_instance=ci)
+        else:
+            return my_redirect("/exam/quizzes/")
+    else:
+        return my_redirect("/exam/quizzes/")
 
 
 def results_user(request):
@@ -367,6 +378,8 @@ def add_quiz(request, quiz_id=None):
                 d.pass_criteria = form['pass_criteria'].data
                 d.language = form['language'].data
                 d.prerequisite_id = form['prerequisite'].data
+                d.attempts_allowed = form['attempts_allowed'].data
+                d.time_between_attempts = form['time_between_attempts'].data
                 d.save()
                 quiz = Quiz.objects.get(id=quiz_id)
                 return my_redirect("/exam/manage/showquiz")
@@ -390,6 +403,8 @@ def add_quiz(request, quiz_id=None):
             form.initial['pass_criteria'] = d.pass_criteria
             form.initial['language'] = d.language
             form.initial['prerequisite'] = d.prerequisite_id
+            form.initial['attempts_allowed'] = d.attempts_allowed
+            form.initial['time_between_attempts'] = d.time_between_attempts
             return my_render_to_response('exam/add_quiz.html',
                                          {'form': form},
                                          context_instance=ci)
@@ -603,8 +618,10 @@ rights/permissions and log in."""
         users_per_paper = []
         for paper in question_papers:
             answer_papers = AnswerPaper.objects.filter(question_paper=paper)
-            users_passed = AnswerPaper.objects.filter(question_paper=paper, passed=True).count()
-            users_failed = AnswerPaper.objects.filter(question_paper=paper, passed=False).count()
+            users_passed = AnswerPaper.objects.filter(question_paper=paper,
+                    passed=True).count()
+            users_failed = AnswerPaper.objects.filter(question_paper=paper,
+                    passed=False).count()
             temp = paper, answer_papers, users_passed, users_failed
             users_per_paper.append(temp)
         context = {'user': user, 'users_per_paper': users_per_paper}
@@ -641,7 +658,7 @@ def user_login(request):
                                      context_instance=ci)
 
 
-def start(request, questionpaper_id=None):
+def start(request, attempt_num=None, questionpaper_id=None):
     """Check the user cedentials and if any quiz is available,
     start the exam."""
     user = request.user
@@ -654,13 +671,13 @@ def start(request, questionpaper_id=None):
     except QuestionPaper.DoesNotExist:
         msg = 'Quiz not found, please contact your '\
             'instructor/administrator. Please login again thereafter.'
-        return complete(request, msg, questionpaper_id)
+        return complete(request, msg, attempt_num, questionpaper_id)
 
     try:
         old_paper = AnswerPaper.objects.get(
-            question_paper=questionpaper, user=user)
+            question_paper=questionpaper, user=user, attempt_number=attempt_num)
         q = old_paper.current_question()
-        return show_question(request, q, questionpaper_id)
+        return show_question(request, q, attempt_num, questionpaper_id)
     except AnswerPaper.DoesNotExist:
         ip = request.META['REMOTE_ADDR']
         key = gen_key(10)
@@ -670,13 +687,13 @@ def start(request, questionpaper_id=None):
             msg = 'You do not have a profile and cannot take the quiz!'
             raise Http404(msg)
 
-        new_paper = questionpaper.make_answerpaper(user, ip,)
+        new_paper = questionpaper.make_answerpaper(user, ip, attempt_num)
         # Make user directory.
         user_dir = get_user_dir(user)
-        return start(request, questionpaper_id)
+        return start(request, attempt_num, questionpaper_id)
 
 
-def question(request, q_id, questionpaper_id, success_msg=None):
+def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     """Check the credentials of the user and start the exam."""
 
     user = request.user
@@ -686,7 +703,7 @@ def question(request, q_id, questionpaper_id, success_msg=None):
     try:
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
         paper = AnswerPaper.objects.get(
-            user=request.user, question_paper=q_paper)
+            user=request.user, attempt_number=attempt_num, question_paper=q_paper)
     except AnswerPaper.DoesNotExist:
         return my_redirect('/exam/start/')
     if not paper.question_paper.quiz.active:
@@ -713,21 +730,22 @@ def question(request, q_id, questionpaper_id, success_msg=None):
                                  context_instance=ci)
 
 
-def show_question(request, q_id, questionpaper_id, success_msg=None):
+def show_question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     """Show a question if possible."""
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
-        return complete(request, msg, questionpaper_id)
+        return complete(request, msg, attempt_num, questionpaper_id)
     else:
-        return question(request, q_id, questionpaper_id, success_msg)
+        return question(request, q_id, attempt_num, questionpaper_id, success_msg)
 
 
-def check(request, q_id, questionpaper_id=None):
+def check(request, q_id, attempt_num=None, questionpaper_id=None):
     """Checks the answers of the user for particular question"""
 
     user = request.user
     q_paper = QuestionPaper.objects.get(id=questionpaper_id)
-    paper = AnswerPaper.objects.get(user=request.user, question_paper=q_paper)
+    paper = AnswerPaper.objects.get(user=request.user, attempt_number=attempt_num,
+            question_paper=q_paper)
     if not user.is_authenticated() or paper.end_time < datetime.datetime.now():
         return my_redirect('/exam/login/')
     question = get_object_or_404(Question, pk=q_id)
@@ -737,13 +755,23 @@ def check(request, q_id, questionpaper_id=None):
     success = True
     if skip is not None:
         next_q = paper.skip()
-        return show_question(request, next_q, questionpaper_id)
+        return show_question(request, next_q, attempt_num, questionpaper_id)
 
     # Add the answer submitted, regardless of it being correct or not.
     if question.type == 'mcq':
         user_answer = request.POST.get('answer')
     elif question.type == 'mcc':
         user_answer = request.POST.getlist('answer')
+    elif question.type == 'upload':
+        assign = AssignmentUpload()
+        assign.user = user.profile
+        assign.assignmentQuestion = question
+        # if time-up at upload question then the form is submitted without
+        # validation
+        if 'assignment' in request.FILES:
+            assign.assignmentFile = request.FILES['assignment']
+        assign.save()
+        user_answer = 'ASSIGNMENT UPLOADED'
     else:
         user_code = request.POST.get('answer')
         user_answer = snippet_code + "\n" + user_code
@@ -756,24 +784,25 @@ def check(request, q_id, questionpaper_id=None):
     # If we were not skipped, we were asked to check.  For any non-mcq
     # questions, we obtain the results via XML-RPC with the code executed
     # safely in a separate process (the code_server.py) running as nobody.
-    correct, success, err_msg = validate_answer(user, user_answer, question)
-    if correct:
-        new_answer.correct = correct
-        new_answer.marks = question.points
-        new_answer.error = err_msg
-        success_msg = True
-    else:
-        new_answer.error = err_msg
-    new_answer.save()
+    if not question.type == 'upload':
+        correct, success, err_msg = validate_answer(user, user_answer, question)
+        if correct:
+            new_answer.correct = correct
+            new_answer.marks = question.points
+            new_answer.error = err_msg
+            success_msg = True
+        else:
+            new_answer.error = err_msg
+        new_answer.save()
 
     time_left = paper.time_left()
     if not success:  # Should only happen for non-mcq questions.
         if time_left == 0:
             reason = 'Your time is up!'
-            return complete(request, reason, questionpaper_id)
+            return complete(request, reason, attempt_num, questionpaper_id)
         if not paper.question_paper.quiz.active:
             reason = 'The quiz has been deactivated!'
-            return complete(request, reason, questionpaper_id)
+            return complete(request, reason, attempt_num, questionpaper_id)
         context = {'question': question, 'error_message': err_msg,
                    'paper': paper, 'last_attempt': user_code,
                    'quiz_name': paper.question_paper.quiz.description,
@@ -785,10 +814,10 @@ def check(request, q_id, questionpaper_id=None):
     else:
         if time_left <= 0:
             reason = 'Your time is up!'
-            return complete(request, reason, questionpaper_id)
+            return complete(request, reason, attempt_num, questionpaper_id)
         else:
             next_q = paper.completed_question(question.id)
-            return show_question(request, next_q,
+            return show_question(request, next_q, attempt_num,
                                  questionpaper_id, success_msg)
 
 
@@ -824,14 +853,15 @@ def validate_answer(user, user_answer, question):
     return correct, success, message
 
 
-def quit(request, questionpaper_id=None):
+def quit(request, attempt_num=None, questionpaper_id=None):
     """Show the quit page when the user logs out."""
-    context = {'id': questionpaper_id}
+    context = {'id': questionpaper_id,
+               'attempt_num': attempt_num}
     return my_render_to_response('exam/quit.html', context,
                                  context_instance=RequestContext(request))
 
 
-def complete(request, reason=None, questionpaper_id=None):
+def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
     """Show a page to inform user that the quiz has been compeleted."""
 
     user = request.user
@@ -842,11 +872,13 @@ def complete(request, reason=None, questionpaper_id=None):
         return my_render_to_response('exam/complete.html', context)
     else:
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
-        paper = AnswerPaper.objects.get(user=user, question_paper=q_paper)
+        paper = AnswerPaper.objects.get(user=user, question_paper=q_paper,
+                attempt_number=attempt_num)
         paper.update_marks_obtained()
         paper.update_percent()
         paper.update_passed()
         paper.end_time = datetime.datetime.now()
+        paper.update_status()
         paper.save()
         obt_marks = paper.marks_obtained
         tot_marks = paper.question_paper.total_marks

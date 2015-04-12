@@ -27,10 +27,16 @@ question_types = (
     ("mcq", "Multiple Choice"),
     ("mcc", "Multiple Correct Choices"),
     ("code", "Code"),
+    ("upload", "Assignment Upload"),
     )
 
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
+
+attempts = [(i, i) for i in range(1, 6)]
+attempts.append((-1, 'Infinite'))
+days_between_attempts = ((j, j) for j in range(401))
+
 
 class UserRegisterForm(forms.Form):
     """A Class to create new form for User's Registration.
@@ -131,7 +137,7 @@ class QuizForm(forms.Form):
         super(QuizForm, self).__init__(*args, **kwargs)
         quizzes = [('', 'Select a prerequisite quiz')]
         quizzes = quizzes + \
-                       list(Quiz.objects.values_list('id','description'))
+                       list(Quiz.objects.values_list('id', 'description'))
         self.fields['prerequisite'] = forms.CharField(required=False,
                                    widget=forms.Select(choices=quizzes))
 
@@ -143,6 +149,10 @@ class QuizForm(forms.Form):
     pass_criteria = forms.FloatField(initial=40,
                                      help_text='Will be taken as percentage')
     language = forms.CharField(widget=forms.Select(choices=languages))
+    attempts_allowed = forms.IntegerField(widget=forms.Select(choices=attempts))
+    time_between_attempts = forms.IntegerField\
+            (widget=forms.Select(choices=days_between_attempts),
+                    help_text='Will be in days')
 
     def save(self):
         start_date = self.cleaned_data["start_date"]
@@ -152,6 +162,8 @@ class QuizForm(forms.Form):
         pass_criteria = self.cleaned_data["pass_criteria"]
         language = self.cleaned_data["language"]
         prerequisite = self.cleaned_data["prerequisite"]
+        attempts_allowed = self.cleaned_data["attempts_allowed"]
+        time_between_attempts = self.cleaned_data["time_between_attempts"]
         new_quiz = Quiz()
         new_quiz.start_date = start_date
         new_quiz.duration = duration
@@ -160,6 +172,8 @@ class QuizForm(forms.Form):
         new_quiz.pass_criteria = pass_criteria
         new_quiz.language = language
         new_quiz.prerequisite_id = prerequisite
+        new_quiz.attempts_allowed = attempts_allowed
+        new_quiz.time_between_attempts = time_between_attempts
         new_quiz.save()
 
 

@@ -27,7 +27,7 @@
          </ul>
           <p> We hope you enjoy taking this exam !!!</p>
 
-          <form action="{{URL_ROOT}}/exam/start/{{ paper_id }}/" method="post" align="center">
+          <form action="{{URL_ROOT}}/exam/start/{{ attempt_num }}/{{ paper_id }}/" method="post" align="center">
            {% csrf_token %}
            <center><button class="btn" type="submit" name="start">Start Exam!</button></center>
           </form>
