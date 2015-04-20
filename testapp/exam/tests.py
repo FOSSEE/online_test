@@ -3,7 +3,6 @@ from exam.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, TestCase
 import datetime, json
 
-
 def setUpModule():
     # create user profile
     user = User.objects.create_user(username='demo_user',
@@ -78,13 +77,6 @@ class QuestionTestCases(unittest.TestCase):
         self.answer_data_json = json.dumps(answer_data)
         self.user_answer = "demo_answer"
 
-
-# {"user_answer": "demo_answer", 
-# "test_parameter": [{"func_name": "def myfunc", 
-#             "expected_answer": "15", "test_id": null, "pos_args": ["12", "13"], 
-#             "kw_args": {"a": "10", "b": "11"}}], 
-#             "ref_code_path": "", "id": 21, "language": "Python"}
-
     def test_question(self):
         """ Test question """
         self.assertEqual(self.question.summary, 'Demo question')
@@ -94,7 +86,6 @@ class QuestionTestCases(unittest.TestCase):
         self.assertEqual(self.question.description, 'Write a function')
         self.assertEqual(self.question.points, 1.0)
         self.assertTrue(self.question.active)
-        # self.assertEqual(self.question.test, 'Test Cases')
         self.assertEqual(self.question.snippet, 'def myfunc()')
         tag_list = []
         for tag in self.question.tags.all():
@@ -104,7 +95,7 @@ class QuestionTestCases(unittest.TestCase):
     def test_consolidate_answer_data(self):
         """ Test consolidate_answer_data function """
         result = self.question.consolidate_answer_data([self.testcase], 
-                                                         user_answer)
+                                                         self.user_answer)
         self.assertEqual(result, self.answer_data_json)
         
 

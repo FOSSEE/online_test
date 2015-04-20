@@ -1,302 +1,92 @@
-"""Simple test suite for the code server.  Running this requires that one start
-up the code server as::
+import unittest
+import os
+from exam import evaluate_c, evaluate_cpp, evaluate_bash, evaluate_python
 
-    $ sudo ./code_server.py
+class TestPythonEvaluation(unittest.TestCase):
+    def setUp(self):
+        self.language = "Python"
+        self.test_parameter = [{"func_name": "add", 
+                                 "expected_answer": "5", 
+                                 "test_id": u'null', 
+                                 "pos_args": ["3", "2"], 
+                                 "kw_args": {}
+                                }]
+    def test_correct_answer(self):
+        user_answer = "def add(a, b):\n\treturn a + b"""
+        get_class = evaluate_python.EvaluatePython(self.test_parameter, self.language, user_answer, ref_code_path=None, in_dir=None)
+        result = get_class.run_code()
+        self.assertTrue(result.get("success"))
+        self.assertEqual(result.get("error"), "Correct answer")
 
-"""
-from exam.xmlrpc_clients import code_server
+    def test_incorrect_answer(self):
+        user_answer = "def add(a, b):\n\treturn a - b"""
+        test_parameter = [{"func_name": "add", 
+                                 "expected_answer": "5", 
+                                 "test_id": u'null', 
+                                 "pos_args": ["3", "2"], 
+                                 "kw_args": {}
+                                }]
+        get_class = evaluate_python.EvaluatePython(self.test_parameter, self.language, user_answer, ref_code_path=None, in_dir=None)
+        result = get_class.run_code()
+        self.assertFalse(result.get("success"))
+        self.assertEqual(result.get("error"), "AssertionError  in: assert add(3, 2) == 5")
 
+    def test_infinite_loop(self):
+        user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"""
+        test_parameter = [{"func_name": "add", 
+                                 "expected_answer": "5", 
+                                 "test_id": u'null', 
+                                 "pos_args": ["3", "2"], 
+                                 "kw_args": {}
+                                }]
+        get_class = evaluate_python.EvaluatePython(self.test_parameter, self.language, user_answer, ref_code_path=None, in_dir=None)
+        result = get_class.run_code()
+        self.assertFalse(result.get("success"))
+        self.assertTrue("Code took more than" in result.get("error"))
 
-def check_result(result, check='correct answer'):
-    if check != 'correct answer':
-        assert result[0] == False
-    else:
-        assert result[0] == True
-    if "unable to connect" in result[1].lower():
-        assert result[0], result[1]
-    assert check in result[1].lower(), result[1]
+###############################################################################
+class TestCEvaluation(unittest.TestCase):
+    def setUp(self):
+        self.language = "C"
+        self.ref_code_path = os.getcwd() + "/c_cpp_files/main.cpp"
+        self.in_dir = "/tmp"
+        self.test_parameter = []
 
-def test_python():
-    """Test if server runs Python code as expected."""
-    src = 'while True: pass'
-    result = code_server.run_code(src, '', '/tmp', language="python")
-    check_result(result, 'more than ')
-    src = 'x = 1'
-    result = code_server.run_code(src, 'assert x == 1', '/tmp',
-                                  language="python")
-    check_result(result, 'correct answer')
+    def test_correct_answer(self):
+        user_answer = "int add(int a, int b)\n{return a+b;}"
+        get_class = evaluate_c.EvaluateC(self.test_parameter, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+        self.assertTrue(result.get("success"))
+        self.assertEqual(result.get("error"))
 
-    result = code_server.run_code(src, 'assert x == 0', '/tmp',
-                                  language="python")
-    check_result(result, 'assertionerror')
+    def test_incorrect_answer(self):
+        user_answer = "int add(int a, int b)\n{return a+b}"
+        get_class = evaluate_c.EvaluateC(self.test_parameter, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+        self.assertFalse(result.get("success"))
+        self.assertTrue("compilation error" in result.get("error").lower())
 
-    src = 'abracadabra'
-    result = code_server.run_code(src, 'assert x == 0', '/tmp',
-                                  language="python")
-    check_result(result, 'nameerror')
+###############################################################################
+class TestCPPEvaluation(unittest.TestCase):
+    def setUp(self):
+        self.language = "CPP"
+        self.ref_code_path = os.getcwd() + "/c_cpp_files/main.cpp"
+        self.in_dir = "/tmp"
+        self.test_parameter = []
 
+    def test_correct_answer(self):
+        user_answer = "int add(int a, int b)\n{return a+b;}"
+        get_class = evaluate_cpp.EvaluateCpp(self.test_parameter, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+        self.assertTrue(result.get("success"))
+        self.assertEqual(result.get("error"))
 
-def test_c():
-    """Test if server runs c code as expected."""
-    src = """
-                #include<stdiol.h>
-                int ad(int a, int b)
-                {return a+b;}
-          """
-    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
-                                  '/tmp', language="C")
-    check_result(result, 'error')
-
-    src = """
-                int add(int a, int b)
-                {return a+b}
-          """
-    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
-                                  '/tmp', language="C")
-    check_result(result, 'compilation error')
-
-    src = """
-                int add(int a, int b)
-                {while(1>0){}
-                return a+b;}
-          """
-    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
-                                  '/tmp', language="C")
-    check_result(result, 'more than')
-
-    src = """
-                int add(int a, int b)
-                {return a+b;}
-          """
-    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
-                                  '/tmp', language="C")
-    check_result(result, 'correct answer')
-
-    src = """
-                #include<stdio.h>
-                int add(int a, int b)
-                {printf("All Correct");}
-          """
-    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
-                                  '/tmp', language="C")
-    check_result(result, 'incorrect')
-
-
-def test_cpp():
-    """Test if server runs c code as expected."""
-    src = """
-                int add(int a, int b)
-                {
-                     return a+b
-                }
-          """
-    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
-                                  '/tmp', language="C++")
-    check_result(result, 'error')
-
-    src = """
-                int add(int a, int b)
-                {
-                     return a+b;
-                }
-          """
-    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
-                                  '/tmp', language="C++")
-    check_result(result, 'correct answer')
-
-    src = """
-                int dd(int a, int b)
-                {
-                      return a+b;
-                }
-          """
-    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
-                                  '/tmp', language="C++")
-    check_result(result, 'error')
-
-    src = """
-                int add(int a, int b)
-                {
-                      while(0==0)
-                      {}
-                      return a+b;
-                }
-          """
-    result = code_server.run_code(src, 'c_cpp_files/main.cpp',
-                                  '/tmp', language="C++")
-    check_result(result, 'more than')
-
-
-def test_java():
-    """Test if server runs java code as expected."""
-    src = """
-                class Test
-                {
-                int square_num(int a)
-                {
-                     return a*a;
-                }
-                }
-          """
-    result = code_server.run_code(src, 'java_files/main_square.java',
-                                  '/tmp', language="java")
-    check_result(result, 'correct answer')
-
-    src = """
-                class Test
-                {
-                int square_num(int a)
-                {
-                     return b*b;
-                }
-                }
-          """
-    result = code_server.run_code(src, 'java_files/main_square.java',
-                                  '/tmp', language="java")
-    check_result(result, 'error')
-
-    src = """
-                class Test
-                {
-                int square_nu(int a)
-                {
-                      return a*a;
-                }
-                }
-          """
-    result = code_server.run_code(src, 'java_files/main_square.java',
-                                  '/tmp', language="java")
-    check_result(result, 'error')
-
-    src = """
-                class Test
-                {
-                int square_num(int a)
-                {
-                      while(0==0)
-                      {}
-                }
-                }
-          """
-    result = code_server.run_code(src, 'java_files/main_square.java',
-                                  '/tmp', language="java")
-    check_result(result, 'more than')
-
-    src = """
-                class Test
-                {
-                int square_num(int a)
-                {
-                      return a+b
-                }
-                }
-          """
-    result = code_server.run_code(src, 'java_files/main_square.java',
-                                  '/tmp', language="java")
-    check_result(result, 'error')
-
-    src = """
-                class Test
-                {
-                int square_num(int a)
-                {
-                      return a+b
-          """
-    result = code_server.run_code(src, 'java_files/main_square.java',
-                                  '/tmp', language="java")
-    check_result(result, 'error')
-
-def test_scilab():
-    """Test if server runs scilab code as expected."""
-    src = """
-                funcprot(0)
-function[c]=add(a,b)
-    c=a+b;
-endfunction
-          """
-    result = code_server.run_code(src, 'scilab_files/test_add.sce',
-                                  '/tmp', language="scilab")
-    check_result(result, 'correct answer')
-
-    src = """
-                funcprot(0)
-function[c]=add(a,b)
-    c=a-b;
-endfunction
-          """
-    result = code_server.run_code(src, 'scilab_files/test_add.sce',
-                                  '/tmp', language="scilab")
-    check_result(result, 'correct answer')
-
-    src = """
-                funcprot(0)
-function[c]=add(a,b)
-    c=a+b;
-dis(
-endfunction
-          """
-    result = code_server.run_code(src, 'scilab_files/test_add.sce',
-                                  '/tmp', language="scilab")
-    check_result(result, 'error')
-
-    src = """
-               funcprot(0)
-function[c]=add(a,b)
-    c=a
-    while(1==1)
-    end
-endfunction
-          """
-    result = code_server.run_code(src, 'scilab_files/test_add.sce',
-                                  '/tmp', language="scilab")
-    check_result(result, 'error')
-
-def test_bash():
-    """Test if server runs Bash code as expected."""
-    src = """
-#!/bin/bash
-    [[ $# -eq 2 ]] && echo $(( $1 + $2 )) && exit $(( $1 + $2 ))
-    """
-    result = code_server.run_code(src, 'docs/sample.sh\ndocs/sample.args',
-                                  '/tmp', language="bash")
-    check_result(result)
-
-    src = """
-#!/bin/bash
-    [[ $# -eq 2 ]] && echo $(( $1 - $2 )) && exit $(( $1 - $2 ))
-    """
-    result = code_server.run_code(src, 'docs/sample.sh\ndocs/sample.args',
-                                  '/tmp', language="bash")
-    check_result(result, 'error')
-
-    src = """\
-#!/bin/bash
-    while [ 1 ] ; do echo "" > /dev/null ; done
-    """
-    result = code_server.run_code(src, 'docs/sample.sh\ndocs/sample.args',
-                                  '/tmp', language="bash")
-    check_result(result, 'more than ')
-
-    src = '''
-#!/bin/bash
-    while [ 1 ] ; do echo "" > /dev/null
-    '''
-    result = code_server.run_code(src, 'docs/sample.sh\ndocs/sample.args',
-                                  '/tmp', language="bash")
-    check_result(result, 'error')
-
-    src = '''# Enter your code here.
-#!/bin/bash
-    while [ 1 ] ; do echo "" > /dev/null
-    '''
-    result = code_server.run_code(src, 'docs/sample.sh\ndocs/sample.args',
-                                  '/tmp', language="bash")
-    check_result(result, 'oserror')
+    def test_incorrect_answer(self):
+        user_answer = "int add(int a, int b)\n{return a+b}"
+        get_class = evaluate_cpp.EvaluateCpp(self.test_parameter, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+        self.assertFalse(result.get("success"))
+        self.assertTrue("compilation error" in result.get("error").lower())
 
 if __name__ == '__main__':
-    test_python()
-    test_bash()
-    test_c()
-    test_cpp()
-    test_java()
-    test_scilab()
+    unittest.main()
