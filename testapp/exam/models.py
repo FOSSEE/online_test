@@ -64,6 +64,7 @@ class Question(models.Model):
     solution = models.TextField(blank=True)
 
     # Test cases file paths (comma seperated for reference code path and test case code path)
+    # Applicable for CPP, C, Java and Scilab
     ref_code_path = models.TextField(blank=True)
 
     # Any multiple choice options. Place one option per line.
@@ -112,11 +113,11 @@ class Question(models.Model):
             parameter_dict['pos_args'] = pos_args_list
             test_case_parameter.append(parameter_dict)
 
-            info_parameter['language'] = self.language
-            info_parameter['id'] = self.id
-            info_parameter['user_answer'] = user_answer
-            info_parameter['test_parameter'] = test_case_parameter
-            info_parameter['ref_code_path'] = self.ref_code_path
+        info_parameter['language'] = self.language
+        info_parameter['id'] = self.id
+        info_parameter['user_answer'] = user_answer
+        info_parameter['test_parameter'] = test_case_parameter
+        info_parameter['ref_code_path'] = self.ref_code_path
 
         return json.dumps(info_parameter)
 
@@ -451,6 +452,3 @@ class TestCase(models.Model):
 
     # Test case Expected answer in list form
     expected_answer = models.TextField(blank=True, null = True)
-
-    # # Test case path to system test code applicable for CPP, C, Java and Scilab
-    # ref_code_path = models.TextField(blank=True, null = True)

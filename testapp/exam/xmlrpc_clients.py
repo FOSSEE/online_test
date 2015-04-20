@@ -21,13 +21,6 @@ class CodeServerProxy(object):
     def __init__(self):
         pool_url = 'http://localhost:%d' % (SERVER_POOL_PORT)
         self.pool_server = ServerProxy(pool_url)
-        self.methods = {"python": 'run_python_code',
-                        "bash": 'run_bash_code',
-                        "C": "run_c_code",
-                        "C++": "run_cplus_code",
-                        "java": "run_java_code",
-                        "scilab": "run_scilab_code",
-                        }
 
     def run_code(self, info_parameter, user_dir):
         """Tests given code (`answer`) with the `test_code` supplied.  If the
