@@ -33,9 +33,13 @@ import json
 import importlib
 # Local imports.
 from settings import SERVER_PORTS, SERVER_TIMEOUT, SERVER_POOL_PORT
+from registry import registry
 
 
 MY_DIR = abspath(dirname(__file__))
+
+registry.register('python', )
+registry.register('py', MyTestCode)
 
 def run_as_nobody():
     """Runs the current process as nobody."""
@@ -137,25 +141,21 @@ class TestCode(object):
         return result
 
     def evaluate_code(self):
-        pass
+        raise NotImplementedError("evaluate_code method not implemented")
 
     def _create_submit_code_file(self, file_name):
         """ Write the code (`answer`) to a file and set the file path"""
-        # user_answer_file = {'c': 'submit.c', 'java': 'Test.java',
-        #                         'scilab': 'function.sci', 'cpp': 'submitstd.cpp',
-        #                         'bash': 'submit.sh'}
-
         # File name/extension depending on the question language
         submit_f = open(file_name, 'w')
         submit_f.write(self.user_answer.lstrip())
         submit_f.close()
         submit_path = abspath(submit_f.name)
-        if self.language == "bash":
-            self._set_exec(submit_path)
+        if sfile_elf.language == "bash":
+            self._set_file_as_executable(submit_path)
 
         return submit_path
 
-    def _set_exec(self, fname):
+    def _set_file_as_executable(self, fname):
         os.chmod(fname,  stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
                  | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
                  | stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH)
@@ -219,7 +219,7 @@ class CodeServer(object):
         self.port = port
         self.queue = queue
 
-    def checker(self, info_parameter, in_dir=None):
+    def check_code(self, info_parameter, in_dir=None):
         """Calls the TestCode Class to test the current code"""
         info_parameter = json.loads(info_parameter)
         test_parameter = info_parameter.get("test_parameter")

@@ -8,6 +8,8 @@ import importlib
 
 # local imports
 from code_server import TestCode
+from registry import registry
+
 
 class EvaluateBash(TestCode):
     """Tests the Bash code obtained from Code Server"""
@@ -106,3 +108,5 @@ class EvaluateBash(TestCode):
                 err = "Error:expected %s, got %s" % (inst_stdout+inst_stderr,
                                                      stdnt_stdout+stdnt_stderr)
                 return False, err
+
+registry.register('bash', evaluate_bash, EvaluateBash)

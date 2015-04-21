@@ -7,6 +7,7 @@ import importlib
 
 # local imports
 from code_server import TestCode
+from registry import registry
 
 class EvaluatePython(TestCode):
     """Tests the Python code obtained from Code Server"""
@@ -50,3 +51,5 @@ class EvaluatePython(TestCode):
                 .format(test_case.get('func_name'), args, test_case.get('expected_answer'))
             test_code += tcode + "\n"
         return test_code
+
+registry.register('python', evaluate_python, EvaluatePython)

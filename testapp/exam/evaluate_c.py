@@ -8,6 +8,8 @@ import importlib
 
 # local imports
 from code_server import TestCode
+from registry import registry
+
 
 class EvaluateC(TestCode):
     """Tests the C code obtained from Code Server"""
@@ -126,3 +128,5 @@ class EvaluateC(TestCode):
             if ord(c) is not 26 and ord(c) is not 0:
                 stripped = stripped + c
         return ''.join(stripped)
+
+registry.register('c', evaluate_c, EvaluateC)

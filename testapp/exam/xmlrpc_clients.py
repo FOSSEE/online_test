@@ -50,7 +50,7 @@ class CodeServerProxy(object):
 
         try:
             server = self._get_server()
-            result = server.checker(info_parameter, user_dir)
+            result = server.check_code(info_parameter, user_dir)
         except ConnectionError:
             result = json.dumps({'success': False, 'error': 'Unable to connect to any code servers!'})
         return result

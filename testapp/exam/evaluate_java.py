@@ -9,6 +9,8 @@ import importlib
 # local imports
 from evaluate_c import EvaluateC
 from code_server import TestCode
+from registry import registry
+
 
 
 class EvaluateJava(EvaluateC, TestCode):
@@ -43,3 +45,5 @@ class EvaluateJava(EvaluateC, TestCode):
         os.remove(submit_path)
 
         return success, err
+
+registry.register('java', evaluate_java, EvaluateJava)

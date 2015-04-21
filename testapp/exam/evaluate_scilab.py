@@ -8,6 +8,7 @@ import importlib
 
 # local imports
 from code_server import TestCode
+from registry import registryz
 
 
 class EvaluateScilab(TestCode):
@@ -77,3 +78,5 @@ class EvaluateScilab(TestCode):
             if l.strip():
                 strip_out = strip_out+"\n"+l.strip()
         return strip_out
+
+registry.register('scilab', evaluate_scilab, EvaluateScilab)
