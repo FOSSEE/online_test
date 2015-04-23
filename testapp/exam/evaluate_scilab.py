@@ -7,21 +7,21 @@ import re
 import importlib
 
 # local imports
-from code_server import TestCode
-from registry import registryz
+from test_code import TestCode
+from registry import registry
 
 
 class EvaluateScilab(TestCode):
     """Tests the Scilab code obtained from Code Server"""
     # def evaluate_scilab_code(self):
     def evaluate_code(self):
-        submit_path = self._create_submit_code_file('function.sci')
-        ref_path, test_case_path = self._set_test_code_file_path()
+        submit_path = self.create_submit_code_file('function.sci')
+        ref_path, test_case_path = self.set_test_code_file_path()
         success = False
 
         cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(ref_path)
         cmd += ' | timeout 8 scilab-cli -nb'
-        ret = self._run_command(cmd,
+        ret = self.run_command(cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
@@ -44,6 +44,7 @@ class EvaluateScilab(TestCode):
 
         return success, err
 
+    # Private Protocol
     def _remove_scilab_exit(self, string):
         """
             Removes exit, quit and abort from the scilab code
@@ -79,4 +80,4 @@ class EvaluateScilab(TestCode):
                 strip_out = strip_out+"\n"+l.strip()
         return strip_out
 
-registry.register('scilab', evaluate_scilab, EvaluateScilab)
+registry.register('scilab', EvaluateScilab)

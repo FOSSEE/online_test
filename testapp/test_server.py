@@ -19,7 +19,7 @@ class TestPythonEvaluation(unittest.TestCase):
         self.assertEqual(result.get("error"), "Correct answer")
 
     def test_incorrect_answer(self):
-        user_answer = "def add(a, b):\n\treturn a - b"""
+        user_answer = "def add(a, b):\n\treturn a - b"
         test_parameter = [{"func_name": "add", 
                                  "expected_answer": "5", 
                                  "test_id": u'null', 
@@ -48,7 +48,7 @@ class TestPythonEvaluation(unittest.TestCase):
 class TestCEvaluation(unittest.TestCase):
     def setUp(self):
         self.language = "C"
-        self.ref_code_path = os.getcwd() + "/c_cpp_files/main.cpp"
+        self.ref_code_path = "c_cpp_files/main.cpp"
         self.in_dir = "/tmp"
         self.test_parameter = []
 
@@ -56,21 +56,23 @@ class TestCEvaluation(unittest.TestCase):
         user_answer = "int add(int a, int b)\n{return a+b;}"
         get_class = evaluate_c.EvaluateC(self.test_parameter, self.language, user_answer, self.ref_code_path, self.in_dir)
         result = get_class.run_code()
+
         self.assertTrue(result.get("success"))
-        self.assertEqual(result.get("error"))
+        self.assertEqual(result.get("error"), "Correct answer")
 
     def test_incorrect_answer(self):
         user_answer = "int add(int a, int b)\n{return a+b}"
         get_class = evaluate_c.EvaluateC(self.test_parameter, self.language, user_answer, self.ref_code_path, self.in_dir)
         result = get_class.run_code()
+
         self.assertFalse(result.get("success"))
-        self.assertTrue("compilation error" in result.get("error").lower())
+        self.assertTrue("Compilation Error" in result.get("error"))
 
 ###############################################################################
 class TestCPPEvaluation(unittest.TestCase):
     def setUp(self):
         self.language = "CPP"
-        self.ref_code_path = os.getcwd() + "/c_cpp_files/main.cpp"
+        self.ref_code_path = "c_cpp_files/main.cpp"
         self.in_dir = "/tmp"
         self.test_parameter = []
 
@@ -78,15 +80,18 @@ class TestCPPEvaluation(unittest.TestCase):
         user_answer = "int add(int a, int b)\n{return a+b;}"
         get_class = evaluate_cpp.EvaluateCpp(self.test_parameter, self.language, user_answer, self.ref_code_path, self.in_dir)
         result = get_class.run_code()
+
         self.assertTrue(result.get("success"))
-        self.assertEqual(result.get("error"))
+        self.assertEqual(result.get("error"), "Correct answer")
 
     def test_incorrect_answer(self):
         user_answer = "int add(int a, int b)\n{return a+b}"
         get_class = evaluate_cpp.EvaluateCpp(self.test_parameter, self.language, user_answer, self.ref_code_path, self.in_dir)
         result = get_class.run_code()
+        error_msg =  ""
+
         self.assertFalse(result.get("success"))
-        self.assertTrue("compilation error" in result.get("error").lower())
+        self.assertTrue("Compilation Error" in result.get("error"))
 
 if __name__ == '__main__':
     unittest.main()

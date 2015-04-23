@@ -7,16 +7,17 @@ import subprocess
 import importlib
 
 # local imports
-from code_server import TestCode
+from test_code import TestCode
 from registry import registry
 
 
 class EvaluateBash(TestCode):
     """Tests the Bash code obtained from Code Server"""
     def evaluate_code(self):
-        submit_path = self._create_submit_code_file('submit.sh')
+        fpath = self.create_submit_code_file('submit.sh')
+        submit_path = self.set_file_as_executable(fpath)
         get_ref_path, get_test_case_path = self.ref_code_path.strip().split(',')
-        ref_path, test_case_path = self._set_test_code_file_path(get_ref_path, get_test_case_path)
+        ref_path, test_case_path = self.set_test_code_file_path(get_ref_path, get_test_case_path)
         success = False
 
         success, err = self.check_bash_script(ref_path, submit_path,
@@ -61,11 +62,11 @@ class EvaluateBash(TestCode):
             return False, "Script %s is not executable" % submit_path
 
         if test_case_path is None or "":
-            ret = self._run_command(ref_path, stdin=None,
+            ret = self.run_command(ref_path, stdin=None,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
             proc, inst_stdout, inst_stderr = ret
-            ret = self._run_command(submit_path, stdin=None,
+            ret = self.run_command(submit_path, stdin=None,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
             proc, stdnt_stdout, stdnt_stderr = ret
@@ -92,12 +93,12 @@ class EvaluateBash(TestCode):
                 loop_count += 1
                 if valid_answer:
                     args = [ref_path] + [x for x in test_case.split()]
-                    ret = self._run_command(args, stdin=None,
+                    ret = self.run_command(args, stdin=None,
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE)
                     proc, inst_stdout, inst_stderr = ret
                     args = [submit_path]+[x for x in test_case.split()]
-                    ret = self._run_command(args, stdin=None,
+                    ret = self.run_command(args, stdin=None,
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE)
                     proc, stdnt_stdout, stdnt_stderr = ret
@@ -109,4 +110,4 @@ class EvaluateBash(TestCode):
                                                      stdnt_stdout+stdnt_stderr)
                 return False, err
 
-registry.register('bash', evaluate_bash, EvaluateBash)
+registry.register('bash', EvaluateBash)

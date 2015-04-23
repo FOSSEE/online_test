@@ -8,7 +8,7 @@ import importlib
 
 # local imports
 from evaluate_c import EvaluateC
-from code_server import TestCode
+from test_code import TestCode
 from registry import registry
 
 
@@ -16,21 +16,21 @@ from registry import registry
 class EvaluateCpp(EvaluateC, TestCode):
     """Tests the C code obtained from Code Server"""
     def evaluate_code(self):
-        submit_path = self._create_submit_code_file('submitstd.cpp')
+        submit_path = self.create_submit_code_file('submitstd.cpp')
         get_ref_path = self.ref_code_path
-        ref_path, test_case_path = self._set_test_code_file_path(get_ref_path)
+        ref_path, test_case_path = self.set_test_code_file_path(get_ref_path)
         success = False
 
         # Set file paths
-        c_user_output_path = os.getcwd() + '/output',
-        c_ref_output_path = os.getcwd() + '/executable',
+        c_user_output_path = os.getcwd() + '/output'
+        c_ref_output_path = os.getcwd() + '/executable'
 
         # Set command variables
         compile_command = 'g++  {0} -c -o {1}'.format(submit_path,
-                                                    c_user_output_path),
+                                                    c_user_output_path)
         compile_main = 'g++ {0} {1} -o {2}'.format(ref_path,
                                                 c_user_output_path,
-                                                c_ref_output_path),
+                                                c_ref_output_path)
         run_command_args = c_ref_output_path
         remove_user_output = c_user_output_path
         remove_ref_output = c_ref_output_path
@@ -44,4 +44,4 @@ class EvaluateCpp(EvaluateC, TestCode):
 
         return success, err
 
-registry.register('cpp', evaluate_cpp, EvaluateCpp)
+registry.register('cpp', EvaluateCpp)

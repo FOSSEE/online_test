@@ -8,7 +8,7 @@ import importlib
 
 # local imports
 from evaluate_c import EvaluateC
-from code_server import TestCode
+from test_code import TestCode
 from registry import registry
 
 
@@ -16,14 +16,14 @@ from registry import registry
 class EvaluateJava(EvaluateC, TestCode):
     """Tests the C code obtained from Code Server"""
     def evaluate_code(self):
-        submit_path = self._create_submit_code_file('Test.java')
+        submit_path = self.create_submit_code_file('Test.java')
         get_ref_path = self.ref_code_path
-        ref_path, test_case_path = self._set_test_code_file_path(get_ref_path)
+        ref_path, test_case_path = self.set_test_code_file_path(get_ref_path)
         success = False
 
         # Set file paths
         java_student_directory = os.getcwd() + '/'
-        java_ref_file_name = (ref_code_path.split('/')[-1]).split('.')[0],
+        java_ref_file_name = (ref_code_path.split('/')[-1]).split('.')[0]
 
         # Set command variables
         compile_command = 'javac  {0}'.format(submit_code_path),
@@ -46,4 +46,4 @@ class EvaluateJava(EvaluateC, TestCode):
 
         return success, err
 
-registry.register('java', evaluate_java, EvaluateJava)
+registry.register('java', EvaluateJava)

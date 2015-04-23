@@ -7,29 +7,29 @@ import subprocess
 import importlib
 
 # local imports
-from code_server import TestCode
+from test_code import TestCode
 from registry import registry
 
 
 class EvaluateC(TestCode):
     """Tests the C code obtained from Code Server"""
     def evaluate_code(self):
-        submit_path = self._create_submit_code_file('submit.c')
+        submit_path = self.create_submit_code_file('submit.c')
         get_ref_path = self.ref_code_path
-        ref_path, test_case_path = self._set_test_code_file_path(get_ref_path)
+        ref_path, test_case_path = self.set_test_code_file_path(get_ref_path)
         success = False
 
         # Set file paths
-        c_user_output_path = os.getcwd() + '/output',
-        c_ref_output_path = os.getcwd() + '/executable',
+        c_user_output_path = os.getcwd() + '/output'
+        c_ref_output_path = os.getcwd() + '/executable'
 
         # Set command variables
-        compile_command = 'g++  {0} -c -o {1}'.format(submit_path,
-                                                    c_user_output_path),
+        compile_command = 'g++  {0} -c -o {1}'.format(submit_path, 
+                                                c_user_output_path)
         compile_main = 'g++ {0} {1} -o {2}'.format(ref_path,
                                                 c_user_output_path,
-                                                c_ref_output_path),
-        run_command_args = c_ref_output_path
+                                                c_ref_output_path)
+        run_command_args = [c_ref_output_path]
         remove_user_output = c_user_output_path
         remove_ref_output = c_ref_output_path
 
@@ -72,21 +72,21 @@ class EvaluateC(TestCode):
 
         success = False
         # output_path = os.getcwd() + '/output'
-        ret = self._compile_command(compile_command)
+        ret = self.compile_command(compile_command)
         proc, stdnt_stderr = ret
         # if self.language == "java":
-        stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
+        stdnt_stderr = self.remove_null_substitute_char(stdnt_stderr)
 
         # Only if compilation is successful, the program is executed
         # And tested with testcases
         if stdnt_stderr == '':
-            ret = self._compile_command(compile_main)
+            ret = self.compile_command(compile_main)
             proc, main_err = ret
             # if self.language == "java":
-            # main_err = self._remove_null_substitute_char(main_err)
+            main_err = self.remove_null_substitute_char(main_err)
 
             if main_err == '':
-                ret = self._run_command(run_command_args, stdin=None,
+                ret = self.run_command(run_command_args, stdin=None,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
                 proc, stdout, stderr = ret
@@ -121,7 +121,8 @@ class EvaluateC(TestCode):
 
         return success, err
 
-    def _remove_null_substitute_char(self, string):
+
+    def remove_null_substitute_char(self, string):
         """Returns a string without any null and substitute characters"""
         stripped = ""
         for c in string:
@@ -129,4 +130,4 @@ class EvaluateC(TestCode):
                 stripped = stripped + c
         return ''.join(stripped)
 
-registry.register('c', evaluate_c, EvaluateC)
+registry.register('c', EvaluateC)

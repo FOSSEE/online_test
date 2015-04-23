@@ -1025,7 +1025,7 @@ def validate_answer(user, user_answer, question, info_parameter=None):
                 message = 'Correct answer'
         elif question.type == 'code':
             user_dir = get_user_dir(user)
-            json_result = code_server.run_code(info_parameter, user_dir)
+            json_result = code_server.run_code(info_parameter, question.language, user_dir)
             result = json.loads(json_result)
             if result.get('success'):
                 correct = True

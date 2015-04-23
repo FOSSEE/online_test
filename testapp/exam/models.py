@@ -87,7 +87,7 @@ class Question(models.Model):
     # Tags for the Question.
     tags = TaggableManager()
 
-    def consolidate_answer_data(self, test_cases, user_answer): #test
+    def consolidate_answer_data(self, test_cases, user_answer):
         test_case_parameter = []
         info_parameter = {}
 
@@ -113,7 +113,7 @@ class Question(models.Model):
             parameter_dict['pos_args'] = pos_args_list
             test_case_parameter.append(parameter_dict)
 
-        info_parameter['language'] = self.language
+        # info_parameter['language'] = self.language
         info_parameter['id'] = self.id
         info_parameter['user_answer'] = user_answer
         info_parameter['test_parameter'] = test_case_parameter

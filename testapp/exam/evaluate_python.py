@@ -6,7 +6,7 @@ from os.path import join
 import importlib
 
 # local imports
-from code_server import TestCode
+from test_code import TestCode
 from registry import registry
 
 class EvaluatePython(TestCode):
@@ -36,6 +36,7 @@ class EvaluatePython(TestCode):
         del tb
         return success, err
 
+    # Private Protocol
     def _create_test_case(self):
         """ 
             Create assert based test cases in python 
@@ -52,4 +53,4 @@ class EvaluatePython(TestCode):
             test_code += tcode + "\n"
         return test_code
 
-registry.register('python', evaluate_python, EvaluatePython)
+registry.register('python', EvaluatePython)
