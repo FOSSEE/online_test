@@ -32,16 +32,17 @@ import json
 import importlib
 # Local imports.
 from settings import SERVER_PORTS, SERVER_TIMEOUT, SERVER_POOL_PORT
-from registry import registry
-from evaluate_python import EvaluatePython
-from evaluate_c import EvaluateC
-from evaluate_cpp import EvaluateCpp
-from evaluate_java import EvaluateJava
-from evaluate_scilab import EvaluateScilab
-from evaluate_bash import EvaluateBash
+from language_registry import registry
+from evaluate_python_code import EvaluatePythonCode
+from evaluate_c_code import EvaluateCCode
+from evaluate_cpp_code import EvaluateCppCode
+from evaluate_java_code import EvaluateJavaCode
+from evaluate_scilab_code import EvaluateScilabCode
+from evaluate_bash_code import EvaluateBashCode
 
 MY_DIR = abspath(dirname(__file__))
 
+## Private Protocol ##########
 def run_as_nobody():
     """Runs the current process as nobody."""
     # Set the effective uid and to that of nobody.
@@ -60,10 +61,11 @@ class CodeServer(object):
         self.port = port
         self.queue = queue
 
-    def check_code(self, info_parameter, language, in_dir=None):
-        """Calls the TestCode SUb Class based on language to test the current code"""
-        evaluate_code_class = registry.get_class(language)
-        evaluate_code_instance = evaluate_code_class.from_json(info_parameter, language, in_dir)
+    ## Public Protocol ##########
+    def check_code(self, language, json_data, in_dir=None):
+        """Calls relevant EvaluateCode class based on language to check the answer code"""
+        evaluate_code_instance = self.create_class_instance(language, json_data, in_dir)
+
         result = evaluate_code_instance.run_code()
 
         # Put us back into the server pool queue since we are free now.
@@ -71,6 +73,14 @@ class CodeServer(object):
 
         return json.dumps(result)
 
+    ## Public Protocol ##########
+    def create_class_instance(self, language, json_data, in_dir):
+        """Create instance of relevant EvaluateCode class based on language"""
+        cls = registry.get_class(language)
+        instance = cls.from_json(language, json_data, in_dir)
+        return instance
+
+    ## Public Protocol ##########
     def run(self):
         """Run XMLRPC server, serving our methods."""
         server = SimpleXMLRPCServer(("localhost", self.port))
@@ -109,6 +119,8 @@ class ServerPool(object):
             p = Process(target=server.run)
             p.start()
         self.servers = servers
+
+    ## Public Protocol ##########
 
     def get_server_port(self):
         """Get available server port from ones in the pool.  This will block

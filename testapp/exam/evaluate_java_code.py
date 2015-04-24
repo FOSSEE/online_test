@@ -7,27 +7,26 @@ import subprocess
 import importlib
 
 # local imports
-from evaluate_c import EvaluateC
-from test_code import TestCode
-from registry import registry
+from evaluate_c_code import EvaluateCCode
+from evaluate_code import EvaluateCode
+from language_registry import registry
 
 
-
-class EvaluateJava(EvaluateC, TestCode):
+class EvaluateJavaCode(EvaluateCCode, EvaluateCode):
     """Tests the C code obtained from Code Server"""
+    ## Public Protocol ##########
     def evaluate_code(self):
         submit_path = self.create_submit_code_file('Test.java')
-        get_ref_path = self.ref_code_path
-        ref_path, test_case_path = self.set_test_code_file_path(get_ref_path)
+        ref_path, test_case_path = self.set_test_code_file_path(self.ref_code_path)
         success = False
 
         # Set file paths
         java_student_directory = os.getcwd() + '/'
-        java_ref_file_name = (ref_code_path.split('/')[-1]).split('.')[0]
+        java_ref_file_name = (ref_path.split('/')[-1]) #.split('.')[0]
 
         # Set command variables
-        compile_command = 'javac  {0}'.format(submit_code_path),
-        compile_main = 'javac {0} -classpath {1} -d {2}'.format(ref_code_path,
+        compile_command = 'javac  {0}'.format(submit_path),
+        compile_main = 'javac {0} -classpath {1} -d {2}'.format(ref_path,
                                                                  java_student_directory,
                                                                  java_student_directory)
         run_command_args = "java -cp {0} {1}".format(java_student_directory,
@@ -46,4 +45,5 @@ class EvaluateJava(EvaluateC, TestCode):
 
         return success, err
 
-registry.register('java', EvaluateJava)
+
+registry.register('java', EvaluateJavaCode)

@@ -21,6 +21,7 @@ MY_DIR = abspath(dirname(__file__))
 class TimeoutException(Exception):
     pass
 
+## Private Protocol ##########
 
 def timeout_handler(signum, frame):
     """A handler for the ALARM signal."""
@@ -49,26 +50,28 @@ def delete_signal_handler():
 ###############################################################################
 # `TestCode` class.
 ###############################################################################
-class TestCode(object):
+class EvaluateCode(object):
     """Tests the code obtained from Code Server"""
-    def __init__(self, test_parameter, language, user_answer, ref_code_path=None, in_dir=None):
+    def __init__(self, test_case_data, language, user_answer, ref_code_path=None, in_dir=None):
         msg = 'Code took more than %s seconds to run. You probably '\
               'have an infinite loop in your code.' % SERVER_TIMEOUT
         self.timeout_msg = msg
-        self.test_parameter = test_parameter
+        self.test_case_data = test_case_data
         self.language = language.lower()
         self.user_answer = user_answer
         self.ref_code_path = ref_code_path
         self.in_dir = in_dir
 
-    @classmethod
-    def from_json(cls, blob, language, in_dir):
-        info_parameter = json.loads(blob)
-        test_parameter = info_parameter.get("test_parameter")
-        user_answer = info_parameter.get("user_answer")
-        ref_code_path = info_parameter.get("ref_code_path")
+    ## Public Protocol ##########
 
-        instance = cls(test_parameter, language, user_answer, ref_code_path, in_dir)
+    @classmethod
+    def from_json(cls, language, json_data, in_dir):
+        json_data = json.loads(json_data)
+        test_case_data = json_data.get("test_case_data")
+        user_answer = json_data.get("user_answer")
+        ref_code_path = json_data.get("ref_code_path")
+
+        instance = cls(Test_case_data, language, user_answer, ref_code_path, in_dir)
         return instance
 
     def run_code(self):
@@ -122,7 +125,6 @@ class TestCode(object):
 
     def create_submit_code_file(self, file_name):
         """ Write the code (`answer`) to a file and set the file path"""
-        # File name/extension depending on the question language
         submit_f = open(file_name, 'w')
         submit_f.write(self.user_answer.lstrip())
         submit_f.close()
@@ -176,6 +178,8 @@ class TestCode(object):
             # Re-raise exception.
             raise
         return proc_compile, err
+
+    ## Private Protocol ##########
 
     def _change_dir(self, in_dir):
         if in_dir is not None and isdir(in_dir):

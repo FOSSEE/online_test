@@ -286,7 +286,6 @@ def edit_question(request):
     user = request.user
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-
     question_list = request.POST.getlist('questions')
     summary = request.POST.getlist('summary')
     description = request.POST.getlist('description')
@@ -311,6 +310,8 @@ def edit_question(request):
         question.active = active[j]
         question.language = language[j]
         question.snippet = snippet[j]
+        question.ref_code_path = ref_code_path[j]
+        question.solution = solution[j]
         question.type = type[j]
         question.save()
     return my_redirect("/exam/manage/questions")
@@ -374,6 +375,8 @@ def add_question(request, question_id=None):
                     d.active = form['active'].data
                     d.language = form['language'].data
                     d.snippet = form['snippet'].data
+                    d.ref_code_path = form['ref_code_path'].data
+                    d.solution = form['solution'].data
                     d.save()
                     question = Question.objects.get(id=question_id)
                     for tag in question.tags.all():
@@ -428,6 +431,8 @@ def add_question(request, question_id=None):
             form.initial['active'] = d.active
             form.initial['language'] = d.language
             form.initial['snippet'] = d.snippet
+            form.initial['ref_code_path'] = d.ref_code_path
+            form.initial['solution'] = d.solution
             form_tags = d.tags.all()
             form_tags_split = form_tags.values('name')
             initial_tags = ""
@@ -953,9 +958,9 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     # questions, we obtain the results via XML-RPC with the code executed
     # safely in a separate process (the code_server.py) running as nobody.
     if not question.type == 'upload':
-        info_parameter = question.consolidate_answer_data(test, user_answer) \
-                            if question.type == 'code' else None
-        correct, result = validate_answer(user, user_answer, question, info_parameter)
+        json_data = question.consolidate_answer_data(test, user_answer) \
+                        if question.type == 'code' else None
+        correct, result = validate_answer(user, user_answer, question, json_data)
         if correct:
             new_answer.correct = correct
             new_answer.marks = question.points
@@ -1000,7 +1005,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                                  questionpaper_id, success_msg)
 
 
-def validate_answer(user, user_answer, question, info_parameter=None):
+def validate_answer(user, user_answer, question, json_data=None):
     """
         Checks whether the answer submitted by the user is right or wrong.
         If right then returns correct = True, success and
@@ -1025,7 +1030,7 @@ def validate_answer(user, user_answer, question, info_parameter=None):
                 message = 'Correct answer'
         elif question.type == 'code':
             user_dir = get_user_dir(user)
-            json_result = code_server.run_code(info_parameter, question.language, user_dir)
+            json_result = code_server.run_code(question.language, json_data, user_dir)
             result = json.loads(json_result)
             if result.get('success'):
                 correct = True
@@ -1247,6 +1252,8 @@ def show_all_questions(request):
             form.initial['active'] = d.active
             form.initial['language'] = d.language
             form.initial['snippet'] = d.snippet
+            form.initial['ref_code_path'] = d.ref_code_path
+            form.initial['solution'] = d.solution
             form_tags = d.tags.all()
             form_tags_split = form_tags.values('name')
             initial_tags = ""

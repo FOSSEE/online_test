@@ -6,12 +6,13 @@ from os.path import join
 import importlib
 
 # local imports
-from test_code import TestCode
-from registry import registry
+from evaluate_code import EvaluateCode
+from language_registry import registry
 
-class EvaluatePython(TestCode):
+
+class EvaluatePythonCode(EvaluateCode):
     """Tests the Python code obtained from Code Server"""
-    # def evaluate_python_code(self):
+    ## Public Protocol ##########
     def evaluate_code(self):
         success = False
 
@@ -36,13 +37,13 @@ class EvaluatePython(TestCode):
         del tb
         return success, err
 
-    # Private Protocol
+    ## Private Protocol ##########
     def _create_test_case(self):
         """ 
             Create assert based test cases in python 
         """
         test_code = ""
-        for test_case in self.test_parameter:
+        for test_case in self.test_case_data:
             pos_args = ", ".join(str(i) for i in test_case.get('pos_args')) if test_case.get('pos_args') \
                             else ""
             kw_args = ", ".join(str(k+"="+a) for k, a in test_case.get('kw_args').iteritems()) \
@@ -53,4 +54,5 @@ class EvaluatePython(TestCode):
             test_code += tcode + "\n"
         return test_code
 
-registry.register('python', EvaluatePython)
+
+registry.register('python', EvaluatePythonCode)

@@ -1,97 +1,244 @@
 import unittest
 import os
-from exam import evaluate_c, evaluate_cpp, evaluate_bash, evaluate_python
+from exam import evaluate_c_code, evaluate_cpp_code, evaluate_java_code, evaluate_python_code, evaluate_scilab_code, evaluate_bash_code
+from exam.language_registry import registry
+from exam.settings import SERVER_TIMEOUT
 
-class TestPythonEvaluation(unittest.TestCase):
+class RegistryTestCase(unittest.TestCase):
+    def setUp(self):
+        self.registry_object = registry
+
+    def test_set_register(self):
+        self.registry_object.register("demo_language", "demo_object")
+        self.assertEquals(self.registry_object._registry["demo_language"], "demo_object")
+
+    def test_get_class(self):
+        self.test_set_register()
+        cls = self.registry_object.get_class("demo_language")
+        self.assertEquals(cls, "demo_object")
+
+
+###############################################################################    
+class PythonEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.language = "Python"
-        self.test_parameter = [{"func_name": "add", 
+        self.test_case_data = [{"func_name": "add", 
                                  "expected_answer": "5", 
                                  "test_id": u'null', 
                                  "pos_args": ["3", "2"], 
                                  "kw_args": {}
                                 }]
+        self.timeout_msg = ("Code took more than {0} seconds to run. "
+                            "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
+
     def test_correct_answer(self):
         user_answer = "def add(a, b):\n\treturn a + b"""
-        get_class = evaluate_python.EvaluatePython(self.test_parameter, self.language, user_answer, ref_code_path=None, in_dir=None)
+        get_class = evaluate_python_code.EvaluatePythonCode(self.test_case_data, self.language, user_answer, ref_code_path=None, in_dir=None)
         result = get_class.run_code()
         self.assertTrue(result.get("success"))
         self.assertEqual(result.get("error"), "Correct answer")
 
     def test_incorrect_answer(self):
         user_answer = "def add(a, b):\n\treturn a - b"
-        test_parameter = [{"func_name": "add", 
+        test_case_data = [{"func_name": "add", 
                                  "expected_answer": "5", 
                                  "test_id": u'null', 
                                  "pos_args": ["3", "2"], 
                                  "kw_args": {}
                                 }]
-        get_class = evaluate_python.EvaluatePython(self.test_parameter, self.language, user_answer, ref_code_path=None, in_dir=None)
+        get_class = evaluate_python_code.EvaluatePythonCode(self.test_case_data, self.language, user_answer, ref_code_path=None, in_dir=None)
         result = get_class.run_code()
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), "AssertionError  in: assert add(3, 2) == 5")
 
     def test_infinite_loop(self):
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"""
-        test_parameter = [{"func_name": "add", 
+        test_case_data = [{"func_name": "add", 
                                  "expected_answer": "5", 
                                  "test_id": u'null', 
                                  "pos_args": ["3", "2"], 
                                  "kw_args": {}
                                 }]
-        get_class = evaluate_python.EvaluatePython(self.test_parameter, self.language, user_answer, ref_code_path=None, in_dir=None)
+        get_class = evaluate_python_code.EvaluatePythonCode(self.test_case_data, self.language, user_answer, ref_code_path=None, in_dir=None)
         result = get_class.run_code()
         self.assertFalse(result.get("success"))
-        self.assertTrue("Code took more than" in result.get("error"))
+        self.assertEquals(result.get("error"), self.timeout_msg)
+
 
 ###############################################################################
-class TestCEvaluation(unittest.TestCase):
+class CEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.language = "C"
         self.ref_code_path = "c_cpp_files/main.cpp"
         self.in_dir = "/tmp"
-        self.test_parameter = []
+        self.test_case_data = []
+        self.timeout_msg = ("Code took more than {0} seconds to run. "
+                            "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
+
 
     def test_correct_answer(self):
         user_answer = "int add(int a, int b)\n{return a+b;}"
-        get_class = evaluate_c.EvaluateC(self.test_parameter, self.language, user_answer, self.ref_code_path, self.in_dir)
+        get_class = evaluate_c_code.EvaluateCCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
         result = get_class.run_code()
 
         self.assertTrue(result.get("success"))
         self.assertEqual(result.get("error"), "Correct answer")
 
-    def test_incorrect_answer(self):
+    def test_compilation_error(self):
         user_answer = "int add(int a, int b)\n{return a+b}"
-        get_class = evaluate_c.EvaluateC(self.test_parameter, self.language, user_answer, self.ref_code_path, self.in_dir)
+        get_class = evaluate_c_code.EvaluateCCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
         result = get_class.run_code()
 
         self.assertFalse(result.get("success"))
         self.assertTrue("Compilation Error" in result.get("error"))
 
+    def test_infinite_loop(self):
+        user_answer = "int add(int a, int b)\n{while(1>0){}}"
+        get_class = evaluate_c_code.EvaluateCCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+ 
+        self.assertFalse(result.get("success"))
+        self.assertEquals(result.get("error"), self.timeout_msg)
+
+
 ###############################################################################
-class TestCPPEvaluation(unittest.TestCase):
+class CppEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.language = "CPP"
         self.ref_code_path = "c_cpp_files/main.cpp"
         self.in_dir = "/tmp"
-        self.test_parameter = []
+        self.test_case_data = []
+        self.timeout_msg = ("Code took more than {0} seconds to run. "
+                            "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
+
 
     def test_correct_answer(self):
         user_answer = "int add(int a, int b)\n{return a+b;}"
-        get_class = evaluate_cpp.EvaluateCpp(self.test_parameter, self.language, user_answer, self.ref_code_path, self.in_dir)
+        get_class = evaluate_cpp_code.EvaluateCppCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
         result = get_class.run_code()
 
         self.assertTrue(result.get("success"))
         self.assertEqual(result.get("error"), "Correct answer")
 
-    def test_incorrect_answer(self):
+    def test_compilation_error(self):
         user_answer = "int add(int a, int b)\n{return a+b}"
-        get_class = evaluate_cpp.EvaluateCpp(self.test_parameter, self.language, user_answer, self.ref_code_path, self.in_dir)
+        get_class = evaluate_cpp_code.EvaluateCppCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
         result = get_class.run_code()
-        error_msg =  ""
 
         self.assertFalse(result.get("success"))
         self.assertTrue("Compilation Error" in result.get("error"))
+
+    def test_infinite_loop(self):
+        user_answer = "int add(int a, int b)\n{while(1>0){}}"
+        get_class = evaluate_cpp_code.EvaluateCppCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+ 
+        self.assertFalse(result.get("success"))
+        self.assertEquals(result.get("error"), self.timeout_msg)
+
+
+###############################################################################
+class BashEvaluationTestCases(unittest.TestCase):
+    def setUp(self):
+        self.language = "bash"
+        self.ref_code_path = "bash_files/sample.sh,bash_files/sample.args"
+        self.in_dir = "/tmp"
+        self.test_case_data = []
+        self.timeout_msg = ("Code took more than {0} seconds to run. "
+                            "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
+
+    def test_correct_answer(self):
+        user_answer = "#!/bin/bash\n[[ $# -eq 2 ]] && echo $(( $1 + $2 )) && exit $(( $1 + $2 ))"
+        get_class = evaluate_bash_code.EvaluateBashCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+
+        self.assertTrue(result.get("success"))
+        self.assertEqual(result.get("error"), "Correct answer")
+
+    def test_error(self):
+        user_answer = "#!/bin/bash\n[[ $# -eq 2 ]] && echo $(( $1 - $2 )) && exit $(( $1 - $2 ))"
+        get_class = evaluate_bash_code.EvaluateBashCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+ 
+        self.assertFalse(result.get("success"))
+        self.assertTrue("Error" in result.get("error"))
+
+    def test_infinite_loop(self):
+        user_answer = "#!/bin/bash\nwhile [ 1 ] ; do echo "" > /dev/null ; done"
+        get_class = evaluate_bash_code.EvaluateBashCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+ 
+        self.assertFalse(result.get("success"))
+        self.assertEquals(result.get("error"), self.timeout_msg)
+
+
+###############################################################################
+class JavaEvaluationTestCases(unittest.TestCase):
+    def setUp(self):
+        self.language = "java"
+        self.ref_code_path = "java_files/main_square.java"
+        self.in_dir = "/tmp"
+        self.test_case_data = []
+        self.timeout_msg = ("Code took more than {0} seconds to run. "
+                            "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
+
+    def test_correct_answer(self):
+        user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a;\n\t}\n}"
+        get_class = evaluate_java_code.EvaluateJavaCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+
+        self.assertTrue(result.get("success"))
+        self.assertEqual(result.get("error"), "Correct answer")
+
+    def test_error(self):
+        user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a"
+        get_class = evaluate_java_code.EvaluateJavaCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+ 
+        self.assertFalse(result.get("success"))
+        self.assertTrue("Error" in result.get("error"))
+
+    def test_infinite_loop(self):                
+        user_answer = "class Test {\n\tint square_num(int a) {\n\t\twhile(0==0){\n\t\t}\n\t}\n}"
+        get_class = evaluate_java_code.EvaluateJavaCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+ 
+        self.assertFalse(result.get("success"))
+        self.assertEquals(result.get("error"), self.timeout_msg)
+
+
+###############################################################################
+class ScilabEvaluationTestCases(unittest.TestCase):
+    def setUp(self):
+        self.language = "scilab"
+        self.ref_code_path = "scilab_files/test_add.sce"
+        self.in_dir = "/tmp"
+        self.test_case_data = []
+
+    def test_correct_answer(self):
+        user_answer = "funcprot(0)\nfunction[c]=add(a,b)\n\tc=a+b;\nendfunction"
+        get_class = evaluate_scilab_code.EvaluateScilabCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+
+        self.assertTrue(result.get("success"))
+        self.assertEqual(result.get("error"), "Correct answer")
+
+    def test_correct_answer_2(self):
+        user_answer = "funcprot(0)\nfunction[c]=add(a,b)\n\tc=a-b;\nendfunction"
+        get_class = evaluate_scilab_code.EvaluateScilabCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+
+        self.assertTrue(result.get("success"))
+        self.assertEqual(result.get("error"), "Correct answer")
+
+    def test_error(self):
+        user_answer = "funcprot(0)\nfunction[c]=add(a,b)\n\t   c=a+b;\ndis(\tendfunction"
+        get_class = evaluate_java_code.EvaluateJavaCode(self.test_case_data, self.language, user_answer, self.ref_code_path, self.in_dir)
+        result = get_class.run_code()
+ 
+        self.assertFalse(result.get("success"))
+        self.assertTrue("Error" in result.get("error"))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -7,14 +7,14 @@ import subprocess
 import importlib
 
 # local imports
-from evaluate_c import EvaluateC
-from test_code import TestCode
-from registry import registry
+from evaluate_c_code import EvaluateCCode
+from evaluate_code import EvaluateCode
+from language_registry import registry
 
 
-
-class EvaluateCpp(EvaluateC, TestCode):
+class EvaluateCppCode(EvaluateCCode, EvaluateCode):
     """Tests the C code obtained from Code Server"""
+    ## Public Protocol ##########
     def evaluate_code(self):
         submit_path = self.create_submit_code_file('submitstd.cpp')
         get_ref_path = self.ref_code_path
@@ -44,4 +44,5 @@ class EvaluateCpp(EvaluateC, TestCode):
 
         return success, err
 
-registry.register('cpp', EvaluateCpp)
+
+registry.register('cpp', EvaluateCppCode)

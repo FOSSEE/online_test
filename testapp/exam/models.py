@@ -88,17 +88,17 @@ class Question(models.Model):
     tags = TaggableManager()
 
     def consolidate_answer_data(self, test_cases, user_answer):
-        test_case_parameter = []
-        info_parameter = {}
+        test_case_data_dict = []
+        question_info_dict = {}
 
         for test_case in test_cases:
             kw_args_dict = {}
             pos_args_list = []
 
-            parameter_dict = {}
-            parameter_dict['test_id'] = test_case.id
-            parameter_dict['func_name'] = test_case.func_name
-            parameter_dict['expected_answer'] = test_case.expected_answer
+            test_case_data = {}
+            test_case_data['test_id'] = test_case.id
+            test_case_data['func_name'] = test_case.func_name
+            test_case_data['expected_answer'] = test_case.expected_answer
 
             if test_case.kw_args:
                 for args in test_case.kw_args.split(","):
@@ -109,17 +109,17 @@ class Question(models.Model):
                 for args in test_case.pos_args.split(","):
                     pos_args_list.append(args.strip())
 
-            parameter_dict['kw_args'] = kw_args_dict
-            parameter_dict['pos_args'] = pos_args_list
-            test_case_parameter.append(parameter_dict)
+            test_case_data['kw_args'] = kw_args_dict
+            test_case_data['pos_args'] = pos_args_list
+            test_case_data_dict.append(test_case_data)
 
-        # info_parameter['language'] = self.language
-        info_parameter['id'] = self.id
-        info_parameter['user_answer'] = user_answer
-        info_parameter['test_parameter'] = test_case_parameter
-        info_parameter['ref_code_path'] = self.ref_code_path
+        # question_info_dict['language'] = self.language
+        question_info_dict['id'] = self.id
+        question_info_dict['user_answer'] = user_answer
+        question_info_dict['test_parameter'] = test_case_data_dict
+        question_info_dict['ref_code_path'] = self.ref_code_path
 
-        return json.dumps(info_parameter)
+        return json.dumps(question_info_dict)
 
     def __unicode__(self):
         return self.summary

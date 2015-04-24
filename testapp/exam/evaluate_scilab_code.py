@@ -7,13 +7,13 @@ import re
 import importlib
 
 # local imports
-from test_code import TestCode
-from registry import registry
+from evaluate_code import EvaluateCode
+from language_registry import registry
 
 
-class EvaluateScilab(TestCode):
+class EvaluateScilabCode(EvaluateCode):
     """Tests the Scilab code obtained from Code Server"""
-    # def evaluate_scilab_code(self):
+    ## Public Protocol ##########
     def evaluate_code(self):
         submit_path = self.create_submit_code_file('function.sci')
         ref_path, test_case_path = self.set_test_code_file_path()
@@ -44,7 +44,7 @@ class EvaluateScilab(TestCode):
 
         return success, err
 
-    # Private Protocol
+    ## Private Protocol ##########
     def _remove_scilab_exit(self, string):
         """
             Removes exit, quit and abort from the scilab code
@@ -60,6 +60,7 @@ class EvaluateScilab(TestCode):
             new_string = new_string +'\n'+ new_line
         return new_string, i
 
+    ## Private Protocol ##########
     def _get_error(self, string):
         """
             Fetches only the error from the string.
@@ -70,6 +71,7 @@ class EvaluateScilab(TestCode):
             return obj.group()
         return None
 
+    ## Private Protocol ##########
     def _strip_output(self, out):
         """
             Cleans whitespace from the output
@@ -80,4 +82,5 @@ class EvaluateScilab(TestCode):
                 strip_out = strip_out+"\n"+l.strip()
         return strip_out
 
-registry.register('scilab', EvaluateScilab)
+
+registry.register('scilab', EvaluateScilabCode)

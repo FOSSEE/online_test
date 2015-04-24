@@ -7,20 +7,22 @@ import subprocess
 import importlib
 
 # local imports
-from test_code import TestCode
-from registry import registry
+from evaluate_code import EvaluateCode
+from language_registry import registry
 
 
-class EvaluateBash(TestCode):
+class EvaluateBashCode(EvaluateCode):
     """Tests the Bash code obtained from Code Server"""
+    ## Public Protocol ##########
     def evaluate_code(self):
-        fpath = self.create_submit_code_file('submit.sh')
-        submit_path = self.set_file_as_executable(fpath)
+        submit_path = self.create_submit_code_file('submit.sh')
+        self.set_file_as_executable(submit_path)
         get_ref_path, get_test_case_path = self.ref_code_path.strip().split(',')
+        get_ref_path = get_ref_path.strip()
+        get_test_case_path = get_test_case_path.strip()
         ref_path, test_case_path = self.set_test_code_file_path(get_ref_path, get_test_case_path)
-        success = False
 
-        success, err = self.check_bash_script(ref_path, submit_path,
+        success, err = self._check_bash_script(ref_path, submit_path,
                             test_case_path)
 
         # Delete the created file.
@@ -28,7 +30,8 @@ class EvaluateBash(TestCode):
 
         return success, err
 
-    def check_bash_script(self, ref_path, submit_path,
+    ## Private Protocol ##########
+    def _check_bash_script(self, ref_path, submit_path,
                           test_case_path=None):
         """ Function validates student script using instructor script as
         reference. Test cases can optionally be provided.  The first argument
@@ -60,6 +63,8 @@ class EvaluateBash(TestCode):
             return False, "Script %s is not executable" % ref_path
         if not os.access(submit_path, os.X_OK):
             return False, "Script %s is not executable" % submit_path
+
+        success = False
 
         if test_case_path is None or "":
             ret = self.run_command(ref_path, stdin=None,
@@ -110,4 +115,5 @@ class EvaluateBash(TestCode):
                                                      stdnt_stdout+stdnt_stderr)
                 return False, err
 
-registry.register('bash', EvaluateBash)
+
+registry.register('bash', EvaluateBashCode)

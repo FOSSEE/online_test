@@ -7,12 +7,13 @@ import subprocess
 import importlib
 
 # local imports
-from test_code import TestCode
-from registry import registry
+from evaluate_code import EvaluateCode
+from language_registry import registry
 
 
-class EvaluateC(TestCode):
+class EvaluateCCode(EvaluateCode):
     """Tests the C code obtained from Code Server"""
+    ## Public Protocol ##########
     def evaluate_code(self):
         submit_path = self.create_submit_code_file('submit.c')
         get_ref_path = self.ref_code_path
@@ -42,6 +43,7 @@ class EvaluateC(TestCode):
 
         return success, err
 
+    ## Public Protocol ##########
     def check_code(self, ref_code_path, submit_code_path, compile_command,
                      compile_main, run_command_args, remove_user_output,
                      remove_ref_output):
@@ -64,7 +66,6 @@ class EvaluateC(TestCode):
         if the required permissions are not given to the file(s).
 
         """
-
         if not isfile(ref_code_path):
             return False, "No file at %s or Incorrect path" % ref_code_path
         if not isfile(submit_code_path):
@@ -122,6 +123,7 @@ class EvaluateC(TestCode):
         return success, err
 
 
+    ## Public Protocol ##########
     def remove_null_substitute_char(self, string):
         """Returns a string without any null and substitute characters"""
         stripped = ""
@@ -130,4 +132,5 @@ class EvaluateC(TestCode):
                 stripped = stripped + c
         return ''.join(stripped)
 
-registry.register('c', EvaluateC)
+
+registry.register('c', EvaluateCCode)
