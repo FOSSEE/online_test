@@ -13,7 +13,7 @@ from language_registry import registry
 
 class EvaluateScilabCode(EvaluateCode):
     """Tests the Scilab code obtained from Code Server"""
-    ## Public Protocol ##########
+    # Public Protocol ##########
     def evaluate_code(self):
         submit_path = self.create_submit_code_file('function.sci')
         ref_path, test_case_path = self.set_test_code_file_path()
@@ -44,34 +44,34 @@ class EvaluateScilabCode(EvaluateCode):
 
         return success, err
 
-    ## Private Protocol ##########
+    # Private Protocol ##########
     def _remove_scilab_exit(self, string):
         """
             Removes exit, quit and abort from the scilab code
         """
         new_string = ""
-        i=0
+        i = 0
         for line in string.splitlines():
-            new_line = re.sub(r"exit.*$","",line)
-            new_line = re.sub(r"quit.*$","",new_line)
-            new_line = re.sub(r"abort.*$","",new_line)
+            new_line = re.sub(r"exit.*$", "", line)
+            new_line = re.sub(r"quit.*$", "", new_line)
+            new_line = re.sub(r"abort.*$", "", new_line)
             if line != new_line:
-                i=i+1
-            new_string = new_string +'\n'+ new_line
+                i = i + 1
+            new_string = new_string + '\n' + new_line
         return new_string, i
 
-    ## Private Protocol ##########
+    # Private Protocol ##########
     def _get_error(self, string):
         """
             Fetches only the error from the string.
             Returns None if no error.
         """
-        obj =  re.search("!.+\n.+",string);
+        obj = re.search("!.+\n.+", string)
         if obj:
             return obj.group()
         return None
 
-    ## Private Protocol ##########
+    # Private Protocol ##########
     def _strip_output(self, out):
         """
             Cleans whitespace from the output

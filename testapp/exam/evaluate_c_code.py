@@ -13,7 +13,7 @@ from language_registry import registry
 
 class EvaluateCCode(EvaluateCode):
     """Tests the C code obtained from Code Server"""
-    ## Public Protocol ##########
+    # Public Protocol ##########
     def evaluate_code(self):
         submit_path = self.create_submit_code_file('submit.c')
         get_ref_path = self.ref_code_path
@@ -25,8 +25,8 @@ class EvaluateCCode(EvaluateCode):
         c_ref_output_path = os.getcwd() + '/executable'
 
         # Set command variables
-        compile_command = 'g++  {0} -c -o {1}'.format(submit_path, 
-                                                c_user_output_path)
+        compile_command = 'g++  {0} -c -o {1}'.format(submit_path,
+                                                 c_user_output_path)
         compile_main = 'g++ {0} {1} -o {2}'.format(ref_path,
                                                 c_user_output_path,
                                                 c_ref_output_path)
@@ -43,7 +43,7 @@ class EvaluateCCode(EvaluateCode):
 
         return success, err
 
-    ## Public Protocol ##########
+    # Public Protocol ##########
     def check_code(self, ref_code_path, submit_code_path, compile_command,
                      compile_main, run_command_args, remove_user_output,
                      remove_ref_output):
@@ -122,8 +122,7 @@ class EvaluateCCode(EvaluateCode):
 
         return success, err
 
-
-    ## Public Protocol ##########
+    # Public Protocol ##########
     def remove_null_substitute_char(self, string):
         """Returns a string without any null and substitute characters"""
         stripped = ""

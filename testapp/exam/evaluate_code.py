@@ -16,22 +16,25 @@ from settings import SERVER_PORTS, SERVER_TIMEOUT, SERVER_POOL_PORT
 
 MY_DIR = abspath(dirname(__file__))
 
+
 # Raised when the code times-out.
 # c.f. http://pguides.net/python/timeout-a-function
 class TimeoutException(Exception):
     pass
 
-## Private Protocol ##########
 
+# Private Protocol ##########
 def timeout_handler(signum, frame):
     """A handler for the ALARM signal."""
     raise TimeoutException('Code took too long to run.')
+
 
 def create_signal_handler():
     """Add a new signal handler for the execution of this code."""
     prev_handler = signal.signal(signal.SIGALRM, timeout_handler)
     signal.alarm(SERVER_TIMEOUT)
     return prev_handler
+
 
 def set_original_signal_handler(old_handler=None):
     """Set back any original signal handler."""
@@ -41,10 +44,10 @@ def set_original_signal_handler(old_handler=None):
     else:
         raise Exception("Signal Handler: object cannot be NoneType")
 
+
 def delete_signal_handler():
     signal.alarm(0)
     return
-
 
 
 ###############################################################################
@@ -52,7 +55,8 @@ def delete_signal_handler():
 ###############################################################################
 class EvaluateCode(object):
     """Tests the code obtained from Code Server"""
-    def __init__(self, test_case_data, language, user_answer, ref_code_path=None, in_dir=None):
+    def __init__(self, test_case_data, language, user_answer, 
+                     ref_code_path=None, in_dir=None):
         msg = 'Code took more than %s seconds to run. You probably '\
               'have an infinite loop in your code.' % SERVER_TIMEOUT
         self.timeout_msg = msg
@@ -62,7 +66,7 @@ class EvaluateCode(object):
         self.ref_code_path = ref_code_path
         self.in_dir = in_dir
 
-    ## Public Protocol ##########
+    # Public Protocol ##########
 
     @classmethod
     def from_json(cls, language, json_data, in_dir):
@@ -71,7 +75,8 @@ class EvaluateCode(object):
         user_answer = json_data.get("user_answer")
         ref_code_path = json_data.get("ref_code_path")
 
-        instance = cls(Test_case_data, language, user_answer, ref_code_path, in_dir)
+        instance = cls(Test_case_data, language, user_answer, ref_code_path,
+                         in_dir)
         return instance
 
     def run_code(self):
@@ -128,7 +133,7 @@ class EvaluateCode(object):
         submit_f = open(file_name, 'w')
         submit_f.write(self.user_answer.lstrip())
         submit_f.close()
-        submit_path = abspath(submit_f.name)            
+        submit_path = abspath(submit_f.name)
 
         return submit_path
 
@@ -179,7 +184,7 @@ class EvaluateCode(object):
             raise
         return proc_compile, err
 
-    ## Private Protocol ##########
+    # Private Protocol ##########
 
     def _change_dir(self, in_dir):
         if in_dir is not None and isdir(in_dir):

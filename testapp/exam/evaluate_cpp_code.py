@@ -14,7 +14,7 @@ from language_registry import registry
 
 class EvaluateCppCode(EvaluateCCode, EvaluateCode):
     """Tests the C code obtained from Code Server"""
-    ## Public Protocol ##########
+    # Public Protocol ##########
     def evaluate_code(self):
         submit_path = self.create_submit_code_file('submitstd.cpp')
         get_ref_path = self.ref_code_path

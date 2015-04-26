@@ -13,14 +13,15 @@ from language_registry import registry
 
 class EvaluateBashCode(EvaluateCode):
     """Tests the Bash code obtained from Code Server"""
-    ## Public Protocol ##########
+    # Public Protocol ##########
     def evaluate_code(self):
         submit_path = self.create_submit_code_file('submit.sh')
         self.set_file_as_executable(submit_path)
         get_ref_path, get_test_case_path = self.ref_code_path.strip().split(',')
         get_ref_path = get_ref_path.strip()
         get_test_case_path = get_test_case_path.strip()
-        ref_path, test_case_path = self.set_test_code_file_path(get_ref_path, get_test_case_path)
+        ref_path, test_case_path = self.set_test_code_file_path(get_ref_path,
+                                                             get_test_case_path)
 
         success, err = self._check_bash_script(ref_path, submit_path,
                             test_case_path)
@@ -30,7 +31,7 @@ class EvaluateBashCode(EvaluateCode):
 
         return success, err
 
-    ## Private Protocol ##########
+    # Private Protocol ##########
     def _check_bash_script(self, ref_path, submit_path,
                           test_case_path=None):
         """ Function validates student script using instructor script as
@@ -86,12 +87,11 @@ class EvaluateBashCode(EvaluateCode):
                 return False, "No test case at %s" % test_case_path
             if not os.access(ref_path, os.R_OK):
                 return False, "Test script %s, not readable" % test_case_path
-            valid_answer = True  # We initially make it one, so that we can
-                                 # stop once a test case fails
-            loop_count = 0  # Loop count has to be greater than or
-                            # equal to one.
-                            # Useful for caching things like empty
-                            # test files,etc.
+            # valid_answer is True, so that we can stop once a test case fails
+            valid_answer = True
+            # loop_count has to be greater than or equal to one.
+            # Useful for caching things like empty test files,etc.
+            loop_count = 0
             test_cases = open(test_case_path).readlines()
             num_lines = len(test_cases)
             for test_case in test_cases:

@@ -40,15 +40,18 @@ from evaluate_java_code import EvaluateJavaCode
 from evaluate_scilab_code import EvaluateScilabCode
 from evaluate_bash_code import EvaluateBashCode
 
+
 MY_DIR = abspath(dirname(__file__))
 
-## Private Protocol ##########
+
+# Private Protocol ##########
 def run_as_nobody():
     """Runs the current process as nobody."""
     # Set the effective uid and to that of nobody.
     nobody = pwd.getpwnam('nobody')
     os.setegid(nobody.pw_gid)
     os.seteuid(nobody.pw_uid)
+
 
 ###############################################################################
 # `CodeServer` class.
@@ -61,10 +64,13 @@ class CodeServer(object):
         self.port = port
         self.queue = queue
 
-    ## Public Protocol ##########
+    # Public Protocol ##########
     def check_code(self, language, json_data, in_dir=None):
-        """Calls relevant EvaluateCode class based on language to check the answer code"""
-        evaluate_code_instance = self.create_class_instance(language, json_data, in_dir)
+        """Calls relevant EvaluateCode class based on language to check the
+         answer code
+        """
+        evaluate_code_instance = self.create_class_instance(language,
+                                                             json_data, in_dir)
 
         result = evaluate_code_instance.run_code()
 
@@ -73,14 +79,14 @@ class CodeServer(object):
 
         return json.dumps(result)
 
-    ## Public Protocol ##########
+    # Public Protocol ##########
     def create_class_instance(self, language, json_data, in_dir):
         """Create instance of relevant EvaluateCode class based on language"""
         cls = registry.get_class(language)
         instance = cls.from_json(language, json_data, in_dir)
         return instance
 
-    ## Public Protocol ##########
+    # Public Protocol ##########
     def run(self):
         """Run XMLRPC server, serving our methods."""
         server = SimpleXMLRPCServer(("localhost", self.port))
@@ -120,7 +126,7 @@ class ServerPool(object):
             p.start()
         self.servers = servers
 
-    ## Public Protocol ##########
+    # Public Protocol ##########
 
     def get_server_port(self):
         """Get available server port from ones in the pool.  This will block
