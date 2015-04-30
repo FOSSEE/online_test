@@ -19,10 +19,10 @@ SERVER_TIMEOUT = 2
 # host.org/foo/exam set URL_ROOT='/foo'
 URL_ROOT = ''
 
-language_register = {"python": "python_code_evaluator",
-					 "c": "c_cpp_code_evaluator",
-					 "cpp": "c_cpp_code_evaluator",
-					 "java": "java_evaluator",
-					 "bash": "bash_evaluator",
-					 "scilab": "scilab_evaluator",
+code_evaluators = {"python": "python_code_evaluator.PythonCodeEvaluator",
+					 "c": "c_cpp_code_evaluator.CCPPCodeEvaluator",
+					 "cpp": "c_cpp_code_evaluator.CCPPCodeEvaluator",
+					 "java": "java_evaluator.JavaCodeEvaluator",
+					 "bash": "bash_evaluator.BashCodeEvaluator",
+					 "scilab": "scilab_evaluator.ScilabCodeEvaluator",
 					}

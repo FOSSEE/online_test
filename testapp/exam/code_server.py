@@ -29,7 +29,6 @@ from multiprocessing import Process, Queue
 import subprocess
 import re
 import json
-import importlib
 # Local imports.
 from settings import SERVER_PORTS, SERVER_TIMEOUT, SERVER_POOL_PORT
 from language_registry import set_registry
@@ -71,7 +70,7 @@ class CodeServer(object):
         """
         code_evaluator = self._create_evaluator_instance(language, json_data,
                                                              in_dir)
-        result = code_evaluator.code_evaluator()
+        result = code_evaluator.evaluate()
 
         # Put us back into the server pool queue since we are free now.
         self.queue.put(self.port)

@@ -8,21 +8,20 @@ import importlib
 
 # local imports
 from code_evaluator import CodeEvaluator
-# from language_registry import registry
 
 
-class CCppCodeEvaluator(CodeEvaluator):
+class CppCodeEvaluator(CodeEvaluator):
     """Tests the C code obtained from Code Server"""
-    def __init__(self, test_case_data, language, user_answer, 
+    def __init__(self, test_case_data, test, language, user_answer, 
                      ref_code_path=None, in_dir=None):  
-        super(CCppCodeEvaluator, self).__init__(test_case_data, language, user_answer, 
+        super(CppCodeEvaluator, self).__init__(test_case_data, test, language, user_answer, 
                                                  ref_code_path, in_dir)
         self.submit_path = self.create_submit_code_file('submit.c')
-        self.test_case_args = self.setup_code_evaluator()      
+        self.test_case_args = self._setup()      
 
     # Private Protocol ##########
-    def setup_code_evaluator(self):
-        super(CCppCodeEvaluator, self).setup_code_evaluator()
+    def _setup(self):
+        super(CppCodeEvaluator, self)._setup()
 
         get_ref_path = self.ref_code_path
         ref_path, test_case_path = self.set_test_code_file_path(get_ref_path)
@@ -43,42 +42,12 @@ class CCppCodeEvaluator(CodeEvaluator):
 
         return ref_path, self.submit_path, compile_command, compile_main, run_command_args, remove_user_output, remove_ref_output
 
-    def teardown_code_evaluator(self):
+    def _teardown(self):
         # Delete the created file.
-        super(CCppCodeEvaluator, self).teardown_code_evaluator()
+        super(CppCodeEvaluator, self)._teardown()
         os.remove(self.submit_path)
 
-    # # Public Protocol ##########
-    # def evaluate_code(self):
-    #     submit_path = self.create_submit_code_file('submit.c')
-    #     get_ref_path = self.ref_code_path
-    #     ref_path, test_case_path = self.set_test_code_file_path(get_ref_path)
-    #     success = False
-
-    #     # Set file paths
-    #     c_user_output_path = os.getcwd() + '/output'
-    #     c_ref_output_path = os.getcwd() + '/executable'
-
-    #     # Set command variables
-    #     compile_command = 'g++  {0} -c -o {1}'.format(submit_path,
-    #                                              c_user_output_path)
-    #     compile_main = 'g++ {0} {1} -o {2}'.format(ref_path,
-    #                                             c_user_output_path,
-    #                                             c_ref_output_path)
-    #     run_command_args = [c_ref_output_path]
-    #     remove_user_output = c_user_output_path
-    #     remove_ref_output = c_ref_output_path
-
-    #     success, err = self.check_code(ref_path, submit_path, compile_command,
-    #                                  compile_main, run_command_args,
-    #                                  remove_user_output, remove_ref_output)
-
-    #     # Delete the created file.
-    #     os.remove(submit_path)
-
-    #     return success, err
-
-    def check_code(self, ref_code_path, submit_code_path, compile_command,
+    def _check_code(self, ref_code_path, submit_code_path, compile_command,
                      compile_main, run_command_args, remove_user_output,
                      remove_ref_output):
         """ Function validates student code using instructor code as
@@ -107,21 +76,21 @@ class CCppCodeEvaluator(CodeEvaluator):
 
         success = False
         # output_path = os.getcwd() + '/output'
-        ret = self.compile_command(compile_command)
+        ret = self._compile_command(compile_command)
         proc, stdnt_stderr = ret
         # if self.language == "java":
-        stdnt_stderr = self.remove_null_substitute_char(stdnt_stderr)
+        stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
 
         # Only if compilation is successful, the program is executed
         # And tested with testcases
         if stdnt_stderr == '':
-            ret = self.compile_command(compile_main)
+            ret = self._compile_command(compile_main)
             proc, main_err = ret
             # if self.language == "java":
-            main_err = self.remove_null_substitute_char(main_err)
+            main_err = self._remove_null_substitute_char(main_err)
 
             if main_err == '':
-                ret = self.run_command(run_command_args, stdin=None,
+                ret = self._run_command(run_command_args, stdin=None,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
                 proc, stdout, stderr = ret
@@ -155,14 +124,3 @@ class CCppCodeEvaluator(CodeEvaluator):
                 err = err + "\n" + stdnt_stderr
 
         return success, err
-
-    def remove_null_substitute_char(self, string):
-        """Returns a string without any null and substitute characters"""
-        stripped = ""
-        for c in string:
-            if ord(c) is not 26 and ord(c) is not 0:
-                stripped = stripped + c
-        return ''.join(stripped)
-
-
-# registry.register('c', EvaluateCCode)

@@ -61,7 +61,7 @@ class Question(models.Model):
     points = models.FloatField(default=1.0)
 
     # Answer for MCQs.
-    solution = models.TextField(blank=True)
+    test = models.TextField(blank=True)
 
     # Test cases file paths (comma seperated for reference code path and test case code path)
     # Applicable for CPP, C, Java and Scilab
@@ -118,6 +118,7 @@ class Question(models.Model):
         question_info_dict['user_answer'] = user_answer
         question_info_dict['test_parameter'] = test_case_data_dict
         question_info_dict['ref_code_path'] = self.ref_code_path
+        question_info_dict['test'] = self.test
 
         return json.dumps(question_info_dict)
 

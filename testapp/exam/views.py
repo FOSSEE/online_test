@@ -311,7 +311,7 @@ def edit_question(request):
         question.language = language[j]
         question.snippet = snippet[j]
         question.ref_code_path = ref_code_path[j]
-        question.solution = solution[j]
+        question.test = test[j]
         question.type = type[j]
         question.save()
     return my_redirect("/exam/manage/questions")
@@ -376,7 +376,7 @@ def add_question(request, question_id=None):
                     d.language = form['language'].data
                     d.snippet = form['snippet'].data
                     d.ref_code_path = form['ref_code_path'].data
-                    d.solution = form['solution'].data
+                    d.test = form['test'].data
                     d.save()
                     question = Question.objects.get(id=question_id)
                     for tag in question.tags.all():
@@ -432,7 +432,7 @@ def add_question(request, question_id=None):
             form.initial['language'] = d.language
             form.initial['snippet'] = d.snippet
             form.initial['ref_code_path'] = d.ref_code_path
-            form.initial['solution'] = d.solution
+            form.initial['test'] = d.test
             form_tags = d.tags.all()
             form_tags_split = form_tags.values('name')
             initial_tags = ""
@@ -916,7 +916,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     question = get_object_or_404(Question, pk=q_id)
     q_paper = QuestionPaper.objects.get(id=questionpaper_id)
     paper = AnswerPaper.objects.get(user=request.user, question_paper=q_paper)
-    test = TestCase.objects.filter(question=question)
+    test_cases = TestCase.objects.filter(question=question)
 
     snippet_code = request.POST.get('snippet')
     user_code = request.POST.get('answer')
@@ -958,7 +958,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     # questions, we obtain the results via XML-RPC with the code executed
     # safely in a separate process (the code_server.py) running as nobody.
     if not question.type == 'upload':
-        json_data = question.consolidate_answer_data(test, user_answer) \
+        json_data = question.consolidate_answer_data(test_cases, user_answer) \
                         if question.type == 'code' else None
         correct, result = validate_answer(user, user_answer, question, json_data)
         if correct:
@@ -1020,11 +1020,11 @@ def validate_answer(user, user_answer, question, json_data=None):
 
     if user_answer is not None:
         if question.type == 'mcq':
-            if user_answer.strip() == question.solution.strip():
+            if user_answer.strip() == question.test.strip():
                 correct = True
                 message = 'Correct answer'
         elif question.type == 'mcc':
-            answers = set(question.solution.splitlines())
+            answers = set(question.test.splitlines())
             if set(user_answer) == answers:
                 correct = True
                 message = 'Correct answer'
@@ -1253,7 +1253,7 @@ def show_all_questions(request):
             form.initial['language'] = d.language
             form.initial['snippet'] = d.snippet
             form.initial['ref_code_path'] = d.ref_code_path
-            form.initial['solution'] = d.solution
+            form.initial['test'] = d.test
             form_tags = d.tags.all()
             form_tags_split = form_tags.values('name')
             initial_tags = ""

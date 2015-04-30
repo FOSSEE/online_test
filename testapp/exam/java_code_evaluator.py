@@ -7,23 +7,21 @@ import subprocess
 import importlib
 
 # local imports
-# from c_code_evaluator import CCodeEvaluator
 from code_evaluator import CodeEvaluator
-# from language_registry import registry
 
 
 class JavaCodeEvaluator(CodeEvaluator):
     """Tests the Java code obtained from Code Server"""
-    def __init__(self, test_case_data, language, user_answer,
+    def __init__(self, test_case_data, test, language, user_answer,
                      ref_code_path=None, in_dir=None):
-        super(JavaCodeEvaluator, self).__init__(test_case_data, language, user_answer, 
+        super(JavaCodeEvaluator, self).__init__(test_case_data, test, language, user_answer, 
                                                  ref_code_path, in_dir)
         self.submit_path = self.create_submit_code_file('Test.java')
-        self.test_case_args = self.setup_code_evaluator()
+        self.test_case_args = self._setup()
 
     # Private Protocol ##########
-    def setup_code_evaluator(self):
-        super(JavaCodeEvaluator, self).setup_code_evaluator()
+    def _setup(self):
+        super(JavaCodeEvaluator, self)._setup()
 
         ref_path, test_case_path = self.set_test_code_file_path(self.ref_code_path)
 
@@ -32,7 +30,7 @@ class JavaCodeEvaluator(CodeEvaluator):
         java_ref_file_name = (ref_path.split('/')[-1]).split('.')[0]
 
         # Set command variables
-        compile_command = 'javac  {0}'.format(submit_path),
+        compile_command = 'javac  {0}'.format(self.submit_path),
         compile_main = ('javac {0} -classpath '
                         '{1} -d {2}').format(ref_path,
                                              java_student_directory,
@@ -44,47 +42,14 @@ class JavaCodeEvaluator(CodeEvaluator):
         remove_ref_output = "{0}{1}.class".format(java_student_directory,
                                                      java_ref_file_name)
 
-        return ref_path, submit_path, compile_command, compile_main, run_command_args, remove_user_output, remove_ref_output
+        return ref_path, self.submit_path, compile_command, compile_main, run_command_args, remove_user_output, remove_ref_output
 
-    def teardown_code_evaluator(self):
+    def _teardown(self):
         # Delete the created file.
-        super(JavaCodeEvaluator, self).teardown_code_evaluator()
+        super(JavaCodeEvaluator, self)._teardown()
         os.remove(self.submit_path)
 
-
-    # Public Protocol ##########
-    # def evaluate_code(self):
-    #     submit_path = self.create_submit_code_file('Test.java')
-    #     ref_path, test_case_path = self.set_test_code_file_path(self.ref_code_path)
-    #     success = False
-
-    #     # Set file paths
-    #     java_student_directory = os.getcwd() + '/'
-    #     java_ref_file_name = (ref_path.split('/')[-1]).split('.')[0]
-
-    #     # Set command variables
-    #     compile_command = 'javac  {0}'.format(submit_path),
-    #     compile_main = ('javac {0} -classpath '
-    #                     '{1} -d {2}').format(ref_path,
-    #                                          java_student_directory,
-    #                                          java_student_directory)
-    #     run_command_args = "java -cp {0} {1}".format(java_student_directory,
-    #                                                  java_ref_file_name)
-    #     remove_user_output = "{0}{1}.class".format(java_student_directory,
-    #                                                  'Test')
-    #     remove_ref_output = "{0}{1}.class".format(java_student_directory,
-    #                                                  java_ref_file_name)
-
-    #     success, err = self.check_code(ref_path, submit_path, compile_command,
-    #                                  compile_main, run_command_args,
-    #                                  remove_user_output, remove_ref_output)
-
-    #     # Delete the created file.
-    #     os.remove(submit_path)
-
-    #     return success, err
-
-    def check_code(self, ref_code_path, submit_code_path, compile_command,
+    def _check_code(self, ref_code_path, submit_code_path, compile_command,
                      compile_main, run_command_args, remove_user_output,
                      remove_ref_output):
         """ Function validates student code using instructor code as
@@ -113,21 +78,21 @@ class JavaCodeEvaluator(CodeEvaluator):
 
         success = False
         # output_path = os.getcwd() + '/output'
-        ret = self.compile_command(compile_command)
+        ret = self._compile_command(compile_command)
         proc, stdnt_stderr = ret
         # if self.language == "java":
-        stdnt_stderr = self.remove_null_substitute_char(stdnt_stderr)
+        stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
 
         # Only if compilation is successful, the program is executed
         # And tested with testcases
         if stdnt_stderr == '':
-            ret = self.compile_command(compile_main)
+            ret = self._compile_command(compile_main)
             proc, main_err = ret
             # if self.language == "java":
-            main_err = self.remove_null_substitute_char(main_err)
+            main_err = self._remove_null_substitute_char(main_err)
 
             if main_err == '':
-                ret = self.run_command(run_command_args, stdin=None,
+                ret = self._run_command(run_command_args, stdin=None,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
                 proc, stdout, stderr = ret
@@ -161,6 +126,3 @@ class JavaCodeEvaluator(CodeEvaluator):
                 err = err + "\n" + stdnt_stderr
 
         return success, err
-
-
-# registry.register('java', EvaluateJavaCode)

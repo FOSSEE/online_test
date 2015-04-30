@@ -71,7 +71,6 @@ class QuestionTestCases(unittest.TestCase):
                                             "kw_args": {"a": "10", 
                                                         "b": "11"}
                                         }], 
-                        "ref_code_path": "", 
                         "id": self.question.id, 
                         "language": "Python"}
         self.answer_data_json = json.dumps(answer_data)

@@ -54,7 +54,7 @@ def delete_signal_handler():
 ###############################################################################
 class CodeEvaluator(object):
     """Tests the code obtained from Code Server"""
-    def __init__(self, test_case_data, language, user_answer, 
+    def __init__(self, test_case_data, test, language, user_answer, 
                      ref_code_path=None, in_dir=None):
         msg = 'Code took more than %s seconds to run. You probably '\
               'have an infinite loop in your code.' % SERVER_TIMEOUT
@@ -63,6 +63,7 @@ class CodeEvaluator(object):
         self.language = language.lower()
         self.user_answer = user_answer
         self.ref_code_path = ref_code_path
+        self.test = test
         self.in_dir = in_dir
         self.test_case_args = None
 
@@ -73,60 +74,15 @@ class CodeEvaluator(object):
         test_case_data = json_data.get("test_case_data")
         user_answer = json_data.get("user_answer")
         ref_code_path = json_data.get("ref_code_path")
+        test = json_data.get("test") 
 
-        instance = cls(Test_case_data, language, user_answer, ref_code_path,
+        instance = cls(test_case_data, test, language, user_answer, ref_code_path,
                          in_dir)
         return instance
 
-    # def run_code(self):
-    #     """Tests given code  (`answer`) with the test cases based on
-    #     given arguments.
-
-    #     The ref_code_path is a path to the reference code.
-    #     The reference code will call the function submitted by the student.
-    #     The reference code will check for the expected output.
-
-    #     If the path's start with a "/" then we assume they are absolute paths.
-    #     If not, we assume they are relative paths w.r.t. the location of this
-    #     code_server script.
-
-    #     If the optional `in_dir` keyword argument is supplied it changes the
-    #     directory to that directory (it does not change it back to the original
-    #     when done).
-
-    #     Returns
-    #     -------
-
-    #     A tuple: (success, error message).
-    #     """
-    #     self._change_dir(self.in_dir)
-
-    #     # Add a new signal handler for the execution of this code.
-    #     prev_handler = self.create_signal_handler()
-    #     success = False
-
-    #     # Do whatever testing needed.
-    #     try:
-    #         success, err = self.evaluate_code() #pass *list where list is a list of args obtained from setup
-
-    #     except TimeoutException:
-    #         err = self.timeout_msg
-    #     except:
-    #         type, value = sys.exc_info()[:2]
-    #         err = "Error: {0}".format(repr(value))
-    #     finally:
-    #         # Set back any original signal handler.
-    #         self.set_original_signal_handler(prev_handler)
-
-    #     # Cancel the signal
-    #     self.delete_signal_handler()
-
-    #     result = {'success': success, 'error': err}
-    #     return result
-
-    def code_evaluator(self):
-        """Tests given code  (`answer`) with the test cases based on
-        given arguments.
+    def evaluate(self):
+        """Evaluates given code with the test cases based on
+        given arguments in test_case_data.
 
         The ref_code_path is a path to the reference code.
         The reference code will call the function submitted by the student.
@@ -146,18 +102,18 @@ class CodeEvaluator(object):
         A tuple: (success, error message).
         """
 
-        self.setup_code_evaluator()
-        success, err = self.evaluate_code(self.test_case_args)
-        self.teardown_code_evaluator()
+        self._setup()
+        success, err = self._evaluate(self.test_case_args)
+        self._teardown()
 
         result = {'success': success, 'error': err}
         return result
 
-    # Public Protocol ########## 
-    def setup_code_evaluator(self):
+    # Private Protocol ##########
+    def _setup(self):
         self._change_dir(self.in_dir)
 
-    def evaluate_code(self, args):
+    def _evaluate(self, args):
         # Add a new signal handler for the execution of this code.
         prev_handler = create_signal_handler()
         success = False
@@ -165,7 +121,7 @@ class CodeEvaluator(object):
 
         # Do whatever testing needed.
         try:
-            success, err = self.check_code(*args)
+            success, err = self._check_code(*args)
 
         except TimeoutException:
             err = self.timeout_msg
@@ -178,14 +134,13 @@ class CodeEvaluator(object):
 
         return success, err
 
-    def teardown_code_evaluator(self):
+    def _teardown(self):
         # Cancel the signal
         delete_signal_handler()
 
-    def check_code(self):
+    def _check_code(self):
         raise NotImplementedError("check_code method not implemented")
 
-    # Private Protocol ##########
     def create_submit_code_file(self, file_name):
         """ Write the code (`answer`) to a file and set the file path"""
         submit_f = open(file_name, 'w')
@@ -209,7 +164,7 @@ class CodeEvaluator(object):
 
         return ref_path, test_case_path
 
-    def run_command(self, cmd_args, *args, **kw):
+    def _run_command(self, cmd_args, *args, **kw):
         """Run a command in a subprocess while blocking, the process is killed
         if it takes more than 2 seconds to run.  Return the Popen object, the
         stdout and stderr.
@@ -224,7 +179,7 @@ class CodeEvaluator(object):
             raise
         return proc, stdout, stderr
 
-    def compile_command(self, cmd, *args, **kw):
+    def _compile_command(self, cmd, *args, **kw):
         """Compiles C/C++/java code and returns errors if any.
         Run a command in a subprocess while blocking, the process is killed
         if it takes more than 2 seconds to run.  Return the Popen object, the
@@ -246,7 +201,7 @@ class CodeEvaluator(object):
         if in_dir is not None and isdir(in_dir):
             os.chdir(in_dir)
 
-    def remove_null_substitute_char(self, string):
+    def _remove_null_substitute_char(self, string):
         """Returns a string without any null and substitute characters"""
         stripped = ""
         for c in string:

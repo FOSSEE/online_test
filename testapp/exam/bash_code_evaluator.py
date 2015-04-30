@@ -8,20 +8,20 @@ import importlib
 
 # local imports
 from code_evaluator import CodeEvaluator
-# from language_registry import registry
 
 
 class BashCodeEvaluator(CodeEvaluator):
     """Tests the Bash code obtained from Code Server"""
-    def __init__(self, test_case_data, language, user_answer,
+    def __init__(self, test_case_data, test, language, user_answer,
                      ref_code_path=None, in_dir=None):
-        super(BashCodeEvaluator, self).__init__(test_case_data, language, user_answer, 
+        super(BashCodeEvaluator, self).__init__(test_case_data, test, language, user_answer, 
                                                  ref_code_path, in_dir)
         self.submit_path = self.create_submit_code_file('submit.sh')
-        self.test_case_args = self.setup_code_evaluator()
+        self.test_case_args = self._setup()
 
-    def setup_code_evaluator(self):
-        super(BashCodeEvaluator, self).setup_code_evaluator()
+    # Private Protocol ##########
+    def _setup(self):
+        super(BashCodeEvaluator, self)._setup()
 
         self.set_file_as_executable(self.submit_path)
         get_ref_path, get_test_case_path = self.ref_code_path.strip().split(',')
@@ -32,28 +32,12 @@ class BashCodeEvaluator(CodeEvaluator):
 
         return ref_path, self.submit_path, test_case_path
 
+    def _teardown(self):
+        # Delete the created file.
+        super(BashCodeEvaluator, self)._teardown()
+        os.remove(self.submit_path)
 
-    # # Public Protocol ##########
-    # def evaluate_code(self):
-    #     submit_path = self.create_submit_code_file('submit.sh')
-    #     self.set_file_as_executable(submit_path)
-    #     get_ref_path, get_test_case_path = self.ref_code_path.strip().split(',')
-    #     get_ref_path = get_ref_path.strip()
-    #     get_test_case_path = get_test_case_path.strip()
-    #     ref_path, test_case_path = self.set_test_code_file_path(get_ref_path,
-    #                                                          get_test_case_path)
-
-    #     success, err = self._check_bash_script(ref_path, submit_path,
-    #                         test_case_path)
-
-    #     # Delete the created file.
-    #     os.remove(submit_path)
-
-    #     return success, err
-
-
-    # Private Protocol ##########
-    def check_code(self, ref_path, submit_path,
+    def _check_code(self, ref_path, submit_path,
                           test_case_path=None):
         """ Function validates student script using instructor script as
         reference. Test cases can optionally be provided.  The first argument
@@ -136,5 +120,3 @@ class BashCodeEvaluator(CodeEvaluator):
                                                      stdnt_stdout+stdnt_stderr)
                 return False, err
 
-
-# registry.register('bash', EvaluateBashCode)
