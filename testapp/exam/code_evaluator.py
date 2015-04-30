@@ -9,7 +9,6 @@ from multiprocessing import Process, Queue
 import subprocess
 import re
 import json
-import importlib
 # Local imports.
 from settings import SERVER_PORTS, SERVER_TIMEOUT, SERVER_POOL_PORT
 
@@ -53,7 +52,7 @@ def delete_signal_handler():
 ###############################################################################
 # `TestCode` class.
 ###############################################################################
-class EvaluateCode(object):
+class CodeEvaluator(object):
     """Tests the code obtained from Code Server"""
     def __init__(self, test_case_data, language, user_answer, 
                      ref_code_path=None, in_dir=None):
@@ -65,9 +64,9 @@ class EvaluateCode(object):
         self.user_answer = user_answer
         self.ref_code_path = ref_code_path
         self.in_dir = in_dir
+        self.test_case_args = None
 
     # Public Protocol ##########
-
     @classmethod
     def from_json(cls, language, json_data, in_dir):
         json_data = json.loads(json_data)
@@ -79,7 +78,53 @@ class EvaluateCode(object):
                          in_dir)
         return instance
 
-    def run_code(self):
+    # def run_code(self):
+    #     """Tests given code  (`answer`) with the test cases based on
+    #     given arguments.
+
+    #     The ref_code_path is a path to the reference code.
+    #     The reference code will call the function submitted by the student.
+    #     The reference code will check for the expected output.
+
+    #     If the path's start with a "/" then we assume they are absolute paths.
+    #     If not, we assume they are relative paths w.r.t. the location of this
+    #     code_server script.
+
+    #     If the optional `in_dir` keyword argument is supplied it changes the
+    #     directory to that directory (it does not change it back to the original
+    #     when done).
+
+    #     Returns
+    #     -------
+
+    #     A tuple: (success, error message).
+    #     """
+    #     self._change_dir(self.in_dir)
+
+    #     # Add a new signal handler for the execution of this code.
+    #     prev_handler = self.create_signal_handler()
+    #     success = False
+
+    #     # Do whatever testing needed.
+    #     try:
+    #         success, err = self.evaluate_code() #pass *list where list is a list of args obtained from setup
+
+    #     except TimeoutException:
+    #         err = self.timeout_msg
+    #     except:
+    #         type, value = sys.exc_info()[:2]
+    #         err = "Error: {0}".format(repr(value))
+    #     finally:
+    #         # Set back any original signal handler.
+    #         self.set_original_signal_handler(prev_handler)
+
+    #     # Cancel the signal
+    #     self.delete_signal_handler()
+
+    #     result = {'success': success, 'error': err}
+    #     return result
+
+    def code_evaluator(self):
         """Tests given code  (`answer`) with the test cases based on
         given arguments.
 
@@ -100,34 +145,47 @@ class EvaluateCode(object):
 
         A tuple: (success, error message).
         """
+
+        self.setup_code_evaluator()
+        success, err = self.evaluate_code(self.test_case_args)
+        self.teardown_code_evaluator()
+
+        result = {'success': success, 'error': err}
+        return result
+
+    # Public Protocol ########## 
+    def setup_code_evaluator(self):
         self._change_dir(self.in_dir)
 
+    def evaluate_code(self, args):
         # Add a new signal handler for the execution of this code.
         prev_handler = create_signal_handler()
         success = False
+        args = args or []
 
         # Do whatever testing needed.
         try:
-            success, err = self.evaluate_code()
+            success, err = self.check_code(*args)
 
         except TimeoutException:
             err = self.timeout_msg
         except:
-            type, value = sys.exc_info()[:2]
+            _type, value = sys.exc_info()[:2]
             err = "Error: {0}".format(repr(value))
         finally:
             # Set back any original signal handler.
             set_original_signal_handler(prev_handler)
 
+        return success, err
+
+    def teardown_code_evaluator(self):
         # Cancel the signal
         delete_signal_handler()
 
-        result = {'success': success, 'error': err}
-        return result
+    def check_code(self):
+        raise NotImplementedError("check_code method not implemented")
 
-    def evaluate_code(self):
-        raise NotImplementedError("evaluate_code method not implemented")
-
+    # Private Protocol ##########
     def create_submit_code_file(self, file_name):
         """ Write the code (`answer`) to a file and set the file path"""
         submit_f = open(file_name, 'w')
@@ -184,8 +242,14 @@ class EvaluateCode(object):
             raise
         return proc_compile, err
 
-    # Private Protocol ##########
-
     def _change_dir(self, in_dir):
         if in_dir is not None and isdir(in_dir):
             os.chdir(in_dir)
+
+    def remove_null_substitute_char(self, string):
+        """Returns a string without any null and substitute characters"""
+        stripped = ""
+        for c in string:
+            if ord(c) is not 26 and ord(c) is not 0:
+                stripped = stripped + c
+        return ''.join(stripped)

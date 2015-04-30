@@ -7,25 +7,32 @@ import subprocess
 import importlib
 
 # local imports
-from evaluate_code import EvaluateCode
-from language_registry import registry
+from code_evaluator import CodeEvaluator
+# from language_registry import registry
 
 
-class EvaluateCCode(EvaluateCode):
+class CCppCodeEvaluator(CodeEvaluator):
     """Tests the C code obtained from Code Server"""
-    # Public Protocol ##########
-    def evaluate_code(self):
-        submit_path = self.create_submit_code_file('submit.c')
+    def __init__(self, test_case_data, language, user_answer, 
+                     ref_code_path=None, in_dir=None):  
+        super(CCppCodeEvaluator, self).__init__(test_case_data, language, user_answer, 
+                                                 ref_code_path, in_dir)
+        self.submit_path = self.create_submit_code_file('submit.c')
+        self.test_case_args = self.setup_code_evaluator()      
+
+    # Private Protocol ##########
+    def setup_code_evaluator(self):
+        super(CCppCodeEvaluator, self).setup_code_evaluator()
+
         get_ref_path = self.ref_code_path
         ref_path, test_case_path = self.set_test_code_file_path(get_ref_path)
-        success = False
 
         # Set file paths
         c_user_output_path = os.getcwd() + '/output'
         c_ref_output_path = os.getcwd() + '/executable'
 
         # Set command variables
-        compile_command = 'g++  {0} -c -o {1}'.format(submit_path,
+        compile_command = 'g++  {0} -c -o {1}'.format(self.submit_path,
                                                  c_user_output_path)
         compile_main = 'g++ {0} {1} -o {2}'.format(ref_path,
                                                 c_user_output_path,
@@ -34,16 +41,43 @@ class EvaluateCCode(EvaluateCode):
         remove_user_output = c_user_output_path
         remove_ref_output = c_ref_output_path
 
-        success, err = self.check_code(ref_path, submit_path, compile_command,
-                                     compile_main, run_command_args,
-                                     remove_user_output, remove_ref_output)
+        return ref_path, self.submit_path, compile_command, compile_main, run_command_args, remove_user_output, remove_ref_output
 
+    def teardown_code_evaluator(self):
         # Delete the created file.
-        os.remove(submit_path)
+        super(CCppCodeEvaluator, self).teardown_code_evaluator()
+        os.remove(self.submit_path)
 
-        return success, err
+    # # Public Protocol ##########
+    # def evaluate_code(self):
+    #     submit_path = self.create_submit_code_file('submit.c')
+    #     get_ref_path = self.ref_code_path
+    #     ref_path, test_case_path = self.set_test_code_file_path(get_ref_path)
+    #     success = False
 
-    # Public Protocol ##########
+    #     # Set file paths
+    #     c_user_output_path = os.getcwd() + '/output'
+    #     c_ref_output_path = os.getcwd() + '/executable'
+
+    #     # Set command variables
+    #     compile_command = 'g++  {0} -c -o {1}'.format(submit_path,
+    #                                              c_user_output_path)
+    #     compile_main = 'g++ {0} {1} -o {2}'.format(ref_path,
+    #                                             c_user_output_path,
+    #                                             c_ref_output_path)
+    #     run_command_args = [c_ref_output_path]
+    #     remove_user_output = c_user_output_path
+    #     remove_ref_output = c_ref_output_path
+
+    #     success, err = self.check_code(ref_path, submit_path, compile_command,
+    #                                  compile_main, run_command_args,
+    #                                  remove_user_output, remove_ref_output)
+
+    #     # Delete the created file.
+    #     os.remove(submit_path)
+
+    #     return success, err
+
     def check_code(self, ref_code_path, submit_code_path, compile_command,
                      compile_main, run_command_args, remove_user_output,
                      remove_ref_output):
@@ -122,7 +156,6 @@ class EvaluateCCode(EvaluateCode):
 
         return success, err
 
-    # Public Protocol ##########
     def remove_null_substitute_char(self, string):
         """Returns a string without any null and substitute characters"""
         stripped = ""
@@ -132,4 +165,4 @@ class EvaluateCCode(EvaluateCode):
         return ''.join(stripped)
 
 
-registry.register('c', EvaluateCCode)
+# registry.register('c', EvaluateCCode)

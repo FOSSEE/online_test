@@ -6,14 +6,14 @@ from os.path import join
 import importlib
 
 # local imports
-from evaluate_code import EvaluateCode
-from language_registry import registry
+from code_evaluator import CodeEvaluator
+# from language_registry import registry
 
 
-class EvaluatePythonCode(EvaluateCode):
+class PythonCodeEvaluator(CodeEvaluator):
     """Tests the Python code obtained from Code Server"""
-    # Public Protocol ##########
-    def evaluate_code(self):
+    # Private Protocol ##########
+    def check_code(self):
         success = False
 
         try:
@@ -37,6 +37,31 @@ class EvaluatePythonCode(EvaluateCode):
         del tb
         return success, err
 
+    # # Public Protocol ##########
+    # def evaluate_code(self):
+    #     success = False
+
+    #     try:
+    #         tb = None
+    #         test_code = self._create_test_case()
+    #         submitted = compile(self.user_answer, '<string>', mode='exec')
+    #         g = {}
+    #         exec submitted in g
+    #         _tests = compile(test_code, '<string>', mode='exec')
+    #         exec _tests in g
+    #     except AssertionError:
+    #         type, value, tb = sys.exc_info()
+    #         info = traceback.extract_tb(tb)
+    #         fname, lineno, func, text = info[-1]
+    #         text = str(test_code).splitlines()[lineno-1]
+    #         err = "{0} {1} in: {2}".format(type.__name__, str(value), text)
+    #     else:
+    #         success = True
+    #         err = 'Correct answer'
+
+    #     del tb
+    #     return success, err
+
     # Private Protocol ##########
     def _create_test_case(self):
         """
@@ -57,4 +82,4 @@ class EvaluatePythonCode(EvaluateCode):
         return test_code
 
 
-registry.register('python', EvaluatePythonCode)
+# registry.register('python', EvaluatePythonCode)

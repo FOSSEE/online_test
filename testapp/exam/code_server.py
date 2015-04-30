@@ -32,13 +32,13 @@ import json
 import importlib
 # Local imports.
 from settings import SERVER_PORTS, SERVER_TIMEOUT, SERVER_POOL_PORT
-from language_registry import registry
-from evaluate_python_code import EvaluatePythonCode
-from evaluate_c_code import EvaluateCCode
-from evaluate_cpp_code import EvaluateCppCode
-from evaluate_java_code import EvaluateJavaCode
-from evaluate_scilab_code import EvaluateScilabCode
-from evaluate_bash_code import EvaluateBashCode
+from language_registry import set_registry
+# from evaluate_python_code import EvaluatePythonCode
+# from evaluate_c_code import EvaluateCCode
+# from evaluate_cpp_code import EvaluateCppCode
+# from evaluate_java_code import EvaluateJavaCode
+# from evaluate_scilab_code import EvaluateScilabCode
+# from evaluate_bash_code import EvaluateBashCode
 
 
 MY_DIR = abspath(dirname(__file__))
@@ -69,24 +69,15 @@ class CodeServer(object):
         """Calls relevant EvaluateCode class based on language to check the
          answer code
         """
-        evaluate_code_instance = self.create_class_instance(language,
-                                                             json_data, in_dir)
-
-        result = evaluate_code_instance.run_code()
+        code_evaluator = self._create_evaluator_instance(language, json_data,
+                                                             in_dir)
+        result = code_evaluator.code_evaluator()
 
         # Put us back into the server pool queue since we are free now.
         self.queue.put(self.port)
 
         return json.dumps(result)
 
-    # Public Protocol ##########
-    def create_class_instance(self, language, json_data, in_dir):
-        """Create instance of relevant EvaluateCode class based on language"""
-        cls = registry.get_class(language)
-        instance = cls.from_json(language, json_data, in_dir)
-        return instance
-
-    # Public Protocol ##########
     def run(self):
         """Run XMLRPC server, serving our methods."""
         server = SimpleXMLRPCServer(("localhost", self.port))
@@ -94,6 +85,15 @@ class CodeServer(object):
         server.register_instance(self)
         self.queue.put(self.port)
         server.serve_forever()
+
+    # Private Protocol ##########
+    def _create_evaluator_instance(self, language, json_data, in_dir):
+        """Create instance of relevant EvaluateCode class based on language"""
+        set_registry()
+        registry = get_registry()
+        cls = registry.get_class(language)
+        instance = cls.from_json(language, json_data, in_dir)
+        return instance
 
 
 ###############################################################################
