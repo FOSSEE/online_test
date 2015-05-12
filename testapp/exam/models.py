@@ -20,8 +20,8 @@ class Profile(models.Model):
 languages = (
         ("python", "Python"),
         ("bash", "Bash"),
-        ("C", "C Language"),
-        ("CPP", "C++ Language"),
+        ("c", "C Language"),
+        ("cpp", "C++ Language"),
         ("java", "Java Language"),
         ("scilab", "Scilab"),
                             )

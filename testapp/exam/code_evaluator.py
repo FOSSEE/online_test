@@ -22,7 +22,6 @@ class TimeoutException(Exception):
     pass
 
 
-# Private Protocol ##########
 def timeout_handler(signum, frame):
     """A handler for the ALARM signal."""
     raise TimeoutException('Code took too long to run.')
@@ -49,9 +48,6 @@ def delete_signal_handler():
     return
 
 
-###############################################################################
-# `TestCode` class.
-###############################################################################
 class CodeEvaluator(object):
     """Tests the code obtained from Code Server"""
     def __init__(self, test_case_data, test, language, user_answer, 
@@ -150,12 +146,12 @@ class CodeEvaluator(object):
 
         return submit_path
 
-    def set_file_as_executable(self, fname):
+    def _set_file_as_executable(self, fname):
         os.chmod(fname,  stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
                  | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
                  | stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH)
 
-    def set_test_code_file_path(self, ref_path=None, test_case_path=None):
+    def _set_test_code_file_path(self, ref_path=None, test_case_path=None):
         if ref_path and not ref_path.startswith('/'):
             ref_path = join(MY_DIR, ref_path)
 

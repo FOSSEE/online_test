@@ -1,4 +1,3 @@
-
 import unittest
 import os
 from exam.bash_code_evaluator import BashCodeEvaluator

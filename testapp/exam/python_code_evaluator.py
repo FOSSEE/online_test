@@ -52,7 +52,10 @@ class PythonCodeEvaluator(CodeEvaluator):
                                 if test_case.get('kw_args') else ""
                 args = pos_args + ", " + kw_args if pos_args and kw_args \
                                                     else pos_args or kw_args
-                tcode = "assert {0}({1}) == {2}".format(test_case.get('func_name'),
-                                                            args, test_case.get('expected_answer'))
+                function_name = test_case.get('func_name')
+                expected_answer = test_case.get('expected_answer')
+
+                tcode = "assert {0}({1}) == {2}".format(function_name, args,
+                                             expected_answer)
                 test_code += tcode + "\n"
             return test_code

@@ -14,7 +14,8 @@ class JavaCodeEvaluator(CodeEvaluator):
     """Tests the Java code obtained from Code Server"""
     def __init__(self, test_case_data, test, language, user_answer,
                      ref_code_path=None, in_dir=None):
-        super(JavaCodeEvaluator, self).__init__(test_case_data, test, language, user_answer, 
+        super(JavaCodeEvaluator, self).__init__(test_case_data, test,
+                                                 language, user_answer,
                                                  ref_code_path, in_dir)
         self.submit_path = self.create_submit_code_file('Test.java')
         self.test_case_args = self._setup()
@@ -23,7 +24,7 @@ class JavaCodeEvaluator(CodeEvaluator):
     def _setup(self):
         super(JavaCodeEvaluator, self)._setup()
 
-        ref_path, test_case_path = self.set_test_code_file_path(self.ref_code_path)
+        ref_path, test_case_path = self._set_test_code_file_path(self.ref_code_path)
 
         # Set file paths
         java_student_directory = os.getcwd() + '/'
@@ -42,7 +43,8 @@ class JavaCodeEvaluator(CodeEvaluator):
         remove_ref_output = "{0}{1}.class".format(java_student_directory,
                                                      java_ref_file_name)
 
-        return ref_path, self.submit_path, compile_command, compile_main, run_command_args, remove_user_output, remove_ref_output
+        return (ref_path, self.submit_path, compile_command, compile_main,
+                     run_command_args, remove_user_output, remove_ref_output)
 
     def _teardown(self):
         # Delete the created file.
@@ -77,10 +79,8 @@ class JavaCodeEvaluator(CodeEvaluator):
             return False, 'No file at %s or Incorrect path' % submit_code_path
 
         success = False
-        # output_path = os.getcwd() + '/output'
         ret = self._compile_command(compile_command)
         proc, stdnt_stderr = ret
-        # if self.language == "java":
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
 
         # Only if compilation is successful, the program is executed
@@ -88,7 +88,6 @@ class JavaCodeEvaluator(CodeEvaluator):
         if stdnt_stderr == '':
             ret = self._compile_command(compile_main)
             proc, main_err = ret
-            # if self.language == "java":
             main_err = self._remove_null_substitute_char(main_err)
 
             if main_err == '':

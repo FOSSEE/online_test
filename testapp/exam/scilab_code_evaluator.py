@@ -14,7 +14,8 @@ class ScilabCodeEvaluator(CodeEvaluator):
     """Tests the Scilab code obtained from Code Server"""
     def __init__(self, test_case_data, test, language, user_answer,
                      ref_code_path=None, in_dir=None):
-        super(ScilabCodeEvaluator, self).__init__(test_case_data, test, language, user_answer, 
+        super(ScilabCodeEvaluator, self).__init__(test_case_data, test,
+                                                 language, user_answer,
                                                  ref_code_path, in_dir)
         self.submit_path = self.create_submit_code_file('function.sci')
         self.test_case_args = self._setup()
@@ -23,7 +24,7 @@ class ScilabCodeEvaluator(CodeEvaluator):
     def _setup(self):
         super(ScilabCodeEvaluator, self)._setup()
 
-        ref_path, test_case_path = self.set_test_code_file_path(self.ref_code_path)
+        ref_path, test_case_path = self._set_test_code_file_path(self.ref_code_path)
 
         return ref_path, # Return as a tuple
 

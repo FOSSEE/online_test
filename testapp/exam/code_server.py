@@ -32,12 +32,6 @@ import json
 # Local imports.
 from settings import SERVER_PORTS, SERVER_TIMEOUT, SERVER_POOL_PORT
 from language_registry import set_registry
-# from evaluate_python_code import EvaluatePythonCode
-# from evaluate_c_code import EvaluateCCode
-# from evaluate_cpp_code import EvaluateCppCode
-# from evaluate_java_code import EvaluateJavaCode
-# from evaluate_scilab_code import EvaluateScilabCode
-# from evaluate_bash_code import EvaluateBashCode
 
 
 MY_DIR = abspath(dirname(__file__))

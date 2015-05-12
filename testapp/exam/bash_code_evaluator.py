@@ -23,11 +23,11 @@ class BashCodeEvaluator(CodeEvaluator):
     def _setup(self):
         super(BashCodeEvaluator, self)._setup()
 
-        self.set_file_as_executable(self.submit_path)
+        self._set_file_as_executable(self.submit_path)
         get_ref_path, get_test_case_path = self.ref_code_path.strip().split(',')
         get_ref_path = get_ref_path.strip()
         get_test_case_path = get_test_case_path.strip()
-        ref_path, test_case_path = self.set_test_code_file_path(get_ref_path,
+        ref_path, test_case_path = self._set_test_code_file_path(get_ref_path,
                                                              get_test_case_path)
 
         return ref_path, self.submit_path, test_case_path
