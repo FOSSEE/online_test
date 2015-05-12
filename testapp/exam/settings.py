@@ -18,3 +18,11 @@ SERVER_TIMEOUT = 2
 # reason set this to the root you have to serve at.  In the above example
 # host.org/foo/exam set URL_ROOT='/foo'
 URL_ROOT = ''
+
+code_evaluators = {"python": "python_code_evaluator.PythonCodeEvaluator",
+					 "c": "c_cpp_code_evaluator.CCPPCodeEvaluator",
+					 "cpp": "c_cpp_code_evaluator.CCPPCodeEvaluator",
+					 "java": "java_evaluator.JavaCodeEvaluator",
+					 "bash": "bash_evaluator.BashCodeEvaluator",
+					 "scilab": "scilab_evaluator.ScilabCodeEvaluator",
+					}

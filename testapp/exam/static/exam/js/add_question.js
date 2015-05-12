@@ -153,8 +153,7 @@ function textareaformat()
 		if(value == 'mcq' || value == 'mcc')
 		{
 			document.getElementById('id_options').style.visibility='visible';
-			document.getElementById('label_option').innerHTML="Options :"
-
+			document.getElementById('label_option').innerHTML="Options :";
 		}
 		else
 		{
@@ -168,7 +167,6 @@ function textareaformat()
 		{
 			document.getElementById('id_options').style.visibility='visible';
 			document.getElementById('label_option').innerHTML="Options :"
-
 		}
 		else
 		{
@@ -189,8 +187,9 @@ function autosubmit()
         if(type.value == 'select')
         {
             type.style.border = 'solid red';
-	    return false;
-	}
+            return false;
+		}
+
 
 	if (type.value == 'mcq' || type.value == 'mcc')
 	{

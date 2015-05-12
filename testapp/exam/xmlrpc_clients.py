@@ -21,15 +21,8 @@ class CodeServerProxy(object):
     def __init__(self):
         pool_url = 'http://localhost:%d' % (SERVER_POOL_PORT)
         self.pool_server = ServerProxy(pool_url)
-        self.methods = {"python": 'run_python_code',
-                        "bash": 'run_bash_code',
-                        "C": "run_c_code",
-                        "C++": "run_cplus_code",
-                        "java": "run_java_code",
-                        "scilab": "run_scilab_code",
-                        }
 
-    def run_code(self, answer, test_code, user_dir, language):
+    def run_code(self, language, json_data, user_dir):
         """Tests given code (`answer`) with the `test_code` supplied.  If the
         optional `in_dir` keyword argument is supplied it changes the directory
         to that directory (it does not change it back to the original when
@@ -38,26 +31,28 @@ class CodeServerProxy(object):
 
         Parameters
         ----------
-        answer : str
-            The user's answer for the question.
+        json_data contains;
+        user_answer : str
+            The user's answer for the question. 
         test_code : str
             The test code to check the user code with.
-        user_dir : str (directory)
-            The directory to run the tests inside.
         language : str
             The programming language to use.
 
+        user_dir : str (directory)
+            The directory to run the tests inside.
+
+
         Returns
         -------
-        A tuple: (success, error message).
+        A json string of a dict: {success: success, err: error message}.
         """
-        method_name = self.methods[language]
+
         try:
             server = self._get_server()
-            method = getattr(server, method_name)
-            result = method(answer, test_code, user_dir)
+            result = server.check_code(language, json_data, user_dir)
         except ConnectionError:
-            result = [False, 'Unable to connect to any code servers!']
+            result = json.dumps({'success': False, 'error': 'Unable to connect to any code servers!'})
         return result
 
     def _get_server(self):

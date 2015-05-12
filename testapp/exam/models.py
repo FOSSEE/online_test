@@ -1,4 +1,5 @@
 import datetime
+import json
 from random import sample, shuffle
 from django.db import models
 from django.contrib.auth.models import User
@@ -19,8 +20,8 @@ class Profile(models.Model):
 languages = (
         ("python", "Python"),
         ("bash", "Bash"),
-        ("C", "C Language"),
-        ("C++", "C++ Language"),
+        ("c", "C Language"),
+        ("cpp", "C++ Language"),
         ("java", "Java Language"),
         ("scilab", "Scilab"),
                             )
@@ -59,8 +60,12 @@ class Question(models.Model):
     # Number of points for the question.
     points = models.FloatField(default=1.0)
 
-    # Test cases for the question in the form of code that is run.
+    # Answer for MCQs.
     test = models.TextField(blank=True)
+
+    # Test cases file paths (comma seperated for reference code path and test case code path)
+    # Applicable for CPP, C, Java and Scilab
+    ref_code_path = models.TextField(blank=True)
 
     # Any multiple choice options. Place one option per line.
     options = models.TextField(blank=True)
@@ -81,6 +86,41 @@ class Question(models.Model):
 
     # Tags for the Question.
     tags = TaggableManager()
+
+    def consolidate_answer_data(self, test_cases, user_answer):
+        test_case_data_dict = []
+        question_info_dict = {}
+
+        for test_case in test_cases:
+            kw_args_dict = {}
+            pos_args_list = []
+
+            test_case_data = {}
+            test_case_data['test_id'] = test_case.id
+            test_case_data['func_name'] = test_case.func_name
+            test_case_data['expected_answer'] = test_case.expected_answer
+
+            if test_case.kw_args:
+                for args in test_case.kw_args.split(","):
+                    arg_name, arg_value = args.split("=")
+                    kw_args_dict[arg_name.strip()] = arg_value.strip()
+
+            if test_case.pos_args:
+                for args in test_case.pos_args.split(","):
+                    pos_args_list.append(args.strip())
+
+            test_case_data['kw_args'] = kw_args_dict
+            test_case_data['pos_args'] = pos_args_list
+            test_case_data_dict.append(test_case_data)
+
+        # question_info_dict['language'] = self.language
+        question_info_dict['id'] = self.id
+        question_info_dict['user_answer'] = user_answer
+        question_info_dict['test_parameter'] = test_case_data_dict
+        question_info_dict['ref_code_path'] = self.ref_code_path
+        question_info_dict['test'] = self.test
+
+        return json.dumps(question_info_dict)
 
     def __unicode__(self):
         return self.summary
@@ -396,3 +436,20 @@ class AssignmentUpload(models.Model):
     user = models.ForeignKey(Profile)
     assignmentQuestion = models.ForeignKey(Question)
     assignmentFile = models.FileField(upload_to=get_assignment_dir)
+
+
+################################################################################
+class TestCase(models.Model):
+    question = models.ForeignKey(Question, blank=True, null = True)
+
+    # Test case function name
+    func_name = models.CharField(blank=True, null = True, max_length=200)
+
+    # Test case Keyword arguments in dict form
+    kw_args = models.TextField(blank=True, null = True)
+
+    # Test case Positional arguments in list form
+    pos_args = models.TextField(blank=True, null = True)
+
+    # Test case Expected answer in list form
+    expected_answer = models.TextField(blank=True, null = True)
