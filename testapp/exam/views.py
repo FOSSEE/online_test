@@ -291,6 +291,7 @@ def edit_question(request):
     description = request.POST.getlist('description')
     points = request.POST.getlist('points')
     options = request.POST.getlist('options')
+    test = request.POST.getlist('test')
     type = request.POST.getlist('type')
     active = request.POST.getlist('active')
     language = request.POST.getlist('language')

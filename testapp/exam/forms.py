@@ -187,7 +187,7 @@ class QuestionForm(forms.ModelForm):
     description = forms.CharField(widget=forms.Textarea\
                                             (attrs={'cols': 40, 'rows': 1}))
     points = forms.FloatField()
-    solution = forms.CharField(widget=forms.Textarea\
+    test = forms.CharField(widget=forms.Textarea\
                                     (attrs={'cols': 40, 'rows': 1}), required=False)
     options = forms.CharField(widget=forms.Textarea\
                               (attrs={'cols': 40, 'rows': 1}), required=False)
@@ -216,7 +216,7 @@ class QuestionForm(forms.ModelForm):
         new_question.summary = summary
         new_question.description = description
         new_question.points = points
-        # new_question.test = test
+        new_question.test = test
         new_question.options = options
         new_question.language = language
         new_question.type = type
