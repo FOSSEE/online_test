@@ -17,7 +17,6 @@ class CppCodeEvaluator(CodeEvaluator):
         super(CppCodeEvaluator, self).__init__(test_case_data, test, language,
                                                  user_answer, ref_code_path,
                                                  in_dir)
-        self.submit_path = self.create_submit_code_file('submit.c')
         self.test_case_args = self._setup()
 
     # Private Protocol ##########
@@ -26,6 +25,7 @@ class CppCodeEvaluator(CodeEvaluator):
 
         get_ref_path = self.ref_code_path
         ref_path, test_case_path = self._set_test_code_file_path(get_ref_path)
+        self.submit_path = self.create_submit_code_file('submit.c')
 
         # Set file paths
         c_user_output_path = os.getcwd() + '/output'

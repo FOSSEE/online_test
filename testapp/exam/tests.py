@@ -1,5 +1,5 @@
 from django.utils import unittest
-from exam.models import User, Profile, Question, Quiz, QuestionPaper,\
+from testapp.exam.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, TestCase
 import datetime, json
 

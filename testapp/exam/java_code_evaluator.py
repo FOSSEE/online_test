@@ -17,7 +17,6 @@ class JavaCodeEvaluator(CodeEvaluator):
         super(JavaCodeEvaluator, self).__init__(test_case_data, test,
                                                  language, user_answer,
                                                  ref_code_path, in_dir)
-        self.submit_path = self.create_submit_code_file('Test.java')
         self.test_case_args = self._setup()
 
     # Private Protocol ##########
@@ -25,6 +24,7 @@ class JavaCodeEvaluator(CodeEvaluator):
         super(JavaCodeEvaluator, self)._setup()
 
         ref_path, test_case_path = self._set_test_code_file_path(self.ref_code_path)
+        self.submit_path = self.create_submit_code_file('Test.java')
 
         # Set file paths
         java_student_directory = os.getcwd() + '/'
@@ -91,9 +91,10 @@ class JavaCodeEvaluator(CodeEvaluator):
             main_err = self._remove_null_substitute_char(main_err)
 
             if main_err == '':
-                ret = self._run_command(run_command_args, stdin=None,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE)
+                ret = self._run_command(run_command_args, shell=True,
+                                         stdin=None,
+                                         stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE)
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
                     success, err = True, "Correct answer"

@@ -1,5 +1,5 @@
 from django import forms
-from exam.models import Profile, Quiz, Question, TestCase
+from testapp.exam.models import Profile, Quiz, Question, TestCase
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -206,6 +206,7 @@ class QuestionForm(forms.ModelForm):
         summary = self.cleaned_data.get("summary")
         description = self.cleaned_data.get("description")
         points = self.cleaned_data.get("points")
+        test = self.cleaned_data.get("test")
         options = self.cleaned_data.get("options")
         language = self.cleaned_data.get("language")
         type = self.cleaned_data.get("type")

@@ -16,13 +16,13 @@ class BashCodeEvaluator(CodeEvaluator):
                      ref_code_path=None, in_dir=None):
         super(BashCodeEvaluator, self).__init__(test_case_data, test, language, user_answer, 
                                                  ref_code_path, in_dir)
-        self.submit_path = self.create_submit_code_file('submit.sh')
         self.test_case_args = self._setup()
 
     # Private Protocol ##########
     def _setup(self):
         super(BashCodeEvaluator, self)._setup()
 
+        self.submit_path = self.create_submit_code_file('submit.sh')
         self._set_file_as_executable(self.submit_path)
         get_ref_path, get_test_case_path = self.ref_code_path.strip().split(',')
         get_ref_path = get_ref_path.strip()
@@ -73,11 +73,11 @@ class BashCodeEvaluator(CodeEvaluator):
         success = False
 
         if test_case_path is None or "":
-            ret = self.run_command(ref_path, stdin=None,
+            ret = self._run_command(ref_path, stdin=None,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
             proc, inst_stdout, inst_stderr = ret
-            ret = self.run_command(submit_path, stdin=None,
+            ret = self._run_command(submit_path, stdin=None,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
             proc, stdnt_stdout, stdnt_stderr = ret
@@ -103,12 +103,12 @@ class BashCodeEvaluator(CodeEvaluator):
                 loop_count += 1
                 if valid_answer:
                     args = [ref_path] + [x for x in test_case.split()]
-                    ret = self.run_command(args, stdin=None,
+                    ret = self._run_command(args, stdin=None,
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE)
                     proc, inst_stdout, inst_stderr = ret
                     args = [submit_path]+[x for x in test_case.split()]
-                    ret = self.run_command(args, stdin=None,
+                    ret = self._run_command(args, stdin=None,
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE)
                     proc, stdnt_stdout, stdnt_stderr = ret
