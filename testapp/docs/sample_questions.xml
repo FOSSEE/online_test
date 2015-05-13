@@ -1,0 +1,43 @@
+<question_bank>
+
+<question>
+<summary>
+Factorial
+</summary>
+<description>
+Write a function called "fact" which takes a single integer argument (say "n") 
+and returns the factorial of the number.
+For example fact(3) -> 6
+</description>
+<points>2</points>
+<type>python</type>
+<test>
+assert fact(0) == 1
+assert fact(5) == 120
+</test>
+<options>
+</options>
+</question>
+
+<question>
+<summary>
+Simple function
+</summary>
+<description>
+Create a simple function called "sqr" which takes a single argument and 
+returns the square of the argument
+For example sqr(3) -> 9.
+</description>
+<points>1</points>
+<type>python</type>
+<test>
+import math
+assert sqr(3) == 9
+assert abs(sqr(math.sqrt(2)) - 2.0) &lt; 1e-14 
+</test>
+<options>
+</options>
+</question>
+
+
+</question_bank>
