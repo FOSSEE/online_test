@@ -1,0 +1,21 @@
+language: python
+
+python:
+  - "2.7"
+
+env:
+  - DJANGO=1.5.7
+  - DJANGO=1.6.4
+
+# command to install dependencies
+install:
+  - pip install -q Django==$DJANGO --use-mirrors
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y scilab
+
+# command to run tests
+script: 
+  - nosetests ./testapp/tests/
+  - python manage.py test
