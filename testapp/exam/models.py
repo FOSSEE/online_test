@@ -245,6 +245,8 @@ class QuestionPaper(models.Model):
         if self.shuffle_questions:
             shuffle(question_ids)
         ans_paper.questions = "|".join(question_ids)
+        if not ans_paper.questions_unanswered:
+            ans_paper.questions_unanswered = ans_paper.questions
         ans_paper.save()
         return ans_paper
 
@@ -298,6 +300,9 @@ class AnswerPaper(models.Model):
     # The questions successfully answered (a list of ids separated by '|')
     questions_answered = models.CharField(max_length=128)
 
+    # The unanswered questions (a list of ids separated by '|')
+    questions_unanswered = models.CharField(max_length=128)
+
     # All the submitted answers.
     answers = models.ManyToManyField(Answer)
 
@@ -317,9 +322,14 @@ class AnswerPaper(models.Model):
     status = models.CharField(max_length=20, choices=test_status,\
             default='inprogress')
 
+    # def initialise_questions_unanswered(self):
+    #     if not self.questions_unanswered:
+    #         self.questions_unanswered = self.questions
+    #     self.save()
+
     def current_question(self):
         """Returns the current active question to display."""
-        qs = self.questions.split('|')
+        qs = self.questions_unanswered.split('|')
         if len(qs) > 0:
             return qs[0]
         else:
@@ -327,7 +337,7 @@ class AnswerPaper(models.Model):
 
     def questions_left(self):
         """Returns the number of questions left."""
-        qs = self.questions
+        qs = self.questions_unanswered
         if len(qs) == 0:
             return 0
         else:
@@ -343,29 +353,40 @@ class AnswerPaper(models.Model):
             self.questions_answered = '|'.join([qa, str(question_id)])
         else:
             self.questions_answered = str(question_id)
-        qs = self.questions.split('|')
-        qs.remove(unicode(question_id))
-        self.questions = '|'.join(qs)
-        self.save()
-        if len(qs) == 0:
-            return ''
-        else:
-            return qs[0]
-
-    def skip(self):
-        """
-            Skips the current question and returns the next available question.
-        """
-        qs = self.questions.split('|')
-        if len(qs) == 0:
-            return ''
-        else:
-            # Put head at the end.
-            head = qs.pop(0)
-            qs.append(head)
-            self.questions = '|'.join(qs)
+        qs = self.questions_unanswered.split('|')
+        try:
+            q_index = qs.index(unicode(question_id))
+            qs.remove(unicode(question_id))
+            self.questions_unanswered = '|'.join(qs) if qs else ""
             self.save()
-            return qs[0]
+        except ValueError:
+            q_index = qs[0]
+        if len(qs) == 0:
+            return ''
+        else:
+            if q_index in range(0, len(qs)-1):
+                return qs[q_index]
+            else:
+                return qs[0]
+
+    def skip(self, question_id):
+        """
+            Skips the current question and returns the next sequentially
+             available question.
+        """
+        qs = self.questions_unanswered.split('|')
+        if len(qs) == 0:
+            return ''
+        else:
+            try:
+                q_index = qs.index(unicode(question_id))
+            except ValueError:
+                q_index = qs[0]
+            if q_index in range(0, len(qs)-1):
+                next_q = qs[q_index + 1]
+            else:
+                next_q = qs[0]
+            return next_q
 
     def time_left(self):
         """Return the time remaining for the user in seconds."""
