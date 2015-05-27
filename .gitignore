@@ -40,4 +40,4 @@ apache/*
 *.db
 migrations
 wsgi.log
-
+*.sqlite3
