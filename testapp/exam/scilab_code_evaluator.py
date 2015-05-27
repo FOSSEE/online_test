@@ -17,7 +17,9 @@ class ScilabCodeEvaluator(CodeEvaluator):
         super(ScilabCodeEvaluator, self).__init__(test_case_data, test,
                                                  language, user_answer,
                                                  ref_code_path, in_dir)
-        self.submit_path = self.create_submit_code_file('function.sci')
+
+        # Removes all the commands that terminates scilab
+        self.user_answer, self.terminate_commands = self._remove_scilab_exit(user_answer.lstrip())
         self.test_case_args = self._setup()
 
     # Private Protocol ##########
@@ -25,6 +27,7 @@ class ScilabCodeEvaluator(CodeEvaluator):
         super(ScilabCodeEvaluator, self)._setup()
 
         ref_path, test_case_path = self._set_test_code_file_path(self.ref_code_path)
+        self.submit_path = self.create_submit_code_file('function.sci')
 
         return ref_path, # Return as a tuple
 
@@ -35,6 +38,13 @@ class ScilabCodeEvaluator(CodeEvaluator):
 
     def _check_code(self, ref_path):
         success = False
+
+        # Throw message if there are commmands that terminates scilab
+        add_err=""
+        if self.terminate_commands:
+            add_err = "Please do not use exit, quit and abort commands in your\
+                        code.\n Otherwise your code will not be evaluated\
+                        correctly.\n"
 
         cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(ref_path)
         cmd += ' | timeout 8 scilab-cli -nb'
@@ -63,15 +73,15 @@ class ScilabCodeEvaluator(CodeEvaluator):
             Removes exit, quit and abort from the scilab code
         """
         new_string = ""
-        i = 0
+        terminate_commands = False
         for line in string.splitlines():
             new_line = re.sub(r"exit.*$", "", line)
             new_line = re.sub(r"quit.*$", "", new_line)
             new_line = re.sub(r"abort.*$", "", new_line)
             if line != new_line:
-                i = i + 1
+                terminate_commands = True
             new_string = new_string + '\n' + new_line
-        return new_string, i
+        return new_string, terminate_commands
 
     def _get_error(self, string):
         """

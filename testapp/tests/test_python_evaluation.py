@@ -1,8 +1,7 @@
-
 import unittest
 import os
-from exam.python_code_evaluator import PythonCodeEvaluator
-from exam.settings import SERVER_TIMEOUT
+from testapp.exam.python_code_evaluator import PythonCodeEvaluator
+from testapp.exam.settings import SERVER_TIMEOUT
 
 class PythonEvaluationTestCases(unittest.TestCase):
     def setUp(self):

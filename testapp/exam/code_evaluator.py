@@ -10,7 +10,7 @@ import subprocess
 import re
 import json
 # Local imports.
-from settings import SERVER_PORTS, SERVER_TIMEOUT, SERVER_POOL_PORT
+from settings import SERVER_TIMEOUT
 
 
 MY_DIR = abspath(dirname(__file__))

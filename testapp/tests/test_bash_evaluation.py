@@ -1,7 +1,7 @@
 import unittest
 import os
-from exam.bash_code_evaluator import BashCodeEvaluator
-from exam.settings import SERVER_TIMEOUT
+from testapp.exam.bash_code_evaluator import BashCodeEvaluator
+from testapp.exam.settings import SERVER_TIMEOUT
 
 class BashEvaluationTestCases(unittest.TestCase):
     def setUp(self):

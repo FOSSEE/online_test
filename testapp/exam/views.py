@@ -20,7 +20,7 @@ from testapp.exam.models import Quiz, Question, QuestionPaper, QuestionSet
 from testapp.exam.models import Profile, Answer, AnswerPaper, User, TestCase
 from testapp.exam.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm, TestCaseFormSet
-from exam.xmlrpc_clients import code_server
+from testapp.exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from testapp.exam.models import AssignmentUpload
 
@@ -291,6 +291,7 @@ def edit_question(request):
     description = request.POST.getlist('description')
     points = request.POST.getlist('points')
     options = request.POST.getlist('options')
+    test = request.POST.getlist('test')
     type = request.POST.getlist('type')
     active = request.POST.getlist('active')
     language = request.POST.getlist('language')
@@ -913,9 +914,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
 
     if not user.is_authenticated() or paper.end_time < datetime.datetime.now():
         return my_redirect('/exam/login/')
+    
     question = get_object_or_404(Question, pk=q_id)
-    q_paper = QuestionPaper.objects.get(id=questionpaper_id)
-    paper = AnswerPaper.objects.get(user=request.user, question_paper=q_paper)
     test_cases = TestCase.objects.filter(question=question)
 
     snippet_code = request.POST.get('snippet')

@@ -1,5 +1,5 @@
 from django import forms
-from exam.models import Profile, Quiz, Question, TestCase
+from testapp.exam.models import Profile, Quiz, Question, TestCase
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -187,7 +187,7 @@ class QuestionForm(forms.ModelForm):
     description = forms.CharField(widget=forms.Textarea\
                                             (attrs={'cols': 40, 'rows': 1}))
     points = forms.FloatField()
-    solution = forms.CharField(widget=forms.Textarea\
+    test = forms.CharField(widget=forms.Textarea\
                                     (attrs={'cols': 40, 'rows': 1}), required=False)
     options = forms.CharField(widget=forms.Textarea\
                               (attrs={'cols': 40, 'rows': 1}), required=False)
@@ -206,6 +206,7 @@ class QuestionForm(forms.ModelForm):
         summary = self.cleaned_data.get("summary")
         description = self.cleaned_data.get("description")
         points = self.cleaned_data.get("points")
+        test = self.cleaned_data.get("test")
         options = self.cleaned_data.get("options")
         language = self.cleaned_data.get("language")
         type = self.cleaned_data.get("type")
@@ -216,7 +217,7 @@ class QuestionForm(forms.ModelForm):
         new_question.summary = summary
         new_question.description = description
         new_question.points = points
-        # new_question.test = test
+        new_question.test = test
         new_question.options = options
         new_question.language = language
         new_question.type = type

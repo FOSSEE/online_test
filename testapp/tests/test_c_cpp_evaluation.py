@@ -1,7 +1,7 @@
 import unittest
 import os
-from exam.cpp_code_evaluator import CppCodeEvaluator
-from exam.settings import SERVER_TIMEOUT
+from testapp.exam.cpp_code_evaluator import CppCodeEvaluator
+from testapp.exam.settings import SERVER_TIMEOUT
 
 class CEvaluationTestCases(unittest.TestCase):
     def setUp(self):
