@@ -808,10 +808,10 @@ def get_questions(paper):
         q_answered = (paper.questions_answered).split('|')
         q_answered.sort()
         submitted = q_answered
-    if paper.questions_unanswered:
-        q_unanswered = (paper.questions_unanswered).split('|')
+    if paper.get_unanswered_questions():
+        q_unanswered = paper.get_unanswered_questions()
         q_unanswered.sort()
-        to_attempt = (paper.questions_unanswered).split('|')
+        to_attempt = q_unanswered
     for index, value in enumerate(all_questions, 1):
         questions[value] = index
         questions = collections.OrderedDict(sorted(questions.items(), key=lambda x:x[1]))
@@ -995,6 +995,20 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         if time_left <= 0:
             reason = 'Your time is up!'
             return complete(request, reason, attempt_num, questionpaper_id)
+
+        # Display the same question if user_answer is None
+        elif not user_answer:
+            msg = "Please submit a valid option or code"
+            time_left = paper.time_left()
+            questions, to_attempt, submitted = get_questions(paper)
+            context = {'question': question, 'error_message': msg,
+                       'paper': paper, 'quiz_name': paper.question_paper.quiz.description,
+                       'time_left': time_left, 'questions': questions,
+                       'to_attempt': to_attempt, 'submitted': submitted}
+            ci = RequestContext(request)
+
+            return my_render_to_response('exam/question.html', context,
+                                         context_instance=ci)
         else:
             next_q = paper.completed_question(question.id)
             return show_question(request, next_q, attempt_num,
