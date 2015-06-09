@@ -17,8 +17,8 @@ languages = (
     ("select", "Select Language"),
     ("python", "Python"),
     ("bash", "Bash"),
-    ("C", "C Language"),
-    ("C++", "C++ Language"),
+    ("c", "C Language"),
+    ("cpp", "C++ Language"),
     ("java", "Java Language"),
     ("scilab", "Scilab"),
     )

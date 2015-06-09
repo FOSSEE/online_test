@@ -20,6 +20,7 @@ def setUpModule():
 
     # create a quiz
     Quiz.objects.create(start_date='2014-06-16', duration=30, active=False,
+                         attempts_allowed=-1, time_between_attempts=0,
                         description='demo quiz', pass_criteria=40,
                         language='Python', prerequisite=None)
 
