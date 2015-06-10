@@ -104,7 +104,6 @@ function call_skip(url)
      </div>
    </div>
 </div>
-
 <div class = container>
   <div class="sidebar">
     <p>Question Navigator </p>
@@ -179,7 +178,9 @@ function call_skip(url)
          {% else %}
          <button class="btn" type="submit" name="check" id="check" onClick="submitCode();">Check Answer</button>&nbsp;&nbsp;
          {% endif %}
-         <button class="btn" type="submit" name="skip" id="skip">Skip Question</button>
+         {% if to_attempt|length != 1 %}
+             <button class="btn" type="submit" name="skip" id="skip">Attempt Later</button>
+         {% endif %}
          </form>
          
       

@@ -1,6 +1,7 @@
 import datetime
 import json
 from random import sample, shuffle
+from itertools import islice, cycle
 from django.db import models
 from django.contrib.auth.models import User
 from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete\
@@ -24,7 +25,7 @@ languages = (
         ("cpp", "C++ Language"),
         ("java", "Java Language"),
         ("scilab", "Scilab"),
-                            )
+    )
 
 
 question_types = (
@@ -32,7 +33,7 @@ question_types = (
         ("mcc", "Multiple Correct Choices"),
         ("code", "Code"),
         ("upload", "Assignment Upload"),
-                        )
+    )
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
 days_between_attempts = ((j, j) for j in range(401))
@@ -319,53 +320,65 @@ class AnswerPaper(models.Model):
 
     def current_question(self):
         """Returns the current active question to display."""
-        qs = self.questions.split('|')
-        if len(qs) > 0:
-            return qs[0]
+        qu = self.get_unanswered_questions()
+        if len(qu) > 0:
+            return qu[0]
         else:
             return ''
 
     def questions_left(self):
         """Returns the number of questions left."""
-        qs = self.questions
-        if len(qs) == 0:
+        qu = self.get_unanswered_questions()
+        if len(qu) == 0:
             return 0
         else:
-            return qs.count('|') + 1
+            return qu.count('|') + 1
+
+    def get_unanswered_questions(self):
+        """Returns the list of unanswered questions."""
+        qa = self.questions_answered.split('|')
+        qs = self.questions.split('|')
+        qu = [q for q in qs if q not in qa]
+        return qu
 
     def completed_question(self, question_id):
         """
-            Removes the completed question from the list of questions and
-            returns the next question.
+            Adds the completed question to the list of answered 
+            questions and returns the next question.
         """
         qa = self.questions_answered
         if len(qa) > 0:
             self.questions_answered = '|'.join([qa, str(question_id)])
         else:
             self.questions_answered = str(question_id)
-        qs = self.questions.split('|')
-        qs.remove(unicode(question_id))
-        self.questions = '|'.join(qs)
         self.save()
-        if len(qs) == 0:
+
+        return self.skip(question_id)
+
+    def skip(self, question_id):
+        """
+            Skips the current question and returns the next sequentially
+             available question.
+        """
+        qu = self.get_unanswered_questions()
+        qs = self.questions.split('|')
+
+        if len(qu) == 0:
             return ''
-        else:
+
+        try:
+            q_index = qs.index(unicode(question_id))
+        except ValueError:
             return qs[0]
 
-    def skip(self):
-        """
-            Skips the current question and returns the next available question.
-        """
-        qs = self.questions.split('|')
-        if len(qs) == 0:
-            return ''
-        else:
-            # Put head at the end.
-            head = qs.pop(0)
-            qs.append(head)
-            self.questions = '|'.join(qs)
-            self.save()
-            return qs[0]
+        start = q_index + 1
+        stop = q_index + 1 + len(qs)
+        q_list = islice(cycle(qs), start, stop)
+        for next_q in q_list:
+            if next_q in qu:
+                return next_q
+
+        return qs[0]
 
     def time_left(self):
         """Return the time remaining for the user in seconds."""

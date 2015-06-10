@@ -803,22 +803,18 @@ def get_questions(paper):
     all_questions = []
     questions = {}
     if paper.questions:
-        to_attempt = (paper.questions).split('|')
+        all_questions = (paper.questions).split('|')
     if paper.questions_answered:
-        submitted = (paper.questions_answered).split('|')
-    if not to_attempt:
-        submitted.sort()
-        all_questions = submitted
-    if not submitted:
-        to_attempt.sort()
-        all_questions = to_attempt
-    if to_attempt and submitted:
-        q_append = to_attempt + submitted
-        q_append.sort()
-        all_questions = q_append
-    for num, value in enumerate(all_questions, 1):
-        questions[value] = num
-    questions = collections.OrderedDict(sorted(questions.items()))
+        q_answered = (paper.questions_answered).split('|')
+        q_answered.sort()
+        submitted = q_answered
+    if paper.get_unanswered_questions():
+        q_unanswered = paper.get_unanswered_questions()
+        q_unanswered.sort()
+        to_attempt = q_unanswered
+    for index, value in enumerate(all_questions, 1):
+        questions[value] = index
+        questions = collections.OrderedDict(sorted(questions.items(), key=lambda x:x[1]))
     return questions, to_attempt, submitted
 
 
@@ -909,7 +905,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     paper = AnswerPaper.objects.get(user=request.user, attempt_number=attempt_num,
             question_paper=q_paper)
     if q_id in paper.questions_answered:
-        next_q = paper.skip()
+        next_q = paper.skip(q_id)
         return show_question(request, next_q, attempt_num, questionpaper_id)
 
     if not user.is_authenticated() or paper.end_time < datetime.datetime.now():
@@ -927,7 +923,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         if  question.type == 'code':
             old_skipped = paper.answers.filter(question=question, skipped=True)
             _save_skipped_answer(old_skipped, user_code, paper, question)
-        next_q = paper.skip()
+        next_q = paper.skip(q_id)
         return show_question(request, next_q, attempt_num, questionpaper_id)
 
     # Add the answer submitted, regardless of it being correct or not.
@@ -989,8 +985,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         context = {'question': question, 'error_message': result.get('error'),
                    'paper': paper, 'last_attempt': user_code,
                    'quiz_name': paper.question_paper.quiz.description,
-                   'time_left': time_left, 'to_attempt': to_attempt,
-                   'submitted': submitted}
+                   'time_left': time_left, 'questions': questions,
+                   'to_attempt': to_attempt, 'submitted': submitted}
         ci = RequestContext(request)
 
         return my_render_to_response('exam/question.html', context,
@@ -999,6 +995,20 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         if time_left <= 0:
             reason = 'Your time is up!'
             return complete(request, reason, attempt_num, questionpaper_id)
+
+        # Display the same question if user_answer is None
+        elif not user_answer:
+            msg = "Please submit a valid option or code"
+            time_left = paper.time_left()
+            questions, to_attempt, submitted = get_questions(paper)
+            context = {'question': question, 'error_message': msg,
+                       'paper': paper, 'quiz_name': paper.question_paper.quiz.description,
+                       'time_left': time_left, 'questions': questions,
+                       'to_attempt': to_attempt, 'submitted': submitted}
+            ci = RequestContext(request)
+
+            return my_render_to_response('exam/question.html', context,
+                                         context_instance=ci)
         else:
             next_q = paper.completed_question(question.id)
             return show_question(request, next_q, attempt_num,
@@ -1037,11 +1047,34 @@ def validate_answer(user, user_answer, question, json_data=None):
 
     return correct, result
 
+def get_question_labels(request, attempt_num=None, questionpaper_id=None):
+    """Get the question number show in template for corresponding
+     question id."""
+    unattempted_questions = []
+    submitted_questions = []
+    try:
+        q_paper = QuestionPaper.objects.get(id=questionpaper_id)
+        paper = AnswerPaper.objects.get(
+            user=request.user, attempt_number=attempt_num, question_paper=q_paper)
+    except AnswerPaper.DoesNotExist:
+        return my_redirect('/exam/start/')
+    questions, to_attempt, submitted = get_questions(paper)
+    for q_id, question_label in questions.items():
+        if q_id in to_attempt:
+            unattempted_questions.append(question_label)
+        else:
+            submitted_questions.append(question_label)
+    unattempted_questions.sort()
+    submitted_questions.sort()
+    return unattempted_questions, submitted_questions
 
 def quit(request, attempt_num=None, questionpaper_id=None):
     """Show the quit page when the user logs out."""
-    context = {'id': questionpaper_id,
-               'attempt_num': attempt_num}
+    unattempted_questions, submitted_questions = get_question_labels(request,
+                                                 attempt_num, questionpaper_id)
+    context = {'id': questionpaper_id, 'attempt_num': attempt_num,
+                 'unattempted': unattempted_questions,
+                 'submitted': submitted_questions}
     return my_render_to_response('exam/quit.html', context,
                                  context_instance=RequestContext(request))
 
@@ -1056,6 +1089,8 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
         context = {'message': message}
         return my_render_to_response('exam/complete.html', context)
     else:
+        unattempted_questions, submitted_questions = get_question_labels(request,
+                                                     attempt_num, questionpaper_id)
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
         paper = AnswerPaper.objects.get(user=user, question_paper=q_paper,
                 attempt_number=attempt_num)
@@ -1071,11 +1106,15 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
             context = {'message': "Hurray ! You did an excellent job.\
                        you answered all the questions correctly.\
                        You have been logged out successfully,\
-                       Thank You !"}
+                       Thank You !",
+                       'unattempted': unattempted_questions,
+                       'submitted': submitted_questions}
             return my_render_to_response('exam/complete.html', context)
         else:
             message = reason or "You are successfully logged out"
-            context = {'message':  message}
+            context = {'message':  message,
+                         'unattempted': unattempted_questions,
+                         'submitted': submitted_questions}
             return my_render_to_response('exam/complete.html', context)
     no = False
     message = reason or 'The quiz has been completed. Thank you.'

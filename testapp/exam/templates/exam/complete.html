@@ -5,8 +5,29 @@
 {% block pagetitle %}Online Test{% endblock %}
 {% block content %}
 {% csrf_token %}
-        <center><h2> Good bye! </h2></center>
-        <center><h4> {{message}} </h4></center>
-        <center><h4>You may now close the browser.</h4></center><br>
+		{% if submitted or unattempted %}
+			<br><center><table class="bordered-table zebra-striped span8"
+			 style="text-align:left;">
+				<tr><td><b>Submitted Questions</b></td>
+				<td>
+				{% if submitted %}
+					{{ submitted|join:", " }}
+				{% else %}
+					<p><b>No Questions have been Submitted</b></p>
+				{% endif %}
+				</td></tr>
+				<tr><td><b>Unattempted Questions</b></td>
+				<td>
+				{% if unattempted %}
+					{{ unattempted|join:", " }}
+				{% else %}
+					<p><b>All Questions have been Submitted</b></p>
+				{% endif %}
+				</td></tr>
+			</table></center>
+		{% endif %}
+		<center><h2> Good bye! </h2></center>
+		<center><h4> {{message}} </h4></center>
+		<br><center><h4>You may now close the browser.</h4></center><br>
 	<center><a href="{{URL_ROOT}}/exam/"> Login Again </a></center>
 {% endblock content %}
