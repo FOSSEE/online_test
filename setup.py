@@ -20,6 +20,7 @@ setup(
     entry_points = {
             'console_scripts': [
                 'code_server = testapp.exam.code_server:main',
+                'vimarsh = testapp.scripts.vimarsh:main',
             ],
     },
     description='A django app to conduct online tests.',

@@ -1,4 +1,4 @@
-from settings import code_evaluators
+from testapp.exam.settings import code_evaluators
 import importlib
 
 registry = None
