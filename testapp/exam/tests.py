@@ -61,10 +61,11 @@ class QuestionTestCases(unittest.TestCase):
                                  snippet='def myfunc()')
         self.question.save()
         self.question.tags.add('python', 'function')
-        self.testcase = TestCase(question=self.question, 
+        self.testcase = TestCase(question=self.question,
                                  func_name='def myfunc', kw_args='a=10,b=11',
                                  pos_args='12,13', expected_answer='15')
-        answer_data = {"user_answer": "demo_answer", 
+        answer_data = { "test": "",
+                        "user_answer": "demo_answer", 
                         "test_parameter": [{"func_name": "def myfunc", 
                                             "expected_answer": "15", 
                                             "test_id": self.testcase.id, 
@@ -72,8 +73,9 @@ class QuestionTestCases(unittest.TestCase):
                                             "kw_args": {"a": "10", 
                                                         "b": "11"}
                                         }], 
-                        "id": self.question.id, 
-                        "language": "Python"}
+                        "id": self.question.id,
+                        "ref_code_path": "",
+                        }
         self.answer_data_json = json.dumps(answer_data)
         self.user_answer = "demo_answer"
 
@@ -181,6 +183,9 @@ class QuestionPaperTestCases(unittest.TestCase):
 
         self.user = User.objects.get(pk=1)
 
+        self.attempted_papers = AnswerPaper.objects.filter(question_paper=self.question_paper,
+                                                        user=self.user)
+
     def test_questionpaper(self):
         """ Test question paper"""
         self.assertEqual(self.question_paper.quiz.description, 'demo quiz')
@@ -229,7 +234,10 @@ class QuestionPaperTestCases(unittest.TestCase):
 
     def test_make_answerpaper(self):
         """ Test make_answerpaper() method of Question Paper"""
-        answerpaper = self.question_paper.make_answerpaper(self.user, self.ip)
+        already_attempted = self.attempted_papers.count()
+        attempt_num = already_attempted + 1
+        answerpaper = self.question_paper.make_answerpaper(self.user, self.ip,
+                                                             attempt_num)
         self.assertIsInstance(answerpaper, AnswerPaper)
         paper_questions = set((answerpaper.questions).split('|'))
         self.assertEqual(len(paper_questions), 7)
@@ -250,13 +258,17 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.question_paper.save()
 
         # create answerpaper
-        self.answerpaper = AnswerPaper(user=self.user, profile=self.profile,
+        self.answerpaper = AnswerPaper(user=self.user,
                                        questions='1|2|3',
                                        question_paper=self.question_paper,
                                        start_time='2014-06-13 12:20:19.791297',
                                        end_time='2014-06-13 12:50:19.791297',
                                        user_ip=self.ip)
         self.answerpaper.questions_answered = '1'
+        self.attempted_papers = AnswerPaper.objects.filter(question_paper=self.question_paper,
+                                                        user=self.user)
+        already_attempted = self.attempted_papers.count()
+        self.answerpaper.attempt_number = already_attempted + 1
         self.answerpaper.save()
 
         # answers for the Answer Paper
@@ -272,7 +284,6 @@ class AnswerPaperTestCases(unittest.TestCase):
     def test_answerpaper(self):
         """ Test Answer Paper"""
         self.assertEqual(self.answerpaper.user.username, 'demo_user')
-        self.assertEqual(self.answerpaper.profile_id, 1)
         self.assertEqual(self.answerpaper.user_ip, self.ip)
         questions = self.answerpaper.questions
         num_questions = len(questions.split('|'))
@@ -300,7 +311,8 @@ class AnswerPaperTestCases(unittest.TestCase):
 
     def test_skip(self):
         """ Test skip() method of Answer Paper"""
-        next_question_id = self.answerpaper.skip()
+        current_question = self.answerpaper.current_question()
+        next_question_id = self.answerpaper.skip(current_question)
         self.assertTrue(next_question_id is not None)
         self.assertEqual(next_question_id, '3')
 

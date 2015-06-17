@@ -9,6 +9,7 @@ env:
 
 # command to install dependencies
 install:
+  - "easy_install git+https://github.com/FOSSEE/online_test.git#egg=django_exam-0.1"
   - pip install -q Django==$DJANGO --use-mirrors
 
 before_install:
