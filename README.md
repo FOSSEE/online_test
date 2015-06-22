@@ -1,6 +1,6 @@
 Vimarsh
 ========
-[![Build Status](https://travis-ci.org/ankitjavalkar/online_test.svg?branch=master)](https://travis-ci.org/ankitjavalkar/online_test)
+[![Build Status](https://travis-ci.org/FOSSEE/online_test.svg?branch=master)](https://travis-ci.org/FOSSEE/online_test)
 
 #### Introduction
 
@@ -31,24 +31,25 @@ Quick Start
 1. Install the vimarsh app
     ```pip install vimarsh```
 
-1. In the terminal run ```vimarsh create_demo <projectname> [destination-path]```
-	- <projectname> is the name of the django project and [destination-path] is the path where the django project will be installed
-	- If [destination-path] is not provided, the project is initialised in the current directory
+1. In the terminal run ```vimarsh create_demo [-p PATH] project_name```
+	- project_name is the name of the django project 
+    - PATH is an optional argument to specify where the django project will be installed
+	- If PATH is not provided, the project is created in the current directory
 
 1. The script does the following;
 	1. Creates a new django project called <projectname>
 	1. Creates a new demo database
-	1. Creates a two users test moderator and a test examinee
+	1. Creates two users, test moderator and test examinee
 	1. Loads demo questions
 	1. Loads demo quiz
 
 1. Run ```vimarsh run_demo```
 
-1. In a new terminal run ```code_server```
+1. In a new terminal run ```sudo vimarsh run_code_server```
 
 1. Open your browser and run http://localhost:8000/exam
 
-1. Login with as a teacher to edit the quiz or as a student to take the quiz
+1. Login as a teacher to edit the quiz or as a student to take the quiz
 	Credentials:
 	- Student - Username: student | Password: student
 	- Teacher - Username: teacher | Password: teacher
@@ -58,10 +59,9 @@ Production Deployment
 
 #### Pre-Requisite
 
+ 1. Install dependencies using ```pip install -r requirements.txt```
  1. Install MySql Server
- 
  1. Install Python MySql support
- 
  1. Install Apache Server for deployment
  
 #### Configure MySql server
@@ -114,14 +114,14 @@ To deploy this app follow the steps below:
     Note that this will likely spawn multiple processes as "nobody"
     depending on the number of server ports specified.
     
- 1. The ```bin/django.wsgi``` script should make it 
+ 1. The ```wsgi.py``` script should make it 
  	easy to deploy this using mod_wsgi.  You will need to add a line of the form:
 
-        WSGIScriptAlias / "/var/www/online_test/bin/django.wsgi"
+        WSGIScriptAlias / "/online_test/wsgi.py"
 
 	to your apache.conf.  For more details see the Django docs here:
 
-	https://docs.djangoproject.com/en/1.3/howto/deployment/modwsgi/
+	https://docs.djangoproject.com/en/1.6/howto/deployment/wsgi/
 	
  1. Go to http://desired_host_or_ip:desired_port/admin
 
