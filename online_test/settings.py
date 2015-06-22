@@ -39,7 +39,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'testapp.exam',
     'taggit',
-    'taggit_autocomplete_modified',
 )
 
 MIDDLEWARE_CLASSES = (

@@ -5,9 +5,6 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from taggit.managers import TaggableManager
 from taggit.forms import TagField
-from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete
-from taggit_autocomplete_modified.widgets import TagAutocomplete
-from taggit_autocomplete_modified import settings
 from django.forms.models import inlineformset_factory
 
 from string import letters, punctuation, digits
@@ -196,7 +193,7 @@ class QuestionForm(forms.ModelForm):
     type = forms.CharField(max_length=8, widget=forms.Select\
                            (choices=question_types))
     active = forms.BooleanField(required=False)
-    tags = TagField(widget=TagAutocomplete(), required=False)
+    tags = TagField(required=False)
     snippet = forms.CharField(widget=forms.Textarea\
                               (attrs={'cols': 40, 'rows': 1}), required=False)
     ref_code_path = forms.CharField(widget=forms.Textarea\
