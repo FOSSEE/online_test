@@ -79,6 +79,7 @@ def create_demo(project_name='vimarsh_demo', project_dir=CUR_DIR):
         top_dir = project_dir
 
     project_path = path.join(top_dir, project_name)
+    fixture_dir = path.join(PARENT_DIR, 'fixtures')
     # Store project details
     _set_project_details(project_name, top_dir)
 
@@ -86,8 +87,9 @@ def create_demo(project_name='vimarsh_demo', project_dir=CUR_DIR):
         root_urlconf = "{0}.{1}".format(project_name, 'demo_urls')
         settings_template_path = path.join(TEMPLATE_DIR, 'demo_settings.py')
         settings_target_path = path.join(project_path, 'demo_settings.py')
-        settings_context = Context({'project_name': project_name, # 'custom_apps': custom_apps, 
-                        'root_urlconf': root_urlconf})
+        settings_context = Context({'project_name': project_name,
+                                        'root_urlconf': root_urlconf,
+                                        'fixture_dir': fixture_dir})
         urls_template_path = path.join(TEMPLATE_DIR, 'demo_urls.py')
         urls_target_path = path.join(project_path, 'demo_urls.py')
         command = ("python ../manage.py syncdb "

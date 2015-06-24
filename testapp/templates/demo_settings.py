@@ -29,6 +29,8 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
+FIXTURE_DIRS = ('{{ fixture_dir }}')
+
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
