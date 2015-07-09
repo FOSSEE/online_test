@@ -5,8 +5,21 @@
 {% block formtitle %}Important instructions & rules {% endblock %}
 {% block content %}
 
-
-
+         {% if enable_quiz_time or disable_quiz_time %}
+              {% if quiz_expired %}
+                  <div class="alert alert-error">
+                      This Quiz has expired. You can no longer attempt this Quiz.
+                  <br/>
+                  </div>
+              {% else %}
+                  <div class="alert">
+                      You can attempt this Quiz at any time between {{ enable_quiz_time }} and {{ disable_quiz_time }}
+                      <br/>
+                      You are not allowed to attempt the Quiz before or after this duration
+                  <br/>
+                  </div>
+              {% endif %}
+          {% endif %}
           <p> Welcome <strong>{{user.first_name.title}} {{user.last_name.title}}</strong>, to the programming quiz! </p>
           <p>
               This examination system has been developed with the intention of making you 
@@ -27,8 +40,14 @@
          </ul>
           <p> We hope you enjoy taking this exam !!!</p>
 
-          <form action="{{URL_ROOT}}/exam/start/{{ attempt_num }}/{{ paper_id }}/" method="post" align="center">
+          <form action="{{URL_ROOT}}/exam/quizzes/" method="post" align="center">
            {% csrf_token %}
-           <center><button class="btn" type="submit" name="start">Start Exam!</button></center>
+           <center><button class="btn" name="home">Home</button></center>
           </form>
+          {% if not quiz_expired %}
+              <form action="{{URL_ROOT}}/exam/start/{{ attempt_num }}/{{ paper_id }}/" method="post" align="center">
+               {% csrf_token %}
+               <center><button class="btn" type="submit" name="start">Start Exam!</button></center>
+              </form>
+          {% endif %}
 {% endblock content %}

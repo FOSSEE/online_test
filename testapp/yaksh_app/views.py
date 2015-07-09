@@ -141,23 +141,20 @@ def quizlist_user(request):
     user = request.user
     avail_quizzes = list(QuestionPaper.objects.filter(quiz__active=True))
     user_answerpapers = AnswerPaper.objects.filter(user=user)
-    quizzes_taken = user_answerpapers
     pre_requisites = []
-    context = {}
+    enabled_quizzes = []
+    disabled_quizzes = []
 
-    if 'cannot_attempt' in request.GET:
-        context['cannot_attempt'] = True
+    cannot_attempt = True if 'cannot_attempt' in request.GET else False
+    quizzes_taken = None if user_answerpapers.count() == 0 else user_answerpapers
 
-    if user_answerpapers.count() == 0:
-        context['quizzes'] = avail_quizzes
-        context['user'] = user
-        context['quizzes_taken'] = None
-        return my_render_to_response("yaksh_app/quizzes_user.html", context)
+    context = {'cannot_attempt': cannot_attempt,
+                'quizzes': avail_quizzes,
+                'user': user,
+                'quizzes_taken': quizzes_taken
+            }
 
-    context['quizzes'] = avail_quizzes
-    context['user'] = user
-    context['quizzes_taken'] = quizzes_taken
-    return my_render_to_response("yaksh_app/quizzes_user.html", context)
+    return my_render_to_response("exam/quizzes_user.html", context)
 
 
 def intro(request, questionpaper_id):
@@ -167,6 +164,12 @@ def intro(request, questionpaper_id):
     quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
     attempt_number = quest_paper.quiz.attempts_allowed
     time_lag = quest_paper.quiz.time_between_attempts
+    quiz_enable_time = quest_paper.quiz.start_date_time
+    quiz_disable_time = quest_paper.quiz.end_date_time
+
+    quiz_expired = False if quiz_enable_time <= datetime.datetime.now() \
+                                <= quiz_disable_time else True
+
     if quest_paper.quiz.prerequisite:
         try:
             pre_quest = QuestionPaper.objects.get(
@@ -185,27 +188,11 @@ def intro(request, questionpaper_id):
     attempted_papers = AnswerPaper.objects.filter(question_paper=quest_paper,
             user=user)
     already_attempted = attempted_papers.count()
-    if already_attempted == 0:
-        context = {'user': user, 'paper_id': questionpaper_id,\
-                'attempt_num': already_attempted + 1}
-        return my_render_to_response('yaksh_app/intro.html', context,
-                                     context_instance=ci)
+    inprogress, previous_attempt, next_attempt = _check_previous_attempt(attempted_papers,
+                                                                            already_attempted,
+                                                                            attempt_number)
 
-    if already_attempted == attempt_number:
-        inprogress, previous_attempt = _check_previous_attempt(attempted_papers,
-                already_attempted)
-        if inprogress:
-            return show_question(request,
-                    previous_attempt.current_question(),
-                    previous_attempt.attempt_number,
-                    previous_attempt.question_paper.id)
-        else:
-            return my_redirect("/exam/quizzes")
-
-
-    if already_attempted < attempt_number or attempt_number < 0:
-        inprogress, previous_attempt = _check_previous_attempt(attempted_papers,
-                already_attempted)
+    if previous_attempt:
         if inprogress:
             return show_question(request,
                     previous_attempt.current_question(),
@@ -213,30 +200,51 @@ def intro(request, questionpaper_id):
                     previous_attempt.question_paper.id)
         days_after_attempt = (datetime.datetime.today() - \
                 previous_attempt.start_time).days
-        if days_after_attempt >= time_lag:
-            context = {'user': user, 'paper_id': questionpaper_id,\
-                    'attempt_num': already_attempted + 1}
-            return my_render_to_response('yaksh_app/intro.html', context,
-                                         context_instance=ci)
+
+        if next_attempt:
+            if days_after_attempt >= time_lag:
+                context = {'user': user,
+                            'paper_id': questionpaper_id,
+                            'attempt_num': already_attempted + 1,
+                            'enable_quiz_time': quiz_enable_time,
+                            'disable_quiz_time': quiz_disable_time,
+                            'quiz_expired': quiz_expired
+                        }
+                return my_render_to_response('exam/intro.html', context,
+                                             context_instance=ci)
         else:
             return my_redirect("/exam/quizzes/")
+
     else:
-        return my_redirect("/exam/quizzes/")
+        context = {'user': user,
+                    'paper_id': questionpaper_id,
+                    'attempt_num': already_attempted + 1,
+                    'enable_quiz_time': quiz_enable_time,
+                    'disable_quiz_time': quiz_disable_time,
+                    'quiz_expired': quiz_expired
+                }
+        return my_render_to_response('exam/intro.html', context,
+                                     context_instance=ci)
 
 
-def _check_previous_attempt(attempted_papers, already_attempted):
-    previous_attempt = attempted_papers[already_attempted-1]
-    previous_attempt_day = previous_attempt.start_time
-    today = datetime.datetime.today()
-    if previous_attempt.status == 'inprogress':
-        end_time = previous_attempt.end_time
-        quiz_time = previous_attempt.question_paper.quiz.duration*60
-        if quiz_time > (today-previous_attempt_day).seconds:
-            return True, previous_attempt
+def _check_previous_attempt(attempted_papers, already_attempted, attempt_number):
+    next_attempt = False if already_attempted == attempt_number else True
+    if already_attempted == 0:
+        return False, None, next_attempt
+    else:
+        previous_attempt = attempted_papers[already_attempted-1]
+        previous_attempt_day = previous_attempt.start_time
+        today = datetime.datetime.today()
+        if previous_attempt.status == 'inprogress':
+            end_time = previous_attempt.end_time
+            quiz_time = previous_attempt.question_paper.quiz.duration*60
+            if quiz_time > (today-previous_attempt_day).seconds:
+                return True, previous_attempt, next_attempt
+            else:
+                return False, previous_attempt, next_attempt
         else:
-            return False, previous_attempt
-    else:
-        return False, previous_attempt
+            return False, previous_attempt, next_attempt
+
 
 def results_user(request):
     """Show list of Results of Quizzes that is taken by logged-in user."""
@@ -262,6 +270,9 @@ def edit_quiz(request):
         raise Http404('You are not allowed to view this page!')
     quiz_list = request.POST.getlist('quizzes')
     start_date = request.POST.getlist('start_date')
+    start_time = request.POST.getlist('start_time')
+    end_date = request.POST.getlist('end_date')
+    end_time = request.POST.getlist('end_time')
     duration = request.POST.getlist('duration')
     active = request.POST.getlist('active')
     description = request.POST.getlist('description')
@@ -271,7 +282,10 @@ def edit_quiz(request):
 
     for j, quiz_id in enumerate(quiz_list):
         quiz = Quiz.objects.get(id=quiz_id)
-        quiz.start_date = start_date[j]
+        quiz.start_date_time = datetime.datetime.combine(start_date[j],
+                                                    start_time[j])
+        quiz.end_date_time = datetime.datetime.combine(end_date[j],
+                                                    end_time[j])
         quiz.duration = duration[j]
         quiz.active = active[j]
         quiz.description = description[j]
@@ -471,7 +485,11 @@ def add_quiz(request, quiz_id=None):
                 return my_redirect("/exam/manage/designquestionpaper")
             else:
                 d = Quiz.objects.get(id=quiz_id)
-                d.start_date = form['start_date'].data
+                d.start_date_time = datetime.datetime.combine(form['start_date'].data,
+                                                            form['start_time'].data) 
+                d.end_date_time = datetime.datetime.combine(form['end_date'].data,
+                                                            form['end_time'].data) 
+
                 d.duration = form['duration'].data
                 d.active = form['active'].data
                 d.description = form['description'].data
@@ -496,7 +514,10 @@ def add_quiz(request, quiz_id=None):
         else:
             d = Quiz.objects.get(id=quiz_id)
             form = QuizForm()
-            form.initial['start_date'] = d.start_date
+            form.initial['start_date'] = d.start_date_time.date()
+            form.initial['start_time'] = d.start_date_time.time()
+            form.initial['end_date'] = d.end_date_time.date()
+            form.initial['end_time'] = d.end_date_time.time()
             form.initial['duration'] = d.duration
             form.initial['description'] = d.description
             form.initial['active'] = d.active
@@ -759,6 +780,65 @@ def user_login(request):
 
 
 def start(request, attempt_num=None, questionpaper_id=None):
+    # """Check the user cedentials and if any quiz is available,
+    # start the exam."""
+    # user = request.user
+    # if questionpaper_id is None:
+    #     return my_redirect('/exam/quizzes/')
+    # try:
+    #     """Right now the app is designed so there is only one active quiz
+    #     at a particular time."""
+    #     questionpaper = QuestionPaper.objects.get(id=questionpaper_id)
+    # except QuestionPaper.DoesNotExist:
+    #     msg = 'Quiz not found, please contact your '\
+    #         'instructor/administrator. Please login again thereafter.'
+    #     return complete(request, msg, attempt_num, questionpaper_id)
+
+    # # if questionpaper.quiz.start_date_time:
+    # #     quiz_enable_time = questionpaper.quiz.start_date_time
+    # # else:
+    # #     quiz_enable_time = datetime.datetime.now()
+    # # if questionpaper.quiz.end_date_time:
+    # #     quiz_disable_time = questionpaper.quiz.end_date_time
+    # # else:
+    # #     quiz_disable_time = datetime.datetime.now()
+    # # quiz_enable_time = questionpaper.quiz.start_date_time
+    # # quiz_disable_time = questionpaper.quiz.end_date_time
+
+    # if not questionpaper.quiz.active:
+    #     reason = 'The quiz has been deactivated!'
+    #     return complete(request, reason, attempt_num, questionpaper_id)
+
+    # if quiz_enable_time <= datetime.datetime.now() <= quiz_disable_time:
+    #     try:
+    #         old_paper = AnswerPaper.objects.get(
+    #             question_paper=questionpaper, user=user, attempt_number=attempt_num)
+    #         q = old_paper.current_question()
+    #         return show_question(request, q, attempt_num, questionpaper_id)
+    #     except AnswerPaper.DoesNotExist:
+    #         ip = request.META['REMOTE_ADDR']
+    #         key = gen_key(10)
+    #         try:
+    #             profile = user.get_profile()
+    #         except Profile.DoesNotExist:
+    #             msg = 'You do not have a profile and cannot take the quiz!'
+    #             raise Http404(msg)
+
+    #         new_paper = questionpaper.make_answerpaper(user, ip, attempt_num)
+    #         # Make user directory.
+    #         user_dir = get_user_dir(user)
+    #         return start(request, attempt_num, questionpaper_id)
+    # else:
+    #     ci = RequestContext(request)
+    #     quiz_expired = datetime.datetime.now() >= quiz_disable_time
+    #     context = {'user': user, 'paper_id': questionpaper_id,\
+    #                     'attempt_num': attempt_num,
+    #                     'enable_quiz_time': quiz_enable_time,
+    #                     'disable_quiz_time': quiz_disable_time,
+    #                     'quiz_expired': quiz_expired}
+    #     return my_render_to_response('exam/intro.html', context,
+    #                                  context_instance=ci)
+
     """Check the user cedentials and if any quiz is available,
     start the exam."""
     user = request.user
@@ -791,7 +871,6 @@ def start(request, attempt_num=None, questionpaper_id=None):
         # Make user directory.
         user_dir = get_user_dir(user)
         return start(request, attempt_num, questionpaper_id)
-
 
 def get_questions(paper):
     '''
@@ -1230,7 +1309,10 @@ def show_all_quiz(request):
         for j in data:
             d = Quiz.objects.get(id=j)
             form = QuizForm()
-            form.initial['start_date'] = d.start_date
+            form.initial['start_date'] = d.start_date_time.date()
+            form.initial['start_time'] = d.start_date_time.time()
+            form.initial['end_date'] = d.end_date_time.date()
+            form.initial['end_time'] = d.end_date_time.time()
             form.initial['duration'] = d.duration
             form.initial['active'] = d.active
             form.initial['description'] = d.description

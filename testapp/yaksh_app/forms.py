@@ -139,7 +139,10 @@ class QuizForm(forms.Form):
         self.fields['prerequisite'] = forms.CharField(required=False,
                                    widget=forms.Select(choices=quizzes))
 
-    start_date = forms.DateField(initial=datetime.date.today)
+    start_date = forms.DateField(initial=datetime.date.today(), required=False)
+    start_time = forms.TimeField(initial=datetime.datetime.now().time(), required=False)
+    end_date = forms.DateField(initial=datetime.date(2199, 1, 1), required=False)
+    end_time = forms.TimeField(initial=datetime.time(0, 0, 0, 0), required=False)
     duration = forms.IntegerField(help_text='Will be taken in minutes')
     active = forms.BooleanField(required=False)
     description = forms.CharField(max_length=256, widget=forms.Textarea\
@@ -154,6 +157,9 @@ class QuizForm(forms.Form):
 
     def save(self):
         start_date = self.cleaned_data["start_date"]
+        start_time = self.cleaned_data["start_time"] 
+        end_date = self.cleaned_data["end_date"]
+        end_time = self.cleaned_data["end_time"] 
         duration = self.cleaned_data["duration"]
         active = self.cleaned_data['active']
         description = self.cleaned_data["description"]
@@ -163,7 +169,10 @@ class QuizForm(forms.Form):
         attempts_allowed = self.cleaned_data["attempts_allowed"]
         time_between_attempts = self.cleaned_data["time_between_attempts"]
         new_quiz = Quiz()
-        new_quiz.start_date = start_date
+        new_quiz.start_date_time = datetime.datetime.combine(start_date,
+                                                    start_time)
+        new_quiz.end_date_time = datetime.datetime.combine(end_date,
+                                                    end_time)
         new_quiz.duration = duration
         new_quiz.active = active
         new_quiz.description = description

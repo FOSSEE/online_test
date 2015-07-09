@@ -160,7 +160,14 @@ class Quiz(models.Model):
     """
 
     # The start date of the quiz.
-    start_date = models.DateField("Date of the quiz")
+    start_date_time = models.DateTimeField("Start Date and Time of the quiz",
+                                        default=datetime.datetime.now(),
+                                        null=True)
+
+    # The end date and time of the quiz
+    end_date_time = models.DateTimeField("End Date and Time of the quiz",
+                                        default=datetime.datetime(2199, 1, 1, 0, 0, 0, 0),
+                                        null=True)
 
     # This is always in minutes.
     duration = models.IntegerField("Duration of quiz in minutes", default=20)
@@ -192,7 +199,7 @@ class Quiz(models.Model):
 
     def __unicode__(self):
         desc = self.description or 'Quiz'
-        return '%s: on %s for %d minutes' % (desc, self.start_date,
+        return '%s: on %s for %d minutes' % (desc, self.start_date_time,
                                              self.duration)
 
 
