@@ -10,8 +10,13 @@
 {% block manage %}
 <form name=frm action="" method="post">
 {% csrf_token %}
-{% for i in questions %}
-<input type="checkbox" name="question" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{ i }}</a><br>
+{% for question, tags in questions.items %}
+<p>
+    <input type="checkbox" name="question" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{ question }}</a> 
+    {% for tag in tags %}
+        <a href="{{URL_ROOT}}/exam/manage/questions/filter/{{ tag }}" class="span label notice" value="{{ tag }}">{{ tag }}</a>
+    {% endfor %}
+</p>
 {% endfor %}
 <br>
 <button class="btn" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question</button>&nbsp;&nbsp;

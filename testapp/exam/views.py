@@ -346,8 +346,11 @@ def add_question(request, question_id=None):
                     form.save()
                     question = Question.objects.order_by("-id")[0]
                     tags = form['tags'].data.split(',')
-                    for i in range(0, len(tags)-1):
-                        tag = tags[i].strip()
+                    # tags.append(form['type'].data)
+                    # tags.append(form['language'].data)
+                    tags_list = [t.strip().lower() for t in tags]
+                    unique_tags_list = list(set(tags_list))
+                    for tag in unique_tags_list:
                         question.tags.add(tag)
                     if test_case_formset.is_valid():
                         test_case_formset.save()
@@ -383,8 +386,11 @@ def add_question(request, question_id=None):
                     for tag in question.tags.all():
                         question.tags.remove(tag)
                     tags = form['tags'].data.split(',')
-                    for i in range(0, len(tags)-1):
-                        tag = tags[i].strip()
+                    # tags.append(form['type'].data)
+                    # tags.append(form['language'].data)
+                    tags_list = [t.strip().lower() for t in tags]
+                    unique_tags_list = list(set(tags_list))
+                    for tag in unique_tags_list:
                         question.tags.add(tag)
 
                     test_case_formset = TestCaseFormSet(request.POST, prefix='test', instance=question)
@@ -412,8 +418,6 @@ def add_question(request, question_id=None):
                                          'formset': test_case_formset},
                                          context_instance=ci)
     else:
-        form = QuestionForm()
-        test_case_formset = TestCaseFormSet(prefix='test', instance=Question())
         if question_id is None:
             form = QuestionForm()
             test_case_formset = TestCaseFormSet(prefix='test', instance=Question())
@@ -439,10 +443,7 @@ def add_question(request, question_id=None):
             initial_tags = ""
             for tag in form_tags_split:
                 initial_tags = initial_tags + str(tag['name']).strip() + ","
-            if (initial_tags == ","):
-                initial_tags = ""
             form.initial['tags'] = initial_tags
-
             test_case_formset = TestCaseFormSet(prefix='test', 
                                                     instance=d)
 
@@ -1248,19 +1249,39 @@ def show_all_quiz(request):
         return my_render_to_response('exam/show_quiz.html', context,
                                      context_instance=ci)
 
+def get_questions_with_tags(tag=None):
+    questions_dict = {}
+    if tag:
+        tag_id = Tag.objects.get(name=str(tag)).id
+        questions = Question.objects.filter(tags=tag_id)
+    else:
+        questions = Question.objects.all()
 
-def show_all_questions(request):
+    for question in questions:
+        question_tags = question.tags.all()
+        question_tags_split = question_tags.values('name')
+        tag_list = []
+
+        for tag in question_tags_split:
+            tag_list.append(str(tag['name']).strip())
+
+        questions_dict[question] = tag_list
+
+    return questions_dict
+
+def show_all_questions(request, tag=None):
     """Show a list of all the questions currently in the databse."""
 
     user = request.user
     ci = RequestContext(request)
+    questions = {}
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404("You are not allowed to view this page !")
 
     if request.method == 'POST' and request.POST.get('delete') == 'delete':
+        questions = get_questions_with_tags(tag)
         data = request.POST.getlist('question')
         if data is None:
-            questions = Question.objects.all()
             context = {'papers': [],
                        'question': None,
                        'questions': questions}
@@ -1269,15 +1290,15 @@ def show_all_questions(request):
         else:
             for i in data:
                 question = Question.objects.get(id=i).delete()
-            questions = Question.objects.all()
+            questions = get_questions_with_tags(tag)
             context = {'papers': [],
                        'question': None,
                        'questions': questions}
             return my_render_to_response('exam/showquestions.html', context,
                                          context_instance=ci)
+
     elif request.method == 'POST' and request.POST.get('edit') == 'edit':
         data = request.POST.getlist('question')
-
         forms = []
         formsets = []
         for j in data:
@@ -1298,8 +1319,6 @@ def show_all_questions(request):
             initial_tags = ""
             for tag in form_tags_split:
                 initial_tags = initial_tags + str(tag['name']).strip() + ","
-            if (initial_tags == ","):
-                initial_tags = ""
             form.initial['tags'] = initial_tags
             forms.append(form)
             test_case_formset = TestCaseFormSet(prefix='test', instance=d)
@@ -1310,8 +1329,9 @@ def show_all_questions(request):
                                      {'data': data,
                                      'data_list': data_list},
                                      context_instance=ci)
+
     else:
-        questions = Question.objects.all()
+        questions = get_questions_with_tags(tag)
         context = {'papers': [],
                    'question': None,
                    'questions': questions}
