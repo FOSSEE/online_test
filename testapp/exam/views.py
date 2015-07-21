@@ -19,7 +19,8 @@ import json
 from testapp.exam.models import Quiz, Question, QuestionPaper, QuestionSet
 from testapp.exam.models import Profile, Answer, AnswerPaper, User, TestCase
 from testapp.exam.forms import UserRegisterForm, UserLoginForm, QuizForm,\
-                QuestionForm, RandomQuestionForm, TestCaseFormSet
+                QuestionForm, RandomQuestionForm, TestCaseFormSet,\
+                QuestionFilterForm
 from testapp.exam.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from testapp.exam.models import AssignmentUpload
@@ -1249,6 +1250,30 @@ def show_all_quiz(request):
                                      context_instance=ci)
 
 
+@csrf_exempt
+def ajax_questions_filter(request):
+    """Ajax call made when filtering displayed questions."""
+
+    filter_dict = {}
+    question_type = request.POST.get('question_type')
+    marks = request.POST.get('marks')
+    language = request.POST.get('language')
+
+    if question_type != "select":
+        filter_dict['type'] = str(question_type)
+
+    if marks != "":
+        filter_dict['points'] = marks
+
+    if language != "select":
+        filter_dict['language'] = str(language)
+
+    questions = list(Question.objects.filter(**filter_dict))
+
+    return my_render_to_response('exam/ajax_question_filter.html',
+                                  {'questions': questions})
+
+
 def show_all_questions(request):
     """Show a list of all the questions currently in the databse."""
 
@@ -1261,18 +1286,24 @@ def show_all_questions(request):
         data = request.POST.getlist('question')
         if data is None:
             questions = Question.objects.all()
+            form = QuestionFilterForm()
             context = {'papers': [],
                        'question': None,
-                       'questions': questions}
+                       'questions': questions,
+                       'form': form
+                       }
             return my_render_to_response('exam/showquestions.html', context,
                                          context_instance=ci)
         else:
             for i in data:
                 question = Question.objects.get(id=i).delete()
             questions = Question.objects.all()
+            form = QuestionFilterForm()
             context = {'papers': [],
                        'question': None,
-                       'questions': questions}
+                       'questions': questions,
+                       'form': form
+                       }
             return my_render_to_response('exam/showquestions.html', context,
                                          context_instance=ci)
     elif request.method == 'POST' and request.POST.get('edit') == 'edit':
@@ -1312,9 +1343,12 @@ def show_all_questions(request):
                                      context_instance=ci)
     else:
         questions = Question.objects.all()
+        form = QuestionFilterForm()
         context = {'papers': [],
                    'question': None,
-                   'questions': questions}
+                   'questions': questions,
+                   'form': form
+                   }
         return my_render_to_response('exam/showquestions.html', context,
                                      context_instance=ci)
 
