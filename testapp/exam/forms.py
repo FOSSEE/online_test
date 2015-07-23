@@ -242,15 +242,19 @@ class RandomQuestionForm(forms.Form):
 
 
 class QuestionFilterForm(forms.Form):
-    questions = Question.objects.all()
-    points_list = questions.values_list('points', flat=True).distinct()
-    points_options = [(i, i) for i in points_list]
+    def __init__(self, *args, **kwargs):
+        super(QuestionFilterForm, self).__init__(*args, **kwargs)
+        questions = Question.objects.all()
+        points_list = questions.values_list('points', flat=True).distinct()
+        points_options = [('select', 'Select Marks')]
+        points_options.extend([(point, point) for point in points_list])
+        self.fields['marks'] = forms.FloatField(widget=forms.Select\
+                                                    (choices=points_options))
 
     language = forms.CharField(max_length=8, widget=forms.Select\
                                 (choices=languages))
     question_type = forms.CharField(max_length=8, widget=forms.Select\
                                     (choices=question_types))
-    marks = forms.FloatField(widget=forms.Select(choices=points_options))
 
 
 TestCaseFormSet = inlineformset_factory(Question, TestCase,\

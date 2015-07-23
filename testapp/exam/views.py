@@ -1262,7 +1262,7 @@ def ajax_questions_filter(request):
     if question_type != "select":
         filter_dict['type'] = str(question_type)
 
-    if marks != "":
+    if marks != "select":
         filter_dict['points'] = marks
 
     if language != "select":
