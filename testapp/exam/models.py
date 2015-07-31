@@ -329,10 +329,7 @@ class AnswerPaper(models.Model):
     def questions_left(self):
         """Returns the number of questions left."""
         qu = self.get_unanswered_questions()
-        if len(qu) == 0:
-            return 0
-        else:
-            return qu.count('|') + 1
+        return len(qu)
 
     def get_unanswered_questions(self):
         """Returns the list of unanswered questions."""

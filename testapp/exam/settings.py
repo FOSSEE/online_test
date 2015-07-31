@@ -20,10 +20,10 @@ SERVER_TIMEOUT = 2
 URL_ROOT = ''
 
 code_evaluators = {
-            "python": "evaluators.python_code_evaluator.PythonCodeEvaluator",
-            "c": "evaluators.c_cpp_code_evaluator.CCPPCodeEvaluator",
-            "cpp": "evaluators.c_cpp_code_evaluator.CCPPCodeEvaluator",
-            "java": "evaluators.java_evaluator.JavaCodeEvaluator",
-            "bash": "evaluators.bash_evaluator.BashCodeEvaluator",
-            "scilab": "evaluators.scilab_evaluator.ScilabCodeEvaluator",
+            "python": "python_code_evaluator.PythonCodeEvaluator",
+            "c": "c_cpp_code_evaluator.CCPPCodeEvaluator",
+            "cpp": "c_cpp_code_evaluator.CCPPCodeEvaluator",
+            "java": "java_code_evaluator.JavaCodeEvaluator",
+            "bash": "bash_code_evaluator.BashCodeEvaluator",
+            "scilab": "scilab_code_evaluator.ScilabCodeEvaluator",
             }
