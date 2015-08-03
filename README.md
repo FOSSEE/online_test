@@ -29,25 +29,32 @@ Quick Start
 #### Installation
 
 1. Install the vimarsh app
-    ```pip install vimarsh```
+    
+        pip install vimarsh
 
-1. In the terminal run ```vimarsh create_demo [-p PATH] project_name```
-	- project_name is the name of the django project 
+1. In the terminal run
+        
+            vimarsh create_demo [-p PATH] project_name
+    - ```project_name``` is the desired name of the django project
     - PATH is an optional argument to specify where the django project will be installed
-	- If PATH is not provided, the project is created in the current directory
+    - If PATH is not provided, the project is created in the current directory
 
 1. The script does the following;
-	1. Creates a new django project called <projectname>
+	1. Creates a new django project called `projectname`
 	1. Creates a new demo database
 	1. Creates two users, test moderator and test examinee
 	1. Loads demo questions
 	1. Loads demo quiz
 
-1. Run ```vimarsh run_demo```
+1. Run:
 
-1. In a new terminal run ```sudo vimarsh run_code_server```
+        vimarsh run_demo
 
-1. Open your browser and run http://localhost:8000/exam
+1. In a new terminal run:
+
+        sudo vimarsh run_code_server
+
+1. Open your browser and open the URL ```http://localhost:8000/exam```
 
 1. Login as a teacher to edit the quiz or as a student to take the quiz
 	Credentials:
@@ -59,7 +66,8 @@ Production Deployment
 
 #### Pre-Requisite
 
- 1. Install dependencies using ```pip install -r requirements.txt```
+ 1. Install dependencies using
+     pip install -r requirements.txt
  1. Install MySql Server
  1. Install Python MySql support
  1. Install Apache Server for deployment
@@ -68,9 +76,8 @@ Production Deployment
 
  1. Create a database named ``online_test`` by following the steps below
     
-    1. $> mysql -u root -p
-    
-    1. mysql> create database online_test
+        $> mysql -u root -p    
+        mysql> create database online_test
  
  1. Add a user named ```online_test_user``` and give access to it on the database ```online_test``` by following the steps below
  
@@ -78,24 +85,19 @@ Production Deployment
     
     1. mysql> grant all privileges on online_test.* to online_test_user@localhost;
  
- 1. Create a file named `local.py` in folder `testapp` and insert `DATABASE_PASSWORD = 'mysecretpassword'`
+ 1. Create a file named `local.py` in folder `testapp` and insert `DATABASE_PASSWORD = 'mysecretpassword'` and `DATABASE_USER = 'online_test_user'`
 
 To deploy this app follow the steps below:
 
  1. Clone this repository and cd to the cloned repo.
-  		```git clone  https://github.com/FOSSEE/online_test.git```
+        git clone  https://github.com/FOSSEE/online_test.git
 
  1. Run:
- 
-        django syncdb
- 
-    1. Run:
-    
-            django migrate exam
+        python manage.py syncdb
     
  1.  Add questions by editing the "docs/sample_questions.py" or any other file in the same format and then run the following:
 
-        django load_exam docs/sample_questions.py
+        python manage.py load_exam docs/sample_questions.py
 
 	 Note that you can supply multiple Python files as arguments and all of
 	 those will be added to the database.
@@ -139,7 +141,7 @@ To deploy this app follow the steps below:
     user.  Users can potentially write output into these that can be used
     for checking later.
 
- 1. As admin user you can visit http://host/exam/monitor  to view
+ 1. As Moderator user you can visit http://host/exam/monitor  to view
      results and user data interactively. You could also "grade" the
      papers manually if needed.
 
@@ -164,15 +166,11 @@ To install this app follow the steps below:
  
  1. Run:
  
-        django syncdb
- 
-    Run:
-    
-        django migrate exam
+        python manage.py syncdb
     
  1.  Add questions by editing the "docs/sample_questions.py" or any other file in the same format and then run the following:
 
-      django load_exam docs/sample_questions.py
+      python manage.py load_exam docs/sample_questions.py
 
      Note that you can supply multiple Python files as arguments and all of
      those will be added to the database.
@@ -193,9 +191,9 @@ To install this app follow the steps below:
     
  1. Now, Run:
 
-        $ django runserver <desired_ip>:<desired_port>
+        python manage.py runserver <desired_ip>:<desired_port>
 	
- 1. Go to http://deserved_host_or_ip:desired_port/admin
+ 1. Go to http://desired_host_or_ip:desired_port/admin
 
  1. Login with your credentials and look at the questions and modify if
     needed.  Create a new Quiz, set the date and duration or
@@ -246,7 +244,7 @@ We provide several convenient commands for you to use:
 
 For more information on these do this:
 
-        $ ./manage.py help [command]
+        $ python manage.py help [command]
 
 where [command] is one of the above.
 
