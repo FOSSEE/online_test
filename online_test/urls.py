@@ -9,5 +9,11 @@ urlpatterns = patterns('',
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^admin/', include(admin.site.urls)),
+<<<<<<< HEAD
     url(r'^exam/', include('testapp.exam.urls')),
+=======
+    url(r'^exam/', include('testapp.yaksh_app.urls')),
+    url(r'^taggit_autocomplete_modified/', include\
+                                    ('taggit_autocomplete_modified.urls'))
+>>>>>>> Change app name to yaksh
 )

@@ -1,0 +1,94 @@
+{% extends "manage.html" %}
+
+{% block title %} Grading papers for {{ data.user.get_full_name.title }} {% endblock title %}
+
+{% block subtitle %}Grading papers for {{ data.user.get_full_name.title }}{% endblock %}
+ 
+{% block css %}
+	 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh_app/css/gradeuser.css" type="text/css" /> 
+{% endblock %}
+
+{% block script %}
+<script src= "{{ URL_ROOT }}/static/yaksh_app/js/edit_question.js"></script>
+{% endblock %}
+{% block manage %}
+
+<p> 
+Name: {{ data.user.get_full_name.title }}
+{% if data.profile %}
+(roll number: {{ data.profile.roll_number }}) <br/>
+{{ data.profile.position }},
+{{ data.profile.department }},
+{{ data.profile.institute }}
+{% endif %}
+</p>
+
+{% if data.papers %}
+
+{% for paper in data.papers %}
+
+<h2> Quiz: {{ paper.quiz.description }} </h2>
+
+<p>
+Questions correctly answered: {{ paper.get_answered_str }} <br/>
+Total attempts at questions: {{ paper.answers.count }} <br/>
+Marks obtained: {{ paper.get_total_marks }} <br/>
+Start time: {{ paper.start_time }} <br/>
+</p>
+
+{% if paper.answers.count %}
+<h3> Answers </h3><br>
+<form name=frm id="q{{ paper.quiz.id }}_form"
+    action="{{URL_ROOT}}/exam/manage/gradeuser/{{data.user.username}}/" method="post">
+{% csrf_token %}
+{% for question, answers in paper.get_question_answers.items %}
+<div class="for-question">
+<p><strong> 
+	Question: {{ question.id }}. {{ question.summary }} (Points: {{ question.points }})
+</strong>
+<strong><a href="" onClick="grade_data('myContent{{question.id}}'); return false;" style="cursor:pointer;" />Details</strong></p></a>
+<div id="contentDiv">
+     <div id="myContent{{question.id}}" style="padding:5px; display:none;">
+        <p> Description : {{ question.description }} </p>
+    	<p> Test : {{ question.test }} </p>
+     </div>
+</div> 
+<div class="question-form">
+
+{% if question.type == "mcq" %}
+<br>
+<p> Choices: 
+{% for option in question.options.strip.splitlines %} {{option}}, {% endfor %}
+</p>
+<p>Student answer: {{ answers.0 }}</p>
+{% else %}{# non-mcq questions #}
+<pre>
+{% for answer in answers %}################################################################################
+{{ answer.answer.strip }}
+# Autocheck: {{ answer.error }}
+{% endfor %}</pre>
+{% endif %} {# if question.type #}
+{% with answers|last as answer %}
+Marks: <input id="q{{ question.id }}" type="text" 
+        name="q{{ question.id }}_marks" size="4"
+        value="{{ answer.marks }}"><br><br>
+{% endwith %}
+</div>
+</div>
+{% endfor %} {# for question, answers ... #}
+
+
+<h3>Teacher comments: </h3>
+<textarea id="comments_{{paper.question_paper.id}}" rows="10" cols="80" 
+    name="comments_{{ paper.question_paper.id }}">{{ paper.comments }}</textarea>
+<br>
+<br><button class="btn" type="submit" name="submit_{{paper.quiz.id}}">Save Marks</button>
+
+</form>
+{% endif %} {# if paper.answers.count #}
+
+{% endfor %} {# for paper in data.papers #}
+
+{% endif %} {# if data.papers #}
+
+{% endblock%}

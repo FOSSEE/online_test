@@ -1,0 +1,21 @@
+{% extends "manage.html" %}
+
+
+{% block subtitle %}Questions in "{{ papers.quiz.description }}"{% endblock %}
+
+{% block script %}
+<script src="{{ URL_ROOT }}/static/yaksh_app/js/show_question.js"></script>
+{% endblock %}
+
+{% block manage %}
+<form name=frm action="" method="post">
+{% csrf_token %}
+
+{% for i in papers.questions %}
+<input type="checkbox" name="papers" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{ i.summary}}</a><br>
+{% endfor %}
+<br>
+<button class="btn" type="submit" name='add' value=add>Add Question</button>&nbsp;&nbsp;
+<button class="btn" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>
+</form>
+{% endblock %}

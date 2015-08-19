@@ -1,0 +1,182 @@
+{% extends "manage.html" %}
+
+{% block subtitle %}Design Question Paper{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh_app/css/base.css" type="text/css" /> 
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh_app/css/question_quiz.css" type="text/css" /> 
+<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh_app/css/autotaggit.css" />
+<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh_app/css/question_paper_creation.css" />
+<style>
+select
+{
+    width:auto;
+}
+</style>
+{% endblock %}
+{% block script %}
+<script src="/static/exam/js/jquery-1.4.2.min.js" type="text/javascript"></script>
+
+<script src="{{ URL_ROOT }}/static/yaksh_app/js/bootstrap-tabs.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh_app/js/add_questionpaper.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh_app/js/question_paper_creation.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh_app/js/bootstrap-modal.js"></script>
+{% endblock %}
+
+{% block manage %}
+<input type=hidden id="url_root" value={{ URL_ROOT }}>
+<center><b>Manual mode to design the {{lang}}  Question Paper</center><br>
+    <ul class="tabs" data-tabs="tabs">
+    <li class="active" id="fixed-tab">
+        <a href="#fixed-questions" id="fixed">
+            STEP 1<br>
+            Add Fixed Questions
+        </a>
+    </li>
+    <li id="random-tab">
+        <a href="#random-questions" id="random">
+            STEP 2<br>
+            Add Random Questions
+        </a>
+    </li>
+    <li id="finish-tab">
+    <a href="#finish" id="finished">
+        STEP 3<br>
+        Finish
+    </a></li>
+</ul>
+
+<form action="{{URL_ROOT}}/exam/manage/designquestionpaper/" method="post" name=frm > {% csrf_token %}
+    <div>
+        <h3>Total Marks:  <span id="total_marks" class="well">0</span></h3>
+    </div>
+<div class="tab-content">
+    <!-- common to fixed and random questions -->
+    <div class="row" id="selectors">
+        <h5 style="padding-left: 20px;">Please select Question type and Marks</h5>
+        <div class="span4">
+            {{ form.question_type }}
+        </div> <!-- /.span4 -->
+        <div class="span4">
+            {{ form.marks }}
+        </div> <!-- /.span4 -->
+         <div class="span4">
+            <div class="pull-left" id="number-wrapper"></div>
+        </div> <!-- /.span4 -->
+    </div> <!-- /.row -->
+    <br><br>
+
+
+    <div class="tab-pane active" id="fixed-questions">
+        <div class="row">
+            <div class="span7">
+                <div id="fixed-available-wrapper">
+                    <p><u>Select questions to add:</u></p>
+                    <div id="fixed-available">
+                    </div>
+                    <a id="add-fixed" class="btn small primary pull-right" href="#">Add to paper</a>
+                </div>
+            </div>
+            <div class="span7">
+                <div id="fixed-added-wrapper">
+                    <p><u>Fixed questions currently in paper:</u></p>
+                    <div id="fixed-added">
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /.row -->
+        <br>
+        <div class="pull-right">
+            <a class="btn" id="fixed-next">Next &gt;</a>
+        </div>
+
+    </div> <!-- /#fixed-questions -->
+
+
+    <div class="tab-pane" id="random-questions">
+        <div class="row">
+            <div class="span7">
+                <div id="random-available-wrapper">
+                    <p><u>Select questions to add to the pool:</u></p>
+                    <div id="random-available">
+                    </div>
+                    <a id="add-random" class="btn small primary pull-right" href="#">Add to paper</a>
+                </div>
+            </div>
+            <div class="span7">
+                <div id="random-added-wrapper">
+                    <p><u>Pool of  questions currently in paper:</u></p>
+                    <div id="random-added">
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /.row -->
+        <br>
+        <div class="pull-left">
+            <a class="btn" id="random-prev">&lt; Previous</a>
+        </div>
+        <div class="pull-right">
+            <a class="btn" id="random-next">Next &gt;</a>
+        </div>
+   </div> <!-- /#random-questions -->
+
+    <div class="tab-pane" id="finish">
+        <center>
+            <h5>Almost finished creating your question paper</h5>
+            <label style="float: none;">
+                {{ form.shuffle_questions }}
+                <span>Auto shuffle.</span>
+            </label> <br><br>
+            <input class ="btn primary large" type="button" id="preview" value="Preview question paper">
+            <input class ="btn primary large" type="button" id="save" value="Save question paper">
+            <br>
+            <div class="pull-left">
+                <a class="btn" id="finish-prev">&lt; Previous</a>
+            </div>
+       </center>
+    </div> <!-- /#finish -->
+</div>
+<!-- /.tab-content -->
+</form>
+<br>
+<div class="clearfix"></div>
+
+<!-- Modal -->
+<div class="modal fade " id="myModal" >
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="myModalLabel">Question Paper Preview</h4>
+      </div>
+      <div id = "modal_body"class="modal-body">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn primary close" data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade " id="modalSave" >
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="myModalLabel">Cannot Save</h4>
+      </div>
+      <div class="modal-body">
+          Please select questions for your paper
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn primary close" data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+    $(function () {
+        $('.tabs').tabs()
+    })
+</script>
+{% endblock %}
