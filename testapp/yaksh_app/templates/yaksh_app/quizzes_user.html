@@ -26,9 +26,15 @@
     <th>Pre requisite quiz</th>
     {% for paper in quizzes %}
         <tr>
-            <td>
-                <a href="{{ URL_ROOT }}/exam/intro/{{paper.id}}">{{ paper.quiz.description }}</a><br>
-            </td>
+            {% if paper in unexpired_quizzes %}
+                <td>
+                    <a href="{{ URL_ROOT }}/exam/intro/{{paper.id}}">{{ paper.quiz.description }}</a><br>
+                </td>
+            {% else %}
+                <td>
+                    {{ paper.quiz.description }} <span class="label important">Expired</span><br>
+                </td>
+            {% endif %}
             <td>
                 {% if paper.quiz.prerequisite %}
                     You have to pass {{ paper.quiz.prerequisite.description }} for taking {{ paper.quiz.description }}

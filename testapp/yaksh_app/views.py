@@ -144,6 +144,13 @@ def quizlist_user(request):
     pre_requisites = []
     enabled_quizzes = []
     disabled_quizzes = []
+    unexpired_quizzes = []
+
+    for paper in avail_quizzes:
+        quiz_enable_time = paper.quiz.start_date_time
+        quiz_disable_time = paper.quiz.end_date_time
+        if quiz_enable_time <= datetime.datetime.now() <= quiz_disable_time:
+            unexpired_quizzes.append(paper)
 
     cannot_attempt = True if 'cannot_attempt' in request.GET else False
     quizzes_taken = None if user_answerpapers.count() == 0 else user_answerpapers
@@ -151,7 +158,8 @@ def quizlist_user(request):
     context = {'cannot_attempt': cannot_attempt,
                 'quizzes': avail_quizzes,
                 'user': user,
-                'quizzes_taken': quizzes_taken
+                'quizzes_taken': quizzes_taken,
+                'unexpired_quizzes': unexpired_quizzes
             }
 
     return my_render_to_response("exam/quizzes_user.html", context)
@@ -485,11 +493,12 @@ def add_quiz(request, quiz_id=None):
                 return my_redirect("/exam/manage/designquestionpaper")
             else:
                 d = Quiz.objects.get(id=quiz_id)
-                d.start_date_time = datetime.datetime.combine(form['start_date'].data,
-                                                            form['start_time'].data) 
-                d.end_date_time = datetime.datetime.combine(form['end_date'].data,
-                                                            form['end_time'].data) 
-
+                sd = datetime.datetime.strptime(form['start_date'].data, '%Y-%m-%d').date()
+                st = datetime.datetime.strptime(form['start_time'].data, "%H:%M:%S").time()
+                ed = datetime.datetime.strptime(form['end_date'].data, '%Y-%m-%d').date()
+                et = datetime.datetime.strptime(form['end_time'].data, "%H:%M:%S").time()
+                d.start_date_time = datetime.datetime.combine(sd, st)
+                d.end_date_time = datetime.datetime.combine(ed, et)
                 d.duration = form['duration'].data
                 d.active = form['active'].data
                 d.description = form['description'].data
@@ -780,65 +789,6 @@ def user_login(request):
 
 
 def start(request, attempt_num=None, questionpaper_id=None):
-    # """Check the user cedentials and if any quiz is available,
-    # start the exam."""
-    # user = request.user
-    # if questionpaper_id is None:
-    #     return my_redirect('/exam/quizzes/')
-    # try:
-    #     """Right now the app is designed so there is only one active quiz
-    #     at a particular time."""
-    #     questionpaper = QuestionPaper.objects.get(id=questionpaper_id)
-    # except QuestionPaper.DoesNotExist:
-    #     msg = 'Quiz not found, please contact your '\
-    #         'instructor/administrator. Please login again thereafter.'
-    #     return complete(request, msg, attempt_num, questionpaper_id)
-
-    # # if questionpaper.quiz.start_date_time:
-    # #     quiz_enable_time = questionpaper.quiz.start_date_time
-    # # else:
-    # #     quiz_enable_time = datetime.datetime.now()
-    # # if questionpaper.quiz.end_date_time:
-    # #     quiz_disable_time = questionpaper.quiz.end_date_time
-    # # else:
-    # #     quiz_disable_time = datetime.datetime.now()
-    # # quiz_enable_time = questionpaper.quiz.start_date_time
-    # # quiz_disable_time = questionpaper.quiz.end_date_time
-
-    # if not questionpaper.quiz.active:
-    #     reason = 'The quiz has been deactivated!'
-    #     return complete(request, reason, attempt_num, questionpaper_id)
-
-    # if quiz_enable_time <= datetime.datetime.now() <= quiz_disable_time:
-    #     try:
-    #         old_paper = AnswerPaper.objects.get(
-    #             question_paper=questionpaper, user=user, attempt_number=attempt_num)
-    #         q = old_paper.current_question()
-    #         return show_question(request, q, attempt_num, questionpaper_id)
-    #     except AnswerPaper.DoesNotExist:
-    #         ip = request.META['REMOTE_ADDR']
-    #         key = gen_key(10)
-    #         try:
-    #             profile = user.get_profile()
-    #         except Profile.DoesNotExist:
-    #             msg = 'You do not have a profile and cannot take the quiz!'
-    #             raise Http404(msg)
-
-    #         new_paper = questionpaper.make_answerpaper(user, ip, attempt_num)
-    #         # Make user directory.
-    #         user_dir = get_user_dir(user)
-    #         return start(request, attempt_num, questionpaper_id)
-    # else:
-    #     ci = RequestContext(request)
-    #     quiz_expired = datetime.datetime.now() >= quiz_disable_time
-    #     context = {'user': user, 'paper_id': questionpaper_id,\
-    #                     'attempt_num': attempt_num,
-    #                     'enable_quiz_time': quiz_enable_time,
-    #                     'disable_quiz_time': quiz_disable_time,
-    #                     'quiz_expired': quiz_expired}
-    #     return my_render_to_response('exam/intro.html', context,
-    #                                  context_instance=ci)
-
     """Check the user cedentials and if any quiz is available,
     start the exam."""
     user = request.user
