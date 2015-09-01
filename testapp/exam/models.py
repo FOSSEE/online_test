@@ -4,8 +4,7 @@ from random import sample, shuffle
 from itertools import islice, cycle
 from django.db import models
 from django.contrib.auth.models import User
-from taggit_autocomplete_modified.managers import TaggableManagerAutocomplete\
-as TaggableManager
+from taggit.managers import TaggableManager
 
 
 ###############################################################################

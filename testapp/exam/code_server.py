@@ -147,15 +147,16 @@ class ServerPool(object):
 
 
 ###############################################################################
-def main():
+def main(args=None):
     run_as_nobody()
-    if len(sys.argv) == 1:
-        ports = SERVER_PORTS
+    if args:
+        ports = [int(x) for x in args[1:]]
     else:
-        ports = [int(x) for x in sys.argv[1:]]
+        ports = SERVER_PORTS
 
     server_pool = ServerPool(ports=ports, pool_port=SERVER_POOL_PORT)
     server_pool.run()
 
 if __name__ == '__main__':
-    main()
+    args = sys.argv[1:]
+    main(args)
