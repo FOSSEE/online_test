@@ -16,20 +16,12 @@ from taggit.models import Tag
 from itertools import chain
 import json
 # Local imports.
-<<<<<<< HEAD:testapp/exam/views.py
-from testapp.exam.models import Quiz, Question, QuestionPaper, QuestionSet
-from testapp.exam.models import Profile, Answer, AnswerPaper, User, TestCase
-from testapp.exam.forms import UserRegisterForm, UserLoginForm, QuizForm,\
-                QuestionForm, RandomQuestionForm, TestCaseFormSet,\
-                QuestionFilterForm
-from testapp.exam.xmlrpc_clients import code_server
-=======
 from testapp.yaksh_app.models import Quiz, Question, QuestionPaper, QuestionSet
 from testapp.yaksh_app.models import Profile, Answer, AnswerPaper, User, TestCase
 from testapp.yaksh_app.forms import UserRegisterForm, UserLoginForm, QuizForm,\
-                QuestionForm, RandomQuestionForm, TestCaseFormSet
+                QuestionForm, RandomQuestionForm, TestCaseFormSet,\
+                QuestionFilterForm
 from testapp.yaksh_app.xmlrpc_clients import code_server
->>>>>>> Change app name to yaksh:testapp/yaksh_app/views.py
 from settings import URL_ROOT
 from testapp.yaksh_app.models import AssignmentUpload
 
@@ -1297,15 +1289,10 @@ def show_all_questions(request):
             form = QuestionFilterForm()
             context = {'papers': [],
                        'question': None,
-<<<<<<< HEAD:testapp/exam/views.py
                        'questions': questions,
                        'form': form
                        }
             return my_render_to_response('exam/showquestions.html', context,
-=======
-                       'questions': questions}
-            return my_render_to_response('yaksh_app/showquestions.html', context,
->>>>>>> Change app name to yaksh:testapp/yaksh_app/views.py
                                          context_instance=ci)
         else:
             for i in data:
@@ -1314,15 +1301,10 @@ def show_all_questions(request):
             form = QuestionFilterForm()
             context = {'papers': [],
                        'question': None,
-<<<<<<< HEAD:testapp/exam/views.py
                        'questions': questions,
                        'form': form
                        }
             return my_render_to_response('exam/showquestions.html', context,
-=======
-                       'questions': questions}
-            return my_render_to_response('yaksh_app/showquestions.html', context,
->>>>>>> Change app name to yaksh:testapp/yaksh_app/views.py
                                          context_instance=ci)
     elif request.method == 'POST' and request.POST.get('edit') == 'edit':
         data = request.POST.getlist('question')
@@ -1364,15 +1346,10 @@ def show_all_questions(request):
         form = QuestionFilterForm()
         context = {'papers': [],
                    'question': None,
-<<<<<<< HEAD:testapp/exam/views.py
                    'questions': questions,
                    'form': form
                    }
         return my_render_to_response('exam/showquestions.html', context,
-=======
-                   'questions': questions}
-        return my_render_to_response('yaksh_app/showquestions.html', context,
->>>>>>> Change app name to yaksh:testapp/yaksh_app/views.py
                                      context_instance=ci)
 
 
