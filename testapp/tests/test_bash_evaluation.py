@@ -1,7 +1,7 @@
 import unittest
 import os
-from testapp.exam.bash_code_evaluator import BashCodeEvaluator
-from testapp.exam.settings import SERVER_TIMEOUT
+from testapp.yaksh_app.bash_code_evaluator import BashCodeEvaluator
+from testapp.yaksh_app.settings import SERVER_TIMEOUT
 
 class BashEvaluationTestCases(unittest.TestCase):
     def setUp(self):

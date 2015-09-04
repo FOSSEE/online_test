@@ -1,7 +1,7 @@
 import unittest
 import os
-from testapp.exam import code_evaluator as evaluator
-from testapp.exam.java_code_evaluator import JavaCodeEvaluator
+from testapp.yaksh_app import code_evaluator as evaluator
+from testapp.yaksh_app.java_code_evaluator import JavaCodeEvaluator
 
 
 class JavaEvaluationTestCases(unittest.TestCase):

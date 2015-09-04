@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+   <head>
+     <title>
+       {% block title %}
+       {% endblock %}
+     </title>
+
+   {% block meta %}
+	<meta charset="utf-8">
+   	<meta name="description" content="">
+	<meta name="author" content="">
+   {% endblock %}
+   
+   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh_app/css/base.css" type="text/css" /> 
+   {% block css %}
+   {% endblock %}
+
+   {% block script %}
+   {% endblock %}
+   </head>
+
+<body {% block onload %}{% endblock %}>
+  <div class="container">
+     <div class="content">
+         <div class="page-header">
+		    <h1><Strong><center>{% block pagetitle %} {% endblock pagetitle %}</center></strong></h1>
+         </div>
+         <div class=row>
+            <div class=span14>
+               <h3><center>{% block formtitle %} {% endblock formtitle %}</center></h3><br>
+	       {% block content %}
+	       {% endblock %}
+            </div>
+         </div>
+     </div>
+     <footer>
+     <p>&copy; FOSSEE group, IIT Bombay</p>
+     </footer>
+  </div>
+
+</body>
+</html>
+

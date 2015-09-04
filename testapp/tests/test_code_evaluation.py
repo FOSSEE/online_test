@@ -1,8 +1,8 @@
 import unittest
 import os
-from testapp.exam import python_code_evaluator
-from testapp.exam.language_registry import _LanguageRegistry, set_registry, get_registry
-from testapp.exam.settings import SERVER_TIMEOUT
+from testapp.yaksh_app import python_code_evaluator
+from testapp.yaksh_app.language_registry import _LanguageRegistry, set_registry, get_registry
+from testapp.yaksh_app.settings import SERVER_TIMEOUT
 
 
 class RegistryTestCase(unittest.TestCase):
@@ -13,7 +13,7 @@ class RegistryTestCase(unittest.TestCase):
 
     def test_set_register(self):
         class_name = getattr(python_code_evaluator, 'PythonCodeEvaluator')
-        self.registry_object.register("python", "testapp.exam.python_code_evaluator.PythonCodeEvaluator")
+        self.registry_object.register("python", "testapp.yaksh_app.python_code_evaluator.PythonCodeEvaluator")
         self.assertEquals(self.registry_object.get_class("python"), class_name)
 
     def tearDown(self):
