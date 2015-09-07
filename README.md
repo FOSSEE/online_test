@@ -1,4 +1,4 @@
-Vimarsh
+Yaksh
 ========
 [![Build Status](https://travis-ci.org/FOSSEE/online_test.svg?branch=master)](https://travis-ci.org/FOSSEE/online_test)
 
@@ -28,13 +28,13 @@ Quick Start
 
 #### Installation
 
-1. Install the vimarsh app
+1. Install the yaksh_app
     
-        pip install vimarsh
+        pip install yaksh_app
 
 1. In the terminal run
         
-            vimarsh create_demo [-p PATH] project_name
+            yaksh create_demo [-p PATH] project_name
     - ```project_name``` is the desired name of the django project
     - PATH is an optional argument to specify where the django project will be installed
     - If PATH is not provided, the project is created in the current directory
@@ -48,11 +48,11 @@ Quick Start
 
 1. Run:
 
-        vimarsh run_demo
+        yaksh run_demo
 
 1. In a new terminal run:
 
-        sudo vimarsh run_code_server
+        sudo yaksh run_code_server
 
 1. Open your browser and open the URL ```http://localhost:8000/exam```
 
@@ -74,18 +74,18 @@ Production Deployment
  
 #### Configure MySql server
 
- 1. Create a database named ``online_test`` by following the steps below
+ 1. Create a database named ``yaksh`` by following the steps below
     
         $> mysql -u root -p    
-        mysql> create database online_test
+        mysql> create database yaksh
  
- 1. Add a user named ```online_test_user``` and give access to it on the database ```online_test``` by following the steps below
+ 1. Add a user named ```yaksh_user``` and give access to it on the database ```yaksh``` by following the steps below
  
-    1. mysql> grant usage on online_test.* to online_test_user@localhost identified by 'mysecretpassword';
+    1. mysql> grant usage on yaksh.* to yaksh_user@localhost identified by 'mysecretpassword';
     
-    1. mysql> grant all privileges on online_test.* to online_test_user@localhost;
+    1. mysql> grant all privileges on yaksh.* to yaksh_user@localhost;
  
- 1. Create a file named `local.py` in folder `testapp` and insert `DATABASE_PASSWORD = 'mysecretpassword'` and `DATABASE_USER = 'online_test_user'`
+ 1. Create a file named `local.py` in folder `testapp` and insert `DATABASE_PASSWORD = 'mysecretpassword'` and `DATABASE_USER = 'yaksh_user'`
 
 To deploy this app follow the steps below:
 
@@ -104,7 +104,7 @@ To deploy this app follow the steps below:
     
  1. First run the python server provided. This ensures that the code is executed in a safe environment.  Do this like so:
     
-        $ sudo python testapp/exam/code_server.py
+        $ sudo python testapp/yaksh_app/code_server.py
       
     Put this in the background once it has started since this will not
     return back the prompt.  It is important that the server be running
@@ -177,7 +177,7 @@ To install this app follow the steps below:
     
  1. First run the python server provided. This ensures that the code is executed in a safe environment.  Do this like so:
     
-      $ sudo python testapp/code_server.py
+      $ sudo python testapp/yaksh_app/code_server.py
       
     Put this in the background once it has started since this will not
     return back the prompt.  It is important that the server be running

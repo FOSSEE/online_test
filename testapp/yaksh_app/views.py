@@ -162,7 +162,7 @@ def quizlist_user(request):
                 'unexpired_quizzes': unexpired_quizzes
             }
 
-    return my_render_to_response("exam/quizzes_user.html", context)
+    return my_render_to_response("yaksh_app/quizzes_user.html", context)
 
 
 def intro(request, questionpaper_id):
@@ -218,7 +218,7 @@ def intro(request, questionpaper_id):
                             'disable_quiz_time': quiz_disable_time,
                             'quiz_expired': quiz_expired
                         }
-                return my_render_to_response('exam/intro.html', context,
+                return my_render_to_response('yaksh_app/intro.html', context,
                                              context_instance=ci)
         else:
             return my_redirect("/exam/quizzes/")
@@ -231,7 +231,7 @@ def intro(request, questionpaper_id):
                     'disable_quiz_time': quiz_disable_time,
                     'quiz_expired': quiz_expired
                 }
-        return my_render_to_response('exam/intro.html', context,
+        return my_render_to_response('yaksh_app/intro.html', context,
                                      context_instance=ci)
 
 
@@ -1302,7 +1302,7 @@ def ajax_questions_filter(request):
 
     questions = list(Question.objects.filter(**filter_dict))
 
-    return my_render_to_response('exam/ajax_question_filter.html',
+    return my_render_to_response('yaksh_app/ajax_question_filter.html',
                                   {'questions': questions})
 
 
@@ -1324,7 +1324,7 @@ def show_all_questions(request):
                        'questions': questions,
                        'form': form
                        }
-            return my_render_to_response('exam/showquestions.html', context,
+            return my_render_to_response('yaksh_app/showquestions.html', context,
                                          context_instance=ci)
         else:
             for i in data:
@@ -1336,7 +1336,7 @@ def show_all_questions(request):
                        'questions': questions,
                        'form': form
                        }
-            return my_render_to_response('exam/showquestions.html', context,
+            return my_render_to_response('yaksh_app/showquestions.html', context,
                                          context_instance=ci)
     elif request.method == 'POST' and request.POST.get('edit') == 'edit':
         data = request.POST.getlist('question')
@@ -1381,7 +1381,7 @@ def show_all_questions(request):
                    'questions': questions,
                    'form': form
                    }
-        return my_render_to_response('exam/showquestions.html', context,
+        return my_render_to_response('yaksh_app/showquestions.html', context,
                                      context_instance=ci)
 
 
