@@ -1,7 +1,7 @@
 import unittest
 import os
-from testapp.yaksh_app.scilab_code_evaluator import ScilabCodeEvaluator
-from testapp.yaksh_app.settings import SERVER_TIMEOUT
+from testapp.yaksh.scilab_code_evaluator import ScilabCodeEvaluator
+from testapp.yaksh.settings import SERVER_TIMEOUT
 
 class ScilabEvaluationTestCases(unittest.TestCase):
     def setUp(self):

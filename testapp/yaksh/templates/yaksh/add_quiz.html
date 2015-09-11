@@ -1,0 +1,25 @@
+{% extends "manage.html" %}
+
+
+{% block subtitle %}Add Quiz{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question_quiz.css" type="text/css" /> 
+{% endblock %}
+{% block script %}
+<script src="{{ URL_ROOT }}/static/yaksh/js/add_quiz.js"></script>
+{% endblock %}
+{% block onload %} onload="javascript:test();"  {% endblock %}
+{% block manage %}
+<form name=frm id=frm action="" method="post" >
+  {% csrf_token %}
+  <center>
+  <table class=span1>
+  {{ form.as_table }}
+  </table>
+  </center>
+    
+  <center><button class="btn" type="submit" id="submit" name="questionpaper">Design Question Paper</button>
+  <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/showquiz/");'>Cancel</button> </center>
+</form>
+{% endblock %}

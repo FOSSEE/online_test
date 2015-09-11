@@ -6,8 +6,8 @@ exclude testapp/urls.py
 exclude testapp/test_server.py
 exclude testapp/manage.py
 recursive-exclude testapp/myauthentication *
-recursive-include testapp/yaksh_app/static *
-recursive-include testapp/yaksh_app/templates *
-recursive-include testapp/yaksh_app/management *
-recursive-include testapp/yaksh_app/output *
-recursive-include testapp/yaksh_app/fixtures *
+recursive-include testapp/yaksh/static *
+recursive-include testapp/yaksh/templates *
+recursive-include testapp/yaksh/management *
+recursive-include testapp/yaksh/output *
+recursive-include testapp/yaksh/fixtures *

@@ -1,0 +1,23 @@
+{% extends "manage.html" %}
+
+
+{% block subtitle %}List of Question Papers {% endblock %}
+
+{% block script %}
+<script src="{{ URL_ROOT }}/static/yaksh/js/show_question.js"></script>
+{% endblock %}
+
+{% block manage %}
+{% if papers %}
+<form name=frm action="" method="post">
+{% csrf_token %}
+{% for i in papers %}
+<input type="checkbox" name="papers" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/showquestionpapers/{{ i.id }}">{{ i.quiz.description }}</a><br>
+{% endfor %}
+<br>
+<button class="btn" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>
+</form>
+{% else %}
+<center><h3>No Question Papers available</h3></center>
+{% endif %}
+{% endblock %}

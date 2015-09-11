@@ -1,7 +1,7 @@
 import unittest
 import os
-from testapp.yaksh_app.cpp_code_evaluator import CppCodeEvaluator
-from testapp.yaksh_app.settings import SERVER_TIMEOUT
+from testapp.yaksh.cpp_code_evaluator import CppCodeEvaluator
+from testapp.yaksh.settings import SERVER_TIMEOUT
 
 class CEvaluationTestCases(unittest.TestCase):
     def setUp(self):

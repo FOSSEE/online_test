@@ -14,7 +14,7 @@ else:
     ADMIN_BASE = r'^admin/'
 
 urlpatterns = patterns('',
-    url(URL_BASE, include('yaksh_app.urls')),
+    url(URL_BASE, include('yaksh.urls')),
     #url(r'^admin/', include(admin.site.urls)),
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

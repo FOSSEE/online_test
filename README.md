@@ -28,9 +28,9 @@ Quick Start
 
 #### Installation
 
-1. Install the yaksh_app
+1. Install the yaksh
     
-        pip install yaksh_app
+        pip install yaksh
 
 1. In the terminal run
         
@@ -104,7 +104,7 @@ To deploy this app follow the steps below:
     
  1. First run the python server provided. This ensures that the code is executed in a safe environment.  Do this like so:
     
-        $ sudo python testapp/yaksh_app/code_server.py
+        $ sudo python testapp/yaksh/code_server.py
       
     Put this in the background once it has started since this will not
     return back the prompt.  It is important that the server be running
@@ -177,7 +177,7 @@ To install this app follow the steps below:
     
  1. First run the python server provided. This ensures that the code is executed in a safe environment.  Do this like so:
     
-      $ sudo python testapp/yaksh_app/code_server.py
+      $ sudo python testapp/yaksh/code_server.py
       
     Put this in the background once it has started since this will not
     return back the prompt.  It is important that the server be running

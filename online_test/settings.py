@@ -37,7 +37,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'testapp.yaksh_app',
+    'testapp.yaksh',
     'taggit',
 )
 
@@ -68,7 +68,7 @@ DATABASES = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 
-AUTH_PROFILE_MODULE = 'yaksh_app.Profile'
+AUTH_PROFILE_MODULE = 'yaksh.Profile'
 
 LANGUAGE_CODE = 'en-us'
 

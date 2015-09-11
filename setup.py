@@ -16,7 +16,7 @@ setup(
     license='BSD License',
     entry_points = {
             'console_scripts': [
-                'vimarsh = testapp.scripts.vimarsh:main',
+                'yaksh = testapp.scripts.yaksh:main',
             ],
     },
     description='A django app to conduct online tests.',
