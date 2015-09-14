@@ -85,7 +85,7 @@ Production Deployment
     
     1. mysql> grant all privileges on yaksh.* to yaksh_user@localhost;
  
- 1. Create a file named `local.py` in folder `testapp` and insert `DATABASE_PASSWORD = 'mysecretpassword'` and `DATABASE_USER = 'yaksh_user'`
+ 1. Add `DATABASE_PASSWORD = 'mysecretpassword'` and `DATABASE_USER = 'yaksh_user'` to online_test/settings.py
 
 To deploy this app follow the steps below:
 
@@ -104,7 +104,7 @@ To deploy this app follow the steps below:
     
  1. First run the python server provided. This ensures that the code is executed in a safe environment.  Do this like so:
     
-        $ sudo python testapp/yaksh/code_server.py
+        $ sudo python yaksh/code_server.py
       
     Put this in the background once it has started since this will not
     return back the prompt.  It is important that the server be running
@@ -177,7 +177,7 @@ To install this app follow the steps below:
     
  1. First run the python server provided. This ensures that the code is executed in a safe environment.  Do this like so:
     
-      $ sudo python testapp/yaksh/code_server.py
+      $ sudo python yaksh/code_server.py
       
     Put this in the background once it has started since this will not
     return back the prompt.  It is important that the server be running

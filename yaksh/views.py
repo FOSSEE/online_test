@@ -16,14 +16,14 @@ from taggit.models import Tag
 from itertools import chain
 import json
 # Local imports.
-from testapp.yaksh.models import Quiz, Question, QuestionPaper, QuestionSet
-from testapp.yaksh.models import Profile, Answer, AnswerPaper, User, TestCase
-from testapp.yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
+from yaksh.models import Quiz, Question, QuestionPaper, QuestionSet
+from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase
+from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm, TestCaseFormSet,\
                 QuestionFilterForm
-from testapp.yaksh.xmlrpc_clients import code_server
+from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
-from testapp.yaksh.models import AssignmentUpload
+from yaksh.models import AssignmentUpload
 
 # The directory where user data can be saved.
 OUTPUT_DIR = abspath(join(dirname(__file__), 'output'))

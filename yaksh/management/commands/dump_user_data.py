@@ -5,8 +5,8 @@ from django.core.management.base import BaseCommand
 from django.template import Template, Context
 
 # Local imports.
-from testapp.yaksh.views import get_user_data
-from testapp.yaksh.models import User
+from yaksh.views import get_user_data
+from yaksh.models import User
 
 data_template = Template('''\
 ===============================================================================

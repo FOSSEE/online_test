@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from django.template import Template, Context
 
 # Local imports.
-from testapp.yaksh.models import Quiz, QuestionPaper
+from yaksh.models import Quiz, QuestionPaper
 
 result_template = Template('''\
 "name","username","rollno","email","answered","total","attempts","position",\

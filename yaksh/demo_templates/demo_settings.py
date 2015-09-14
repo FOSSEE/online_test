@@ -38,7 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'testapp.exam',
+    'yaksh',
     'taggit',
 )
 
@@ -85,4 +85,4 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 
-AUTH_PROFILE_MODULE = 'exam.Profile'
+AUTH_PROFILE_MODULE = 'yaksh.Profile'

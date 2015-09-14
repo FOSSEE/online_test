@@ -1,5 +1,5 @@
 from django import forms
-from testapp.yaksh.models import Profile, Quiz, Question, TestCase
+from yaksh.models import Profile, Quiz, Question, TestCase
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User

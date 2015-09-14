@@ -1,4 +1,4 @@
-from testapp.yaksh.models import Question, Quiz, TestCase
+from yaksh.models import Question, Quiz, TestCase
 from django.contrib import admin
 
 admin.site.register(Question)

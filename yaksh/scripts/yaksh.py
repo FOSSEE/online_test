@@ -15,7 +15,7 @@ from project_detail import NAME, PATH
 CUR_DIR = os.getcwd()
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 PARENT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
-TEMPLATE_DIR = path.join(PARENT_DIR, 'templates')
+TEMPLATE_DIR = path.join(PARENT_DIR, 'demo_templates')
 
 def main():
     #Parse command-line to obtain the arguments and/or options
@@ -111,7 +111,7 @@ def run_demo(project_name, top_dir):
 
 def run_server():
     try:
-        from testapp.exam import code_server
+        from yaksh import code_server
         code_server.main()
     except Exception as e:
         print("Error: {0}\nExiting Vimarsh code server".format(e))
