@@ -91,27 +91,28 @@ class Question(models.Model):
         test_case_data_dict = []
         question_info_dict = {}
 
-        for test_case in test_cases:
-            kw_args_dict = {}
-            pos_args_list = []
+        if test_cases:
+            for test_case in test_cases:
+                kw_args_dict = {}
+                pos_args_list = []
 
-            test_case_data = {}
-            test_case_data['test_id'] = test_case.id
-            test_case_data['func_name'] = test_case.func_name
-            test_case_data['expected_answer'] = test_case.expected_answer
+                test_case_data = {}
+                test_case_data['test_id'] = test_case.id
+                test_case_data['func_name'] = test_case.func_name
+                test_case_data['expected_answer'] = test_case.expected_answer
 
-            if test_case.kw_args:
-                for args in test_case.kw_args.split(","):
-                    arg_name, arg_value = args.split("=")
-                    kw_args_dict[arg_name.strip()] = arg_value.strip()
+                if test_case.kw_args:
+                    for args in test_case.kw_args.split(","):
+                        arg_name, arg_value = args.split("=")
+                        kw_args_dict[arg_name.strip()] = arg_value.strip()
 
-            if test_case.pos_args:
-                for args in test_case.pos_args.split(","):
-                    pos_args_list.append(args.strip())
+                if test_case.pos_args:
+                    for args in test_case.pos_args.split(","):
+                        pos_args_list.append(args.strip())
 
-            test_case_data['kw_args'] = kw_args_dict
-            test_case_data['pos_args'] = pos_args_list
-            test_case_data_dict.append(test_case_data)
+                test_case_data['kw_args'] = kw_args_dict
+                test_case_data['pos_args'] = pos_args_list
+                test_case_data_dict.append(test_case_data)
 
         # question_info_dict['language'] = self.language
         question_info_dict['id'] = self.id
