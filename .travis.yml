@@ -18,5 +18,5 @@ before_install:
 
 # command to run tests
 script: 
-  - nosetests ./testapp/tests/
+  - nosetests ./yaksh/tests/
   - python manage.py test

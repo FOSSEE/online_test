@@ -1,5 +1,5 @@
 """
-Django settings for online_test project.
+Django settings for my_demo project.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/1.6/topics/settings/
@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '0=fsi3g5dw*7ze1cyh441_e^5^$2ay@&z(5(n7mhir0xb267=6'
+SECRET_KEY = 'TH!S_!S_@_DUMMY_K3Y'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -26,9 +26,10 @@ TEMPLATE_DEBUG = True
 
 ALLOWED_HOSTS = []
 
-URL_ROOT = ''
 
 # Application definition
+
+FIXTURE_DIRS = ('{{ fixture_dir }}')
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -50,9 +51,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'online_test.urls'
+ROOT_URLCONF = '{{ root_urlconf }}'
 
-WSGI_APPLICATION = 'online_test.wsgi.application'
+WSGI_APPLICATION = '{{ project_name }}.wsgi.application'
 
 
 # Database
@@ -62,13 +63,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    },
+    }
 }
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
-
-AUTH_PROFILE_MODULE = 'yaksh.Profile'
 
 LANGUAGE_CODE = 'en-us'
 
@@ -85,3 +84,5 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+
+AUTH_PROFILE_MODULE = 'yaksh.Profile'

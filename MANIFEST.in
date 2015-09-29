@@ -1,13 +1,8 @@
 include LICENSE
 include README.rst
-exclude testapp/production.py
-exclude testapp/settings.py
-exclude testapp/urls.py
-exclude testapp/test_server.py
-exclude testapp/manage.py
-recursive-exclude testapp/myauthentication *
-recursive-include testapp/yaksh_app/static *
-recursive-include testapp/yaksh_app/templates *
-recursive-include testapp/yaksh_app/management *
-recursive-include testapp/yaksh_app/output *
-recursive-include testapp/yaksh_app/fixtures *
+recursive-include yaksh/static *
+recursive-include yaksh/templates *
+recursive-include yaksh/demo_templates *
+recursive-include yaksh/management *
+recursive-include yaksh/output *
+recursive-include yaksh/fixtures *
