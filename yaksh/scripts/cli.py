@@ -20,13 +20,15 @@ TEMPLATE_DIR = path.join(PARENT_DIR, 'demo_templates')
 def main():
     #Parse command-line to obtain the arguments and/or options
     # create top-level parser object
-    parser = argparse.ArgumentParser(prog="vimarsh")
+    parser = argparse.ArgumentParser(prog="yaksh")
     subparser = parser.add_subparsers(dest="subcommand")
 
     # create parser for the "create_demo" subcommand
     create_demo_parser = subparser.add_parser("create_demo",
                                         help="Create a new demo Django project")
     create_demo_parser.add_argument("project_name", type=str,
+                                        default="yaksh_demo",
+                                        nargs="?",
                                         help="name of demo Django project")
     create_demo_parser.add_argument("-p", "--path", type=str,
                                         help="path of demo Django project")
@@ -37,7 +39,7 @@ def main():
 
     # create parser for the "run_code_server" subcommand
     code_server_parser = subparser.add_parser("run_code_server",
-                                                help="Initialise Vimarsh code server")
+                                                help="Initialise yaksh code server")
     code_server_parser.add_argument("-P", "--ports", type=int, nargs='+', 
                                         help="code server ports")
 
@@ -65,13 +67,13 @@ def main():
         else:
             run_server()
 
-def create_demo(project_name='vimarsh_demo', project_dir=CUR_DIR):
+def create_demo(project_name='yaksh_demo', project_dir=CUR_DIR):
     try:
         management.call_command('startproject', project_name, project_dir)
         print("Demo Django project '{0}' created at '{1}'".format(project_name,
                                                                 project_dir))
     except Exception, e:
-        print("Error: {0}\nExiting Vimarsh Installer".format(e))
+        print("Error: {0}\nExiting yaksh Installer".format(e))
 
     if project_dir is None:
         top_dir = path.join(os.getcwd(), project_name)
@@ -110,11 +112,11 @@ def run_demo(project_name, top_dir):
         subprocess.call(command, shell=True)
 
 def run_server():
-    try:
-        from yaksh import code_server
-        code_server.main()
-    except Exception as e:
-        print("Error: {0}\nExiting Vimarsh code server".format(e))
+    # try:
+    from yaksh import code_server
+    code_server.main()
+    # except Exception as e:
+    print("Error: {0}\nExiting yaksh code server".format(e))
 
 def _set_project_details(project_name, top_dir):
     file_path = path.join(SCRIPT_DIR, 'project_detail.py')
