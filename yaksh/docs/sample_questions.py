@@ -78,7 +78,7 @@ None of the above
 
 ] #list of questions ends here
 
-quiz = Quiz(start_date=date.today(),
-            duration=10,
-            description='Basic Python Quiz 1'
+quiz = Quiz(duration=10,
+            description='Basic Python Quiz 1',
+            time_between_attempts=0
             )

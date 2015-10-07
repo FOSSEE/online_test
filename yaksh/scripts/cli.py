@@ -82,6 +82,7 @@ def create_demo(project_name='yaksh_demo', project_dir=CUR_DIR):
 
     project_path = path.join(top_dir, project_name)
     fixture_dir = path.join(PARENT_DIR, 'fixtures')
+    fixture_path = path.join(fixture_dir, 'initial_fixtures.json')
     # Store project details
     _set_project_details(project_name, top_dir)
 
@@ -97,12 +98,14 @@ def create_demo(project_name='yaksh_demo', project_dir=CUR_DIR):
         command = ("python ../manage.py syncdb "
                         "--noinput --settings={0}.demo_settings").format(project_name)
 
+        loaddata_command = "python ../manage.py loaddata {0} ".format(fixture_path)
+
         # Create demo_settings file
         _render_demo_files(settings_template_path, settings_target_path, settings_context)
         # Create demo_urls file 
         _render_demo_files(urls_template_path, urls_target_path)
         # Run syncdb
-        subprocess.call(command, shell=True)
+        subprocess.call("{0}; {1}".format(command, loaddata_command), shell=True)
 
 def run_demo(project_name, top_dir):
     with _chdir(top_dir):

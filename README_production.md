@@ -30,7 +30,7 @@ This README provides documentation to help deploy Yaksh in a production environm
 To deploy this app follow the steps below:
 
  1. Clone this repository and cd to the cloned repo.
-        git clone  https://github.com/FOSSEE/online_test.git
+        $ git clone  https://github.com/FOSSEE/online_test.git
 
  1. Run:
         python manage.py syncdb
@@ -102,7 +102,7 @@ Development Settings
 To install this app follow the steps below:
 
  1. Clone this repository and cd to the cloned repo.
-        ```git clone  https://github.com/FOSSEE/online_test.git```
+        ```$ git clone  https://github.com/FOSSEE/online_test.git```
  
  1. Run:
  

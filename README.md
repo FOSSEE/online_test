@@ -33,11 +33,11 @@ Quick Start
 1. Install the yaksh
     - For latest stable release
     
-            pip install yaksh
+            $ pip install yaksh
 
     - For the development version
 
-            pip install git+https://github.com/FOSSEE/online_test.git
+            $ pip install git+https://github.com/FOSSEE/online_test.git
 
 1. In the terminal run
         
@@ -56,11 +56,11 @@ Quick Start
 
 1. Run:
 
-        yaksh run_demo
+        $ yaksh run_demo
 
 1. In a new terminal run:
 
-        sudo yaksh run_code_server
+        $ sudo yaksh run_code_server
 
 1. Open your browser and open the URL ```http://localhost:8000/exam```
 
@@ -68,6 +68,9 @@ Quick Start
     Credentials:
     - Student - Username: student | Password: student
     - Teacher - Username: teacher | Password: teacher
+
+1. User can also login to the Default Django admin using;
+    - Admin - Username: admin | Password: admin
 
 Inspiration
 ===========
