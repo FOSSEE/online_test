@@ -72,21 +72,22 @@ Quick Start
 1. User can also login to the Default Django admin using;
     - Admin - Username: admin | Password: admin
 
-Inspiration
-===========
+History
+=======
 
 At FOSSEE, Nishanth had implemented a nice django based app to
-test for multiple-choice questions. I was inspired by a
-programming contest that I saw at PyCon APAC 2011.  Chris Boesch, who
+test for multiple-choice questions. Prabhu Ramchandran was inspired by a
+programming contest that he saw at PyCon APAC 2011.  Chris Boesch, who
 administered the contest, used a nice web application 
 [Singpath](http://singpath.com) that he had built on top of GAE that 
 basically checked your Python code, live. This made it fun and interesting.
 
-I wanted an implementation that was not tied to GAE and decided to write
-one myself and the result is the "exam" app.  The idea being that I can
-use this to test students programming skills and not have to worry about
-grading their answers myself and I can do so on my machines.
+Prabhu wanted an implementation that was not tied to GAE and hence wrote 
+the initial cut of what is now 'Yaksh'. The idea being that 
+anyone can use this to test students programming skills and not have to worry 
+about grading their answers manually and instead do so on their machines.
 
+The application has since been refactored and maintained by FOSSEE Developers.
 
 Contact
 =======
@@ -107,7 +108,7 @@ Authors
 
 Main author: Prabhu Ramachandran
 
-I gratefully acknowledge help from the following:
+Help from the following is gratefully acknowledged:
 
  - Nishanth Amuluru originally from FOSSEE who wrote bulk of the
    login/registration code.  He wrote an initial first cut of a quiz app
@@ -121,5 +122,7 @@ I gratefully acknowledge help from the following:
  - Srikant Patnaik and Thomas Stephen Lee, who helped deploy and test
    the code.
 
+ - [FOSSEE Developers](http://singpath.com) 
 
-Copyright (c) 2011 Prabhu Ramachandran and FOSSEE (fossee.in)
+
+Copyright (c) 2011 FOSSEE (fossee.in)
