@@ -116,11 +116,11 @@ def run_demo(project_name, top_dir):
         subprocess.call(command, shell=True)
 
 def run_server():
-    # try:
-    from yaksh import code_server
-    code_server.main()
-    # except Exception as e:
-    print("Error: {0}\nExiting yaksh code server".format(e))
+    try:
+        from yaksh import code_server
+        code_server.main()
+    except Exception as e:
+        print("Error: {0}\nExiting yaksh code server".format(e))
 
 def _set_project_details(project_name, top_dir):
     file_path = path.join(SCRIPT_DIR, 'project_detail.py')

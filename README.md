@@ -76,7 +76,7 @@ History
 =======
 
 At FOSSEE, Nishanth had implemented a nice django based app to
-test for multiple-choice questions. Prabhu Ramchandran was inspired by a
+test for multiple-choice questions. Prabhu Ramachandran was inspired by a
 programming contest that he saw at PyCon APAC 2011.  Chris Boesch, who
 administered the contest, used a nice web application 
 [Singpath](http://singpath.com) that he had built on top of GAE that 
@@ -94,8 +94,7 @@ Contact
 
 For further information and support you can contact
 
-* Forum Link
-* Email Address
+Python Team at FOSSEE: pythonsupport@fossee.in
 
 License
 =======
@@ -106,23 +105,7 @@ information is at the bottom of this file.
 Authors
 =======
 
-Main author: Prabhu Ramachandran
-
-Help from the following is gratefully acknowledged:
-
- - Nishanth Amuluru originally from FOSSEE who wrote bulk of the
-   login/registration code.  He wrote an initial first cut of a quiz app
-   which supported only simple questions which provided motivation for
-   this app.  The current codebase does not share too much from his
-   implementation although there are plenty of similarities.
-
- - Harish Badrinath (FOSSEE) -- who provided a first cut of the bash
-   related scripts.
-
- - Srikant Patnaik and Thomas Stephen Lee, who helped deploy and test
-   the code.
-
- - [FOSSEE Developers](http://singpath.com) 
+ [FOSSEE Developers] (https://github.com/FOSSEE/online_test/graphs/contributors) 
 
 
 Copyright (c) 2011 FOSSEE (fossee.in)
