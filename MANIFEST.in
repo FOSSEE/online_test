@@ -6,3 +6,4 @@ recursive-include yaksh/demo_templates *
 recursive-include yaksh/management *
 recursive-include yaksh/output *
 recursive-include yaksh/fixtures *
+recursive-include yaksh/docs *

@@ -7,8 +7,8 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name='django-exam',
-    author='python team at IIT Bombay',
+    name='yaksh',
+    author='Python Team at FOSSEE, IIT Bombay',
     author_email='python@fossee.in',
     version='0.1',
     packages=find_packages(),
@@ -16,7 +16,7 @@ setup(
     license='BSD License',
     entry_points = {
             'console_scripts': [
-                'yaksh = yaksh.scripts.yaksh:main',
+                'yaksh = yaksh.scripts.cli:main',
             ],
     },
     description='A django app to conduct online tests.',
