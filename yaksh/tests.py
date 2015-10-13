@@ -19,10 +19,11 @@ def setUpModule():
         Question.objects.create(summary='Q%d' % (i), points=1)
 
     # create a quiz
-    Quiz.objects.create(start_date='2014-06-16', duration=30, active=False,
+    Quiz.objects.create(start_date_time=datetime.datetime(2015, 10, 9, 10, 8, 15, 0),
+                         duration=30, active=False,
                          attempts_allowed=-1, time_between_attempts=0,
-                        description='demo quiz', pass_criteria=40,
-                        language='Python', prerequisite=None)
+                         description='demo quiz', pass_criteria=40,
+                         language='Python', prerequisite=None)
 
 
 def tearDownModule():
@@ -51,10 +52,6 @@ class ProfileTestCases(unittest.TestCase):
 class QuestionTestCases(unittest.TestCase):
     def setUp(self):
         # Single question details
-        # self.question = Question(summary='Demo question', language='Python',
-        #                          type='Code', active=True,
-        #                          description='Write a function', points=1.0,
-        #                          test='Test Cases', snippet='def myfunc()')
         self.question = Question(summary='Demo question', language='Python',
                                  type='Code', active=True,
                                  description='Write a function', points=1.0,
@@ -130,8 +127,10 @@ class QuizTestCases(unittest.TestCase):
 
     def test_quiz(self):
         """ Test Quiz"""
-        self.assertEqual((self.quiz.start_date).strftime('%Y-%m-%d'),
-                         '2014-06-16')
+        self.assertEqual((self.quiz.start_date_time).strftime('%Y-%m-%d'),
+                         '2015-10-09')
+        self.assertEqual((self.quiz.start_date_time).strftime('%H:%M:%S'),
+                         '10:08:15')
         self.assertEqual(self.quiz.duration, 30)
         self.assertTrue(self.quiz.active is False)
         self.assertEqual(self.quiz.description, 'demo quiz')

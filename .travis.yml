@@ -9,7 +9,7 @@ env:
 
 # command to install dependencies
 install:
-  - "easy_install git+https://github.com/FOSSEE/online_test.git#egg=django_exam-0.1"
+  - pip install git+https://github.com/FOSSEE/online_test.git#egg=yaksh-0.1
   - pip install -q Django==$DJANGO --use-mirrors
 
 before_install:
@@ -17,6 +17,6 @@ before_install:
   - sudo apt-get install -y scilab
 
 # command to run tests
-script: 
-  - nosetests ./yaksh/tests/
-  - python manage.py test
+script:
+  - test $DJANGO=1.5.7 && nosetests ./yaksh/evaluator_tests/
+  - python manage.py test yaksh
