@@ -10,9 +10,10 @@ setup(
     name='yaksh',
     author='Python Team at FOSSEE, IIT Bombay',
     author_email='python@fossee.in',
-    version='0.1',
+    version='0.1.1',
     packages=find_packages(),
     include_package_data=True,
+    url = 'https://pypi.python.org/pypi/yaksh/',
     license='BSD License',
     entry_points = {
             'console_scripts': [
