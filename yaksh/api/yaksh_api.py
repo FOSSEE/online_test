@@ -35,15 +35,16 @@ class Resource(object):
             return False
 
 class QuestionResource(Resource):
-    def create(self):
-        return Question.objects.create(summary=self.data['summary'],
-                description=self.data['description'],
-                points=self.data['points'],
-                test=self.data['test'],
-                options=self.data['options'],
-                language=self.data['language'], # Currently supports python, c, cpp, scilab, java, bash
-                active=self.data['active'], # True/False
-                type=self.data['type'], # mcq/mcc/code/upload
+    def create(self, summary, description, points, test, options, language,
+                     active, type):
+        return Question.objects.create(summary=summary,
+                description=description,
+                points=points,
+                test=test,
+                options=options,
+                language=language, # Currently supports python, c, cpp, scilab, java, bash
+                active=active, # True/False
+                type=type, # mcq/mcc/code/upload
                 )
 
     def detail(self, pk):
@@ -57,12 +58,12 @@ class QuestionResource(Resource):
 
 
 class QuestionPaperResource(Resource):
-    def create(self):
-        q = QuestionPaper.objects.create(quiz=self._get_quiz(self.data['quiz_id']),
+    def create(self, quiz_id, fixed_question_id, total_marks):
+        q = QuestionPaper.objects.create(quiz=self._get_quiz(quiz_id),
                 # fixed_questions=self._get_questions(*self.data['fixed_question_id']), # fixed_question_id will be a list of Question ID
-                total_marks=self.data['total_marks'])
+                total_marks=total_marks)
 
-        q.fixed_questions.add(*self._get_questions(*self.data['fixed_question_id']))
+        q.fixed_questions.add(*self._get_questions(*fixed_question_id))
         q.save()
         return q
 
@@ -77,13 +78,14 @@ class QuestionPaperResource(Resource):
 
 
 class QuizResource(Resource):
-    def create(self):
-        return Quiz.objects.create(duration=self.data['duration'],
-                 description=self.data['description'],
-                 pass_criteria=self.data['pass_criteria'],
-                 language=self.data['language'], # Currently supports python, c, cpp, scilab, java, bash
-                 attempts_allowed=self.data['attempts_allowed'], # 1,2,3,4,5, -1(Infinite)
-                 time_between_attempts=self.data['time_between_attempts'] # In days: 0-400,
+    def create(self, duration, description, pass_criteria, language,
+                     attempts_allowed, time_between_attempts):
+        return Quiz.objects.create(duration=duration,
+                 description=description,
+                 pass_criteria=pass_criteria,
+                 language=language, # Currently supports python, c, cpp, scilab, java, bash
+                 attempts_allowed=attempts_allowed, # 1,2,3,4,5, -1(Infinite)
+                 time_between_attempts=time_between_attempts # In days: 0-400,
                 )
 
     def detail(self, pk):
@@ -97,10 +99,10 @@ class QuizResource(Resource):
 
 
 class AnswerResource(Resource):
-    def create(self):
-        return Answer.objects.create(answer=self.data['answer'],
-                marks=self._get_question(self.data['question_id']).points,
-                question=self._get_question(self.data['question_id']))
+    def create(self, answer, question_id):
+        return Answer.objects.create(answer=answer,
+                marks=self._get_question(question_id).points,
+                question=self._get_question(question_id))
 
     def detail(self, pk):
         return Answer.objects.get(id=pk)
