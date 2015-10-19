@@ -1044,7 +1044,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             return show_question(request, next_q, attempt_num,
                                  questionpaper_id, success_msg)
 
-
 def validate_answer(user, user_answer, question, json_data=None):
     """
         Checks whether the answer submitted by the user is right or wrong.

@@ -1,4 +1,5 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import patterns, include, url
+from yaksh.api.rest_api import QuestionResource, QuestionPaperResource, QuizResource, AnswerResource
 
 urlpatterns = patterns('yaksh.views',
     url(r'^$', 'index'),
@@ -47,6 +48,14 @@ urlpatterns = patterns('yaksh.views',
     url(r'^manage/designquestionpaper/manual/(?P<questionpaper_id>\d+)/$',\
                                                         'manual_questionpaper'),
     url(r'^ajax/questionpaper/(?P<query>.+)/$', 'ajax_questionpaper'),
-    url(r'^ajax/questions/filter/$', 'ajax_questions_filter'), ##@@
+    url(r'^ajax/questions/filter/$', 'ajax_questions_filter'),
 
+)
+
+urlpatterns += patterns('',
+    url(r'api/question/', include(QuestionResource.urls())),
+    url(r'api/questionpaper/', include(QuestionPaperResource.urls())),
+    url(r'api/quiz/', include(QuizResource.urls())),
+    url(r'api/answer/', include(AnswerResource.urls())),
+    # url(r'api/answer/evaluate/(?P<question_id>\d+)/$', PostResource.as_detail(), name='api_post_detail'),
 )
