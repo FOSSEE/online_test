@@ -41,6 +41,7 @@ Questions correctly answered: {{ paper.get_answered_str }} <br/>
 Total attempts at questions: {{ paper.answers.count }} <br/>
 Marks obtained: {{ paper.get_total_marks }} <br/>
 Start time: {{ paper.start_time }} <br/>
+Paper Type: {{ paper.question_paper.quiz.description }}<br/>
 </p>
 
 {% if paper.answers.count %}
