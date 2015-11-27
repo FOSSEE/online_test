@@ -17,9 +17,7 @@ function decrease(frm)
 	else
 	{
 		frm.points.value=0;
-	}
-
-	
+	}	
 }
 
 function setSelectionRange(input, selectionStart, selectionEnd) 
@@ -127,6 +125,10 @@ function textareaformat()
          document.getElementById("id_options").rows=1;
          document.getElementById("id_options").cols=40;
       });
+	$('#id_language').bind('focus', function(event){
+            var language = document.getElementById('id_language');
+            language.style.border = '1px solid #ccc';
+        });
       
       $('#id_snippet').bind('focus', function( event ){
          document.getElementById("id_snippet").rows=5;
@@ -143,46 +145,44 @@ function textareaformat()
             type.style.border = '1px solid #ccc';
         });
 
-        $('#id_language').bind('focus', function(event){
-            var language = document.getElementById('id_language');
-            language.style.border = '1px solid #ccc';
-        });
+        
 	
 	$('#id_type').bind('change',function(event){
 		var value = document.getElementById('id_type').value;
+		
 		if(value == 'mcq' || value == 'mcc')
 		{
+			document.getElementById('id_language').style.visibility='hidden';
 			document.getElementById('id_options').style.visibility='visible';
 			document.getElementById('label_option').innerHTML="Options :";
+			document.getElementById('label_language').innerHTML = "";
 		}
 		else
 		{
+			document.getElementById('id_language').style.visibility='visible';			    
 			document.getElementById('id_options').style.visibility='hidden';
 			document.getElementById('label_option').innerHTML = "";
+			document.getElementById('label_language').innerHTML="Language:";
 		}
-	});
+ });
+
 		document.getElementById('my').innerHTML = document.getElementById('id_description').value ;
 		var value = document.getElementById('id_type').value;
-		if(value == 'mcq' || value == 'mcc')
-		{
+    	if(value == 'mcq' || value == 'mcc')
+		{ 
 			document.getElementById('id_options').style.visibility='visible';
 			document.getElementById('label_option').innerHTML="Options :"
+		
 		}
 		else
 		{
 			document.getElementById('id_options').style.visibility='hidden';
 			document.getElementById('label_option').innerHTML = "";
-		}	
+		}
 }
 
 function autosubmit()
 {
-        var language = document.getElementById('id_language');
-        if(language.value == 'select')
-        {
-            language.style.border="solid red";
-            return false;
-        }
         var type = document.getElementById('id_type');
         if(type.value == 'select')
         {
