@@ -1,4 +1,5 @@
 import random
+import datetime
 import string
 import os
 import stat
@@ -14,6 +15,7 @@ from django.db.models import Sum
 from django.views.decorators.csrf import csrf_exempt
 from taggit.models import Tag
 from itertools import chain
+from collections import OrderedDict
 import json
 # Local imports.
 from yaksh.models import Quiz, Question, QuestionPaper, QuestionSet
@@ -260,7 +262,7 @@ def results_user(request):
     papers = AnswerPaper.objects.filter(user=user)
     quiz_marks = []
     for paper in papers:
-        marks_obtained = paper.marks_obtained
+        marks_obtained=paper.marks_obtained
         max_marks = paper.question_paper.total_marks
         percentage = round((marks_obtained/max_marks)*100, 2)
         temp = paper.question_paper.quiz.description, marks_obtained,\
@@ -271,7 +273,7 @@ def results_user(request):
 
 
 def edit_quiz(request):
-    """Edit the list of quizzes seleted by the user for editing."""
+    """Edit the list of quizzes selected by the user for editing."""
 
     user = request.user
     if not user.is_authenticated() or not is_moderator(user):
@@ -359,8 +361,9 @@ def add_question(request, question_id=None):
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     if request.method == "POST":
-        form = QuestionForm(request.POST)
+        form = QuestionForm(request.POST or None)
         if form.is_valid():
+            
             if question_id is None:
                 test_case_formset = add_or_delete_test_form(request.POST, form.save(commit=False))
                 if 'save_question' in request.POST:
@@ -1172,9 +1175,11 @@ def monitor(request, questionpaper_id=None):
 
     if questionpaper_id is None:
         q_paper = QuestionPaper.objects.all()
+        
         context = {'papers': [],
                    'quiz': None,
-                   'quizzes': q_paper}
+                   'quizzes': q_paper,
+                   }
         return my_render_to_response('yaksh/monitor.html', context,
                                      context_instance=ci)
     # quiz_id is not None.
@@ -1182,12 +1187,15 @@ def monitor(request, questionpaper_id=None):
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
     except QuestionPaper.DoesNotExist:
         papers = []
-        q_paper = None
+        q_paper = None    
     else:
+        a_paper =AnswerPaper.objects.filter(question_paper_id=q_paper.quiz_id).values_list('user_id')
         papers = AnswerPaper.objects.filter(question_paper=q_paper).annotate(
             total=Sum('answers__marks')).order_by('-total')
-
-    context = {'papers': papers, 'quiz': q_paper, 'quizzes': None}
+        
+        profile=Profile.objects.filter(user_id=a_paper)
+        
+    context = {'papers':papers, 'quiz': q_paper, 'quizzes': None,'profile':profile}
     return my_render_to_response('yaksh/monitor.html', context,
                                  context_instance=ci)
 
@@ -1196,18 +1204,22 @@ def get_user_data(username):
     """For a given username, this returns a dictionary of important data
     related to the user including all the user's answers submitted.
     """
+    
     user = User.objects.get(username=username)
     papers = AnswerPaper.objects.filter(user=user)
-
+    
     data = {}
+    
     try:
         profile = user.get_profile()
     except Profile.DoesNotExist:
         # Admin user may have a paper by accident but no profile.
         profile = None
+    
     data['user'] = user
     data['profile'] = profile
     data['papers'] = papers
+    
     return data
 
 
@@ -1385,10 +1397,11 @@ def show_all_questions(request):
                                      context_instance=ci)
 
 
-def user_data(request, username):
+def user_data(request,username):
     """Render user data."""
 
     current_user = request.user
+    
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
 
