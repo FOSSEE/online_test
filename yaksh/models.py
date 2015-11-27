@@ -18,6 +18,7 @@ class Profile(models.Model):
 
 
 languages = (
+        ("general", "Select Language"),
         ("python", "Python"),
         ("bash", "Bash"),
         ("c", "C Language"),
@@ -32,7 +33,7 @@ question_types = (
         ("mcc", "Multiple Correct Choices"),
         ("code", "Code"),
         ("upload", "Assignment Upload"),
-    )
+        )
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
 days_between_attempts = ((j, j) for j in range(401))
@@ -72,7 +73,7 @@ class Question(models.Model):
 
     # The language for question.
     language = models.CharField(max_length=24,
-                                choices=languages)
+                                choices=languages,blank=True,null=True)
 
     # The type of question.
     type = models.CharField(max_length=24, choices=question_types)
@@ -186,7 +187,7 @@ class Quiz(models.Model):
     prerequisite = models.ForeignKey("Quiz", null=True)
 
     # Programming language for a quiz
-    language = models.CharField(max_length=20, choices=languages)
+    language = models.CharField(max_length=20, choices=languages,blank=True)
 
     # Number of attempts for the quiz
     attempts_allowed = models.IntegerField(default=1, choices=attempts)
@@ -323,7 +324,7 @@ class AnswerPaper(models.Model):
     # Status of the quiz attempt
     status = models.CharField(max_length=20, choices=test_status,\
             default='inprogress')
-
+    
     def current_question(self):
         """Returns the current active question to display."""
         qu = self.get_unanswered_questions()
