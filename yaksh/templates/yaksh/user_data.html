@@ -1,5 +1,6 @@
 {% extends "manage.html" %}
 
+
 {% block title %} Data for user {{ data.user.get_full_name.title }} {% endblock title %}
 
 {% block manage %}
@@ -27,8 +28,7 @@ Last login: {{ data.user.last_login }}
 
 {% for paper in data.papers %}
 
-<h2> Quiz: {{ paper.quiz.description }} </h2>
-
+<h2> Quiz: {{ paper.question_paper.quiz.description }} </h2>
 <p>
 Questions correctly answered: {{ paper.get_answered_str }} <br/>
 Total attempts at questions: {{ paper.answers.count }} <br/>
