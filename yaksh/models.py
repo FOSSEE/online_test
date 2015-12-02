@@ -8,8 +8,8 @@ from taggit.managers import TaggableManager
 
 
 ###############################################################################
-class Visitor(models.Model):
-    visitor_user = models.OneToOneField(User, null=False)
+class ConcurrentUser(models.Model):
+    concurrent_user = models.OneToOneField(User, null=False)
     session_key = models.CharField(null=False, max_length=40)
 
 
