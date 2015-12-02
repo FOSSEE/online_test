@@ -1,7 +1,7 @@
 Production Deployment
 ======================
 
-This README provides documentation to help deploy Yaksh in a production environment. If you wish to take Yaksh on a trial run, here is a [Quickstart Guide] (https://github.com/FOSSEE/online_test/blob/master/README.md)  
+This README provides documentation to help deploy Yaksh in a production environment. If you wish to take Yaksh on a trial run, here is a [Quickstart Guide] (https://github.com/FOSSEE/online_test/blob/master/README.md)
 
 #### Pre-Requisite
 
@@ -96,8 +96,7 @@ To deploy this app follow the steps below:
     have to serve at.  In the above example for "host.org/foo/exam" set
     URL_ROOT='/foo'.
  
-Development Settings
-====================
+#### Installation & Usage
 
 To install this app follow the steps below:
 
@@ -128,6 +127,8 @@ To install this app follow the steps below:
     This is the maximum time allowed to execute the submitted code.
     Note that this will likely spawn multiple processes as "nobody"
     depending on the number of server ports specified.
+
+    You can also use a Dockerized code server (see below)
     
  1. Now, Run:
 
@@ -164,8 +165,24 @@ To install this app follow the steps below:
     have to serve at.  In the above example for "host.org/foo/exam" set
     URL_ROOT='/foo'.
 
-Additional commands available
-==============================
+#### Using Dockerized Code Server
+
+ 1. Install [Docker] (https://github.com/FOSSEE/online_test/blob/master/README.md)
+
+ 1. Got to the directory where the project is located
+        cd /path/to/online_test
+
+ 1. Create a docker image. This may take a few minutes
+        docker build -t yaksha:v1 .
+
+ 1. Check if the image has been created using the output of,
+        docker images
+
+ 1. Run a container using the newly created image.
+        sudo docker run -d -p 53579:53579 -p 8001:8001 yaksha:v1
+    The command will create and run a new docker container (that is running the code_server.py within it), it will also bind the ports of the host with those of the container
+
+#### Additional commands available
 
 We provide several convenient commands for you to use:
 

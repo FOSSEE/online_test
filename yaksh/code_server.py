@@ -73,7 +73,7 @@ class CodeServer(object):
 
     def run(self):
         """Run XMLRPC server, serving our methods."""
-        server = SimpleXMLRPCServer(("localhost", self.port))
+        server = SimpleXMLRPCServer(("0.0.0.0", self.port))
         self.server = server
         server.register_instance(self)
         self.queue.put(self.port)
@@ -140,7 +140,7 @@ class ServerPool(object):
         """Run server which returns an available server port where code
         can be executed.
         """
-        server = SimpleXMLRPCServer(("localhost", self.my_port))
+        server = SimpleXMLRPCServer(("0.0.0.0", self.my_port))
         self.server = server
         server.register_instance(self)
         server.serve_forever()
