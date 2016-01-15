@@ -27,13 +27,10 @@ Institute: {{ data.profile.institute }} <br/>
 
 {% for paper in data.papers %}
 
-<<<<<<< HEAD
 {{ paper.total_marks }}
 
 <h2> Quiz: {{ paper.quiz.description }} </h2>
-=======
-<h2> Quiz: {{ paper.question_paper.quiz.description }} </h2>
->>>>>>> display quiz description
+
 
 <p>
 Questions correctly answered: {{ paper.get_answered_str }} <br/>
