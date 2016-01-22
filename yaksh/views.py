@@ -12,6 +12,7 @@ from django.template import RequestContext
 from django.http import Http404
 from django.db.models import Sum
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 from taggit.models import Tag
 from itertools import chain
 import json
@@ -136,6 +137,7 @@ def user_register(request):
                                       context_instance=ci)
 
 
+@login_required
 def quizlist_user(request):
     """Show All Quizzes that is available to logged-in user."""
     user = request.user
@@ -164,7 +166,7 @@ def quizlist_user(request):
 
     return my_render_to_response("yaksh/quizzes_user.html", context)
 
-
+@login_required
 def intro(request, questionpaper_id):
     """Show introduction page before quiz starts"""
     user = request.user
@@ -253,7 +255,7 @@ def _check_previous_attempt(attempted_papers, already_attempted, attempt_number)
         else:
             return False, previous_attempt, next_attempt
 
-
+@login_required
 def results_user(request):
     """Show list of Results of Quizzes that is taken by logged-in user."""
     user = request.user
@@ -270,6 +272,7 @@ def results_user(request):
     return my_render_to_response("yaksh/results_user.html", context)
 
 
+@login_required
 def edit_quiz(request):
     """Edit the list of quizzes seleted by the user for editing."""
 
@@ -304,6 +307,7 @@ def edit_quiz(request):
     return my_redirect("/exam/manage/showquiz/")
 
 
+@login_required
 def edit_question(request):
     """Edit the list of questions selected by the user for editing."""
     user = request.user
@@ -341,6 +345,7 @@ def edit_question(request):
     return my_redirect("/exam/manage/questions")
 
 
+@login_required
 def add_question(request, question_id=None):
     """To add a new question in the database.
     Create a new question and store it."""
@@ -475,6 +480,7 @@ def add_question(request, question_id=None):
                                          context_instance=ci)
 
 
+@login_required
 def add_quiz(request, quiz_id=None):
     """To add a new quiz in the database.
     Create a new quiz and store it."""
@@ -540,6 +546,7 @@ def add_quiz(request, quiz_id=None):
                                          context_instance=ci)
 
 
+@login_required
 def show_all_questionpapers(request, questionpaper_id=None):
     user = request.user
     ci = RequestContext(request)
@@ -573,6 +580,7 @@ def show_all_questionpapers(request, questionpaper_id=None):
                                      context_instance=ci)
 
 
+@login_required
 def automatic_questionpaper(request, questionpaper_id=None):
     """Generate automatic question paper for a particular quiz"""
 
@@ -664,6 +672,7 @@ def automatic_questionpaper(request, questionpaper_id=None):
                                          context, context_instance=ci)
 
 
+@login_required
 def manual_questionpaper(request, questionpaper_id=None):
     user = request.user
     ci = RequestContext(request)
@@ -739,6 +748,7 @@ def manual_questionpaper(request, questionpaper_id=None):
                                          context, context_instance=ci)
 
 
+@login_required
 def prof_manage(request):
     """Take credentials of the user with professor/moderator
 rights/permissions and log in."""
@@ -788,6 +798,7 @@ def user_login(request):
                                      context_instance=ci)
 
 
+@login_required
 def start(request, attempt_num=None, questionpaper_id=None):
     """Check the user cedentials and if any quiz is available,
     start the exam."""
@@ -822,6 +833,7 @@ def start(request, attempt_num=None, questionpaper_id=None):
         user_dir = get_user_dir(user)
         return start(request, attempt_num, questionpaper_id)
 
+@login_required
 def get_questions(paper):
     '''
         Takes answerpaper as an argument. Returns the total questions as
@@ -848,6 +860,7 @@ def get_questions(paper):
     return questions, to_attempt, submitted
 
 
+@login_required
 def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     """Check the credentials of the user and start the exam."""
 
@@ -890,6 +903,7 @@ def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
                                  context_instance=ci)
 
 
+@login_required
 def show_question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     """Show a question if possible."""
     user = request.user
@@ -926,6 +940,7 @@ def _save_skipped_answer(old_skipped, user_answer, paper, question):
             correct=False, skipped=True)
         skipped_answer.save()
         paper.answers.add(skipped_answer)
+
 
 def check(request, q_id, attempt_num=None, questionpaper_id=None):
     """Checks the answers of the user for particular question"""
@@ -1109,6 +1124,7 @@ def quit(request, attempt_num=None, questionpaper_id=None):
                                  context_instance=RequestContext(request))
 
 
+@login_required
 def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
     """Show a page to inform user that the quiz has been compeleted."""
 
@@ -1162,6 +1178,7 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
         return my_redirect('/exam/')
 
 
+@login_required
 def monitor(request, questionpaper_id=None):
     """Monitor the progress of the papers taken so far."""
 
@@ -1192,6 +1209,7 @@ def monitor(request, questionpaper_id=None):
                                  context_instance=ci)
 
 
+@login_required
 def get_user_data(username):
     """For a given username, this returns a dictionary of important data
     related to the user including all the user's answers submitted.
@@ -1211,6 +1229,7 @@ def get_user_data(username):
     return data
 
 
+@login_required
 def show_all_users(request):
     """Shows all the users who have taken various exams/quiz."""
 
@@ -1224,6 +1243,7 @@ def show_all_users(request):
                                  context_instance=RequestContext(request))
 
 
+@login_required
 def show_all_quiz(request):
     """Generates a list of all the quizzes
     that are currently in the database."""
@@ -1306,6 +1326,7 @@ def ajax_questions_filter(request):
                                   {'questions': questions})
 
 
+@login_required
 def show_all_questions(request):
     """Show a list of all the questions currently in the databse."""
 
@@ -1385,6 +1406,7 @@ def show_all_questions(request):
                                      context_instance=ci)
 
 
+@login_required
 def user_data(request, username):
     """Render user data."""
 
@@ -1399,6 +1421,7 @@ def user_data(request, username):
                                  context_instance=RequestContext(request))
 
 
+@login_required
 def grade_user(request, username):
     """Present an interface with which we can easily grade a user's papers
     and update all their marks and also give comments for each paper.
@@ -1456,6 +1479,7 @@ def ajax_questionpaper(request, query):
                               {'questions': questions})
 
 
+@login_required
 def design_questionpaper(request):
     user = request.user
     ci = RequestContext(request)

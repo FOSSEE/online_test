@@ -47,6 +47,6 @@ urlpatterns = patterns('yaksh.views',
     url(r'^manage/designquestionpaper/manual/(?P<questionpaper_id>\d+)/$',\
                                                         'manual_questionpaper'),
     url(r'^ajax/questionpaper/(?P<query>.+)/$', 'ajax_questionpaper'),
-    url(r'^ajax/questions/filter/$', 'ajax_questions_filter'), ##@@
+    url(r'^ajax/questions/filter/$', 'ajax_questions_filter'),
 
 )

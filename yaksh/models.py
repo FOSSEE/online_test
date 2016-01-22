@@ -8,6 +8,12 @@ from taggit.managers import TaggableManager
 
 
 ###############################################################################
+class ConcurrentUser(models.Model):
+    concurrent_user = models.OneToOneField(User, null=False)
+    session_key = models.CharField(null=False, max_length=40)
+
+
+###############################################################################
 class Profile(models.Model):
     """Profile for a user to store roll number and other details."""
     user = models.OneToOneField(User)
