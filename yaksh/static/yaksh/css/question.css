@@ -4,9 +4,11 @@
     padding: 8px;
     color: #5DFC0A;
     vertical-align:middle;
-    width:150px;
+    width: 160px;
+    height: 30px;
     float:right;
     border-radius: 6px 6px 6px 6px;
+    font-size:20px;
 }
 .td1-class
 {
@@ -15,6 +17,7 @@
 .td2-class
 {
 	width:50px;
+  padding: 5px 10px 9px;
 }
 .page-header {
   height:50px;

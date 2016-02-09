@@ -15,31 +15,61 @@
 <script src="{{ URL_ROOT }}/static/yaksh/js/bootstrap-modal.js"></script>
 
 <script>
-var time_left = {{ time_left }} 
-function secs_to_time(secs)
-{
-    var h = Math.floor(secs/3600);
-    var h_s = (h > 0) ? h+'h:' : '';
-    var m = Math.floor((secs%3600)/60);
-    var m_s = (m > 0) ? m+'m:' : '';
-    var s_s = Math.floor(secs%60) + 's';
-    return h_s + m_s + s_s;
+var time_left = {{ time_left }}
+
+function blinker() {
+    var elem = document.getElementById('time_left');
+    setInterval(function (){
+                elem.style.visibility = (elem.style.visibility == 'hidden' ? '' : 'hidden');
+                }, 400);
 }
 
-function update_time()
+function getTimeRemaining(endtime){
+  var t = Date.parse(endtime) - Date.parse(new Date());
+  var seconds = Math.floor( (t/1000) % 60 );
+  var minutes = Math.floor( (t/1000/60) % 60 );
+  var hours = Math.floor( (t/(1000*60*60)) % 24 );
+  var days = Math.floor( t/(1000*60*60*24) );
+  return {
+    'total': t,
+    'days': days,
+    'hours': hours,
+    'minutes': minutes,
+    'seconds': seconds
+  };
+}
+
+function updateTime()
 {
-    time_left -= 1;
-    if (time_left) 
-    {
-	var elem = document.getElementById("time_left");
-	var t_str = secs_to_time(time_left);
-	elem.innerHTML = "<strong>" + t_str + "</strong>";
-	setTimeout("update_time()", 1000);
+var timeInSeconds = time_left;
+var currentTime = Date.parse(new Date());
+var deadline = new Date(currentTime + timeInSeconds*1000);
+
+function updateClock(){
+    var t = getTimeRemaining(deadline);
+    var hh = ('0' + t.hours).slice(-2);
+    var mm = ('0' + t.minutes).slice(-2);
+    var ss = ('0' + t.seconds).slice(-2);
+
+    if(t.total<=0){
+      clearInterval(timeinterval);
+      document.forms["code"].submit();
     }
-    else 
-    {
-	document.forms["code"].submit();
-    }	
+    else if (0<t.total<=300000){
+      clock.innerHTML = "<span style='color:red'><strong>" + hh + ":" + mm + ":" + ss + "</strong></span>";
+    }
+    else {
+      clock.innerHTML = "<strong>" + hh + ":" + mm + ":" + ss + "</strong>";
+    }
+  }
+
+var clock = document.getElementById("time_left");
+var tm = getTimeRemaining(deadline)
+updateClock();
+if (0<tm.total<=300000){
+  blinker();
+}
+var timeinterval = setInterval(updateClock,1000);
 }
 
 function setSnippetHeight()
@@ -75,12 +105,12 @@ function call_skip(url)
 
 
 
-{% block onload %} onload="update_time();setSnippetHeight()" {% endblock %}
+{% block onload %} onload="updateTime();setSnippetHeight()" {% endblock %}
 
 {% block pagetitle %}
 
 <table><h6><div>
-	<tr><td class=td1-class><h5>You have {{ paper.questions_left }} question(s) left in {{ quiz_name }} </h5>
+	<tr><td class=td1-class><h5>You have {{ paper.questions_left }} question(s) left in {{ quiz_name }} {{ time_left }}</h5>
 	<td class=td2-class><div class=time-div id="time_left">
 	</div>
 </div></h6></table>
@@ -117,7 +147,7 @@ function call_skip(url)
                     {% endif %}
                 {% endif %}
                 {% if qid in submitted %}
-                    <li class="done"><a href="#">{{ num }}</a></li>
+                    <li class="disabled"><a href="#">{{ num }}</a></li>
                 {% endif %}
             {% endfor %}
         </ul>

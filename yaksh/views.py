@@ -1199,7 +1199,6 @@ def monitor(request, questionpaper_id=None):
                                  context_instance=ci)
 
 
-
 def get_user_data(username):
     """For a given username, this returns a dictionary of important data
     related to the user including all the user's answers submitted.
