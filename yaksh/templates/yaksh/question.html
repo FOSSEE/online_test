@@ -17,13 +17,6 @@
 <script>
 var time_left = {{ time_left }}
 
-function blinker() {
-    var elem = document.getElementById('time_left');
-    setInterval(function (){
-                elem.style.visibility = (elem.style.visibility == 'hidden' ? '' : 'hidden');
-                }, 400);
-}
-
 function getTimeRemaining(endtime){
   var t = Date.parse(endtime) - Date.parse(new Date());
   var seconds = Math.floor( (t/1000) % 60 );
@@ -51,24 +44,21 @@ function updateClock(){
     var mm = ('0' + t.minutes).slice(-2);
     var ss = ('0' + t.seconds).slice(-2);
 
-    if(t.total<=0){
-      clearInterval(timeinterval);
+    if(t.total<0){
       document.forms["code"].submit();
+      clearInterval(timeinterval);
+      return null;
     }
-    else if (0<t.total<=300000){
-      clock.innerHTML = "<span style='color:red'><strong>" + hh + ":" + mm + ":" + ss + "</strong></span>";
+    if (t.total<=300000){
+      clock.innerHTML = "<blink><span style='color:red'><strong>" + hh + ":" + mm + ":" + ss + "</strong></span></blink>";
     }
-    else {
+    if (t.total>=300000) {
       clock.innerHTML = "<strong>" + hh + ":" + mm + ":" + ss + "</strong>";
     }
   }
 
 var clock = document.getElementById("time_left");
-var tm = getTimeRemaining(deadline)
 updateClock();
-if (0<tm.total<=300000){
-  blinker();
-}
 var timeinterval = setInterval(updateClock,1000);
 }
 
@@ -110,7 +100,7 @@ function call_skip(url)
 {% block pagetitle %}
 
 <table><h6><div>
-	<tr><td class=td1-class><h5>You have {{ paper.questions_left }} question(s) left in {{ quiz_name }} {{ time_left }}</h5>
+	<tr><td class=td1-class><h5>You have {{ paper.questions_left }} question(s) left in {{ quiz_name }}</h5>
 	<td class=td2-class><div class=time-div id="time_left">
 	</div>
 </div></h6></table>
@@ -155,15 +145,30 @@ function call_skip(url)
   </div>
 </div>
 
-     <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br>
-	 <font size=3 face=arial>	{{ question.description|safe }} </font>
-         {% if error_message %}
-	 <div class="alert alert-error">
-	 {% for e in error_message.splitlines %}
-	 {{ e|join:"" }} 
-	 <br/>
-	 {% endfor%}
-	 </div>{% endif %}
+<div class="span13">
+<table>
+  <tr>
+    <td width="20%">
+      <h5><u>Marks</u> : {{ question.points }}</h5>
+      <span class="label success">{{ question.language }}</span>
+    </td>
+    <td width="90%">
+      <span align="left"><h4><u> {{ question.summary }} </u></h4>
+      <p>{{ question.description|safe }}</p>
+      </span>
+    </td>
+  </tr>
+</table>
+</div>
+{% if error_message %}
+  <div class="alert alert-error">
+  {% for e in error_message.splitlines %}
+    {{ e|join:"" }} 
+    <br/>
+  {% endfor%}
+  </div>
+{% endif %}
+
 
          <p id="status"></p>
 
