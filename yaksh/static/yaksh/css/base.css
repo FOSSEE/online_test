@@ -2312,16 +2312,31 @@ button.btn::-moz-focus-inner, input[type=submit].btn::-moz-focus-inner {
   text-decoration: none;
 }
 .pagination a:hover, .pagination .active a {
-  background-color: #c7eefe;
+  background-color: #00CC66;
 }
 /*custom classes*/
 .pagination .done a {
   background-color: #00CC66;
 }
 .pagination .disabled a, .pagination .disabled a:hover {
-  background-color: transparent;
-  color: #bfbfbf;
+  background-color: #bfbfbf;
+  color: #ffffff;
 }
 .pagination .next a {
   border: 0;
+}
+
+@-webkit-keyframes blink {
+    from {
+        opacity: 1.0;
+    }
+    to {
+        opacity: 0.0;
+    }
+}
+blink {
+    -webkit-animation-name: blink;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
+    -webkit-animation-duration: 1s;
 }

@@ -6,7 +6,9 @@ function submitCode()
     x = document.getElementById("check");
     x.disabled = true;
     x.value = "Checking Answer ...";
+    if (document.getElementById("skip")!=null) {
     document.getElementById("skip").disabled = true;
+    }
 }
 
 function setSelectionRange(input, selectionStart, selectionEnd) 
