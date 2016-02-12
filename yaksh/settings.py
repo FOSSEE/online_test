@@ -21,8 +21,8 @@ URL_ROOT = ''
 
 code_evaluators = {
             "python": "python_code_evaluator.PythonCodeEvaluator",
-            "c": "c_cpp_code_evaluator.CCPPCodeEvaluator",
-            "cpp": "c_cpp_code_evaluator.CCPPCodeEvaluator",
+            "c": "cpp_code_evaluator.CppCodeEvaluator",
+            "cpp": "cpp_code_evaluator.CppCodeEvaluator",
             "java": "java_code_evaluator.JavaCodeEvaluator",
             "bash": "bash_code_evaluator.BashCodeEvaluator",
             "scilab": "scilab_code_evaluator.ScilabCodeEvaluator",

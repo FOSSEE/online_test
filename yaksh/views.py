@@ -833,7 +833,7 @@ def start(request, attempt_num=None, questionpaper_id=None):
         user_dir = get_user_dir(user)
         return start(request, attempt_num, questionpaper_id)
 
-@login_required
+
 def get_questions(paper):
     '''
         Takes answerpaper as an argument. Returns the total questions as
@@ -912,13 +912,6 @@ def show_question(request, q_id, attempt_num, questionpaper_id, success_msg=None
             question_paper=q_paper)
     if not user.is_authenticated() or paper.end_time < datetime.datetime.now():
         return my_redirect('/exam/login/')
-    old_qid = request.POST.get('question_id')
-    if old_qid is not None:
-        quest = Question.objects.get(pk=old_qid)
-        user_code = request.POST.get('answer')
-        if  quest.type == 'code':
-            old_skipped = paper.answers.filter(question=quest, skipped=True)
-            _save_skipped_answer(old_skipped, user_code, paper, quest)
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(request, msg, attempt_num, questionpaper_id)
@@ -1015,9 +1008,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     if not result.get('success'):  # Should only happen for non-mcq questions.
         if time_left == 0:
             reason = 'Your time is up!'
-            return complete(request, reason, attempt_num, questionpaper_id)
-        if not paper.question_paper.quiz.active:
-            reason = 'The quiz has been deactivated!'
             return complete(request, reason, attempt_num, questionpaper_id)
         if not paper.question_paper.quiz.active:
             reason = 'The quiz has been deactivated!'
@@ -1209,7 +1199,7 @@ def monitor(request, questionpaper_id=None):
                                  context_instance=ci)
 
 
-@login_required
+
 def get_user_data(username):
     """For a given username, this returns a dictionary of important data
     related to the user including all the user's answers submitted.
