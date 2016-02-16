@@ -293,6 +293,7 @@ class AnswerPaperTestCases(unittest.TestCase):
                          '2014-06-13 12:20:19.791297')
         self.assertEqual(self.answerpaper.end_time,
                          '2014-06-13 12:50:19.791297')
+        self.assertEqual(self.answerpaper.status, 'inprogress')
 
     def test_current_question(self):
         """ Test current_question() method of Answer Paper"""
@@ -342,3 +343,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(first_answer.answer, 'Demo answer')
         self.assertTrue(first_answer.correct)
         self.assertEqual(len(answered), 2)
+
+    def test_update_status(self):
+        """ Test update_status method of Answer Paper"""
+        self.answerpaper.update_status('inprogress')
+        self.assertEqual(self.answerpaper.status, 'inprogress')
+        self.answerpaper.update_status('completed')
+        self.assertEqual(self.answerpaper.status, 'completed')
