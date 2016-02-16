@@ -49,16 +49,18 @@
     <th> Questions answered </th> 
     <th> Marks obtained </th>
     <th> Attempts </th>
+    <th> Status </th>
     </tr>
     {% for paper in papers %}
     <tr> 
         <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.username}}">{{ paper.user.get_full_name.title }}</a> </td>
         <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.username}}">{{ paper.user.username }}</a> </td>
-        <td> {{ paper.profile.roll_number }} </td>
-        <td> {{ paper.profile.institute }} </td>
+        <td> {{ paper.user.profile.roll_number }} </td>
+        <td> {{ paper.user.profile.institute }} </td>
         <td> {{ paper.get_answered_str }} </td> 
         <td> {{ paper.marks_obtained }} </td>
         <td> {{ paper.answers.count }} </td>
+        <td> {{ paper.status }} </td>
     </tr>
     {% endfor %}
 </table>

@@ -430,9 +430,9 @@ class AnswerPaper(models.Model):
             else:
                 self.passed = False
 
-    def update_status(self):
-        """ Sets status to completed """
-        self.status = 'completed'
+    def update_status(self, state):
+        """ Sets status as inprogress or completed """
+        self.status = state
 
     def get_question_answers(self):
         """
