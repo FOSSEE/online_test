@@ -99,6 +99,15 @@ def fetch_questions(request):
     return set2
 
 
+def _update_marks(answer_paper, state='completed'):
+    answer_paper.update_marks_obtained()
+    answer_paper.update_percent()
+    answer_paper.update_passed()
+    answer_paper.update_status(state)
+    answer_paper.end_time = datetime.datetime.now()
+    answer_paper.save()
+
+
 def index(request):
     """The start page.
     """
@@ -243,12 +252,8 @@ def _check_previous_attempt(attempted_papers, already_attempted, attempt_number)
         return False, None, next_attempt
     else:
         previous_attempt = attempted_papers[already_attempted-1]
-        previous_attempt_day = previous_attempt.start_time
-        today = datetime.datetime.today()
         if previous_attempt.status == 'inprogress':
-            end_time = previous_attempt.end_time
-            quiz_time = previous_attempt.question_paper.quiz.duration*60
-            if quiz_time > (today-previous_attempt_day).seconds:
+            if previous_attempt.time_left() > 0:
                 return True, previous_attempt, next_attempt
             else:
                 return False, previous_attempt, next_attempt
@@ -877,9 +882,6 @@ def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     if not paper.question_paper.quiz.active:
         reason = 'The quiz has been deactivated!'
         return complete(request, reason, attempt_num, questionpaper_id)
-    elif paper.end_time < datetime.datetime.now():
-        reason = 'You have already attempted the quiz'
-        return complete(request, reason, attempt_num, questionpaper_id)
     time_left = paper.time_left()
     if time_left == 0:
         return complete(request, attempt_num, questionpaper_id, reason='Your time is up!')
@@ -910,7 +912,7 @@ def show_question(request, q_id, attempt_num, questionpaper_id, success_msg=None
     q_paper = QuestionPaper.objects.get(id=questionpaper_id)
     paper = AnswerPaper.objects.get(user=request.user, attempt_number=attempt_num,
             question_paper=q_paper)
-    if not user.is_authenticated() or paper.end_time < datetime.datetime.now():
+    if not user.is_authenticated():
         return my_redirect('/exam/login/')
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
@@ -933,11 +935,7 @@ def _save_skipped_answer(old_skipped, user_answer, paper, question):
             correct=False, skipped=True)
         skipped_answer.save()
         paper.answers.add(skipped_answer)
-def _time_check(paper):
-    if paper.time_left() <= 0:
-        return False
-    else:
-        return True
+
 
 def check(request, q_id, attempt_num=None, questionpaper_id=None):
     """Checks the answers of the user for particular question"""
@@ -945,16 +943,12 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     q_paper = QuestionPaper.objects.get(id=questionpaper_id)
     paper = AnswerPaper.objects.get(user=request.user, attempt_number=attempt_num,
             question_paper=q_paper)
-    is_time_left = _time_check(paper)
-    if not is_time_left:
-        reason = 'Your time is up!'
-        return complete(request, reason, attempt_num, questionpaper_id)
 
     if q_id in paper.questions_answered:
         next_q = paper.skip(q_id)
         return show_question(request, next_q, attempt_num, questionpaper_id)
 
-    if not user.is_authenticated() or paper.end_time < datetime.datetime.now():
+    if not user.is_authenticated():
         return my_redirect('/exam/login/')
 
     question = get_object_or_404(Question, pk=q_id)
@@ -1012,9 +1006,10 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             new_answer.error = result.get('error')
         new_answer.save()
 
-    is_time_left = _time_check(paper)
+    _update_marks(paper, 'inprogress')
+    time_left = paper.time_left()
     if not result.get('success'):  # Should only happen for non-mcq questions.
-        if is_time_left == 0:
+        if time_left <= 0:
             reason = 'Your time is up!'
             return complete(request, reason, attempt_num, questionpaper_id)
         if not paper.question_paper.quiz.active:
@@ -1035,7 +1030,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         return my_render_to_response('yaksh/question.html', context,
                                      context_instance=ci)
     else:
-        if is_time_left <= 0:
+        if time_left <= 0:
             reason = 'Your time is up!'
             return complete(request, reason, attempt_num, questionpaper_id)
 
@@ -1121,14 +1116,6 @@ def quit(request, attempt_num=None, questionpaper_id=None):
     return my_render_to_response('yaksh/quit.html', context,
                                  context_instance=RequestContext(request))
 
-
-def _update_marks(answer_paper):
-    answer_paper.update_marks_obtained()
-    answer_paper.update_percent()
-    answer_paper.update_passed()
-    answer_paper.update_status()
-    answer_paper.end_time = datetime.datetime.now()
-    answer_paper.save()
 
 @login_required
 def complete(request, reason=None, attempt_num=None, questionpaper_id=None):

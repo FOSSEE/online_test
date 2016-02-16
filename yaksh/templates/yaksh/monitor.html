@@ -49,6 +49,7 @@
     <th> Questions answered </th> 
     <th> Marks obtained </th>
     <th> Attempts </th>
+    <th> Status </th>
     </tr>
     {% for paper in papers %}
     <tr> 
@@ -59,6 +60,7 @@
         <td> {{ paper.get_answered_str }} </td> 
         <td> {{ paper.marks_obtained }} </td>
         <td> {{ paper.answers.count }} </td>
+        <td> {{ paper.status }} </td>
     </tr>
     {% endfor %}
 </table>
