@@ -27,11 +27,16 @@ Institute: {{ data.profile.institute }} <br/>
 
 {% for paper in data.papers %}
 
+{% if forloop.counter == 2 and data.questionpaperid %}
+<hr>
+<u><h2> Previous attempts </h2></u>
+{% endif %}
 {{ paper.total_marks }}
 
 <h2> Quiz: {{ paper.question_paper.quiz.description }} </h2>
 
 <p>
+Attempt Number: {{ paper.attempt_number }}<br/>
 Questions correctly answered: {{ paper.get_answered_str }} <br/>
 Total attempts at questions: {{ paper.answers.count }} <br/>
 Marks obtained: {{ paper.get_total_marks }} <br/>
@@ -56,7 +61,12 @@ Start time: {{ paper.start_time }} <br/>
 
 <h3> Answers </h3><br>
 <form name=frm id="q{{ paper.quiz.id }}_form"
-    action="{{URL_ROOT}}/exam/manage/gradeuser/{{data.user.username}}/" method="post">
+    {% if data.questionpaperid %}
+    action="{{URL_ROOT}}/exam/manage/gradeuser/{{data.user.username}}/{{data.questionpaperid}}/"
+    {% else %}
+    action="{{URL_ROOT}}/exam/manage/gradeuser/{{data.user.username}}/"
+    {% endif %}
+    method="post">
 {% csrf_token %}
 {% for question, answers in paper.get_question_answers.items %}
 

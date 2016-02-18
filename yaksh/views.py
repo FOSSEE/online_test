@@ -10,7 +10,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.http import Http404
-from django.db.models import Sum
+from django.db.models import Sum, Max
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from taggit.models import Tag
@@ -1188,20 +1188,30 @@ def monitor(request, questionpaper_id=None):
         papers = []
         q_paper = None
     else:
-        papers = AnswerPaper.objects.filter(question_paper=q_paper).annotate(
-            total=Sum('answers__marks')).order_by('-total')
-
-    context = {'papers': papers, 'quiz': q_paper, 'quizzes': None}
+        latest_attempts = []
+        papers = AnswerPaper.objects.filter(question_paper=q_paper).order_by(
+                'user__profile__roll_number')
+        users = papers.values_list('user').distinct()
+        for auser in users:
+            last_attempt = papers.filter(user__in=auser).aggregate(
+                    last_attempt_num=Max('attempt_number'))
+            latest_attempts.append(papers.get(user__in=auser,
+                attempt_number=last_attempt['last_attempt_num']))
+    context = {'papers': papers, 'quiz': q_paper, 'quizzes': None,
+            'latest_attempts': latest_attempts,}
     return my_render_to_response('yaksh/monitor.html', context,
                                  context_instance=ci)
 
 
-def get_user_data(username):
+def get_user_data(username, questionpaper_id=None):
     """For a given username, this returns a dictionary of important data
     related to the user including all the user's answers submitted.
     """
     user = User.objects.get(username=username)
     papers = AnswerPaper.objects.filter(user=user)
+    if questionpaper_id is not None:
+        papers = papers.filter(question_paper_id=questionpaper_id).order_by(
+                '-attempt_number')
 
     data = {}
     try:
@@ -1212,6 +1222,7 @@ def get_user_data(username):
     data['user'] = user
     data['profile'] = profile
     data['papers'] = papers
+    data['questionpaperid'] = questionpaper_id
     return data
 
 
@@ -1393,14 +1404,14 @@ def show_all_questions(request):
 
 
 @login_required
-def user_data(request, username):
+def user_data(request, username, questionpaper_id=None):
     """Render user data."""
 
     current_user = request.user
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
 
-    data = get_user_data(username)
+    data = get_user_data(username, questionpaper_id)
 
     context = {'data': data}
     return my_render_to_response('yaksh/user_data.html', context,
@@ -1408,7 +1419,7 @@ def user_data(request, username):
 
 
 @login_required
-def grade_user(request, username):
+def grade_user(request, username, questionpaper_id=None):
     """Present an interface with which we can easily grade a user's papers
     and update all their marks and also give comments for each paper.
     """
@@ -1416,18 +1427,17 @@ def grade_user(request, username):
     ci = RequestContext(request)
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
-
-    data = get_user_data(username)
+    data = get_user_data(username, questionpaper_id)
     if request.method == 'POST':
         papers = data['papers']
         for paper in papers:
             for question, answers in paper.get_question_answers().iteritems():
-                marks = float(request.POST.get('q%d_marks' % question.id))
+                marks = float(request.POST.get('q%d_marks' % question.id, 0))
                 last_ans = answers[-1]
                 last_ans.marks = marks
                 last_ans.save()
             paper.comments = request.POST.get(
-                'comments_%d' % paper.question_paper.id)
+                'comments_%d' % paper.question_paper.id, 'No comments')
             paper.save()
 
         context = {'data': data}

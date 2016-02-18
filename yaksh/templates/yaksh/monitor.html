@@ -38,7 +38,6 @@
 {% if quiz %}
 
 {% if papers %}
-{# <p> Quiz: {{ quiz_name }}</p> #}
 <p>Number of papers: {{ papers|length }} </p>
 <table border="1" cellpadding="3">
     <tr>
@@ -51,10 +50,10 @@
     <th> Attempts </th>
     <th> Status </th>
     </tr>
-    {% for paper in papers %}
+    {% for paper in latest_attempts %}
     <tr> 
-        <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.username}}">{{ paper.user.get_full_name.title }}</a> </td>
-        <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.username}}">{{ paper.user.username }}</a> </td>
+        <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.username}}/{{paper.question_paper.id}}">{{ paper.user.get_full_name.title }}</a> </td>
+        <td> {{ paper.user.username }} </td>
         <td> {{ paper.user.profile.roll_number }} </td>
         <td> {{ paper.user.profile.institute }} </td>
         <td> {{ paper.get_answered_str }} </td> 
