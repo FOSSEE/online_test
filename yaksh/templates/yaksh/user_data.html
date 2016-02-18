@@ -21,15 +21,24 @@ Last login: {{ data.user.last_login }}
 </p>
 
 {% if data.papers %}
-<p><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{ data.user.username }}/">
+{% if data.questionpaperid %}
+<p><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{ data.user.username }}/{{ data.questionpaperid }}">
     Grade/correct paper</a>
 </p>
+{% else %}
+<p><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{ data.user.username }}">
+    Grade/correct paper</a>
+{% endif %}
 
 {% for paper in data.papers %}
-
-<h2> Quiz: {{ paper.quiz.description }} </h2>
+{% if forloop.counter == 2 and data.questionpaperid %}
+<hr>
+<U><h2> Previous attempts </h2></U>
+{% endif %}
+<h2> Quiz: {{ paper.question_paper.quiz.description }} </h2>
 
 <p>
+Attempt Number: {{ paper.attempt_number }}<br/>
 Questions correctly answered: {{ paper.get_answered_str }} <br/>
 Total attempts at questions: {{ paper.answers.count }} <br/>
 Marks obtained: {{ paper.get_total_marks }} <br/>
