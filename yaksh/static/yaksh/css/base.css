@@ -221,7 +221,7 @@ body {
   box-shadow: 0 1px 2px rgba(0,0,0,.15);
 }
 .content .span10,
-.content .span14 {
+.content  {
   min-height: 475px;
 }
 .content .span4 {
@@ -431,6 +431,7 @@ a:hover {
 /* Typography.less
 * Headings, body text, lists, code, and more for a versatile and durable typography system
 * ---------------------------------------------------------------------------------------- */
+
 p {
   font-size: 13px;
   font-weight: normal;
@@ -478,6 +479,7 @@ h4,
 h5,
 h6 {
   line-height: 36px;
+
 }
 h3 {
   font-size: 18px;
@@ -493,6 +495,8 @@ h4 small {
 }
 h5 {
   font-size: 14px;
+  color:white;
+  text-align:left;
 }
 h6 {
   font-size: 13px;
@@ -1189,6 +1193,10 @@ table tbody th {
   -moz-border-radius: 4px;
   border-radius: 4px;
 }
+.output {
+background-color: #f2dede;
+
+}
 .bordered-table th + th, .bordered-table td + td, .bordered-table th + td {
   border-left: 1px solid #ddd;
 }
@@ -1793,6 +1801,7 @@ footer {
   -ms-transition: 0.1s linear all;
   -o-transition: 0.1s linear all;
   transition: 0.1s linear all;
+  margin-right:50px
 }
 .btn:hover {
   background-position: 0 -15px;
@@ -1888,7 +1897,7 @@ footer {
 .alert-success, .alert-success .alert-heading {
   color: #468847;
 }
-.alert-danger, .alert-error {
+.alert-danger {
   background-color: #f2dede;
   border-color: #eed3d7;
 }
