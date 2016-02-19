@@ -6,7 +6,7 @@ from os.path import join
 import importlib
 
 # local imports
-from code_evaluator import CodeEvaluator
+from code_evaluator import CodeEvaluator, TimeoutException
 
 
 class PythonCodeEvaluator(CodeEvaluator):
@@ -29,6 +29,10 @@ class PythonCodeEvaluator(CodeEvaluator):
             fname, lineno, func, text = info[-1]
             text = str(test_code).splitlines()[lineno-1]
             err = "{0} {1} in: {2}".format(type.__name__, str(value), text)
+        except TimeoutException:
+            raise
+        except Exception:
+            err = traceback.format_exc(limit=0)
         else:
             success = True
             err = 'Correct answer'
