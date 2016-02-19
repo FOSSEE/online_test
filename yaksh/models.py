@@ -24,7 +24,6 @@ class Profile(models.Model):
 
 
 languages = (
-	("general", "select language"),
         ("python", "Python"),
         ("bash", "Bash"),
         ("c", "C Language"),
