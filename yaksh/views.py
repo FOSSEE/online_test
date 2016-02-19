@@ -902,12 +902,6 @@ def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
         skipped_answer = paper.answers.filter(question=q, skipped=True)
         if skipped_answer:
             context['last_attempt'] = skipped_answer[0].answer
-        elif success_msg:
-            msg="Correct Output"
-            context = {'question': q, 'questions': questions, 'paper': paper, 
-                   'error_message':msg,'user': user, 'quiz_name': quiz_name, 
-                   'time_left': time_left,'to_attempt': to_attempt, 
-                   'submitted': submitted}
     ci = RequestContext(request)
     return my_render_to_response('yaksh/question.html', context,
                                  context_instance=ci)
@@ -925,9 +919,6 @@ def show_question(request, q_id, attempt_num, questionpaper_id, success_msg=None
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(request, msg, attempt_num, questionpaper_id)
-    elif success_msg:
-        
-        return question(request, q_id, attempt_num, questionpaper_id, success_msg)
     else:
         return question(request, q_id, attempt_num, questionpaper_id, success_msg)
     
@@ -1058,11 +1049,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
 
             return my_render_to_response('yaksh/question.html', context,
                                          context_instance=ci)
-        elif user_answer:
-            success_msg=True
-            next_q = paper.completed_question(question.id)
-            return show_question(request, next_q, attempt_num,
-                                 questionpaper_id, success_msg)
         else:
             next_q = paper.completed_question(question.id)
             return show_question(request, next_q, attempt_num,
