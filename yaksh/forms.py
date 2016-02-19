@@ -11,7 +11,7 @@ from string import letters, punctuation, digits
 import datetime
 
 languages = (
-    ("select", "Select Language"),
+    ("general", "Select Language"),
     ("python", "Python"),
     ("bash", "Bash"),
     ("c", "C Language"),

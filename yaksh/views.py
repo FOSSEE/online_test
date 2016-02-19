@@ -859,7 +859,9 @@ def get_questions(paper):
         q_unanswered = paper.get_unanswered_questions()
         q_unanswered.sort()
         to_attempt = q_unanswered
-    for index, value in enumerate(all_questions, 1):
+    
+    question_objs = Question.objects.filter(id__in=all_questions)
+    for index, value in enumerate(question_objs, 1):
         questions[value] = index
         questions = collections.OrderedDict(sorted(questions.items(), key=lambda x:x[1]))
     return questions, to_attempt, submitted
@@ -886,7 +888,7 @@ def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     if time_left == 0:
         return complete(request, attempt_num, questionpaper_id, reason='Your time is up!')
     quiz_name = paper.question_paper.quiz.description
-    questions, to_attempt, submitted = get_questions(paper)
+    questions, to_attempt, submitted= get_questions(paper)
     if success_msg is None:
         context = {'question': q, 'questions': questions, 'paper': paper,
                    'user': user, 'quiz_name': quiz_name, 'time_left': time_left,
@@ -900,6 +902,12 @@ def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
         skipped_answer = paper.answers.filter(question=q, skipped=True)
         if skipped_answer:
             context['last_attempt'] = skipped_answer[0].answer
+        elif success_msg:
+            msg="Correct Output"
+            context = {'question': q, 'questions': questions, 'paper': paper, 
+                   'error_message':msg,'user': user, 'quiz_name': quiz_name, 
+                   'time_left': time_left,'to_attempt': to_attempt, 
+                   'submitted': submitted}
     ci = RequestContext(request)
     return my_render_to_response('yaksh/question.html', context,
                                  context_instance=ci)
@@ -917,8 +925,12 @@ def show_question(request, q_id, attempt_num, questionpaper_id, success_msg=None
     if len(q_id) == 0:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(request, msg, attempt_num, questionpaper_id)
+    elif success_msg:
+        
+        return question(request, q_id, attempt_num, questionpaper_id, success_msg)
     else:
         return question(request, q_id, attempt_num, questionpaper_id, success_msg)
+    
 
 
 def _save_skipped_answer(old_skipped, user_answer, paper, question):
@@ -1024,7 +1036,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                    'paper': paper, 'last_attempt': user_code,
                    'quiz_name': paper.question_paper.quiz.description,
                    'time_left': time_left, 'questions': questions,
-                   'to_attempt': to_attempt, 'submitted': submitted}
+                   'to_attempt': to_attempt, 'submitted': submitted, 'answer':Answer}
         ci = RequestContext(request)
 
         return my_render_to_response('yaksh/question.html', context,
@@ -1033,7 +1045,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         if time_left <= 0:
             reason = 'Your time is up!'
             return complete(request, reason, attempt_num, questionpaper_id)
-
         # Display the same question if user_answer is None
         elif not user_answer:
             msg = "Please submit a valid option or code"
@@ -1042,11 +1053,16 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             context = {'question': question, 'error_message': msg,
                        'paper': paper, 'quiz_name': paper.question_paper.quiz.description,
                        'time_left': time_left, 'questions': questions,
-                       'to_attempt': to_attempt, 'submitted': submitted}
+                       'to_attempt': to_attempt, 'submitted': submitted, 'answer':Answer}
             ci = RequestContext(request)
 
             return my_render_to_response('yaksh/question.html', context,
                                          context_instance=ci)
+        elif user_answer:
+            success_msg=True
+            next_q = paper.completed_question(question.id)
+            return show_question(request, next_q, attempt_num,
+                                 questionpaper_id, success_msg)
         else:
             next_q = paper.completed_question(question.id)
             return show_question(request, next_q, attempt_num,
@@ -1082,7 +1098,6 @@ def validate_answer(user, user_answer, question, json_data=None):
             result = json.loads(json_result)
             if result.get('success'):
                 correct = True
-
     return correct, result
 
 def get_question_labels(request, attempt_num=None, questionpaper_id=None):
