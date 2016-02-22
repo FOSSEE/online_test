@@ -1,0 +1,19 @@
+{% extends "manage.html" %}
+
+{% block title %} Statistics {% endblock title %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question_quiz.css" type="text/css" />
+{% endblock %}
+{% block subtitle %}
+Statistics for {{quiz_name}}
+{% endblock %}
+{% block manage %}
+<p><b>Total number of participants(including multiple attempts): {{ total }}</b></p>
+<table class="bordered-table zebra-striped">
+    <tr><th>Question</th><th>Type</th><th>Answered</th></tr>
+    {% for question, attempts in question_stats.items  %}
+    <tr><td>{{ question.summary }}</td><td>{{ question.type }}</td><td>{{ attempts }} ({% widthratio attempts total 100 %}%)</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}
