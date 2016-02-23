@@ -9,7 +9,7 @@
 Statistics for {{quiz_name}}
 {% endblock %}
 {% block manage %}
-<p><b>Total number of participants(including multiple attempts): {{ total }}</b></p>
+<p><b>Total number of participants: {{ total }}</b></p>
 <table class="bordered-table zebra-striped">
     <tr><th>Question</th><th>Type</th><th>Answered</th></tr>
     {% for question, attempts in question_stats.items  %}
