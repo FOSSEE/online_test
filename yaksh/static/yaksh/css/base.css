@@ -967,8 +967,7 @@ input[disabled],
 select[disabled],
 textarea[disabled],
 input[readonly],
-select[readonly],
-textarea[readonly] {
+select[readonly]{
   background-color: #f5f5f5;
   border-color: #ddd;
   cursor: not-allowed;
@@ -1192,10 +1191,6 @@ table tbody th {
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
   border-radius: 4px;
-}
-.output {
-background-color: #f2dede;
-
 }
 .bordered-table th + th, .bordered-table td + td, .bordered-table th + td {
   border-left: 1px solid #ddd;
@@ -1897,7 +1892,7 @@ footer {
 .alert-success, .alert-success .alert-heading {
   color: #468847;
 }
-.alert-danger {
+.alert-danger, .alert-error {
   background-color: #f2dede;
   border-color: #eed3d7;
 }
@@ -2349,3 +2344,39 @@ blink {
     -webkit-animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
     -webkit-animation-duration: 1s;
 }
+
+.error{
+padding:40px;
+height:auto;
+width:650px;
+resize:None;
+overflow-y:scroll;
+background-color:white;
+border: 0 None white;
+}
+
+.error_msg{
+padding:45px;
+height:auto;
+width:650px;
+resize:None;
+overflow:hidden;
+border: 10px solid #f2dede;
+}
+
+.bash{
+padding:0;
+height:auto;
+width:750px;
+resize:None;
+overflow:hidden;
+background-color:white;
+border: 0 none white;
+}
+
+
+
+
+
+
+

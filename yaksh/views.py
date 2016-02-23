@@ -859,9 +859,8 @@ def get_questions(paper):
         q_unanswered = paper.get_unanswered_questions()
         q_unanswered.sort()
         to_attempt = q_unanswered
-    
-    question_objs = Question.objects.filter(id__in=all_questions)
-    for index, value in enumerate(question_objs, 1):
+    question = Question.objects.filter(id__in=all_questions)
+    for index, value in enumerate(question, 1):
         questions[value] = index
         questions = collections.OrderedDict(sorted(questions.items(), key=lambda x:x[1]))
     return questions, to_attempt, submitted
@@ -1027,7 +1026,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                    'paper': paper, 'last_attempt': user_code,
                    'quiz_name': paper.question_paper.quiz.description,
                    'time_left': time_left, 'questions': questions,
-                   'to_attempt': to_attempt, 'submitted': submitted, 'answer':Answer}
+                   'to_attempt': to_attempt, 'submitted': submitted}
         ci = RequestContext(request)
 
         return my_render_to_response('yaksh/question.html', context,
@@ -1041,14 +1040,28 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             msg = "Please submit a valid option or code"
             time_left = paper.time_left()
             questions, to_attempt, submitted = get_questions(paper)
-            context = {'question': question, 'error_message': msg,
-                       'paper': paper, 'quiz_name': paper.question_paper.quiz.description,
-                       'time_left': time_left, 'questions': questions,
-                       'to_attempt': to_attempt, 'submitted': submitted, 'answer':Answer}
+            context = {'question': question, 'paper': paper, 
+                   'quiz_name': paper.question_paper.quiz.description,
+                   'time_left': time_left, 'questions': questions,
+                   'to_attempt': to_attempt, 'submitted': submitted,
+                   'error_message': msg}
             ci = RequestContext(request)
-
             return my_render_to_response('yaksh/question.html', context,
                                          context_instance=ci)
+        elif question.type == 'code' and user_answer:
+            msg = "Correct Output"
+            success = "True"
+            next_q = paper.completed_question(question.id)
+            time_left = paper.time_left()
+            questions, to_attempt, submitted = get_questions(paper)
+            context = {'question': question, 'paper': paper, 
+                   'quiz_name': paper.question_paper.quiz.description,
+                   'time_left': time_left, 'questions': questions,
+                   'to_attempt': to_attempt, 'submitted': submitted,
+                   'error_message': msg, 'success': success}
+            ci = RequestContext(request)
+            return my_render_to_response('yaksh/question.html', context,
+                                         context_instance=ci) 
         else:
             next_q = paper.completed_question(question.id)
             return show_question(request, next_q, attempt_num,
