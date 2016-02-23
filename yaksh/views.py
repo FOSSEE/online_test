@@ -1170,13 +1170,13 @@ def show_statistics(request, questionpaper_id):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
-    questions_answered = []
-    question_stats = {}
     papers = AnswerPaper.objects.filter(question_paper_id=questionpaper_id,
                                         status='completed')
     total_attempt = papers.count()
     if total_attempt == 0:
         return my_redirect('/exam/manage/')
+    questions_answered = []
+    question_stats = {}
     for paper in papers:
         questions_answered += paper.questions_answered.split('|')
     quiz_name = paper.question_paper.quiz.description
