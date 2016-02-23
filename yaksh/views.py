@@ -1164,32 +1164,36 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
     else:
         return my_redirect('/exam/')
 
+
 @login_required
-def statistics(request, questionpaper_id):
+def show_statistics(request, questionpaper_id):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     questions_answered = []
     question_stats = {}
     papers = AnswerPaper.objects.filter(question_paper_id=questionpaper_id,
-            status='completed')
+                                        status='completed')
+    total_attempt = papers.count()
+    if total_attempt == 0:
+        return my_redirect('/exam/manage/')
     for paper in papers:
         questions_answered += paper.questions_answered.split('|')
     quiz_name = paper.question_paper.quiz.description
     questions_answered = collections.Counter(map(int, filter(None,
-        questions_answered)))
-    total_attempt = papers.count()
-    questions = Question.objects.filter(id__in=paper.questions.split('|')).\
-            order_by('type')
+                                             questions_answered)))
+    questions = Question.objects.filter(
+        id__in=paper.questions.split('|')
+    ).order_by('type')
     for question in questions:
         if question.id in questions_answered:
             question_stats[question] = questions_answered[question.id]
         else:
             question_stats[question] = 0
     context = {'question_stats': question_stats, 'quiz_name': quiz_name,
-            'total': total_attempt}
+               'total': total_attempt}
     return my_render_to_response('yaksh/statistics_question.html', context,
-            context_instance=RequestContext(request))
+                                 context_instance=RequestContext(request))
 
 
 @login_required
@@ -1547,5 +1551,3 @@ def design_questionpaper(request):
         context = {'form': form}
         return my_render_to_response('yaksh/design_questionpaper.html',
                                      context, context_instance=ci)
-
-
