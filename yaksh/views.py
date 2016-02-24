@@ -1166,32 +1166,27 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
 
 
 @login_required
-def show_statistics(request, questionpaper_id):
+def show_statistics(request, questionpaper_id, attempt_number=None):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
-    papers = AnswerPaper.objects.filter(question_paper_id=questionpaper_id,
-                                        status='completed')
-    total_attempt = papers.count()
-    if total_attempt == 0:
+    attempt_numbers = AnswerPaper.objects.get_attempt_numbers(questionpaper_id)
+    quiz = get_object_or_404(QuestionPaper, pk=questionpaper_id).quiz
+    if attempt_number is None:
+        context = {'quiz': quiz, 'attempts': attempt_numbers,
+                   'questionpaper_id': questionpaper_id}
+        return my_render_to_response('yaksh/statistics_question.html', context,
+                                     context_instance=RequestContext(request))
+    total_attempt = AnswerPaper.objects.get_count(questionpaper_id,
+                                                  attempt_number)
+    if not AnswerPaper.objects.has_attempt(questionpaper_id, attempt_number):
         return my_redirect('/exam/manage/')
-    questions_answered = []
-    question_stats = {}
-    for paper in papers:
-        questions_answered += paper.questions_answered.split('|')
-    quiz_name = paper.question_paper.quiz.description
-    questions_answered = collections.Counter(map(int, filter(None,
-                                             questions_answered)))
-    questions = Question.objects.filter(
-        id__in=paper.questions.split('|')
-    ).order_by('type')
-    for question in questions:
-        if question.id in questions_answered:
-            question_stats[question] = questions_answered[question.id]
-        else:
-            question_stats[question] = 0
-    context = {'question_stats': question_stats, 'quiz_name': quiz_name,
-               'total': total_attempt}
+    question_stats = AnswerPaper.objects.get_question_statistics(
+        questionpaper_id, attempt_number
+    )
+    context = {'question_stats': question_stats, 'quiz': quiz,
+               'questionpaper_id': questionpaper_id,
+               'attempts': attempt_numbers, 'total': total_attempt}
     return my_render_to_response('yaksh/statistics_question.html', context,
                                  context_instance=RequestContext(request))
 

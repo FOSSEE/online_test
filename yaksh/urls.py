@@ -52,6 +52,8 @@ urlpatterns = patterns('yaksh.views',
                                                         'manual_questionpaper'),
     url(r'^manage/statistics/question/(?P<questionpaper_id>\d+)/$',
         'show_statistics'),
+    url(r'^manage/statistics/question/(?P<questionpaper_id>\d+)/(?P<attempt_number>\d+)/$',
+        'show_statistics'),
     url(r'^ajax/questionpaper/(?P<query>.+)/$', 'ajax_questionpaper'),
     url(r'^ajax/questions/filter/$', 'ajax_questions_filter'),
 
