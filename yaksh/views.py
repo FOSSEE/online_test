@@ -1166,6 +1166,32 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
 
 
 @login_required
+def show_statistics(request, questionpaper_id, attempt_number=None):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+    attempt_numbers = AnswerPaper.objects.get_attempt_numbers(questionpaper_id)
+    quiz = get_object_or_404(QuestionPaper, pk=questionpaper_id).quiz
+    if attempt_number is None:
+        context = {'quiz': quiz, 'attempts': attempt_numbers,
+                   'questionpaper_id': questionpaper_id}
+        return my_render_to_response('yaksh/statistics_question.html', context,
+                                     context_instance=RequestContext(request))
+    total_attempt = AnswerPaper.objects.get_count(questionpaper_id,
+                                                  attempt_number)
+    if not AnswerPaper.objects.has_attempt(questionpaper_id, attempt_number):
+        return my_redirect('/exam/manage/')
+    question_stats = AnswerPaper.objects.get_question_statistics(
+        questionpaper_id, attempt_number
+    )
+    context = {'question_stats': question_stats, 'quiz': quiz,
+               'questionpaper_id': questionpaper_id,
+               'attempts': attempt_numbers, 'total': total_attempt}
+    return my_render_to_response('yaksh/statistics_question.html', context,
+                                 context_instance=RequestContext(request))
+
+
+@login_required
 def monitor(request, questionpaper_id=None):
     """Monitor the progress of the papers taken so far."""
 

@@ -2,6 +2,7 @@ import datetime
 import json
 from random import sample, shuffle
 from itertools import islice, cycle
+from collections import Counter
 from django.db import models
 from django.contrib.auth.models import User
 from taggit.managers import TaggableManager
@@ -283,6 +284,70 @@ class QuestionSet(models.Model):
 
 
 ###############################################################################
+class AnswerPaperManager(models.Manager):
+    def get_all_questions(self, questionpaper_id, attempt_number,
+                          status='completed'):
+        ''' Return a dict of question id as key and count as value'''
+        papers = self.filter(question_paper_id=questionpaper_id,
+                             attempt_number=attempt_number, status=status)
+        questions = list()
+        for paper in papers:
+            questions += paper.get_questions()
+        return Counter(map(int, questions))
+
+    def get_all_questions_answered(self, questionpaper_id, attempt_number,
+                                   status='completed'):
+        ''' Return a dict of answered question id as key and count as value'''
+        papers = self.filter(question_paper_id=questionpaper_id,
+                             attempt_number=attempt_number, status=status)
+        questions_answered = list()
+        for paper in papers:
+            for question in filter(None, paper.get_questions_answered()):
+                if paper.is_answer_correct(question):
+                    questions_answered.append(question)
+        return Counter(map(int, questions_answered))
+
+    def get_attempt_numbers(self, questionpaper_id, status='completed'):
+        ''' Return list of attempt numbers'''
+        attempt_numbers = self.filter(
+            question_paper_id=questionpaper_id, status=status
+        ).values_list('attempt_number', flat=True).distinct()
+        return attempt_numbers
+
+    def has_attempt(self, questionpaper_id, attempt_number, status='completed'):
+        ''' Whether question paper is attempted'''
+        return self.filter(question_paper_id=questionpaper_id,
+                           attempt_number=attempt_number, status=status).exists()
+
+    def get_count(self, questionpaper_id, attempt_number, status='completed'):
+        ''' Return count of answerpapers for a specfic question paper
+            and attempt number'''
+        return self.filter(question_paper_id=questionpaper_id,
+                           attempt_number=attempt_number, status=status).count()
+
+    def get_question_statistics(self, questionpaper_id, attempt_number,
+                                status='completed'):
+        ''' Return dict with question object as key and list as value
+            The list contains two value, first the number of times a question
+            was answered correctly, and second the number of times a question
+            appeared in a quiz'''
+        question_stats = {}
+        questions_answered = self.get_all_questions_answered(questionpaper_id,
+                                                             attempt_number)
+        questions = self.get_all_questions(questionpaper_id, attempt_number)
+        all_questions = Question.objects.filter(
+            id__in=set(questions)
+        ).order_by('type')
+        for question in all_questions:
+            if question.id in questions_answered:
+                question_stats[question] = [questions_answered[question.id],
+                                            questions[question.id]]
+            else:
+                question_stats[question] = [0, questions[question.id]]
+        return question_stats
+
+
+###############################################################################
 class AnswerPaper(models.Model):
     """A answer paper for a student -- one per student typically.
     """
@@ -329,6 +394,8 @@ class AnswerPaper(models.Model):
     # Status of the quiz attempt
     status = models.CharField(max_length=20, choices=test_status,\
             default='inprogress')
+
+    objects = AnswerPaperManager()
 
     def current_question(self):
         """Returns the current active question to display."""
@@ -448,6 +515,19 @@ class AnswerPaper(models.Model):
                 q_a[question] = [answer]
         return q_a
 
+    def get_questions(self):
+        ''' Return a list of questions'''
+        return self.questions.split('|')
+
+    def get_questions_answered(self):
+        ''' Return a list of questions answered'''
+        return self.questions_answered.split('|')
+
+    def is_answer_correct(self, question_id):
+        ''' Return marks of a question answered'''
+        return self.answers.filter(question_id=question_id,
+                                   correct=True).exists()
+
     def __unicode__(self):
         u = self.user
         return u'Question paper for {0} {1}'.format(u.first_name, u.last_name)
@@ -475,3 +555,5 @@ class TestCase(models.Model):
 
     # Test case Expected answer in list form
     expected_answer = models.TextField(blank=True, null = True)
+
+
