@@ -45,6 +45,7 @@ function updateClock(){
     var ss = ('0' + t.seconds).slice(-2);
 
     if(t.total<0){
+      	
       document.forms["code"].submit();
       clearInterval(timeinterval);
       return null;
@@ -89,23 +90,26 @@ function call_skip(url)
     form.action = url
     form.submit();
 }
-
+	{% if question.type == 'code' and success == 'True' %}
+	{% if to_attempt|length != 0 %}
+	window.setTimeout(function()
+	{   
+		{% for qid, num in questions.items %}
+		location.href="{{ URL_ROOT }}/exam/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/"
+		{% endfor %}		
+	}, 1000);
+	{% else %}
+	window.setTimeout(function()
+	{   
+		location.href="{{ URL_ROOT }}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/"
+	}, 1000);
+    {% endif %}
+	{% endif %}
 </script>
+
 {% endblock script %}
 
-
-
 {% block onload %} onload="updateTime();setSnippetHeight()" {% endblock %}
-
-{% block pagetitle %}
-
-<table><h6><div>
-	<tr><td class=td1-class><h5>You have {{ paper.questions_left }} question(s) left in {{ quiz_name }}</h5>
-	<td class=td2-class><div class=time-div id="time_left">
-	</div>
-</div></h6></table>
-
-{% endblock %}
 
 {% block content %}
 <div class="topbar">
@@ -113,58 +117,54 @@ function call_skip(url)
      <div class="container">
         <h3 class="brand"><strong>Online Test</h3></strong>
         <ul>
-        <li> <h5><a> Hi {{user.first_name.title}} {{user.last_name.title}}  </a></h5>
-        </ul>
-        <form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" class="pull-right">
-        {% csrf_token %}
-         <button class="btn" type="submit" name="quit">Quit Exam</button> </li>
-
-        </form>
+        <li><h5><a> Hi {{user.first_name.title}} {{user.last_name.title}}  </a></h5></li>
+        </ul><br>
+        <div class=time-div id="time_left"></div>
+		<h5 class=td1-class>You have {{ paper.questions_left }} question(s) left in {{ quiz_name }}</h5>
      </div>
    </div>
 </div>
-<div class = container>
+<div class = "container">
   <div class="sidebar">
     <p>Question Navigator </p>
     <div class="pagination">
-        <ul>
-            {% for qid, num in questions.items %}
-                {% if qid in to_attempt %}
-                    {% if qid == question.id|slugify %}
-                        <li class="active"><a href="#" onclick="call_skip('{{ URL_ROOT }}/exam/{{ qid }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ num }}</a></li>
-                    {% else %}
-                        <li><a href="#" onclick="call_skip('{{ URL_ROOT }}/exam/{{ qid }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ num }}</a></li>
-                    {% endif %}
-                {% endif %}
-                {% if qid in submitted %}
-                    <li class="disabled"><a href="#">{{ num }}</a></li>
-                {% endif %}
-            {% endfor %}
-        </ul>
+    <ul>
+    {% for qid, num in questions.items %}
+        {% if qid.id|slugify in to_attempt %}
+            {% if qid.id|slugify == question.id|slugify %}
+                <li class="active"><a href="#" data-toggle="tooltip" title="{{ qid.description }}" onclick="call_skip('{{ URL_ROOT }}/exam/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ num }}</a></li>
+            {% else %}
+                <li><a href="#" data-toggle="tooltip" title="{{ qid.description }}" onclick="call_skip('{{ URL_ROOT }}/exam/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ num }}</a></li>
+			{% endif %}
+        {% endif %}
+        {% if qid.id|slugify in submitted %}
+            <li class="disabled"><a href="#">{{ num }}</a></li>
+        {% endif %}
+    {% endfor %}
+    </ul>
     </div>
   </div>
 </div>
-
 <div class="span13">
   <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br>
   <font size=3 face=arial> {{ question.description|safe }} </font>
   <br><font size=3 face=arial> Language: {{ question.language }} </font><br>
-</div>
-{% if error_message %}
-  <div class="alert alert-error">
-  {% for e in error_message.splitlines %}
-    {{ e|join:"" }} 
-    <br/>
-  {% endfor%}
-  </div>
-{% endif %}
 
-
+  {% if question.type == "code" %}
+  <br><h3>Output:</h3>
+    {% if error_message %}
+    <div class="alert alert-error">
+      <textarea class="error" rows="2" cols="20" readonly="yes">{{ error_message }}</textarea>
+	{% else %}
+	  <textarea class="error_msg" readonly="yes"> Please submit your answer below </textarea>
+	{% endif %}
+	</div>
+  {% endif %}
+<br> 
          <p id="status"></p>
-
          <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" enctype="multipart/form-data">
-             {% csrf_token %}
-             <input type=hidden name="question_id" id="question_id" value={{ question.id }}></input>
+         {% csrf_token %}
+         <input type=hidden name="question_id" id="question_id" value={{ question.id }}></input>
 
          {% if question.type == "mcq" %}
          {% for option in question.options.strip.splitlines %}
@@ -183,18 +183,15 @@ function call_skip(url)
          {% endfor %}
          {% endif %}
          {% if question.type == "code" %}
-
-         <textarea rows="1" style="padding:0;height:auto;width:750px;overflow:hidden;background-color:white;border: 0 none white;" readonly="yes"  name="snippet" id="snippet" wrap="off">{% if last_attempt %}{{ question.snippet }}{% else %}{% if question.type == "bash" %} #!/bin/bash&#13;&#10;{{ question.snippet }}{% else %}{{ question.snippet }}{% endif %}{% endif %}</textarea>
-        
-         <textarea tabindex=1 rows="10" style="padding:0;height:auto; box-shadow: none;width:750px;margin-bottom:10px;overflow:hidden;border:none;" name="answer" id="answer" wrap="off" onkeydown="return catchTab(this,event)">{% if last_attempt %}{{last_attempt}}{% else %}{% if question.type == "bash" %}{% else %}{% endif %}{% endif %}</textarea>
+        <h3>Program:</h3>
+        <textarea rows="1" class="bash" readonly="yes"  name="snippet" id="snippet" wrap="off" >{% if last_attempt %}{{ question.snippet }}{% else %}{% if question.type == "bash" %} #!/bin/bash&#13;&#10;{{ question.snippet }}{% else %}{{ question.snippet }}{% endif %}{% endif %}</textarea>
+        <textarea rows="10" class="bash" name="answer" id="answer" wrap="off" onkeydown="return catchTab(this,event)">{% if last_attempt %}{{last_attempt}}{% else %}{% if question.type == "bash" %}{% else %}{% endif %}{% endif %}</textarea>
 <br>
-
  <script type="text/javascript">
        addLineNumbers('answer');
        </script>
        <script>addLineNumbers('snippet');</script>
          {% endif %}
-
          {% if question.type == "mcq" or question.type == "mcc "%}
          <br><button class="btn" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
          {% elif question.type == "upload" %}
@@ -206,8 +203,7 @@ function call_skip(url)
              <button class="btn" type="submit" name="skip" id="skip">Attempt Later</button>
          {% endif %}
          </form>
-         
-      
+</div>        
     <!-- Modal -->
     <div class="modal fade " id="upload_alert" >
       <div class="modal-dialog">
@@ -224,5 +220,8 @@ function call_skip(url)
         </div>
       </div>
    </div>
-
+   <form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" class="pull-right">
+        {% csrf_token %}
+        <button class="btn" type="submit" name="quit">Quit Exam</button>
+   </form>
 {% endblock content %}

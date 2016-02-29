@@ -859,7 +859,8 @@ def get_questions(paper):
         q_unanswered = paper.get_unanswered_questions()
         q_unanswered.sort()
         to_attempt = q_unanswered
-    for index, value in enumerate(all_questions, 1):
+    question = Question.objects.filter(id__in=all_questions)
+    for index, value in enumerate(question, 1):
         questions[value] = index
         questions = collections.OrderedDict(sorted(questions.items(), key=lambda x:x[1]))
     return questions, to_attempt, submitted
@@ -886,7 +887,7 @@ def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     if time_left == 0:
         return complete(request, attempt_num, questionpaper_id, reason='Your time is up!')
     quiz_name = paper.question_paper.quiz.description
-    questions, to_attempt, submitted = get_questions(paper)
+    questions, to_attempt, submitted= get_questions(paper)
     if success_msg is None:
         context = {'question': q, 'questions': questions, 'paper': paper,
                    'user': user, 'quiz_name': quiz_name, 'time_left': time_left,
@@ -919,6 +920,7 @@ def show_question(request, q_id, attempt_num, questionpaper_id, success_msg=None
         return complete(request, msg, attempt_num, questionpaper_id)
     else:
         return question(request, q_id, attempt_num, questionpaper_id, success_msg)
+    
 
 
 def _save_skipped_answer(old_skipped, user_answer, paper, question):
@@ -1026,31 +1028,44 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                    'time_left': time_left, 'questions': questions,
                    'to_attempt': to_attempt, 'submitted': submitted}
         ci = RequestContext(request)
-
         return my_render_to_response('yaksh/question.html', context,
                                      context_instance=ci)
     else:
         if time_left <= 0:
             reason = 'Your time is up!'
             return complete(request, reason, attempt_num, questionpaper_id)
-
         # Display the same question if user_answer is None
         elif not user_answer:
             msg = "Please submit a valid option or code"
             time_left = paper.time_left()
             questions, to_attempt, submitted = get_questions(paper)
-            context = {'question': question, 'error_message': msg,
-                       'paper': paper, 'quiz_name': paper.question_paper.quiz.description,
-                       'time_left': time_left, 'questions': questions,
-                       'to_attempt': to_attempt, 'submitted': submitted}
+            context = {'question': question, 'paper': paper, 
+                   'quiz_name': paper.question_paper.quiz.description,
+                   'time_left': time_left, 'questions': questions,
+                   'to_attempt': to_attempt, 'submitted': submitted,
+                   'error_message': msg}
             ci = RequestContext(request)
-
-            return my_render_to_response('yaksh/question.html', context,
-                                         context_instance=ci)
+         
+        elif question.type == 'code' and user_answer:
+            msg = "Correct Output"
+            success = "True"
+            paper.completed_question(question.id)
+            time_left = paper.time_left()
+            questions, to_attempt, submitted = get_questions(paper)
+            context = {'question': question, 'paper': paper, 
+                   'quiz_name': paper.question_paper.quiz.description,
+                   'time_left': time_left, 'questions': questions,
+                   'to_attempt': to_attempt, 'submitted': submitted,
+                   'error_message': msg, 'success': success}
+            ci = RequestContext(request)
+         
         else:
             next_q = paper.completed_question(question.id)
             return show_question(request, next_q, attempt_num,
                                  questionpaper_id, success_msg)
+                                 
+        return my_render_to_response('yaksh/question.html', context,
+                                         context_instance=ci)
 
 
 def validate_answer(user, user_answer, question, json_data=None):
@@ -1082,7 +1097,6 @@ def validate_answer(user, user_answer, question, json_data=None):
             result = json.loads(json_result)
             if result.get('success'):
                 correct = True
-
     return correct, result
 
 def get_question_labels(request, attempt_num=None, questionpaper_id=None):

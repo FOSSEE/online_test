@@ -24,15 +24,16 @@ class PythonCodeEvaluator(CodeEvaluator):
             _tests = compile(test_code, '<string>', mode='exec')
             exec _tests in g
         except AssertionError:
-            type, value, tb = sys.exc_info()
+            _type, value, tb = sys.exc_info()
             info = traceback.extract_tb(tb)
             fname, lineno, func, text = info[-1]
             text = str(test_code).splitlines()[lineno-1]
-            err = "{0} {1} in: {2}".format(type.__name__, str(value), text)
+            err = "{0} {1} in: {2}".format(_type.__name__, str(value), text)
+        except:
+            err = traceback.format_exc(limit=0)
         else:
             success = True
             err = 'Correct answer'
-
         del tb
         return success, err
 
