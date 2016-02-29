@@ -1028,7 +1028,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                    'time_left': time_left, 'questions': questions,
                    'to_attempt': to_attempt, 'submitted': submitted}
         ci = RequestContext(request)
-
         return my_render_to_response('yaksh/question.html', context,
                                      context_instance=ci)
     else:
@@ -1046,12 +1045,11 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                    'to_attempt': to_attempt, 'submitted': submitted,
                    'error_message': msg}
             ci = RequestContext(request)
-            return my_render_to_response('yaksh/question.html', context,
-                                         context_instance=ci)
+         
         elif question.type == 'code' and user_answer:
             msg = "Correct Output"
             success = "True"
-            next_q = paper.completed_question(question.id)
+            paper.completed_question(question.id)
             time_left = paper.time_left()
             questions, to_attempt, submitted = get_questions(paper)
             context = {'question': question, 'paper': paper, 
@@ -1060,12 +1058,14 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                    'to_attempt': to_attempt, 'submitted': submitted,
                    'error_message': msg, 'success': success}
             ci = RequestContext(request)
-            return my_render_to_response('yaksh/question.html', context,
-                                         context_instance=ci) 
+         
         else:
             next_q = paper.completed_question(question.id)
             return show_question(request, next_q, attempt_num,
                                  questionpaper_id, success_msg)
+                                 
+        return my_render_to_response('yaksh/question.html', context,
+                                         context_instance=ci)
 
 
 def validate_answer(user, user_answer, question, json_data=None):
