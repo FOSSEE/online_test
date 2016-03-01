@@ -24,9 +24,7 @@ class TimeoutException(Exception):
 
 def timeout_handler(signum, frame):
     """A handler for the ALARM signal."""
-    msg = 'Code took more than %s seconds to run. You probably '\
-              'have an infinite loop in your code.' % SERVER_TIMEOUT
-    raise TimeoutException(msg)
+    raise TimeoutException('Code took too long to run.')
 
 
 def create_signal_handler():
