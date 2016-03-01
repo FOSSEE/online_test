@@ -898,7 +898,7 @@ def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     if time_left == 0:
         return complete(request, attempt_num, questionpaper_id, reason='Your time is up!')
     quiz_name = paper.question_paper.quiz.description
-    questions, to_attempt, submitted= get_questions(paper)
+    questions, to_attempt, submitted = get_questions(paper)
     if success_msg is None:
         context = {'question': q, 'questions': questions, 'paper': paper,
                    'user': user, 'quiz_name': quiz_name, 'time_left': time_left,
