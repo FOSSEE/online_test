@@ -27,9 +27,9 @@
         <a href="{{ URL_ROOT }}/exam/manage/"><h3 class="brand"><strong>Online Test</h3></strong></a>
 <ul>
 <li><a href="{{ URL_ROOT }}/exam/manage/questions">Questions</a></li>
-               <li><a href="{{ URL_ROOT }}/exam/manage/showquiz">Quizzes</a></li>
         <li><a href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
 <li><a href="{{ URL_ROOT }}/exam/manage/monitor">Monitor</a></li>
+<li><a href="{{ URL_ROOT }}/exam/manage/courses">Courses</a></li>
         </ul>
 <ul style="float:right;">
 <li><strong><a style='cursor:pointer' onClick='location.replace("{{URL_ROOT}}/exam/complete/");'>Log out</a></strong></li>
@@ -72,8 +72,8 @@
                 <hr>
                 <center>
                     <h4>Moderator's Dashboard!</h4>
-                    <h5>Click on the button given below to add a new quiz.</h5>
-                    <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz");'>Add New Quiz</button>
+                    <h5>Click on the button given below to add a new course.</h5>
+                    <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/add_course");'>Add New Course</button>
                 </center>
 {% endblock %}
             </div>

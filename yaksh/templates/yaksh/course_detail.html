@@ -1,0 +1,59 @@
+{% extends "manage.html" %}
+
+{% block title %} Course Detail {% endblock title %}
+
+{% block subtitle %} Course Detail for {{ course.name }} {% endblock %}
+
+{% block css %}
+<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/course.css" />
+{% endblock %}
+
+{% block manage %}
+<div class="row">
+    <div class="span6 wrap">
+        <center><b><u>Requests</u></b></center><br>
+        {% for request in course.get_requests %}
+        <div class="well">
+            <div class="row">
+                <div class="span3" style="padding-top:10px">
+                    {{ request.username }}
+                </div>
+                <a class="btn success" href="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/{{ request.id }}/"> Enroll </a>  <a class="btn danger" href="{{URL_ROOT}}/exam/manage/reject/{{ course.id }}/{{ request.id }}/"> Reject </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="span6 wrap">
+        <center><b><u>Rejected</u></b></center><br>
+        {% for rejected in course.get_rejected %}
+        <div class="well">
+            <div class="row">
+                <div class="span4" style="padding-top:10px">
+                    {{ rejected.username }}
+                </div>
+                <a class="btn success" href="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/{{ rejected.id }}/"> Enroll </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<br>
+<div class="row">
+    <div class="span6 offset4 wrap">
+        <center><b><u>Enrolled</u></b></center><br>
+        {% for enrolled in course.get_enrolled %}
+        <div class="well">
+            <div class="row">
+                <div class="span4" style="padding-top:10px">
+                    {{ enrolled.username }}
+                </div>
+                <a class="btn danger" href="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/{{ enrolled.id }}/"> Reject </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<div class="pull-right">
+            <a class="btn primary" href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">{% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}</a>
+</div>
+{% endblock %}

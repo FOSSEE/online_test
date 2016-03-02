@@ -17,11 +17,11 @@ from taggit.models import Tag
 from itertools import chain
 import json
 # Local imports.
-from yaksh.models import Quiz, Question, QuestionPaper, QuestionSet
+from yaksh.models import Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm, TestCaseFormSet,\
-                QuestionFilterForm
+                QuestionFilterForm, CourseForm
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
@@ -157,6 +157,8 @@ def quizlist_user(request):
     disabled_quizzes = []
     unexpired_quizzes = []
 
+    courses = Course.objects.filter(active=True)
+
     for paper in avail_quizzes:
         quiz_enable_time = paper.quiz.start_date_time
         quiz_disable_time = paper.quiz.end_date_time
@@ -170,7 +172,8 @@ def quizlist_user(request):
                 'quizzes': avail_quizzes,
                 'user': user,
                 'quizzes_taken': quizzes_taken,
-                'unexpired_quizzes': unexpired_quizzes
+                'unexpired_quizzes': unexpired_quizzes,
+                'courses': courses
             }
 
     return my_render_to_response("yaksh/quizzes_user.html", context)
@@ -495,7 +498,7 @@ def add_quiz(request, quiz_id=None):
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     if request.method == "POST":
-        form = QuizForm(request.POST)
+        form = QuizForm(request.POST, user=user)
         if form.is_valid():
             data = form.cleaned_data
             if quiz_id is None:
@@ -527,13 +530,13 @@ def add_quiz(request, quiz_id=None):
                                          context_instance=ci)
     else:
         if quiz_id is None:
-            form = QuizForm()
+            form = QuizForm(user=user)
             return my_render_to_response('yaksh/add_quiz.html',
                                          {'form': form},
                                          context_instance=ci)
         else:
             d = Quiz.objects.get(id=quiz_id)
-            form = QuizForm()
+            form = QuizForm(user=user)
             form.initial['start_date'] = d.start_date_time.date()
             form.initial['start_time'] = d.start_date_time.time()
             form.initial['end_date'] = d.end_date_time.date()
@@ -759,7 +762,7 @@ def prof_manage(request):
 rights/permissions and log in."""
     user = request.user
     if user.is_authenticated() and is_moderator(user):
-        question_papers = QuestionPaper.objects.all()
+        question_papers = QuestionPaper.objects.filter(quiz__course__creator=user)
         users_per_paper = []
         for paper in question_papers:
             answer_papers = AnswerPaper.objects.filter(question_paper=paper)
@@ -1166,6 +1169,102 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
 
 
 @login_required
+def add_course(request):
+    user = request.user
+    ci = RequestContext(request)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+    if request.method == 'POST':
+        form = CourseForm(request.POST)
+        if form.is_valid():
+            new_course = form.save(commit=False)
+            new_course.creator = user
+            new_course.save()
+            return my_render_to_response('manage.html', {'course': new_course})
+        else:
+            return my_render_to_response('yaksh/add_course.html',
+                                         {'form': form},
+                                         context_instance=ci)
+    else:
+        form = CourseForm()
+        return my_render_to_response('yaksh/add_course.html', {'form': form},
+                                     context_instance=ci)
+
+
+@login_required
+def enroll_request(request, course_id):
+    user = request.user
+    ci = RequestContext(request)
+    course = get_object_or_404(Course, pk=course_id)
+    course.request(user)
+    return my_redirect('/exam/manage/')
+
+
+@login_required
+def self_enroll(request, course_id):
+    user = request.user
+    ci = RequestContext(request)
+    course = get_object_or_404(Course, pk=course_id)
+    if course.is_self_enroll():
+        course.enroll(False, user)
+    return my_redirect('/exam/manage/')
+
+
+@login_required
+def courses(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+    courses = Course.objects.filter(creator=user)
+    return my_render_to_response('yaksh/courses.html', {'courses': courses})
+
+
+@login_required
+def course_detail(request, course_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+    course = get_object_or_404(Course, creator=user, pk=course_id)
+    return my_render_to_response('yaksh/course_detail.html', {'course': course})
+
+
+@login_required
+def enroll(request, course_id, user_id, was_rejected=False):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+    course = get_object_or_404(Course, creator=user, pk=course_id)
+    user = get_object_or_404(User, pk=user_id)
+    course.enroll(was_rejected, user)
+    return course_detail(request, course_id)
+
+
+@login_required
+def reject(request, course_id, user_id, was_enrolled=False):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+    course = get_object_or_404(Course, creator=user, pk=course_id)
+    user = get_object_or_404(User, pk=user_id)
+    course.reject(was_enrolled, user)
+    return course_detail(request, course_id)
+
+
+@login_required
+def toggle_course_status(request, course_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+    course = get_object_or_404(Course, creator=user, pk=course_id)
+    if course.active:
+        course.deactivate()
+    else:
+        course.activate()
+    course.save()
+    return course_detail(request, course_id)
+
+
+@login_required
 def show_statistics(request, questionpaper_id, attempt_number=None):
     user = request.user
     if not is_moderator(user):
@@ -1201,7 +1300,7 @@ def monitor(request, questionpaper_id=None):
         raise Http404('You are not allowed to view this page!')
 
     if questionpaper_id is None:
-        q_paper = QuestionPaper.objects.all()
+        q_paper = QuestionPaper.objects.filter(quiz__course__creator=user)
         context = {'papers': [],
                    'quiz': None,
                    'quizzes': q_paper}
@@ -1209,10 +1308,12 @@ def monitor(request, questionpaper_id=None):
                                      context_instance=ci)
     # quiz_id is not None.
     try:
-        q_paper = QuestionPaper.objects.get(id=questionpaper_id)
+        q_paper = QuestionPaper.objects.get(id=questionpaper_id,
+                                            quiz__course__creator=user)
     except QuestionPaper.DoesNotExist:
         papers = []
         q_paper = None
+        latest_attempts = []
     else:
         latest_attempts = []
         papers = AnswerPaper.objects.filter(question_paper=q_paper).order_by(
@@ -1301,7 +1402,7 @@ def show_all_quiz(request):
         forms = []
         for j in data:
             d = Quiz.objects.get(id=j)
-            form = QuizForm()
+            form = QuizForm(user=user)
             form.initial['start_date'] = d.start_date_time.date()
             form.initial['start_time'] = d.start_date_time.time()
             form.initial['end_date'] = d.end_date_time.date()
