@@ -98,18 +98,18 @@ class CodeEvaluator(object):
         A tuple: (success, error message).
         """
 
-        self._setup()
-        success, err = self._evaluate(self.test_case_args)
-        self._teardown()
+        self.setup()
+        success, err = self.safe_evaluate(self.test_case_args)
+        self.teardown()
 
         result = {'success': success, 'error': err}
         return result
 
     # Private Protocol ##########
-    def _setup(self):
+    def setup(self):
         self._change_dir(self.in_dir)
 
-    def _evaluate(self, args):
+    def safe_evaluate(self, args):
         # Add a new signal handler for the execution of this code.
         prev_handler = create_signal_handler()
         success = False
@@ -117,7 +117,7 @@ class CodeEvaluator(object):
 
         # Do whatever testing needed.
         try:
-            success, err = self._check_code(*args)
+            success, err = self.check_code(*args)
 
         except TimeoutException:
             err = self.timeout_msg
@@ -130,11 +130,11 @@ class CodeEvaluator(object):
 
         return success, err
 
-    def _teardown(self):
+    def teardown(self):
         # Cancel the signal
         delete_signal_handler()
 
-    def _check_code(self):
+    def check_code(self):
         raise NotImplementedError("check_code method not implemented")
 
     def create_submit_code_file(self, file_name):

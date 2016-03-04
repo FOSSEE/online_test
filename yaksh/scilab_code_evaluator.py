@@ -20,23 +20,22 @@ class ScilabCodeEvaluator(CodeEvaluator):
 
         # Removes all the commands that terminates scilab
         self.user_answer, self.terminate_commands = self._remove_scilab_exit(user_answer.lstrip())
-        self.test_case_args = self._setup()
+        self.test_case_args = self.setup()
 
-    # Private Protocol ##########
-    def _setup(self):
-        super(ScilabCodeEvaluator, self)._setup()
+    def setup(self):
+        super(ScilabCodeEvaluator, self).setup()
 
         ref_path, test_case_path = self._set_test_code_file_path(self.ref_code_path)
         self.submit_path = self.create_submit_code_file('function.sci')
 
         return ref_path, # Return as a tuple
 
-    def _teardown(self):
+    def teardown(self):
         # Delete the created file.
-        super(ScilabCodeEvaluator, self)._teardown()
+        super(ScilabCodeEvaluator, self).teardown()
         os.remove(self.submit_path)
 
-    def _check_code(self, ref_path):
+    def check_code(self, ref_path):
         success = False
 
         # Throw message if there are commmands that terminates scilab

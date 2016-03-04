@@ -11,8 +11,8 @@ from code_evaluator import CodeEvaluator
 
 class PythonCodeEvaluator(CodeEvaluator):
     """Tests the Python code obtained from Code Server"""
-    # Private Protocol ##########
-    def _check_code(self):
+
+    def check_code(self):
         success = False
 
         try:
