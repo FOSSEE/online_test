@@ -17,11 +17,10 @@ class CppCodeEvaluator(CodeEvaluator):
         super(CppCodeEvaluator, self).__init__(test_case_data, test, language,
                                                  user_answer, ref_code_path,
                                                  in_dir)
-        self.test_case_args = self._setup()
+        self.test_case_args = self.setup()
 
-    # Private Protocol ##########
-    def _setup(self):
-        super(CppCodeEvaluator, self)._setup()
+    def setup(self):
+        super(CppCodeEvaluator, self).setup()
 
         get_ref_path = self.ref_code_path
         ref_path, test_case_path = self._set_test_code_file_path(get_ref_path)
@@ -44,12 +43,12 @@ class CppCodeEvaluator(CodeEvaluator):
         return (ref_path, self.submit_path, compile_command, compile_main,
                  run_command_args, remove_user_output, remove_ref_output)
 
-    def _teardown(self):
+    def teardown(self):
         # Delete the created file.
-        super(CppCodeEvaluator, self)._teardown()
+        super(CppCodeEvaluator, self).teardown()
         os.remove(self.submit_path)
 
-    def _check_code(self, ref_code_path, submit_code_path, compile_command,
+    def check_code(self, ref_code_path, submit_code_path, compile_command,
                      compile_main, run_command_args, remove_user_output,
                      remove_ref_output):
         """ Function validates student code using instructor code as

@@ -3,11 +3,18 @@ import importlib
 
 registry = None
 
-def set_registry():
+# def set_registry():
+#     global registry
+#     registry = _LanguageRegistry()
+
+def _set_registry():
     global registry
-    registry = _LanguageRegistry()
+    if registry is None:
+        registry = _LanguageRegistry()
+    return registry
     
 def get_registry():
+    registry = _set_registry()
     return registry
 
 class _LanguageRegistry(object):

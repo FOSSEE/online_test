@@ -17,11 +17,10 @@ class JavaCodeEvaluator(CodeEvaluator):
         super(JavaCodeEvaluator, self).__init__(test_case_data, test,
                                                  language, user_answer,
                                                  ref_code_path, in_dir)
-        self.test_case_args = self._setup()
+        self.test_case_args = self.setup()
 
-    # Private Protocol ##########
-    def _setup(self):
-        super(JavaCodeEvaluator, self)._setup()
+    def setup(self):
+        super(JavaCodeEvaluator, self).setup()
 
         ref_path, test_case_path = self._set_test_code_file_path(self.ref_code_path)
         self.submit_path = self.create_submit_code_file('Test.java')
@@ -46,12 +45,12 @@ class JavaCodeEvaluator(CodeEvaluator):
         return (ref_path, self.submit_path, compile_command, compile_main,
                      run_command_args, remove_user_output, remove_ref_output)
 
-    def _teardown(self):
+    def teardown(self):
         # Delete the created file.
-        super(JavaCodeEvaluator, self)._teardown()
+        super(JavaCodeEvaluator, self).teardown()
         os.remove(self.submit_path)
 
-    def _check_code(self, ref_code_path, submit_code_path, compile_command,
+    def check_code(self, ref_code_path, submit_code_path, compile_command,
                      compile_main, run_command_args, remove_user_output,
                      remove_ref_output):
         """ Function validates student code using instructor code as

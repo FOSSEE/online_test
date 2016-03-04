@@ -31,7 +31,7 @@ import re
 import json
 # Local imports.
 from settings import SERVER_PORTS, SERVER_POOL_PORT
-from language_registry import set_registry, get_registry
+from language_registry import get_registry, registry
 
 
 MY_DIR = abspath(dirname(__file__))
@@ -82,9 +82,10 @@ class CodeServer(object):
     # Private Protocol ##########
     def _create_evaluator_instance(self, language, json_data, in_dir):
         """Create instance of relevant EvaluateCode class based on language"""
-        set_registry()
-        registry = get_registry()
-        cls = registry.get_class(language)
+        # set_registry()
+        registry1 = get_registry()
+        print registry
+        cls = registry1.get_class(language)
         instance = cls.from_json(language, json_data, in_dir)
         return instance
 
