@@ -8,21 +8,6 @@ from django.contrib.auth.models import User
 from taggit.managers import TaggableManager
 
 
-###############################################################################
-class ConcurrentUser(models.Model):
-    concurrent_user = models.OneToOneField(User, null=False)
-    session_key = models.CharField(null=False, max_length=40)
-
-
-###############################################################################
-class Profile(models.Model):
-    """Profile for a user to store roll number and other details."""
-    user = models.OneToOneField(User)
-    roll_number = models.CharField(max_length=20)
-    institute = models.CharField(max_length=128)
-    department = models.CharField(max_length=64)
-    position = models.CharField(max_length=64)
-
 languages = (
         ("python", "Python"),
         ("bash", "Bash"),
@@ -45,6 +30,12 @@ enrollment_methods = (
     ("open", "Open Course"),
     )
 
+test_case_types = (
+        ("assert_based", "Assertion Based Testcase"),
+        # ("argument_based", "Multiple Correct Choices"),
+        # ("stdout_based", "Code"),
+    )
+
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
 days_between_attempts = ((j, j) for j in range(401))
@@ -53,7 +44,6 @@ test_status = (
                 ('inprogress', 'Inprogress'),
                 ('completed', 'Completed'),
               )
-
 
 def get_assignment_dir(instance, filename):
     return '%s/%s' % (instance.user.roll_number, instance.assignmentQuestion.id)
@@ -132,6 +122,21 @@ class Course(models.Model):
     def __unicode__(self):
         return self.name
 
+###############################################################################
+class ConcurrentUser(models.Model):
+    concurrent_user = models.OneToOneField(User, null=False)
+    session_key = models.CharField(null=False, max_length=40)
+
+
+###############################################################################
+class Profile(models.Model):
+    """Profile for a user to store roll number and other details."""
+    user = models.OneToOneField(User)
+    roll_number = models.CharField(max_length=20)
+    institute = models.CharField(max_length=128)
+    department = models.CharField(max_length=64)
+    position = models.CharField(max_length=64)
+
 
 ###############################################################################
 class Question(models.Model):
@@ -163,6 +168,8 @@ class Question(models.Model):
     # The type of question.
     type = models.CharField(max_length=24, choices=question_types)
 
+    # The type of evaluator
+    test_case_type = models.CharField(max_length=24, choices=test_case_types)
     # Is this question active or not. If it is inactive it will not be used
     # when creating a QuestionPaper.
     active = models.BooleanField(default=True)

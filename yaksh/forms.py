@@ -28,6 +28,12 @@ question_types = (
     ("upload", "Assignment Upload"),
     )
 
+test_case_types = (
+        ("assert_based", "Assertion Based Testcase"),
+        # ("argument_based", "Multiple Correct Choices"),
+        # ("stdout_based", "Code"),
+    )
+
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
 
