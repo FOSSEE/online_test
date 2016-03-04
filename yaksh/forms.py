@@ -28,6 +28,12 @@ question_types = (
     ("upload", "Assignment Upload"),
     )
 
+test_case_types = (
+        ("assert_based", "Assertion Based Testcase"),
+        # ("argument_based", "Multiple Correct Choices"),
+        # ("stdout_based", "Code"),
+    )
+
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
 
@@ -153,6 +159,7 @@ class QuizForm(forms.Form):
     pass_criteria = forms.FloatField(initial=40,
                                      help_text='Will be taken as percentage')
     language = forms.CharField(widget=forms.Select(choices=languages))
+    test_case_type = forms.CharField(widget=forms.Select(choices=test_case_types))
     attempts_allowed = forms.IntegerField(widget=forms.Select(choices=attempts))
     time_between_attempts = forms.IntegerField\
             (widget=forms.Select(choices=days_between_attempts),
