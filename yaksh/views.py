@@ -949,7 +949,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     """Checks the answers of the user for particular question"""
     user = request.user
     q_paper = QuestionPaper.objects.get(id=questionpaper_id)
-    paper = AnswerPaper.objects.get(user=request.user, attempt_number=attempt_num,
+    paper = get_object_or_404(AnswerPaper, user=request.user, attempt_number=attempt_num,
             question_paper=q_paper)
 
     if q_id in paper.questions_answered:
