@@ -1206,7 +1206,8 @@ def self_enroll(request, course_id):
     ci = RequestContext(request)
     course = get_object_or_404(Course, pk=course_id)
     if course.is_self_enroll():
-        course.enroll(False, user)
+        was_rejected = False
+        course.enroll(was_rejected, user)
     return my_redirect('/exam/manage/')
 
 

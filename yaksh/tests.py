@@ -1,7 +1,8 @@
 from django.utils import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
-    QuestionSet, AnswerPaper, Answer, TestCase
+    QuestionSet, AnswerPaper, Answer, TestCase, Course
 import datetime, json
+
 
 def setUpModule():
     # create user profile
@@ -13,6 +14,15 @@ def setUpModule():
                              email='demo@test.com')
     Profile.objects.create(user=user, roll_number=1, institute='IIT',
                            department='Chemical', position='Student')
+    student = User.objects.create_user(username='demo_user3',
+                                       password='demo',
+                                       email='demo3@test.com')
+    Profile.objects.create(user=student, roll_number=3, institute='IIT',
+                           department='Chemical', position='Student')
+
+    # create a course
+    course = Course.objects.create(name="Python Course",
+                                   enrollment="Enroll Request", creator=user)
 
     # create 20 questions
     for i in range(1, 21):
@@ -20,10 +30,11 @@ def setUpModule():
 
     # create a quiz
     Quiz.objects.create(start_date_time=datetime.datetime(2015, 10, 9, 10, 8, 15, 0),
-                         duration=30, active=False,
-                         attempts_allowed=-1, time_between_attempts=0,
-                         description='demo quiz', pass_criteria=40,
-                         language='Python', prerequisite=None)
+                        duration=30, active=False,
+                        attempts_allowed=-1, time_between_attempts=0,
+                        description='demo quiz', pass_criteria=40,
+                        language='Python', prerequisite=None,
+                        course=course)
 
 
 def tearDownModule():
@@ -62,14 +73,14 @@ class QuestionTestCases(unittest.TestCase):
                                  func_name='def myfunc', kw_args='a=10,b=11',
                                  pos_args='12,13', expected_answer='15')
         answer_data = { "test": "",
-                        "user_answer": "demo_answer", 
-                        "test_parameter": [{"func_name": "def myfunc", 
-                                            "expected_answer": "15", 
-                                            "test_id": self.testcase.id, 
-                                            "pos_args": ["12", "13"], 
-                                            "kw_args": {"a": "10", 
+                        "user_answer": "demo_answer",
+                        "test_parameter": [{"func_name": "def myfunc",
+                                            "expected_answer": "15",
+                                            "test_id": self.testcase.id,
+                                            "pos_args": ["12", "13"],
+                                            "kw_args": {"a": "10",
                                                         "b": "11"}
-                                        }], 
+                                        }],
                         "id": self.question.id,
                         "ref_code_path": "",
                         }
@@ -93,10 +104,9 @@ class QuestionTestCases(unittest.TestCase):
 
     def test_consolidate_answer_data(self):
         """ Test consolidate_answer_data function """
-        result = self.question.consolidate_answer_data([self.testcase], 
+        result = self.question.consolidate_answer_data([self.testcase],
                                                          self.user_answer)
         self.assertEqual(result, self.answer_data_json)
-        
 
 
 ###############################################################################
@@ -107,7 +117,7 @@ class TestCaseTestCases(unittest.TestCase):
                                  description='Write a function', points=1.0,
                                  snippet='def myfunc()')
         self.question.save()
-        self.testcase = TestCase(question=self.question, 
+        self.testcase = TestCase(question=self.question,
                                  func_name='def myfunc', kw_args='a=10,b=11',
                                  pos_args='12,13', expected_answer='15')
 
@@ -188,7 +198,7 @@ class QuestionPaperTestCases(unittest.TestCase):
     def test_questionpaper(self):
         """ Test question paper"""
         self.assertEqual(self.question_paper.quiz.description, 'demo quiz')
-        self.assertEqual(list(self.question_paper.fixed_questions.all()),
+        self.assertSequenceEqual(self.question_paper.fixed_questions.all(),
                          [self.questions[3], self.questions[5]])
         self.assertTrue(self.question_paper.shuffle_questions)
 
@@ -350,3 +360,66 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(self.answerpaper.status, 'inprogress')
         self.answerpaper.update_status('completed')
         self.assertEqual(self.answerpaper.status, 'completed')
+
+
+###############################################################################
+class CourseTestCases(unittest.TestCase):
+    def setUp(self):
+        self.course = Course.objects.get(pk=1)
+        self.creator = User.objects.get(pk=1)
+        self.student1 = User.objects.get(pk=2)
+        self.student2 = User.objects.get(pk=3)
+        self.quiz = Quiz.objects.get(pk=1)
+
+    def test_is_creator(self):
+        """ Test is_creator method of Course"""
+        self.assertTrue(self.course.is_creator(self.creator))
+
+    def test_is_self_enroll(self):
+        """ Test is_self_enroll method of Course"""
+        self.assertFalse(self.course.is_self_enroll())
+
+    def test_deactivate(self):
+        """ Test deactivate method of Course"""
+        self.course.deactivate()
+        self.assertFalse(self.course.active)
+
+    def test_activate(self):
+        """ Test activate method of Course"""
+        self.course.activate()
+        self.assertTrue(self.course.active)
+
+    def test_request(self):
+        """ Test request and get_requests methods of Course"""
+        self.course.request(self.student1, self.student2)
+        self.assertSequenceEqual(self.course.get_requests(),
+                                 [self.student1, self.student2])
+
+    def test_enroll_reject(self):
+        """ Test enroll, reject, get_enrolled and get_rejected methods"""
+        self.assertSequenceEqual(self.course.get_enrolled(), [])
+        was_rejected = False
+        self.course.enroll(was_rejected, self.student1)
+        self.assertSequenceEqual(self.course.get_enrolled(), [self.student1])
+
+        self.assertSequenceEqual(self.course.get_rejected(), [])
+        was_enrolled = False
+        self.course.reject(was_enrolled, self.student2)
+        self.assertSequenceEqual(self.course.get_rejected(), [self.student2])
+
+        was_rejected = True
+        self.course.enroll(was_rejected, self.student2)
+        self.assertSequenceEqual(self.course.get_enrolled(),
+                                 [self.student1, self.student2])
+        self.assertSequenceEqual(self.course.get_rejected(), [])
+
+        was_enrolled = True
+        self.course.reject(was_enrolled, self.student2)
+        self.assertSequenceEqual(self.course.get_rejected(), [self.student2])
+        self.assertSequenceEqual(self.course.get_enrolled(), [self.student1])
+
+        self.assertTrue(self.course.is_enrolled(self.student1.id))
+
+    def test_get_quizzes(self):
+        """ Test get_quizzes method of Courses"""
+        self.assertSequenceEqual(self.course.get_quizzes(), [self.quiz])

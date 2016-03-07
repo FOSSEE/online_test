@@ -62,6 +62,7 @@ def get_assignment_dir(instance, filename):
 
 ###############################################################################
 class Course(models.Model):
+    """ Course for students"""
     name = models.CharField(max_length=128)
     enrollment = models.CharField(max_length=32, choices=enrollment_methods)
     active = models.BooleanField(default=True)
@@ -77,17 +78,7 @@ class Course(models.Model):
     def get_requests(self):
         return self.requests.all()
 
-    def reject(self, was_enrolled=False, *users):
-        self.rejected.add(*users)
-        if not was_enrolled:
-            self.requests.remove(*users)
-        else:
-            self.students.remove(*users)
-
-    def get_rejected(self):
-        return self.rejected.all()
-
-    def enroll(self, was_rejected=False, *users):
+    def enroll(self, was_rejected, *users):
         self.students.add(*users)
         if not was_rejected:
             self.requests.remove(*users)
@@ -97,11 +88,24 @@ class Course(models.Model):
     def get_enrolled(self):
         return self.students.all()
 
+    def reject(self, was_enrolled, *users):
+        self.rejected.add(*users)
+        if not was_enrolled:
+            self.requests.remove(*users)
+        else:
+            self.students.remove(*users)
+
+    def get_rejected(self):
+        return self.rejected.all()
+
     def is_enrolled(self, user_id):
         return self.students.filter(id=user_id).exists()
 
     def is_creator(self, user):
         return self.creator == user
+
+    def is_self_enroll(self):
+        return True if self.enrollment == enrollment_methods[1][0] else False
 
     def get_quizzes(self):
         return self.quiz_set.all()
@@ -111,9 +115,6 @@ class Course(models.Model):
 
     def deactivate(self):
         self.active = False
-
-    def is_self_enroll(self):
-        return True if self.enrollment == 'open' else False
 
     def __unicode__(self):
         return self.name
