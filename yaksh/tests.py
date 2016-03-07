@@ -418,7 +418,7 @@ class CourseTestCases(unittest.TestCase):
         self.assertSequenceEqual(self.course.get_rejected(), [self.student2])
         self.assertSequenceEqual(self.course.get_enrolled(), [self.student1])
 
-        self.assertTrue(self.course.is_enrolled(self.student1.id))
+        self.assertTrue(self.course.is_enrolled(self.student1))
 
     def test_get_quizzes(self):
         """ Test get_quizzes method of Courses"""

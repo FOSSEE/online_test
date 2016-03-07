@@ -184,6 +184,8 @@ def intro(request, questionpaper_id):
     user = request.user
     ci = RequestContext(request)
     quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
+    if not quest_paper.quiz.course.is_enrolled(user):
+        raise Http404('You are not allowed to view this page!')
     attempt_number = quest_paper.quiz.attempts_allowed
     time_lag = quest_paper.quiz.time_between_attempts
     quiz_enable_time = quest_paper.quiz.start_date_time
@@ -821,6 +823,9 @@ def start(request, attempt_num=None, questionpaper_id=None):
         msg = 'Quiz not found, please contact your '\
             'instructor/administrator. Please login again thereafter.'
         return complete(request, msg, attempt_num, questionpaper_id)
+
+    if not questionpaper.quiz.course.is_enrolled(user):
+        raise Http404('You are not allowed to view this page!')
 
     try:
         old_paper = AnswerPaper.objects.get(

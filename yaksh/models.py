@@ -98,8 +98,8 @@ class Course(models.Model):
     def get_rejected(self):
         return self.rejected.all()
 
-    def is_enrolled(self, user_id):
-        return self.students.filter(id=user_id).exists()
+    def is_enrolled(self, user):
+        return user in self.students.all()
 
     def is_creator(self, user):
         return self.creator == user
