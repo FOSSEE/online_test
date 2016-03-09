@@ -103,7 +103,6 @@ class PythonEvaluationTestCases(unittest.TestCase):
                                 "kw_args": {}
                                 }]
         evaluator = PythonCodeEvaluator(self.test_case_data, self.test, self.language, user_answer, ref_code_path=None, in_dir=None)
-        """add variable name as get evaluator instead of evaluator"""
         result = evaluator.evaluate()
         self.assertFalse(result.get("success"))
         self.assertEquals(result.get("error"), type_error_msg)
