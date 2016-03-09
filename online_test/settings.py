@@ -88,3 +88,15 @@ USE_TZ = False
 STATIC_URL = '/static/'
 
 LOGIN_URL = '/exam/login'
+
+EMAIL_USE_TLS = False
+
+EMAIL_HOST = 'your_email_host'
+
+EMAIL_PORT = 'your_email_port'
+
+EMAIL_HOST_USER = 'email_host_user'
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+TEMPLATE_DIRS = ['yaksh/templates',]
