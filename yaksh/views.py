@@ -1375,11 +1375,9 @@ def get_user_data(username, questionpaper_id=None):
     data['user'] = user
     data['profile'] = profile
     data['papers'] = papers
-<<<<<<< HEAD
+
     data['questionpaperid'] = questionpaper_id
-=======
     
->>>>>>> added profile of students in monitor function
     return data
 
 
@@ -1560,12 +1558,9 @@ def show_all_questions(request):
                                      context_instance=ci)
 
 
-<<<<<<< HEAD
+
 @login_required
 def user_data(request, username, questionpaper_id=None):
-=======
-def user_data(request,username):
->>>>>>> added profile of students in monitor function
     """Render user data."""
 
     current_user = request.user
