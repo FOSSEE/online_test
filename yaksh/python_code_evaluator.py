@@ -4,9 +4,9 @@ import traceback
 import os
 from os.path import join
 import importlib
-from settings import SERVER_TIMEOUT
+
 # local imports
-from code_evaluator import CodeEvaluator
+from code_evaluator import CodeEvaluator, TimeoutException
 
 
 class PythonCodeEvaluator(CodeEvaluator):
@@ -29,9 +29,10 @@ class PythonCodeEvaluator(CodeEvaluator):
             fname, lineno, func, text = info[-1]
             text = str(test_code).splitlines()[lineno-1]
             err = "{0} {1} in: {2}".format(type.__name__, str(value), text)
-        except (SyntaxError, TypeError, NameError, IndentationError, ValueError) :
+        except TimeoutException:
+            raise
+        except Exception:
             err = traceback.format_exc(limit=0)
-        
         else:
             success = True
             err = 'Correct answer'
