@@ -1,0 +1,21 @@
+{% extends "manage.html" %}
+
+{% block subtitle %}Add Course{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question_quiz.css" type="text/css" />
+{% endblock %}
+
+{% block manage %}
+<form name=frm id=frm action="" method="post" >
+  {% csrf_token %}
+  <center>
+  <table class=span1>
+  {{ form.as_table }}
+  </table>
+  </center>
+
+  <center><button class="btn primary" type="submit" id="submit" name="questionpaper">Add Course</button>
+  <button class="btn primary" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/");'>Cancel</button> </center>
+</form>
+{% endblock %}

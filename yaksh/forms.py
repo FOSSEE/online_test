@@ -1,5 +1,5 @@
 from django import forms
-from yaksh.models import Profile, Quiz, Question, TestCase
+from yaksh.models import Profile, Quiz, Question, TestCase, Course
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -132,12 +132,15 @@ class QuizForm(forms.Form):
     It has the related fields and functions required."""
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user')
         super(QuizForm, self).__init__(*args, **kwargs)
         quizzes = [('', 'Select a prerequisite quiz')]
-        quizzes = quizzes + \
-                       list(Quiz.objects.values_list('id', 'description'))
+        quizzes += list(Quiz.objects.filter(
+                        course__creator=user).values_list('id', 'description'))
         self.fields['prerequisite'] = forms.CharField(required=False,
                                    widget=forms.Select(choices=quizzes))
+        self.fields['course'] = forms.ModelChoiceField(
+                queryset=Course.objects.filter(creator=user))
 
     start_date = forms.DateField(initial=datetime.date.today(), required=False)
     start_time = forms.TimeField(initial=datetime.datetime.now().time(), required=False)
@@ -156,6 +159,7 @@ class QuizForm(forms.Form):
                     help_text='Will be in days')
 
     def save(self):
+        course = self.cleaned_data["course"]
         start_date = self.cleaned_data["start_date"]
         start_time = self.cleaned_data["start_time"] 
         end_date = self.cleaned_data["end_date"]
@@ -169,6 +173,7 @@ class QuizForm(forms.Form):
         attempts_allowed = self.cleaned_data["attempts_allowed"]
         time_between_attempts = self.cleaned_data["time_between_attempts"]
         new_quiz = Quiz()
+        new_quiz.course = course
         new_quiz.start_date_time = datetime.datetime.combine(start_date,
                                                     start_time)
         new_quiz.end_date_time = datetime.datetime.combine(end_date,
@@ -265,3 +270,9 @@ class QuestionFilterForm(forms.Form):
 
 TestCaseFormSet = inlineformset_factory(Question, TestCase,\
                         can_order=False, can_delete=False, extra=1)
+
+
+class CourseForm(forms.ModelForm):
+    class Meta:
+        model = Course
+        fields = ['name', 'active', 'enrollment']

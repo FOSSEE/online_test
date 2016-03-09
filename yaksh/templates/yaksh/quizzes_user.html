@@ -4,7 +4,7 @@
 {% block subtitle %}Hello {{ user.first_name }}, welcome to your dashboard !{% endblock %}
 
 {% block css %}
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question_quiz.css" type="text/css" />
+<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/course.css" />
 {% endblock %}
 
 {% block script %}
@@ -14,73 +14,106 @@
 
 
 {% block manage %}
-    {% if cannot_attempt %}
-        <p>You have not passed the prerequisite & hence you cannot take the quiz.</p>
-    {% endif %}
-    <h4>List of quizzes availbale for you</h4>
-    {% if not quizzes %}
-        <h5>No active quizzes for you</h5>
-    {% endif %}
-    <table>
-    <th>Quiz</th>
-    <th>Pre requisite quiz</th>
-    {% for paper in quizzes %}
-        <tr>
-            {% if paper in unexpired_quizzes %}
-                <td>
-                    <a href="{{ URL_ROOT }}/exam/intro/{{paper.id}}">{{ paper.quiz.description }}</a><br>
-                </td>
-            {% else %}
-                <td>
-                    {{ paper.quiz.description }} <span class="label important">Expired</span><br>
-                </td>
-            {% endif %}
-            <td>
-                {% if paper.quiz.prerequisite %}
-                    You have to pass {{ paper.quiz.prerequisite.description }} for taking {{ paper.quiz.description }}
+
+<center><b><u>Available Courses</u></b></center><br>
+{% for course in courses %}
+<div class="row show-grid">
+    <div class="span14">
+        <div class="row">
+            <div class="span6">
+                <h4><b><u> {{ course.name }} by {{ course.creator}}</u></b></h4>
+            </div>
+             <div class="span6">
+                {% if user in course.requests.all %} <span class="label warning">Request Pending </span>
+                {% elif user in course.rejected.all %}<span class="label important">Request Rejected</span>
+                {% elif user in course.students.all %}<span class="label notice">Enrolled</span>
                 {% else %}
-                    No pre requisites for {{ paper.quiz.description }}
+                        {% if course.is_self_enroll %}
+                            <a class="btn success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.id }}">Enroll</a>
+                        {% else %}
+                            <a class="btn success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.id }}">Enroll Request</a>
+                        {% endif %}
                 {% endif %}
+             </div>
+         </div>
+
+        <div class="row">
+            {% if user in course.students.all %}
+                {% if cannot_attempt %}
+                    <p>You have not passed the prerequisite & hence you cannot take the quiz.</p>
+                {% endif %}
+                <h4>List of quizzes availbale for you</h4>
+                {% if not quizzes %}
+                    <h5>No active quizzes for you</h5>
+                {% endif %}
+                <table>
+                    <th>Quiz</th>
+                    <th>Pre requisite quiz</th>
+                    {% for paper in quizzes %}
+                        {% if paper.quiz.course_id == course.id %}
+                        <tr>
+                            {% if paper in unexpired_quizzes %}
+                                <td>
+                                    <a href="{{ URL_ROOT }}/exam/intro/{{paper.id}}">{{ paper.quiz.description }}</a><br>
+                                </td>
+                            {% else %}
+                                <td>
+                                    {{ paper.quiz.description }} <span class="label important">Expired</span><br>
+                                </td>
+                            {% endif %}
+                            <td>
+                                {% if paper.quiz.prerequisite %}
+                                    You have to pass {{ paper.quiz.prerequisite.description }} for taking {{ paper.quiz.description }}
+                                {% else %}
+                                    No pre requisites for {{ paper.quiz.description }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                </table>
+            {% endif %}
+        </div>
+    </div>
+</div><!--/row show-grid-->
+ </br>
+{% endfor %}
+<hr>
+<h4>List of quizzes taken by you so far</h4>
+{% if quizzes_taken %}
+    <table class="bordered-table zebra-striped">
+        <th>Quiz</th>
+        <th>Result</th>
+        <th>Marks Obtained</th>
+        <th>Total Marks</th>
+        <th>Percentage</th>
+    {% for paper in quizzes_taken %}
+        <tr>
+            <td>
+                {{ paper.question_paper.quiz.description }}
+            </td>
+            <td>
+                {% if paper.passed %}
+                    <p>Pass</p>
+                {% else %}
+                    <p>Fail</p>
+                {% endif %}
+            </td>
+            <td>
+                {{ paper.marks_obtained }}
+            </td>
+            <td>
+                {{ paper.question_paper.total_marks }}
+            </td>
+            <td>
+                {{ paper.percent }}
             </td>
         </tr>
     {% endfor %}
     </table>
-    <hr>    
-    <h4>List of quizzes taken by you so far</h4>
-    {% if quizzes_taken %}
-        <table class="bordered-table zebra-striped">
-            <th>Quiz</th>
-            <th>Result</th>
-            <th>Marks Obtained</th>
-            <th>Total Marks</th>
-            <th>Percentage</th>
-        {% for paper in quizzes_taken %}
-            <tr>
-                <td>
-                    {{ paper.question_paper.quiz.description }}
-                </td>
-                <td>
-                    {% if paper.passed %}
-                        <p>Pass</p>
-                    {% else %}
-                        <p>Fail</p>
-                    {% endif %}
-                </td>
-                <td>
-                    {{ paper.marks_obtained }}
-                </td>
-                <td>
-                    {{ paper.question_paper.total_marks }}
-                </td>
-                <td>
-                    {{ paper.percent }}
-                </td>
-            </tr>
-        {% endfor %}
-        </table>
-    {% else %}
-        <p>You have not taken any quiz yet !!</p>
-    {% endif %}
+{% else %}
+    <p>You have not taken any quiz yet !!</p>
+{% endif %}
 
 
 {% endblock %}

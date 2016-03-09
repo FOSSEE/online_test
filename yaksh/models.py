@@ -40,6 +40,12 @@ question_types = (
         ("code", "Code"),
         ("upload", "Assignment Upload"),
     )
+
+enrollment_methods = (
+    ("default", "Enroll Request"),
+    ("open", "Open Course"),
+    )
+
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
 days_between_attempts = ((j, j) for j in range(401))
@@ -52,6 +58,66 @@ test_status = (
 
 def get_assignment_dir(instance, filename):
     return '%s/%s' % (instance.user.roll_number, instance.assignmentQuestion.id)
+
+
+###############################################################################
+class Course(models.Model):
+    """ Course for students"""
+    name = models.CharField(max_length=128)
+    enrollment = models.CharField(max_length=32, choices=enrollment_methods)
+    active = models.BooleanField(default=True)
+    creator = models.ForeignKey(User, related_name='creator')
+    students = models.ManyToManyField(User, related_name='students')
+    requests = models.ManyToManyField(User, related_name='requests')
+    rejected = models.ManyToManyField(User, related_name='rejected')
+    created_on = models.DateTimeField(default=datetime.datetime.now())
+
+    def request(self, *users):
+        self.requests.add(*users)
+
+    def get_requests(self):
+        return self.requests.all()
+
+    def enroll(self, was_rejected, *users):
+        self.students.add(*users)
+        if not was_rejected:
+            self.requests.remove(*users)
+        else:
+            self.rejected.remove(*users)
+
+    def get_enrolled(self):
+        return self.students.all()
+
+    def reject(self, was_enrolled, *users):
+        self.rejected.add(*users)
+        if not was_enrolled:
+            self.requests.remove(*users)
+        else:
+            self.students.remove(*users)
+
+    def get_rejected(self):
+        return self.rejected.all()
+
+    def is_enrolled(self, user):
+        return user in self.students.all()
+
+    def is_creator(self, user):
+        return self.creator == user
+
+    def is_self_enroll(self):
+        return True if self.enrollment == enrollment_methods[1][0] else False
+
+    def get_quizzes(self):
+        return self.quiz_set.all()
+
+    def activate(self):
+        self.active = True
+
+    def deactivate(self):
+        self.active = False
+
+    def __unicode__(self):
+        return self.name
 
 
 ###############################################################################
@@ -165,6 +231,8 @@ class Quiz(models.Model):
     """A quiz that students will participate in. One can think of this
     as the "examination" event.
     """
+
+    course = models.ForeignKey(Course)
 
     # The start date of the quiz.
     start_date_time = models.DateTimeField("Start Date and Time of the quiz",

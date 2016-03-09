@@ -22,3 +22,6 @@ table th, table td
     height : 30px;
     width : 100px;
 }
+input, textarea, select, .uneditable-input {
+    height: 30px;
+}
