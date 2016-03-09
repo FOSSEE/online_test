@@ -94,7 +94,7 @@ class PythonEvaluationTestCases(unittest.TestCase):
 
     def test_value_error(self):
         user_answer = "def split(line):\n\t[ key, value ] = line.split()"
-        type_error_msg = ("Traceback (most recent call last):\nValueError: "
+        value_error_msg = ("Traceback (most recent call last):\nValueError: "
                           "need more than 1 value to unpack\n")
         self.test_case_data = [{"func_name": "split",
                                 "expected_answer": "Hello",
@@ -105,7 +105,7 @@ class PythonEvaluationTestCases(unittest.TestCase):
         evaluator = PythonCodeEvaluator(self.test_case_data, self.test, self.language, user_answer, ref_code_path=None, in_dir=None)
         result = evaluator.evaluate()
         self.assertFalse(result.get("success"))
-        self.assertEquals(result.get("error"), type_error_msg)
+        self.assertEquals(result.get("error"), value_error_msg)
 
 if __name__ == '__main__':
     unittest.main()
