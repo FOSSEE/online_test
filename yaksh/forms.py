@@ -152,7 +152,7 @@ class QuizForm(forms.Form):
                                   (attrs={'cols': 20, 'rows': 1}))
     pass_criteria = forms.FloatField(initial=40,
                                      help_text='Will be taken as percentage')
-    language = forms.CharField(widget=forms.Select(choices=languages))
+    language = forms.CharField(widget=forms.Select(choices=languages),required=False)
     attempts_allowed = forms.IntegerField(widget=forms.Select(choices=attempts))
     time_between_attempts = forms.IntegerField\
             (widget=forms.Select(choices=days_between_attempts),
@@ -203,7 +203,7 @@ class QuestionForm(forms.ModelForm):
     options = forms.CharField(widget=forms.Textarea\
                               (attrs={'cols': 40, 'rows': 1}), required=False)
     language = forms.CharField(max_length=20, widget=forms.Select\
-                               (choices=languages))
+                               (choices=languages), required=False)
     type = forms.CharField(max_length=8, widget=forms.Select\
                            (choices=question_types))
     active = forms.BooleanField(required=False)
@@ -234,9 +234,9 @@ class QuestionForm(forms.ModelForm):
         new_question.type = type
         new_question.active = active
         new_question.snippet = snippet
-        new_question = super(QuestionForm, self).save(commit=False)
+        #new_question = super(QuestionForm, self).save(commit=False)
         if commit:
-            new_question.save()
+          new_question.save()
 
         return new_question
 
@@ -263,7 +263,7 @@ class QuestionFilterForm(forms.Form):
                                                     (choices=points_options))
 
     language = forms.CharField(max_length=8, widget=forms.Select\
-                                (choices=languages))
+                                (choices=languages),required=False)
     question_type = forms.CharField(max_length=8, widget=forms.Select\
                                     (choices=question_types))
 

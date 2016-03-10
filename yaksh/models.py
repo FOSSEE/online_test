@@ -25,6 +25,7 @@ class Profile(models.Model):
 
 
 languages = (
+        ("general", "Select Language"),
         ("python", "Python"),
         ("bash", "Bash"),
         ("c", "C Language"),
@@ -145,7 +146,7 @@ class Question(models.Model):
 
     # The language for question.
     language = models.CharField(max_length=24,
-                                choices=languages)
+                                choices=languages,blank=True,null=True)
 
     # The type of question.
     type = models.CharField(max_length=24, choices=question_types)
@@ -261,7 +262,7 @@ class Quiz(models.Model):
     prerequisite = models.ForeignKey("Quiz", null=True)
 
     # Programming language for a quiz
-    language = models.CharField(max_length=20, choices=languages)
+    language = models.CharField(max_length=20, choices=languages,blank=True)
 
     # Number of attempts for the quiz
     attempts_allowed = models.IntegerField(default=1, choices=attempts)
@@ -464,6 +465,7 @@ class AnswerPaper(models.Model):
             default='inprogress')
 
     objects = AnswerPaperManager()
+
 
     def current_question(self):
         """Returns the current active question to display."""

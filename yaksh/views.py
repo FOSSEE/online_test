@@ -1,4 +1,5 @@
 import random
+import datetime
 import string
 import os
 import stat
@@ -15,6 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from taggit.models import Tag
 from itertools import chain
+from collections import OrderedDict
 import json
 # Local imports.
 from yaksh.models import Quiz, Question, QuestionPaper, QuestionSet, Course
@@ -272,7 +274,7 @@ def results_user(request):
     papers = AnswerPaper.objects.filter(user=user)
     quiz_marks = []
     for paper in papers:
-        marks_obtained = paper.marks_obtained
+        marks_obtained=paper.marks_obtained
         max_marks = paper.question_paper.total_marks
         percentage = round((marks_obtained/max_marks)*100, 2)
         temp = paper.question_paper.quiz.description, marks_obtained,\
@@ -284,7 +286,7 @@ def results_user(request):
 
 @login_required
 def edit_quiz(request):
-    """Edit the list of quizzes seleted by the user for editing."""
+    """Edit the list of quizzes selected by the user for editing."""
 
     user = request.user
     if not user.is_authenticated() or not is_moderator(user):
@@ -374,8 +376,9 @@ def add_question(request, question_id=None):
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     if request.method == "POST":
-        form = QuestionForm(request.POST)
+        form = QuestionForm(request.POST or None)
         if form.is_valid():
+            
             if question_id is None:
                 test_case_formset = add_or_delete_test_form(request.POST, form.save(commit=False))
                 if 'save_question' in request.POST:
@@ -867,7 +870,8 @@ def get_questions(paper):
         q_unanswered = paper.get_unanswered_questions()
         q_unanswered.sort()
         to_attempt = q_unanswered
-    for index, value in enumerate(all_questions, 1):
+    question = Question.objects.filter(id__in=all_questions)
+    for index, value in enumerate(question, 1):
         questions[value] = index
         questions = collections.OrderedDict(sorted(questions.items(), key=lambda x:x[1]))
     return questions, to_attempt, submitted
@@ -927,6 +931,7 @@ def show_question(request, q_id, attempt_num, questionpaper_id, success_msg=None
         return complete(request, msg, attempt_num, questionpaper_id)
     else:
         return question(request, q_id, attempt_num, questionpaper_id, success_msg)
+    
 
 
 def _save_skipped_answer(old_skipped, user_answer, paper, question):
@@ -1041,25 +1046,38 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         if time_left <= 0:
             reason = 'Your time is up!'
             return complete(request, reason, attempt_num, questionpaper_id)
-
         # Display the same question if user_answer is None
         elif not user_answer:
             msg = "Please submit a valid option or code"
             time_left = paper.time_left()
             questions, to_attempt, submitted = get_questions(paper)
-            context = {'question': question, 'error_message': msg,
-                       'paper': paper, 'quiz_name': paper.question_paper.quiz.description,
-                       'time_left': time_left, 'questions': questions,
-                       'to_attempt': to_attempt, 'submitted': submitted}
+            context = {'question': question, 'paper': paper, 
+                   'quiz_name': paper.question_paper.quiz.description,
+                   'time_left': time_left, 'questions': questions,
+                   'to_attempt': to_attempt, 'submitted': submitted,
+                   'error_message': msg}
             ci = RequestContext(request)
-
-            return my_render_to_response('yaksh/question.html', context,
-                                         context_instance=ci)
+            
+        elif question.type == 'code' and user_answer:
+            msg = "Correct Output"
+            success = "True"
+            next_q = paper.completed_question(question.id)
+            time_left = paper.time_left()
+            questions, to_attempt, submitted = get_questions(paper)
+            context = {'question': question, 'paper': paper, 
+                   'quiz_name': paper.question_paper.quiz.description,
+                   'time_left': time_left, 'questions': questions,
+                   'to_attempt': to_attempt, 'submitted': submitted,
+                   'error_message': msg, 'success': success}
+            ci = RequestContext(request)
+           
         else:
             next_q = paper.completed_question(question.id)
             return show_question(request, next_q, attempt_num,
                                  questionpaper_id, success_msg)
-
+        
+        return my_render_to_response('yaksh/question.html', context,
+                                         context_instance=ci)
 
 def validate_answer(user, user_answer, question, json_data=None):
     """
@@ -1090,7 +1108,6 @@ def validate_answer(user, user_answer, question, json_data=None):
             result = json.loads(json_result)
             if result.get('success'):
                 correct = True
-
     return correct, result
 
 def get_question_labels(request, attempt_num=None, questionpaper_id=None):
@@ -1309,7 +1326,8 @@ def monitor(request, questionpaper_id=None):
         q_paper = QuestionPaper.objects.filter(quiz__course__creator=user)
         context = {'papers': [],
                    'quiz': None,
-                   'quizzes': q_paper}
+                   'quizzes': q_paper,
+                   }
         return my_render_to_response('yaksh/monitor.html', context,
                                      context_instance=ci)
     # quiz_id is not None.
@@ -1340,22 +1358,26 @@ def get_user_data(username, questionpaper_id=None):
     """For a given username, this returns a dictionary of important data
     related to the user including all the user's answers submitted.
     """
+    
     user = User.objects.get(username=username)
     papers = AnswerPaper.objects.filter(user=user)
     if questionpaper_id is not None:
         papers = papers.filter(question_paper_id=questionpaper_id).order_by(
                 '-attempt_number')
-
     data = {}
+    
     try:
         profile = user.get_profile()
     except Profile.DoesNotExist:
         # Admin user may have a paper by accident but no profile.
         profile = None
+    
     data['user'] = user
     data['profile'] = profile
     data['papers'] = papers
+
     data['questionpaperid'] = questionpaper_id
+    
     return data
 
 
@@ -1536,11 +1558,13 @@ def show_all_questions(request):
                                      context_instance=ci)
 
 
+
 @login_required
 def user_data(request, username, questionpaper_id=None):
     """Render user data."""
 
     current_user = request.user
+    
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
 

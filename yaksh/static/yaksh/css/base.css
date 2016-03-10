@@ -221,7 +221,7 @@ body {
   box-shadow: 0 1px 2px rgba(0,0,0,.15);
 }
 .content .span10,
-.content .span14 {
+.content  {
   min-height: 475px;
 }
 .content .span4 {
@@ -431,6 +431,7 @@ a:hover {
 /* Typography.less
 * Headings, body text, lists, code, and more for a versatile and durable typography system
 * ---------------------------------------------------------------------------------------- */
+
 p {
   font-size: 13px;
   font-weight: normal;
@@ -478,6 +479,7 @@ h4,
 h5,
 h6 {
   line-height: 36px;
+
 }
 h3 {
   font-size: 18px;
@@ -493,6 +495,8 @@ h4 small {
 }
 h5 {
   font-size: 14px;
+  color:white;
+  text-align:left;
 }
 h6 {
   font-size: 13px;
@@ -963,8 +967,7 @@ input[disabled],
 select[disabled],
 textarea[disabled],
 input[readonly],
-select[readonly],
-textarea[readonly] {
+select[readonly]{
   background-color: #f5f5f5;
   border-color: #ddd;
   cursor: not-allowed;
@@ -1793,6 +1796,7 @@ footer {
   -ms-transition: 0.1s linear all;
   -o-transition: 0.1s linear all;
   transition: 0.1s linear all;
+  margin-right:50px
 }
 .btn:hover {
   background-position: 0 -15px;
@@ -2339,4 +2343,30 @@ blink {
     -webkit-animation-iteration-count: infinite;
     -webkit-animation-timing-function: cubic-bezier(1.0, 0, 0, 1.0);
     -webkit-animation-duration: 1s;
+}
+
+.error{
+padding:0;
+height:100px;
+width:730px;
+resize:None;
+overflow-y:scroll;
+background-color:white;
+border: 0 None white;
+}
+.error_msg{
+padding:0;
+height:100px;
+width:730px;
+resize:None;
+overflow:hidden;
+
+}
+.bash{
+padding:0;
+height:auto;
+width:750px;
+resize:none;
+overflow:hidden;
+background-color:white;
 }
