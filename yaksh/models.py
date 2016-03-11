@@ -33,7 +33,7 @@ enrollment_methods = (
 test_case_types = (
         ("assert_based", "Assertion Based Testcase"),
         # ("argument_based", "Multiple Correct Choices"),
-        # ("stdout_based", "Code"),
+        ("stdout_based", "Stdout Based Testcase"),
     )
 
 attempts = [(i, i) for i in range(1, 6)]
@@ -156,6 +156,7 @@ class Question(models.Model):
 
     # The type of evaluator
     test_case_type = models.CharField(max_length=24, choices=test_case_types)
+    
     # Is this question active or not. If it is inactive it will not be used
     # when creating a QuestionPaper.
     active = models.BooleanField(default=True)
@@ -166,38 +167,40 @@ class Question(models.Model):
     # Tags for the Question.
     tags = TaggableManager()
 
-    def consolidate_answer_data(self, test_cases, user_answer):
+    # def consolidate_answer_data(self, test_cases, user_answer):
+    def consolidate_answer_data(self, user_answer):
         test_case_data_dict = []
         question_info_dict = {}
 
-        for test_case in test_cases:
-            kw_args_dict = {}
-            pos_args_list = []
+        # for test_case in test_cases:
+        #     kw_args_dict = {}
+        #     pos_args_list = []
 
-            test_case_data = {}
-            test_case_data['test_id'] = test_case.id
-            test_case_data['func_name'] = test_case.func_name
-            test_case_data['expected_answer'] = test_case.expected_answer
+            # test_case_data = {}
+            # test_case_data['test_id'] = test_case.id
+            # test_case_data['func_name'] = test_case.func_name
+            # test_case_data['expected_answer'] = test_case.expected_answer
 
-            if test_case.kw_args:
-                for args in test_case.kw_args.split(","):
-                    arg_name, arg_value = args.split("=")
-                    kw_args_dict[arg_name.strip()] = arg_value.strip()
+            # if test_case.kw_args:
+            #     for args in test_case.kw_args.split(","):
+            #         arg_name, arg_value = args.split("=")
+            #         kw_args_dict[arg_name.strip()] = arg_value.strip()
 
-            if test_case.pos_args:
-                for args in test_case.pos_args.split(","):
-                    pos_args_list.append(args.strip())
+            # if test_case.pos_args:
+            #     for args in test_case.pos_args.split(","):
+            #         pos_args_list.append(args.strip())
 
-            test_case_data['kw_args'] = kw_args_dict
-            test_case_data['pos_args'] = pos_args_list
-            test_case_data_dict.append(test_case_data)
+            # test_case_data['kw_args'] = kw_args_dict
+            # test_case_data['pos_args'] = pos_args_list
+            # test_case_data_dict.append(test_case_data)
 
         # question_info_dict['language'] = self.language
-        question_info_dict['id'] = self.id
+        # question_info_dict['id'] = self.id
         question_info_dict['user_answer'] = user_answer
-        question_info_dict['test_parameter'] = test_case_data_dict
+        # question_info_dict['test_parameter'] = test_case_data_dict
         question_info_dict['ref_code_path'] = self.ref_code_path
         question_info_dict['test'] = self.test
+        # question_info_dict['test_case_type'] = self.test_case_type
 
         return json.dumps(question_info_dict)
 

@@ -31,7 +31,7 @@ question_types = (
 test_case_types = (
         ("assert_based", "Assertion Based Testcase"),
         # ("argument_based", "Multiple Correct Choices"),
-        # ("stdout_based", "Code"),
+        ("stdout_based", "Stdout Based Testcase"),
     )
 
 UNAME_CHARS = letters + "._" + digits
@@ -159,7 +159,6 @@ class QuizForm(forms.Form):
     pass_criteria = forms.FloatField(initial=40,
                                      help_text='Will be taken as percentage')
     language = forms.CharField(widget=forms.Select(choices=languages))
-    test_case_type = forms.CharField(widget=forms.Select(choices=test_case_types))
     attempts_allowed = forms.IntegerField(widget=forms.Select(choices=attempts))
     time_between_attempts = forms.IntegerField\
             (widget=forms.Select(choices=days_between_attempts),
@@ -217,6 +216,7 @@ class QuestionForm(forms.ModelForm):
     tags = TagField(required=False)
     snippet = forms.CharField(widget=forms.Textarea\
                               (attrs={'cols': 40, 'rows': 1}), required=False)
+    test_case_type = forms.CharField(widget=forms.Select(choices=test_case_types))
     ref_code_path = forms.CharField(widget=forms.Textarea\
                           (attrs={'cols': 40, 'rows': 1}), required=False)
 
@@ -230,6 +230,8 @@ class QuestionForm(forms.ModelForm):
         type = self.cleaned_data.get("type")
         active = self.cleaned_data.get("active")
         snippet = self.cleaned_data.get("snippet")
+        test_case_type = self.cleaned_data["test_case_type"]
+
 
         new_question = Question()
         new_question.summary = summary
@@ -241,6 +243,7 @@ class QuestionForm(forms.ModelForm):
         new_question.type = type
         new_question.active = active
         new_question.snippet = snippet
+        new_question.test_case_type = test_case_type
         new_question = super(QuestionForm, self).save(commit=False)
         if commit:
             new_question.save()

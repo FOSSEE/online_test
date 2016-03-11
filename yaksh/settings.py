@@ -20,7 +20,10 @@ SERVER_TIMEOUT = 2
 URL_ROOT = ''
 
 code_evaluators = {
-            "python": "python_code_evaluator.PythonCodeEvaluator",
+            "python": {"assert_based": "python_code_evaluator.PythonCodeEvaluator",
+            		"argument_based": "python_argument_based_evaluator.PythonCodeEvaluator",
+            		"stdout_based": "python_stdout_evaluator.PythonStdoutEvaluator"
+            	},
             "c": "cpp_code_evaluator.CppCodeEvaluator",
             "cpp": "cpp_code_evaluator.CppCodeEvaluator",
             "java": "java_code_evaluator.JavaCodeEvaluator",

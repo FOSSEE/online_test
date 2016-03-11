@@ -1002,7 +1002,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     # questions, we obtain the results via XML-RPC with the code executed
     # safely in a separate process (the code_server.py) running as nobody.
     if not question.type == 'upload':
-        json_data = question.consolidate_answer_data(test_cases, user_answer) \
+        json_data = question.consolidate_answer_data(user_answer) \
                         if question.type == 'code' else None
         correct, result = validate_answer(user, user_answer, question, json_data)
         if correct:
@@ -1086,7 +1086,7 @@ def validate_answer(user, user_answer, question, json_data=None):
                 message = 'Correct answer'
         elif question.type == 'code':
             user_dir = get_user_dir(user)
-            json_result = code_server.run_code(question.language, json_data, user_dir)
+            json_result = code_server.run_code(question.language, question.test_case_type, json_data, user_dir)
             result = json.loads(json_result)
             if result.get('success'):
                 correct = True
