@@ -20,7 +20,7 @@ import json
 from yaksh.models import Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
-                QuestionForm, RandomQuestionForm, TestCaseFormSet,\
+                QuestionForm, RandomQuestionForm,\
                 QuestionFilterForm, CourseForm
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
@@ -335,11 +335,6 @@ def edit_question(request):
     snippet = request.POST.getlist('snippet')
     for j, question_id in enumerate(question_list):
         question = Question.objects.get(id=question_id)
-        test_case_formset = TestCaseFormSet(request.POST, prefix='test', instance=question)
-        if test_case_formset.is_valid():
-            test_case_instance = test_case_formset.save(commit=False)
-            for i in test_case_instance:
-                i.save()
 
         question.summary = summary[j]
         question.description = description[j]
@@ -359,16 +354,6 @@ def edit_question(request):
 def add_question(request, question_id=None):
     """To add a new question in the database.
     Create a new question and store it."""
-
-    def add_or_delete_test_form(post_request, instance):
-        request_copy = post_request.copy()
-        if 'add_test' in post_request:
-            request_copy['test-TOTAL_FORMS'] = int(request_copy['test-TOTAL_FORMS']) + 1
-        elif 'delete_test' in post_request:
-            request_copy['test-TOTAL_FORMS'] = int(request_copy['test-TOTAL_FORMS']) - 1
-        test_case_formset = TestCaseFormSet(request_copy, prefix='test', instance=instance)
-        return test_case_formset
-
     user = request.user
     ci = RequestContext(request)
     if not user.is_authenticated() or not is_moderator(user):
@@ -377,34 +362,22 @@ def add_question(request, question_id=None):
         form = QuestionForm(request.POST)
         if form.is_valid():
             if question_id is None:
-                test_case_formset = add_or_delete_test_form(request.POST, form.save(commit=False))
                 if 'save_question' in request.POST:
-                    qtn = form.save(commit=False)
-                    test_case_formset = TestCaseFormSet(request.POST, prefix='test',  instance=qtn)
                     form.save()
                     question = Question.objects.order_by("-id")[0]
                     tags = form['tags'].data.split(',')
                     for i in range(0, len(tags)-1):
                         tag = tags[i].strip()
                         question.tags.add(tag)
-                    if test_case_formset.is_valid():
-                        test_case_formset.save()
-                    else:
-                        return my_render_to_response('yaksh/add_question.html',
-                                                     {'form': form,
-                                                     'formset': test_case_formset},
-                                                     context_instance=ci)
 
                     return my_redirect("/exam/manage/questions")
 
                 return my_render_to_response('yaksh/add_question.html',
-                                             {'form': form,
-                                             'formset': test_case_formset},
+                                             {'form': form},
                                              context_instance=ci)
                 
             else:
                 d = Question.objects.get(id=question_id)
-                test_case_formset = add_or_delete_test_form(request.POST, d)
                 if 'save_question' in request.POST:
                     d.summary = form['summary'].data
                     d.description = form['description'].data
@@ -425,39 +398,22 @@ def add_question(request, question_id=None):
                         tag = tags[i].strip()
                         question.tags.add(tag)
 
-                    test_case_formset = TestCaseFormSet(request.POST, prefix='test', instance=question)
-                    if test_case_formset.is_valid():
-                        test_case_instance = test_case_formset.save(commit=False)
-                        for i in test_case_instance:
-                            i.save()
-                    else:
-                        return my_render_to_response('yaksh/add_question.html',
-                                                     {'form': form,
-                                                     'formset': test_case_formset},
-                                                     context_instance=ci)
-
-
                     return my_redirect("/exam/manage/questions")
+
                 return my_render_to_response('yaksh/add_question.html',
-                                             {'form': form,
-                                             'formset': test_case_formset},
+                                             {'form': form},
                                              context_instance=ci)
 
         else:
-            test_case_formset = add_or_delete_test_form(request.POST, form.save(commit=False))
             return my_render_to_response('yaksh/add_question.html',
-                                         {'form': form,
-                                         'formset': test_case_formset},
+                                         {'form': form},
                                          context_instance=ci)
     else:
         form = QuestionForm()
-        test_case_formset = TestCaseFormSet(prefix='test', instance=Question())
         if question_id is None:
             form = QuestionForm()
-            test_case_formset = TestCaseFormSet(prefix='test', instance=Question())
             return my_render_to_response('yaksh/add_question.html',
-                                         {'form': form,
-                                         'formset': test_case_formset},
+                                         {'form': form},
                                          context_instance=ci)
         else:
             d = Question.objects.get(id=question_id)
@@ -481,12 +437,8 @@ def add_question(request, question_id=None):
                 initial_tags = ""
             form.initial['tags'] = initial_tags
 
-            test_case_formset = TestCaseFormSet(prefix='test', 
-                                                    instance=d)
-
             return my_render_to_response('yaksh/add_question.html',
-                                         {'form': form,
-                                         'formset': test_case_formset},
+                                         {'form': form},
                                          context_instance=ci)
 
 
@@ -1493,7 +1445,6 @@ def show_all_questions(request):
         data = request.POST.getlist('question')
 
         forms = []
-        formsets = []
         for j in data:
             d = Question.objects.get(id=j)
             form = QuestionForm()
@@ -1516,13 +1467,9 @@ def show_all_questions(request):
                 initial_tags = ""
             form.initial['tags'] = initial_tags
             forms.append(form)
-            test_case_formset = TestCaseFormSet(prefix='test', instance=d)
-            formsets.append(test_case_formset)
-            data_list = zip(forms, formsets)
 
         return my_render_to_response('yaksh/edit_question.html',
-                                     {'data': data,
-                                     'data_list': data_list},
+                                     {'data': data},
                                      context_instance=ci)
     else:
         questions = Question.objects.all()
