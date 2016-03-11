@@ -5,7 +5,6 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from taggit.managers import TaggableManager
 from taggit.forms import TagField
-from django.forms.models import inlineformset_factory
 
 from string import letters, punctuation, digits
 import datetime
@@ -266,10 +265,6 @@ class QuestionFilterForm(forms.Form):
                                 (choices=languages))
     question_type = forms.CharField(max_length=8, widget=forms.Select\
                                     (choices=question_types))
-
-
-TestCaseFormSet = inlineformset_factory(Question, TestCase,\
-                        can_order=False, can_delete=False, extra=1)
 
 
 class CourseForm(forms.ModelForm):
