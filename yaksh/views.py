@@ -513,7 +513,7 @@ def validate_answer(user, user_answer, question, json_data=None):
                 message = 'Correct answer'
         elif question.type == 'code':
             user_dir = get_user_dir(user)
-            json_result = code_server.run_code(question.language, json_data, user_dir)
+            json_result = code_server.run_code(question.language, question.test_case_type, json_data, user_dir)
             result = json.loads(json_result)
             if result.get('success'):
                 correct = True

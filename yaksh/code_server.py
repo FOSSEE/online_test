@@ -31,7 +31,7 @@ import re
 import json
 # Local imports.
 from settings import SERVER_PORTS, SERVER_POOL_PORT
-from language_registry import get_registry, registry
+from language_registry import get_registry, create_evaluator_instance, unpack_json
 
 
 MY_DIR = abspath(dirname(__file__))
@@ -58,13 +58,14 @@ class CodeServer(object):
         self.queue = queue
 
     # Public Protocol ##########
-    def check_code(self, language, json_data, in_dir=None):
+    def check_code(self, language, test_case_type, json_data, in_dir=None):
         """Calls relevant EvaluateCode class based on language to check the
          answer code
         """
-        code_evaluator = self._create_evaluator_instance(language, json_data,
+        code_evaluator = create_evaluator_instance(language, test_case_type, json_data,
                                                              in_dir)
-        result = code_evaluator.evaluate()
+        data = unpack_json(json_data) #@@@ def should be here
+        result = code_evaluator.evaluate(**data)
 
         # Put us back into the server pool queue since we are free now.
         self.queue.put(self.port)
@@ -79,15 +80,14 @@ class CodeServer(object):
         self.queue.put(self.port)
         server.serve_forever()
 
-    # Private Protocol ##########
-    def _create_evaluator_instance(self, language, json_data, in_dir):
-        """Create instance of relevant EvaluateCode class based on language"""
-        # set_registry()
-        registry1 = get_registry()
-        print registry
-        cls = registry1.get_class(language)
-        instance = cls.from_json(language, json_data, in_dir)
-        return instance
+    # # Private Protocol ##########
+    # def _create_evaluator_instance(self, language, json_data, in_dir):
+    #     """Create instance of relevant EvaluateCode class based on language"""
+    #     # set_registry()
+    #     registry = get_registry()
+    #     cls = registry.get_class(language)
+    #     instance = cls.from_json(language, json_data, in_dir)
+    #     return instance
 
 
 ###############################################################################
