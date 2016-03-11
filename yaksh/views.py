@@ -146,14 +146,14 @@ def add_question(request, question_id=None):
     """To add a new question in the database.
     Create a new question and store it."""
 
-    def add_or_delete_test_form(post_request, instance):
-        request_copy = post_request.copy()
-        if 'add_test' in post_request:
-            request_copy['test-TOTAL_FORMS'] = int(request_copy['test-TOTAL_FORMS']) + 1
-        elif 'delete_test' in post_request:
-            request_copy['test-TOTAL_FORMS'] = int(request_copy['test-TOTAL_FORMS']) - 1
-        test_case_formset = TestCaseFormSet(request_copy, prefix='test', instance=instance)
-        return test_case_formset
+    # def add_or_delete_test_form(post_request, instance):
+    #     request_copy = post_request.copy()
+    #     if 'add_test' in post_request:
+    #         request_copy['test-TOTAL_FORMS'] = int(request_copy['test-TOTAL_FORMS']) + 1
+    #     elif 'delete_test' in post_request:
+    #         request_copy['test-TOTAL_FORMS'] = int(request_copy['test-TOTAL_FORMS']) - 1
+    #     test_case_formset = TestCaseFormSet(request_copy, prefix='test', instance=instance)
+    #     return test_case_formset
 
     user = request.user
     ci = RequestContext(request)
@@ -163,7 +163,7 @@ def add_question(request, question_id=None):
         form = QuestionForm(request.POST)
         if form.is_valid():
             if question_id is None:
-                test_case_formset = add_or_delete_test_form(request.POST, form.save(commit=False))
+                # test_case_formset = add_or_delete_test_form(request.POST, form.save(commit=False))
                 if 'save_question' in request.POST:
                     qtn = form.save(commit=False)
                     qtn.user = user
@@ -178,52 +178,45 @@ def add_question(request, question_id=None):
                                                      {'form': form,
                                                      'formset': test_case_formset},
                                                      context_instance=ci)
-
                     return my_redirect("/exam/manage/questions")
 
                 return my_render_to_response('yaksh/add_question.html',
-                                             {'form': form,
-                                             'formset': test_case_formset},
+                                             {'form': form},
+                                             # 'formset': test_case_formset},
                                              context_instance=ci)
             else:
                 d = Question.objects.get(id=question_id)
-                form = QuestionForm(request.POST, instance=d)
-                test_case_formset = add_or_delete_test_form(request.POST, d)
                 if 'save_question' in request.POST:
                     qtn = form.save(commit=False)
                     test_case_formset = TestCaseFormSet(request.POST, prefix='test',  instance=qtn)
                     form.save()
                     question = Question.objects.get(id=question_id)
-                    if test_case_formset.is_valid():
-                        test_case_formset.save()
                     return my_redirect("/exam/manage/questions")
                 return my_render_to_response('yaksh/add_question.html',
-                                             {'form': form,
-                                             'formset': test_case_formset},
+                                             {'form': form},
+                                             # 'formset': test_case_formset},
                                              context_instance=ci)
 
         else:
-            test_case_formset = TestCaseFormSet(prefix='test', instance=Question())
             return my_render_to_response('yaksh/add_question.html',
-                                         {'form': form,
-                                         'formset': test_case_formset},
+                                         {'form': form},
+                                         # 'formset': test_case_formset},
                                          context_instance=ci)
     else:
         if question_id is None:
             form = QuestionForm()
-            test_case_formset = TestCaseFormSet(prefix='test', instance=Question())
+            # test_case_formset = TestCaseFormSet(prefix='test', instance=Question())
             return my_render_to_response('yaksh/add_question.html',
-                                         {'form': form,
-                                         'formset': test_case_formset},
+                                         {'form': form},
+                                         # 'formset': test_case_formset},
                                          context_instance=ci)
         else:
             d = Question.objects.get(id=question_id)
             form = QuestionForm(instance=d)
-            test_case_formset = TestCaseFormSet(prefix='test', instance=d)
 
             return my_render_to_response('yaksh/add_question.html',
-                                         {'form': form,
-                                         'formset': test_case_formset},
+                                         {'form': form},
+                                         # 'formset': test_case_formset},
                                          context_instance=ci)
 
 

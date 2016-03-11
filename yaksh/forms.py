@@ -180,10 +180,6 @@ class QuestionFilterForm(forms.Form):
                                     (choices=question_types))
 
 
-TestCaseFormSet = inlineformset_factory(Question, TestCase, fields='__all__',
-                        can_order=False, can_delete=False, extra=1)
-
-
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
