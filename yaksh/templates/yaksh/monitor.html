@@ -40,6 +40,7 @@
 {% if papers %}
 <p>Number of papers: {{ papers|length }} </p>
 <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{papers.0.question_paper.id}}">Question Statisitics</a></p>
+<p><a href="{{URL_ROOT}}/exam/manage/monitor/download_csv/{{papers.0.question_paper.id}}">Download CSV</a></p>
 <table border="1" cellpadding="3">
     <tr>
     <th> Name </th>
