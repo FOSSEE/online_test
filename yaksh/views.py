@@ -328,7 +328,7 @@ def edit_question(request):
     description = request.POST.getlist('description')
     points = request.POST.getlist('points')
     options = request.POST.getlist('options')
-    test = request.POST.getlist('test')
+    # test = request.POST.getlist('test')
     type = request.POST.getlist('type')
     active = request.POST.getlist('active')
     language = request.POST.getlist('language')
@@ -344,7 +344,7 @@ def edit_question(request):
         question.language = language[j]
         question.snippet = snippet[j]
         question.ref_code_path = ref_code_path[j]
-        question.test = test[j]
+        # question.test = test[j]
         question.type = type[j]
         question.save()
     return my_redirect("/exam/manage/questions")
@@ -388,7 +388,7 @@ def add_question(request, question_id=None):
                     d.language = form['language'].data
                     d.snippet = form['snippet'].data
                     d.ref_code_path = form['ref_code_path'].data
-                    d.test = form['test'].data
+                    # d.test = form['test'].data
                     d.save()
                     question = Question.objects.get(id=question_id)
                     for tag in question.tags.all():
@@ -427,7 +427,7 @@ def add_question(request, question_id=None):
             form.initial['language'] = d.language
             form.initial['snippet'] = d.snippet
             form.initial['ref_code_path'] = d.ref_code_path
-            form.initial['test'] = d.test
+            # form.initial['test'] = d.test
             form_tags = d.tags.all()
             form_tags_split = form_tags.values('name')
             initial_tags = ""
@@ -912,7 +912,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         return my_redirect('/exam/login/')
 
     question = get_object_or_404(Question, pk=q_id)
-    test_cases = TestCase.objects.filter(question=question)
+    # test_cases = TestCase.objects.filter(question=question)
 
     snippet_code = request.POST.get('snippet')
     user_code = request.POST.get('answer')
@@ -1030,12 +1030,10 @@ def validate_answer(user, user_answer, question, json_data=None):
         if question.type == 'mcq':
             if user_answer.strip() == question.test.strip():
                 correct = True
-                message = 'Correct answer'
         elif question.type == 'mcc':
             answers = set(question.test.splitlines())
             if set(user_answer) == answers:
                 correct = True
-                message = 'Correct answer'
         elif question.type == 'code':
             user_dir = get_user_dir(user)
             json_result = code_server.run_code(question.language, question.test_case_type, json_data, user_dir)
@@ -1457,7 +1455,7 @@ def show_all_questions(request):
             form.initial['language'] = d.language
             form.initial['snippet'] = d.snippet
             form.initial['ref_code_path'] = d.ref_code_path
-            form.initial['test'] = d.test
+            # form.initial['test'] = d.test
             form_tags = d.tags.all()
             form_tags_split = form_tags.values('name')
             initial_tags = ""

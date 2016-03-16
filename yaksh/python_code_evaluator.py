@@ -12,17 +12,18 @@ from code_evaluator import CodeEvaluator
 class PythonCodeEvaluator(CodeEvaluator):
     """Tests the Python code obtained from Code Server"""
 
-    def check_code(self, test, user_answer, ref_code_path):
+    # def check_code(self, test, user_answer, ref_code_path):
+    def check_code(self, user_answer, test_cases):
         success = False
 
         try:
             tb = None
-            test_code = test
             submitted = compile(user_answer, '<string>', mode='exec')
             g = {}
             exec submitted in g
-            _tests = compile(test_code, '<string>', mode='exec')
-            exec _tests in g
+            for test_code in test_cases:
+                _tests = compile(test_code, '<string>', mode='exec')
+                exec _tests in g
         except AssertionError:
             type, value, tb = sys.exc_info()
             info = traceback.extract_tb(tb)
@@ -35,6 +36,14 @@ class PythonCodeEvaluator(CodeEvaluator):
 
         del tb
         return success, err
+
+    # def unpack_test_case_data(self, test_case_data):
+    #     test_cases = []
+    #     for t in test_case_data:
+    #         test_case = t.get('test_case')
+    #         test_cases.append(test_case)
+
+    #     return test_cases
 
     # def check_code(self):
     #     success = False
