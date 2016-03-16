@@ -29,9 +29,9 @@ question_types = (
     )
 
 test_case_types = (
-        ("assert_based", "Assertion Based Testcase"),
+        ("standardtestcase", "Standard Testcase"),
         # ("argument_based", "Multiple Correct Choices"),
-        ("stdout_based", "Stdout Based Testcase"),
+        ("stdoutbasedtestcase", "Stdout Based Testcase"),
     )
 
 UNAME_CHARS = letters + "._" + digits

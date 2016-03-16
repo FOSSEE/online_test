@@ -64,7 +64,7 @@ class CodeServer(object):
         """
         code_evaluator = create_evaluator_instance(language, test_case_type, json_data,
                                                              in_dir)
-        data = unpack_json(json_data) #@@@ def should be here
+        data = unpack_json(json_data)
         result = code_evaluator.evaluate(**data)
 
         # Put us back into the server pool queue since we are free now.

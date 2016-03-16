@@ -188,7 +188,6 @@ def add_question(request, question_id=None):
                 d = Question.objects.get(id=question_id)
                 if 'save_question' in request.POST:
                     qtn = form.save(commit=False)
-                    test_case_formset = TestCaseFormSet(request.POST, prefix='test',  instance=qtn)
                     form.save()
                     question = Question.objects.get(id=question_id)
                     return my_redirect("/exam/manage/questions")
@@ -213,7 +212,6 @@ def add_question(request, question_id=None):
         else:
             d = Question.objects.get(id=question_id)
             form = QuestionForm(instance=d)
-
             return my_render_to_response('yaksh/add_question.html',
                                          {'form': form},
                                          # 'formset': test_case_formset},
@@ -455,8 +453,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         # If we were not skipped, we were asked to check.  For any non-mcq
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
-        test_cases = TestCase.objects.filter(question=question)
-        json_data = question.consolidate_answer_data(test_cases, user_answer) \
+        json_data = question.consolidate_answer_data(user_answer) \
                         if question.type == 'code' else None
         correct, result = validate_answer(user, user_answer, question, json_data)
         if correct:
@@ -505,12 +502,10 @@ def validate_answer(user, user_answer, question, json_data=None):
         if question.type == 'mcq':
             if user_answer.strip() == question.test.strip():
                 correct = True
-                message = 'Correct answer'
         elif question.type == 'mcc':
             answers = set(question.test.splitlines())
             if set(user_answer) == answers:
                 correct = True
-                message = 'Correct answer'
         elif question.type == 'code':
             user_dir = get_user_dir(user)
             json_result = code_server.run_code(question.language, question.test_case_type, json_data, user_dir)
@@ -847,6 +842,7 @@ def show_all_questions(request):
     context['upload_form'] = upload_form
     return my_render_to_response('yaksh/showquestions.html', context,
                                  context_instance=ci)
+
 
 @login_required
 def user_data(request, user_id, questionpaper_id=None):
