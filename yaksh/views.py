@@ -5,6 +5,7 @@ import stat
 from os.path import dirname, pardir, abspath, join, exists
 import datetime
 import collections
+import csv
 from django.http import HttpResponse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
@@ -1549,6 +1550,50 @@ def user_data(request, username, questionpaper_id=None):
     context = {'data': data}
     return my_render_to_response('yaksh/user_data.html', context,
                                  context_instance=RequestContext(request))
+
+
+@login_required
+def download_csv(request, questionpaper_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    quiz = Quiz.objects.get(questionpaper=questionpaper_id)
+    if quiz.course.creator != user:
+        raise Http404('The question paper does not belong to your course')
+    papers = AnswerPaper.objects.get_latest_attempts(questionpaper_id)
+    if not papers:
+        return monitor(request, questionpaper_id)
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(
+                                      (quiz.description).replace('.', ''))
+    writer = csv.writer(response)
+    header = [
+                'name',
+                'username',
+                'roll_number',
+                'institute',
+                'marks_obtained',
+                'total_marks',
+                'percentage',
+                'questions',
+                'questions_answererd',
+                'status'
+    ]
+    writer.writerow(header)
+    for paper in papers:
+        row = [
+                '{0} {1}'.format(paper.user.first_name, paper.user.last_name),
+                paper.user.username,
+                paper.user.profile.roll_number,
+                paper.user.profile.institute,
+                paper.marks_obtained,
+                paper.question_paper.total_marks,
+                paper.percent,
+                paper.questions, paper.questions_answered,
+                paper.status
+        ]
+        writer.writerow(row)
+    return response
 
 
 @login_required

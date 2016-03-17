@@ -414,6 +414,23 @@ class AnswerPaperManager(models.Manager):
                 question_stats[question] = [0, questions[question.id]]
         return question_stats
 
+    def get_answerpapers_for_quiz(self, questionpaper_id):
+        return self.filter(question_paper_id=questionpaper_id)
+
+    def _get_answerpapers_users(self, answerpapers):
+        return answerpapers.values_list('user', flat=True).distinct()
+
+    def get_latest_attempts(self, questionpaper_id):
+        papers = self.get_answerpapers_for_quiz(questionpaper_id)
+        users = self._get_answerpapers_users(papers)
+        latest_attempts = []
+        for user in users:
+            latest_attempts.append(self._get_latest_attempt(papers, user))
+        return latest_attempts
+
+    def _get_latest_attempt(self, answerpapers, user_id):
+        return answerpapers.filter(user_id=user_id).order_by('-attempt_number')[0]
+
 
 ###############################################################################
 class AnswerPaper(models.Model):
