@@ -8,7 +8,6 @@ import signal
 from multiprocessing import Process, Queue
 import subprocess
 import re
-# import json
 # Local imports.
 from settings import SERVER_TIMEOUT
 
@@ -50,36 +49,12 @@ def delete_signal_handler():
 
 class CodeEvaluator(object):
     """Tests the code obtained from Code Server"""
-    # def __init__(self, test_case_data, test, language, user_answer, 
-    #                  ref_code_path=None, in_dir=None):
     def __init__(self, in_dir=None):
         msg = 'Code took more than %s seconds to run. You probably '\
               'have an infinite loop in your code.' % SERVER_TIMEOUT
         self.timeout_msg = msg
-        # self.test_case_data = test_case_data
-        # self.language = language.lower()    #@@@remove
-        # self.user_answer = user_answer      #@@@specific to check-code
-        # self.ref_code_path = ref_code_path  #@@@specific to check-code
-        # self.test = test                    #@@@specific to check-code
-        self.in_dir = in_dir                #@@@Common for all, no change
-        # self.test_case_args = None          #@@@no change
+        self.in_dir = in_dir
 
-    # Public Protocol ##########
-    # @classmethod
-    # def from_json(cls, language, json_data, in_dir):
-    #     json_data = json.loads(json_data)
-    #     # test_case_data = json_data.get("test_case_data")
-    #     user_answer = json_data.get("user_answer")
-    #     ref_code_path = json_data.get("ref_code_path")
-    #     test = json_data.get("test") 
-
-    #     # instance = cls(test_case_data, test, language, user_answer, ref_code_path,
-    #     #                  in_dir)
-    #     instance = cls(test, language, user_answer, ref_code_path,
-    #                      in_dir)
-    #     return instance
-
-    # def evaluate(self):
     def evaluate(self, **kwargs):
         """Evaluates given code with the test cases based on
         given arguments in test_case_data.
@@ -103,7 +78,6 @@ class CodeEvaluator(object):
         """
 
         self.setup()
-        # success, err = self.safe_evaluate(self.test_case_args)
         success, err = self.safe_evaluate(**kwargs)
         self.teardown()
 
@@ -114,18 +88,13 @@ class CodeEvaluator(object):
     def setup(self):
         self._change_dir(self.in_dir)
 
-    # def safe_evaluate(self, args):
-    # def safe_evaluate(self, **kwargs): #@@@v2
     def safe_evaluate(self, user_answer, test_case_data):
         # Add a new signal handler for the execution of this code.
         prev_handler = create_signal_handler()
         success = False
-        # args = args or []
 
         # Do whatever testing needed.
         try:
-            # success, err = self.check_code(*args)
-            # success, err = self.check_code(**kwargs) #@@@v2
             for test_case in test_case_data:
                 self.compile_code(user_answer, **test_case)
                 success, err = self.check_code(user_answer, **test_case)

@@ -23,28 +23,3 @@ class RegistryTestCase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-
-# import unittest
-# import os
-# from yaksh import cpp_code_evaluator
-# from yaksh.language_registry import _LanguageRegistry, get_registry
-# from yaksh.settings import SERVER_TIMEOUT
-
-
-# class RegistryTestCase(unittest.TestCase):
-#     def setUp(self):
-#         self.registry_object = get_registry()
-#         self.language_registry = _LanguageRegistry()
-
-#     def test_set_register(self):
-#         class_name = getattr(cpp_code_evaluator, 'CppCodeEvaluator')
-#         self.registry_object.register("c", {"standardtestcase": "cpp_code_evaluator.CppCodeEvaluator"})
-#         self.assertEquals(self.registry_object.get_class("c", "standardtestcase"), class_name)
-
-#     def tearDown(self):
-#         self.registry_object = None
-
-
-# if __name__ == '__main__':
-#     unittest.main()

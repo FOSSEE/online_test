@@ -80,15 +80,6 @@ class CodeServer(object):
         self.queue.put(self.port)
         server.serve_forever()
 
-    # # Private Protocol ##########
-    # def _create_evaluator_instance(self, language, json_data, in_dir):
-    #     """Create instance of relevant EvaluateCode class based on language"""
-    #     # set_registry()
-    #     registry = get_registry()
-    #     cls = registry.get_class(language)
-    #     instance = cls.from_json(language, json_data, in_dir)
-    #     return instance
-
 
 ###############################################################################
 # `ServerPool` class.

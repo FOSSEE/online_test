@@ -40,12 +40,6 @@ class PythonStdoutEvaluator(CodeEvaluator):
         success = False
 
         tb = None
-        # submitted = compile(user_answer, '<string>', mode='exec')
-        # with redirect_stdout() as output_buffer:
-        #     g = {}
-        #     exec submitted in g
-        # raw_output_value = output_buffer.getvalue()
-        # output_value = raw_output_value.strip()
         if expected_output in user_answer:
             success = False
             err = "Incorrect Answer: Please avoid printing the expected output directly"

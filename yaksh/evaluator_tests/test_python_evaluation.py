@@ -14,7 +14,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
 
     def test_correct_answer(self):
-        # {u'user_answer': u'def adder(a,b):\r\n    return a', u'test_case_data': [u'assert(adder(1,2)==3)']}
         user_answer = "def add(a,b):\n\treturn a + b"
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer, 
@@ -51,7 +50,6 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
                             "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
 
     def test_correct_answer(self):
-        # user_answer = "a = 'Hello'\nb = 'World'\nprint '{0} {1}'.format(a, b)"
         user_answer = "a,b=0,1\nfor i in range(5):\n\tprint a,\n\ta,b=b,a+b"
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer,

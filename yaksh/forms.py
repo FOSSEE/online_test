@@ -29,7 +29,6 @@ question_types = (
 
 test_case_types = (
         ("standardtestcase", "Standard Testcase"),
-        # ("argument_based", "Multiple Correct Choices"),
         ("stdoutbasedtestcase", "Stdout Based Testcase"),
     )
 
@@ -203,21 +202,13 @@ class QuestionForm(forms.ModelForm):
     description = forms.CharField(widget=forms.Textarea\
                                             (attrs={'cols': 40, 'rows': 1}))
     points = forms.FloatField()
-    # test = forms.CharField(widget=forms.Textarea\
-    #                                 (attrs={'cols': 40, 'rows': 1}), required=False)
-    # options = forms.CharField(widget=forms.Textarea\
-    #                           (attrs={'cols': 40, 'rows': 1}), required=False)
     language = forms.CharField(max_length=20, widget=forms.Select\
                                (choices=languages))
     type = forms.CharField(max_length=8, widget=forms.Select\
                            (choices=question_types))
     active = forms.BooleanField(required=False)
     tags = TagField(required=False)
-    # snippet = forms.CharField(widget=forms.Textarea\
-    #                           (attrs={'cols': 40, 'rows': 1}), required=False)
     test_case_type = forms.CharField(widget=forms.Select(choices=test_case_types))
-    # ref_code_path = forms.CharField(widget=forms.Textarea\
-    #                       (attrs={'cols': 40, 'rows': 1}), required=False)
 
     def save(self, commit=True):
         summary = self.cleaned_data.get("summary")

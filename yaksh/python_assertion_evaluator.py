@@ -25,15 +25,10 @@ class PythonAssertionEvaluator(CodeEvaluator):
             exec submitted in self.exec_scope
             return self.exec_scope
 
-    # def check_code(self, test, user_answer, ref_code_path):
-    # def check_code(self, user_answer, test_case_data): #@@@v2
     def check_code(self, user_answer, test_case):
         success = False
         try:
             tb = None
-            # submitted = compile(user_answer, '<string>', mode='exec')
-            # g = {}
-            # exec submitted in g
             _tests = compile(test_case, '<string>', mode='exec')
             exec _tests in self.exec_scope
         except AssertionError:
