@@ -52,9 +52,7 @@ class CodeEvaluator(object):
     """Tests the code obtained from Code Server"""
     # def __init__(self, test_case_data, test, language, user_answer, 
     #                  ref_code_path=None, in_dir=None):
-    def __init__(self, in_dir, **kwargs):
-
-
+    def __init__(self, in_dir=None):
         msg = 'Code took more than %s seconds to run. You probably '\
               'have an infinite loop in your code.' % SERVER_TIMEOUT
         self.timeout_msg = msg
@@ -64,7 +62,7 @@ class CodeEvaluator(object):
         # self.ref_code_path = ref_code_path  #@@@specific to check-code
         # self.test = test                    #@@@specific to check-code
         self.in_dir = in_dir                #@@@Common for all, no change
-        self.test_case_args = None          #@@@no change
+        # self.test_case_args = None          #@@@no change
 
     # Public Protocol ##########
     # @classmethod

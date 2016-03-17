@@ -20,7 +20,7 @@ SERVER_TIMEOUT = 2
 URL_ROOT = ''
 
 code_evaluators = {
-            "python": {"standardtestcase": "python_code_evaluator.PythonCodeEvaluator",
+            "python": {"standardtestcase": "python_assertion_evaluator.PythonStandardEvaluator",
             		"stdoutbasedtestcase": "python_stdout_evaluator.PythonStdoutEvaluator"
         	},
             "c": "cpp_code_evaluator.CppCodeEvaluator",

@@ -25,29 +25,24 @@ def redirect_stdout():
 class PythonStdoutEvaluator(CodeEvaluator):
     """Tests the Python code obtained from Code Server"""
 
-    def check_code(self, user_answer, test_cases):
+    def check_code(self, user_answer, test_case_data):
         success = False
 
         tb = None
-        expected_output = test_cases[0]
+        expected_output = test_case_data[0]
         submitted = compile(user_answer, '<string>', mode='exec')
         with redirect_stdout() as output_buffer:
             g = {}
             exec submitted in g
         raw_output_value = output_buffer.getvalue()
         output_value = raw_output_value.encode('string_escape').strip()
-        if output_value == str(test_code):
+        if output_value == expected_output:
             success = True
-            err = 'Correct answer'
+            err = "Correct answer"
+
         else:
             success = False
             err = "Incorrect Answer"
 
         del tb
         return success, err
-
-    # def unpack_test_case_data(self, test_case_data):
-    #     for t in test_case_data:
-    #         test_case = t.get('output')
-
-    #     return test_case
