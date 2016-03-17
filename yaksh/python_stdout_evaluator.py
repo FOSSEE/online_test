@@ -35,7 +35,6 @@ class PythonStdoutEvaluator(CodeEvaluator):
             g = {}
             exec submitted in g
         raw_output_value = output_buffer.getvalue()
-        # output_value = raw_output_value.encode('string_escape').strip()
         output_value = raw_output_value.strip()
         if expected_output in user_answer:
             success = False

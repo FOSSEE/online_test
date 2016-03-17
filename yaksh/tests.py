@@ -69,7 +69,6 @@ class QuestionTestCases(unittest.TestCase):
                                  test_case_type='standardtestcase',
                                  description='Write a function', points=1.0,
                                 )
-                                 # snippet='def myfunc()')
         self.question.save()
         self.assertion_testcase = StandardTestCase(question=self.question,
                                  test_case='assert myfunc(12, 13) == 15')
@@ -78,18 +77,6 @@ class QuestionTestCases(unittest.TestCase):
         answer_data = {"user_answer": "demo_answer",
                          "test_case_data": ["assert myfunc(12, 13) == 15"],
                     }
-        # answer_data = { "test": "",
-        #                 "user_answer": "demo_answer",
-        #                 "test_parameter": [{"func_name": "def myfunc",
-        #                                     "expected_answer": "15",
-        #                                     "test_id": self.testcase.id,
-        #                                     "pos_args": ["12", "13"],
-        #                                     # "kw_args": {"a": "10",
-        #                                     #             "b": "11"}
-        #                                 }],
-        #                 "id": self.question.id,
-        #                 "ref_code_path": "",
-        #                 }
         self.answer_data_json = json.dumps(answer_data)
         self.user_answer = "demo_answer"
 
@@ -98,11 +85,9 @@ class QuestionTestCases(unittest.TestCase):
         self.assertEqual(self.question.summary, 'Demo question')
         self.assertEqual(self.question.language, 'Python')
         self.assertEqual(self.question.type, 'Code')
-        # self.assertFalse(self.question.options)
         self.assertEqual(self.question.description, 'Write a function')
         self.assertEqual(self.question.points, 1.0)
         self.assertTrue(self.question.active)
-        # self.assertEqual(self.question.snippet, 'def myfunc()')
         tag_list = []
         for tag in self.question.tags.all():
                     tag_list.append(tag.name)
@@ -112,27 +97,6 @@ class QuestionTestCases(unittest.TestCase):
         """ Test consolidate_answer_data function """
         result = self.question.consolidate_answer_data(self.user_answer)
         self.assertEqual(result, self.answer_data_json)
-
-
-###############################################################################
-# class TestCaseTestCases(unittest.TestCase):
-#     def setUp(self):
-#         self.question = Question(summary='Demo question', language='Python',
-#                                  type='Code', active=True,
-#                                  description='Write a function', points=1.0,
-#                                  snippet='def myfunc()')
-#         self.question.save()
-#         self.testcase = TestCase(question=self.question,
-#                                  func_name='def myfunc', kw_args='a=10,b=11',
-#                                  pos_args='12,13', expected_answer='15')
-
-#     def test_testcase(self):
-#         """ Test question """
-#         self.assertEqual(self.testcase.question, self.question)
-#         self.assertEqual(self.testcase.func_name, 'def myfunc')
-#         self.assertEqual(self.testcase.kw_args, 'a=10,b=11')
-#         self.assertEqual(self.testcase.pos_args, '12,13')
-#         self.assertEqual(self.testcase.expected_answer, '15')
 
 
 ###############################################################################
@@ -435,7 +399,6 @@ class TestCaseTestCases(unittest.TestCase):
         self.question = Question(summary='Demo question', language='Python',
                                  type='Code', active=True,
                                  description='Write a function', points=1.0,
-                                 # snippet='def myfunc()')
                                 )
         self.question.save()
         self.assertion_testcase = StandardTestCase(question=self.question,

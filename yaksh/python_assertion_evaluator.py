@@ -12,7 +12,6 @@ from code_evaluator import CodeEvaluator
 class PythonAssertionEvaluator(CodeEvaluator):
     """Tests the Python code obtained from Code Server"""
 
-    # def check_code(self, test, user_answer, ref_code_path):
     def check_code(self, user_answer, test_case_data):
         success = False
         try:

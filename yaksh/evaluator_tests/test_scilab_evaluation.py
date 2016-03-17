@@ -11,16 +11,6 @@ class ScilabEvaluationTestCases(unittest.TestCase):
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
 
-    # def setUp(self):
-    #     self.language = "scilab"
-    #     self.ref_code_path = "scilab_files/test_add.sce"
-    #     self.in_dir = "/tmp"
-    #     self.test_case_data = []
-    #     self.timeout_msg = ("Code took more than {0} seconds to run. "
-    #                         "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
-    #     self.test = None
-
-
     def test_correct_answer(self):
         user_answer = "funcprot(0)\nfunction[c]=add(a,b)\n\tc=a+b;\nendfunction"
         get_class = ScilabCodeEvaluator(self.in_dir)
@@ -30,16 +20,6 @@ class ScilabEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs)
         self.assertEquals(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
-
-    # def test_correct_answer(self):
-    #     user_answer = "funcprot(0)\nfunction[c]=add(a,b)\n\tc=a+b;\nendfunction"
-    #     get_class = ScilabCodeEvaluator(self.test_case_data, self.test,
-    #                                          self.language, user_answer,
-    #                                          self.ref_code_path, self.in_dir)
-    #     result = get_class.evaluate()
-
-    #     self.assertTrue(result.get("success"))
-    #     self.assertEqual(result.get("error"), "Correct answer")
 
     def test_error(self):
         user_answer = "funcprot(0)\nfunction[c]=add(a,b)\n\tc=a+b;\ndis(\tendfunction"

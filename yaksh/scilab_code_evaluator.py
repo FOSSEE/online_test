@@ -12,21 +12,9 @@ from code_evaluator import CodeEvaluator
 
 class ScilabCodeEvaluator(CodeEvaluator):
     """Tests the Scilab code obtained from Code Server"""
-    # def __init__(self, test_case_data, test, language, user_answer,
-    #                  ref_code_path=None, in_dir=None):
-    #     super(ScilabCodeEvaluator, self).__init__(test_case_data, test,
-    #                                              language, user_answer,
-    #                                              ref_code_path, in_dir)
-
-    #     # Removes all the commands that terminates scilab
-    #     self.user_answer, self.terminate_commands = self._remove_scilab_exit(user_answer.lstrip())
-    #     self.test_case_args = self.setup()
-
     def setup(self):
         super(ScilabCodeEvaluator, self).setup()
-        # ref_path, test_case_path = self._set_test_code_file_path(self.ref_code_path)
         self.submit_code_path = self.create_submit_code_file('function.sci')
-        # return ref_path, # Return as a tuple
 
     def teardown(self):
         super(ScilabCodeEvaluator, self).teardown()
@@ -68,38 +56,6 @@ class ScilabCodeEvaluator(CodeEvaluator):
             err = add_err + stderr
 
         return success, err
-
-    # def check_code(self, ref_path):
-    #     success = False
-
-    #     # Throw message if there are commmands that terminates scilab
-    #     add_err=""
-    #     if self.terminate_commands:
-    #         add_err = "Please do not use exit, quit and abort commands in your\
-    #                     code.\n Otherwise your code will not be evaluated\
-    #                     correctly.\n"
-
-    #     cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(ref_path)
-    #     cmd += ' | timeout 8 scilab-cli -nb'
-    #     ret = self._run_command(cmd,
-    #                             shell=True,
-    #                             stdout=subprocess.PIPE,
-    #                             stderr=subprocess.PIPE)
-    #     proc, stdout, stderr = ret
-
-    #     # Get only the error.
-    #     stderr = self._get_error(stdout)
-    #     if stderr is None:
-    #         # Clean output
-    #         stdout = self._strip_output(stdout)
-    #         if proc.returncode == 5:
-    #             success, err = True, "Correct answer"
-    #         else:
-    #             err = add_err + stdout
-    #     else:
-    #         err = add_err + stderr
-
-    #     return success, err
 
     def _remove_scilab_exit(self, string):
         """
