@@ -30,6 +30,9 @@ urlpatterns += patterns('yaksh.views',
     url(r'^(?P<q_id>\d+)/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$', 'show_question'),
     url(r'^enroll_request/(?P<course_id>\d+)/$', 'enroll_request'),
     url(r'^self_enroll/(?P<course_id>\d+)/$', 'self_enroll'),
+    url(r'^editprofile/$', 'edit_profile'),
+    url(r'^changepassword/$', 'change_password'),
+    url(r'^viewprofile/$', 'view_profile'),
 
     url(r'^manage/$', 'prof_manage'),
     url(r'^manage/addquestion/$', 'add_question'),
@@ -79,5 +82,8 @@ urlpatterns += patterns('yaksh.views',
     url(r'manage/toggle_status/(?P<course_id>\d+)/$', 'toggle_course_status'),
     url(r'^ajax/questionpaper/(?P<query>.+)/$', 'ajax_questionpaper'),
     url(r'^ajax/questions/filter/$', 'ajax_questions_filter'),
-
+    url(r'^manage/editprofile/$', 'edit_profile'),
+    url(r'^manage/changepassword/$', 'change_password'),
+    url(r'^manage/viewprofile/$', 'view_profile'),
+    url(r'^manage/enroll/(?P<course_id>\d+)', 'enroll')
 )

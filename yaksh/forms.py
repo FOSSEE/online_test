@@ -276,3 +276,40 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ['name', 'active', 'enrollment']
+
+class EditProfile(forms.Form):
+    """ edit profile form for students and moderators """
+
+    first_name = forms.CharField(max_length=30)
+    last_name = forms.CharField(max_length=30)
+    institute = forms.CharField\
+                (max_length=128)
+    department = forms.CharField\
+                (max_length=64)
+    roll_number = forms.CharField\
+                (max_length=30)
+    position = forms.CharField\
+        (max_length=64)
+
+    def save(self, user):
+        user_details = User.objects.get(id=user.id)
+        profile_details = Profile.objects.get(user_id=user.id)
+        user_details.first_name = self.cleaned_data['first_name']
+        user_details.last_name = self.cleaned_data['last_name']
+        profile_details.department = self.cleaned_data['department']
+        profile_details.institute = self.cleaned_data['institute']
+        profile_details.roll_number = self.cleaned_data['roll_number']
+        profile_details.position = self.cleaned_data['position']
+        profile_details.save()
+        user_details.save()
+
+
+class PasswordResetForm(forms.Form):
+    """ change password form for students and moderators """
+
+    new_password = forms.CharField(widget=forms.PasswordInput(attrs={
+                               'class': 'form-control',
+                               'placeholder': 'New Password'}), label='')
+    confirm_new_password = forms.CharField(widget=forms.PasswordInput(attrs={
+                               'class': 'form-control',
+                               'placeholder': 'Confirm New Password'}), label='')

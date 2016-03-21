@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %} View Profile {% endblock %}
+
+{% block pagetitle %} Online Test {% endblock %}
+{% block css %}
+<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/base.css" />
+{% endblock %}
+{% block content %}
+<a href={{ URL_ROOT }}/exam/manage/editprofile>Edit Profile</a><br><br>
+ <table width="398" border="0" align="center" cellpadding="0">
+  <tr>
+    <td height="26" colspan="2"><h2>Your Profile Information</h2> </td>
+  </tr>
+  <tr>
+    <td width="82" valign="top"><h3>Firstname:</h3></td>
+    <td width="165" valign="top"><h4>{{ user.first_name }}</h4></td>
+  </tr>
+  <tr>
+    <td valign="top"><h3>Lastname:</h3></td>
+    <td valign="top"><h4>{{ user.last_name }}</h4></td>
+  </tr>
+  <tr>
+    <td valign="top"><h3>Email:</h3><h3></td>
+    <td valign="top"><h4>{{ user.email }}</h4></td>
+  </tr>
+  <tr>
+    <td valign="top"><h3>Institute:</h3></td>
+    <td valign="top"><h4>{{ profile.institute }}</h4></td>
+  </tr>
+  <tr>
+    <td valign="top"><h3>Department:</h3></td>
+    <td valign="top"><h4>{{ profile.department }}</h4></td>
+  </tr>
+    <tr>
+    <td valign="top"><h3>Roll Number:</h3></td>
+    <td valign="top"><h4>{{ profile.roll_number }}</h4></td>
+  </tr>
+  <tr>
+    <td valign="top"><h3>Position:</h3></td>
+    <td valign="top"><h4>{{ profile.position }}</h4></td>
+  </tr>
+</table>
+{% endblock content %}
