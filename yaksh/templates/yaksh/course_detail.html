@@ -32,7 +32,7 @@ $(".checkall").click( function(){
         <center><b><u>Requests</u></b></center><br>
         <form action="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}" method="post">
         {% csrf_token %}
-        <input type="checkbox" class="checkall"/><font size="3">Enroll all</font>
+        <input type="checkbox" class="checkall"/><font size="2">Enroll all</font>
         <div id="enroll-all">
         {% for request in course.get_requests %}
         <div class="well">

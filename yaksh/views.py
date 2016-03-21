@@ -1745,14 +1745,8 @@ def edit_profile(request):
     if request.method == 'POST':
         form = EditProfile(request.POST)
         if form.is_valid():
-            user_details.first_name = form.cleaned_data['first_name']
-            user_details.last_name = form.cleaned_data['last_name']
-            profile_details.department = form.cleaned_data['department']
-            profile_details.institute = form.cleaned_data['institute']
-            profile_details.roll_number = form.cleaned_data['roll_number']
-            profile_details.position = form.cleaned_data['position']
-            profile_details.save()
-            user_details.save()
+            data = form.cleaned_data
+            form.save(user)
             return my_render_to_response('yaksh/profile_updated.html',
                                         context_instance=ci)
         else:

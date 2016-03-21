@@ -291,6 +291,19 @@ class EditProfile(forms.Form):
     position = forms.CharField\
         (max_length=64)
 
+    def save(self, user):
+        user_details = User.objects.get(id=user.id)
+        profile_details = Profile.objects.get(user_id=user.id)
+        user_details.first_name = self.cleaned_data['first_name']
+        user_details.last_name = self.cleaned_data['last_name']
+        profile_details.department = self.cleaned_data['department']
+        profile_details.institute = self.cleaned_data['institute']
+        profile_details.roll_number = self.cleaned_data['roll_number']
+        profile_details.position = self.cleaned_data['position']
+        profile_details.save()
+        user_details.save()
+
+
 class PasswordResetForm(forms.Form):
     """ change password form for students and moderators """
 
