@@ -22,7 +22,7 @@ from yaksh.models import Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm, TestCaseFormSet,\
-                QuestionFilterForm, CourseForm
+                QuestionFilterForm, CourseForm, EditProfile, PasswordResetForm
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
@@ -1229,20 +1229,33 @@ def courses(request):
 @login_required
 def course_detail(request, course_id):
     user = request.user
+    ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     course = get_object_or_404(Course, creator=user, pk=course_id)
-    return my_render_to_response('yaksh/course_detail.html', {'course': course})
+    return my_render_to_response('yaksh/course_detail.html', {'course': course},
+                                context_instance=ci)
 
 
 @login_required
-def enroll(request, course_id, user_id, was_rejected=False):
+def enroll(request, course_id, user_id=None, was_rejected=False):
     user = request.user
+    ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     course = get_object_or_404(Course, creator=user, pk=course_id)
-    user = get_object_or_404(User, pk=user_id)
-    course.enroll(was_rejected, user)
+    if request.method == 'POST':
+        data = request.POST.getlist('check')
+        if data is None:
+            return my_render_to_response('yaksh/course_detail.html', {'course': course},
+                                        context_instance=ci)
+        else:
+            for i in data:
+                user = get_object_or_404(User, pk=i)
+                course.enroll(was_rejected, user)
+    else:
+        user = get_object_or_404(User, pk=user_id)
+        course.enroll(was_rejected, user)
     return course_detail(request, course_id)
 
 
@@ -1698,3 +1711,101 @@ def design_questionpaper(request):
         context = {'form': form}
         return my_render_to_response('yaksh/design_questionpaper.html',
                                      context, context_instance=ci)
+
+@login_required
+def view_profile(request):
+    """ view moderators and users profile """
+
+    context = {}
+    user = request.user
+    ci = RequestContext(request)
+    if not user.is_authenticated():
+        raise Http404('You are not allowed to view this page!')
+    else:
+        profile_details = Profile.objects.get(user_id=user.id)
+        user_details = User.objects.get(id=user.id)
+        context['profile'] = profile_details
+        context['user'] = user_details
+        return my_render_to_response('yaksh/view_profile.html', context,
+                                    context_instance=ci)
+
+
+@login_required
+def edit_profile(request):
+    """ edit profile details facility for moderator and students """
+
+    context = {}
+    user = request.user
+    ci = RequestContext(request)
+    data = {}
+    if not user.is_authenticated():
+        raise Http404('You are not allowed to view this page!')
+    profile_details = Profile.objects.get(user_id=user.id)
+    user_details = User.objects.get(id=user.id)
+    if request.method == 'POST':
+        form = EditProfile(request.POST)
+        if form.is_valid():
+            user_details.first_name = form.cleaned_data['first_name']
+            user_details.last_name = form.cleaned_data['last_name']
+            profile_details.department = form.cleaned_data['department']
+            profile_details.institute = form.cleaned_data['institute']
+            profile_details.roll_number = form.cleaned_data['roll_number']
+            profile_details.position = form.cleaned_data['position']
+            profile_details.save()
+            user_details.save()
+            return my_render_to_response('yaksh/profile_updated.html',
+                                        context_instance=ci)
+        else:
+            context['form'] = form
+            return my_render_to_response('yaksh/editprofile.html', context,
+                                        context_instance=ci)
+    else:
+        data['first_name'] = user_details.first_name
+        data['last_name'] = user_details.last_name
+        data['institute'] = profile_details.institute
+        data['department'] = profile_details.department
+        data['roll_number'] = profile_details.roll_number
+        data['position'] = profile_details.position
+        form = EditProfile(initial=data)
+        context['form'] = form
+        return my_render_to_response('yaksh/editprofile.html', context,
+                                    context_instance=ci)
+
+
+@login_required
+def change_password(request):
+    """ change password facility for moderators and users"""
+
+    context = {}
+    user = request.user
+    ci = RequestContext(request)
+    if not user.is_authenticated():
+        raise Http404('You are not allowed to view this page!')
+
+    if request.method == 'POST':
+        form = PasswordResetForm(request.POST)
+        if form.is_valid():
+            new_password = request.POST['new_password']
+            confirm_password = request.POST['confirm_new_password']
+            if new_password == confirm_password:
+                user.set_password(new_password)
+                user.save()
+                return my_render_to_response('yaksh/password_changed.html',
+                                            context_instance=ci)
+            else:
+                form = PasswordResetForm()
+                context['not_match'] = True
+                context['form'] = form
+                return my_render_to_response('yaksh/changepassword.html', context,
+                                            context_instance=ci)
+        else:
+            context['form'] = form
+            context['user'] = user
+            return my_render_to_response('yaksh/changepassword.html', context,
+                                        context_instance=ci)
+    else:
+        form = PasswordResetForm()
+        context['form'] = form
+        context['user'] = user
+        return my_render_to_response('yaksh/changepassword.html', context,
+                                    context_instance=ci)

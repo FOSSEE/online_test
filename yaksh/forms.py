@@ -276,3 +276,27 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ['name', 'active', 'enrollment']
+
+class EditProfile(forms.Form):
+    """ edit profile form for students and moderators """
+
+    first_name = forms.CharField(max_length=30)
+    last_name = forms.CharField(max_length=30)
+    institute = forms.CharField\
+                (max_length=128)
+    department = forms.CharField\
+                (max_length=64)
+    roll_number = forms.CharField\
+                (max_length=30)
+    position = forms.CharField\
+        (max_length=64)
+
+class PasswordResetForm(forms.Form):
+    """ change password form for students and moderators """
+
+    new_password = forms.CharField(widget=forms.PasswordInput(attrs={
+                               'class': 'form-control',
+                               'placeholder': 'New Password'}), label='')
+    confirm_new_password = forms.CharField(widget=forms.PasswordInput(attrs={
+                               'class': 'form-control',
+                               'placeholder': 'Confirm New Password'}), label='')
