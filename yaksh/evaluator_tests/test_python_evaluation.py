@@ -148,12 +148,13 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
 class PythonStdoutEvaluationTestCases(unittest.TestCase):
     def setUp(self):
-        self.output = ['Hello World\\n']
+        self.output = ['0 1 1 2 3']
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
 
     def test_correct_answer(self):
-        user_answer = "a = 'Hello'\nb = 'World'\nprint '{0} {1}'.format(a, b)"
+        # user_answer = "a = 'Hello'\nb = 'World'\nprint '{0} {1}'.format(a, b)"
+        user_answer = "a,b=0,1\nfor i in range(5):\n\tprint a,\n\ta,b=b,a+b"
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer,
                     'test_case_data': self.output
@@ -163,7 +164,7 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
-        user_answer = "a = 'Goodbye'\nb = 'Name'\nprint '{0} {1}'.format(a, b)"
+        user_answer = "a,b=0,1\nfor i in range(5):\n\tprint b,\n\ta,b=b,a+b"
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer, 
                     'test_case_data': self.output
@@ -171,6 +172,17 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
         self.assertEqual(result.get('error'), "Incorrect Answer")
+
+    def test_direct_printed_answer(self):
+        user_answer = "print '0 1 1 2 3'"
+        error_msg = "Incorrect Answer: Please avoid printing the expected output directly"
+        get_class = PythonStdoutEvaluator()
+        kwargs = {'user_answer': user_answer, 
+                    'test_case_data': self.output
+                }
+        result = get_class.evaluate(**kwargs)
+        self.assertFalse(result.get('success'))
+        self.assertEqual(result.get('error'), error_msg)
 
     def test_infinite_loop(self):
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
