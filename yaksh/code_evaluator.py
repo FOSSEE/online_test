@@ -3,7 +3,7 @@ from SimpleXMLRPCServer import SimpleXMLRPCServer
 import pwd
 import os
 import stat
-from os.path import isdir, dirname, abspath, join, isfile
+from os.path import isdir, dirname, abspath, join, isfile, exists
 import signal
 from multiprocessing import Process, Queue
 import subprocess
@@ -144,14 +144,30 @@ class CodeEvaluator(object):
     def check_code(self):
         raise NotImplementedError("check_code method not implemented")
 
+    # def create_submit_code_file(self, file_name):
+    #     """ Write the code (`answer`) to a file and set the file path"""
+    #     submit_f = open(file_name, 'w')
+    #     submit_f.write(self.user_answer.lstrip())
+    #     submit_f.close()
+    #     submit_path = abspath(submit_f.name)
+
+    #     return submit_path
+
     def create_submit_code_file(self, file_name):
-        """ Write the code (`answer`) to a file and set the file path"""
-        submit_f = open(file_name, 'w')
-        submit_f.write(self.user_answer.lstrip())
-        submit_f.close()
-        submit_path = abspath(submit_f.name)
+        """ Set the file path for code (`answer`)"""
+        submit_path = abspath(file_name)
+        if not exists(submit_path):
+            submit_f = open(submit_path, 'w')
+            submit_f.close()
 
         return submit_path
+
+
+    def write_to_submit_code_file(self, file_path, user_answer):
+        """ Write the code (`answer`) to a file"""
+        submit_f = open(file_path, 'w')
+        submit_f.write(user_answer.lstrip())
+        submit_f.close()
 
     def _set_file_as_executable(self, fname):
         os.chmod(fname,  stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
