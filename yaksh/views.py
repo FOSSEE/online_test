@@ -22,7 +22,7 @@ from yaksh.models import Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm, TestCaseFormSet,\
-                QuestionFilterForm, CourseForm
+                QuestionFilterForm, CourseForm, EditProfile
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
@@ -603,20 +603,31 @@ def courses(request):
 @login_required
 def course_detail(request, course_id):
     user = request.user
+    ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     course = get_object_or_404(Course, creator=user, pk=course_id)
-    return my_render_to_response('yaksh/course_detail.html', {'course': course})
+    return my_render_to_response('yaksh/course_detail.html', {'course': course},
+                                context_instance=ci)
 
 
 @login_required
-def enroll(request, course_id, user_id, was_rejected=False):
+def enroll(request, course_id, user_id=None, was_rejected=False):
     user = request.user
+    ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     course = get_object_or_404(Course, creator=user, pk=course_id)
-    user = get_object_or_404(User, pk=user_id)
-    course.enroll(was_rejected, user)
+    if request.method == 'POST':
+        enroll_ids = request.POST.getlist('check')
+        if enroll_ids is None:
+            return my_render_to_response('yaksh/course_detail.html', {'course': course},
+                                        context_instance=ci)
+        else:
+            course.enroll(was_rejected, *enroll_ids)
+    else:
+        user = get_object_or_404(User, pk=user_id)
+        course.enroll(was_rejected, user)
     return course_detail(request, course_id)
 
 
@@ -954,3 +965,49 @@ def design_questionpaper(request):
         context = {'form': form, 'questionpaper':True}
         return my_render_to_response('yaksh/design_questionpaper.html',
                                      context, context_instance=ci)
+
+@login_required
+def view_profile(request):
+    """ view moderators and users profile """
+
+    context = {}
+    user = request.user
+    ci = RequestContext(request)
+    if not user.is_authenticated():
+        raise Http404('You are not allowed to view this page!')
+    else:
+        return my_render_to_response('yaksh/view_profile.html',
+                                    context_instance=ci)
+
+@login_required
+def edit_profile(request):
+    """ edit profile details facility for moderator and students """
+
+    context = {}
+    user = request.user
+    ci = RequestContext(request)
+    data = {}
+    if not user.is_authenticated():
+        raise Http404('You are not allowed to view this page!')
+    if request.method == 'POST':
+        form = EditProfile(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            form.save(user)
+            return my_render_to_response('yaksh/profile_updated.html',
+                                        context_instance=ci)
+        else:
+            context['form'] = form
+            return my_render_to_response('yaksh/editprofile.html', context,
+                                        context_instance=ci)
+    else:
+        data['first_name'] = user.first_name
+        data['last_name'] = user.last_name
+        data['institute'] = user.profile.institute
+        data['department'] = user.profile.department
+        data['roll_number'] = user.profile.roll_number
+        data['position'] = user.profile.position
+        form = EditProfile(initial=data)
+        context['form'] = form
+        return my_render_to_response('yaksh/editprofile.html', context,
+                                    context_instance=ci)

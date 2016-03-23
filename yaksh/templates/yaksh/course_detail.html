@@ -7,21 +7,44 @@
 {% block css %}
 <link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/course.css" />
 {% endblock %}
-
+{% block script %}
+<script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.4.2.min.js"></script>
+<script>
+$(document).ready(function(){
+$(".checkall").click( function(){
+        if($(this).attr("checked")) {
+                $("#enroll-all input:checkbox").each(function(index, element) {
+                $(this).attr('checked', true);
+                });
+        }
+        else {
+                $("#enroll-all input:checkbox").each(function(index, element) {
+                $(this).attr('checked', false);
+                });
+        }
+    });
+});
+</script>
+{% endblock %}
 {% block manage %}
 <div class="row">
     <div class="span6 wrap">
         <center><b><u>Requests</u></b></center><br>
+        <form action="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}" method="post">
+        {% csrf_token %}
+        <input type="checkbox" class="checkall"/><font size="2">Enroll all</font>
+        <div id="enroll-all">
         {% for request in course.get_requests %}
         <div class="well">
             <div class="row">
-                <div class="span3" style="padding-top:10px">
-                    {{ request.username }}
+            <div class="span3" style="padding-top:10px">
+               <input type="checkbox" name="check" value="{{ request.id }}"></input>&nbsp;&nbsp;<a href="#" data-toggle="tooltip" title=" Institute: {{ request.profile.institute }}&#013;Department: {{ request.profile.department}}&#013;Roll Number: {{ request.profile.roll_number }}">{{ request.username }}</a><br>
                 </div>
                 <a class="btn success" href="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/{{ request.id }}/"> Enroll </a>  <a class="btn danger" href="{{URL_ROOT}}/exam/manage/reject/{{ course.id }}/{{ request.id }}/"> Reject </a>
             </div>
         </div>
         {% endfor %}
+        </div>
     </div>
     <div class="span6 wrap">
         <center><b><u>Rejected</u></b></center><br>
@@ -38,6 +61,8 @@
     </div>
 </div>
 <br>
+<button class="btn" type="submit" name='enroll' value='enroll'>Enroll</button>
+</form>
 <div class="row">
     <div class="span6 offset4 wrap">
         <center><b><u>Enrolled</u></b></center><br>

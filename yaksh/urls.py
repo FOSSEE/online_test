@@ -1,7 +1,8 @@
 from django.conf.urls import patterns, url
 from yaksh import views
 from django.contrib.auth.views import password_reset, password_reset_confirm,\
-        password_reset_done, password_reset_complete
+        password_reset_done, password_reset_complete, password_change,\
+        password_change_done
 
 urlpatterns = [
     url(r'^forgotpassword/$', password_reset, name="password_reset"),
@@ -11,6 +12,8 @@ urlpatterns = [
         name='password_reset_done'),
     url(r'^password_reset/complete/$', password_reset_complete,
         name='password_reset_complete'),
+    url(r'^changepassword/$', 'password_change', name='password_change'),
+    url(r'^password_change/done/$', 'password_change_done', name='password_change_done'),
 ]
 urlpatterns += [
     url(r'^$', views.index),
@@ -34,7 +37,6 @@ urlpatterns += [
         views.skip),
     url(r'^enroll_request/(?P<course_id>\d+)/$', views.enroll_request),
     url(r'^self_enroll/(?P<course_id>\d+)/$', views.self_enroll),
-
     url(r'^manage/$', views.prof_manage),
     url(r'^manage/addquestion/$', views.add_question),
     url(r'^manage/addquestion/(?P<question_id>\d+)/$', views.add_question),
@@ -74,4 +76,8 @@ urlpatterns += [
     url(r'manage/toggle_status/(?P<course_id>\d+)/$', views.toggle_course_status),
     url(r'^ajax/questionpaper/(?P<query>.+)/$', views.ajax_questionpaper),
     url(r'^ajax/questions/filter/$', views.ajax_questions_filter),
+    url(r'^manage/editprofile/$', views.edit_profile),
+    url(r'^manage/viewprofile/$', views.view_profile),
+    url(r'^manage/enroll/(?P<course_id>\d+)', views.enroll)
 ]
+
