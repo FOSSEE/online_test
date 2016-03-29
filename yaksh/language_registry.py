@@ -48,7 +48,7 @@ class _LanguageRegistry(object):
         get_class = getattr(get_module, class_name)
         return get_class
 
-    def register(self, language, class_name):
+    def register(self, language, class_names):
         """ Register a new code evaluator class for language"""
-        self._register[language] = class_name
+        self._register[language] = class_names
 

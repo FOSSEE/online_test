@@ -31,7 +31,7 @@ import re
 import json
 # Local imports.
 from settings import SERVER_PORTS, SERVER_POOL_PORT
-from language_registry import get_registry, create_evaluator_instance, unpack_json
+from language_registry import create_evaluator_instance, unpack_json
 
 
 MY_DIR = abspath(dirname(__file__))
