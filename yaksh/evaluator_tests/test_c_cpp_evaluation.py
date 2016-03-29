@@ -18,7 +18,18 @@ class CEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get('success'))
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEquals(result.get('error'), "Correct answer")
+
+    def test_incorrect_answer(self):
+        user_answer = "int add(int a, int b)\n{return a-b;}"
+        get_class = CppCodeEvaluator(self.in_dir)
+        kwargs = {'user_answer': user_answer, 
+                    'test_case_data': self.test_case_data
+                }
+        result = get_class.evaluate(**kwargs)
+        self.assertFalse(result.get('success'))
+        self.assertIn("Incorrect:", result.get('error'))
+        self.assertTrue(result.get('error').splitlines > 1)
 
     def test_compilation_error(self):
         user_answer = "int add(int a, int b)\n{return a+b}"
