@@ -17,10 +17,11 @@
     <th>Percentage
     {% for paper in papers %}
         <tr>
-        {% for i in paper %}
-            <td>{{ i }}
-        {% endfor %}
-        <br>
+            <td>{{ paper.question_paper.quiz.description }}</td>
+            <td>{{ paper.marks_obtained }}</td>
+            <td>{{ paper.question_paper.total_marks }}</td>
+            <td>{{ paper.percent }}</td>
+        </tr>
     {% endfor %}
   </table></center>
 </form>

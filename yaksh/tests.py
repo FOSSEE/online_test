@@ -30,7 +30,8 @@ def setUpModule():
 
     # create a quiz
     Quiz.objects.create(start_date_time=datetime.datetime(2015, 10, 9, 10, 8, 15, 0),
-                        duration=30, active=False,
+                        end_date_time=datetime.datetime(2199, 10, 9, 10, 8, 15, 0),
+                        duration=30, active=True,
                         attempts_allowed=-1, time_between_attempts=0,
                         description='demo quiz', pass_criteria=40,
                         language='Python', prerequisite=None,
@@ -142,11 +143,22 @@ class QuizTestCases(unittest.TestCase):
         self.assertEqual((self.quiz.start_date_time).strftime('%H:%M:%S'),
                          '10:08:15')
         self.assertEqual(self.quiz.duration, 30)
-        self.assertTrue(self.quiz.active is False)
+        self.assertTrue(self.quiz.active)
         self.assertEqual(self.quiz.description, 'demo quiz')
         self.assertEqual(self.quiz.language, 'Python')
         self.assertEqual(self.quiz.pass_criteria, 40)
         self.assertEqual(self.quiz.prerequisite, None)
+
+    def test_is_expired(self):
+        self.assertFalse(self.quiz.is_expired())
+
+    def test_has_prerequisite(self):
+        self.assertFalse(self.quiz.has_prerequisite())
+
+    def test_get_active_quizzes(self):
+        quizzes = Quiz.objects.get_active_quizzes()
+        for quiz in quizzes:
+            self.assertTrue(quiz.active)
 
 
 ###############################################################################
@@ -248,11 +260,19 @@ class QuestionPaperTestCases(unittest.TestCase):
         answerpaper = self.question_paper.make_answerpaper(self.user, self.ip,
                                                              attempt_num)
         self.assertIsInstance(answerpaper, AnswerPaper)
-        paper_questions = set((answerpaper.questions).split('|'))
+        paper_questions = answerpaper.questions.all()
         self.assertEqual(len(paper_questions), 7)
-        fixed = {'4', '6'}
-        boolean = fixed.intersection(paper_questions) == fixed
-        self.assertTrue(boolean)
+        fixed_questions = set(self.question_paper.fixed_questions.all())
+        self.assertTrue(fixed_questions.issubset(set(paper_questions)))
+
+    def test_is_questionpaper_passed(self):
+        self.assertFalse(self.question_paper.is_questionpaper_passed(self.user))
+
+    def test_is_attempt_allowed(self):
+        self.assertTrue(self.question_paper.is_attempt_allowed(self.user))
+
+    def test_can_attempt_now(self):
+        self.assertTrue(self.question_paper.can_attempt_now(self.user))
 
 
 ###############################################################################
@@ -265,21 +285,24 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.quiz = Quiz.objects.get(pk=1)
         self.question_paper = QuestionPaper(quiz=self.quiz, total_marks=3)
         self.question_paper.save()
+        self.questions = Question.objects.filter(id__in=[1,2,3])
+        self.start_time = datetime.datetime.now()
+        self.end_time = self.start_time + datetime.timedelta(minutes=20)
 
         # create answerpaper
         self.answerpaper = AnswerPaper(user=self.user,
-                                       questions='1|2|3',
                                        question_paper=self.question_paper,
-                                       start_time='2014-06-13 12:20:19.791297',
-                                       end_time='2014-06-13 12:50:19.791297',
+                                       start_time=self.start_time,
+                                       end_time=self.end_time,
                                        user_ip=self.ip)
-        self.answerpaper.questions_answered = '1'
         self.attempted_papers = AnswerPaper.objects.filter(question_paper=self.question_paper,
                                                         user=self.user)
         already_attempted = self.attempted_papers.count()
         self.answerpaper.attempt_number = already_attempted + 1
         self.answerpaper.save()
-
+        self.answerpaper.questions.add(*self.questions)
+        self.answerpaper.questions_unanswered.add(*self.questions)
+        self.answerpaper.save()
         # answers for the Answer Paper
         self.answer_right = Answer(question=Question.objects.get(id=1),
                                    answer="Demo answer", correct=True, marks=1)
@@ -294,21 +317,18 @@ class AnswerPaperTestCases(unittest.TestCase):
         """ Test Answer Paper"""
         self.assertEqual(self.answerpaper.user.username, 'demo_user')
         self.assertEqual(self.answerpaper.user_ip, self.ip)
-        questions = self.answerpaper.questions
-        num_questions = len(questions.split('|'))
-        self.assertEqual(questions, '1|2|3')
+        questions = self.answerpaper.questions.all()
+        num_questions = len(questions)
+        self.assertSequenceEqual(list(questions), list(self.questions))
         self.assertEqual(num_questions, 3)
         self.assertEqual(self.answerpaper.question_paper, self.question_paper)
-        self.assertEqual(self.answerpaper.start_time,
-                         '2014-06-13 12:20:19.791297')
-        self.assertEqual(self.answerpaper.end_time,
-                         '2014-06-13 12:50:19.791297')
+        self.assertEqual(self.answerpaper.start_time, self.start_time)
         self.assertEqual(self.answerpaper.status, 'inprogress')
 
     def test_current_question(self):
         """ Test current_question() method of Answer Paper"""
         current_question = self.answerpaper.current_question()
-        self.assertEqual(current_question, '2')
+        self.assertEqual(current_question.id, 2)
 
     def test_completed_question(self):
         """ Test completed_question() method of Answer Paper"""
@@ -321,29 +341,24 @@ class AnswerPaperTestCases(unittest.TestCase):
 
     def test_skip(self):
         """ Test skip() method of Answer Paper"""
-        current_question = self.answerpaper.current_question()
+        current_question = self.answerpaper.current_question().id
         next_question_id = self.answerpaper.skip(current_question)
         self.assertTrue(next_question_id is not None)
-        self.assertEqual(next_question_id, '3')
-
-    def test_answered_str(self):
-        """ Test answered_str() method of Answer Paper"""
-        answered_question = self.answerpaper.get_answered_str()
-        self.assertEqual(answered_question, '1')
+        self.assertEqual(next_question_id.id, 3)
 
     def test_update_marks_obtained(self):
         """ Test get_marks_obtained() method of Answer Paper"""
-        self.answerpaper.update_marks_obtained()
+        self.answerpaper._update_marks_obtained()
         self.assertEqual(self.answerpaper.marks_obtained, 1.0)
 
     def test_update_percent(self):
         """ Test update_percent() method of Answerpaper"""
-        self.answerpaper.update_percent()
+        self.answerpaper._update_percent()
         self.assertEqual(self.answerpaper.percent, 33.33)
 
     def test_update_passed(self):
         """ Test update_passed method of AnswerPaper"""
-        self.answerpaper.update_passed()
+        self.answerpaper._update_passed()
         self.assertFalse(self.answerpaper.passed)
 
     def test_get_question_answer(self):
@@ -356,10 +371,11 @@ class AnswerPaperTestCases(unittest.TestCase):
 
     def test_update_status(self):
         """ Test update_status method of Answer Paper"""
-        self.answerpaper.update_status('inprogress')
+        self.answerpaper._update_status('inprogress')
         self.assertEqual(self.answerpaper.status, 'inprogress')
-        self.answerpaper.update_status('completed')
+        self.answerpaper._update_status('completed')
         self.assertEqual(self.answerpaper.status, 'completed')
+        self.assertFalse(self.answerpaper.is_attempt_inprogress())
 
 
 ###############################################################################
