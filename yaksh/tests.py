@@ -1,7 +1,8 @@
 from django.utils import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, TestCase, Course
-import datetime, json
+import json
+from datetime import datetime, timedelta
 
 
 def setUpModule():
@@ -29,14 +30,21 @@ def setUpModule():
         Question.objects.create(summary='Q%d' % (i), points=1)
 
     # create a quiz
-    Quiz.objects.create(start_date_time=datetime.datetime(2015, 10, 9, 10, 8, 15, 0),
-                        end_date_time=datetime.datetime(2199, 10, 9, 10, 8, 15, 0),
+    quiz = Quiz.objects.create(start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+                        end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0),
                         duration=30, active=True,
-                        attempts_allowed=-1, time_between_attempts=0,
-                        description='demo quiz', pass_criteria=40,
+                        attempts_allowed=1, time_between_attempts=0,
+                        description='demo quiz', pass_criteria=0,
                         language='Python', prerequisite=None,
                         course=course)
 
+    Quiz.objects.create(start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0),
+                        end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+                        duration=30, active=False,
+                        attempts_allowed=-1, time_between_attempts=0,
+                        description='demo quiz', pass_criteria=40,
+                        language='Python', prerequisite=quiz,
+                        course=course)
 
 def tearDownModule():
     User.objects.all().delete()
@@ -134,26 +142,29 @@ class TestCaseTestCases(unittest.TestCase):
 ###############################################################################
 class QuizTestCases(unittest.TestCase):
     def setUp(self):
-        self.quiz = Quiz.objects.get(pk=1)
+        self.quiz1 = Quiz.objects.get(pk=1)
+        self.quiz2 = Quiz.objects.get(pk=2)
 
     def test_quiz(self):
         """ Test Quiz"""
-        self.assertEqual((self.quiz.start_date_time).strftime('%Y-%m-%d'),
+        self.assertEqual((self.quiz1.start_date_time).strftime('%Y-%m-%d'),
                          '2015-10-09')
-        self.assertEqual((self.quiz.start_date_time).strftime('%H:%M:%S'),
+        self.assertEqual((self.quiz1.start_date_time).strftime('%H:%M:%S'),
                          '10:08:15')
-        self.assertEqual(self.quiz.duration, 30)
-        self.assertTrue(self.quiz.active)
-        self.assertEqual(self.quiz.description, 'demo quiz')
-        self.assertEqual(self.quiz.language, 'Python')
-        self.assertEqual(self.quiz.pass_criteria, 40)
-        self.assertEqual(self.quiz.prerequisite, None)
+        self.assertEqual(self.quiz1.duration, 30)
+        self.assertTrue(self.quiz1.active)
+        self.assertEqual(self.quiz1.description, 'demo quiz')
+        self.assertEqual(self.quiz1.language, 'Python')
+        self.assertEqual(self.quiz1.pass_criteria, 0)
+        self.assertEqual(self.quiz1.prerequisite, None)
 
     def test_is_expired(self):
-        self.assertFalse(self.quiz.is_expired())
+        self.assertFalse(self.quiz1.is_expired())
+        self.assertTrue(self.quiz2.is_expired())
 
     def test_has_prerequisite(self):
-        self.assertFalse(self.quiz.has_prerequisite())
+        self.assertFalse(self.quiz1.has_prerequisite())
+        self.assertTrue(self.quiz2.has_prerequisite())
 
     def test_get_active_quizzes(self):
         quizzes = Quiz.objects.get_active_quizzes()
@@ -264,15 +275,14 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.assertEqual(len(paper_questions), 7)
         fixed_questions = set(self.question_paper.fixed_questions.all())
         self.assertTrue(fixed_questions.issubset(set(paper_questions)))
-
-    def test_is_questionpaper_passed(self):
-        self.assertFalse(self.question_paper.is_questionpaper_passed(self.user))
-
-    def test_is_attempt_allowed(self):
-        self.assertTrue(self.question_paper.is_attempt_allowed(self.user))
-
-    def test_can_attempt_now(self):
-        self.assertTrue(self.question_paper.can_attempt_now(self.user))
+        # test is_questionpaper_passed()
+        answerpaper.passed = True
+        answerpaper.save()
+        self.assertTrue(self.question_paper.is_questionpaper_passed(self.user))
+        # test is_attempt_allowed()
+        self.assertFalse(self.question_paper.is_attempt_allowed(self.user))
+        # test can_attempt_now(self):
+        self.assertFalse(self.question_paper.can_attempt_now(self.user))
 
 
 ###############################################################################
@@ -286,8 +296,8 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.question_paper = QuestionPaper(quiz=self.quiz, total_marks=3)
         self.question_paper.save()
         self.questions = Question.objects.filter(id__in=[1,2,3])
-        self.start_time = datetime.datetime.now()
-        self.end_time = self.start_time + datetime.timedelta(minutes=20)
+        self.start_time = datetime.now()
+        self.end_time = self.start_time + timedelta(minutes=20)
 
         # create answerpaper
         self.answerpaper = AnswerPaper(user=self.user,
@@ -317,7 +327,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         """ Test Answer Paper"""
         self.assertEqual(self.answerpaper.user.username, 'demo_user')
         self.assertEqual(self.answerpaper.user_ip, self.ip)
-        questions = self.answerpaper.questions.all()
+        questions = self.answerpaper.get_questions()
         num_questions = len(questions)
         self.assertSequenceEqual(list(questions), list(self.questions))
         self.assertEqual(num_questions, 3)
@@ -325,26 +335,28 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(self.answerpaper.start_time, self.start_time)
         self.assertEqual(self.answerpaper.status, 'inprogress')
 
-    def test_current_question(self):
-        """ Test current_question() method of Answer Paper"""
+    def test_questions(self):
+        # Test questions_left() method of Answer Paper
+        self.assertEqual(self.answerpaper.questions_left(), 3)
+        # Test current_question() method of Answer Paper
         current_question = self.answerpaper.current_question()
-        self.assertEqual(current_question.id, 2)
-
-    def test_completed_question(self):
-        """ Test completed_question() method of Answer Paper"""
+        self.assertEqual(current_question.id, 1)
+        # Test completed_question() method of Answer Paper
         question = self.answerpaper.completed_question(1)
         self.assertEqual(self.answerpaper.questions_left(), 2)
-
-    def test_questions_left(self):
-        """ Test questions_left() method of Answer Paper"""
-        self.assertEqual(self.answerpaper.questions_left(), 2)
-
-    def test_skip(self):
-        """ Test skip() method of Answer Paper"""
-        current_question = self.answerpaper.current_question().id
-        next_question_id = self.answerpaper.skip(current_question)
+        # Test skip() method of Answer Paper
+        current_question = self.answerpaper.current_question()
+        self.assertEqual(current_question.id, 2)
+        next_question_id = self.answerpaper.skip(current_question.id)
         self.assertTrue(next_question_id is not None)
         self.assertEqual(next_question_id.id, 3)
+        questions_answered = self.answerpaper.get_questions_answered()
+        self.assertEqual(questions_answered.count(), 1)
+        self.assertSequenceEqual(questions_answered, [self.questions.first()])
+        questions_unanswered = self.answerpaper.get_questions_unanswered()
+        self.assertEqual(questions_unanswered.count(), 2)
+        self.assertSequenceEqual(questions_unanswered,
+                                 [self.questions[1], self.questions[2]])
 
     def test_update_marks_obtained(self):
         """ Test get_marks_obtained() method of Answer Paper"""
@@ -377,6 +389,12 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(self.answerpaper.status, 'completed')
         self.assertFalse(self.answerpaper.is_attempt_inprogress())
 
+    def test_is_answer_correct(self):
+        self.assertTrue(self.answerpaper.is_answer_correct(self.questions[0]))
+        self.assertFalse(self.answerpaper.is_answer_correct(self.questions[1]))
+
+    def test_is_attempt_inprogress(self):
+        self.assertTrue(self.answerpaper.is_attempt_inprogress())
 
 ###############################################################################
 class CourseTestCases(unittest.TestCase):
@@ -385,7 +403,8 @@ class CourseTestCases(unittest.TestCase):
         self.creator = User.objects.get(pk=1)
         self.student1 = User.objects.get(pk=2)
         self.student2 = User.objects.get(pk=3)
-        self.quiz = Quiz.objects.get(pk=1)
+        self.quiz1 = Quiz.objects.get(pk=1)
+        self.quiz2 = Quiz.objects.get(pk=2)
 
     def test_is_creator(self):
         """ Test is_creator method of Course"""
@@ -438,4 +457,4 @@ class CourseTestCases(unittest.TestCase):
 
     def test_get_quizzes(self):
         """ Test get_quizzes method of Courses"""
-        self.assertSequenceEqual(self.course.get_quizzes(), [self.quiz])
+        self.assertSequenceEqual(self.course.get_quizzes(), [self.quiz1, self.quiz2])

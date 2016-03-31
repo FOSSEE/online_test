@@ -339,7 +339,6 @@ class QuestionPaper(models.Model):
         questions = self._get_questions_for_answerpaper()
         ans_paper.questions.add(*questions)
         ans_paper.questions_unanswered.add(*questions)
-        ans_paper.save()
         return ans_paper
 
     def is_questionpaper_passed(self, user):
@@ -352,13 +351,16 @@ class QuestionPaper(models.Model):
         return attempts != self.quiz.attempts_allowed
 
     def can_attempt_now(self, user):
-        last_attempt = AnswerPaper.objects.get_user_last_attempt(user=user,
-                       questionpaper=self)
-        if last_attempt:
-            time_lag = (datetime.today() - last_attempt.start_time).days
-            return time_lag >= self.quiz.time_between_attempts
+        if self.is_attempt_allowed(user):
+            last_attempt = AnswerPaper.objects.get_user_last_attempt(user=user,
+                           questionpaper=self)
+            if last_attempt:
+                time_lag = (datetime.today() - last_attempt.start_time).days
+                return time_lag >= self.quiz.time_between_attempts
+            else:
+                return True
         else:
-            return True
+            return False
 
 ###############################################################################
 class QuestionSet(models.Model):
