@@ -163,7 +163,7 @@ class Question(models.Model):
     active = models.BooleanField(default=True)
 
     # Snippet of code provided to the user.
-    snippet = models.CharField(max_length=256)
+    # snippet = models.CharField(max_length=256)
 
     # Tags for the Question.
     tags = TaggableManager()

@@ -203,21 +203,21 @@ class QuestionForm(forms.ModelForm):
     description = forms.CharField(widget=forms.Textarea\
                                             (attrs={'cols': 40, 'rows': 1}))
     points = forms.FloatField()
-    test = forms.CharField(widget=forms.Textarea\
-                                    (attrs={'cols': 40, 'rows': 1}), required=False)
-    options = forms.CharField(widget=forms.Textarea\
-                              (attrs={'cols': 40, 'rows': 1}), required=False)
+    # test = forms.CharField(widget=forms.Textarea\
+    #                                 (attrs={'cols': 40, 'rows': 1}), required=False)
+    # options = forms.CharField(widget=forms.Textarea\
+    #                           (attrs={'cols': 40, 'rows': 1}), required=False)
     language = forms.CharField(max_length=20, widget=forms.Select\
                                (choices=languages))
     type = forms.CharField(max_length=8, widget=forms.Select\
                            (choices=question_types))
     active = forms.BooleanField(required=False)
     tags = TagField(required=False)
-    snippet = forms.CharField(widget=forms.Textarea\
-                              (attrs={'cols': 40, 'rows': 1}), required=False)
+    # snippet = forms.CharField(widget=forms.Textarea\
+    #                           (attrs={'cols': 40, 'rows': 1}), required=False)
     test_case_type = forms.CharField(widget=forms.Select(choices=test_case_types))
-    ref_code_path = forms.CharField(widget=forms.Textarea\
-                          (attrs={'cols': 40, 'rows': 1}), required=False)
+    # ref_code_path = forms.CharField(widget=forms.Textarea\
+    #                       (attrs={'cols': 40, 'rows': 1}), required=False)
 
     def save(self, commit=True):
         summary = self.cleaned_data.get("summary")
@@ -236,12 +236,12 @@ class QuestionForm(forms.ModelForm):
         new_question.summary = summary
         new_question.description = description
         new_question.points = points
-        new_question.test = test
-        new_question.options = options
+        # new_question.test = test
+        # new_question.options = options
         new_question.language = language
         new_question.type = type
         new_question.active = active
-        new_question.snippet = snippet
+        # new_question.snippet = snippet
         new_question.test_case_type = test_case_type
         new_question = super(QuestionForm, self).save(commit=False)
         if commit:
