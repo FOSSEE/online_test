@@ -624,7 +624,8 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
             return my_render_to_response('yaksh/course_detail.html', {'course': course},
                                         context_instance=ci)
         else:
-            course.enroll(was_rejected, *enroll_ids)
+            enroll_users = User.objects.filter(id__in=enroll_ids)
+            course.enroll(was_rejected, *enroll_users)
     else:
         user = get_object_or_404(User, pk=user_id)
         course.enroll(was_rejected, user)
@@ -632,13 +633,22 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
 
 
 @login_required
-def reject(request, course_id, user_id, was_enrolled=False):
+def reject(request, course_id, user_id=None, was_enrolled=False):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     course = get_object_or_404(Course, creator=user, pk=course_id)
-    user = get_object_or_404(User, pk=user_id)
-    course.reject(was_enrolled, user)
+    if request.method == 'POST':
+        reject_ids = request.POST.getlist('check')
+        if reject_ids is None:
+            return my_render_to_response('yaksh/course_detail.html', {'course': course},
+                                        context_instance=ci)
+        else:
+            reject_users = User.objects.filter(id__in=reject_ids)
+            course.reject(was_enrolled, *reject_users)
+    else:
+        user = get_object_or_404(User, pk=user_id)
+        course.reject(was_enrolled, user)
     return course_detail(request, course_id)
 
 
@@ -970,7 +980,6 @@ def design_questionpaper(request):
 def view_profile(request):
     """ view moderators and users profile """
 
-    context = {}
     user = request.user
     ci = RequestContext(request)
     if not user.is_authenticated():

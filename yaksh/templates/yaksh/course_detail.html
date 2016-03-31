@@ -9,73 +9,78 @@
 {% endblock %}
 {% block script %}
 <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.4.2.min.js"></script>
-<script>
-$(document).ready(function(){
-$(".checkall").click( function(){
-        if($(this).attr("checked")) {
-                $("#enroll-all input:checkbox").each(function(index, element) {
-                $(this).attr('checked', true);
-                });
-        }
-        else {
-                $("#enroll-all input:checkbox").each(function(index, element) {
-                $(this).attr('checked', false);
-                });
-        }
-    });
-});
-</script>
+<script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/course.js"></script>
 {% endblock %}
 {% block manage %}
 <div class="row">
     <div class="span6 wrap">
         <center><b><u>Requests</u></b></center><br>
-        <form action="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}" method="post">
-        {% csrf_token %}
-        <input type="checkbox" class="checkall"/><font size="2">Enroll all</font>
+        {% if course.get_requests %}
+        <input type="checkbox" class="checkall"/>&nbsp;<font size="2">Select all</font>
         <div id="enroll-all">
+        <form action="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/" method="post">
+        {% csrf_token %}
         {% for request in course.get_requests %}
         <div class="well">
             <div class="row">
-            <div class="span3" style="padding-top:10px">
-               <input type="checkbox" name="check" value="{{ request.id }}"></input>&nbsp;&nbsp;<a href="#" data-toggle="tooltip" title=" Institute: {{ request.profile.institute }}&#013;Department: {{ request.profile.department}}&#013;Roll Number: {{ request.profile.roll_number }}">{{ request.username }}</a><br>
+                <div class="span3" style="padding-top:10px">
+                    <input type="checkbox" name="check" value="{{ request.id }}">&nbsp;<a href="#" data-toggle="tooltip" title=" Institute: {{ request.profile.institute }}&#013;Department: {{ request.profile.department}}&#013;Roll Number: {{ request.profile.roll_number }}">&nbsp;{{ request.username }}</a><br>
                 </div>
                 <a class="btn success" href="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/{{ request.id }}/"> Enroll </a>  <a class="btn danger" href="{{URL_ROOT}}/exam/manage/reject/{{ course.id }}/{{ request.id }}/"> Reject </a>
             </div>
         </div>
         {% endfor %}
+        <button class="btn success" type="submit" name='enroll' value='enroll'>Enroll Selected</button>
         </div>
+        {% endif %}
+        </form>
     </div>
     <div class="span6 wrap">
         <center><b><u>Rejected</u></b></center><br>
+        {% if course.get_rejected %}
+        <input type="checkbox" class="enroll"/>&nbsp;<font size="2">Select all</font>
+        <div id="enroll">
         {% for rejected in course.get_rejected %}
+        <form action="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/" method="post">
+        {% csrf_token %}
         <div class="well">
             <div class="row">
                 <div class="span4" style="padding-top:10px">
-                    {{ rejected.username }}
+                <input type="checkbox" name="check" value="{{ rejected.id }}">&nbsp;{{ rejected.username }}
                 </div>
                 <a class="btn success" href="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/{{ rejected.id }}/"> Enroll </a>
             </div>
         </div>
         {% endfor %}
+        <button class="btn success" type="submit" name='enroll' value='enroll'>Enroll Selected</button>
+        </div>
+        {% endif %}
+        </form>
     </div>
 </div>
 <br>
-<button class="btn" type="submit" name='enroll' value='enroll'>Enroll</button>
-</form>
 <div class="row">
     <div class="span6 offset4 wrap">
         <center><b><u>Enrolled</u></b></center><br>
+        {% if course.get_enrolled %}
+        <input type="checkbox" class="reject"/>&nbsp;<font size="2">Select all</font>
+        <div id="reject">
         {% for enrolled in course.get_enrolled %}
+        <form action="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/" method="post">
+        {% csrf_token %}
         <div class="well">
             <div class="row">
                 <div class="span4" style="padding-top:10px">
-                    {{ enrolled.username }}
+                <input type="checkbox" name="check" value="{{ enrolled.id }}">&nbsp;{{ enrolled.username }}
                 </div>
                 <a class="btn danger" href="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/{{ enrolled.id }}/"> Reject </a>
             </div>
         </div>
         {% endfor %}
+        <button class="btn danger" type="submit" name='reject' value='reject'>Reject Selected</button>
+	    </div>
+        {% endif %}
+        </form>
     </div>
 </div>
 <div class="pull-right">

@@ -12,8 +12,10 @@ urlpatterns = [
         name='password_reset_done'),
     url(r'^password_reset/complete/$', password_reset_complete,
         name='password_reset_complete'),
-    url(r'^changepassword/$', 'password_change', name='password_change'),
-    url(r'^password_change/done/$', 'password_change_done', name='password_change_done'),
+    url(r'^password_change/$', password_change,
+        name='password_change'),
+    url(r'^password_change/done/$', password_change_done,
+        name='password_change_done'),
 ]
 urlpatterns += [
     url(r'^$', views.index),
@@ -80,4 +82,3 @@ urlpatterns += [
     url(r'^manage/viewprofile/$', views.view_profile),
     url(r'^manage/enroll/(?P<course_id>\d+)', views.enroll)
 ]
-
