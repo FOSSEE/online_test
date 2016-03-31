@@ -5,7 +5,6 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from taggit.managers import TaggableManager
 from taggit.forms import TagField
-from django.forms.models import inlineformset_factory
 
 from string import letters, punctuation, digits
 import datetime
@@ -26,6 +25,11 @@ question_types = (
     ("mcc", "Multiple Correct Choices"),
     ("code", "Code"),
     ("upload", "Assignment Upload"),
+    )
+
+test_case_types = (
+        ("standardtestcase", "Standard Testcase"),
+        ("stdoutbasedtestcase", "Stdout Based Testcase"),
     )
 
 UNAME_CHARS = letters + "._" + digits
@@ -198,20 +202,13 @@ class QuestionForm(forms.ModelForm):
     description = forms.CharField(widget=forms.Textarea\
                                             (attrs={'cols': 40, 'rows': 1}))
     points = forms.FloatField()
-    test = forms.CharField(widget=forms.Textarea\
-                                    (attrs={'cols': 40, 'rows': 1}), required=False)
-    options = forms.CharField(widget=forms.Textarea\
-                              (attrs={'cols': 40, 'rows': 1}), required=False)
     language = forms.CharField(max_length=20, widget=forms.Select\
                                (choices=languages))
     type = forms.CharField(max_length=8, widget=forms.Select\
                            (choices=question_types))
     active = forms.BooleanField(required=False)
     tags = TagField(required=False)
-    snippet = forms.CharField(widget=forms.Textarea\
-                              (attrs={'cols': 40, 'rows': 1}), required=False)
-    ref_code_path = forms.CharField(widget=forms.Textarea\
-                          (attrs={'cols': 40, 'rows': 1}), required=False)
+    test_case_type = forms.CharField(widget=forms.Select(choices=test_case_types))
 
     def save(self, commit=True):
         summary = self.cleaned_data.get("summary")
@@ -223,17 +220,20 @@ class QuestionForm(forms.ModelForm):
         type = self.cleaned_data.get("type")
         active = self.cleaned_data.get("active")
         snippet = self.cleaned_data.get("snippet")
+        test_case_type = self.cleaned_data["test_case_type"]
+
 
         new_question = Question()
         new_question.summary = summary
         new_question.description = description
         new_question.points = points
-        new_question.test = test
-        new_question.options = options
+        # new_question.test = test
+        # new_question.options = options
         new_question.language = language
         new_question.type = type
         new_question.active = active
-        new_question.snippet = snippet
+        # new_question.snippet = snippet
+        new_question.test_case_type = test_case_type
         new_question = super(QuestionForm, self).save(commit=False)
         if commit:
             new_question.save()
@@ -266,10 +266,6 @@ class QuestionFilterForm(forms.Form):
                                 (choices=languages))
     question_type = forms.CharField(max_length=8, widget=forms.Select\
                                     (choices=question_types))
-
-
-TestCaseFormSet = inlineformset_factory(Question, TestCase,\
-                        can_order=False, can_delete=False, extra=1)
 
 
 class CourseForm(forms.ModelForm):

@@ -12,41 +12,30 @@ from code_evaluator import CodeEvaluator
 
 class ScilabCodeEvaluator(CodeEvaluator):
     """Tests the Scilab code obtained from Code Server"""
-    def __init__(self, test_case_data, test, language, user_answer,
-                     ref_code_path=None, in_dir=None):
-        super(ScilabCodeEvaluator, self).__init__(test_case_data, test,
-                                                 language, user_answer,
-                                                 ref_code_path, in_dir)
+    def setup(self):
+        super(ScilabCodeEvaluator, self).setup()
+        self.submit_code_path = self.create_submit_code_file('function.sci')
 
-        # Removes all the commands that terminates scilab
-        self.user_answer, self.terminate_commands = self._remove_scilab_exit(user_answer.lstrip())
-        self.test_case_args = self._setup()
-
-    # Private Protocol ##########
-    def _setup(self):
-        super(ScilabCodeEvaluator, self)._setup()
-
-        ref_path, test_case_path = self._set_test_code_file_path(self.ref_code_path)
-        self.submit_path = self.create_submit_code_file('function.sci')
-
-        return ref_path, # Return as a tuple
-
-    def _teardown(self):
+    def teardown(self):
+        super(ScilabCodeEvaluator, self).teardown()
         # Delete the created file.
-        super(ScilabCodeEvaluator, self)._teardown()
-        os.remove(self.submit_path)
+        os.remove(self.submit_code_path)
 
-    def _check_code(self, ref_path):
+    def check_code(self, user_answer, test_case_data):
+        ref_code_path = test_case_data[0]
+        clean_ref_path, clean_test_case_path = self._set_test_code_file_path(ref_code_path)
+        user_answer, terminate_commands = self._remove_scilab_exit(user_answer.lstrip())
+
         success = False
-
+        self.write_to_submit_code_file(self.submit_code_path, user_answer)
         # Throw message if there are commmands that terminates scilab
         add_err=""
-        if self.terminate_commands:
+        if terminate_commands:
             add_err = "Please do not use exit, quit and abort commands in your\
                         code.\n Otherwise your code will not be evaluated\
                         correctly.\n"
 
-        cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(ref_path)
+        cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(clean_ref_path)
         cmd += ' | timeout 8 scilab-cli -nb'
         ret = self._run_command(cmd,
                                 shell=True,

@@ -3,12 +3,11 @@ from SimpleXMLRPCServer import SimpleXMLRPCServer
 import pwd
 import os
 import stat
-from os.path import isdir, dirname, abspath, join, isfile
+from os.path import isdir, dirname, abspath, join, isfile, exists
 import signal
 from multiprocessing import Process, Queue
 import subprocess
 import re
-import json
 # Local imports.
 from settings import SERVER_TIMEOUT
 
@@ -50,33 +49,13 @@ def delete_signal_handler():
 
 class CodeEvaluator(object):
     """Tests the code obtained from Code Server"""
-    def __init__(self, test_case_data, test, language, user_answer, 
-                     ref_code_path=None, in_dir=None):
+    def __init__(self, in_dir=None):
         msg = 'Code took more than %s seconds to run. You probably '\
               'have an infinite loop in your code.' % SERVER_TIMEOUT
         self.timeout_msg = msg
-        self.test_case_data = test_case_data
-        self.language = language.lower()
-        self.user_answer = user_answer
-        self.ref_code_path = ref_code_path
-        self.test = test
         self.in_dir = in_dir
-        self.test_case_args = None
 
-    # Public Protocol ##########
-    @classmethod
-    def from_json(cls, language, json_data, in_dir):
-        json_data = json.loads(json_data)
-        test_case_data = json_data.get("test_case_data")
-        user_answer = json_data.get("user_answer")
-        ref_code_path = json_data.get("ref_code_path")
-        test = json_data.get("test") 
-
-        instance = cls(test_case_data, test, language, user_answer, ref_code_path,
-                         in_dir)
-        return instance
-
-    def evaluate(self):
+    def evaluate(self, **kwargs):
         """Evaluates given code with the test cases based on
         given arguments in test_case_data.
 
@@ -98,26 +77,25 @@ class CodeEvaluator(object):
         A tuple: (success, error message).
         """
 
-        self._setup()
-        success, err = self._evaluate(self.test_case_args)
-        self._teardown()
+        self.setup()
+        success, err = self.safe_evaluate(**kwargs)
+        self.teardown()
 
         result = {'success': success, 'error': err}
         return result
 
     # Private Protocol ##########
-    def _setup(self):
+    def setup(self):
         self._change_dir(self.in_dir)
 
-    def _evaluate(self, args):
+    def safe_evaluate(self, **kwargs):
         # Add a new signal handler for the execution of this code.
         prev_handler = create_signal_handler()
         success = False
-        args = args or []
 
         # Do whatever testing needed.
         try:
-            success, err = self._check_code(*args)
+            success, err = self.check_code(**kwargs)
 
         except TimeoutException:
             err = self.timeout_msg
@@ -130,21 +108,28 @@ class CodeEvaluator(object):
 
         return success, err
 
-    def _teardown(self):
+    def teardown(self):
         # Cancel the signal
         delete_signal_handler()
 
-    def _check_code(self):
+    def check_code(self):
         raise NotImplementedError("check_code method not implemented")
 
     def create_submit_code_file(self, file_name):
-        """ Write the code (`answer`) to a file and set the file path"""
-        submit_f = open(file_name, 'w')
-        submit_f.write(self.user_answer.lstrip())
-        submit_f.close()
-        submit_path = abspath(submit_f.name)
+        """ Set the file path for code (`answer`)"""
+        submit_path = abspath(file_name)
+        if not exists(submit_path):
+            submit_f = open(submit_path, 'w')
+            submit_f.close()
 
         return submit_path
+
+
+    def write_to_submit_code_file(self, file_path, user_answer):
+        """ Write the code (`answer`) to a file"""
+        submit_f = open(file_path, 'w')
+        submit_f.write(user_answer.lstrip())
+        submit_f.close()
 
     def _set_file_as_executable(self, fname):
         os.chmod(fname,  stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
