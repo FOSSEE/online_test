@@ -217,6 +217,26 @@ def add_question(request, question_id=None):
                                          # 'formset': test_case_formset},
                                          context_instance=ci)
 
+# @login_required
+# def add_testcase(request, question_id=None):
+#     """To add new test case for a question"""
+
+#     ci = RequestContext(request)
+#     if not question_id:
+#         raise Http404('No Question Found')
+#     question = Question.objects.get(id=question_id)
+#     initial = {'question': question}
+
+#     # if question.test
+
+#     if request.method == "POST":
+#         pass
+#     else:
+#         form = TestCaseForm(user=user)
+#         return my_render_to_response('yaksh/add_testcase.html',
+#                                      {'form': form},
+#                                      context_instance=ci)
+
 
 @login_required
 def add_quiz(request, quiz_id=None):
