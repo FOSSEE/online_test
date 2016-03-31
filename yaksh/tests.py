@@ -352,7 +352,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(next_question_id.id, 3)
         questions_answered = self.answerpaper.get_questions_answered()
         self.assertEqual(questions_answered.count(), 1)
-        self.assertSequenceEqual(questions_answered, [self.questions.first()])
+        self.assertSequenceEqual(questions_answered, [self.questions[0]])
         questions_unanswered = self.answerpaper.get_questions_unanswered()
         self.assertEqual(questions_unanswered.count(), 2)
         self.assertSequenceEqual(questions_unanswered,

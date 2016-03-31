@@ -529,7 +529,8 @@ class AnswerPaper(models.Model):
 
     def current_question(self):
         """Returns the current active question to display."""
-        return self.questions_unanswered.first()
+        if self.questions_unanswered.all():
+            return self.questions_unanswered.all()[0]
 
     def questions_left(self):
         """Returns the number of questions left."""
