@@ -281,3 +281,13 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ['name', 'active', 'enrollment']
+
+class StandardTestCaseForm(forms.ModelForm):
+    class Meta:
+        model = StandardTestCase
+        fields = ['test_case']
+
+class StdoutBasedTestCaseForm(forms.ModelForm):
+    class Meta:
+        model = StdoutBasedTestCase
+        fields = ['output']
