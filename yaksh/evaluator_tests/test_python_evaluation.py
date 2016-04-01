@@ -57,57 +57,75 @@ class PythonEvaluationTestCases(unittest.TestCase):
         def add(a, b);
             return a + b
         """)
-        syntax_error_msg = "SyntaxError"
+        syntax_error_msg = ["Traceback", "call", "File", "line", "<string>",
+                            "SyntaxError", "invalid syntax"]
         get_evaluator = PythonCodeEvaluator(self.test_case_data, self.test,
                                             self.language, user_answer)
         result = get_evaluator.evaluate()
+        err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
-        self.assertIn(syntax_error_msg, result.get("error"))
+        self.assertEqual(5, len(err))
+        for msg in syntax_error_msg:
+            self.assertIn(msg, result.get("error"))
 
     def test_indent_error(self):
         user_answer = dedent("""
         def add(a, b):
         return a + b
         """)
-        indent_error_msg = "IndentationError"
+        indent_error_msg = ["Traceback", "call", "File", "line", "<string>",
+                            "IndentationError", "indented block"]
         get_evaluator = PythonCodeEvaluator(self.test_case_data, self.test,
                                             self.language, user_answer)
         result = get_evaluator.evaluate()
+        err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
-        self.assertIn(indent_error_msg, result.get("error"))
+        self.assertEqual(5, len(err))
+        for msg in indent_error_msg:
+            self.assertIn(msg, result.get("error"))
 
     def test_name_error(self):
         user_answer = ""
-        name_error_msg = "NameError"
+        name_error_msg = ["Traceback", "call", "NameError", "name", "defined"]
         get_evaluator = PythonCodeEvaluator(self.test_case_data, self.test,
                                             self.language, user_answer)
         result = get_evaluator.evaluate()
+        err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
-        self.assertIn(name_error_msg, result.get("error"))
+        self.assertEqual(2, len(err))
+        for msg in name_error_msg:
+            self.assertIn(msg, result.get("error"))
 
     def test_recursion_error(self):
         user_answer = dedent("""
         def add(a, b):
             return add(3, 3)
         """)
-        recursion_error_msg = "RuntimeError"
+        recursion_error_msg = ["Traceback", "call", "RuntimeError",
+                                "maximum recursion depth exceeded"]
         get_evaluator = PythonCodeEvaluator(self.test_case_data, self.test,
                                             self.language, user_answer)
         result = get_evaluator.evaluate()
+        err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
-        self.assertIn(recursion_error_msg, result.get("error"))
+        self.assertEqual(2, len(err))
+        for msg in recursion_error_msg:
+            self.assertIn(msg, result.get("error"))
 
     def test_type_error(self):
         user_answer = dedent("""
         def add(a):
             return a + b
         """)
-        type_error_msg = "TypeError"
+        type_error_msg = ["Traceback", "call", "TypeError", "exactly", "argument"]
         get_evaluator = PythonCodeEvaluator(self.test_case_data, self.test,
                                             self.language, user_answer)
         result = get_evaluator.evaluate()
+        err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
-        self.assertIn(type_error_msg, result.get("error"))
+        self.assertEqual(2, len(err))
+        for msg in type_error_msg:
+            self.assertIn(msg, result.get("error"))
 
     def test_value_error(self):
         user_answer = dedent("""
@@ -115,12 +133,15 @@ class PythonEvaluationTestCases(unittest.TestCase):
             c = 'a'
             return int(a) + int(b) + int(c)
         """)
-        value_error_msg = "ValueError"
+        value_error_msg = ["Traceback", "call", "ValueError", "invalid literal", "base"]
         get_evaluator = PythonCodeEvaluator(self.test_case_data, self.test,
                                             self.language, user_answer)
         result = get_evaluator.evaluate()
+        err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
-        self.assertIn(value_error_msg, result.get("error"))
+        self.assertEqual(2, len(err))
+        for msg in value_error_msg:
+            self.assertIn(msg, result.get("error"))
 
 if __name__ == '__main__':
     unittest.main()
