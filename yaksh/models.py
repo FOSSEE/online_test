@@ -389,10 +389,13 @@ class AnswerPaperManager(models.Manager):
         ''' Return a dict of question id as key and count as value'''
         papers = self.filter(question_paper_id=questionpaper_id,
                              attempt_number=attempt_number, status=status)
+        all_questions = list()
         questions = list()
         for paper in papers:
-            questions += paper.get_questions()
-        return Counter(map(int, questions))
+            all_questions += paper.get_questions()
+        for question in all_questions:
+            questions.append(question.id)
+        return Counter(questions)
 
     def get_all_questions_answered(self, questionpaper_id, attempt_number,
                                    status='completed'):
@@ -403,8 +406,8 @@ class AnswerPaperManager(models.Manager):
         for paper in papers:
             for question in filter(None, paper.get_questions_answered()):
                 if paper.is_answer_correct(question):
-                    questions_answered.append(question)
-        return Counter(map(int, questions_answered))
+                    questions_answered.append(question.id)
+        return Counter(questions_answered)
 
     def get_attempt_numbers(self, questionpaper_id, status='completed'):
         ''' Return list of attempt numbers'''

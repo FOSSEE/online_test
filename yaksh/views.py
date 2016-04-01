@@ -1210,7 +1210,8 @@ def download_csv(request, questionpaper_id):
                 paper.marks_obtained,
                 paper.question_paper.total_marks,
                 paper.percent,
-                paper.questions, paper.questions_answered,
+                paper.questions.all(),
+                paper.questions_answered.all(),
                 paper.status
         ]
         writer.writerow(row)

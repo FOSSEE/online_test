@@ -21,7 +21,7 @@
     <div class="span14">
         <div class="row">
             <div class="span6">
-                <h4><b><u> {{ course.name }} by {{ course.creator}}</u></b></h4>
+                <h4><b><u> {{ course.name }} by {{ course.creator }}</u></b></h4>
             </div>
              <div class="span6">
                 {% if user in course.requests.all %} <span class="label warning">Request Pending </span>
