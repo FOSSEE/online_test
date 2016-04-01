@@ -235,6 +235,8 @@ class QuestionPaperTestCases(unittest.TestCase):
         """ Test get_random_questions() method of Question Paper"""
         random_questions_set_1 = self.question_set_1.get_random_questions()
         random_questions_set_2 = self.question_set_2.get_random_questions()
+        total_random_questions = len(random_questions_set_1 + random_questions_set_2)
+        self.assertEqual(total_random_questions, 5)
 
         # To check whether random questions are from random_question_set
         questions_set_1 = set(self.question_set_1.questions.all())
