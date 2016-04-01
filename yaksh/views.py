@@ -689,7 +689,10 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     else:
         # Display the same question if user_answer is None
         if not user_answer:
+            ci = RequestContext(request)
             msg = "Please submit a valid option or code"
+            context = {'question': question, 'error_message': msg,
+                       'paper': paper}
         elif question.type == 'code' and user_answer:
             msg = "Correct Output"
             success = "True"
@@ -698,9 +701,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                    'error_message': msg, 'success': success}
             ci = RequestContext(request)
 
-            context = {'question': question, 'error_message': msg,
-                       'paper': paper}
-            ci = RequestContext(request)
             return my_render_to_response('yaksh/question.html', context,
                                          context_instance=ci)
         else:

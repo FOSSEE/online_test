@@ -90,11 +90,11 @@ function call_skip(url)
     form.action = url
     form.submit();
 }
-	{% if question.type == 'code' and success == 'True'%}
-	{% if to_attempt|length != 0 %}
+    {% if question.type == 'code' and success == 'True'%}
+	{% if paper.questions_left  %}
 	window.setTimeout(function()
 	{   
-		{% for qid, num in questions.items %}
+		{% for qid in paper.questions.all  %}
 		location.href="{{ URL_ROOT }}/exam/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/"
 		{% endfor %}		
 	}, 1000);
@@ -120,7 +120,7 @@ function call_skip(url)
         <li><h5><a> Hi {{ paper.user.first_name.title}} {{ paper.user.last_name.title}}  </a></h5></li>
         </ul><br>
         <div class=time-div id="time_left"></div>
-		<h5 class=td1-class>You have {{ paper.questions_left }} question(s) left in {{ paper.question_paper.quiz.description }}</h5>
+		<h5>You have {{ paper.questions_left }} question(s) left in {{ paper.question_paper.quiz.description }}</h5>
      </div>
    </div>
 </div>
