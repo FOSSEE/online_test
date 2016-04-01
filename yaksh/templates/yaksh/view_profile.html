@@ -12,39 +12,39 @@
   <a href="{{ URL_ROOT }}/exam/manage/editprofile">Edit Profile</a>
   <a href="{{ URL_ROOT }}/exam/">Back to Home</a>
 </ul>
-<div class="well">
- <table width="398" border="0" align="center" cellpadding="0">
+<div class="span14">
+  <h2 style="margin-left: 220px">Your Profile Information</h2>
+  <center>
+  <table class="span1">
   <tr>
-    <td height="26" colspan="2"><h2>Your Profile Information</h2> </td>
-  </tr>
-  <tr>
-    <td width="82" valign="top"><h4>Firstname:</h4></td>
-    <td width="165" valign="top"><h4>{{ user.first_name }}</h4></td>
-  </tr>
-  <tr>
-    <td valign="top"><h4>Lastname:</h4></td>
-    <td valign="top"><h4>{{ user.last_name }}</h4></td>
+    <th><label for="id_first_name"><h5>First name:</h5></label></th>
+    <th><label for="id_first_name"><h5>{{ user.first_name }}</h5></label></th>
   </tr>
   <tr>
-    <td valign="top"><h4>Email:</h4></td>
-    <td valign="top"><h4>{{ user.email }}</h4></td>
+    <th><label for="id_last_name"><h5>Last name:</h5></label></th>
+    <th><label for="id_last_name"><h5>{{ user.last_name }}</h5></label></th>
   </tr>
   <tr>
-    <td valign="top"><h4>Institute:</h4></td>
-    <td valign="top"><h4>{{ user.profile.institute }}</h4></td>
+    <th><label for="id_email"><h5>Email:</h5></label></th>
+    <th><label for="id_email"><h5>{{ user.email }}</h5></label></th>
   </tr>
   <tr>
-    <td valign="top"><h4>Department:</h4></td>
-    <td valign="top"><h4>{{ user.profile.department }}</h4></td>
-  </tr>
-    <tr>
-    <td valign="top"><h4>Roll Number:</h4></td>
-    <td valign="top"><h4>{{ user.profile.roll_number }}</h4></td>
+    <th><label for="id_institute"><h5>Institute:</h5></label></th>
+    <th><label for="id_institute"><h5>{{ user.profile.institute }}</h5></label></th>
   </tr>
   <tr>
-    <td valign="top"><h4>Position:</h4></td>
-    <td valign="top"><h4>{{ user.profile.position }}</h4></td>
+    <th><label for="id_department"><h5>Department:</h5></label></th>
+    <th><label for="id_department"><h5>{{ user.profile.department }}</h5></label></th>
   </tr>
-</table>
+  <tr>
+    <th><label for="id_roll_number"><h5>Roll number:</h5></label></th>
+    <th><label for="id_roll_number"><h5>{{ user.profile.roll_number }}</h5></label></th>
+  </tr>
+  <tr>
+    <th><label for="id_position"><h5>Position:</h5></label></th>
+    <th><label for="id_position"><h5>{{ user.profile.position }}</h5></label></th>
+  </tr>
+  </table>
+  </center>
 </div>
 {% endblock %}
