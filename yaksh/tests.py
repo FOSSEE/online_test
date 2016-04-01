@@ -250,20 +250,6 @@ class QuestionPaperTestCases(unittest.TestCase):
         except AssertionError:
             self.assertTrue(random_questions_set_1 != random_questions_set_2)
 
-    def test_get_questions_for_answerpaper(self):
-        """ Test get_questions_for_answerpaper() method of Question Paper"""
-        questions = self.question_paper._get_questions_for_answerpaper()
-        fixed = list(self.question_paper.fixed_questions.all())
-        question_set = self.question_paper.random_questions.all()
-        total_random_questions = 0
-        available_questions = []
-        for qs in question_set:
-            total_random_questions += qs.num_questions
-            available_questions += qs.questions.all()
-        self.assertEqual(total_random_questions, 5)
-        self.assertEqual(len(available_questions), 8)
-        self.assertEqual(len(questions), 7)
-
     def test_make_answerpaper(self):
         """ Test make_answerpaper() method of Question Paper"""
         already_attempted = self.attempted_papers.count()
@@ -358,20 +344,17 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertSequenceEqual(questions_unanswered,
                                  [self.questions[1], self.questions[2]])
 
-    def test_update_marks_obtained(self):
-        """ Test get_marks_obtained() method of Answer Paper"""
-        self.answerpaper._update_marks_obtained()
+    def test_update_marks(self):
+        """ Test update_marks method of AnswerPaper"""
+        self.answerpaper.update_marks('inprogress')
+        self.assertEqual(self.answerpaper.status, 'inprogress')
+        self.assertTrue(self.answerpaper.is_attempt_inprogress())
+        self.answerpaper.update_marks()
+        self.assertEqual(self.answerpaper.status, 'completed')
         self.assertEqual(self.answerpaper.marks_obtained, 1.0)
-
-    def test_update_percent(self):
-        """ Test update_percent() method of Answerpaper"""
-        self.answerpaper._update_percent()
         self.assertEqual(self.answerpaper.percent, 33.33)
-
-    def test_update_passed(self):
-        """ Test update_passed method of AnswerPaper"""
-        self.answerpaper._update_passed()
-        self.assertFalse(self.answerpaper.passed)
+        self.assertTrue(self.answerpaper.passed)
+        self.assertFalse(self.answerpaper.is_attempt_inprogress())
 
     def test_get_question_answer(self):
         """ Test get_question_answer() method of Answer Paper"""
@@ -381,20 +364,9 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertTrue(first_answer.correct)
         self.assertEqual(len(answered), 2)
 
-    def test_update_status(self):
-        """ Test update_status method of Answer Paper"""
-        self.answerpaper._update_status('inprogress')
-        self.assertEqual(self.answerpaper.status, 'inprogress')
-        self.answerpaper._update_status('completed')
-        self.assertEqual(self.answerpaper.status, 'completed')
-        self.assertFalse(self.answerpaper.is_attempt_inprogress())
-
     def test_is_answer_correct(self):
         self.assertTrue(self.answerpaper.is_answer_correct(self.questions[0]))
         self.assertFalse(self.answerpaper.is_answer_correct(self.questions[1]))
-
-    def test_is_attempt_inprogress(self):
-        self.assertTrue(self.answerpaper.is_attempt_inprogress())
 
 ###############################################################################
 class CourseTestCases(unittest.TestCase):
