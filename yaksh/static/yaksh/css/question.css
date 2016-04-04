@@ -13,11 +13,11 @@
 }
 .td1-class
 {
-	width:300px;	
+       width:300px;
 }
 .td2-class
 {
-	width:50px;
+       width:50px;
   padding: 5px 10px 9px;
 }
 .page-header {
@@ -43,4 +43,3 @@
        .lineObj{
           color: grey;
        }
-

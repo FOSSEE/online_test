@@ -24,7 +24,7 @@
         <div class="well">
             <div class="row">
                 <div class="span3" style="padding-top:10px">
-                    <input type="checkbox" name="check" value="{{ request.id }}">&nbsp;<a href="#" data-toggle="tooltip" title=" Institute: {{ request.profile.institute }}&#013;Department: {{ request.profile.department}}&#013;Roll Number: {{ request.profile.roll_number }}">&nbsp;{{ request.username }}</a><br>
+                    <input type="checkbox" name="check" value="{{ request.id }}">&nbsp;<a href="#" data-toggle="tooltip" title=" Institute: {{ request.profile.institute }}&#013;Department: {{ request.profile.department}}&#013;Roll Number: {{ request.profile.roll_number }}">&nbsp;{{ request.username }}</a>
                 </div>
                 <a class="btn success" href="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/{{ request.id }}/"> Enroll </a>  <a class="btn danger" href="{{URL_ROOT}}/exam/manage/reject/{{ course.id }}/{{ request.id }}/"> Reject </a>
             </div>
