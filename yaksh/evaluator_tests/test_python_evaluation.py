@@ -6,7 +6,10 @@ from yaksh.settings import SERVER_TIMEOUT
 
 class PythonAssertionEvaluationTestCases(unittest.TestCase):
     def setUp(self):
-        self.test_case_data = ['assert(add(1,2)==3)']
+        self.test_case_data = [{"test_case": 'assert(add(1,2)==3)'},
+                                {"test_case": 'assert(add(-1,2)==1)'},
+                                {"test_case":  'assert(add(-1,-2)==-3)'},
+                            ]
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
 
@@ -43,7 +46,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
 class PythonStdoutEvaluationTestCases(unittest.TestCase):
     def setUp(self):
-        self.output = ['0 1 1 2 3']
+        self.test_case_data = [{"expected_output": "0 1 1 2 3"}]
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
 
@@ -52,7 +55,7 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         user_answer = "a,b=0,1\nfor i in range(5):\n\tprint a,\n\ta,b=b,a+b"
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer,
-                    'test_case_data': self.output
+                    'test_case_data': self.test_case_data
                 }
         result = get_class.evaluate(**kwargs)
         self.assertEqual(result.get('error'), "Correct answer")
@@ -62,7 +65,7 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         user_answer = "a,b=0,1\nfor i in range(5):\n\tprint b,\n\ta,b=b,a+b"
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.output
+                    'test_case_data': self.test_case_data
                 }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
@@ -73,7 +76,7 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         error_msg = "Incorrect Answer: Please avoid printing the expected output directly"
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.output
+                    'test_case_data': self.test_case_data
                 }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
@@ -83,7 +86,7 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer,
-                    'test_case_data': self.output
+                    'test_case_data': self.test_case_data
                 }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))

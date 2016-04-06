@@ -36,7 +36,7 @@ class CppCodeEvaluator(CodeEvaluator):
                                                 ref_output_path)
         return compile_command, compile_main
 
-    def check_code(self, user_answer, test_case_data):
+    def check_code(self, user_answer, test_case):
             """ Function validates student code using instructor code as
             reference.The first argument ref_code_path, is the path to
             instructor code, it is assumed to have executable permission.
@@ -56,7 +56,7 @@ class CppCodeEvaluator(CodeEvaluator):
             if the required permissions are not given to the file(s).
 
             """
-            ref_code_path = test_case_data[0]
+            ref_code_path = test_case
             clean_ref_code_path, clean_test_case_path = self._set_test_code_file_path(ref_code_path)
 
             if not isfile(clean_ref_code_path):

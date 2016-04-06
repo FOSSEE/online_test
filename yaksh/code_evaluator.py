@@ -115,7 +115,8 @@ class CodeEvaluator(object):
         self._change_dir(self.in_dir)
 
     # def safe_evaluate(self, args):
-    def safe_evaluate(self, **kwargs):
+    # def safe_evaluate(self, **kwargs): #@@@v2
+    def safe_evaluate(self, user_answer, test_case_data):
         # Add a new signal handler for the execution of this code.
         prev_handler = create_signal_handler()
         success = False
@@ -124,7 +125,11 @@ class CodeEvaluator(object):
         # Do whatever testing needed.
         try:
             # success, err = self.check_code(*args)
-            success, err = self.check_code(**kwargs)
+            # success, err = self.check_code(**kwargs) #@@@v2
+            for test_case in test_case_data:
+                success, err = self.check_code(user_answer, **test_case)
+                if not success:
+                    break
 
         except TimeoutException:
             err = self.timeout_msg
