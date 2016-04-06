@@ -27,7 +27,7 @@ def setUpModule():
 
     # create 20 questions
     for i in range(1, 21):
-        Question.objects.create(summary='Q%d' % (i), points=1)
+        Question.objects.create(summary='Q%d' % (i), points=1, type='code')
 
     # create a quiz
     quiz = Quiz.objects.create(start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
@@ -263,12 +263,9 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.assertEqual(len(paper_questions), 7)
         fixed_questions = set(self.question_paper.fixed_questions.all())
         self.assertTrue(fixed_questions.issubset(set(paper_questions)))
-        # test is_questionpaper_passed()
         answerpaper.passed = True
         answerpaper.save()
-        self.assertTrue(self.question_paper.is_questionpaper_passed(self.user))
-        # test is_attempt_allowed()
-        self.assertFalse(self.question_paper.is_attempt_allowed(self.user))
+        self.assertFalse(self.question_paper.is_prerequisite_passed(self.user))
         # test can_attempt_now(self):
         self.assertFalse(self.question_paper.can_attempt_now(self.user))
 
@@ -369,6 +366,14 @@ class AnswerPaperTestCases(unittest.TestCase):
     def test_is_answer_correct(self):
         self.assertTrue(self.answerpaper.is_answer_correct(self.questions[0]))
         self.assertFalse(self.answerpaper.is_answer_correct(self.questions[1]))
+
+    def test_get_previous_answers(self):
+        answers = self.answerpaper.get_previous_answers(self.questions[0])
+        self.assertEqual(answers.count(), 1)
+        self.assertTrue(answers[0], self.answer_right)
+        answers = self.answerpaper.get_previous_answers(self.questions[1])
+        self.assertEqual(answers.count(), 1)
+        self.assertTrue(answers[0], self.answer_wrong)
 
 ###############################################################################
 class CourseTestCases(unittest.TestCase):

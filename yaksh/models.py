@@ -155,10 +155,10 @@ class Question(models.Model):
     active = models.BooleanField(default=True)
 
     # Snippet of code provided to the user.
-    snippet = models.CharField(max_length=256)
+    snippet = models.CharField(max_length=256, blank=True)
 
     # Tags for the Question.
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)
 
     def consolidate_answer_data(self, test_cases, user_answer):
         test_case_data_dict = []
@@ -262,7 +262,7 @@ class Quiz(models.Model):
     pass_criteria = models.FloatField("Passing percentage", default=40)
 
     # List of prerequisite quizzes to be passed to take this quiz
-    prerequisite = models.ForeignKey("Quiz", null=True)
+    prerequisite = models.ForeignKey("Quiz", null=True, blank=True)
 
     # Programming language for a quiz
     language = models.CharField(max_length=20, choices=languages)
@@ -341,17 +341,17 @@ class QuestionPaper(models.Model):
         ans_paper.questions_unanswered.add(*questions)
         return ans_paper
 
-    def is_questionpaper_passed(self, user):
+    def _is_questionpaper_passed(self, user):
         return  AnswerPaper.objects.filter(question_paper=self, user=user,
                                            passed = True).exists()
 
-    def is_attempt_allowed(self, user):
+    def _is_attempt_allowed(self, user):
         attempts = AnswerPaper.objects.get_total_attempt(questionpaper=self,
                                                          user=user)
         return attempts != self.quiz.attempts_allowed
 
     def can_attempt_now(self, user):
-        if self.is_attempt_allowed(user):
+        if self._is_attempt_allowed(user):
             last_attempt = AnswerPaper.objects.get_user_last_attempt(user=user,
                            questionpaper=self)
             if last_attempt:
@@ -361,6 +361,15 @@ class QuestionPaper(models.Model):
                 return True
         else:
             return False
+
+    def _get_prequisite_paper(self):
+        return self.quiz.prerequisite.questionpaper_set.get()
+
+    def is_prerequisite_passed(self, user):
+        if self.quiz.has_prerequisite():
+            prerequisite = self._get_prequisite_paper()
+            return prerequisite._is_questionpaper_passed(user)
+
 
 ###############################################################################
 class QuestionSet(models.Model):
@@ -642,6 +651,9 @@ class AnswerPaper(models.Model):
         if self.status == 'inprogress':
             return self.time_left()> 0
 
+    def get_previous_answers(self, question):
+        if question.type == 'code':
+            return self.answers.filter(question=question).order_by('-id')
 
     def __unicode__(self):
         u = self.user
