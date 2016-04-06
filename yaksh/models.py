@@ -228,8 +228,8 @@ class Question(models.Model):
 
         test_cases = self.testcase_set.all()
         for test in test_cases:
-            test_instance = test.get_child_instance(self.test_case_type)
-            test_case_field_value = test_instance.get_field_value()
+            test_case_child_instance = test.get_child_instance(self.test_case_type)
+            test_case_instance_dict = test_case_child_instance.get_instance_as_dict()
             test_case_data.append(test_case_field_value)
 
         question_data['test_case_data'] = test_case_data
@@ -779,17 +779,18 @@ class StandardTestCase(TestCase):
     test_case = models.TextField(blank=True)
 
     def get_field_value(self):
-        return self.test_case
+        return {"test_case": self.test_case}
+
 
 class StdoutBasedTestCase(TestCase):
-    output = models.TextField(blank=True)
+    expected_output = models.TextField(blank=True)
 
     def get_field_value(self):
-        return self.output
+        return {"expected_output": self.expected_output}
 
 class McqTestCase(TestCase):
     options = models.TextField()
     correct = models.BooleanField(default=False)
 
-    def validate(self, user_answer):
-        pass
+    def get_field_value(self):
+        return {"options": self.options, "correct": self.correct}

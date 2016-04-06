@@ -5,7 +5,7 @@ from yaksh.settings import SERVER_TIMEOUT
 
 class BashEvaluationTestCases(unittest.TestCase):
     def setUp(self):
-        self.test_case_data = ["bash_files/sample.sh,bash_files/sample.args"]
+        self.test_case_data = [{"test_case": "bash_files/sample.sh,bash_files/sample.args"}]
         self.in_dir = "/tmp"
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)

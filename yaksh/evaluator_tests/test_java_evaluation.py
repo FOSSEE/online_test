@@ -7,7 +7,7 @@ from yaksh.settings import SERVER_TIMEOUT
 
 class JavaEvaluationTestCases(unittest.TestCase):
     def setUp(self):
-        self.test_case_data = ["java_files/main_square.java"]
+        self.test_case_data = [{"test_case": "java_files/main_square.java"}]
         self.in_dir = "/tmp"
         evaluator.SERVER_TIMEOUT = 9
         self.timeout_msg = ("Code took more than {0} seconds to run. "

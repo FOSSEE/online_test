@@ -33,8 +33,8 @@ class ScilabCodeEvaluator(CodeEvaluator):
         # Delete the created file.
         os.remove(self.submit_code_path)
 
-    def check_code(self, user_answer, test_case_data):
-        ref_code_path = test_case_data[0]
+    def check_code(self, user_answer, test_case):
+        ref_code_path = test_case
         clean_ref_path, clean_test_case_path = self._set_test_code_file_path(ref_code_path)
         user_answer, terminate_commands = self._remove_scilab_exit(user_answer.lstrip())
 

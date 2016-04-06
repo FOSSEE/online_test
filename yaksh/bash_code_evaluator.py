@@ -37,7 +37,7 @@ class BashCodeEvaluator(CodeEvaluator):
         super(BashCodeEvaluator, self).teardown()
         os.remove(self.submit_code_path)
 
-    def check_code(self, user_answer, test_case_data):
+    def check_code(self, user_answer, test_case):
         """ Function validates student script using instructor script as
         reference. Test cases can optionally be provided.  The first argument
         ref_path, is the path to instructor script, it is assumed to
@@ -60,7 +60,8 @@ class BashCodeEvaluator(CodeEvaluator):
         the required permissions are not given to the file(s).
 
         """
-        ref_code_path = test_case_data[0]
+        # ref_code_path = test_case_data[0]
+        ref_code_path = test_case
         get_ref_path, get_test_case_path = ref_code_path.strip().split(',')
         get_ref_path = get_ref_path.strip()
         get_test_case_path = get_test_case_path.strip()
