@@ -90,19 +90,19 @@ function call_skip(url)
     form.action = url
     form.submit();
 }
-    {% if question.type == 'code' and success == 'True'%}
+    {% if error_message == 'Correct Output'%}
 	{% if paper.questions_left  %}
 	window.setTimeout(function()
 	{   
 		{% for qid in paper.questions.all  %}
-		location.href="{{ URL_ROOT }}/exam/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/"
+        location.href="{{ URL_ROOT }}/exam/{{ qid.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/"
 		{% endfor %}		
-	}, 1000);
+	}, 2000);
 	{% else %}
 	window.setTimeout(function()
 	{   
 		location.href="{{ URL_ROOT }}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/"
-	}, 1000);
+	}, 2000);
     {% endif %}
 	{% endif %}
 </script>
@@ -132,21 +132,19 @@ function call_skip(url)
             {% for qid in paper.questions.all %}
                 {% if qid in paper.questions_unanswered.all %}
                 {% if qid.id == question.id %}
-                {{ q.id}}
-                        <li class="active"><a href="#" data-toggle="tooltip" title="{{ qid.description }}" onclick="call_skip('{{ URL_ROOT }}/exam/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
+                <li class="active"><a href="#"data-toggle="tooltip" title="{{ qid.description }}" onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
                     {% else %}
-                        <li><a href="#" data-toggle="tooltip" title="{{ qid.description }}" onclick="call_skip('{{ URL_ROOT }}/exam/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
+                    <li><a href="#" data-toggle="tooltip" title="{{ qid.description }}" onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
                     {% endif %}
                 {% endif %}
                 {% if qid in paper.questions_answered.all %}
-                    <li class="disabled"><a href="#">{{ forloop.counter }}</a></li>
+                    <li class="disabled"><a href="#" data-toggle="tooltip" title="{{ qid.description }}" >{{ forloop.counter }}</a></li>
                 {% endif %}
             {% endfor %}
         </ul>
     </div>
   </div>
 </div>
-
 <div class="span13">
   <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br>
   <font size=3 face=arial> {{ question.description|safe }} </font>
@@ -204,7 +202,7 @@ function call_skip(url)
          <button class="btn" type="submit" name="check" id="check" onClick="submitCode();">Check Answer</button>&nbsp;&nbsp;
          {% endif %}
          {% if paper.unanswered.all|length != 1 %}
-             <button class="btn" type="submit" name="skip" id="skip">Attempt Later</button>
+             <button class="btn"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')" name="skip" id="skip">Attempt Later</button>
          {% endif %}
          </form>
 </div>     

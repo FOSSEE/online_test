@@ -127,118 +127,26 @@ class UserLoginForm(forms.Form):
         return user
 
 
-class QuizForm(forms.Form):
+class QuizForm(forms.ModelForm):
     """Creates a form to add or edit a Quiz.
     It has the related fields and functions required."""
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')
         super(QuizForm, self).__init__(*args, **kwargs)
-        quizzes = [('', 'Select a prerequisite quiz')]
-        quizzes += list(Quiz.objects.filter(
-                        course__creator=user).values_list('id', 'description'))
-        self.fields['prerequisite'] = forms.CharField(required=False,
-                                   widget=forms.Select(choices=quizzes))
+        self.fields['prerequisite'] = forms.ModelChoiceField(
+                queryset=Quiz.objects.filter(course__creator=user))
         self.fields['course'] = forms.ModelChoiceField(
                 queryset=Course.objects.filter(creator=user))
 
-    start_date = forms.DateField(initial=datetime.date.today(), required=False)
-    start_time = forms.TimeField(initial=datetime.datetime.now().time(), required=False)
-    end_date = forms.DateField(initial=datetime.date(2199, 1, 1), required=False)
-    end_time = forms.TimeField(initial=datetime.time(0, 0, 0, 0), required=False)
-    duration = forms.IntegerField(help_text='Will be taken in minutes')
-    active = forms.BooleanField(required=False)
-    description = forms.CharField(max_length=256, widget=forms.Textarea\
-                                  (attrs={'cols': 20, 'rows': 1}))
-    pass_criteria = forms.FloatField(initial=40,
-                                     help_text='Will be taken as percentage')
-    language = forms.CharField(widget=forms.Select(choices=languages))
-    attempts_allowed = forms.IntegerField(widget=forms.Select(choices=attempts))
-    time_between_attempts = forms.IntegerField\
-            (widget=forms.Select(choices=days_between_attempts),
-                    help_text='Will be in days')
 
-    def save(self):
-        course = self.cleaned_data["course"]
-        start_date = self.cleaned_data["start_date"]
-        start_time = self.cleaned_data["start_time"] 
-        end_date = self.cleaned_data["end_date"]
-        end_time = self.cleaned_data["end_time"] 
-        duration = self.cleaned_data["duration"]
-        active = self.cleaned_data['active']
-        description = self.cleaned_data["description"]
-        pass_criteria = self.cleaned_data["pass_criteria"]
-        language = self.cleaned_data["language"]
-        prerequisite = self.cleaned_data["prerequisite"]
-        attempts_allowed = self.cleaned_data["attempts_allowed"]
-        time_between_attempts = self.cleaned_data["time_between_attempts"]
-        new_quiz = Quiz()
-        new_quiz.course = course
-        new_quiz.start_date_time = datetime.datetime.combine(start_date,
-                                                    start_time)
-        new_quiz.end_date_time = datetime.datetime.combine(end_date,
-                                                    end_time)
-        new_quiz.duration = duration
-        new_quiz.active = active
-        new_quiz.description = description
-        new_quiz.pass_criteria = pass_criteria
-        new_quiz.language = language
-        new_quiz.prerequisite_id = prerequisite
-        new_quiz.attempts_allowed = attempts_allowed
-        new_quiz.time_between_attempts = time_between_attempts
-        new_quiz.save()
+    class Meta:
+        model = Quiz
 
 
 class QuestionForm(forms.ModelForm):
     """Creates a form to add or edit a Question.
     It has the related fields and functions required."""
-
-    summary = forms.CharField(widget=forms.Textarea\
-                                        (attrs={'cols': 40, 'rows': 1}))
-    description = forms.CharField(widget=forms.Textarea\
-                                            (attrs={'cols': 40, 'rows': 1}))
-    points = forms.FloatField()
-    test = forms.CharField(widget=forms.Textarea\
-                                    (attrs={'cols': 40, 'rows': 1}), required=False)
-    options = forms.CharField(widget=forms.Textarea\
-                              (attrs={'cols': 40, 'rows': 1}), required=False)
-    language = forms.CharField(max_length=20, widget=forms.Select\
-                               (choices=languages))
-    type = forms.CharField(max_length=8, widget=forms.Select\
-                           (choices=question_types))
-    active = forms.BooleanField(required=False)
-    tags = TagField(required=False)
-    snippet = forms.CharField(widget=forms.Textarea\
-                              (attrs={'cols': 40, 'rows': 1}), required=False)
-    ref_code_path = forms.CharField(widget=forms.Textarea\
-                          (attrs={'cols': 40, 'rows': 1}), required=False)
-
-    def save(self, commit=True):
-        summary = self.cleaned_data.get("summary")
-        description = self.cleaned_data.get("description")
-        points = self.cleaned_data.get("points")
-        test = self.cleaned_data.get("test")
-        options = self.cleaned_data.get("options")
-        language = self.cleaned_data.get("language")
-        type = self.cleaned_data.get("type")
-        active = self.cleaned_data.get("active")
-        snippet = self.cleaned_data.get("snippet")
-
-        new_question = Question()
-        new_question.summary = summary
-        new_question.description = description
-        new_question.points = points
-        new_question.test = test
-        new_question.options = options
-        new_question.language = language
-        new_question.type = type
-        new_question.active = active
-        new_question.snippet = snippet
-        new_question = super(QuestionForm, self).save(commit=False)
-        if commit:
-            new_question.save()
-
-        return new_question
 
     class Meta:
         model = Question

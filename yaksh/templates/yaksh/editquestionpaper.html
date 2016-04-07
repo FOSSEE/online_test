@@ -10,12 +10,17 @@
 {% block manage %}
 <form name=frm action="" method="post">
 {% csrf_token %}
-
-{% for i in papers.questions %}
-<input type="checkbox" name="papers" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{ i.summary}}</a><br>
+<p><u> Fixed Questions </u></p>
+{% for q in fixed_questions %}
+<input type="checkbox" name="papers" value="{{ q.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ q.id }}">{{ q.summary}}</a><br>
+{% endfor %}
+<p><u> Random Questions </u></p>
+{% for random_set in random_questions %}
+<p>{{ random_set.num_questions}} question(s) from {{ random_set.questions.all|length }} question(s)</p>
+{% for q in random_set.questions.all %}
+<input type="checkbox" name="papers" value="{{ q.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ q.id }}">{{ q.summary}}</a><br>
+{% endfor %}
 {% endfor %}
 <br>
-<button class="btn" type="submit" name='add' value=add>Add Question</button>&nbsp;&nbsp;
-<button class="btn" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>
 </form>
 {% endblock %}

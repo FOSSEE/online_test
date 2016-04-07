@@ -54,11 +54,11 @@
                         <tr>
                             {% if not quiz.is_expired %}
                                 <td>
-                                    <a href="{{ URL_ROOT }}/exam/intro/{{quiz.questionpaper_set.get.id}}">{{ quiz.description }}</a><br>
+                                    <a href="{{ URL_ROOT }}/exam/start/{{quiz.questionpaper_set.get.id}}">{{ quiz.description }}</a><br>
                                 </td>
                             {% else %}
                                 <td>
-                                    <a href="{{ URL_ROOT }}/exam/intro/{{quiz.questionpaper_set.get.id}}">{{ quiz.description }}</a><br>
+                                    <a href="{{ URL_ROOT }}/exam/start/{{quiz.questionpaper_set.get.id}}">{{ quiz.description }}</a><br>
                                     {{ quiz.description }} <span class="label important">INACTIVE</span><br>
                                 </td>
                             {% endif %}
