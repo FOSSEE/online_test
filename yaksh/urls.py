@@ -22,11 +22,10 @@ urlpatterns += patterns('yaksh.views',
     url(r'^complete/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$',\
             'complete'),
     url(r'^register/$', 'user_register'),
-    url(r'^(?P<q_id>\d+)/$', 'question'),
     url(r'^(?P<q_id>\d+)/check/$', 'check'),
     url(r'^(?P<q_id>\d+)/check/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$',\
             'check'),
-    url(r'^intro/$', 'start'),
+    url(r'^intro/$', 'intro'),
     url(r'^(?P<q_id>\d+)/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$', 'show_question'),
     url(r'^enroll_request/(?P<course_id>\d+)/$', 'enroll_request'),
     url(r'^self_enroll/(?P<course_id>\d+)/$', 'self_enroll'),
@@ -55,12 +54,6 @@ urlpatterns += patterns('yaksh.views',
     url(r'^manage/designquestionpaper/$', 'design_questionpaper'),
     url(r'^manage/designquestionpaper/(?P<questionpaper_id>\d+)/$',\
                                                         'design_questionpaper'),
-    url(r'^manage/designquestionpaper/automatic/(?P<questionpaper_id>\d+)/$',\
-                                                    'automatic_questionpaper'),
-    url(r'^manage/designquestionpaper/automatic$', 'automatic_questionpaper'),
-    url(r'^manage/designquestionpaper/manual$', 'manual_questionpaper'),
-    url(r'^manage/designquestionpaper/manual/(?P<questionpaper_id>\d+)/$',\
-                                                        'manual_questionpaper'),
     url(r'^manage/statistics/question/(?P<questionpaper_id>\d+)/$',
         'show_statistics'),
     url(r'^manage/statistics/question/(?P<questionpaper_id>\d+)/(?P<attempt_number>\d+)/$',

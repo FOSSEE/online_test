@@ -47,12 +47,6 @@ def my_render_to_response(template, context=None, **kwargs):
     return render_to_response(template, context, **kwargs)
 
 
-def gen_key(no_of_chars):
-    """Generate a random key of the number of characters."""
-    allowed_chars = string.digits+string.uppercase
-    return ''.join([random.choice(allowed_chars) for i in range(no_of_chars)])
-
-
 def get_user_dir(user):
     """Return the output directory for the user."""
 
@@ -70,43 +64,6 @@ def is_moderator(user):
     """Check if the user is having moderator rights"""
     if user.groups.filter(name='moderator').count() == 1:
         return True
-
-
-def fetch_questions(request):
-    """Fetch questions from database based on the given search conditions &
-    tags"""
-    set1 = set()
-    set2 = set()
-    first_tag = request.POST.get('first_tag')
-    first_condition = request.POST.get('first_condition')
-    second_tag = request.POST.get('second_tag')
-    second_condition = request.POST.get('second_condition')
-    third_tag = request.POST.get('third_tag')
-    question1 = set(Question.objects.filter(tags__name__in=[first_tag]))
-    question2 = set(Question.objects.filter(tags__name__in=[second_tag]))
-    question3 = set(Question.objects.filter(tags__name__in=[third_tag]))
-    if first_condition == 'and':
-        set1 = question1.intersection(question2)
-        if second_condition == 'and':
-            set2 = set1.intersection(question3)
-        else:
-            set2 = set1.union(question3)
-    else:
-        set1 = question1.union(question2)
-        if second_condition == 'and':
-            set2 = set1.intersection(question3)
-        else:
-            set2 = set1.union(question3)
-    return set2
-
-
-def _update_marks(answer_paper, state='completed'):
-    answer_paper.update_marks_obtained()
-    answer_paper.update_percent()
-    answer_paper.update_passed()
-    answer_paper.update_status(state)
-    answer_paper.end_time = datetime.datetime.now()
-    answer_paper.save()
 
 
 def index(request):
@@ -151,135 +108,56 @@ def user_register(request):
 def quizlist_user(request):
     """Show All Quizzes that is available to logged-in user."""
     user = request.user
-    avail_quizzes = list(QuestionPaper.objects.filter(quiz__active=True))
+    avail_quizzes = Quiz.objects.get_active_quizzes()
     user_answerpapers = AnswerPaper.objects.filter(user=user)
-    pre_requisites = []
-    enabled_quizzes = []
-    disabled_quizzes = []
-    unexpired_quizzes = []
-
     courses = Course.objects.filter(active=True)
 
-    for paper in avail_quizzes:
-        quiz_enable_time = paper.quiz.start_date_time
-        quiz_disable_time = paper.quiz.end_date_time
-        if quiz_enable_time <= datetime.datetime.now() <= quiz_disable_time:
-            unexpired_quizzes.append(paper)
-
-    cannot_attempt = True if 'cannot_attempt' in request.GET else False
-    quizzes_taken = None if user_answerpapers.count() == 0 else user_answerpapers
-
-    context = {'cannot_attempt': cannot_attempt,
-                'quizzes': avail_quizzes,
+    context = { 'quizzes': avail_quizzes,
                 'user': user,
-                'quizzes_taken': quizzes_taken,
-                'unexpired_quizzes': unexpired_quizzes,
-                'courses': courses
+                'courses': courses,
+                'quizzes_taken': user_answerpapers,
             }
 
     return my_render_to_response("yaksh/quizzes_user.html", context)
 
 @login_required
-def intro(request, questionpaper_id):
+def intro(request, questionpaper_id=None):
     """Show introduction page before quiz starts"""
     user = request.user
     ci = RequestContext(request)
+    if questionpaper_id is None:
+        return my_redirect('/exam/quizzes/')
     quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
-    if not quest_paper.quiz.course.is_enrolled(user):
+    if not quest_paper.quiz.course.is_enrolled(user) :
         raise Http404('You are not allowed to view this page!')
     attempt_number = quest_paper.quiz.attempts_allowed
-    time_lag = quest_paper.quiz.time_between_attempts
-    quiz_enable_time = quest_paper.quiz.start_date_time
-    quiz_disable_time = quest_paper.quiz.end_date_time
+    if quest_paper.quiz.has_prerequisite():
+        pre_quest = QuestionPaper.objects.get(quiz=quest_paper.quiz.prerequisite)
+        if not pre_quest.is_questionpaper_passed(user):
+            return quizlist_user(request)
 
-    quiz_expired = False if quiz_enable_time <= datetime.datetime.now() \
-                                <= quiz_disable_time else True
+    last_attempt = AnswerPaper.objects.get_user_last_attempt(
+            questionpaper=quest_paper, user=user)
+    if last_attempt and last_attempt.is_attempt_inprogress():
+        return show_question(request, last_attempt.current_question().id,
+                             last_attempt.attempt_number,
+                             last_attempt.question_paper.id)
 
-    if quest_paper.quiz.prerequisite:
-        try:
-            pre_quest = QuestionPaper.objects.get(
-                    quiz=quest_paper.quiz.prerequisite)
-            answer_papers = AnswerPaper.objects.filter(
-                    question_paper=pre_quest, user=user)
-            answer_papers_failed = AnswerPaper.objects.filter(
-                    question_paper=pre_quest, user=user, passed=False)
-            if answer_papers.count() == answer_papers_failed.count():
-                context = {'user': user, 'cannot_attempt': True}
-                return my_redirect("/exam/quizzes/?cannot_attempt=True")
-        except:
-            context = {'user': user, 'cannot_attempt': True}
-            return my_redirect("/exam/quizzes/?cannot_attempt=True")
-
-    attempted_papers = AnswerPaper.objects.filter(question_paper=quest_paper,
-            user=user)
-    already_attempted = attempted_papers.count()
-    inprogress, previous_attempt, next_attempt = _check_previous_attempt(attempted_papers,
-                                                                            already_attempted,
-                                                                            attempt_number)
-
-    if previous_attempt:
-        if inprogress:
-            return show_question(request,
-                    previous_attempt.current_question(),
-                    previous_attempt.attempt_number,
-                    previous_attempt.question_paper.id)
-        days_after_attempt = (datetime.datetime.today() - \
-                previous_attempt.start_time).days
-
-        if next_attempt:
-            if days_after_attempt >= time_lag:
-                context = {'user': user,
-                            'paper_id': questionpaper_id,
-                            'attempt_num': already_attempted + 1,
-                            'enable_quiz_time': quiz_enable_time,
-                            'disable_quiz_time': quiz_disable_time,
-                            'quiz_expired': quiz_expired
-                        }
-                return my_render_to_response('yaksh/intro.html', context,
-                                             context_instance=ci)
-        else:
-            return my_redirect("/exam/quizzes/")
-
-    else:
-        context = {'user': user,
-                    'paper_id': questionpaper_id,
-                    'attempt_num': already_attempted + 1,
-                    'enable_quiz_time': quiz_enable_time,
-                    'disable_quiz_time': quiz_disable_time,
-                    'quiz_expired': quiz_expired
-                }
+    attempt_number = 1 if not last_attempt else last_attempt.attempt_number +1
+    if quest_paper.is_attempt_allowed(user) and quest_paper.can_attempt_now(user):
+        context = {'user': user, 'questionpaper': quest_paper,
+                   'attempt_num': attempt_number}
         return my_render_to_response('yaksh/intro.html', context,
                                      context_instance=ci)
+    return my_redirect("/exam/quizzes/")
 
-
-def _check_previous_attempt(attempted_papers, already_attempted, attempt_number):
-    next_attempt = False if already_attempted == attempt_number else True
-    if already_attempted == 0:
-        return False, None, next_attempt
-    else:
-        previous_attempt = attempted_papers[already_attempted-1]
-        if previous_attempt.status == 'inprogress':
-            if previous_attempt.time_left() > 0:
-                return True, previous_attempt, next_attempt
-            else:
-                return False, previous_attempt, next_attempt
-        else:
-            return False, previous_attempt, next_attempt
 
 @login_required
 def results_user(request):
     """Show list of Results of Quizzes that is taken by logged-in user."""
     user = request.user
-    papers = AnswerPaper.objects.filter(user=user)
-    quiz_marks = []
-    for paper in papers:
-        marks_obtained = paper.marks_obtained
-        max_marks = paper.question_paper.total_marks
-        percentage = round((marks_obtained/max_marks)*100, 2)
-        temp = paper.question_paper.quiz.description, marks_obtained,\
-               max_marks, percentage
-        quiz_marks.append(temp)
-    context = {'papers': quiz_marks}
+    papers = AnswerPaper.objects.get_user_answerpapers(user)
+    context = {'papers': papers}
     return my_render_to_response("yaksh/results_user.html", context)
 
 
@@ -592,174 +470,6 @@ def show_all_questionpapers(request, questionpaper_id=None):
 
 
 @login_required
-def automatic_questionpaper(request, questionpaper_id=None):
-    """Generate automatic question paper for a particular quiz"""
-
-    user = request.user
-    ci = RequestContext(request)
-    if not user.is_authenticated() or not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-
-    if questionpaper_id is None:
-        if request.method == "POST":
-            if request.POST.get('save') == 'save':
-                quiz = Quiz.objects.order_by("-id")[0]
-                quest_paper = QuestionPaper()
-                questions = request.POST.getlist('questions')
-                tot_marks = 0
-                for quest in questions:
-                    q = Question.objects.get(id=quest)
-                    tot_marks += q.points
-                quest_paper.quiz = quiz
-                quest_paper.total_marks = tot_marks
-                quest_paper.save()
-                for quest in questions:
-                    q = Question.objects.get(id=quest)
-                    quest_paper.fixed_questions.add(q)
-                return my_redirect('/exam/manage/showquiz')
-            else:
-                no_questions = int(request.POST.get('num_questions'))
-                fetched_questions = fetch_questions(request)
-                n = len(fetched_questions)
-                msg = ''
-                if (no_questions < n):
-                    i = n - no_questions
-                    for i in range(0, i):
-                        fetched_questions.pop()
-                elif (no_questions > n):
-                    msg = 'The given Criteria does not satisfy the number\
-                    of Questions...'
-                tags = Tag.objects.all()
-                context = {'data': {'questions': fetched_questions,
-                                    'tags': tags,
-                                    'msg': msg}}
-                return my_render_to_response(
-                    'yaksh/automatic_questionpaper.html', context,
-                    context_instance=ci)
-        else:
-            tags = Tag.objects.all()
-            context = {'data': {'tags': tags}}
-            return my_render_to_response('yaksh/automatic_questionpaper.html',
-                                         context, context_instance=ci)
-
-    else:
-        if request.method == "POST":
-            if request.POST.get('save') == 'save':
-                quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
-                questions = request.POST.getlist('questions')
-                tot_marks = quest_paper.total_marks
-                for quest in questions:
-                    q = Question.objects.get(id=quest)
-                    tot_marks += q.points
-                quest_paper.total_marks = tot_marks
-                quest_paper.save()
-                for quest in questions:
-                    q = Question.objects.get(id=quest)
-                    quest_paper.questions.add(q)
-                return my_redirect('/yaksh/manage/showquiz')
-            else:
-                no_questions = int(request.POST.get('num_questions'))
-                fetched_questions = fetch_questions(request)
-                n = len(fetched_questions)
-                msg = ''
-                if(no_questions < n):
-                    i = n - no_questions
-                    for i in range(0, i):
-                        fetched_questions.pop()
-                elif(no_questions > n):
-                    msg = 'The given Criteria does not satisfy the number of \
-                                                                Questions...'
-                tags = Tag.objects.all()
-                context = {'data': {'questions': fetched_questions,
-                                    'tags': tags,
-                                    'msg': msg}}
-                return my_render_to_response(
-                    'yaksh/automatic_questionpaper.html', context,
-                    context_instance=ci)
-        else:
-            tags = Tag.objects.all()
-            context = {'data': {'tags': tags}}
-            return my_render_to_response('yaksh/automatic_questionpaper.html',
-                                         context, context_instance=ci)
-
-
-@login_required
-def manual_questionpaper(request, questionpaper_id=None):
-    user = request.user
-    ci = RequestContext(request)
-    if not user.is_authenticated() or not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-
-    if questionpaper_id is None:
-        if request.method == "POST":
-            if request.POST.get('save') == 'save':
-                questions = request.POST.getlist('questions')
-                quest_paper = QuestionPaper()
-                quiz = Quiz.objects.order_by("-id")[0]
-                tot_marks = 0
-                for quest in questions:
-                    q = Question.objects.get(id=quest)
-                    tot_marks += q.points
-                quest_paper.quiz = quiz
-                quest_paper.total_marks = tot_marks
-                quest_paper.save()
-                for i in questions:
-                    q = Question.objects.get(id=i)
-                    quest_paper.questions.add(q)
-                return my_redirect('/exam/manage/showquiz')
-            else:
-                fetched_questions = fetch_questions(request)
-                n = len(fetched_questions)
-                msg = ''
-                if (n == 0):
-                    msg = 'No matching Question found...'
-                tags = Tag.objects.all()
-                context = {'data': {'questions': fetched_questions,
-                                    'tags': tags, 'msg': msg}}
-                return my_render_to_response('yaksh/manual_questionpaper.html',
-                                             context,
-                                             context_instance=ci)
-        else:
-            tags = Tag.objects.all()
-            context = {'data': {'tags': tags}}
-            return my_render_to_response('yaksh/manual_questionpaper.html',
-                                         context, context_instance=ci)
-
-    else:
-        if request.method == "POST":
-            if request.POST.get('save') == 'save':
-                quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
-                questions = request.POST.getlist('questions')
-                tot_marks = quest_paper.total_marks
-                for quest in questions:
-                    q = Question.objects.get(id=quest)
-                    tot_marks += q.points
-                    quest_paper.total_marks = tot_marks
-                    quest_paper.save()
-                    for i in questions:
-                        q = Question.objects.get(id=i)
-                        quest_paper.questions.add(q)
-                        return my_redirect('/exam/manage/showquiz')
-            else:
-                fetched_questions = fetch_questions(request)
-                n = len(fetched_questions)
-                msg = ''
-                if (n == 0):
-                    msg = 'No matching Question found...'
-                tags = Tag.objects.all()
-                context = {'data': {'questions': fetched_questions,
-                                    'tags': tags, 'msg': msg}}
-                return my_render_to_response('yaksh/manual_questionpaper.html',
-                                             context,
-                                             context_instance=ci)
-        else:
-            tags = Tag.objects.all()
-            context = {'data': {'tags': tags}}
-            return my_render_to_response('yaksh/manual_questionpaper.html',
-                                         context, context_instance=ci)
-
-
-@login_required
 def prof_manage(request):
     """Take credentials of the user with professor/moderator
 rights/permissions and log in."""
@@ -814,11 +524,9 @@ def start(request, attempt_num=None, questionpaper_id=None):
     """Check the user cedentials and if any quiz is available,
     start the exam."""
     user = request.user
-    if questionpaper_id is None:
+    if questionpaper_id is None or attempt_num is None:
         return my_redirect('/exam/quizzes/')
     try:
-        """Right now the app is designed so there is only one active quiz
-        at a particular time."""
         questionpaper = QuestionPaper.objects.get(id=questionpaper_id)
     except QuestionPaper.DoesNotExist:
         msg = 'Quiz not found, please contact your '\
@@ -831,11 +539,10 @@ def start(request, attempt_num=None, questionpaper_id=None):
     try:
         old_paper = AnswerPaper.objects.get(
             question_paper=questionpaper, user=user, attempt_number=attempt_num)
-        q = old_paper.current_question()
+        q = old_paper.current_question().id
         return show_question(request, q, attempt_num, questionpaper_id)
     except AnswerPaper.DoesNotExist:
         ip = request.META['REMOTE_ADDR']
-        key = gen_key(10)
         try:
             profile = user.get_profile()
         except Profile.DoesNotExist:
@@ -845,91 +552,39 @@ def start(request, attempt_num=None, questionpaper_id=None):
         new_paper = questionpaper.make_answerpaper(user, ip, attempt_num)
         # Make user directory.
         user_dir = get_user_dir(user)
-        return start(request, attempt_num, questionpaper_id)
-
-
-def get_questions(paper):
-    '''
-        Takes answerpaper as an argument. Returns the total questions as
-        ordered dictionary, the questions yet to attempt and the questions
-        attempted
-    '''
-    to_attempt = []
-    submitted = []
-    all_questions = []
-    questions = {}
-    if paper.questions:
-        all_questions = (paper.questions).split('|')
-    if paper.questions_answered:
-        q_answered = (paper.questions_answered).split('|')
-        q_answered.sort()
-        submitted = q_answered
-    if paper.get_unanswered_questions():
-        q_unanswered = paper.get_unanswered_questions()
-        q_unanswered.sort()
-        to_attempt = q_unanswered
-    question = Question.objects.filter(id__in=all_questions)
-    for index, value in enumerate(question, 1):
-        questions[value] = index
-        questions = collections.OrderedDict(sorted(questions.items(), key=lambda x:x[1]))
-    return questions, to_attempt, submitted
-
-
-@login_required
-def question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
-    """Check the credentials of the user and start the exam."""
-
-    user = request.user
-    if not user.is_authenticated():
-        return my_redirect('/exam/login/')
-    q = get_object_or_404(Question, pk=q_id)
-    try:
-        q_paper = QuestionPaper.objects.get(id=questionpaper_id)
-        paper = AnswerPaper.objects.get(
-            user=request.user, attempt_number=attempt_num, question_paper=q_paper)
-    except AnswerPaper.DoesNotExist:
-        return my_redirect('/exam/start/')
-    if not paper.question_paper.quiz.active:
-        reason = 'The quiz has been deactivated!'
-        return complete(request, reason, attempt_num, questionpaper_id)
-    time_left = paper.time_left()
-    if time_left == 0:
-        return complete(request, attempt_num, questionpaper_id, reason='Your time is up!')
-    quiz_name = paper.question_paper.quiz.description
-    questions, to_attempt, submitted = get_questions(paper)
-    if success_msg is None:
-        context = {'question': q, 'questions': questions, 'paper': paper,
-                   'user': user, 'quiz_name': quiz_name, 'time_left': time_left,
-                   'to_attempt': to_attempt, 'submitted': submitted}
-    else:
-        context = {'question': q, 'questions': questions, 'paper': paper,
-                   'user': user, 'quiz_name': quiz_name, 'time_left': time_left,
-                   'success_msg': success_msg, 'to_attempt': to_attempt,
-                   'submitted': submitted}
-    if q.type == 'code':
-        skipped_answer = paper.answers.filter(question=q, skipped=True)
-        if skipped_answer:
-            context['last_attempt'] = skipped_answer[0].answer
-    ci = RequestContext(request)
-    return my_render_to_response('yaksh/question.html', context,
-                                 context_instance=ci)
+        return show_question(request, new_paper.current_question().id, attempt_num, questionpaper_id)
 
 
 @login_required
 def show_question(request, q_id, attempt_num, questionpaper_id, success_msg=None):
     """Show a question if possible."""
     user = request.user
-    q_paper = QuestionPaper.objects.get(id=questionpaper_id)
-    paper = AnswerPaper.objects.get(user=request.user, attempt_number=attempt_num,
-            question_paper=q_paper)
-    if not user.is_authenticated():
-        return my_redirect('/exam/login/')
-    if len(q_id) == 0:
+    try:
+        q_paper = QuestionPaper.objects.get(id=questionpaper_id)
+        paper = AnswerPaper.objects.get(
+            user=request.user, attempt_number=attempt_num, question_paper=q_paper)
+    except AnswerPaper.DoesNotExist:
+        return my_redirect('/exam/start/')
+    if not q_id:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(request, msg, attempt_num, questionpaper_id)
     else:
-        return question(request, q_id, attempt_num, questionpaper_id, success_msg)
-    
+        q = get_object_or_404(Question, pk=q_id)
+        if not paper.question_paper.quiz.active:
+            reason = 'The quiz has been deactivated!'
+            return complete(request, reason, attempt_num, questionpaper_id)
+        time_left = paper.time_left()
+        if time_left == 0:
+            reason='Your time is up!'
+            return complete(request, reason, attempt_num, questionpaper_id)
+        context = {'question': q, 'paper': paper}
+        if q.type == 'code':
+            skipped_answer = paper.answers.filter(question=q, skipped=True)
+            if skipped_answer:
+                context['last_attempt'] = skipped_answer[0].answer
+        ci = RequestContext(request)
+        return my_render_to_response('yaksh/question.html', context,
+                                     context_instance=ci)
 
 
 def _save_skipped_answer(old_skipped, user_answer, paper, question):
@@ -947,7 +602,7 @@ def _save_skipped_answer(old_skipped, user_answer, paper, question):
         skipped_answer.save()
         paper.answers.add(skipped_answer)
 
-
+@login_required
 def check(request, q_id, attempt_num=None, questionpaper_id=None):
     """Checks the answers of the user for particular question"""
     user = request.user
@@ -955,12 +610,9 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     paper = get_object_or_404(AnswerPaper, user=request.user, attempt_number=attempt_num,
             question_paper=q_paper)
 
-    if q_id in paper.questions_answered:
-        next_q = paper.skip(q_id)
+    if q_id in paper.questions_answered.all():
+        next_q = paper.skip(q_id).id
         return show_question(request, next_q, attempt_num, questionpaper_id)
-
-    if not user.is_authenticated():
-        return my_redirect('/exam/login/')
 
     question = get_object_or_404(Question, pk=q_id)
     test_cases = TestCase.objects.filter(question=question)
@@ -974,7 +626,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         if  question.type == 'code':
             old_skipped = paper.answers.filter(question=question, skipped=True)
             _save_skipped_answer(old_skipped, user_code, paper, question)
-        next_q = paper.skip(q_id)
+        next_q = paper.skip(q_id).id if paper.skip(q_id) else q_id
         return show_question(request, next_q, attempt_num, questionpaper_id)
 
     # Add the answer submitted, regardless of it being correct or not.
@@ -995,7 +647,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     else:
         user_code = request.POST.get('answer')
         user_answer = snippet_code + "\n" + user_code if snippet_code else user_code
-
     new_answer = Answer(question=question, answer=user_answer,
                         correct=False)
     new_answer.save()
@@ -1017,60 +668,45 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             new_answer.error = result.get('error')
         new_answer.save()
 
-    _update_marks(paper, 'inprogress')
-    time_left = paper.time_left()
+    paper.update_marks('inprogress')
+    if paper.time_left() <= 0:
+        reason = 'Your time is up!'
+        return complete(request, reason, attempt_num, questionpaper_id)
+    if not paper.question_paper.quiz.active:
+        reason = 'The quiz has been deactivated!'
+        return complete(request, reason, attempt_num, questionpaper_id)
     if not result.get('success'):  # Should only happen for non-mcq questions.
-        if time_left <= 0:
-            reason = 'Your time is up!'
-            return complete(request, reason, attempt_num, questionpaper_id)
-        if not paper.question_paper.quiz.active:
-            reason = 'The quiz has been deactivated!'
-            return complete(request, reason, attempt_num, questionpaper_id)
-        questions, to_attempt, submitted = get_questions(paper)
         old_answer = paper.answers.filter(question=question, skipped=True)
         if old_answer:
             old_answer[0].answer = user_code
             old_answer[0].save()
         context = {'question': question, 'error_message': result.get('error'),
-                   'paper': paper, 'last_attempt': user_code,
-                   'quiz_name': paper.question_paper.quiz.description,
-                   'time_left': time_left, 'questions': questions,
-                   'to_attempt': to_attempt, 'submitted': submitted}
+                   'paper': paper}
         ci = RequestContext(request)
 
         return my_render_to_response('yaksh/question.html', context,
                                      context_instance=ci)
     else:
-        if time_left <= 0:
-            reason = 'Your time is up!'
-            return complete(request, reason, attempt_num, questionpaper_id)
         # Display the same question if user_answer is None
-        elif not user_answer:
-            msg = "Please submit a valid option or code"
-            time_left = paper.time_left()
-            questions, to_attempt, submitted = get_questions(paper)
-            context = {'question': question, 'paper': paper, 
-                   'quiz_name': paper.question_paper.quiz.description,
-                   'time_left': time_left, 'questions': questions,
-                   'to_attempt': to_attempt, 'submitted': submitted,
-                   'error_message': msg}
+        if not user_answer:
             ci = RequestContext(request)
-
+            msg = "Please submit a valid option or code"
+            context = {'question': question, 'error_message': msg,
+                       'paper': paper}
         elif question.type == 'code' and user_answer:
             msg = "Correct Output"
             success = "True"
             paper.completed_question(question.id)
-            time_left = paper.time_left()
-            questions, to_attempt, submitted = get_questions(paper)
             context = {'question': question, 'paper': paper, 
-                   'quiz_name': paper.question_paper.quiz.description,
-                   'time_left': time_left, 'questions': questions,
-                   'to_attempt': to_attempt, 'submitted': submitted,
                    'error_message': msg, 'success': success}
             ci = RequestContext(request)
 
+            return my_render_to_response('yaksh/question.html', context,
+                                         context_instance=ci)
         else:
             next_q = paper.completed_question(question.id)
+            if next_q:
+                next_q = next_q.id
             return show_question(request, next_q, attempt_num,
                                  questionpaper_id, success_msg)
 
@@ -1108,34 +744,13 @@ def validate_answer(user, user_answer, question, json_data=None):
                 correct = True
     return correct, result
 
-def get_question_labels(request, attempt_num=None, questionpaper_id=None):
-    """Get the question number show in template for corresponding
-     question id."""
-    unattempted_questions = []
-    submitted_questions = []
-    try:
-        q_paper = QuestionPaper.objects.get(id=questionpaper_id)
-        paper = AnswerPaper.objects.get(
-            user=request.user, attempt_number=attempt_num, question_paper=q_paper)
-    except AnswerPaper.DoesNotExist:
-        return my_redirect('/exam/start/')
-    questions, to_attempt, submitted = get_questions(paper)
-    for q_id, question_label in questions.items():
-        if q_id in to_attempt:
-            unattempted_questions.append(question_label)
-        else:
-            submitted_questions.append(question_label)
-    unattempted_questions.sort()
-    submitted_questions.sort()
-    return unattempted_questions, submitted_questions
 
-def quit(request, attempt_num=None, questionpaper_id=None):
+def quit(request, reason=None, attempt_num=None, questionpaper_id=None):
     """Show the quit page when the user logs out."""
-    unattempted_questions, submitted_questions = get_question_labels(request,
-                                                 attempt_num, questionpaper_id)
-    context = {'id': questionpaper_id, 'attempt_num': attempt_num,
-                 'unattempted': unattempted_questions,
-                 'submitted': submitted_questions}
+    paper = AnswerPaper.objects.get(user=request.user,
+                                    attempt_number=attempt_num,
+                                    question_paper=questionpaper_id)
+    context = {'paper': paper, 'message': reason}
     return my_render_to_response('yaksh/quit.html', context,
                                  context_instance=RequestContext(request))
 
@@ -1150,27 +765,20 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
         context = {'message': message}
         return my_render_to_response('yaksh/complete.html', context)
     else:
-        unattempted_questions, submitted_questions = get_question_labels(request,
-                                                     attempt_num, questionpaper_id)
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
         paper = AnswerPaper.objects.get(user=user, question_paper=q_paper,
                 attempt_number=attempt_num)
-        _update_marks(paper)
-        obt_marks = paper.marks_obtained
-        tot_marks = paper.question_paper.total_marks
-        if obt_marks == paper.question_paper.total_marks:
+        paper.update_marks()
+        if paper.percent == 100:
             context = {'message': "Hurray ! You did an excellent job.\
                        you answered all the questions correctly.\
                        You have been logged out successfully,\
                        Thank You !",
-                       'unattempted': unattempted_questions,
-                       'submitted': submitted_questions}
+                       'paper': paper}
             return my_render_to_response('yaksh/complete.html', context)
         else:
             message = reason or "You are successfully logged out"
-            context = {'message':  message,
-                         'unattempted': unattempted_questions,
-                         'submitted': submitted_questions}
+            context = {'message':  message, 'paper': paper}
             return my_render_to_response('yaksh/complete.html', context)
     no = False
     message = reason or 'The quiz has been completed. Thank you.'
@@ -1589,7 +1197,7 @@ def download_csv(request, questionpaper_id):
                 'total_marks',
                 'percentage',
                 'questions',
-                'questions_answererd',
+                'questions_answered',
                 'status'
     ]
     writer.writerow(header)
@@ -1602,7 +1210,8 @@ def download_csv(request, questionpaper_id):
                 paper.marks_obtained,
                 paper.question_paper.total_marks,
                 paper.percent,
-                paper.questions, paper.questions_answered,
+                paper.questions.all(),
+                paper.questions_answered.all(),
                 paper.status
         ]
         writer.writerow(row)

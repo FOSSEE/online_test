@@ -21,7 +21,7 @@
     <div class="span14">
         <div class="row">
             <div class="span6">
-                <h4><b><u> {{ course.name }} by {{ course.creator}}</u></b></h4>
+                <h4><b><u> {{ course.name }} by {{ course.creator }}</u></b></h4>
             </div>
              <div class="span6">
                 {% if user in course.requests.all %} <span class="label warning">Request Pending </span>
@@ -49,23 +49,24 @@
                 <table>
                     <th>Quiz</th>
                     <th>Pre requisite quiz</th>
-                    {% for paper in quizzes %}
-                        {% if paper.quiz.course_id == course.id %}
+                    {% for quiz in quizzes %}
+                        {% if quiz.course_id == course.id %}
                         <tr>
-                            {% if paper in unexpired_quizzes %}
+                            {% if not quiz.is_expired %}
                                 <td>
-                                    <a href="{{ URL_ROOT }}/exam/intro/{{paper.id}}">{{ paper.quiz.description }}</a><br>
+                                    <a href="{{ URL_ROOT }}/exam/intro/{{quiz.questionpaper_set.get.id}}">{{ quiz.description }}</a><br>
                                 </td>
                             {% else %}
                                 <td>
-                                    {{ paper.quiz.description }} <span class="label important">Expired</span><br>
+                                    <a href="{{ URL_ROOT }}/exam/intro/{{quiz.questionpaper_set.get.id}}">{{ quiz.description }}</a><br>
+                                    {{ quiz.description }} <span class="label important">INACTIVE</span><br>
                                 </td>
                             {% endif %}
                             <td>
-                                {% if paper.quiz.prerequisite %}
-                                    You have to pass {{ paper.quiz.prerequisite.description }} for taking {{ paper.quiz.description }}
+                                {% if quiz.prerequisite %}
+                                    You have to pass {{ quiz.prerequisite.description }} for taking {{ paper.quiz.description }}
                                 {% else %}
-                                    No pre requisites for {{ paper.quiz.description }}
+                                    No pre requisites for {{ quiz.description }}
                                 {% endif %}
                             </td>
                         </tr>

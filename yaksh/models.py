@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta
 import json
 from random import sample, shuffle
 from itertools import islice, cycle
@@ -70,7 +70,7 @@ class Course(models.Model):
     students = models.ManyToManyField(User, related_name='students')
     requests = models.ManyToManyField(User, related_name='requests')
     rejected = models.ManyToManyField(User, related_name='rejected')
-    created_on = models.DateTimeField(default=datetime.datetime.now())
+    created_on = models.DateTimeField(default=datetime.now())
 
     def request(self, *users):
         self.requests.add(*users)
@@ -227,6 +227,10 @@ class Answer(models.Model):
 
 
 ###############################################################################
+class QuizManager(models.Manager):
+    def get_active_quizzes(self):
+        return self.filter(active=True)
+###############################################################################
 class Quiz(models.Model):
     """A quiz that students will participate in. One can think of this
     as the "examination" event.
@@ -236,12 +240,12 @@ class Quiz(models.Model):
 
     # The start date of the quiz.
     start_date_time = models.DateTimeField("Start Date and Time of the quiz",
-                                        default=datetime.datetime.now(),
+                                        default=datetime.now(),
                                         null=True)
 
     # The end date and time of the quiz
     end_date_time = models.DateTimeField("End Date and Time of the quiz",
-                                        default=datetime.datetime(2199, 1, 1, 0, 0, 0, 0),
+                                        default=datetime(2199, 1, 1, 0, 0, 0, 0),
                                         null=True)
 
     # This is always in minutes.
@@ -269,8 +273,17 @@ class Quiz(models.Model):
     time_between_attempts = models.IntegerField("Number of Days",\
             choices=days_between_attempts)
 
+    objects = QuizManager()
+
     class Meta:
         verbose_name_plural = "Quizzes"
+
+
+    def is_expired(self):
+        return not self.start_date_time <= datetime.now() < self.end_date_time
+
+    def has_prerequisite(self):
+        return True if self.prerequisite else False
 
     def __unicode__(self):
         desc = self.description or 'Quiz'
@@ -318,18 +331,36 @@ class QuestionPaper(models.Model):
     def make_answerpaper(self, user, ip, attempt_num):
         """Creates an  answer paper for the user to attempt the quiz"""
         ans_paper = AnswerPaper(user=user, user_ip=ip, attempt_number=attempt_num)
-        ans_paper.start_time = datetime.datetime.now()
+        ans_paper.start_time = datetime.now()
         ans_paper.end_time = ans_paper.start_time \
-                             + datetime.timedelta(minutes=self.quiz.duration)
+                             + timedelta(minutes=self.quiz.duration)
         ans_paper.question_paper = self
-        questions = self._get_questions_for_answerpaper()
-        question_ids = [str(x.id) for x in questions]
-        if self.shuffle_questions:
-            shuffle(question_ids)
-        ans_paper.questions = "|".join(question_ids)
         ans_paper.save()
+        questions = self._get_questions_for_answerpaper()
+        ans_paper.questions.add(*questions)
+        ans_paper.questions_unanswered.add(*questions)
         return ans_paper
 
+    def is_questionpaper_passed(self, user):
+        return  AnswerPaper.objects.filter(question_paper=self, user=user,
+                                           passed = True).exists()
+
+    def is_attempt_allowed(self, user):
+        attempts = AnswerPaper.objects.get_total_attempt(questionpaper=self,
+                                                         user=user)
+        return attempts != self.quiz.attempts_allowed
+
+    def can_attempt_now(self, user):
+        if self.is_attempt_allowed(user):
+            last_attempt = AnswerPaper.objects.get_user_last_attempt(user=user,
+                           questionpaper=self)
+            if last_attempt:
+                time_lag = (datetime.today() - last_attempt.start_time).days
+                return time_lag >= self.quiz.time_between_attempts
+            else:
+                return True
+        else:
+            return False
 
 ###############################################################################
 class QuestionSet(models.Model):
@@ -358,10 +389,13 @@ class AnswerPaperManager(models.Manager):
         ''' Return a dict of question id as key and count as value'''
         papers = self.filter(question_paper_id=questionpaper_id,
                              attempt_number=attempt_number, status=status)
+        all_questions = list()
         questions = list()
         for paper in papers:
-            questions += paper.get_questions()
-        return Counter(map(int, questions))
+            all_questions += paper.get_questions()
+        for question in all_questions:
+            questions.append(question.id)
+        return Counter(questions)
 
     def get_all_questions_answered(self, questionpaper_id, attempt_number,
                                    status='completed'):
@@ -372,8 +406,8 @@ class AnswerPaperManager(models.Manager):
         for paper in papers:
             for question in filter(None, paper.get_questions_answered()):
                 if paper.is_answer_correct(question):
-                    questions_answered.append(question)
-        return Counter(map(int, questions_answered))
+                    questions_answered.append(question.id)
+        return Counter(questions_answered)
 
     def get_attempt_numbers(self, questionpaper_id, status='completed'):
         ''' Return list of attempt numbers'''
@@ -431,6 +465,17 @@ class AnswerPaperManager(models.Manager):
     def _get_latest_attempt(self, answerpapers, user_id):
         return answerpapers.filter(user_id=user_id).order_by('-attempt_number')[0]
 
+    def get_user_last_attempt(self, questionpaper, user):
+        attempts = self.filter(question_paper=questionpaper,
+                               user=user).order_by('-attempt_number')
+        if attempts:
+            return attempts[0]
+
+    def get_user_answerpapers(self, user):
+        return self.filter(user=user)
+
+    def get_total_attempt(self, questionpaper, user):
+        return self.filter(question_paper=questionpaper, user=user).count()
 
 ###############################################################################
 class AnswerPaper(models.Model):
@@ -439,9 +484,7 @@ class AnswerPaper(models.Model):
     # The user taking this question paper.
     user = models.ForeignKey(User)
 
-    # All questions that remain to be attempted for a particular Student
-    # (a list of ids separated by '|')
-    questions = models.CharField(max_length=128)
+    questions = models.ManyToManyField(Question, related_name='questions')
 
     # The Quiz to which this question paper is attached to.
     question_paper = models.ForeignKey(QuestionPaper)
@@ -458,8 +501,13 @@ class AnswerPaper(models.Model):
     # User's IP which is logged.
     user_ip = models.CharField(max_length=15)
 
-    # The questions successfully answered (a list of ids separated by '|')
-    questions_answered = models.CharField(max_length=128)
+    # The questions unanswered
+    questions_unanswered = models.ManyToManyField(Question,
+                                            related_name='questions_unanswered')
+
+    # The questions answered
+    questions_answered = models.ManyToManyField(Question,
+                                            related_name='questions_answered')
 
     # All the submitted answers.
     answers = models.ManyToManyField(Answer)
@@ -484,66 +532,37 @@ class AnswerPaper(models.Model):
 
     def current_question(self):
         """Returns the current active question to display."""
-        qu = self.get_unanswered_questions()
-        if len(qu) > 0:
-            return qu[0]
-        else:
-            return ''
+        if self.questions_unanswered.all():
+            return self.questions_unanswered.all()[0]
 
     def questions_left(self):
         """Returns the number of questions left."""
-        qu = self.get_unanswered_questions()
-        return len(qu)
-
-    def get_unanswered_questions(self):
-        """Returns the list of unanswered questions."""
-        qa = self.questions_answered.split('|')
-        qs = self.questions.split('|')
-        qu = [q for q in qs if q not in qa]
-        return qu
+        return self.questions_unanswered.count()
 
     def completed_question(self, question_id):
         """
             Adds the completed question to the list of answered 
             questions and returns the next question.
         """
-        qa = self.questions_answered
-        if len(qa) > 0:
-            self.questions_answered = '|'.join([qa, str(question_id)])
-        else:
-            self.questions_answered = str(question_id)
-        self.save()
+        self.questions_answered.add(question_id)
+        self.questions_unanswered.remove(question_id)
 
-        return self.skip(question_id)
+        return self.current_question()
 
     def skip(self, question_id):
         """
             Skips the current question and returns the next sequentially
              available question.
         """
-        qu = self.get_unanswered_questions()
-        qs = self.questions.split('|')
-
-        if len(qu) == 0:
-            return ''
-
-        try:
-            q_index = qs.index(unicode(question_id))
-        except ValueError:
-            return qs[0]
-
-        start = q_index + 1
-        stop = q_index + 1 + len(qs)
-        q_list = islice(cycle(qs), start, stop)
-        for next_q in q_list:
-            if next_q in qu:
-                return next_q
-
-        return qs[0]
+        questions = self.questions_unanswered.all()
+        question_cycle = cycle(questions)
+        for question in question_cycle:
+            if question.id==int(question_id):
+                return question_cycle.next()
 
     def time_left(self):
         """Return the time remaining for the user in seconds."""
-        dt = datetime.datetime.now() - self.start_time.replace(tzinfo=None)
+        dt = datetime.now() - self.start_time.replace(tzinfo=None)
         try:
             secs = dt.total_seconds()
         except AttributeError:
@@ -553,25 +572,22 @@ class AnswerPaper(models.Model):
         remain = max(total - secs, 0)
         return int(remain)
 
-    def get_answered_str(self):
-        """Returns the answered questions, sorted and as a nice string."""
-        qa = self.questions_answered.split('|')
-        answered = ', '.join(sorted(qa))
-        return answered if answered else 'None'
-
-    def update_marks_obtained(self):
+    def _update_marks_obtained(self):
         """Updates the total marks earned by student for this paper."""
         marks = sum([x.marks for x in self.answers.filter(marks__gt=0.0)])
-        self.marks_obtained = marks
+        if not marks:
+            self.marks_obtained = 0
+        else:
+            self.marks_obtained = marks
 
-    def update_percent(self):
+    def _update_percent(self):
         """Updates the percent gained by the student for this paper."""
         total_marks = self.question_paper.total_marks
         if self.marks_obtained is not None:
             percent = self.marks_obtained/self.question_paper.total_marks*100
             self.percent = round(percent, 2)
 
-    def update_passed(self):
+    def _update_passed(self):
         """
             Checks whether student passed or failed, as per the quiz
             passing criteria.
@@ -582,9 +598,17 @@ class AnswerPaper(models.Model):
             else:
                 self.passed = False
 
-    def update_status(self, state):
+    def _update_status(self, state):
         """ Sets status as inprogress or completed """
         self.status = state
+
+    def update_marks(self, state='completed'):
+        self._update_marks_obtained()
+        self._update_percent()
+        self._update_passed()
+        self._update_status(state)
+        self.end_time = datetime.now()
+        self.save()
 
     def get_question_answers(self):
         """
@@ -601,17 +625,23 @@ class AnswerPaper(models.Model):
         return q_a
 
     def get_questions(self):
-        ''' Return a list of questions'''
-        return self.questions.split('|')
+        return self.questions.all()
 
     def get_questions_answered(self):
-        ''' Return a list of questions answered'''
-        return self.questions_answered.split('|')
+        return self.questions_answered.all()
+
+    def get_questions_unanswered(self):
+        return self.questions_unanswered.all()
 
     def is_answer_correct(self, question_id):
         ''' Return marks of a question answered'''
         return self.answers.filter(question_id=question_id,
                                    correct=True).exists()
+
+    def is_attempt_inprogress(self):
+        if self.status == 'inprogress':
+            return self.time_left()> 0
+
 
     def __unicode__(self):
         u = self.user

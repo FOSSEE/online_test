@@ -15,7 +15,7 @@
 <script src="{{ URL_ROOT }}/static/yaksh/js/bootstrap-modal.js"></script>
 
 <script>
-var time_left = {{ time_left }}
+var time_left = {{ paper.time_left }}
 
 function getTimeRemaining(endtime){
   var t = Date.parse(endtime) - Date.parse(new Date());
@@ -90,11 +90,11 @@ function call_skip(url)
     form.action = url
     form.submit();
 }
-	{% if question.type == 'code' and success == 'True'%}
-	{% if to_attempt|length != 0 %}
+    {% if question.type == 'code' and success == 'True'%}
+	{% if paper.questions_left  %}
 	window.setTimeout(function()
 	{   
-		{% for qid, num in questions.items %}
+		{% for qid in paper.questions.all  %}
 		location.href="{{ URL_ROOT }}/exam/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/"
 		{% endfor %}		
 	}, 1000);
@@ -117,10 +117,10 @@ function call_skip(url)
      <div class="container">
         <h3 class="brand"><strong>Online Test</h3></strong>
         <ul>
-        <li><h5><a> Hi {{user.first_name.title}} {{user.last_name.title}}  </a></h5></li>
+        <li><h5><a> Hi {{ paper.user.first_name.title}} {{ paper.user.last_name.title}}  </a></h5></li>
         </ul><br>
         <div class=time-div id="time_left"></div>
-		<h5 class=td1-class>You have {{ paper.questions_left }} question(s) left in {{ quiz_name }}</h5>
+		<h5>You have {{ paper.questions_left }} question(s) left in {{ paper.question_paper.quiz.description }}</h5>
      </div>
    </div>
 </div>
@@ -128,20 +128,21 @@ function call_skip(url)
   <div class="sidebar">
     <p>Question Navigator </p>
     <div class="pagination">
-    <ul>
-    {% for qid, num in questions.items %}
-        {% if qid.id|slugify in to_attempt %}
-            {% if qid.id|slugify == question.id|slugify %}
-                <li class="active"><a href="#" data-toggle="tooltip" title="{{ qid.description }}" onclick="call_skip('{{ URL_ROOT }}/exam/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ num }}</a></li>
-            {% else %}
-                <li><a href="#" data-toggle="tooltip" title="{{ qid.description }}" onclick="call_skip('{{ URL_ROOT }}/exam/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ num }}</a></li>
-			{% endif %}
-        {% endif %}
-        {% if qid.id|slugify in submitted %}
-            <li class="disabled"><a href="#">{{ num }}</a></li>
-        {% endif %}
-    {% endfor %}
-    </ul>
+        <ul>
+            {% for qid in paper.questions.all %}
+                {% if qid in paper.questions_unanswered.all %}
+                {% if qid.id == question.id %}
+                {{ q.id}}
+                        <li class="active"><a href="#" data-toggle="tooltip" title="{{ qid.description }}" onclick="call_skip('{{ URL_ROOT }}/exam/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
+                    {% else %}
+                        <li><a href="#" data-toggle="tooltip" title="{{ qid.description }}" onclick="call_skip('{{ URL_ROOT }}/exam/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
+                    {% endif %}
+                {% endif %}
+                {% if qid in paper.questions_answered.all %}
+                    <li class="disabled"><a href="#">{{ forloop.counter }}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
     </div>
   </div>
 </div>
@@ -191,7 +192,7 @@ function call_skip(url)
 
  <script type="text/javascript">
        addLineNumbers('answer');
-       </script>
+   </script>
        <script>addLineNumbers('snippet');</script>
          {% endif %}
  
@@ -202,7 +203,7 @@ function call_skip(url)
          {% else %}
          <button class="btn" type="submit" name="check" id="check" onClick="submitCode();">Check Answer</button>&nbsp;&nbsp;
          {% endif %}
-         {% if to_attempt|length != 1 %}
+         {% if paper.unanswered.all|length != 1 %}
              <button class="btn" type="submit" name="skip" id="skip">Attempt Later</button>
          {% endif %}
          </form>
