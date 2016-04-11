@@ -22,7 +22,6 @@ SECRET_KEY = '0=fsi3g5dw*7ze1cyh441_e^5^$2ay@&z(5(n7mhir0xb267=6'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-TEMPLATE_DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -69,7 +68,6 @@ DATABASES = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 
-AUTH_PROFILE_MODULE = 'yaksh.Profile'
 
 LANGUAGE_CODE = 'en-us'
 
@@ -99,4 +97,16 @@ EMAIL_HOST_USER = 'email_host_user'
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-TEMPLATE_DIRS = ['yaksh/templates',]
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': True,
+        'DIRS': '[yaksh/templates]',
+        'OPTIONS': {
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+            ],
+            'debug': True,
+        }
+    },
+]

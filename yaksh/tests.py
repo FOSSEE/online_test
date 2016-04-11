@@ -1,4 +1,4 @@
-from django.utils import unittest
+import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, TestCase, Course
 import json
