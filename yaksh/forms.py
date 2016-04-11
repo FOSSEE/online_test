@@ -140,7 +140,6 @@ class QuizForm(forms.ModelForm):
         self.fields['course'] = forms.ModelChoiceField(
                 queryset=Course.objects.filter(creator=user))
 
-
     class Meta:
         model = Quiz
         fields = '__all__'
@@ -188,26 +187,27 @@ class CourseForm(forms.ModelForm):
         model = Course
         fields = ['name', 'active', 'enrollment']
 
-class EditProfile(forms.Form):
+class EditProfile(forms.ModelForm):
     """ edit profile form for students and moderators """
+
+    class Meta:
+        model = Profile
+        fields = ['first_name', 'last_name', 'institute', 'department', 'roll_number', 'position']
 
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
-    institute = forms.CharField\
-                 (max_length=128)
-    department = forms.CharField\
-                 (max_length=64)
-    roll_number = forms.CharField\
-                 (max_length=30)
-    position = forms.CharField\
-         (max_length=64)
- 
-    def save(self, user):
-        user.first_name = self.cleaned_data['first_name']
-        user.last_name = self.cleaned_data['last_name']
-        user.profile.department = self.cleaned_data['department']
-        user.profile.institute = self.cleaned_data['institute']
-        user.profile.roll_number = self.cleaned_data['roll_number']
-        user.profile.position = self.cleaned_data['position']
-        user.save()
-        user.profile.save()
+
+    def __init__(self, user, *args, **kwargs):
+        initial = ''
+        if 'instance' in kwargs:
+            initial = kwargs["instance"]
+        if 'user' in kwargs:
+            user = kwargs["user"]
+            del kwargs["user"]
+        super(EditProfile, self).__init__(*args, **kwargs)
+        self.fields['first_name'].initial = user.first_name
+        self.fields['last_name'].initial = user.last_name
+        self.fields['roll_number'].initial = user.profile.roll_number
+        self.fields['department'].initial = user.profile.department
+        self.fields['institute'].initial = user.profile.institute
+        self.fields['position'].initial = user.profile.position

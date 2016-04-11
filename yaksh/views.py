@@ -626,6 +626,9 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
         else:
             enroll_users = User.objects.filter(id__in=enroll_ids)
             course.enroll(was_rejected, *enroll_users)
+    elif user_id is None:
+        return my_render_to_response('yaksh/course_detail.html', {'course': course},
+                                            context_instance=ci)
     else:
         user = get_object_or_404(User, pk=user_id)
         course.enroll(was_rejected, user)
@@ -635,6 +638,7 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
 @login_required
 def reject(request, course_id, user_id=None, was_enrolled=False):
     user = request.user
+    ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     course = get_object_or_404(Course, creator=user, pk=course_id)
@@ -646,6 +650,9 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
         else:
             reject_users = User.objects.filter(id__in=reject_ids)
             course.reject(was_enrolled, *reject_users)
+    elif user_id is None:
+        return my_render_to_response('yaksh/course_detail.html', {'course': course},
+                                            context_instance=ci)
     else:
         user = get_object_or_404(User, pk=user_id)
         course.reject(was_enrolled, user)
@@ -981,12 +988,8 @@ def view_profile(request):
     """ view moderators and users profile """
 
     user = request.user
-    ci = RequestContext(request)
-    if not user.is_authenticated():
-        raise Http404('You are not allowed to view this page!')
-    else:
-        return my_render_to_response('yaksh/view_profile.html',
-                                    context_instance=ci)
+    #ci = RequestContext(request)
+    return my_render_to_response('yaksh/view_profile.html', {'user':user})
 
 @login_required
 def edit_profile(request):
@@ -995,14 +998,20 @@ def edit_profile(request):
     context = {}
     user = request.user
     ci = RequestContext(request)
-    data = {}
-    if not user.is_authenticated():
-        raise Http404('You are not allowed to view this page!')
+    profile = Profile.objects.get(user_id=user.id)
     if request.method == 'POST':
-        form = EditProfile(request.POST)
+        form = EditProfile(user, request.POST)
         if form.is_valid():
-            data = form.cleaned_data
-            form.save(user)
+            user.first_name = request.POST['first_name']
+            user.last_name = request.POST['last_name']
+            profile.department = request.POST['department']
+            profile.institute = request.POST['institute']
+            profile.roll_number = request.POST['roll_number']
+            profile.position = request.POST['position']
+            user.save()
+            form_data = form.save(commit=False)
+            form_data.user_id = user.id
+            profile.save()
             return my_render_to_response('yaksh/profile_updated.html',
                                         context_instance=ci)
         else:
@@ -1010,13 +1019,7 @@ def edit_profile(request):
             return my_render_to_response('yaksh/editprofile.html', context,
                                         context_instance=ci)
     else:
-        data['first_name'] = user.first_name
-        data['last_name'] = user.last_name
-        data['institute'] = user.profile.institute
-        data['department'] = user.profile.department
-        data['roll_number'] = user.profile.roll_number
-        data['position'] = user.profile.position
-        form = EditProfile(initial=data)
+        form = EditProfile(user=user)
         context['form'] = form
         return my_render_to_response('yaksh/editprofile.html', context,
                                     context_instance=ci)

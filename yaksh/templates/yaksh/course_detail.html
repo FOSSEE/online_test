@@ -24,7 +24,8 @@
         <div class="well">
             <div class="row">
                 <div class="span3" style="padding-top:10px">
-                    <input type="checkbox" name="check" value="{{ request.id }}">&nbsp;<a href="#" data-toggle="tooltip" title=" Full Name: {{ request.get_full_name }}&#013;Institute: {{ request.profile.institute }}&#013;Department: {{ request.profile.department}}&#013;Roll Number: {{ request.profile.roll_number }}">&nbsp;{{ request.username }}</a>
+                    <input type="checkbox" name="check" value="{{ request.id }}">&nbsp;
+                    <a href="#" data-toggle="tooltip" title=" Full Name: {{ request.get_full_name }}&#013;Institute: {{ request.profile.institute }}&#013;Department: {{ request.profile.department}}&#013;Roll Number: {{ request.profile.roll_number }}">&nbsp;{{ request.username }}</a>
                 </div>
                 <a class="btn success" href="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/{{ request.id }}/"> Enroll </a>  <a class="btn danger" href="{{URL_ROOT}}/exam/manage/reject/{{ course.id }}/{{ request.id }}/"> Reject </a>
             </div>
@@ -46,7 +47,8 @@
         <div class="well">
             <div class="row">
                 <div class="span4" style="padding-top:10px">
-                <input type="checkbox" name="check" value="{{ rejected.id }}">&nbsp;{{ rejected.username }}
+                <input type="checkbox" name="check" value="{{ rejected.id }}">&nbsp;
+                <a href="#" data-toggle="tooltip" title=" Full Name: {{ rejected.get_full_name }}&#013;Institute: {{ rejected.profile.institute }}&#013;Department: {{ rejected.profile.department}}&#013;Roll Number: {{ rejected.profile.roll_number }}">&nbsp;{{ rejected.username }}</a>
                 </div>
                 <a class="btn success" href="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/{{ rejected.id }}/"> Enroll </a>
             </div>
@@ -71,7 +73,8 @@
         <div class="well">
             <div class="row">
                 <div class="span4" style="padding-top:10px">
-                <input type="checkbox" name="check" value="{{ enrolled.id }}">&nbsp;{{ enrolled.username }}
+                <input type="checkbox" name="check" value="{{ enrolled.id }}">&nbsp;
+                <a href="#" data-toggle="tooltip" title=" Full Name: {{ enrolled.get_full_name }}&#013;Institute: {{ enrolled.profile.institute }}&#013;Department: {{ enrolled.profile.department}}&#013;Roll Number: {{ enrolled.profile.roll_number }}">&nbsp;{{ enrolled.username }}</a>
                 </div>
                 <a class="btn danger" href="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/{{ enrolled.id }}/"> Reject </a>
             </div>
