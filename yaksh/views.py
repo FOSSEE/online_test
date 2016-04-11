@@ -988,7 +988,6 @@ def view_profile(request):
     """ view moderators and users profile """
 
     user = request.user
-    #ci = RequestContext(request)
     return my_render_to_response('yaksh/view_profile.html', {'user':user})
 
 @login_required
