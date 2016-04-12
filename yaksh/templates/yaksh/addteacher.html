@@ -21,7 +21,7 @@
 <form action="{{ URL_ROOT }}/exam/manage/addteacher/{{ course.id }}/" method="post">
 {% csrf_token %}
 {% if success == True %}
-	{% if teachers|length == 1 or teachers|length == 0 %}
+	{% if teachers|length == 0 %}
 		<center><h3>No results found</h3></center>
 	{% else %}
 		<center><b><u>Search Results</u></b></center><br>
@@ -34,7 +34,6 @@
 			<th>Department</th>
             <th>Position</th>
 			{% for teacher in teachers %}
-			    {% if teacher != user %}
 				<tr>
 				<td><input type="checkbox" name="check" value="{{ teacher.id }}"></td>
 				<td>{{ teacher.first_name }}</td>
@@ -44,7 +43,6 @@
 				<td>{{ teacher.profile.department }}</td>
 				<td>{{ teacher.profile.position }}</td>
 				</tr>
-				{% endif %}
 			{% endfor %}
 		</table>
 		<button class="btn" type="submit">Add</button>
