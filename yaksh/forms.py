@@ -198,16 +198,6 @@ class EditProfile(forms.ModelForm):
     last_name = forms.CharField(max_length=30)
 
     def __init__(self, user, *args, **kwargs):
-        initial = ''
-        if 'instance' in kwargs:
-            initial = kwargs["instance"]
-        if 'user' in kwargs:
-            user = kwargs["user"]
-            del kwargs["user"]
         super(EditProfile, self).__init__(*args, **kwargs)
         self.fields['first_name'].initial = user.first_name
         self.fields['last_name'].initial = user.last_name
-        self.fields['roll_number'].initial = user.profile.roll_number
-        self.fields['department'].initial = user.profile.department
-        self.fields['institute'].initial = user.profile.institute
-        self.fields['position'].initial = user.profile.position

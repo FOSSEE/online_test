@@ -620,10 +620,7 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
     course = get_object_or_404(Course, creator=user, pk=course_id)
     if request.method == 'POST':
         enroll_ids = request.POST.getlist('check')
-        if enroll_ids is None:
-            return my_render_to_response('yaksh/course_detail.html', {'course': course},
-                                        context_instance=ci)
-        else:
+        if enroll_ids is not None:
             enroll_users = User.objects.filter(id__in=enroll_ids)
             course.enroll(was_rejected, *enroll_users)
     elif user_id is None:
@@ -644,10 +641,7 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
     course = get_object_or_404(Course, creator=user, pk=course_id)
     if request.method == 'POST':
         reject_ids = request.POST.getlist('check')
-        if reject_ids is None:
-            return my_render_to_response('yaksh/course_detail.html', {'course': course},
-                                        context_instance=ci)
-        else:
+        if reject_ids is not None:
             reject_users = User.objects.filter(id__in=reject_ids)
             course.reject(was_enrolled, *reject_users)
     elif user_id is None:
@@ -999,18 +993,13 @@ def edit_profile(request):
     ci = RequestContext(request)
     profile = Profile.objects.get(user_id=user.id)
     if request.method == 'POST':
-        form = EditProfile(user, request.POST)
+        form = EditProfile(user, request.POST, instance=profile)
         if form.is_valid():
-            user.first_name = request.POST['first_name']
-            user.last_name = request.POST['last_name']
-            profile.department = request.POST['department']
-            profile.institute = request.POST['institute']
-            profile.roll_number = request.POST['roll_number']
-            profile.position = request.POST['position']
-            user.save()
             form_data = form.save(commit=False)
-            form_data.user_id = user.id
-            profile.save()
+            form_data.user.first_name = request.POST['first_name']
+            form_data.user.last_name = request.POST['last_name']
+            form_data.user.save()
+            form_data.save()
             return my_render_to_response('yaksh/profile_updated.html',
                                         context_instance=ci)
         else:
@@ -1018,7 +1007,7 @@ def edit_profile(request):
             return my_render_to_response('yaksh/editprofile.html', context,
                                         context_instance=ci)
     else:
-        form = EditProfile(user=user)
+        form = EditProfile(user, instance=profile)
         context['form'] = form
         return my_render_to_response('yaksh/editprofile.html', context,
                                     context_instance=ci)
