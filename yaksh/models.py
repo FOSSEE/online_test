@@ -70,7 +70,7 @@ class Course(models.Model):
     students = models.ManyToManyField(User, related_name='students')
     requests = models.ManyToManyField(User, related_name='requests')
     rejected = models.ManyToManyField(User, related_name='rejected')
-    created_on = models.DateTimeField(default=datetime.now())
+    created_on = models.DateTimeField(auto_now_add=True)
 
     def request(self, *users):
         self.requests.add(*users)

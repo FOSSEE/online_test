@@ -23,9 +23,9 @@ setup(
     description='A django app to conduct online tests.',
     long_description=README,
     install_requires=[
-        'django==1.6',
+        'django==1.9.5',
         'mysql-python==1.2.5',
-        'django-taggit==0.12.2',
+        'django-taggit==0.18.1',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

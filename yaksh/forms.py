@@ -136,12 +136,14 @@ class QuizForm(forms.ModelForm):
         super(QuizForm, self).__init__(*args, **kwargs)
         self.fields['prerequisite'] = forms.ModelChoiceField(
                 queryset=Quiz.objects.filter(course__creator=user))
+        self.fields['prerequisite'].required = False
         self.fields['course'] = forms.ModelChoiceField(
                 queryset=Course.objects.filter(creator=user))
 
 
     class Meta:
         model = Quiz
+        fields = '__all__'
 
 
 class QuestionForm(forms.ModelForm):
@@ -150,6 +152,7 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
+        fields = '__all__'
 
 
 class RandomQuestionForm(forms.Form):
@@ -176,7 +179,7 @@ class QuestionFilterForm(forms.Form):
                                     (choices=question_types))
 
 
-TestCaseFormSet = inlineformset_factory(Question, TestCase,\
+TestCaseFormSet = inlineformset_factory(Question, TestCase, fields='__all__',
                         can_order=False, can_delete=False, extra=1)
 
 

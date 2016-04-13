@@ -359,9 +359,7 @@ def start(request, questionpaper_id=None, attempt_num=None):
                                      context_instance=ci)
     else:
         ip = request.META['REMOTE_ADDR']
-        try:
-            profile = user.get_profile()
-        except Profile.DoesNotExist:
+        if not hasattr(user, 'profile'):
             msg = 'You do not have a profile and cannot take the quiz!'
             raise Http404(msg)
         new_paper = quest_paper.make_answerpaper(user, ip, attempt_num)
@@ -724,11 +722,7 @@ def get_user_data(username, questionpaper_id=None):
                 '-attempt_number')
 
     data = {}
-    try:
-        profile = user.get_profile()
-    except Profile.DoesNotExist:
-        # Admin user may have a paper by accident but no profile.
-        profile = None
+    profile = user.profile if hasattr(user, 'profile') else None
     data['user'] = user
     data['profile'] = profile
     data['papers'] = papers
