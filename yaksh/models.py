@@ -173,6 +173,9 @@ class Question(models.Model):
     # Tags for the Question.
     tags = TaggableManager(blank=True)
 
+    # user for particular question
+    user = models.ForeignKey(User, related_name="user")
+
     def consolidate_answer_data(self, test_cases, user_answer):
         test_case_data_dict = []
         question_info_dict = {}

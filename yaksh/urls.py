@@ -74,6 +74,7 @@ urlpatterns += [
         views.enroll, {'was_rejected': True}),
     url(r'manage/reject/(?P<course_id>\d+)/(?P<user_id>\d+)/$', views.reject),
     url(r'manage/enrolled/reject/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
+
         views.reject, {'was_enrolled': True}),
     url(r'manage/toggle_status/(?P<course_id>\d+)/$', views.toggle_course_status),
     url(r'^ajax/questionpaper/(?P<query>.+)/$', views.ajax_questionpaper),
@@ -89,4 +90,8 @@ urlpatterns += [
     url(r'^manage/addteacher/(?P<course_id>\d+)/$', views.add_teacher),
     url(r'^manage/allotted_course/$', views.allotted_courses),
     url(r'^manage/remove_teachers/(?P<course_id>\d+)/$', views.remove_teachers)
+    url(r'^manage/download_questions/$', views.download_questions),
+    url(r'^manage/upload_questions/$', views.upload_questions)
 ]
+
+    

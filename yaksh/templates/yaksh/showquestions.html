@@ -10,6 +10,18 @@
 {% endblock %}
 
 {% block manage %}
+
+{% if questions %}
+<a href="{{URL_ROOT}}/exam/manage/download_questions/">Download Questions</a><br>
+{% endif %}
+
+<h4>Upload csv file for adding questions</h4>
+<form action="{{URL_ROOT}}/exam/manage/upload_questions/" method="post"  enctype="multipart/form-data">
+{% csrf_token %}
+{{ upload_form.as_p }}
+<button class="btn" type="submit">Upload File</button>
+</form>
+
 <form name=frm action="" method="post">
 {% csrf_token %}
 <div class="row" id="selectors">
@@ -31,6 +43,7 @@
 </div>
 </div>
 <br>
+
 <div id="filtered-questions">
 {% for i in questions %}
 <input type="checkbox" name="question" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{ i }}</a><br>

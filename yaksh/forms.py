@@ -152,7 +152,7 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
-        fields = '__all__'
+        exclude = ['user']
 
 
 class RandomQuestionForm(forms.Form):
@@ -165,8 +165,9 @@ class RandomQuestionForm(forms.Form):
 
 class QuestionFilterForm(forms.Form):
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user")
         super(QuestionFilterForm, self).__init__(*args, **kwargs)
-        questions = Question.objects.all()
+        questions = Question.objects.filter(user_id=user)
         points_list = questions.values_list('points', flat=True).distinct()
         points_options = [('select', 'Select Marks')]
         points_options.extend([(point, point) for point in points_list])
@@ -188,6 +189,7 @@ class CourseForm(forms.ModelForm):
         model = Course
         fields = ['name', 'active', 'enrollment']
 
+
 class ProfileForm(forms.ModelForm):
     """ profile form for students and moderators """
 
@@ -205,3 +207,8 @@ class ProfileForm(forms.ModelForm):
         super(ProfileForm, self).__init__(*args, **kwargs)
         self.fields['first_name'].initial = user.first_name
         self.fields['last_name'].initial = user.last_name
+
+
+class UploadFileForm(forms.Form):
+    file = forms.FileField()
+

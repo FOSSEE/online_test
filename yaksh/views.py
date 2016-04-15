@@ -23,7 +23,7 @@ from yaksh.models import Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm, TestCaseFormSet,\
-                QuestionFilterForm, CourseForm, ProfileForm
+                QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
@@ -166,6 +166,8 @@ def add_question(request, question_id=None):
                 test_case_formset = add_or_delete_test_form(request.POST, form.save(commit=False))
                 if 'save_question' in request.POST:
                     qtn = form.save(commit=False)
+                    qtn.user = user
+                    qtn.save()
                     test_case_formset = TestCaseFormSet(request.POST, prefix='test',  instance=qtn)
                     form.save()
                     question = Question.objects.order_by("-id")[0]
@@ -780,6 +782,7 @@ def show_all_users(request):
 def ajax_questions_filter(request):
     """Ajax call made when filtering displayed questions."""
 
+    user = request.user
     filter_dict = {}
     question_type = request.POST.get('question_type')
     marks = request.POST.get('marks')
@@ -794,7 +797,7 @@ def ajax_questions_filter(request):
     if language != "select":
         filter_dict['language'] = str(language)
 
-    questions = list(Question.objects.filter(**filter_dict))
+    questions = list(Question.objects.filter(**filter_dict).filter(user_id=user.id))
 
     return my_render_to_response('yaksh/ajax_question_filter.html',
                                   {'questions': questions})
@@ -814,12 +817,14 @@ def show_all_questions(request):
         if data is not None:
             for i in data:
                 question = Question.objects.get(id=i).delete()
-    questions = Question.objects.all()
-    form = QuestionFilterForm()
+    questions = Question.objects.filter(user_id=user.id)
+    form = QuestionFilterForm(user=user)
+    upload_form = UploadFileForm()
     context = {'papers': [],
                'question': None,
                'questions': questions,
-               'form': form
+               'form': form,
+               'upload_form': upload_form
                }
     return my_render_to_response('yaksh/showquestions.html', context,
                                  context_instance=ci)
@@ -944,9 +949,11 @@ def ajax_questionpaper(request, query):
     """
         During question paper creation, ajax call made to get question details.
     """
+
+    user = request.user
     if query == 'marks':
         question_type = request.POST.get('question_type')
-        questions = Question.objects.filter(type=question_type)
+        questions = Question.objects.filter(type=question_type, user=user)
         marks = questions.values_list('points').distinct()
         return my_render_to_response('yaksh/ajax_marks.html', {'marks': marks})
     elif query == 'questions':
@@ -958,7 +965,7 @@ def ajax_questionpaper(request, query):
         random_question_list = ",".join(random_questions).split(',')
         question_list = fixed_question_list + random_question_list
         questions = list(Question.objects.filter(type=question_type,
-                                            points=marks_selected))
+                                            points=marks_selected, user=user))
         questions = [question for question in questions \
                 if not str(question.id) in question_list]
         return my_render_to_response('yaksh/ajax_questions.html',
@@ -1151,3 +1158,72 @@ def remove_teachers(request, course_id):
         teachers = User.objects.filter(id__in=teacher_ids)
         course.remove_teachers(*teachers)
     return my_redirect('/exam/manage/courses')
+
+
+@login_required
+def download_questions(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    questions = Question.objects.filter(user_id = user.id)
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="{0}_Questions.csv"'.format(user)
+    writer = csv.writer(response)
+    header = [
+                'summary',
+                'description',
+                'points',
+                'test',
+                'ref_code_path',
+                'options',
+                'language',
+                'type',
+                'active',
+                'snippet'
+    ]
+    writer.writerow(header)
+    for que in questions:
+        row = [
+                que.summary,
+                que.description,
+                que.points,
+                que.test,
+                que.ref_code_path,
+                que.options,
+                que.language,
+                que.type,
+                que.active,
+                que.snippet
+        ]
+        writer.writerow(row)
+    return response
+
+
+@login_required
+def upload_questions(request):
+    user = request.user
+    ci = RequestContext(request)
+
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            csvfile = request.FILES['file']
+            if csvfile.name.split('.')[1] == "csv":
+                reader = csv.DictReader(csvfile, delimiter=',')
+                for row in reader:
+                    Question.objects.get_or_create(summary=row['summary'],
+                        description=row['description'], points=row['points'],
+                        test=row['test'], ref_code_path=row['ref_code_path'],
+                        options=row['options'], language=row['language'],
+                        type=row['type'], active=row['active'],
+                        snippet=row['snippet'], user=user)
+                return my_redirect('/exam/manage/questions')
+            else:
+                raise Http404('Please Upload a csv file')
+        else:
+            return my_redirect('/exam/manage/questions')
+    else:
+        return my_redirect('/exam/manage/questions')
