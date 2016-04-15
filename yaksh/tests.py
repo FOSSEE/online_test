@@ -27,7 +27,7 @@ def setUpModule():
 
     # create 20 questions
     for i in range(1, 21):
-        Question.objects.create(summary='Q%d' % (i), points=1, type='code')
+        Question.objects.create(summary='Q%d' % (i), points=1, type='code', user=user)
 
     # create a quiz
     quiz = Quiz.objects.create(start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
@@ -72,10 +72,11 @@ class ProfileTestCases(unittest.TestCase):
 class QuestionTestCases(unittest.TestCase):
     def setUp(self):
         # Single question details
+        self.user = User.objects.get(pk=1)
         self.question = Question(summary='Demo question', language='Python',
                                  type='Code', active=True,
                                  description='Write a function', points=1.0,
-                                 snippet='def myfunc()')
+                                 snippet='def myfunc()', user=self.user)
         self.question.save()
         self.question.tags.add('python', 'function')
         self.testcase = TestCase(question=self.question,
@@ -121,10 +122,11 @@ class QuestionTestCases(unittest.TestCase):
 ###############################################################################
 class TestCaseTestCases(unittest.TestCase):
     def setUp(self):
+        self.user = User.objects.get(pk=1)
         self.question = Question(summary='Demo question', language='Python',
                                  type='Code', active=True,
                                  description='Write a function', points=1.0,
-                                 snippet='def myfunc()')
+                                 snippet='def myfunc()', user=self.user)
         self.question.save()
         self.testcase = TestCase(question=self.question,
                                  func_name='def myfunc', kw_args='a=10,b=11',

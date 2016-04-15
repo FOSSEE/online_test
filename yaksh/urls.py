@@ -74,7 +74,6 @@ urlpatterns += [
         views.enroll, {'was_rejected': True}),
     url(r'manage/reject/(?P<course_id>\d+)/(?P<user_id>\d+)/$', views.reject),
     url(r'manage/enrolled/reject/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
-
         views.reject, {'was_enrolled': True}),
     url(r'manage/toggle_status/(?P<course_id>\d+)/$', views.toggle_course_status),
     url(r'^ajax/questionpaper/(?P<query>.+)/$', views.ajax_questionpaper),
