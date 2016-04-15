@@ -167,7 +167,7 @@ class QuestionFilterForm(forms.Form):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user")
         super(QuestionFilterForm, self).__init__(*args, **kwargs)
-        questions = Question.objects.filter(user_id=user)
+        questions = Question.objects.filter(user_id=user.id)
         points_list = questions.values_list('points', flat=True).distinct()
         points_options = [('select', 'Select Marks')]
         points_options.extend([(point, point) for point in points_list])

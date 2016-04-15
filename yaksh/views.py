@@ -186,14 +186,16 @@ def add_question(request, question_id=None):
                                              'formset': test_case_formset},
                                              context_instance=ci)
             else:
-                d = Question.objects.get(id=question_id)
+                d = Question.objects.get(id=question_id, user_id=user.id)
                 form = QuestionForm(request.POST, instance=d)
                 test_case_formset = add_or_delete_test_form(request.POST, d)
                 if 'save_question' in request.POST:
                     qtn = form.save(commit=False)
+                    qtn.user = user
+                    qtn.save()
                     test_case_formset = TestCaseFormSet(request.POST, prefix='test',  instance=qtn)
                     form.save()
-                    question = Question.objects.get(id=question_id)
+                    question = Question.objects.get(id=question_id, user_id=user.id)
                     if test_case_formset.is_valid():
                         test_case_formset.save()
                     return my_redirect("/exam/manage/questions")
@@ -217,7 +219,7 @@ def add_question(request, question_id=None):
                                          'formset': test_case_formset},
                                          context_instance=ci)
         else:
-            d = Question.objects.get(id=question_id)
+            d = Question.objects.get(id=question_id, user_id=user.id)
             form = QuestionForm(instance=d)
             test_case_formset = TestCaseFormSet(prefix='test', instance=d)
 
@@ -816,7 +818,7 @@ def show_all_questions(request):
         data = request.POST.getlist('question')
         if data is not None:
             for i in data:
-                question = Question.objects.get(id=i).delete()
+                question = Question.objects.get(id=i, user_id=user.id).delete()
     questions = Question.objects.filter(user_id=user.id)
     form = QuestionFilterForm(user=user)
     upload_form = UploadFileForm()
@@ -1002,7 +1004,7 @@ def design_questionpaper(request):
         if random_questions:
             for random_question, num in zip(random_questions, random_number):
                 qid = random_question.split(',')[0]
-                question = Question.objects.get(id=int(qid))
+                question = Question.objects.get(id=int(qid), user_id=user.id)
                 marks = question.points
                 question_set = QuestionSet(marks=marks, num_questions=num)
                 question_set.save()
@@ -1206,7 +1208,6 @@ def upload_questions(request):
 
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
