@@ -991,11 +991,19 @@ def edit_profile(request):
     context = {}
     user = request.user
     ci = RequestContext(request)
-    profile = Profile.objects.get(user_id=user.id)
+
+    if not hasattr(user, 'profile'):
+        new_form = EditProfile(request.POST, user=user)
+        form = EditProfile(user=user)
+    else:
+        profile = Profile.objects.get(user_id=user.id)
+        new_form = EditProfile(request.POST, user=user, instance=profile)
+        form = EditProfile(user=user, instance=profile)
+
     if request.method == 'POST':
-        form = EditProfile(user, request.POST, instance=profile)
-        if form.is_valid():
-            form_data = form.save(commit=False)
+        if new_form.is_valid():
+            form_data = new_form.save(commit=False)
+            form_data.user = user
             form_data.user.first_name = request.POST['first_name']
             form_data.user.last_name = request.POST['last_name']
             form_data.user.save()
@@ -1003,11 +1011,10 @@ def edit_profile(request):
             return my_render_to_response('yaksh/profile_updated.html',
                                         context_instance=ci)
         else:
-            context['form'] = form
+            context['form'] = new_form
             return my_render_to_response('yaksh/editprofile.html', context,
                                         context_instance=ci)
     else:
-        form = EditProfile(user, instance=profile)
         context['form'] = form
         return my_render_to_response('yaksh/editprofile.html', context,
                                     context_instance=ci)

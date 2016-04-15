@@ -12,7 +12,7 @@ urlpatterns = [
         name='password_reset_done'),
     url(r'^password_reset/complete/$', password_reset_complete,
         name='password_reset_complete'),
-    url(r'^password_change/$', password_change,
+    url(r'^changepassword/$', password_change,
         name='password_change'),
     url(r'^password_change/done/$', password_change_done,
         name='password_change_done'),
@@ -80,5 +80,9 @@ urlpatterns += [
     url(r'^ajax/questions/filter/$', views.ajax_questions_filter),
     url(r'^manage/editprofile/$', views.edit_profile),
     url(r'^manage/viewprofile/$', views.view_profile),
-    url(r'^manage/enroll/(?P<course_id>\d+)', views.enroll)
+    url(r'^manage/enroll/(?P<course_id>\d+)/$', views.enroll),
+    url(r'manage/enroll/rejected/(?P<course_id>\d+)/$',
+        views.enroll, {'was_rejected': True}),
+    url(r'manage/enrolled/reject/(?P<course_id>\d+)/$',
+        views.reject, {'was_enrolled': True})
 ]
