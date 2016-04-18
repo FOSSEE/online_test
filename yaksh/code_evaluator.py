@@ -127,6 +127,7 @@ class CodeEvaluator(object):
             # success, err = self.check_code(*args)
             # success, err = self.check_code(**kwargs) #@@@v2
             for test_case in test_case_data:
+                self.compile_user_answer(user_answer, **test_case)
                 success, err = self.check_code(user_answer, **test_case)
                 if not success:
                     break
@@ -149,14 +150,8 @@ class CodeEvaluator(object):
     def check_code(self):
         raise NotImplementedError("check_code method not implemented")
 
-    # def create_submit_code_file(self, file_name):
-    #     """ Write the code (`answer`) to a file and set the file path"""
-    #     submit_f = open(file_name, 'w')
-    #     submit_f.write(self.user_answer.lstrip())
-    #     submit_f.close()
-    #     submit_path = abspath(submit_f.name)
-
-    #     return submit_path
+    def compile_user_answer(self, user_answer, **kwargs):
+        pass
 
     def create_submit_code_file(self, file_name):
         """ Set the file path for code (`answer`)"""

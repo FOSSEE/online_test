@@ -25,22 +25,31 @@ def redirect_stdout():
 class PythonStdoutEvaluator(CodeEvaluator):
     """Tests the Python code obtained from Code Server"""
 
+    def compile_code(self, user_answer, expected_output):
+        if hasattr(self, 'output_value'):
+            return None
+        else:
+            submitted = compile(user_answer, '<string>', mode='exec')
+            with redirect_stdout() as output_buffer:
+                g = {}
+                exec submitted in g
+            self.output_value = output_buffer.getvalue()
+            return self.output_value
+
     def check_code(self, user_answer, expected_output):
         success = False
 
         tb = None
-        # expected_output = test_case_data[0]
-        submitted = compile(user_answer, '<string>', mode='exec')
-        with redirect_stdout() as output_buffer:
-            g = {}
-            exec submitted in g
-        raw_output_value = output_buffer.getvalue()
-        # output_value = raw_output_value.encode('string_escape').strip()
-        output_value = raw_output_value.strip()
+        # submitted = compile(user_answer, '<string>', mode='exec')
+        # with redirect_stdout() as output_buffer:
+        #     g = {}
+        #     exec submitted in g
+        # raw_output_value = output_buffer.getvalue()
+        # output_value = raw_output_value.strip()
         if expected_output in user_answer:
             success = False
             err = "Incorrect Answer: Please avoid printing the expected output directly"
-        elif output_value == expected_output:
+        elif self.output_value == expected_output:
             success = True
             err = "Correct answer"
 
