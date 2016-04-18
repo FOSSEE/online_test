@@ -6,8 +6,10 @@
 {% block formtitle %} Please fill in the following details {% endblock %}
 
 {% block content %}
-
-<form action="" method="post" >
+{% if msg %}
+<center><h5>Your profile does not exist. Please fill in your details</h5></center>
+{% endif %}
+<form action="{{URL_ROOT}}/exam/editprofile/" method="post" >
   {% csrf_token %}
   <center>
   <table class=span1>
@@ -15,7 +17,7 @@
   </table>
   </center>
   <center><button class="btn" type="submit">Save</button>
-  <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/viewprofile");'>Cancel</button> </center>
+  <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/");'>Cancel</button> </center>
 </form>
 
 {% endblock content %}

@@ -172,7 +172,6 @@ def add_question(request, question_id=None):
                                              {'form': form,
                                              'formset': test_case_formset},
                                              context_instance=ci)
-                
             else:
                 d = Question.objects.get(id=question_id)
                 form = QuestionForm(request.POST, instance=d)
@@ -620,15 +619,13 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
     course = get_object_or_404(Course, creator=user, pk=course_id)
     if request.method == 'POST':
         enroll_ids = request.POST.getlist('check')
-        if enroll_ids is not None:
-            enroll_users = User.objects.filter(id__in=enroll_ids)
-            course.enroll(was_rejected, *enroll_users)
-    elif user_id is None:
+    else:
+        enroll_ids = user_id
+    if not enroll_ids:
         return my_render_to_response('yaksh/course_detail.html', {'course': course},
                                             context_instance=ci)
-    else:
-        user = get_object_or_404(User, pk=user_id)
-        course.enroll(was_rejected, user)
+    users = User.objects.filter(id__in=enroll_ids)
+    course.enroll(was_rejected, *users)
     return course_detail(request, course_id)
 
 
@@ -641,15 +638,13 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
     course = get_object_or_404(Course, creator=user, pk=course_id)
     if request.method == 'POST':
         reject_ids = request.POST.getlist('check')
-        if reject_ids is not None:
-            reject_users = User.objects.filter(id__in=reject_ids)
-            course.reject(was_enrolled, *reject_users)
-    elif user_id is None:
+    else:
+        reject_ids = user_id
+    if not reject_ids:
         return my_render_to_response('yaksh/course_detail.html', {'course': course},
                                             context_instance=ci)
-    else:
-        user = get_object_or_404(User, pk=user_id)
-        course.reject(was_enrolled, user)
+    users = User.objects.filter(id__in=reject_ids)
+    course.reject(was_enrolled, *users)
     return course_detail(request, course_id)
 
 
@@ -982,7 +977,17 @@ def view_profile(request):
     """ view moderators and users profile """
 
     user = request.user
-    return my_render_to_response('yaksh/view_profile.html', {'user':user})
+    ci = RequestContext(request)
+    context = {}
+    if hasattr(user, 'profile'):
+        return my_render_to_response('yaksh/view_profile.html', {'user':user})
+    else:
+        form = EditProfile(user=user)
+        msg = True
+        context['form'] = form
+        context['msg'] = msg
+        return my_render_to_response('yaksh/editprofile.html', context,
+                                    context_instance=ci)
 
 @login_required
 def edit_profile(request):
@@ -992,17 +997,14 @@ def edit_profile(request):
     user = request.user
     ci = RequestContext(request)
 
-    if not hasattr(user, 'profile'):
-        new_form = EditProfile(request.POST, user=user)
-        form = EditProfile(user=user)
-    else:
-        profile = Profile.objects.get(user_id=user.id)
-        new_form = EditProfile(request.POST, user=user, instance=profile)
-        form = EditProfile(user=user, instance=profile)
-
     if request.method == 'POST':
-        if new_form.is_valid():
-            form_data = new_form.save(commit=False)
+        if not hasattr(user, 'profile'):
+            form = EditProfile(request.POST, user=user)
+        else:
+            profile = Profile.objects.get(user_id=user.id)
+            form = EditProfile(request.POST, user=user, instance=profile)
+        if form.is_valid():
+            form_data = form.save(commit=False)
             form_data.user = user
             form_data.user.first_name = request.POST['first_name']
             form_data.user.last_name = request.POST['last_name']
@@ -1011,10 +1013,15 @@ def edit_profile(request):
             return my_render_to_response('yaksh/profile_updated.html',
                                         context_instance=ci)
         else:
-            context['form'] = new_form
+            context['form'] = form
             return my_render_to_response('yaksh/editprofile.html', context,
                                         context_instance=ci)
     else:
+        if not hasattr(user, 'profile'):
+            form = EditProfile(user=user)
+        else:
+            profile = Profile.objects.get(user_id=user.id)
+            form = EditProfile(user=user, instance=profile)
         context['form'] = form
         return my_render_to_response('yaksh/editprofile.html', context,
                                     context_instance=ci)
