@@ -34,19 +34,21 @@ urlpatterns += [
         views.skip),
     url(r'^enroll_request/(?P<course_id>\d+)/$', views.enroll_request),
     url(r'^self_enroll/(?P<course_id>\d+)/$', views.self_enroll),
-
     url(r'^manage/$', views.prof_manage),
     url(r'^manage/addquestion/$', views.add_question),
     url(r'^manage/addquestion/(?P<question_id>\d+)/$', views.add_question),
     url(r'^manage/addquiz/$', views.add_quiz),
     url(r'^manage/addquiz/(?P<quiz_id>\d+)/$', views.add_quiz),
-    url(r'^manage/gradeuser/$', views.show_all_users),
-    url(r'^manage/gradeuser/(?P<username>.*)/(?P<questionpaper_id>\d+)/$',
-        views.grade_user),
-    url(r'^manage/gradeuser/(?P<username>.*)/$', views.grade_user),
+
+    url(r'^manage/gradeuser/$', views.grade_user),
+    url(r'^manage/gradeuser/(?P<quiz_id>\d+)/$',views.grade_user),
+    url(r'^manage/gradeuser/(?P<quiz_id>\d+)/(?P<user_id>\d+)/$',views.grade_user),
+    url(r'^manage/gradeuser/(?P<quiz_id>\d+)/(?P<user_id>\d+)/(?P<attempt_number>\d+)/$',views.grade_user),
+
     url(r'^manage/questions/$', views.show_all_questions),
     url(r'^manage/monitor/$', views.monitor),
     url(r'^manage/showquestionpapers/$', views.show_all_questionpapers),
+
     url(r'^manage/showquestionpapers/(?P<questionpaper_id>\d+)/$',\
                                                     views.show_all_questionpapers),
     url(r'^manage/monitor/(?P<questionpaper_id>\d+)/$', views.monitor),
