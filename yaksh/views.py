@@ -26,7 +26,6 @@ from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
-from django.db.models import Q
 
 # The directory where user data can be saved.
 OUTPUT_DIR = abspath(join(dirname(__file__), 'output'))
@@ -975,24 +974,3 @@ def design_questionpaper(request):
         context = {'form': form, 'questionpaper':True}
         return my_render_to_response('yaksh/design_questionpaper.html',
                                      context, context_instance=ci)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
