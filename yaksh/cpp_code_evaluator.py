@@ -19,7 +19,7 @@ class CppCodeEvaluator(CodeEvaluator):
     def teardown(self):
         super(CppCodeEvaluator, self).teardown()
         # Delete the created file.
-        os.remove(self.submit_code_path) 
+        os.remove(self.submit_code_path)
 
     def set_file_paths(self):
         user_output_path = os.getcwd() + '/output'
@@ -35,6 +35,24 @@ class CppCodeEvaluator(CodeEvaluator):
                                                 user_output_path,
                                                 ref_output_path)
         return compile_command, compile_main
+
+    def compile_code(self,  user_answer, test_case):
+        if hasattr(self, 'compiled_output'):
+            return None
+        else:
+            ref_code_path = test_case
+            clean_ref_code_path, clean_test_case_path = self._set_test_code_file_path(ref_code_path)
+
+            if not isfile(clean_ref_code_path):
+                return False, "No file at %s or Incorrect path" % clean_ref_code_path
+            if not isfile(self.submit_code_path):
+                return False, 'No file at %s or Incorrect path' % self.submit_code_path
+
+            self.write_to_submit_code_file(self.submit_code_path, user_answer)
+            self.user_output_path, self.ref_output_path = self.set_file_paths()
+            self.compile_command, self.compile_main = self.get_commands(clean_ref_code_path, self.user_output_path, self.ref_output_path)
+            self.compiled_output = self._compile_command(self.compile_command)
+            return self.compiled_output
 
     def check_code(self, user_answer, test_case):
             """ Function validates student code using instructor code as
@@ -56,31 +74,36 @@ class CppCodeEvaluator(CodeEvaluator):
             if the required permissions are not given to the file(s).
 
             """
-            ref_code_path = test_case
-            clean_ref_code_path, clean_test_case_path = self._set_test_code_file_path(ref_code_path)
+            # ref_code_path = test_case
+            # clean_ref_code_path, clean_test_case_path = self._set_test_code_file_path(ref_code_path)
 
-            if not isfile(clean_ref_code_path):
-                return False, "No file at %s or Incorrect path" % clean_ref_code_path
-            if not isfile(self.submit_code_path):
-                return False, 'No file at %s or Incorrect path' % self.submit_code_path
+            # if not isfile(clean_ref_code_path):
+            #     return False, "No file at %s or Incorrect path" % clean_ref_code_path
+            # if not isfile(self.submit_code_path):
+            #     return False, 'No file at %s or Incorrect path' % self.submit_code_path
+
+            # success = False
+            # self.write_to_submit_code_file(self.submit_code_path, user_answer)
+            # user_output_path, ref_output_path = self.set_file_paths()
+            # compile_command, compile_main = self.get_commands(clean_ref_code_path, user_output_path, ref_output_path)
+            # ret = self._compile_command(compile_command)
+            # proc, stdnt_stderr = ret
+            # stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
 
             success = False
-            self.write_to_submit_code_file(self.submit_code_path, user_answer)
-            user_output_path, ref_output_path = self.set_file_paths()
-            compile_command, compile_main = self.get_commands(clean_ref_code_path, user_output_path, ref_output_path)
-            ret = self._compile_command(compile_command)
-            proc, stdnt_stderr = ret
+            proc, stdnt_stderr = self.compiled_output
             stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
+
 
             # Only if compilation is successful, the program is executed
             # And tested with testcases
             if stdnt_stderr == '':
-                ret = self._compile_command(compile_main)
+                ret = self._compile_command(self.compile_main)
                 proc, main_err = ret
                 main_err = self._remove_null_substitute_char(main_err)
 
                 if main_err == '':
-                    ret = self._run_command([ref_output_path], stdin=None,
+                    ret = self._run_command([self.ref_output_path], stdin=None,
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE)
                     proc, stdout, stderr = ret
@@ -88,7 +111,7 @@ class CppCodeEvaluator(CodeEvaluator):
                         success, err = True, "Correct answer"
                     else:
                         err = stdout + "\n" + stderr
-                    os.remove(ref_output_path)
+                    os.remove(self.ref_output_path)
                 else:
                     err = "Error:"
                     try:
@@ -100,7 +123,7 @@ class CppCodeEvaluator(CodeEvaluator):
                                 err = err + "\n" + e
                     except:
                             err = err + "\n" + main_err
-                os.remove(user_output_path)
+                os.remove(self.user_output_path)
             else:
                 err = "Compilation Error:"
                 try:
