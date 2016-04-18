@@ -713,13 +713,13 @@ def monitor(request, questionpaper_id=None):
                                  context_instance=ci)
 
 
-def get_user_data( username = None, questionpaper_id=None, attempt_number = None):
-    """For a given user id, this returns a dictionary of important data
+def get_user_data(username, questionpaper_id=None, attempt_number = None):
+    """For a given username, this returns a dictionary of important data
     related to the user including all the user's answers submitted.
     """
-    user = User.objects.get(username = username)
+    user = User.objects.get(username=username)
     papers = AnswerPaper.objects.filter(user=user)
-    if questionpaper_id is not None and attempt_number is not None:
+    if questionpaper_id and attempt_number is not None:
         papers = papers.filter(question_paper_id=questionpaper_id, attempt_number = attempt_number).order_by(
                 '-attempt_number')
     if attempt_number == None:
@@ -799,11 +799,9 @@ def show_all_questions(request):
 @login_required
 def user_data(request, username, questionpaper_id=None):
     """Render user data."""
-
     current_user = request.user
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
-    
     data = get_user_data(username, questionpaper_id)
 
     context = {'data': data}
