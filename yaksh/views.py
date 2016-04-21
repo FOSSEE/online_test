@@ -65,6 +65,12 @@ def is_moderator(user):
     if user.groups.filter(name='moderator').count() == 1:
         return True
 
+def has_profile(user):
+    """ check if user is having profile """
+    if hasattr(user, 'profile'):
+        return True
+    else:
+        return False
 
 def index(request):
     """The start page.
@@ -979,7 +985,7 @@ def view_profile(request):
     user = request.user
     ci = RequestContext(request)
     context = {}
-    if hasattr(user, 'profile'):
+    if has_profile(user):
         return my_render_to_response('yaksh/view_profile.html', {'user':user})
     else:
         form = EditProfile(user=user)
@@ -997,12 +1003,13 @@ def edit_profile(request):
     user = request.user
     ci = RequestContext(request)
 
+    if has_profile(user):
+        profile = Profile.objects.get(user_id=user.id)
+    else:
+        profile = None
+
     if request.method == 'POST':
-        if not hasattr(user, 'profile'):
-            form = EditProfile(request.POST, user=user)
-        else:
-            profile = Profile.objects.get(user_id=user.id)
-            form = EditProfile(request.POST, user=user, instance=profile)
+        form = EditProfile(request.POST, user=user, instance=profile)
         if form.is_valid():
             form_data = form.save(commit=False)
             form_data.user = user
@@ -1017,11 +1024,7 @@ def edit_profile(request):
             return my_render_to_response('yaksh/editprofile.html', context,
                                         context_instance=ci)
     else:
-        if not hasattr(user, 'profile'):
-            form = EditProfile(user=user)
-        else:
-            profile = Profile.objects.get(user_id=user.id)
-            form = EditProfile(user=user, instance=profile)
+        form = EditProfile(user=user, instance=profile)
         context['form'] = form
         return my_render_to_response('yaksh/editprofile.html', context,
                                     context_instance=ci)
