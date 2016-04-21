@@ -33,52 +33,53 @@ class ScilabCodeEvaluator(CodeEvaluator):
         # Delete the created file.
         os.remove(self.submit_code_path)
 
-    def compile_code(self, user_answer, test_case):
-        if hasattr(self, 'compiled_output'):
-            return None
-        else:
-            ref_code_path = test_case
-            clean_ref_path, clean_test_case_path = self._set_test_code_file_path(ref_code_path)
-            user_answer, terminate_commands = self._remove_scilab_exit(user_answer.lstrip())
+    # def compile_code(self, user_answer, test_case):
+    #     if hasattr(self, 'compiled_output'):
+    #         return None
+    #     else:
+    #         ref_code_path = test_case
+    #         clean_ref_path, clean_test_case_path = self._set_test_code_file_path(ref_code_path)
+    #         user_answer, terminate_commands = self._remove_scilab_exit(user_answer.lstrip())
 
-            self.write_to_submit_code_file(self.submit_code_path, user_answer)
-            # Throw message if there are commmands that terminates scilab
-            self.add_err = ""
-            if terminate_commands:
-                self.add_err = "Please do not use exit, quit and abort commands in your\
-                            code.\n Otherwise your code will not be evaluated\
-                            correctly.\n"
+    #         self.write_to_submit_code_file(self.submit_code_path, user_answer)
+    #         # Throw message if there are commmands that terminates scilab
+    #         self.add_err = ""
+    #         if terminate_commands:
+    #             self.add_err = "Please do not use exit, quit and abort commands in your\
+    #                         code.\n Otherwise your code will not be evaluated\
+    #                         correctly.\n"
 
-            cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(clean_ref_path)
-            cmd += ' | timeout 8 scilab-cli -nb'
-            self.compiled_output = self._run_command(cmd,
-                                    shell=True,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-            return self.compiled_output
+    #         cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(clean_ref_path)
+    #         cmd += ' | timeout 8 scilab-cli -nb'
+    #         self.compiled_output = self._run_command(cmd,
+    #                                 shell=True,
+    #                                 stdout=subprocess.PIPE,
+    #                                 stderr=subprocess.PIPE)
+    #         return self.compiled_output
 
     def check_code(self, user_answer, test_case):
-        # ref_code_path = test_case
-        # clean_ref_path, clean_test_case_path = self._set_test_code_file_path(ref_code_path)
-        # user_answer, terminate_commands = self._remove_scilab_exit(user_answer.lstrip())
+        ref_code_path = test_case
+        clean_ref_path, clean_test_case_path = self._set_test_code_file_path(ref_code_path)
+        user_answer, terminate_commands = self._remove_scilab_exit(user_answer.lstrip())
 
-        # success = False
-        # self.write_to_submit_code_file(self.submit_code_path, user_answer)
-        # # Throw message if there are commmands that terminates scilab
-        # add_err = ""
-        # if terminate_commands:
-        #     add_err = "Please do not use exit, quit and abort commands in your\
-        #                 code.\n Otherwise your code will not be evaluated\
-        #                 correctly.\n"
-
-        # cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(clean_ref_path)
-        # cmd += ' | timeout 8 scilab-cli -nb'
-        # ret = self._run_command(cmd,
-        #                         shell=True,
-        #                         stdout=subprocess.PIPE,
-        #                         stderr=subprocess.PIPE)
         success = False
-        proc, stdout, stderr = self.compiled_output
+        self.write_to_submit_code_file(self.submit_code_path, user_answer)
+        # Throw message if there are commmands that terminates scilab
+        add_err = ""
+        if terminate_commands:
+            add_err = "Please do not use exit, quit and abort commands in your\
+                        code.\n Otherwise your code will not be evaluated\
+                        correctly.\n"
+
+        cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(clean_ref_path)
+        cmd += ' | timeout 8 scilab-cli -nb'
+        ret = self._run_command(cmd,
+                                shell=True,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        # success = False
+        # proc, stdout, stderr = self.compiled_output
+        proc, stdout, stderr = ret 
 
         # Get only the error.
         stderr = self._get_error(stdout)
@@ -88,9 +89,11 @@ class ScilabCodeEvaluator(CodeEvaluator):
             if proc.returncode == 5:
                 success, err = True, "Correct answer"
             else:
-                err = self.add_err + stdout
+                # err = self.add_err + stdout
+                err = add_err + stdout
         else:
-            err = self.add_err + stderr
+            # err = self.add_err + stderr
+            err = add_err + stderr
 
         return success, err
 

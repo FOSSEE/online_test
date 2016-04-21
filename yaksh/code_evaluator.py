@@ -127,7 +127,7 @@ class CodeEvaluator(object):
             # success, err = self.check_code(*args)
             # success, err = self.check_code(**kwargs) #@@@v2
             for test_case in test_case_data:
-                self.compile_user_answer(user_answer, **test_case)
+                self.compile_code(user_answer, **test_case)
                 success, err = self.check_code(user_answer, **test_case)
                 if not success:
                     break
@@ -150,7 +150,7 @@ class CodeEvaluator(object):
     def check_code(self):
         raise NotImplementedError("check_code method not implemented")
 
-    def compile_user_answer(self, user_answer, **kwargs):
+    def compile_code(self, user_answer, **kwargs):
         pass
 
     def create_submit_code_file(self, file_name):
@@ -198,23 +198,23 @@ class CodeEvaluator(object):
             raise
         return proc, stdout, stderr
 
-    def _compile_command(self, cmd, *args, **kw):
-        """Compiles C/C++/java code and returns errors if any.
-        Run a command in a subprocess while blocking, the process is killed
-        if it takes more than 2 seconds to run.  Return the Popen object, the
-        stderr.
-        """
-        try:
-            proc_compile = subprocess.Popen(cmd, shell=True, stdin=None,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
-            out, err = proc_compile.communicate()
-        except TimeoutException:
-            # Runaway code, so kill it.
-            proc_compile.kill()
-            # Re-raise exception.
-            raise
-        return proc_compile, err
+    # def _compile_command(self, cmd, *args, **kw):
+    #     """Compiles C/C++/java code and returns errors if any.
+    #     Run a command in a subprocess while blocking, the process is killed
+    #     if it takes more than 2 seconds to run.  Return the Popen object, the
+    #     stderr.
+    #     """
+    #     try:
+    #         proc_compile = subprocess.Popen(cmd, shell=True, stdin=None,
+    #                                         stdout=subprocess.PIPE,
+    #                                         stderr=subprocess.PIPE)
+    #         out, err = proc_compile.communicate()
+    #     except TimeoutException:
+    #         # Runaway code, so kill it.
+    #         proc_compile.kill()
+    #         # Re-raise exception.
+    #         raise
+    #     return proc_compile, err
 
     def _change_dir(self, in_dir):
         if in_dir is not None and isdir(in_dir):

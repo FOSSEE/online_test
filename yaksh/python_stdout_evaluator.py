@@ -31,8 +31,8 @@ class PythonStdoutEvaluator(CodeEvaluator):
         else:
             submitted = compile(user_answer, '<string>', mode='exec')
             with redirect_stdout() as output_buffer:
-                g = {}
-                exec submitted in g
+                exec_scope = {}
+                exec submitted in exec_scope
             self.output_value = output_buffer.getvalue()
             return self.output_value
 

@@ -15,6 +15,8 @@ class JavaCodeEvaluator(CodeEvaluator):
     def setup(self):
         super(JavaCodeEvaluator, self).setup()
         self.submit_code_path = self.create_submit_code_file('Test.java')
+        self.compiled_user_answer = None
+        self.compiled_test_code = None
 
     def teardown(self):
         super(JavaCodeEvaluator, self).teardown()
@@ -34,7 +36,7 @@ class JavaCodeEvaluator(CodeEvaluator):
         return output_path
 
     def compile_code(self, user_answer, test_case):
-        if hasattr(self, 'compiled_output'):
+        if self.compiled_user_answer and self.compiled_test_code:
             return None
         else:
             ref_code_path = test_case
@@ -59,8 +61,18 @@ class JavaCodeEvaluator(CodeEvaluator):
             compile_command, self.compile_main = self.get_commands(clean_ref_code_path, user_code_directory)
             self.run_command_args = "java -cp {0} {1}".format(user_code_directory,
                                                          ref_file_name)
-            self.compiled_output = self._compile_command(compile_command)
-            return self.compiled_output
+            # self.compiled_output = self._compile_command(compile_command)
+            self.compiled_user_answer = self._run_command(compile_command,
+                                     shell=True,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
+
+            self.compiled_test_code = self._run_command(self.compile_main,
+                                     shell=True,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
+
+            return self.compiled_user_answer, self.compiled_test_code
 
     def check_code(self, user_answer, test_case):
         """ Function validates student code using instructor code as
@@ -108,14 +120,19 @@ class JavaCodeEvaluator(CodeEvaluator):
         # ret = self._compile_command(compile_command)
         # proc, stdnt_stderr = ret
         success = False
-        proc, stdnt_stderr = self.compiled_output
+        proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
 
         # Only if compilation is successful, the program is executed
         # And tested with testcases
         if stdnt_stderr == '':
-            ret = self._compile_command(self.compile_main)
-            proc, main_err = ret
+            # ret = self._compile_command(self.compile_main)
+            # ret = self._run_command(self.compile_main,
+            #                          shell=True,
+            #                          stdout=subprocess.PIPE,
+            #                          stderr=subprocess.PIPE)
+
+            proc, main_out, main_err = self.compiled_test_code
             main_err = self._remove_null_substitute_char(main_err)
 
             if main_err == '':
