@@ -12,14 +12,18 @@ from code_evaluator import CodeEvaluator, TimeoutException
 class PythonAssertionEvaluator(CodeEvaluator):
     """Tests the Python code obtained from Code Server"""
 
+    def setup(self):
+        super(PythonAssertionEvaluator, self).setup()
+        self.exec_scope = None
+
     def compile_code(self, user_answer, test_case):
-        if hasattr(self, 'g'):
+        if self.exec_scope:
             return None
         else:
             submitted = compile(user_answer, '<string>', mode='exec')
-            self.g = {}
-            exec submitted in self.g
-            return self.g
+            self.exec_scope = {}
+            exec submitted in self.exec_scope
+            return self.exec_scope
 
     # def check_code(self, test, user_answer, ref_code_path):
     # def check_code(self, user_answer, test_case_data): #@@@v2
@@ -31,7 +35,7 @@ class PythonAssertionEvaluator(CodeEvaluator):
             # g = {}
             # exec submitted in g
             _tests = compile(test_case, '<string>', mode='exec')
-            exec _tests in self.g
+            exec _tests in self.exec_scope
         except AssertionError:
             type, value, tb = sys.exc_info()
             info = traceback.extract_tb(tb)
