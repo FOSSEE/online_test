@@ -35,11 +35,7 @@
             <th>Position</th>
 			{% for teacher in teachers %}
 				<tr>
-				<td>
-				{% if teacher != user %}
-				<input type="checkbox" name="check" value="{{ teacher.id }}">
-				{% endif %}
-				</td>
+				<td><input type="checkbox" name="check" value="{{ teacher.id }}"></td>
 				<td>{{ teacher.first_name }}</td>
 				<td>{{ teacher.last_name }}</td>
 				<td>{{ teacher.email }}</td>
@@ -53,7 +49,35 @@
 	{% endif %}
 {% endif %}
 </form>
-{% if status == True %}
-<center><h3>Added Teacher(s) to this course</h3></center>
+{% if status == True and teachers_added or teachers_rejected %}
+<center>
+<h4>Note: Teacher(s) without profile are rejected</h4>
+<div class="row">
+    <div class="span6 wrap">
+        <center><b><u>Teacher(s) Added</u></b></center><br>
+        {% for teacher in teachers_added %}
+        <div class="well">
+            <div class="row">
+                <div class="span3" style="padding-top:10px">
+                    <h5>{{ teacher.get_full_name }}</h5>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="span6 wrap">
+        <center><b><u>Teacher(s) Rejected</u></b></center><br>
+        {% for teacher in teachers_rejected %}
+        <div class="well">
+            <div class="row">
+                <div class="span4" style="padding-top:10px">
+                    <h5>{{ teacher.get_full_name }}</h5>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</center>
 {% endif %}
 {% endblock %}
