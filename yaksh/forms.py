@@ -187,12 +187,13 @@ class CourseForm(forms.ModelForm):
         model = Course
         fields = ['name', 'active', 'enrollment']
 
-class EditProfile(forms.ModelForm):
-    """ edit profile form for students and moderators """
+class ProfileForm(forms.ModelForm):
+    """ profile form for students and moderators """
 
     class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'institute', 'department', 'roll_number', 'position']
+        fields = ['first_name', 'last_name', 'institute',
+                'department', 'roll_number', 'position']
 
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
@@ -200,6 +201,6 @@ class EditProfile(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         if 'user' in kwargs:
             user = kwargs.pop('user')
-        super(EditProfile, self).__init__(*args, **kwargs)
+        super(ProfileForm, self).__init__(*args, **kwargs)
         self.fields['first_name'].initial = user.first_name
         self.fields['last_name'].initial = user.last_name

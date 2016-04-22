@@ -22,7 +22,7 @@ from yaksh.models import Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm, TestCaseFormSet,\
-                QuestionFilterForm, CourseForm, EditProfile
+                QuestionFilterForm, CourseForm, ProfileForm
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
@@ -66,11 +66,8 @@ def is_moderator(user):
         return True
 
 def has_profile(user):
-    """ check if user is having profile """
-    if hasattr(user, 'profile'):
-        return True
-    else:
-        return False
+    """ check if user has profile """
+    return True if hasattr(user, 'profile') else False
 
 def index(request):
     """The start page.
@@ -988,7 +985,7 @@ def view_profile(request):
     if has_profile(user):
         return my_render_to_response('yaksh/view_profile.html', {'user':user})
     else:
-        form = EditProfile(user=user)
+        form = ProfileForm(user=user)
         msg = True
         context['form'] = form
         context['msg'] = msg
@@ -1009,7 +1006,7 @@ def edit_profile(request):
         profile = None
 
     if request.method == 'POST':
-        form = EditProfile(request.POST, user=user, instance=profile)
+        form = ProfileForm(request.POST, user=user, instance=profile)
         if form.is_valid():
             form_data = form.save(commit=False)
             form_data.user = user
@@ -1024,7 +1021,7 @@ def edit_profile(request):
             return my_render_to_response('yaksh/editprofile.html', context,
                                         context_instance=ci)
     else:
-        form = EditProfile(user=user, instance=profile)
+        form = ProfileForm(user=user, instance=profile)
         context['form'] = form
         return my_render_to_response('yaksh/editprofile.html', context,
                                     context_instance=ci)
