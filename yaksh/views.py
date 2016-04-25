@@ -815,10 +815,9 @@ def show_all_questions(request):
         raise Http404("You are not allowed to view this page !")
 
     if request.method == 'POST' and request.POST.get('delete') == 'delete':
-        data = request.POST.getlist('question')
-        if data is not None:
-            for i in data:
-                question = Question.objects.get(id=i, user_id=user.id).delete()
+        question_ids = request.POST.getlist('question')
+        if question_ids is not None:
+            question = Question.objects.filter(id__in=question_ids, user_id=user.id).delete()
     questions = Question.objects.filter(user_id=user.id)
     form = QuestionFilterForm(user=user)
     upload_form = UploadFileForm()
@@ -955,7 +954,7 @@ def ajax_questionpaper(request, query):
     user = request.user
     if query == 'marks':
         question_type = request.POST.get('question_type')
-        questions = Question.objects.filter(type=question_type, user=user)
+        questions = Question.objects.filter(type=question_type, user_id=user.id)
         marks = questions.values_list('points').distinct()
         return my_render_to_response('yaksh/ajax_marks.html', {'marks': marks})
     elif query == 'questions':
@@ -967,7 +966,7 @@ def ajax_questionpaper(request, query):
         random_question_list = ",".join(random_questions).split(',')
         question_list = fixed_question_list + random_question_list
         questions = list(Question.objects.filter(type=question_type,
-                                            points=marks_selected, user=user))
+                                            points=marks_selected, user_id=user.id))
         questions = [question for question in questions \
                 if not str(question.id) in question_list]
         return my_render_to_response('yaksh/ajax_questions.html',
@@ -1167,37 +1166,11 @@ def download_questions(request):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    questions = Question.objects.filter(user_id = user.id)
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="{0}_Questions.csv"'.format(user)
-    writer = csv.writer(response)
-    header = [
-                'summary',
-                'description',
-                'points',
-                'test',
-                'ref_code_path',
-                'options',
-                'language',
-                'type',
-                'active',
-                'snippet'
-    ]
-    writer.writerow(header)
-    for que in questions:
-        row = [
-                que.summary,
-                que.description,
-                que.points,
-                que.test,
-                que.ref_code_path,
-                que.options,
-                que.language,
-                que.type,
-                que.active,
-                que.snippet
-        ]
-        writer.writerow(row)
+    question = Question()
+    questions = question.dump_questions_into_json(user)
+    response = HttpResponse(questions, content_type='text/json')
+    response['Content-Disposition'] = 'attachment; filename="{0}_questions.json"'\
+                                                            .format(user)
     return response
 
 
@@ -1211,19 +1184,14 @@ def upload_questions(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            csvfile = request.FILES['file']
-            if csvfile.name.split('.')[1] == "csv":
-                reader = csv.DictReader(csvfile, delimiter=',')
-                for row in reader:
-                    Question.objects.get_or_create(summary=row['summary'],
-                        description=row['description'], points=row['points'],
-                        test=row['test'], ref_code_path=row['ref_code_path'],
-                        options=row['options'], language=row['language'],
-                        type=row['type'], active=row['active'],
-                        snippet=row['snippet'], user=user)
+            questions_file = request.FILES['file']
+            if questions_file.name.split('.')[1] == "json":
+                questions_list = questions_file.read()
+                question = Question()
+                question.load_questions_from_json(questions_list, user)
                 return my_redirect('/exam/manage/questions')
             else:
-                raise Http404('Please Upload a csv file')
+                raise Http404("Please Upload a JSON file")
         else:
             return my_redirect('/exam/manage/questions')
     else:

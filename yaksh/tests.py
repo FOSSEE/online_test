@@ -73,11 +73,19 @@ class QuestionTestCases(unittest.TestCase):
     def setUp(self):
         # Single question details
         self.user = User.objects.get(pk=1)
+        self.user1 = User.objects.get(pk=2)
         self.question = Question(summary='Demo question', language='Python',
                                  type='Code', active=True,
                                  description='Write a function', points=1.0,
                                  snippet='def myfunc()', user=self.user)
         self.question.save()
+
+        self.question1 = Question(summary='Demo Json', language='python',
+                                 type='code', active=True,
+                                 description='factorial of a no', points=2.0,
+                                 snippet='def fact()', user=self.user1)
+        self.question1.save()
+
         self.question.tags.add('python', 'function')
         self.testcase = TestCase(question=self.question,
                                  func_name='def myfunc', kw_args='a=10,b=11',
@@ -96,6 +104,11 @@ class QuestionTestCases(unittest.TestCase):
                         }
         self.answer_data_json = json.dumps(answer_data)
         self.user_answer = "demo_answer"
+        questions_data = [{"snippet": "def fact()", "active": True, "points": 1.0,
+                        "ref_code_path": "", "description": "factorial of a no",
+                        "language": "Python", "test": "", "type": "Code",
+                        "options": "", "summary": "Json Demo"}]
+        self.json_questions_data = json.dumps(questions_data)
 
     def test_question(self):
         """ Test question """
@@ -118,6 +131,31 @@ class QuestionTestCases(unittest.TestCase):
                                                          self.user_answer)
         self.assertEqual(result, self.answer_data_json)
 
+    def test_dump_questions_into_json(self):
+        """ Test dump questions into json """
+        question = Question()
+        questions = json.loads(question.dump_questions_into_json(self.user1))
+        for que in questions:
+            self.assertEqual(self.question1.summary, que['summary'])
+            self.assertEqual(self.question1.language, que['language'])
+            self.assertEqual(self.question1.type, que['type'])
+            self.assertEqual(self.question1.description, que['description'])
+            self.assertEqual(self.question1.points, que['points'])
+            self.assertTrue(self.question1.active)
+            self.assertEqual(self.question1.snippet, que['snippet'])
+
+    def test_load_questions_from_json(self):
+        """ Test load questions into database from json """
+        question = Question()
+        result = question.load_questions_from_json(self.json_questions_data, self.user1)
+        question_data = Question.objects.all().last()
+        self.assertEqual(question_data.summary, 'Json Demo')
+        self.assertEqual(question_data.language, 'Python')
+        self.assertEqual(question_data.type, 'Code')
+        self.assertEqual(question_data.description, 'factorial of a no')
+        self.assertEqual(question_data.points, 1.0)
+        self.assertTrue(question_data.active)
+        self.assertEqual(question_data.snippet, 'def fact()')
 
 ###############################################################################
 class TestCaseTestCases(unittest.TestCase):

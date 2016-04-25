@@ -15,7 +15,7 @@
 <a href="{{URL_ROOT}}/exam/manage/download_questions/">Download Questions</a><br>
 {% endif %}
 
-<h4>Upload csv file for adding questions</h4>
+<h4>Upload json file for adding questions</h4>
 <form action="{{URL_ROOT}}/exam/manage/upload_questions/" method="post"  enctype="multipart/form-data">
 {% csrf_token %}
 {{ upload_form.as_p }}

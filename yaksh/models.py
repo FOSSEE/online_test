@@ -211,6 +211,27 @@ class Question(models.Model):
 
         return json.dumps(question_info_dict)
 
+    def dump_questions_into_json(self, user):
+        questions = Question.objects.filter(user_id = user.id)
+        questions_dict = [{'summary': question.summary,
+                        'description': question.description,
+                        'points': question.points, 'test': question.test,
+                        'ref_code_path': question.ref_code_path,
+                        'options': question.options, 'language': question.language,
+                        'type': question.type, 'active': question.active,
+                        'snippet': question.snippet} for question in questions]
+        return json.dumps(questions_dict, indent=2)
+
+    def load_questions_from_json(self, questions_list, user):
+        questions = json.loads(questions_list)
+        for question in questions:
+            Question.objects.get_or_create(summary=question['summary'],
+                description=question['description'], points=question['points'],
+                test=question['test'], ref_code_path=question['ref_code_path'],
+                options=question['options'], language=question['language'],
+                type=question['type'], active=question['active'],
+                snippet=question['snippet'], user=user)
+
     def __unicode__(self):
         return self.summary
 
