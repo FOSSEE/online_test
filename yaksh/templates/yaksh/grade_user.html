@@ -46,7 +46,7 @@
 {%if users %}
 <div id = "student" class="span2">
 {% for user in users %}
-<p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.id}}">{{user.get_full_name}} </a></p>
+<p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}">{{user.user__first_name}} {{user.user__last_name}}</a></p>
 {% endfor %}
 </div>
 {% endif %}
@@ -93,7 +93,7 @@ Start time: {{ paper.start_time }} <br/>
 Percentage obtained: {{paper.percent}}% <br/>
 {% endif %}
 {% if paper.passed == 0 %}
-Status : <b style= "color: red;"> Failed </b><br/>
+Status : <b style="color: red;"> Failed </b><br/>
 {% else %}
 Status : <b style="color: green;"> Passed </b><br/>
 {% endif %}
