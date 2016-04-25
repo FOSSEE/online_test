@@ -148,7 +148,7 @@ class QuestionTestCases(unittest.TestCase):
         """ Test load questions into database from json """
         question = Question()
         result = question.load_questions_from_json(self.json_questions_data, self.user1)
-        question_data = Question.objects.all().last()
+        question_data = Question.objects.get(pk=27)
         self.assertEqual(question_data.summary, 'Json Demo')
         self.assertEqual(question_data.language, 'Python')
         self.assertEqual(question_data.type, 'Code')
