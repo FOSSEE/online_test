@@ -53,9 +53,8 @@
 
 
 
-
+<div id = "paper" class="span12">
 {% if data %}
-<div class=span12 id = "paper">
 <p> <h3> <center> Showing paper for {{data.user.get_full_name.title}} </center></h3>
 <p><b>Name:</b>{{ data.user.get_full_name.title }}
 {% if data.profile %}
@@ -172,13 +171,13 @@ Marks: <input id="q{{ question.id }}" type="text"
 </form>
 </div>
 
+
 {% endif %} {# if paper.answers.count #}
 
 {% endfor %} {# for paper in data.papers #}
 
 {% endif %} {# if data.papers #}
 
-{% endif %}
+{% endif %} {#if data#}
 </div>
-
 {% endblock%}
