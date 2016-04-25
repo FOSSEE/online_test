@@ -732,11 +732,11 @@ def monitor(request, questionpaper_id=None):
                                  context_instance=ci)
 
 
-def get_user_data(username, questionpaper_id=None, attempt_number = None):
+def get_user_data(user_id, questionpaper_id=None, attempt_number = None):
     """For a given username, this returns a dictionary of important data
     related to the user including all the user's answers submitted.
     """
-    user = User.objects.get(username=username)
+    user = User.objects.get(id=user_id)
     papers = AnswerPaper.objects.filter(user=user)
     if questionpaper_id and attempt_number is not None:
         papers = papers.filter(question_paper_id=questionpaper_id, attempt_number = attempt_number).order_by(
@@ -816,12 +816,12 @@ def show_all_questions(request):
                                  context_instance=ci)
 
 @login_required
-def user_data(request, username, questionpaper_id=None):
+def user_data(request, user_id, questionpaper_id=None):
     """Render user data."""
     current_user = request.user
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
-    data = get_user_data(username, questionpaper_id)
+    data = get_user_data(user_id, questionpaper_id)
 
     context = {'data': data}
     return my_render_to_response('yaksh/user_data.html', context,
@@ -889,18 +889,16 @@ def grade_user(request, quiz_id = None, user_id=None, attempt_number = None):
 
     if quiz_id != None:
         questionpaper_id = QuestionPaper.objects.filter(quiz_id = quiz_id).values("id")
-
-        answerpaper_details = AnswerPaper.objects.filter(question_paper_id = questionpaper_id)
-        users_id = answerpaper_details.values_list("user_id").distinct()
-        user_details = User.objects.filter(id__in = users_id)
+        user_details = AnswerPaper.objects.get_users_for_questionpaper(questionpaper_id)
         context = {"users": user_details, "quiz_id": quiz_id}
+        
         if user_id !=None:
-            attempts = answerpaper_details.filter(user_id= user_id).order_by("-attempt_number")
-            username = User.objects.get(id = user_id)
-            if attempt_number is None:
+            attempts = AnswerPaper.objects.get_user_all_attempts(questionpaper_id, user_id)
+            
+            if attempt_number == None:
                 attempt_number = attempts[0].attempt_number
-
-            data = get_user_data(username.username, questionpaper_id, attempt_number)
+                
+            data = get_user_data(user_id, questionpaper_id, attempt_number)
             if request.method == "POST":
                 papers = data['papers']
                 for paper in papers:
