@@ -57,9 +57,9 @@ urlpatterns += [
     url(r'^manage/showquestionpapers/(?P<questionpaper_id>\d+)/$',\
                                                     views.show_all_questionpapers),
     url(r'^manage/monitor/(?P<questionpaper_id>\d+)/$', views.monitor),
-    url(r'^manage/user_data/(?P<username>.*)/(?P<questionpaper_id>\d+)/$',
+    url(r'^manage/user_data/(?P<user_id>\d+)/(?P<questionpaper_id>\d+)/$',
         views.user_data),
-    url(r'^manage/user_data/(?P<username>.*)/$', views.user_data),
+    url(r'^manage/user_data/(?P<user_id>\d+)/$', views.user_data),
     url(r'^manage/designquestionpaper/$', views.design_questionpaper),
     url(r'^manage/designquestionpaper/(?P<questionpaper_id>\d+)/$',\
                                                         views.design_questionpaper),
