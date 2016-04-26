@@ -9,52 +9,52 @@
 {% endblock %}
 
 {% block script %}
-<script src= "{{ URL_ROOT }}/static/yaksh/js/edit_question.js"></script>
+    <script src= "{{ URL_ROOT }}/static/yaksh/js/edit_question.js"></script>
 {% endblock %}
 
 {% block manage %}
 
-
 {% if course_details %}
-<table id = "course-details">
-<tr>
-<th>Courses</th> 
-<th> Quizzes </th>
-</tr>
+    <table id = "course-details" class = "zebra-striped">
+    <tr>
+    <th>Courses</th> 
+    <th> Quizzes </th>
+    </tr>
 
-{% for course in course_details %}
-<tr>
-<td><ul>{{course.name}} </td>
+    {% for course in course_details %}
+    <tr>
+    <td><ul>{{course.name}} </td>
 
-{% if course.get_quizzes %}
-<td>
-{% for quiz in course.get_quizzes %}
- <li><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}">{{quiz.description}}</a></li>
+    {% if course.get_quizzes %}
+    <td>
+    {% for quiz in course.get_quizzes %}
+     <li><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}">{{quiz.description}}</a></li>
 
-{% endfor %}
-</td>
-{% else %}
-<td> No quiz</td>
+    {% endfor %}
+    </td>
+    {% else %}
+    <td> No quiz</td>
+    {% endif %}
+    </ul></tr>
+    {% endfor %}
+    </table>
 {% endif %}
-</ul></tr>
-{% endfor %}
-</table>
 
-{% endif %}
 <div class="row">
-
 {%if users %}
-<div id = "student" class="span2">
-{% for user in users %}
-<p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}">{{user.user__first_name}} {{user.user__last_name}}</a></p>
-{% endfor %}
-</div>
+    <div id = "student" class="span2">
+    {% for user in users %}
+    <p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}">{{user.user__first_name}} {{user.user__last_name}}</a></p>
+    {% endfor %}
+    </div>
 {% endif %}
 
 
 
-<div id = "paper" class="span12">
-{% if data %}
+<div id = "paper" class="span12"> {#not found yet#}
+{% if not data %}
+</div>
+{% else %}
 <p> <h3> <center> Showing paper for {{data.user.get_full_name.title}} </center></h3>
 <p><b>Name:</b>{{ data.user.get_full_name.title }}
 {% if data.profile %}
@@ -170,13 +170,11 @@ Marks: <input id="q{{ question.id }}" type="text"
 
 </form>
 </div>
-
-
 {% endif %} {# if paper.answers.count #}
 
 {% endfor %} {# for paper in data.papers #}
 
-{% endif %} {# if data.papers #}
+{% endif %} {#  if data.papers #}
 
 {% endif %} {#if data#}
 </div>
