@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %} View Profile {% endblock %}
+
+{% block pagetitle %} Online Test {% endblock %}
+{% block css %}
+<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/base.css" />
+
+{% endblock %}
+{% block content %}
+<ul>
+  <a href="{{ URL_ROOT }}/exam/editprofile/">Edit Profile</a>
+  <a href="{{ URL_ROOT }}/exam/">Back to Home</a>
+</ul>
+<div class="span14">
+  <center>
+  <h2>Your Profile Information</h2>
+  <table class="span1">
+  <tr>
+    <th><label for="id_first_name"><h5>First name:</h5></label></th>
+    <th><label for="id_first_name"><h5>{{ user.first_name }}</h5></label></th>
+  </tr>
+  <tr>
+    <th><label for="id_last_name"><h5>Last name:</h5></label></th>
+    <th><label for="id_last_name"><h5>{{ user.last_name }}</h5></label></th>
+  </tr>
+  <tr>
+    <th><label for="id_email"><h5>Email:</h5></label></th>
+    <th><label for="id_email"><h5>{{ user.email }}</h5></label></th>
+  </tr>
+  <tr>
+    <th><label for="id_institute"><h5>Institute:</h5></label></th>
+    <th><label for="id_institute"><h5>{{ user.profile.institute }}</h5></label></th>
+  </tr>
+  <tr>
+    <th><label for="id_department"><h5>Department:</h5></label></th>
+    <th><label for="id_department"><h5>{{ user.profile.department }}</h5></label></th>
+  </tr>
+  <tr>
+    <th><label for="id_roll_number"><h5>Roll number:</h5></label></th>
+    <th><label for="id_roll_number"><h5>{{ user.profile.roll_number }}</h5></label></th>
+  </tr>
+  <tr>
+    <th><label for="id_position"><h5>Position:</h5></label></th>
+    <th><label for="id_position"><h5>{{ user.profile.position }}</h5></label></th>
+  </tr>
+  </table>
+  </center>
+</div>
+{% endblock %}

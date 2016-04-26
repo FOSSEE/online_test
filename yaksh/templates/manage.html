@@ -10,12 +10,12 @@
     <meta name="description" content="">
 <meta name="author" content="">
    {% endblock %}
-   
+
    <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/base.css" type="text/css" />
    <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/manage.css" type="text/css" />
    {% block css %}
    {% endblock %}
-
+<script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.4.2.min.js"></script>
    {% block script %}
    {% endblock %}
    </head>
@@ -30,6 +30,8 @@
         <li><a href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
 <li><a href="{{ URL_ROOT }}/exam/manage/monitor">Monitor</a></li>
 <li><a href="{{ URL_ROOT }}/exam/manage/courses">Courses</a></li>
+<li><a href="{{ URL_ROOT }}/exam/viewprofile">My Profile</a></li>
+<li><a href="{{ URL_ROOT }}/exam/changepassword">Change Password</a></li>
         </ul>
 <ul style="float:right;">
 <li><strong><a style='cursor:pointer' onClick='location.replace("{{URL_ROOT}}/exam/complete/");'>Log out</a></strong></li>

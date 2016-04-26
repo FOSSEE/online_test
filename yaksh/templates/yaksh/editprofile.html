@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %} Edit Profile {% endblock %}
+
+{% block pagetitle %} Online Test {% endblock %}
+{% block formtitle %} Please fill in the following details {% endblock %}
+
+{% block content %}
+{% if msg %}
+<center><h5>Your profile does not exist. Please fill in your details</h5></center>
+{% endif %}
+<form action="{{URL_ROOT}}/exam/editprofile/" method="post" >
+  {% csrf_token %}
+  <center>
+  <table class="span1">
+  {{ form.as_table }}
+  </table>
+  </center>
+  <center><button class="btn" type="submit">Save</button>
+  <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/");'>Cancel</button> </center>
+</form>
+
+{% endblock content %}

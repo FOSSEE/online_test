@@ -140,7 +140,6 @@ class QuizForm(forms.ModelForm):
         self.fields['course'] = forms.ModelChoiceField(
                 queryset=Course.objects.filter(creator=user))
 
-
     class Meta:
         model = Quiz
         fields = '__all__'
@@ -187,3 +186,21 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ['name', 'active', 'enrollment']
+
+class ProfileForm(forms.ModelForm):
+    """ profile form for students and moderators """
+
+    class Meta:
+        model = Profile
+        fields = ['first_name', 'last_name', 'institute',
+                'department', 'roll_number', 'position']
+
+    first_name = forms.CharField(max_length=30)
+    last_name = forms.CharField(max_length=30)
+
+    def __init__(self, *args, **kwargs):
+        if 'user' in kwargs:
+            user = kwargs.pop('user')
+        super(ProfileForm, self).__init__(*args, **kwargs)
+        self.fields['first_name'].initial = user.first_name
+        self.fields['last_name'].initial = user.last_name

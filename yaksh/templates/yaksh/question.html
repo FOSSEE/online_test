@@ -116,11 +116,9 @@ function call_skip(url)
   <div class="fill">
      <div class="container">
         <h3 class="brand"><strong>Online Test</h3></strong>
-        <ul>
-        <li><h5><a> Hi {{ paper.user.first_name.title}} {{ paper.user.last_name.title}}  </a></h5></li>
-        </ul><br>
-        <div class=time-div id="time_left"></div>
-		<h5>You have {{ paper.questions_left }} question(s) left in {{ paper.question_paper.quiz.description }}</h5>
+        <h5><a> Hi {{ paper.user.first_name.title}} {{ paper.user.last_name.title}} </a></h5>
+        <div class=time-div id="time_left"></div><br>
+        <b style="color: white; font-size: 14px;">You have {{ paper.questions_left }} question(s) left in {{ paper.question_paper.quiz.description }}</b>
      </div>
    </div>
 </div>
