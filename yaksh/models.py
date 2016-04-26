@@ -71,6 +71,8 @@ class Course(models.Model):
     requests = models.ManyToManyField(User, related_name='requests')
     rejected = models.ManyToManyField(User, related_name='rejected')
     created_on = models.DateTimeField(auto_now_add=True)
+    teachers = models.ManyToManyField(User, related_name='teachers')
+
 
     def request(self, *users):
         self.requests.add(*users)
@@ -115,6 +117,9 @@ class Course(models.Model):
 
     def deactivate(self):
         self.active = False
+
+    def add_teachers(self, *users):
+        self.teachers.add(*users)
 
     def __unicode__(self):
         return self.name

@@ -82,7 +82,7 @@ User IP address: {{ paper.user_ip }}
 <a href="{{URL_ROOT}}/exam/manage/monitor/">Monitor quiz</a>
 {% else %}
 {% with data.papers.0 as paper %}
-<a href="{{URL_ROOT}}/exam/manage/monitor/{{paper.quiz.id}}/">Monitor quiz</a>
+<a href="{{URL_ROOT}}/exam/manage/monitor/{{paper.question_paper.id}}/">Monitor quiz</a>
 {% endwith %}
 {% endif %}
 

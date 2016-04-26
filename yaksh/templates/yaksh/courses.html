@@ -9,9 +9,11 @@
 {% endblock %}
 
 {% block manage %}
+<a href="{{URL_ROOT}}/exam/manage/viewcourse/">View Allotted Courses</a><br>
 {% if not courses %}
     <center><h5> You have not created any courses </h5></center>
 {% else %}
+<center><h3> Course(s) created by you </h3></center>
     {% for course in courses %}
     <div class="row show-grid">
         <div class="span14">
@@ -27,6 +29,9 @@
                     </p>
                     <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">{{ course.name }}</a>
                     </br>
+                </div>
+                <div class="span6">
+                    <p><b><a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher</a></b></p>
                 </div>
                 <div class="span6">
                     <p><b><u>Quiz(zes)</u></b></p>

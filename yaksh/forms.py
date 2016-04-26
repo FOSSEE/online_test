@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from taggit.managers import TaggableManager
 from taggit.forms import TagField
 from django.forms.models import inlineformset_factory
-
+from django.db.models import Q
 from string import letters, punctuation, digits
 import datetime
 
@@ -138,7 +138,8 @@ class QuizForm(forms.ModelForm):
                 queryset=Quiz.objects.filter(course__creator=user))
         self.fields['prerequisite'].required = False
         self.fields['course'] = forms.ModelChoiceField(
-                queryset=Course.objects.filter(creator=user))
+                queryset=Course.objects.filter(Q(creator=user)|
+                    Q(teachers=user)).distinct())
 
     class Meta:
         model = Quiz

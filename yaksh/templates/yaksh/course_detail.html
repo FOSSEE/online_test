@@ -11,6 +11,7 @@
 <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/course.js"></script>
 {% endblock %}
 {% block manage %}
+{% for course in courses %}
 <div class="row">
     <div class="span6 wrap">
         <center><b><u>Requests</u></b></center><br>
@@ -88,4 +89,5 @@
 <div class="pull-right">
             <a class="btn primary" href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">{% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}</a>
 </div>
+{% endfor %}
 {% endblock %}

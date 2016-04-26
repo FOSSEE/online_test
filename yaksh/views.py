@@ -11,9 +11,10 @@ from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.http import Http404
-from django.db.models import Sum, Max
+from django.db.models import Sum, Max, Q
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 from taggit.models import Tag
 from itertools import chain
 import json
@@ -610,7 +611,8 @@ def course_detail(request, course_id):
         raise Http404('You are not allowed to view this page')
     course = get_object_or_404(Course, creator=user, pk=course_id)
     return my_render_to_response('yaksh/course_detail.html', {'course': course},
-                                context_instance=ci)
+                                 context_instance=ci)
+
 
 
 @login_required
@@ -656,7 +658,8 @@ def toggle_course_status(request, course_id):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
-    course = get_object_or_404(Course, creator=user, pk=course_id)
+    course = get_object_or_404(Course, Q(creator=user)|Q(teachers=user),
+                                pk=course_id)
     if course.active:
         course.deactivate()
     else:
@@ -701,7 +704,8 @@ def monitor(request, questionpaper_id=None):
         raise Http404('You are not allowed to view this page!')
 
     if questionpaper_id is None:
-        q_paper = QuestionPaper.objects.filter(quiz__course__creator=user)
+        q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user)|
+                                    Q(quiz__course__teachers=user)).distinct()
         context = {'papers': [],
                    'quiz': None,
                    'quizzes': q_paper}
@@ -709,8 +713,9 @@ def monitor(request, questionpaper_id=None):
                                      context_instance=ci)
     # quiz_id is not None.
     try:
-        q_paper = QuestionPaper.objects.get(id=questionpaper_id,
-                                            quiz__course__creator=user)
+        q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user)|
+                                        Q(quiz__course__teachers=user),
+                                        id=questionpaper_id).distinct()
     except QuestionPaper.DoesNotExist:
         papers = []
         q_paper = None
@@ -833,7 +838,8 @@ def download_csv(request, questionpaper_id):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     quiz = Quiz.objects.get(questionpaper=questionpaper_id)
-    if quiz.course.creator != user:
+    course = Course.objects.filter(teachers=user, id=quiz.course.id)
+    if quiz.course.creator != user and not course:
         raise Http404('The question paper does not belong to your course')
     papers = AnswerPaper.objects.get_latest_attempts(questionpaper_id)
     if not papers:
@@ -978,7 +984,6 @@ def design_questionpaper(request):
 @login_required
 def view_profile(request):
     """ view moderators and users profile """
-
     user = request.user
     ci = RequestContext(request)
     context = {}
@@ -1025,3 +1030,76 @@ def edit_profile(request):
         context['form'] = form
         return my_render_to_response('yaksh/editprofile.html', context,
                                     context_instance=ci)
+
+
+def search_teacher(request, course_id):
+    """ search teachers for the course """
+    course = get_object_or_404(Course, creator=user, pk=course_id)
+    context['course'] = course
+    if not user.is_authenticated() or not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+
+    if request.method == 'POST':
+        u_name = request.POST.get('uname')
+        if len(u_name) == 0:
+            context['success'] = False
+            return my_render_to_response('yaksh/addteacher.html', context,
+                                        context_instance=ci)
+        else:
+            teachers = User.objects.filter(Q(username__icontains=u_name)|
+                Q(first_name__icontains=u_name)|Q(last_name__icontains=u_name)|
+                Q(email__icontains=u_name)).exclude(is_superuser=1)
+            context['success'] = True
+            context['teachers'] = teachers
+            return my_render_to_response('yaksh/addteacher.html', context,
+                                        context_instance=ci)
+    else:
+        context['success'] = False
+        return my_render_to_response('yaksh/addteacher.html', context,
+                                    context_instance=ci)
+
+
+@login_required
+def add_teacher(request, course_id):
+    """ add teachers to the course also add students to
+        moderator group if a student is alotted to course """
+
+    user = request.user
+    ci = RequestContext(request)
+    context = {}
+    course = get_object_or_404(Course, creator=user, pk=course_id)
+    context['course'] = course
+    if not user.is_authenticated() or not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+
+    if request.method == 'POST':
+        teacher_ids = request.POST.getlist('check')
+        if not teacher_ids:
+            return my_render_to_response('yaksh/addteacher.html', context,
+                                        context_instance=ci)
+        else:
+            teachers = User.objects.filter(id__in=teacher_ids)
+            course.add_teachers(*teachers)
+            groupname = Group.objects.get(name='moderator')
+            groupname.user_set.add(*teachers)
+            context['status'] = True
+            for teacher in teachers:
+                if teacher.profile.position.lower() == "student":
+                    teacher.profile.position = "Faculty"
+                    teacher.profile.save()
+            return my_render_to_response('yaksh/addteacher.html', context,
+                                        context_instance=ci)
+    else:
+        return my_render_to_response('yaksh/addteacher.html', context,
+                                    context_instance=ci)
+
+@login_required
+def view_courses(request):
+    """  show courses allotted to a user """
+
+    user = request.user
+    ci = RequestContext(request)
+    courses = Course.objects.filter(teachers=user)
+    return my_render_to_response('yaksh/viewcourse.html', {'courses': courses},
+                                        context_instance=ci)
+
