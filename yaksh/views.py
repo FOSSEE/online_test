@@ -657,13 +657,12 @@ def toggle_course_status(request, course_id):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
-    courses = Course.objects.filter(Q(creator=user)|Q(teachers=user), id=course_id).distinct()
-    for course in courses:
-        if course.active:
-            course.deactivate()
-        else:
-            course.activate()
-        course.save()
+    course = Course.objects.filter(Q(creator=user)|Q(teachers=user), pk=course_id)[0]
+    if course.active:
+        course.deactivate()
+    else:
+        course.activate()
+    course.save()
     return course_detail(request, course_id)
 
 

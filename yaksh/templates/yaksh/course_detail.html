@@ -2,7 +2,7 @@
 
 {% block title %} Course {% endblock title %}
 
-{% block subtitle %} {% for course in courses %}{{ course.name }}{% endfor %} {% endblock %}
+{% block subtitle %} {{ course.name }} {% endblock %}
 
 {% block css %}
 <link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/course.css" />
@@ -11,7 +11,6 @@
 <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/course.js"></script>
 {% endblock %}
 {% block manage %}
-{% for course in courses %}
 <div class="row">
     <div class="span6 wrap">
         <center><b><u>Requests</u></b></center><br>
@@ -89,5 +88,4 @@
 <div class="pull-right">
             <a class="btn primary" href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">{% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}</a>
 </div>
-{% endfor %}
 {% endblock %}
