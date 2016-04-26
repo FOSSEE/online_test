@@ -22,8 +22,9 @@ import json
 from yaksh.models import Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
-                QuestionForm, RandomQuestionForm, TestCaseFormSet,\
-                QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm
+                QuestionForm, RandomQuestionForm,\
+                QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
+                get_object_form
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
@@ -181,8 +182,9 @@ def add_question(request, question_id=None):
                     return my_redirect("/exam/manage/questions")
 
                 return my_render_to_response('yaksh/add_question.html',
-                                             {'form': form},
-                                             # 'formset': test_case_formset},
+                                             # {'form': form},
+                                             {'form': form,
+                                              'question_id': question_id},
                                              context_instance=ci)
             else:
                 d = Question.objects.get(id=question_id)
@@ -192,56 +194,112 @@ def add_question(request, question_id=None):
                     question = Question.objects.get(id=question_id)
                     return my_redirect("/exam/manage/questions")
                 return my_render_to_response('yaksh/add_question.html',
-                                             {'form': form},
-                                             # 'formset': test_case_formset},
+                                             # {'form': form},
+                                             {'form': form,
+                                              'question_id': question_id},
                                              context_instance=ci)
 
         else:
             return my_render_to_response('yaksh/add_question.html',
-                                         {'form': form},
-                                         # 'formset': test_case_formset},
+                                         # {'form': form},
+                                             {'form': form,
+                                              'question_id': question_id},
                                          context_instance=ci)
     else:
         if question_id is None:
             form = QuestionForm()
             # test_case_formset = TestCaseFormSet(prefix='test', instance=Question())
             return my_render_to_response('yaksh/add_question.html',
-                                         {'form': form},
-                                         # 'formset': test_case_formset},
+                                         # {'form': form},
+                                         {'form': form,
+                                          'question_id': question_id},
                                          context_instance=ci)
         else:
             d = Question.objects.get(id=question_id)
             form = QuestionForm(instance=d)
             return my_render_to_response('yaksh/add_question.html',
-                                         {'form': form},
-                                         # 'formset': test_case_formset},
+                                         # {'form': form},
+                                             {'form': form,
+                                              'question_id': question_id},
                                          context_instance=ci)
 
 @login_required
-def add_testcase(request, question_id=None):
-    """To add new test case for a question"""
+def show_testcase(request, question_id=None):
+    """Show all test cases related to Questions"""
 
+    user = request.user
     ci = RequestContext(request)
+    if not user.is_authenticated() or not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
     if not question_id:
         raise Http404('No Question Found')
-    question = Question.objects.get(id=question_id)
-    initial = {'question': question}
 
+    question = Question.objects.get(id=question_id)
+    test_cases = question.get_test_cases()
+
+    if request.POST.get('delete') == 'delete':
+        data = request.POST.getlist('test_case')
+        for i in data:
+            for t in test_cases:
+                if int(i) == t.id:
+                    test_case_deleted = t.delete()
+        test_cases = question.get_test_cases()
+
+    return my_render_to_response('yaksh/show_testcase.html',
+                                 {'test_cases': test_cases,
+                                  'question_id': question_id},
+                                 context_instance=ci)
+
+
+@login_required
+def add_testcase(request, question_id=None, test_case_id=None):
+    """To add new test case for a question"""
+
+    user = request.user
+    ci = RequestContext(request)
+    if not user.is_authenticated() or not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    if not question_id:
+        raise Http404('No Question Found')
+
+    question = Question.objects.get(id=question_id)
     test_case_type = question.test_case_type
 
-    if test_case_type == "standardtestcase":
-        from yaksh.forms import StandardTestCaseForm
-            if request.method == "POST":
-                form = StandardTestCaseForm(request.POST)
-            initial = {'question': question}
-                form = StandardTestCaseForm(initial)
+    if test_case_id:
+        instance = question.get_test_case(test_case_id)
+    else:
+        instance = None
+
+    # test_cases = self.testcase_set.all()
+    # for test in test_cases:
+    #     test_case_child_instance = test.get_child_instance(test_case_type)
+
+    test_case_form_object = get_object_form(model=test_case_type, exclude_fields=['question'])
+
+    # if test_case_type == "standardtestcase":
+    #     from yaksh.forms import StandardTestCaseForm
+    #     if request.method == "POST":
+    #         form = StandardTestCaseForm(request.POST)
+    #     form = StandardTestCaseForm(initial)
 
     if request.method == "POST":
+        form = test_case_form_object(request.POST, instance=instance)
         if form.is_valid():
-            form.save()
+            form_data = form.save(commit=False)
+            form_data.question = question
+            form_data.save()
+            return my_redirect("/exam/manage/showtestcase/{0}".format(question_id))
+        else:
+            return my_render_to_response('yaksh/add_testcase.html',
+                                         {'form': form,
+                                         'question_id': question_id},
+                                         context_instance=ci)
+
     else:
+        form = test_case_form_object(initial={"question": question}, instance=instance)
         return my_render_to_response('yaksh/add_testcase.html',
-                                     {'form': form},
+                                     {'form': form,
+                                     'question_id': question_id},
                                      context_instance=ci)
 
 @login_required

@@ -6,6 +6,7 @@ from collections import Counter
 from django.db import models
 from django.contrib.auth.models import User
 from django.forms.models import model_to_dict
+from django.contrib.contenttypes.models import ContentType 
 from taggit.managers import TaggableManager
 
 
@@ -34,7 +35,7 @@ enrollment_methods = (
 test_case_types = (
         ("standardtestcase", "Standard Testcase"),
         ("stdoutbasedtestcase", "Stdout Based Testcase"),
-        # ("mcqtestcase", "MCQ Testcase"),
+        ("mcqtestcase", "MCQ Testcase"),
     )
 
 attempts = [(i, i) for i in range(1, 6)]
@@ -226,11 +227,17 @@ class Question(models.Model):
         question_data = {}
         test_case_data = []
 
-        test_cases = self.testcase_set.all()
+        test_cases = self.get_test_cases()
+
         for test in test_cases:
-            test_case_child_instance = test.get_child_instance(self.test_case_type)
-            test_case_instance_dict = test_case_child_instance.get_instance_as_dict()
-            test_case_data.append(test_case_field_value)
+            test_case_as_dict = test.get_field_value()
+            test_case_data.append(test_case_as_dict)
+
+        # test_cases = self.testcase_set.all()
+        # for test in test_cases:
+        #     test_case_child_instance = test.get_child_instance(self.test_case_type)
+        #     test_case_instance_dict = test_case_child_instance.get_instance_as_dict()
+        #     test_case_data.append(test_case_field_value)
 
         question_data['test_case_data'] = test_case_data
         question_data['user_answer'] = user_answer
@@ -256,6 +263,18 @@ class Question(models.Model):
         for question in questions:
             question['user'] = user
             Question.objects.get_or_create(**question)
+
+    def get_test_cases(self):
+        test_case_ctype = ContentType.objects.get(app_label="yaksh", model=self.test_case_type)
+        test_cases = test_case_ctype.get_all_objects_for_this_type(question=self)
+
+        return test_cases
+
+    def get_test_case(self, test_case_id):
+        test_case_ctype = ContentType.objects.get(app_label="yaksh", model=self.test_case_type)
+        test_case = test_case_ctype.get_object_for_this_type(question=self, id=test_case_id)
+
+        return test_case
 
     def __unicode__(self):
         return self.summary
@@ -772,14 +791,18 @@ class AssignmentUpload(models.Model):
 class TestCase(models.Model):
     question = models.ForeignKey(Question, blank=True, null = True)
 
-    def get_child_instance(self, type):
-        return getattr(self, type)
+    # def get_child_instance(self, type):
+    #     return getattr(self, type)
+
 
 class StandardTestCase(TestCase):
     test_case = models.TextField(blank=True)
 
     def get_field_value(self):
         return {"test_case": self.test_case}
+
+    def __unicode__(self):
+        return u'Question: {0} | Test Case: {1}'.format(self.question, self.test_case)
 
 
 class StdoutBasedTestCase(TestCase):
@@ -788,9 +811,16 @@ class StdoutBasedTestCase(TestCase):
     def get_field_value(self):
         return {"expected_output": self.expected_output}
 
+    def __unicode__(self):
+        return u'Question: {0} | Exp. Output: {1}'.format(self.question, self.expected_output)
+
+
 class McqTestCase(TestCase):
     options = models.TextField()
     correct = models.BooleanField(default=False)
 
     def get_field_value(self):
         return {"options": self.options, "correct": self.correct}
+
+    def __unicode__(self):
+        return u'Question: {0} | Correct: {1}'.format(self.question, self.correct)

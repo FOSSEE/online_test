@@ -1,8 +1,10 @@
 from django import forms
-from yaksh.models import Profile, Quiz, Question, TestCase, Course
+from yaksh.models import Profile, Quiz, Question, TestCase, Course, StandardTestCase, StdoutBasedTestCase
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType 
+
 from taggit.managers import TaggableManager
 from taggit.forms import TagField
 from django.forms.models import inlineformset_factory
@@ -30,8 +32,8 @@ question_types = (
 
 test_case_types = (
         ("standardtestcase", "Standard Testcase"),
-        # ("argument_based", "Multiple Correct Choices"),
         ("stdoutbasedtestcase", "Stdout Based Testcase"),
+        ("mcqtestcase", "MCQ Testcase"),
     )
 
 UNAME_CHARS = letters + "._" + digits
@@ -40,6 +42,22 @@ PWD_CHARS = letters + punctuation + digits
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
 days_between_attempts = ((j, j) for j in range(401))
+
+def get_object_form(model, exclude_fields=None):  
+    ctype = ContentType.objects.get(app_label="yaksh", model=model)
+    # ctype = ContentType.objects.get(pk=type_id) 
+    model_class = ctype.model_class() 
+    class _ObjectForm(forms.ModelForm):
+        # def __init__(self, *args, **kwargs):
+        #     if "question" in kwargs:
+        #         question = kwargs.pop("question")
+        #     else:
+        #         question = None
+        #     self.fields["question"] = question
+        class Meta:
+            model = model_class
+            exclude = exclude_fields
+    return _ObjectForm
 
 
 class UserRegisterForm(forms.Form):
