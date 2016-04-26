@@ -873,7 +873,6 @@ def download_csv(request, questionpaper_id):
 
 @login_required
 def grade_user(request, quiz_id = None, user_id=None, attempt_number = None):
-
     """Present an interface with which we can easily grade a user's papers
     and update all their marks and also give comments for each paper.
     """
