@@ -26,6 +26,7 @@ from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
+from django.db.models import Q
 
 # The directory where user data can be saved.
 OUTPUT_DIR = abspath(join(dirname(__file__), 'output'))
@@ -670,6 +671,7 @@ def show_statistics(request, questionpaper_id, attempt_number=None):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
+    
     attempt_numbers = AnswerPaper.objects.get_attempt_numbers(questionpaper_id)
     quiz = get_object_or_404(QuestionPaper, pk=questionpaper_id).quiz
     if attempt_number is None:
@@ -731,15 +733,17 @@ def monitor(request, questionpaper_id=None):
                                  context_instance=ci)
 
 
-def get_user_data(username, questionpaper_id=None):
-    """For a given username, this returns a dictionary of important data
+def get_user_data( username = None, questionpaper_id=None, attempt_number = None):
+    """For a given user id, this returns a dictionary of important data
     related to the user including all the user's answers submitted.
     """
-    user = User.objects.get(username=username)
+    user = User.objects.get(username = username)
     papers = AnswerPaper.objects.filter(user=user)
-    if questionpaper_id is not None:
-        papers = papers.filter(question_paper_id=questionpaper_id).order_by(
+    if questionpaper_id is not None and attempt_number is not None:
+        papers = papers.filter(question_paper_id=questionpaper_id, attempt_number = attempt_number).order_by(
                 '-attempt_number')
+    if attempt_number == None:
+        papers = papers.filter(question_paper_id=questionpaper_id).order_by("-attempt_number")
 
     data = {}
     profile = user.profile if hasattr(user, 'profile') else None
@@ -819,7 +823,7 @@ def user_data(request, username, questionpaper_id=None):
     current_user = request.user
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
-
+    
     data = get_user_data(username, questionpaper_id)
 
     context = {'data': data}
@@ -873,7 +877,8 @@ def download_csv(request, questionpaper_id):
 
 
 @login_required
-def grade_user(request, username, questionpaper_id=None):
+def grade_user(request, quiz_id = None, user_id=None, attempt_number = None):
+
     """Present an interface with which we can easily grade a user's papers
     and update all their marks and also give comments for each paper.
     """
@@ -881,26 +886,44 @@ def grade_user(request, username, questionpaper_id=None):
     ci = RequestContext(request)
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
-    data = get_user_data(username, questionpaper_id)
-    if request.method == 'POST':
-        papers = data['papers']
-        for paper in papers:
-            for question, answers in paper.get_question_answers().iteritems():
-                marks = float(request.POST.get('q%d_marks' % question.id, 0))
-                last_ans = answers[-1]
-                last_ans.marks = marks
-                last_ans.save()
-            paper.comments = request.POST.get(
-                'comments_%d' % paper.question_paper.id, 'No comments')
-            paper.save()
 
-        context = {'data': data}
-        return my_render_to_response('yaksh/user_data.html', context,
-                                     context_instance=ci)
-    else:
-        context = {'data': data}
-        return my_render_to_response('yaksh/grade_user.html', context,
-                                     context_instance=ci)
+    course_details =Course.objects.filter(creator = current_user)
+    context = {"course_details": course_details}
+
+    if quiz_id != None:
+        questionpaper_id = QuestionPaper.objects.filter(quiz_id = quiz_id).values("id")
+
+        answerpaper_details = AnswerPaper.objects.filter(question_paper_id = questionpaper_id)
+        users_id = answerpaper_details.values_list("user_id").distinct()
+        user_details = User.objects.filter(id__in = users_id)
+        context = {"users": user_details, "quiz_id": quiz_id}
+        if user_id !=None:
+            attempts = answerpaper_details.filter(user_id= user_id).order_by("-attempt_number")
+            username = User.objects.get(id = user_id)
+            if attempt_number is None:
+                attempt_number = attempts[0].attempt_number
+
+            data = get_user_data(username.username, questionpaper_id, attempt_number)
+            if request.method == "POST":
+                papers = data['papers']
+                for paper in papers:
+                    for question, answers in paper.get_question_answers().iteritems():
+                        marks = float(request.POST.get('q%d_marks' % question.id, 0))
+                        last_ans = answers[-1]
+                        last_ans.marks = marks
+                        last_ans.save()
+                    paper.comments = request.POST.get(
+                        'comments_%d' % paper.question_paper.id, 'No comments')
+                    paper.save()
+
+            context = {'data': data,"quiz_id": quiz_id,  "users": user_details,
+                            "attempts": attempts,"user_id":user_id
+                            }
+
+
+               
+    return my_render_to_response('yaksh/grade_user.html', context, context_instance=ci)
+
 
 
 @csrf_exempt
