@@ -9,13 +9,13 @@
 {% endblock %}
 {% block subtitle %}
   {% if not quizzes and not quiz %}
-	Quiz Results
+  Quiz Results
   {% endif %}
   {% if quizzes %}
-	Available Quizzes
+  Available Quizzes
   {% endif %}
   {% if quiz %}
-	{{ quiz.description }} Results
+  {{ quiz.description }} Results
   {% endif %}
 {% endblock %}
 {% block manage %}
@@ -54,7 +54,7 @@
     </tr>
     {% for paper in latest_attempts %}
     <tr> 
-        <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.username}}/{{paper.question_paper.id}}">{{ paper.user.get_full_name.title }}</a> </td>
+        <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.id}}/{{paper.question_paper.id}}">{{ paper.user.get_full_name.title }}</a> </td>
         <td> {{ paper.user.username }} </td>
         <td> {{ paper.user.profile.roll_number }} </td>
         <td> {{ paper.user.profile.institute }} </td>
