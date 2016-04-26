@@ -495,6 +495,9 @@ class AnswerPaperManager(models.Manager):
         return self.filter(question_paper=questionpaper, user=user)\
                             .order_by('-attempt_number')
 
+    def get_user_all_attempts(self, questionpaper,user):
+        return self.filter(question_paper=questionpaper, user= user).order_by('-attempt_number')
+
 
 ###############################################################################
 class AnswerPaper(models.Model):
