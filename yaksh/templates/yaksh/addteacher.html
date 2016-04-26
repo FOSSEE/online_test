@@ -21,7 +21,7 @@
 <form action="{{ URL_ROOT }}/exam/manage/addteacher/{{ course.id }}/" method="post">
 {% csrf_token %}
 {% if success == True %}
-	{% if teachers|length == 1 or teachers|length == 0%}
+	{% if teachers|length == 1 or teachers|length == 0 %}
 		<center><h3>No results found</h3></center>
 	{% else %}
 		<center><b><u>Search Results</u></b></center><br>

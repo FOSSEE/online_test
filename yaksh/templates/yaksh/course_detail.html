@@ -2,7 +2,7 @@
 
 {% block title %} Course {% endblock title %}
 
-{% block subtitle %} {{ course.name }} {% endblock %}
+{% block subtitle %} {% for course in courses %}{{ course.name }}{% endfor %} {% endblock %}
 
 {% block css %}
 <link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/course.css" />
