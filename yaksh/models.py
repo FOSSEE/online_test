@@ -487,12 +487,13 @@ class AnswerPaperManager(models.Manager):
         return self.filter(question_paper=questionpaper, user=user).count()
 
     def get_users_for_questionpaper(self, questionpaper_id):
-        return self.get_answerpapers_for_quiz(questionpaper_id).values("user__id",
-                                                                        "user__first_name",
-                                                                        "user__last_name"
-                                                                        ).distinct()
-    def get_user_all_attempts(self, questionpaper,user):
-        return self.filter(question_paper=questionpaper, user= user).order_by('-attempt_number')
+        return self.get_answerpapers_for_quiz(questionpaper_id)\
+            .values("user__id", "user__first_name", "user__last_name")\
+            .distinct()
+
+    def get_user_all_attempts(self, questionpaper, user):
+        return self.filter(question_paper=questionpaper, user=user)\
+                            .order_by('-attempt_number')
 
 
 ###############################################################################
