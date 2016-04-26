@@ -1,46 +1,101 @@
 {% extends "manage.html" %}
 
-{% block title %} Grading papers for {{ data.user.get_full_name.title }} {% endblock title %}
+{% block title %} Grade User {% endblock title %}
 
-{% block subtitle %}Grading papers for {{ data.user.get_full_name.title }}{% endblock %}
+{% block subtitle %} Grade User {% endblock %}
  
 {% block css %}
-	 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/gradeuser.css" type="text/css" /> 
+     <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/gradeuser.css" type="text/css" /> 
 {% endblock %}
 
 {% block script %}
-<script src= "{{ URL_ROOT }}/static/yaksh/js/edit_question.js"></script>
+    <script src= "{{ URL_ROOT }}/static/yaksh/js/edit_question.js"></script>
 {% endblock %}
+
 {% block manage %}
 
-<p> 
-Name: {{ data.user.get_full_name.title }}
-{% if data.profile %}
-(roll number: {{ data.profile.roll_number }}) <br/>
-Position: {{ data.profile.position }} <br/>
-Department: {{ data.profile.department }} <br/>
-Institute: {{ data.profile.institute }} <br/>
+{% if course_details %}
+    <table id = "course-details" class = "zebra-striped">
+    <tr>
+    <th>Courses</th> 
+    <th> Quizzes </th>
+    </tr>
+
+    {% for course in course_details %}
+    <tr>
+    <td><ul>{{course.name}} </td>
+
+    {% if course.get_quizzes %}
+    <td>
+    {% for quiz in course.get_quizzes %}
+     <li><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}">{{quiz.description}}</a></li>
+
+    {% endfor %}
+    </td>
+    {% else %}
+    <td> No quiz</td>
+    {% endif %}
+    </ul></tr>
+    {% endfor %}
+    </table>
 {% endif %}
-</p>
+
+<div class="row">
+{%if users %}
+    <div id = "student" class="span2">
+    {% for user in users %}
+    <p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}">{{user.user__first_name}} {{user.user__last_name}}</a></p>
+    {% endfor %}
+    </div>
+{% endif %}
+
+
+
+<div id = "paper" class="span12"> {#not found yet#}
+{% if not data %}
+</div>
+{% else %}
+<p> <h3> <center> Showing paper for {{data.user.get_full_name.title}} </center></h3>
+<p><b>Name:</b>{{ data.user.get_full_name.title }}
+{% if data.profile %}
+
+<p><b> Roll number:</b> {{ data.profile.roll_number }}
+<p><b>Position: </b> {{ data.profile.position }}
+<p><b>Department: </b>{{ data.profile.department }} 
+<p><b>Institute: </b>{{ data.profile.institute }}
+{% endif %}
 
 {% if data.papers %}
 
 {% for paper in data.papers %}
-
-{% if forloop.counter == 2 and data.questionpaperid %}
 <hr>
-<u><h2> Previous attempts </h2></u>
-{% endif %}
 {{ paper.total_marks }}
 
-<h2> Quiz: {{ paper.question_paper.quiz.description }} </h2>
+<h3> Quiz: {{ paper.question_paper.quiz.description }} </h3>
 
 <p>
-Attempt Number: {{ paper.attempt_number }}<br/>
-Questions correctly answered: {{ paper.get_answered_str }} <br/>
+Attempt Number: <b>{{paper.attempt_number}} </b>
+<select id = "attempt" onchange="window.location.href=this.value">
+<option selected="">Select attempt number</option>
+{%for attempt in attempts %}
+<option value = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user_id}}/{{attempt.attempt_number}}/"> 
+{{attempt.attempt_number}}
+</option>
+{% endfor %}
+</select>
+
+<br/>Questions correctly answered: {{ paper.get_answered_str }} <br/>
 Total attempts at questions: {{ paper.answers.count }} <br/>
-Marks obtained: {{ paper.get_total_marks }} <br/>
+Marks obtained: {{ paper.marks_obtained }} <br/>
 Start time: {{ paper.start_time }} <br/>
+{%if paper.percent%}
+Percentage obtained: {{paper.percent}}% <br/>
+{% endif %}
+{% if paper.passed == 0 %}
+Status : <b style="color: red;"> Failed </b><br/>
+{% else %}
+Status : <b style="color: green;"> Passed </b><br/>
+{% endif %}
 </p>
 
 {% if paper.answers.count %}
@@ -59,12 +114,13 @@ Start time: {{ paper.start_time }} <br/>
     {% endfor %}
 </table>
 
+
 <h3> Answers </h3><br>
 <form name=frm id="q{{ paper.quiz.id }}_form"
     {% if data.questionpaperid %}
-    action="{{URL_ROOT}}/exam/manage/gradeuser/{{data.user.username}}/{{data.questionpaperid}}/"
+    action="{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user_id}}/{{paper.attempt_number}}/"
     {% else %}
-    action="{{URL_ROOT}}/exam/manage/gradeuser/{{data.user.username}}/"
+    action="{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user_id}}/{{paper.attempt_number}}/"
     {% endif %}
     method="post">
 {% csrf_token %}
@@ -72,13 +128,13 @@ Start time: {{ paper.start_time }} <br/>
 
 <div class="for-question">
 <p><strong> 
-	Question: {{ question.id }}. {{ question.summary }} (Points: {{ question.points }})
+    Question: {{ question.id }}. {{ question.summary }} (Points: {{ question.points }})
 </strong>
 <strong><a href="" onClick="grade_data('myContent{{question.id}}'); return false;" style="cursor:pointer;" />Details</strong></p></a>
 <div id="contentDiv">
      <div id="myContent{{question.id}}" style="padding:5px; display:none;">
         <p> Description : {{ question.description }} </p>
-    	<p> Test : {{ question.test }} </p>
+        <p> Test : {{ question.test }} </p>
      </div>
 </div> 
 <div class="question-form">
@@ -113,10 +169,13 @@ Marks: <input id="q{{ question.id }}" type="text"
 <br><button class="btn" type="submit" name="submit_{{paper.quiz.id}}">Save Marks</button>
 
 </form>
+</div>
 {% endif %} {# if paper.answers.count #}
 
 {% endfor %} {# for paper in data.papers #}
 
-{% endif %} {# if data.papers #}
+{% endif %} {#  if data.papers #}
 
+{% endif %} {#if data#}
+</div>
 {% endblock%}
