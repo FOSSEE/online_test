@@ -36,7 +36,7 @@ color: #9EB6FF;
     border: 1px solid #C9C9C9;
     border-radius: 5px 5px 5px 5px;
     margin-bottom: 10px;
-    min-width: 805px;
+    min-width: 685px;
     
 }
 
@@ -50,3 +50,9 @@ margin: 10px 10px 5px 5px;
 }
 #headerDiv a:hover {
 color: #FFFFFF;
+}
+
+#attempt {
+    width: 157px;
+    position: relative; left:20%;
+}
