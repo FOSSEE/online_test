@@ -60,13 +60,13 @@ def tearDownModule():
 ###############################################################################
 class ProfileTestCases(unittest.TestCase):
     def setUp(self):
-        self.user = User.objects.get(pk=1)
+        self.user1 = User.objects.get(pk=1)
         self.profile = Profile.objects.get(pk=1)
-        self.user1 = User.objects.get(pk=3)
+        self.user2 = User.objects.get(pk=3)
 
     def test_user_profile(self):
         """ Test user profile"""
-        self.assertEqual(self.user.username, 'demo_user')
+        self.assertEqual(self.user1.username, 'demo_user')
         self.assertEqual(self.profile.user.username, 'demo_user')
         self.assertEqual(int(self.profile.roll_number), 1)
         self.assertEqual(self.profile.institute, 'IIT')
@@ -74,9 +74,9 @@ class ProfileTestCases(unittest.TestCase):
         self.assertEqual(self.profile.position, 'Student')
 
     def test_is_moderator(self):
-        result = self.user1.profile.is_moderator(self.user1)
+        result = self.user2.profile.is_moderator(self.user2)
         self.assertTrue(result)
-        result = self.user.profile.is_moderator(self.user)
+        result = self.user1.profile.is_moderator(self.user1)
         self.assertFalse(result)
 
 ###############################################################################
@@ -454,3 +454,9 @@ class CourseTestCases(unittest.TestCase):
         added_list, rejected_list = self.course.add_teachers(self.student1, self.student2)
         self.assertSequenceEqual(added_list, [self.student2])
         self.assertSequenceEqual(rejected_list, [self.student1])
+
+    def test_remove_teachers(self):
+        """ Test to remove teachers from a course"""
+        self.course.add_teachers(self.student1, self.student2)
+        self.course.remove_teachers(self.student1)
+        self.assertSequenceEqual(self.course.get_teachers(), [self.student2])

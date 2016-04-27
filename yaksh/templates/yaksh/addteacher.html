@@ -25,8 +25,10 @@
 		<center><h3>No results found</h3></center>
 	{% else %}
 		<center><b><u>Search Results</u></b></center><br>
+		<center><b>Search results does not include teachers already added</b></center><br>
 		<table>
             <th></th>
+            <th>Username</th>
 			<th>First Name</th>
 			<th>Last Name</th>
 			<th>Email</th>
@@ -34,8 +36,10 @@
 			<th>Department</th>
             <th>Position</th>
 			{% for teacher in teachers %}
+				{% if teacher not in course.get_teachers %}
 				<tr>
 				<td><input type="checkbox" name="check" value="{{ teacher.id }}"></td>
+				<td>{{ teacher.username }}</td>
 				<td>{{ teacher.first_name }}</td>
 				<td>{{ teacher.last_name }}</td>
 				<td>{{ teacher.email }}</td>
@@ -43,6 +47,7 @@
 				<td>{{ teacher.profile.department }}</td>
 				<td>{{ teacher.profile.position }}</td>
 				</tr>
+				{% endif %}
 			{% endfor %}
 		</table>
 		<button class="btn" type="submit">Add</button>
@@ -51,31 +56,35 @@
 </form>
 {% if status == True and teachers_added or teachers_rejected %}
 <center>
-<h4>Note: Teacher(s) without profile are rejected</h4>
+<h4>Teacher(s) without profile are rejected</h4>
 <div class="row">
     <div class="span6 wrap">
         <center><b><u>Teacher(s) Added</u></b></center><br>
+        {% if teachers_added %}
         {% for teacher in teachers_added %}
         <div class="well">
             <div class="row">
-                <div class="span3" style="padding-top:10px">
-                    <h5>{{ teacher.get_full_name }}</h5>
-                </div>
+				<h5>{{ teacher.get_full_name }}</h5>
             </div>
         </div>
         {% endfor %}
+        {% else %}
+        <center><b>No Teacher(s) Added</b></center>
+        {% endif %}
     </div>
     <div class="span6 wrap">
         <center><b><u>Teacher(s) Rejected</u></b></center><br>
+        {% if teachers_rejected %}
         {% for teacher in teachers_rejected %}
         <div class="well">
             <div class="row">
-                <div class="span4" style="padding-top:10px">
-                    <h5>{{ teacher.get_full_name }}</h5>
-                </div>
+                <h5>{{ teacher.get_full_name }}</h5>
             </div>
         </div>
         {% endfor %}
+        {% else %}
+        <center><b>No Teacher(s) Rejected</b></center>
+        {% endif %}
     </div>
 </div>
 </center>

@@ -11,10 +11,13 @@
 {% block manage %}
 <a href="{{URL_ROOT}}/exam/manage/viewcourse/">View Allotted Courses</a><br>
 {% if not courses %}
-    <center><h5> You have not created any courses </h5></center>
+    <center><h4> No new Courses added </h4></center>
 {% else %}
-<center><h3> Course(s) created by you </h3></center>
+<center><h3> Course(s) Added</h3></center>
     {% for course in courses %}
+    {% if user != course.creator %}
+        <h4> {{course.creator.get_full_name}} added you to this course</h4>
+    {% endif %}
     <div class="row show-grid">
         <div class="span14">
             <div class="row">
@@ -28,11 +31,39 @@
                         {% endif %}
                     </p>
                     <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">{{ course.name }}</a>
-                    </br>
+                    </br></br>
+                    {% if user == course.creator %}
+                    <div class="row">
+                        <div class="span6 wrap">
+                            <center><b><u>Teacher(s) Added to {{ course }}</u></b></center>
+                            {% if course.get_teachers %}
+                            <div align="left">
+                            <form action="{{URL_ROOT}}/exam/manage/remove_teachers/{{ course.id }}/" method="post">
+                            {% csrf_token %}
+                            {% for teacher in course.get_teachers %}
+                            <div class="well">
+                                <div class="row">
+                                    <div class="span3" style="width: auto;">
+                                        <input type="checkbox" name="remove" value="{{ teacher.id }}">&nbsp;{{ teacher.get_full_name }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <button class="btn success" type="submit">Remove Selected</button>
+                            </div>
+                            {% else %}
+                            <center><b>No Teacher(s) Added</b></center>
+                            {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
+                {% if user == course.creator %}
                 <div class="span6">
                     <p><b><a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher</a></b></p>
                 </div>
+                {% endif %}
                 <div class="span6">
                     <p><b><u>Quiz(zes)</u></b></p>
                     {% if course.get_quizzes %}
@@ -48,7 +79,6 @@
     </div>
     <br><br>
     {% endfor %}
-
     <button class="btn primary" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/add_course");'>Add New Course</button>
     <button class="btn primary" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz");'>Add New Quiz</button>
 {% endif %}

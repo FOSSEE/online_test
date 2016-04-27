@@ -24,13 +24,11 @@ class Profile(models.Model):
     position = models.CharField(max_length=64)
 
     def is_moderator(self, user):
-        return True if user.groups.filter(name='moderator').exists() else False
+        return user.groups.filter(name='moderator').exists()
 
     def _add_to_group(self, user):
         group = Group.objects.get(name="moderator")
         user.groups.add(group)
-        user.profile.position = "Faculty"
-        user.profile.save()
 
 languages = (
         ("python", "Python"),
@@ -138,6 +136,12 @@ class Course(models.Model):
             else:
                 rejected_teachers.append(teacher)
         return added_teachers, rejected_teachers
+
+    def get_teachers(self):
+        return self.teachers.all()
+
+    def remove_teachers(self, *teachers):
+        self.teachers.remove(*teachers)
 
     def __unicode__(self):
         return self.name
