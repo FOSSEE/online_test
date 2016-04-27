@@ -134,7 +134,7 @@ class QuestionTestCases(unittest.TestCase):
     def test_dump_questions_into_json(self):
         """ Test dump questions into json """
         question = Question()
-        questions = json.loads(question.dump_questions_into_json(self.user1))
+        questions = json.loads(question.dump_into_json(self.user1))
         for que in questions:
             self.assertEqual(self.question1.summary, que['summary'])
             self.assertEqual(self.question1.language, que['language'])
@@ -147,7 +147,7 @@ class QuestionTestCases(unittest.TestCase):
     def test_load_questions_from_json(self):
         """ Test load questions into database from json """
         question = Question()
-        result = question.load_questions_from_json(self.json_questions_data, self.user1)
+        result = question.load_from_json(self.json_questions_data, self.user1)
         question_data = Question.objects.get(pk=27)
         self.assertEqual(question_data.summary, 'Json Demo')
         self.assertEqual(question_data.language, 'Python')
