@@ -186,16 +186,14 @@ def add_question(request, question_id=None):
                                              'formset': test_case_formset},
                                              context_instance=ci)
             else:
-                d = Question.objects.get(id=question_id, user_id=user.id)
+                d = Question.objects.get(id=question_id)
                 form = QuestionForm(request.POST, instance=d)
                 test_case_formset = add_or_delete_test_form(request.POST, d)
                 if 'save_question' in request.POST:
                     qtn = form.save(commit=False)
-                    qtn.user = user
-                    qtn.save()
                     test_case_formset = TestCaseFormSet(request.POST, prefix='test',  instance=qtn)
                     form.save()
-                    question = Question.objects.get(id=question_id, user_id=user.id)
+                    question = Question.objects.get(id=question_id)
                     if test_case_formset.is_valid():
                         test_case_formset.save()
                     return my_redirect("/exam/manage/questions")
@@ -219,7 +217,7 @@ def add_question(request, question_id=None):
                                          'formset': test_case_formset},
                                          context_instance=ci)
         else:
-            d = Question.objects.get(id=question_id, user_id=user.id)
+            d = Question.objects.get(id=question_id)
             form = QuestionForm(instance=d)
             test_case_formset = TestCaseFormSet(prefix='test', instance=d)
 
@@ -815,9 +813,10 @@ def show_all_questions(request):
         raise Http404("You are not allowed to view this page !")
 
     if request.method == 'POST' and request.POST.get('delete') == 'delete':
-        question_ids = request.POST.getlist('question')
-        if question_ids is not None:
-            question = Question.objects.filter(id__in=question_ids, user_id=user.id).delete()
+        data = request.POST.getlist('question')
+        if data is not None:
+            for i in data:
+                question = Question.objects.get(id=i).delete()
     questions = Question.objects.filter(user_id=user.id)
     form = QuestionFilterForm(user=user)
     upload_form = UploadFileForm()
@@ -954,7 +953,7 @@ def ajax_questionpaper(request, query):
     user = request.user
     if query == 'marks':
         question_type = request.POST.get('question_type')
-        questions = Question.objects.filter(type=question_type, user_id=user.id)
+        questions = Question.objects.filter(type=question_type, user=user)
         marks = questions.values_list('points').distinct()
         return my_render_to_response('yaksh/ajax_marks.html', {'marks': marks})
     elif query == 'questions':
@@ -966,7 +965,7 @@ def ajax_questionpaper(request, query):
         random_question_list = ",".join(random_questions).split(',')
         question_list = fixed_question_list + random_question_list
         questions = list(Question.objects.filter(type=question_type,
-                                            points=marks_selected, user_id=user.id))
+                                            points=marks_selected, user=user))
         questions = [question for question in questions \
                 if not str(question.id) in question_list]
         return my_render_to_response('yaksh/ajax_questions.html',
@@ -1003,7 +1002,7 @@ def design_questionpaper(request):
         if random_questions:
             for random_question, num in zip(random_questions, random_number):
                 qid = random_question.split(',')[0]
-                question = Question.objects.get(id=int(qid), user_id=user.id)
+                question = Question.objects.get(id=int(qid))
                 marks = question.points
                 question_set = QuestionSet(marks=marks, num_questions=num)
                 question_set.save()
@@ -1167,7 +1166,7 @@ def download_questions(request):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     question = Question()
-    questions = question.dump_questions_into_json(user)
+    questions = question.dump_into_json(user)
     response = HttpResponse(questions, content_type='text/json')
     response['Content-Disposition'] = 'attachment; filename="{0}_questions.json"'\
                                                             .format(user)
@@ -1188,11 +1187,8 @@ def upload_questions(request):
             if questions_file.name.split('.')[1] == "json":
                 questions_list = questions_file.read()
                 question = Question()
-                question.load_questions_from_json(questions_list, user)
+                question.load_from_json(questions_list, user)
                 return my_redirect('/exam/manage/questions')
             else:
                 raise Http404("Please Upload a JSON file")
-        else:
-            return my_redirect('/exam/manage/questions')
-    else:
-        return my_redirect('/exam/manage/questions')
+    return my_redirect('/exam/manage/questions')

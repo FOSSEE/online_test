@@ -211,7 +211,7 @@ class Question(models.Model):
 
         return json.dumps(question_info_dict)
 
-    def dump_questions_into_json(self, user):
+    def dump_into_json(self, user):
         questions = Question.objects.filter(user_id = user.id)
         questions_dict = [{'summary': question.summary,
                         'description': question.description,
@@ -222,7 +222,7 @@ class Question(models.Model):
                         'snippet': question.snippet} for question in questions]
         return json.dumps(questions_dict, indent=2)
 
-    def load_questions_from_json(self, questions_list, user):
+    def load_from_json(self, questions_list, user):
         questions = json.loads(questions_list)
         for question in questions:
             Question.objects.get_or_create(summary=question['summary'],
