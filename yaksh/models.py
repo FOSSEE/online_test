@@ -50,6 +50,11 @@ test_status = (
 def get_assignment_dir(instance, filename):
     return '%s/%s' % (instance.user.roll_number, instance.assignmentQuestion.id)
 
+def get_model_class(model):
+    ctype = ContentType.objects.get(app_label="yaksh", model=model)
+    model_class = ctype.model_class()
+
+
 
 ###############################################################################
 class Course(models.Model):
