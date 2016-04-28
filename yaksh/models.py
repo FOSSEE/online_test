@@ -112,6 +112,9 @@ class Course(models.Model):
     def is_creator(self, user):
         return self.creator == user
 
+    def is_teacher(self, user):
+        return True if user in self.teachers.all() else False
+
     def is_self_enroll(self):
         return True if self.enrollment == enrollment_methods[1][0] else False
 

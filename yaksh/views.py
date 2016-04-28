@@ -608,12 +608,11 @@ def courses(request):
 def course_detail(request, course_id):
     user = request.user
     ci = RequestContext(request)
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page')
     course = Course.objects.filter(Q(creator=user)|Q(teachers=user),
                                   pk=course_id).first()
-    if user != course.creator and user not in course.teachers.all():
+    if not is_moderator(user) or not course:
         raise Http404('You are not allowed to view this page')
+
     return my_render_to_response('yaksh/course_detail.html', {'course': course},
                                 context_instance=ci)
 
@@ -843,7 +842,8 @@ def download_csv(request, questionpaper_id):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     quiz = Quiz.objects.get(questionpaper=questionpaper_id)
-    if quiz.course.creator != user and user not in quiz.course.teachers.all():
+
+    if not quiz.course.is_creator(user) and not quiz.course.is_teacher(user):
         raise Http404('The question paper does not belong to your course')
     papers = AnswerPaper.objects.get_latest_attempts(questionpaper_id)
     if not papers:
@@ -1098,7 +1098,7 @@ def add_teacher(request, course_id):
 
 
 @login_required
-def view_courses(request):
+def allotted_courses(request):
     """  show courses allotted to a user """
 
     user = request.user
@@ -1113,7 +1113,7 @@ def view_courses(request):
 
 @login_required
 def remove_teachers(request, course_id):
-    """  show courses allotted to a user """
+    """  remove user from a course """
 
     user = request.user
     if not is_moderator(user):

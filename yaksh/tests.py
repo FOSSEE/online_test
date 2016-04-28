@@ -21,6 +21,12 @@ def setUpModule():
     Profile.objects.create(user=student, roll_number=3, institute='IIT',
                            department='Chemical', position='Student')
 
+    student1 = User.objects.create_user(username='demo_user4',
+                             password='demo',
+                             email='demo@test.com')
+    Profile.objects.create(user=student1, roll_number=4, institute='IIT',
+                           department='Chemical', position='Student')
+
     # create group
     group = Group(name="moderator")
     group.save()
@@ -393,6 +399,7 @@ class CourseTestCases(unittest.TestCase):
         self.creator = User.objects.get(pk=1)
         self.student1 = User.objects.get(pk=2)
         self.student2 = User.objects.get(pk=3)
+        self.student3 = User.objects.get(pk=4)
         self.quiz1 = Quiz.objects.get(pk=1)
         self.quiz2 = Quiz.objects.get(pk=2)
 
@@ -457,6 +464,12 @@ class CourseTestCases(unittest.TestCase):
 
     def test_remove_teachers(self):
         """ Test to remove teachers from a course"""
-        self.course.add_teachers(self.student1, self.student2)
-        self.course.remove_teachers(self.student1)
-        self.assertSequenceEqual(self.course.get_teachers(), [self.student2])
+        self.course.add_teachers(self.student2, self.student3)
+        self.course.remove_teachers(self.student2)
+        self.assertSequenceEqual(self.course.get_teachers(), [self.student3])
+
+    def test_is_teacher(self):
+        """ Test to check if user is teacher"""
+        self.course.add_teachers(self.student2)
+        result = self.course.is_teacher(self.student2)
+        self.assertTrue(result)

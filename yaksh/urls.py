@@ -87,6 +87,6 @@ urlpatterns += [
         views.reject, {'was_enrolled': True}),
     url(r'^manage/searchteacher/(?P<course_id>\d+)/$', views.search_teacher),
     url(r'^manage/addteacher/(?P<course_id>\d+)/$', views.add_teacher),
-    url(r'^manage/viewcourse/$', views.view_courses),
+    url(r'^manage/allotted_course/$', views.allotted_courses),
     url(r'^manage/remove_teachers/(?P<course_id>\d+)/$', views.remove_teachers)
 ]
