@@ -54,6 +54,7 @@ def get_model_class(model):
     ctype = ContentType.objects.get(app_label="yaksh", model=model)
     model_class = ctype.model_class()
 
+    return model_class
 
 
 ###############################################################################

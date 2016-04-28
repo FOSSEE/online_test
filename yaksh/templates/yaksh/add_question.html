@@ -1,6 +1,5 @@
 {% extends "manage.html" %}
 
-
 {% block subtitle %}Add Question{% endblock %}
 
 {% block css %}
@@ -30,23 +29,23 @@
   <!-- <tr><td id='label_option'>Options: <td>{{ form.options }}  {{form.options.errors}} -->
   <!-- <tr><td id='label_solution'>Test: <td>{{ form.test }}  {{form.test.errors}} -->
   <!-- <tr><td id='label_ref_code_path'>Reference Code Path: <td>{{ form.ref_code_path }}  {{form.ref_code_path.errors}} -->
-  <tr><td> test_case_type: <td> {{ form.test_case_type }}{{ form.test_case_type.errors }}
+  <tr><td> Test Case Type: <td> {{ form.test_case_type }}{{ form.test_case_type.errors }}
 
-    <form method="post" action="">
-      {% if formset%}
-        {{ formset.management_form }}
-        {% for form in formset %}
-          {{ form }}
-        {% endfor %}
-      {% endif %}
-    </form>
+  <div class="form-group">
+      {{ test_case_formset.management_form }}
+
+      {% for form in test_case_formset %}
+        <div class="link-formset">
+            {{ form }}
+        </div>
+      {% endfor %}
+
+  </div>
+
   </table></center>
   <center>
     <button class="btn" type="submit" name="save_question">Save</button>
     <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Cancel</button>
-    {% if question_id %}
-    <button class="btn" type="button" name="testcase_button" onClick='location.replace("{{URL_ROOT}}/exam/manage/showtestcase/{{ question_id }}/");'>Go To TestCases</button>
-    {% endif %}
   </center>
 </form>
 {% endblock %}
