@@ -70,12 +70,12 @@ def has_profile(user):
     """ check if user has profile """
     return True if hasattr(user, 'profile') else False
 
-def add_teachers_to_group(teachers):
-    """ add teachers to moderator group """
-    for teacher in teachers:
-        if not is_moderator(teacher):
-            group = Group.objects.get(name="moderator")
-            teacher.groups.add(group)
+def add_to_group(users):
+    """ add users to moderator group """
+    group = Group.objects.get(name="moderator")
+    for user in users:
+        if not is_moderator(user):
+            user.groups.add(group)
 
 def index(request):
     """The start page.
@@ -1106,7 +1106,7 @@ def add_teacher(request, course_id):
     if request.method == 'POST':
         teacher_ids = request.POST.getlist('check')
         teachers = User.objects.filter(id__in=teacher_ids)
-        add_teachers_to_group(teachers)
+        add_to_group(teachers)
         course.add_teachers(*teachers)
         context['status'] = True
         context['teachers_added'] = teachers
@@ -1142,5 +1142,6 @@ def remove_teachers(request, course_id):
     course = get_object_or_404(Course, creator=user, pk=course_id)
     if request.method == "POST":
         teacher_ids = request.POST.getlist('remove')
-        course.remove_teachers(*teacher_ids)
+        teachers = User.objects.filter(id__in=teacher_ids)
+        course.remove_teachers(*teachers)
     return my_redirect('/exam/manage/courses')
