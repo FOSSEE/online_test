@@ -4,7 +4,7 @@ from random import sample, shuffle
 from itertools import islice, cycle
 from collections import Counter
 from django.db import models
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from taggit.managers import TaggableManager
 
 
@@ -22,13 +22,6 @@ class Profile(models.Model):
     institute = models.CharField(max_length=128)
     department = models.CharField(max_length=64)
     position = models.CharField(max_length=64)
-
-    def is_moderator(self, user):
-        return user.groups.filter(name='moderator').exists()
-
-    def _add_to_group(self, user):
-        group = Group.objects.get(name="moderator")
-        user.groups.add(group)
 
 languages = (
         ("python", "Python"),
@@ -128,17 +121,7 @@ class Course(models.Model):
         self.active = False
 
     def add_teachers(self, *teachers):
-        added_teachers = list()
-        rejected_teachers = list()
-        for teacher in teachers:
-            if hasattr(teacher, 'profile'):
-                if not teacher.profile.is_moderator(teacher):
-                    teacher.profile._add_to_group(teacher)
-                self.teachers.add(teacher)
-                added_teachers.append(teacher)
-            else:
-                rejected_teachers.append(teacher)
-        return added_teachers, rejected_teachers
+        self.teachers.add(*teachers)
 
     def get_teachers(self):
         return self.teachers.all()

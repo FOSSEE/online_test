@@ -21,17 +21,6 @@ def setUpModule():
     Profile.objects.create(user=student, roll_number=3, institute='IIT',
                            department='Chemical', position='Student')
 
-    student1 = User.objects.create_user(username='demo_user4',
-                             password='demo',
-                             email='demo@test.com')
-    Profile.objects.create(user=student1, roll_number=4, institute='IIT',
-                           department='Chemical', position='Student')
-
-    # create group
-    group = Group(name="moderator")
-    group.save()
-    student.groups.add(group)
-
     # create a course
     course = Course.objects.create(name="Python Course",
                                    enrollment="Enroll Request", creator=user)
@@ -78,12 +67,6 @@ class ProfileTestCases(unittest.TestCase):
         self.assertEqual(self.profile.institute, 'IIT')
         self.assertEqual(self.profile.department, 'Chemical')
         self.assertEqual(self.profile.position, 'Student')
-
-    def test_is_moderator(self):
-        result = self.user2.profile.is_moderator(self.user2)
-        self.assertTrue(result)
-        result = self.user1.profile.is_moderator(self.user1)
-        self.assertFalse(result)
 
 ###############################################################################
 class QuestionTestCases(unittest.TestCase):
@@ -399,7 +382,6 @@ class CourseTestCases(unittest.TestCase):
         self.creator = User.objects.get(pk=1)
         self.student1 = User.objects.get(pk=2)
         self.student2 = User.objects.get(pk=3)
-        self.student3 = User.objects.get(pk=4)
         self.quiz1 = Quiz.objects.get(pk=1)
         self.quiz2 = Quiz.objects.get(pk=2)
 
@@ -458,15 +440,14 @@ class CourseTestCases(unittest.TestCase):
 
     def test_add_teachers(self):
         """ Test to add teachers to a course"""
-        added_list, rejected_list = self.course.add_teachers(self.student1, self.student2)
-        self.assertSequenceEqual(added_list, [self.student2])
-        self.assertSequenceEqual(rejected_list, [self.student1])
+        self.course.add_teachers(self.student1, self.student2)
+        self.assertSequenceEqual(self.course.get_teachers(), [self.student1, self.student2])
 
     def test_remove_teachers(self):
         """ Test to remove teachers from a course"""
-        self.course.add_teachers(self.student2, self.student3)
-        self.course.remove_teachers(self.student2)
-        self.assertSequenceEqual(self.course.get_teachers(), [self.student3])
+        self.course.add_teachers(self.student1, self.student2)
+        self.course.remove_teachers(self.student1)
+        self.assertSequenceEqual(self.course.get_teachers(), [self.student2])
 
     def test_is_teacher(self):
         """ Test to check if user is teacher"""

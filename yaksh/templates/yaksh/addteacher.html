@@ -54,17 +54,17 @@
 	{% endif %}
 {% endif %}
 </form>
-{% if status == True and teachers_added or teachers_rejected %}
-<center>
-<h4>Teacher(s) without profile are rejected</h4>
+{% if status == True %}
 <div class="row">
-    <div class="span6 wrap">
+    <div class="span6 offset4 wrap">
         <center><b><u>Teacher(s) Added</u></b></center><br>
         {% if teachers_added %}
         {% for teacher in teachers_added %}
         <div class="well">
             <div class="row">
-				<h5>{{ teacher.get_full_name }}</h5>
+				<div class="span3" style="width: auto;">
+					<h5>{{ teacher.get_full_name }}</h5>
+				</div>
             </div>
         </div>
         {% endfor %}
@@ -72,21 +72,6 @@
         <center><b>No Teacher(s) Added</b></center>
         {% endif %}
     </div>
-    <div class="span6 wrap">
-        <center><b><u>Teacher(s) Rejected</u></b></center><br>
-        {% if teachers_rejected %}
-        {% for teacher in teachers_rejected %}
-        <div class="well">
-            <div class="row">
-                <h5>{{ teacher.get_full_name }}</h5>
-            </div>
-        </div>
-        {% endfor %}
-        {% else %}
-        <center><b>No Teacher(s) Rejected</b></center>
-        {% endif %}
-    </div>
 </div>
-</center>
 {% endif %}
 {% endblock %}

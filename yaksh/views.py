@@ -14,6 +14,7 @@ from django.http import Http404
 from django.db.models import Sum, Max, Q
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 from taggit.models import Tag
 from itertools import chain
 import json
@@ -68,6 +69,13 @@ def is_moderator(user):
 def has_profile(user):
     """ check if user has profile """
     return True if hasattr(user, 'profile') else False
+
+def add_teachers_to_group(teachers):
+    """ add teachers to moderator group """
+    for teacher in teachers:
+        if not is_moderator(teacher):
+            group = Group.objects.get(name="moderator")
+            teacher.groups.add(group)
 
 def index(request):
     """The start page.
@@ -608,10 +616,13 @@ def courses(request):
 def course_detail(request, course_id):
     user = request.user
     ci = RequestContext(request)
-    course = Course.objects.filter(Q(creator=user)|Q(teachers=user),
-                                  pk=course_id).first()
-    if not is_moderator(user) or not course:
+
+    if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
+
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
 
     return my_render_to_response('yaksh/course_detail.html', {'course': course},
                                 context_instance=ci)
@@ -623,8 +634,11 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
     ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
-    course = Course.objects.filter(Q(creator=user)|Q(teachers=user),
-                                    pk=course_id).first()
+
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
     if request.method == 'POST':
         enroll_ids = request.POST.getlist('check')
     else:
@@ -643,8 +657,11 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
     ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
-    course = Course.objects.filter(Q(creator=user)|Q(teachers=user),
-                                    pk=course_id).first()
+
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
     if request.method == 'POST':
         reject_ids = request.POST.getlist('check')
     else:
@@ -662,8 +679,11 @@ def toggle_course_status(request, course_id):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
-    course = Course.objects.filter(Q(creator=user)|Q(teachers=user),
-                                    pk=course_id).first()
+
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
     if course.active:
         course.deactivate()
     else:
@@ -1086,10 +1106,10 @@ def add_teacher(request, course_id):
     if request.method == 'POST':
         teacher_ids = request.POST.getlist('check')
         teachers = User.objects.filter(id__in=teacher_ids)
-        teachers_added, teachers_rejected = course.add_teachers(*teachers)
+        add_teachers_to_group(teachers)
+        course.add_teachers(*teachers)
         context['status'] = True
-        context['teachers_added'] = teachers_added
-        context['teachers_rejected'] = teachers_rejected
+        context['teachers_added'] = teachers
         return my_render_to_response('yaksh/addteacher.html', context,
                                     context_instance=ci)
     else:
@@ -1122,6 +1142,5 @@ def remove_teachers(request, course_id):
     course = get_object_or_404(Course, creator=user, pk=course_id)
     if request.method == "POST":
         teacher_ids = request.POST.getlist('remove')
-        teachers = User.objects.filter(id__in=teacher_ids)
-        course.remove_teachers(*teachers)
+        course.remove_teachers(*teacher_ids)
     return my_redirect('/exam/manage/courses')
