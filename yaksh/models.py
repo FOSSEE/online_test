@@ -250,6 +250,7 @@ class Question(models.Model):
 
         return json.dumps(question_data)
 
+<<<<<<< HEAD
     def dump_into_json(self, question_ids, user):
         questions = Question.objects.filter(id__in = question_ids, user_id = user.id)
         questions_dict = []
@@ -270,15 +271,18 @@ class Question(models.Model):
             question['user'] = user
             Question.objects.get_or_create(**question)
 
-    def get_test_cases(self):
+    def get_test_cases(self, **kwargs):
         test_case_ctype = ContentType.objects.get(app_label="yaksh", model=self.test_case_type)
-        test_cases = test_case_ctype.get_all_objects_for_this_type(question=self)
+        test_cases = test_case_ctype.get_all_objects_for_this_type(question=self, **kwargs)
 
         return test_cases
 
-    def get_test_case(self, test_case_id):
+    # def get_test_case(self, test_case_id):
+    #     test_case_ctype = ContentType.objects.get(app_label="yaksh", model=self.test_case_type)
+    #     test_case = test_case_ctype.get_object_for_this_type(question=self, id=test_case_id)
+    def get_test_case(self, **kwargs):
         test_case_ctype = ContentType.objects.get(app_label="yaksh", model=self.test_case_type)
-        test_case = test_case_ctype.get_object_for_this_type(question=self, id=test_case_id)
+        test_case = test_case_ctype.get_object_for_this_type(question=self, **kwargs)
 
         return test_case
 

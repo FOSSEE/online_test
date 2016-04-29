@@ -565,7 +565,9 @@ def show_question(request, question, paper, error_message=None):
     if paper.time_left() <= 0:
         reason='Your time is up!'
         return complete(request, reason, paper.attempt_number, paper.question_paper.id)
-    context = {'question': question, 'paper': paper, 'error_message': error_message}
+    test_cases = question.get_test_cases()
+    context = {'question': question, 'paper': paper, 'error_message': error_message,
+                'test_cases': test_cases}
     answers = paper.get_previous_answers(question)
     if answers:
         context['last_attempt'] = answers[0]
@@ -666,6 +668,36 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         return show_question(request, question, paper)
 
 
+# def validate_answer(user, user_answer, question, json_data=None):
+#     """
+#         Checks whether the answer submitted by the user is right or wrong.
+#         If right then returns correct = True, success and
+#         message = Correct answer.
+#         success is True for MCQ's and multiple correct choices because
+#         only one attempt are allowed for them.
+#         For code questions success is True only if the answer is correct.
+#     """
+
+#     result = {'success': True, 'error': 'Incorrect answer'}
+#     correct = False
+
+#     if user_answer is not None:
+#         if question.type == 'mcq':
+#             if user_answer.strip() == question.test.strip():
+#                 correct = True
+#         elif question.type == 'mcc':
+#             answers = set(question.test.splitlines())
+#             if set(user_answer) == answers:
+#                 correct = True
+#         elif question.type == 'code':
+#             user_dir = get_user_dir(user)
+#             json_result = code_server.run_code(question.language, question.test_case_type, json_data, user_dir)
+#             result = json.loads(json_result)
+#             if result.get('success'):
+#                 correct = True
+
+#     return correct, result
+
 def validate_answer(user, user_answer, question, json_data=None):
     """
         Checks whether the answer submitted by the user is right or wrong.
@@ -681,11 +713,15 @@ def validate_answer(user, user_answer, question, json_data=None):
 
     if user_answer is not None:
         if question.type == 'mcq':
-            if user_answer.strip() == question.test.strip():
+            expected_answer = question.get_test_case(correct=True).options
+            if user_answer.strip() == expected_answer.strip():
                 correct = True
         elif question.type == 'mcc':
-            answers = set(question.test.splitlines())
-            if set(user_answer) == answers:
+            expected_answers = []
+            for opt in question.get_test_cases(correct=True):
+                expected_answers.append(opt.options)
+            # answers = set(question.test.splitlines())
+            if set(user_answer) == set(expected_answers):
                 correct = True
         elif question.type == 'code':
             user_dir = get_user_dir(user)

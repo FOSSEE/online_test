@@ -20,12 +20,12 @@ SERVER_TIMEOUT = 2
 URL_ROOT = ''
 
 code_evaluators = {
-            "python": {"standardtestcase": "yaksh.python_assertion_evaluator.PythonAssertionEvaluator",
-                    "stdoutbasedtestcase": "yaksh.python_stdout_evaluator.PythonStdoutEvaluator"
+            "python": {"standardtestcase": "python_assertion_evaluator.PythonAssertionEvaluator",
+                    "stdoutbasedtestcase": "python_stdout_evaluator.PythonStdoutEvaluator"
             },
-            "c": {"standardtestcase": "yaksh.cpp_code_evaluator.CppCodeEvaluator"},
-            "cpp": {"standardtestcase": "yaksh.cpp_code_evaluator.CppCodeEvaluator"},
-            "java": {"standardtestcase": "yaksh.java_code_evaluator.JavaCodeEvaluator"},
-            "bash": {"standardtestcase": "yaksh.bash_code_evaluator.BashCodeEvaluator"},
-            "scilab": {"standardtestcase": "yaksh.scilab_code_evaluator.ScilabCodeEvaluator"},
+            "c": {"standardtestcase": "cpp_code_evaluator.CppCodeEvaluator"},
+            "cpp": {"standardtestcase": "cpp_code_evaluator.CppCodeEvaluator"},
+            "java": {"standardtestcase": "java_code_evaluator.JavaCodeEvaluator"},
+            "bash": {"standardtestcase": "bash_code_evaluator.BashCodeEvaluator"},
+            "scilab": {"standardtestcase": "scilab_code_evaluator.ScilabCodeEvaluator"},
     }

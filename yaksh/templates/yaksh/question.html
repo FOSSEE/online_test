@@ -165,20 +165,20 @@ function call_skip(url)
          <input type=hidden name="question_id" id="question_id" value={{ question.id }}></input>
 
          {% if question.type == "mcq" %}
-         {% for option in question.options.strip.splitlines %}
-         <input name="answer" type="radio" value="{{option}}" />{{option}} <br/>
+         {% for test_case in test_cases %}
+         <input name="answer" type="radio" value="{{ test_case.options }}" />{{ test_case.options }} <br/>
+         {% endfor %}
+         {% endif %}
+         {% if question.type == "mcc" %}
+         {% for test_case in test_cases %}
+         <input name="answer" type="checkbox" value="{{ test_case.options }}"> {{ test_case.options }}
+         <br>
          {% endfor %}
          {% endif %}
          {% if question.type == "upload" %}
          <p>Upload assignment file for the said question<p>
          <input type=file id="assignment" name="assignment">
          <hr>
-         {% endif %}
-         {% if question.type == "mcc" %}
-         {% for option in question.options.strip.splitlines %}
-         <input name="answer" type="checkbox" value="{{ option }}"> {{ option }}
-         <br>
-         {% endfor %}
          {% endif %}
          {% if question.type == "code" %}
         <h3>Program:</h3>
@@ -204,7 +204,7 @@ function call_skip(url)
          {% endif %}
          </form>
 </div>     
-      
+
     <!-- Modal -->
     <div class="modal fade " id="upload_alert" >
       <div class="modal-dialog">

@@ -41,7 +41,7 @@ urlpatterns += [
     url(r'^self_enroll/(?P<course_id>\d+)/$', views.self_enroll),
     url(r'^manage/$', views.prof_manage),
     url(r'^manage/addquestion/$', views.add_question),
-    url(r'^manage/addquestion/(?P<question_id>\d+)/$', views.add_question),
+    url(r'^manage/addquestion/(?P<question_id>\d+)/$', views.edit_question),
     url(r'^manage/addquiz/$', views.add_quiz),
     url(r'^manage/addquiz/(?P<quiz_id>\d+)/$', views.edit_quiz),
     url(r'^manage/gradeuser/$', views.grade_user),
