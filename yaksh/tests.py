@@ -79,27 +79,23 @@ class QuestionTestCases(unittest.TestCase):
                                  type='Code', active=True,
                                  test_case_type='standardtestcase',
                                  description='Write a function', points=1.0,
-                                 user=self.user1)
+                                 snippet='def myfunc()', user=self.user1)
         self.question1.save()
 
         self.question2 = Question(summary='Demo Json', language='python',
                                  type='code', active=True,
                                  description='factorial of a no', points=2.0,
-                                 user=self.user2)
+                                 snippet='def fact()', user=self.user2)
         self.question2.save()
 
         self.question1.tags.add('python', 'function')
         self.assertion_testcase = StandardTestCase(question=self.question1,
                                  test_case='assert myfunc(12, 13) == 15')
-        answer_data = {"user_answer": "demo_answer",
-                         "test_case_data": ["assert myfunc(12, 13) == 15"],
-                    }
-        self.answer_data_json = json.dumps(answer_data)
         self.user_answer = "demo_answer"
         questions_data = [{"snippet": "def fact()", "active": True, "points": 1.0,
-                        "ref_code_path": "", "description": "factorial of a no",
-                        "language": "Python", "test": "", "type": "Code",
-                        "options": "", "summary": "Json Demo"}]
+                        "description": "factorial of a no",
+                        "language": "Python", "type": "Code",
+                        "summary": "Json Demo"}]
         self.json_questions_data = json.dumps(questions_data)
 
     def test_question(self):
@@ -110,15 +106,11 @@ class QuestionTestCases(unittest.TestCase):
         self.assertEqual(self.question1.description, 'Write a function')
         self.assertEqual(self.question1.points, 1.0)
         self.assertTrue(self.question1.active)
+        self.assertEqual(self.question1.snippet, 'def myfunc()')
         tag_list = []
         for tag in self.question1.tags.all():
                     tag_list.append(tag.name)
         self.assertEqual(tag_list, ['python', 'function'])
-
-    def test_consolidate_answer_data(self):
-        """ Test consolidate_answer_data function """
-        result = self.question1.consolidate_answer_data(self.user_answer)
-        self.assertEqual(result, self.answer_data_json)
 
     def test_dump_questions_into_json(self):
         """ Test dump questions into json """
@@ -138,7 +130,7 @@ class QuestionTestCases(unittest.TestCase):
         """ Test load questions into database from json """
         question = Question()
         result = question.load_from_json(self.json_questions_data, self.user1)
-        question_data = Question.objects.get(pk=27)
+        question_data = Question.objects.get(pk=25)
         self.assertEqual(question_data.summary, 'Json Demo')
         self.assertEqual(question_data.language, 'Python')
         self.assertEqual(question_data.type, 'Code')
@@ -479,22 +471,43 @@ class CourseTestCases(unittest.TestCase):
 ###############################################################################
 class TestCaseTestCases(unittest.TestCase):
     def setUp(self):
-        self.question = Question(summary='Demo question', language='Python',
+        self.user = User.objects.get(pk=1)
+        self.question1 = Question(summary='Demo question 1', language='Python',
                                  type='Code', active=True,
                                  description='Write a function', points=1.0,
+                                 test_case_type="standardtestcase", user=self.user,
+                                 snippet='def myfunc()'
                                 )
-        self.question.save()
-        self.assertion_testcase = StandardTestCase(question=self.question,
+        self.question2 = Question(summary='Demo question 2', language='Python',
+                                 type='Code', active=True,
+                                 description='Write to standard output', points=1.0,
+                                 test_case_type="stdoutbasedtestcase", user=self.user,
+                                 snippet='def myfunc()'
+                                )
+        self.question1.save()
+        self.question2.save()
+        self.assertion_testcase = StandardTestCase(question=self.question1,
                                  test_case='assert myfunc(12, 13) == 15')
-        self.stdout_based_testcase = StdoutBasedTestCase(question=self.question,
-                                 output='Hello World')
+        self.stdout_based_testcase = StdoutBasedTestCase(question=self.question2,
+                                 expected_output='Hello World')
+        self.assertion_testcase.save()
+        self.stdout_based_testcase.save()
+        answer_data = {"user_answer": "demo_answer",
+                         "test_case_data": [{"test_case": "assert myfunc(12, 13) == 15"}],
+                    }
+        self.answer_data_json = json.dumps(answer_data)
 
     def test_assertion_testcase(self):
         """ Test question """
-        self.assertEqual(self.assertion_testcase.question, self.question)
+        self.assertEqual(self.assertion_testcase.question, self.question1)
         self.assertEqual(self.assertion_testcase.test_case, 'assert myfunc(12, 13) == 15')
 
     def test_stdout_based_testcase(self):
         """ Test question """
-        self.assertEqual(self.stdout_based_testcase.question, self.question)
-        self.assertEqual(self.stdout_based_testcase.output, 'Hello World')
+        self.assertEqual(self.stdout_based_testcase.question, self.question2)
+        self.assertEqual(self.stdout_based_testcase.expected_output, 'Hello World')
+
+    def test_consolidate_answer_data(self):
+        """ Test consolidate answer data model method """
+        result = self.question1.consolidate_answer_data(user_answer="demo_answer")
+        self.assertEqual(result, self.answer_data_json)

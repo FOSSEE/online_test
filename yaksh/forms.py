@@ -224,14 +224,3 @@ class ProfileForm(forms.ModelForm):
 class UploadFileForm(forms.Form):
     file = forms.FileField()
 
-
-class StandardTestCaseForm(forms.ModelForm):
-    class Meta:
-        model = StandardTestCase
-        fields = ['test_case']
-
-
-class StdoutBasedTestCaseForm(forms.ModelForm):
-    class Meta:
-        model = StdoutBasedTestCase
-        fields = ['output']

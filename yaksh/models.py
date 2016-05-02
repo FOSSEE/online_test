@@ -176,6 +176,9 @@ class Question(models.Model):
     # Tags for the Question.
     tags = TaggableManager(blank=True)
 
+    # Snippet of code provided to the user.
+    snippet = models.CharField(max_length=256, blank=True)
+
     # user for particular question
     user = models.ForeignKey(User, related_name="user")
 
@@ -199,10 +202,9 @@ class Question(models.Model):
         questions_dict = []
         for question in questions:
             q_dict = {'summary': question.summary, 'description': question.description,
-                        'points': question.points, 'test': question.test,
-                        'ref_code_path': question.ref_code_path,
-                        'options': question.options, 'language': question.language,
+                        'points': question.points, 'language': question.language,
                         'type': question.type, 'active': question.active,
+                        'test_case_type': question.test_case_type,
                         'snippet': question.snippet}
             questions_dict.append(q_dict)
 

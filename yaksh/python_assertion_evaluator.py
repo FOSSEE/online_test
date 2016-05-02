@@ -39,8 +39,6 @@ class PythonAssertionEvaluator(CodeEvaluator):
             err = "{0} {1} in: {2}".format(type.__name__, str(value), text)
         except TimeoutException:
             raise
-        except Exception:
-            err = traceback.format_exc(limit=0)
         else:
             success = True
             err = 'Correct answer'

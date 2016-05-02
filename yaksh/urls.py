@@ -43,7 +43,7 @@ urlpatterns += [
     url(r'^manage/addquestion/$', views.add_question),
     url(r'^manage/addquestion/(?P<question_id>\d+)/$', views.edit_question),
     url(r'^manage/addquiz/$', views.add_quiz),
-    url(r'^manage/addquiz/(?P<quiz_id>\d+)/$', views.edit_quiz),
+    url(r'^manage/addquiz/(?P<quiz_id>\d+)/$', views.add_quiz),
     url(r'^manage/gradeuser/$', views.grade_user),
     url(r'^manage/gradeuser/(?P<quiz_id>\d+)/$',views.grade_user),
     url(r'^manage/gradeuser/(?P<quiz_id>\d+)/(?P<user_id>\d+)/$',views.grade_user),

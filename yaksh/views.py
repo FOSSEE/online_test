@@ -153,7 +153,9 @@ def add_question(request):
     if request.method == "POST" and 'save_question' in request.POST:
         question_form = QuestionForm(request.POST)
         if question_form.is_valid():
-            new_question = question_form.save()
+            new_question = question_form.save(commit=False)
+            new_question.user = user
+            new_question.save()
             return my_redirect("/exam/manage/addquestion/{0}".format(new_question.id))
         else:
             return my_render_to_response('yaksh/add_question.html',
@@ -190,6 +192,11 @@ def edit_question(request, question_id=None):
                 test_case_formset.save()
             return my_redirect("/exam/manage/addquestion/{0}".format(new_question.id))
         else:
+            test_case_type = question_form.cleaned_data.get('test_case_type')
+            test_case_form_class = get_object_form(model=test_case_type, exclude_fields=['question'])
+            test_case_model_class = get_model_class(test_case_type)
+            TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class, extra=1)
+            test_case_formset = TestCaseInlineFormSet(request.POST, request.FILES, instance=question_instance)
             return my_render_to_response('yaksh/add_question.html',
                                          {'form': question_form,
                                          'test_case_formset': test_case_formset,

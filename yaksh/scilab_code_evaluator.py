@@ -14,9 +14,7 @@ class ScilabCodeEvaluator(CodeEvaluator):
     """Tests the Scilab code obtained from Code Server"""
     def setup(self):
         super(ScilabCodeEvaluator, self).setup()
-        # ref_path, test_case_path = self._set_test_code_file_path(self.ref_code_path)
         self.submit_code_path = self.create_submit_code_file('function.sci')
-        # return ref_path, # Return as a tuple
 
     def teardown(self):
         super(ScilabCodeEvaluator, self).teardown()
@@ -43,8 +41,6 @@ class ScilabCodeEvaluator(CodeEvaluator):
                                 shell=True,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
-        # success = False
-        # proc, stdout, stderr = self.compiled_output
         proc, stdout, stderr = ret 
 
         # Get only the error.
