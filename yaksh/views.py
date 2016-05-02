@@ -761,26 +761,6 @@ def monitor(request, questionpaper_id=None):
     return my_render_to_response('yaksh/monitor.html', context,
                                  context_instance=ci)
 
-def get_user_data(user_id, questionpaper_id=None, attempt_number = None):
-    """For a given username, this returns a dictionary of important data
-    related to the user including all the user's answers submitted.
-    """
-    user = User.objects.get(id=user_id)
-    papers = AnswerPaper.objects.filter(user=user)
-    if questionpaper_id and attempt_number is not None:
-        papers = papers.filter(question_paper_id=questionpaper_id, attempt_number = attempt_number)
-    if attempt_number == None:
-        papers = papers.filter(question_paper_id=questionpaper_id).order_by("-attempt_number")
-
-    data = {}
-    profile = user.profile if hasattr(user, 'profile') else None
-    data['user'] = user
-    data['profile'] = profile
-    data['papers'] = papers
-    data['questionpaperid'] = questionpaper_id
-    return data
-
-
 
 @login_required
 def show_all_users(request):
@@ -850,7 +830,8 @@ def user_data(request, user_id, questionpaper_id=None):
     current_user = request.user
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
-    data = get_user_data(user_id, questionpaper_id)
+    user = User.objects.get(id=user_id)
+    data = AnswerPaper.objects.get_user_data(user, questionpaper_id)
 
     context = {'data': data}
     return my_render_to_response('yaksh/user_data.html', context,
@@ -928,8 +909,10 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
                     attempt_number = attempts[0].attempt_number
             except IndexError:
                 raise Http404('No attempts for paper')
-                
-            data = get_user_data(user_id, questionpaper_id, attempt_number)
+            user = User.objects.get(id=user_id)    
+            data = AnswerPaper.objects.get_user_data(user,questionpaper_id,
+                                                     attempt_number
+                                                     )
 
             context = {'data': data,"quiz_id": quiz_id,  "users": user_details,
                     "attempts": attempts,"user_id":user_id
