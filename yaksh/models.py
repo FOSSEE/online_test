@@ -235,9 +235,14 @@ class Answer(models.Model):
     # Whether skipped or not.
     skipped = models.BooleanField(default=False)
 
+    def set_marks(self, marks):
+        if marks > self.question.points:
+            self.marks = self.question.points
+        else:
+            self.marks = marks
+
     def __unicode__(self):
         return self.answer
-
 
 ###############################################################################
 class QuizManager(models.Manager):
@@ -470,8 +475,13 @@ class AnswerPaperManager(models.Manager):
                 question_stats[question] = [0, questions[question.id]]
         return question_stats
 
-    def get_answerpapers_for_quiz(self, questionpaper_id):
-        return self.filter(question_paper_id=questionpaper_id)
+    def _get_answerpapers_for_quiz(self, questionpaper_id, status=False):
+        if not status:
+           return self.filter(question_paper_id=questionpaper_id) 
+        else:
+            return self.filter(question_paper_id=questionpaper_id,
+                                status="completed")
+            
 
     def _get_answerpapers_users(self, answerpapers):
         return answerpapers.values_list('user', flat=True).distinct()
@@ -500,7 +510,7 @@ class AnswerPaperManager(models.Manager):
         return self.filter(question_paper=questionpaper, user=user).count()
 
     def get_users_for_questionpaper(self, questionpaper_id):
-        return self.get_answerpapers_for_quiz(questionpaper_id)\
+        return self._get_answerpapers_for_quiz(questionpaper_id, status=True)\
             .values("user__id", "user__first_name", "user__last_name")\
             .distinct()
 
@@ -639,7 +649,11 @@ class AnswerPaper(models.Model):
         self._update_percent()
         self._update_passed()
         self._update_status(state)
-        self.end_time = datetime.now()
+        self.save()
+
+    def set_end_time(self,datetime):
+        """ Sets end time """
+        self.end_time = datetime
         self.save()
 
     def get_question_answers(self):
@@ -705,3 +719,4 @@ class TestCase(models.Model):
 
     # Test case Expected answer in list form
     expected_answer = models.TextField(blank=True, null = True)
+#################################################################################
