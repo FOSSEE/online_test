@@ -3,12 +3,8 @@ import importlib
 import json
 
 registry = None
-
-# def set_registry():
-#     global registry
-#     registry = _LanguageRegistry()
     
-def get_registry(): #@@@get_evaluator_registry
+def get_registry():
     global registry
     if registry is None:
         registry = _LanguageRegistry()
@@ -20,11 +16,9 @@ def unpack_json(json_data):
 
 def create_evaluator_instance(language, test_case_type, json_data, in_dir):
     """Create instance of relevant EvaluateCode class based on language"""
-    # set_registry()
     registry = get_registry()
-    cls = registry.get_class(language, test_case_type) #@@@get_evaluator_for_language
+    cls = registry.get_class(language, test_case_type)
     instance = cls(in_dir)
-    # instance = cls.from_json(language, json_data, in_dir)
     return instance
 
 class _LanguageRegistry(object):

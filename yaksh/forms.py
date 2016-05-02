@@ -44,17 +44,8 @@ attempts.append((-1, 'Infinite'))
 days_between_attempts = ((j, j) for j in range(401))
 
 def get_object_form(model, exclude_fields=None):  
-    # ctype = ContentType.objects.get(app_label="yaksh", model=model)
-    # ctype = ContentType.objects.get(pk=type_id) 
-    # model_class = ctype.model_class()
     model_class = get_model_class(model)
     class _ObjectForm(forms.ModelForm):
-        # def __init__(self, *args, **kwargs):
-        #     if "question" in kwargs:
-        #         question = kwargs.pop("question")
-        #     else:
-        #         question = None
-        #     self.fields["question"] = question
         class Meta:
             model = model_class
             exclude = exclude_fields

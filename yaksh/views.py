@@ -154,11 +154,6 @@ def add_question(request):
         question_form = QuestionForm(request.POST)
         if question_form.is_valid():
             new_question = question_form.save()
-            # tags = question_form['tags'].data.split(',')
-            # for i in range(0, len(tags)):
-            #     tag = tags[i].strip()
-            #     new_question.tags.add(tag)
-            # new_question.save()
             return my_redirect("/exam/manage/addquestion/{0}".format(new_question.id))
         else:
             return my_render_to_response('yaksh/add_question.html',
@@ -185,11 +180,6 @@ def edit_question(request, question_id=None):
         question_form = QuestionForm(request.POST, instance=question_instance)
         if question_form.is_valid():
             new_question = question_form.save(commit=False)
-            # tags = question_form['tags'].data.split(',')
-            # for i in range(0, len(tags)):
-            #     tag = tags[i].strip()
-            #     new_question.tags.add(tag)
-            # new_question.save()
             test_case_type = question_form.cleaned_data.get('test_case_type')
             test_case_form_class = get_object_form(model=test_case_type, exclude_fields=['question'])
             test_case_model_class = get_model_class(test_case_type)
@@ -198,7 +188,6 @@ def edit_question(request, question_id=None):
             if test_case_formset.is_valid():
                 new_question.save()
                 test_case_formset.save()
-            # return my_redirect("/exam/manage/questions")
             return my_redirect("/exam/manage/addquestion/{0}".format(new_question.id))
         else:
             return my_render_to_response('yaksh/add_question.html',
@@ -219,186 +208,6 @@ def edit_question(request, question_id=None):
                                      'test_case_formset': test_case_formset,
                                      'question_id': question_id},
                                      context_instance=ci)
-
-# def add_question(request, question_id=None):
-# def add_question(request, question_id=None):
-#     """To add a new question in the database.
-#     Create a new question and store it."""
-#     user = request.user
-#     ci = RequestContext(request)
-#     if not user.is_authenticated() or not is_moderator(user):
-#         raise Http404('You are not allowed to view this page!')
-#     if request.method == "POST":
-#         form = QuestionForm(request.POST)
-#         if form.is_valid():
-#             if question_id is None:
-#                 if 'save_question' in request.POST:
-#                     form.save()
-#                     question = Question.objects.order_by("-id")[0]
-#                     tags = form['tags'].data.split(',')
-#                     for i in range(0, len(tags)-1):
-#                         tag = tags[i].strip()
-#                         question.tags.add(tag)
-
-#                     return my_redirect("/exam/manage/questions")
-
-#                 return my_render_to_response('yaksh/add_question.html',
-#                                              # {'form': form},
-#                                              {'form': form,
-#                                               'question_id': question_id},
-#                                              context_instance=ci)
-                
-#             else:
-#                 d = Question.objects.get(id=question_id)
-#                 if 'save_question' in request.POST:
-#                     d.summary = form['summary'].data
-#                     d.description = form['description'].data
-#                     d.points = form['points'].data
-#                     # d.options = form['options'].data
-#                     d.type = form['type'].data
-#                     d.active = form['active'].data
-#                     d.language = form['language'].data
-#                     # d.snippet = form['snippet'].data
-#                     # d.ref_code_path = form['ref_code_path'].data
-#                     # d.test = form['test'].data
-#                     d.save()
-#                     question = Question.objects.get(id=question_id)
-#                     for tag in question.tags.all():
-#                         question.tags.remove(tag)
-#                     tags = form['tags'].data.split(',')
-#                     for i in range(0, len(tags)-1):
-#                         tag = tags[i].strip()
-#                         question.tags.add(tag)
-
-#                     return my_redirect("/exam/manage/questions")
-
-#                 return my_render_to_response('yaksh/add_question.html',
-#                                              # {'form': form},
-#                                              {'form': form,
-#                                               'question_id': question_id},
-#                                              context_instance=ci)
-
-#         else:
-#             return my_render_to_response('yaksh/add_question.html',
-#                                          # {'form': form},
-#                                              {'form': form,
-#                                               'question_id': question_id},
-#                                          context_instance=ci)
-#     else:
-#         form = QuestionForm()
-#         if question_id is None:
-#             form = QuestionForm()
-#             return my_render_to_response('yaksh/add_question.html',
-#                                          # {'form': form},
-#                                          {'form': form,
-#                                           'question_id': question_id},
-#                                          context_instance=ci)
-#         else:
-#             d = Question.objects.get(id=question_id)
-#             form = QuestionForm()
-#             form.initial['summary'] = d.summary
-#             form.initial['description'] = d.description
-#             form.initial['points'] = d.points
-#             # form.initial['options'] = d.options
-#             form.initial['type'] = d.type
-#             form.initial['active'] = d.active
-#             form.initial['language'] = d.language
-#             # form.initial['snippet'] = d.snippet
-#             # form.initial['ref_code_path'] = d.ref_code_path
-#             # form.initial['test'] = d.test
-#             form_tags = d.tags.all()
-#             form_tags_split = form_tags.values('name')
-#             initial_tags = ""
-#             for tag in form_tags_split:
-#                 initial_tags = initial_tags + str(tag['name']).strip() + ","
-#             if (initial_tags == ","):
-#                 initial_tags = ""
-#             form.initial['tags'] = initial_tags
-
-#             return my_render_to_response('yaksh/add_question.html',
-#                                          # {'form': form},
-#                                              {'form': form,
-#                                               'question_id': question_id},
-#                                          context_instance=ci)
-
-# @login_required
-# def show_testcase(request, question_id=None):
-#     """Show all test cases related to Questions"""
-
-#     user = request.user
-#     ci = RequestContext(request)
-#     if not user.is_authenticated() or not is_moderator(user):
-#         raise Http404('You are not allowed to view this page!')
-#     if not question_id:
-#         raise Http404('No Question Found')
-
-#     question = Question.objects.get(id=question_id)
-#     test_cases = question.get_test_cases()
-
-#     if request.POST.get('delete') == 'delete':
-#         data = request.POST.getlist('test_case')
-#         for i in data:
-#             for t in test_cases:
-#                 if int(i) == t.id:
-#                     test_case_deleted = t.delete()
-#         test_cases = question.get_test_cases()
-
-#     return my_render_to_response('yaksh/show_testcase.html',
-#                                  {'test_cases': test_cases,
-#                                   'question_id': question_id},
-#                                  context_instance=ci)
-
-
-# @login_required
-# def add_testcase(request, question_id=None, test_case_id=None):
-#     """To add new test case for a question"""
-
-#     user = request.user
-#     ci = RequestContext(request)
-#     if not user.is_authenticated() or not is_moderator(user):
-#         raise Http404('You are not allowed to view this page!')
-#     if not question_id:
-#         raise Http404('No Question Found')
-
-#     question = Question.objects.get(id=question_id)
-#     test_case_type = question.test_case_type
-
-#     if test_case_id:
-#         instance = question.get_test_case(test_case_id)
-#     else:
-#         instance = None
-
-#     # test_cases = self.testcase_set.all()
-#     # for test in test_cases:
-#     #     test_case_child_instance = test.get_child_instance(test_case_type)
-
-#     test_case_form_object = get_object_form(model=test_case_type, exclude_fields=['question'])
-
-#     # if test_case_type == "standardtestcase":
-#     #     from yaksh.forms import StandardTestCaseForm
-#     #     if request.method == "POST":
-#     #         form = StandardTestCaseForm(request.POST)
-#     #     form = StandardTestCaseForm(initial)
-
-#     if request.method == "POST":
-#         form = test_case_form_object(request.POST, instance=instance)
-#         if form.is_valid():
-#             form_data = form.save(commit=False)
-#             form_data.question = question
-#             form_data.save()
-#             return my_redirect("/exam/manage/showtestcase/{0}".format(question_id))
-#         else:
-#             return my_render_to_response('yaksh/add_testcase.html',
-#                                          {'form': form,
-#                                          'question_id': question_id},
-#                                          context_instance=ci)
-
-#     else:
-#         form = test_case_form_object(initial={"question": question}, instance=instance)
-#         return my_render_to_response('yaksh/add_testcase.html',
-#                                      {'form': form,
-#                                      'question_id': question_id},
-#                                      context_instance=ci)
 
 @login_required
 def add_quiz(request, quiz_id=None):
@@ -669,36 +478,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         return show_question(request, question, paper)
 
 
-# def validate_answer(user, user_answer, question, json_data=None):
-#     """
-#         Checks whether the answer submitted by the user is right or wrong.
-#         If right then returns correct = True, success and
-#         message = Correct answer.
-#         success is True for MCQ's and multiple correct choices because
-#         only one attempt are allowed for them.
-#         For code questions success is True only if the answer is correct.
-#     """
-
-#     result = {'success': True, 'error': 'Incorrect answer'}
-#     correct = False
-
-#     if user_answer is not None:
-#         if question.type == 'mcq':
-#             if user_answer.strip() == question.test.strip():
-#                 correct = True
-#         elif question.type == 'mcc':
-#             answers = set(question.test.splitlines())
-#             if set(user_answer) == answers:
-#                 correct = True
-#         elif question.type == 'code':
-#             user_dir = get_user_dir(user)
-#             json_result = code_server.run_code(question.language, question.test_case_type, json_data, user_dir)
-#             result = json.loads(json_result)
-#             if result.get('success'):
-#                 correct = True
-
-#     return correct, result
-
 def validate_answer(user, user_answer, question, json_data=None):
     """
         Checks whether the answer submitted by the user is right or wrong.
@@ -721,7 +500,6 @@ def validate_answer(user, user_answer, question, json_data=None):
             expected_answers = []
             for opt in question.get_test_cases(correct=True):
                 expected_answers.append(opt.options)
-            # answers = set(question.test.splitlines())
             if set(user_answer) == set(expected_answers):
                 correct = True
         elif question.type == 'code':

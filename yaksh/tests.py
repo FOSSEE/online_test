@@ -107,11 +107,9 @@ class QuestionTestCases(unittest.TestCase):
         self.assertEqual(self.question1.summary, 'Demo question')
         self.assertEqual(self.question1.language, 'Python')
         self.assertEqual(self.question1.type, 'Code')
-        # self.assertFalse(self.question.options)
         self.assertEqual(self.question1.description, 'Write a function')
         self.assertEqual(self.question1.points, 1.0)
         self.assertTrue(self.question1.active)
-        # self.assertEqual(self.question.snippet, 'def myfunc()')
         tag_list = []
         for tag in self.question1.tags.all():
                     tag_list.append(tag.name)
@@ -148,27 +146,6 @@ class QuestionTestCases(unittest.TestCase):
         self.assertEqual(question_data.points, 1.0)
         self.assertTrue(question_data.active)
         self.assertEqual(question_data.snippet, 'def fact()')
-
-###############################################################################
-# class TestCaseTestCases(unittest.TestCase):
-#     def setUp(self):
-#         self.question = Question(summary='Demo question', language='Python',
-#                                  type='Code', active=True,
-#                                  description='Write a function', points=1.0,
-#                                  snippet='def myfunc()')
-#         self.question.save()
-#         self.testcase = TestCase(question=self.question,
-#                                  func_name='def myfunc', kw_args='a=10,b=11',
-#                                  pos_args='12,13', expected_answer='15')
-
-#     def test_testcase(self):
-#         """ Test question """
-#         self.assertEqual(self.testcase.question, self.question)
-#         self.assertEqual(self.testcase.func_name, 'def myfunc')
-#         self.assertEqual(self.testcase.kw_args, 'a=10,b=11')
-#         self.assertEqual(self.testcase.pos_args, '12,13')
-#         self.assertEqual(self.testcase.expected_answer, '15')
-
 
 ###############################################################################
 class QuizTestCases(unittest.TestCase):
