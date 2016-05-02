@@ -154,12 +154,12 @@ def add_question(request):
         question_form = QuestionForm(request.POST)
         if question_form.is_valid():
             new_question = question_form.save()
-            tags = question_form['tags'].data.split(',')
-            for i in range(0, len(tags)):
-                tag = tags[i].strip()
-                new_question.tags.add(tag)
-            new_question.save()
-            return my_redirect("/exam/manage/questions")
+            # tags = question_form['tags'].data.split(',')
+            # for i in range(0, len(tags)):
+            #     tag = tags[i].strip()
+            #     new_question.tags.add(tag)
+            # new_question.save()
+            return my_redirect("/exam/manage/addquestion/{0}".format(new_question.id))
         else:
             return my_render_to_response('yaksh/add_question.html',
                                          {'form': question_form},
@@ -185,20 +185,21 @@ def edit_question(request, question_id=None):
         question_form = QuestionForm(request.POST, instance=question_instance)
         if question_form.is_valid():
             new_question = question_form.save(commit=False)
-            tags = question_form['tags'].data.split(',')
-            for i in range(0, len(tags)):
-                tag = tags[i].strip()
-                new_question.tags.add(tag)
+            # tags = question_form['tags'].data.split(',')
+            # for i in range(0, len(tags)):
+            #     tag = tags[i].strip()
+            #     new_question.tags.add(tag)
             # new_question.save()
             test_case_type = question_form.cleaned_data.get('test_case_type')
             test_case_form_class = get_object_form(model=test_case_type, exclude_fields=['question'])
             test_case_model_class = get_model_class(test_case_type)
-            TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class)
+            TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class, extra=1)
             test_case_formset = TestCaseInlineFormSet(request.POST, request.FILES, instance=new_question)
             if test_case_formset.is_valid():
                 new_question.save()
                 test_case_formset.save()
-            return my_redirect("/exam/manage/questions")
+            # return my_redirect("/exam/manage/questions")
+            return my_redirect("/exam/manage/addquestion/{0}".format(new_question.id))
         else:
             return my_render_to_response('yaksh/add_question.html',
                                          {'form': question_form,
@@ -210,7 +211,7 @@ def edit_question(request, question_id=None):
         test_case_type = question_instance.test_case_type
         test_case_form_class = get_object_form(model=test_case_type, exclude_fields=['question'])
         test_case_model_class = get_model_class(test_case_type)
-        TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class)
+        TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class, extra=1)
         test_case_formset = TestCaseInlineFormSet(instance=question_instance)
 
         return my_render_to_response('yaksh/add_question.html',
