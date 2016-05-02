@@ -472,6 +472,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             new_answer.error = result.get('error')
         new_answer.save()
         paper.update_marks('inprogress')
+        paper.update_time(datetime.now())
         if not result.get('success'):  # Should only happen for non-mcq questions.
             new_answer.answer = user_code
             new_answer.save()
@@ -548,6 +549,7 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
         paper = AnswerPaper.objects.get(user=user, question_paper=q_paper,
                 attempt_number=attempt_num)
         paper.update_marks()
+        paper.set_end_time(datetime.now())
         if paper.percent == 100:
             message = "You answered all the questions correctly.\
                        You have been logged out successfully,\
@@ -766,8 +768,7 @@ def get_user_data(user_id, questionpaper_id=None, attempt_number = None):
     user = User.objects.get(id=user_id)
     papers = AnswerPaper.objects.filter(user=user)
     if questionpaper_id and attempt_number is not None:
-        papers = papers.filter(question_paper_id=questionpaper_id, attempt_number = attempt_number).order_by(
-                '-attempt_number')
+        papers = papers.filter(question_paper_id=questionpaper_id, attempt_number = attempt_number)
     if attempt_number == None:
         papers = papers.filter(question_paper_id=questionpaper_id).order_by("-attempt_number")
 
@@ -901,8 +902,9 @@ def download_csv(request, questionpaper_id):
         writer.writerow(row)
     return response
 
+
 @login_required
-def grade_user(request, quiz_id = None, user_id=None, attempt_number = None):
+def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
     """Present an interface with which we can easily grade a user's papers
     and update all their marks and also give comments for each paper.
     """
@@ -910,38 +912,42 @@ def grade_user(request, quiz_id = None, user_id=None, attempt_number = None):
     ci = RequestContext(request)
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
-
-    course_details =Course.objects.filter(creator = current_user)
+    course_details = Course.objects.filter(creator=current_user)
     context = {"course_details": course_details}
-
-    if quiz_id != None:
-        questionpaper_id = QuestionPaper.objects.filter(quiz_id = quiz_id).values("id")
-        user_details = AnswerPaper.objects.get_users_for_questionpaper(questionpaper_id)
+    if quiz_id is not None:
+        questionpaper_id = QuestionPaper.objects.filter(quiz_id=quiz_id)\
+                                                        .values("id")
+        user_details = AnswerPaper.objects.get_users_for_questionpaper\
+                                            (questionpaper_id)
         context = {"users": user_details, "quiz_id": quiz_id}
-        
-        if user_id !=None:
-            attempts = AnswerPaper.objects.get_user_all_attempts(questionpaper_id, user_id)
-            
-            if attempt_number == None:
-                attempt_number = attempts[0].attempt_number
+        if user_id is not None:
+            try:
+                attempts = AnswerPaper.objects.get_user_all_attempts\
+                                                (questionpaper_id, user_id)
+                if attempt_number is None:
+                    attempt_number = attempts[0].attempt_number
+            except IndexError:
+                raise Http404('No attempts for paper')
                 
             data = get_user_data(user_id, questionpaper_id, attempt_number)
-            if request.method == "POST":
-                papers = data['papers']
-                for paper in papers:
-                    for question, answers in paper.get_question_answers().iteritems():
-                        marks = float(request.POST.get('q%d_marks' % question.id, 0))
-                        last_ans = answers[-1]
-                        last_ans.marks = marks
-                        last_ans.save()
-                    paper.comments = request.POST.get(
-                        'comments_%d' % paper.question_paper.id, 'No comments')
-                    paper.save()
 
             context = {'data': data,"quiz_id": quiz_id,  "users": user_details,
-                            "attempts": attempts,"user_id":user_id
-                            }
-               
+                    "attempts": attempts,"user_id":user_id
+                    }   
+    if request.method == "POST":
+        papers = data['papers']
+        for paper in papers:
+            for question, answers in paper.get_question_answers().iteritems():
+                marks = float(request.POST.get('q%d_marks' % question.id, 0))
+                answers = answers[-1]
+                answers.set_marks(marks)
+                answers.save()
+            paper.update_marks()
+            paper.comments = request.POST.get(
+                'comments_%d' % paper.question_paper.id, 'No comments')
+            paper.save()
+
+       
     return my_render_to_response('yaksh/grade_user.html', context, context_instance=ci)
 
 
