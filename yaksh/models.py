@@ -518,6 +518,23 @@ class AnswerPaperManager(models.Manager):
         return self.filter(question_paper=questionpaper, user=user)\
                             .order_by('-attempt_number')
 
+    def get_user_data(self, user, questionpaper_id, attempt_number = None):
+
+        if attempt_number is not None:
+            papers = self.filter( user=user, question_paper_id=questionpaper_id,
+                                     attempt_number = attempt_number)
+        else:
+            papers = self.filter(user=user, question_paper_id=questionpaper_id)\
+                                    .order_by("-attempt_number")
+
+        data = {}
+        profile = user.profile if hasattr(user, 'profile') else None
+        data['user'] = user
+        data['profile'] = profile
+        data['papers'] = papers
+        data['questionpaperid'] = questionpaper_id
+        return data
+
 
 ###############################################################################
 class AnswerPaper(models.Model):
@@ -692,6 +709,8 @@ class AnswerPaper(models.Model):
         if question.type == 'code':
             return self.answers.filter(question=question).order_by('-id')
 
+
+
     def __unicode__(self):
         u = self.user
         return u'Question paper for {0} {1}'.format(u.first_name, u.last_name)
@@ -719,4 +738,3 @@ class TestCase(models.Model):
 
     # Test case Expected answer in list form
     expected_answer = models.TextField(blank=True, null = True)
-#################################################################################
