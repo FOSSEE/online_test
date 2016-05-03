@@ -477,11 +477,11 @@ class AnswerPaperManager(models.Manager):
 
     def _get_answerpapers_for_quiz(self, questionpaper_id, status=False):
         if not status:
-           return self.filter(question_paper_id=questionpaper_id) 
+            return self.filter(question_paper_id=questionpaper_id)
         else:
             return self.filter(question_paper_id=questionpaper_id,
                                 status="completed")
-            
+
 
     def _get_answerpapers_users(self, answerpapers):
         return answerpapers.values_list('user', flat=True).distinct()
@@ -518,15 +518,13 @@ class AnswerPaperManager(models.Manager):
         return self.filter(question_paper=questionpaper, user=user)\
                             .order_by('-attempt_number')
 
-    def get_user_data(self, user, questionpaper_id, attempt_number = None):
-
+    def get_user_data(self, user, questionpaper_id, attempt_number=None):
         if attempt_number is not None:
-            papers = self.filter( user=user, question_paper_id=questionpaper_id,
-                                     attempt_number = attempt_number)
+            papers = self.filter(user=user, question_paper_id=questionpaper_id,
+                                     attempt_number=attempt_number)
         else:
             papers = self.filter(user=user, question_paper_id=questionpaper_id)\
                                     .order_by("-attempt_number")
-
         data = {}
         profile = user.profile if hasattr(user, 'profile') else None
         data['user'] = user
@@ -600,7 +598,7 @@ class AnswerPaper(models.Model):
 
     def completed_question(self, question_id):
         """
-            Adds the completed question to the list of answered 
+            Adds the completed question to the list of answered
             questions and returns the next question.
         """
         self.questions_answered.add(question_id)
@@ -668,7 +666,7 @@ class AnswerPaper(models.Model):
         self._update_status(state)
         self.save()
 
-    def set_end_time(self,datetime):
+    def set_end_time(self, datetime):
         """ Sets end time """
         self.end_time = datetime
         self.save()
@@ -708,8 +706,6 @@ class AnswerPaper(models.Model):
     def get_previous_answers(self, question):
         if question.type == 'code':
             return self.answers.filter(question=question).order_by('-id')
-
-
 
     def __unicode__(self):
         u = self.user
