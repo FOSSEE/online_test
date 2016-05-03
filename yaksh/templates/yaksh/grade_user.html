@@ -51,7 +51,7 @@
 
 
 
-<div id = "paper" class="span12"> {#not found yet#}
+<div id = "paper" class="span12">
 {% if data %}
 
 
@@ -176,8 +176,9 @@ Marks: <input id="q{{ question.id }}" type="text"
 {% endfor %} {# for paper in data.papers #}
 
 {% endif %} {#  if data.papers #}
-
+{% else %}
+    </div>
 {% endif %} {#if data#}
-</div>
+
 </div>
 {% endblock%}
