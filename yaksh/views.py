@@ -902,21 +902,23 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
                                             (questionpaper_id)
         context = {"users": user_details, "quiz_id": quiz_id}
         if user_id is not None:
+
+            attempts = AnswerPaper.objects.get_user_all_attempts\
+                                            (questionpaper_id, user_id)
             try:
-                attempts = AnswerPaper.objects.get_user_all_attempts\
-                                                (questionpaper_id, user_id)
                 if attempt_number is None:
                     attempt_number = attempts[0].attempt_number
             except IndexError:
                 raise Http404('No attempts for paper')
-            user = User.objects.get(id=user_id)    
-            data = AnswerPaper.objects.get_user_data(user,questionpaper_id,
+
+            user = User.objects.get(id=user_id)
+            data = AnswerPaper.objects.get_user_data(user, questionpaper_id,
                                                      attempt_number
                                                      )
 
-            context = {'data': data,"quiz_id": quiz_id,  "users": user_details,
-                    "attempts": attempts,"user_id":user_id
-                    }   
+            context = {'data': data, "quiz_id": quiz_id, "users": user_details,
+                    "attempts": attempts, "user_id": user_id
+                    }
     if request.method == "POST":
         papers = data['papers']
         for paper in papers:
@@ -930,8 +932,10 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
                 'comments_%d' % paper.question_paper.id, 'No comments')
             paper.save()
 
-       
-    return my_render_to_response('yaksh/grade_user.html', context, context_instance=ci)
+
+    return my_render_to_response('yaksh/grade_user.html',
+                                context, context_instance=ci
+                                )
 
 
 @csrf_exempt
