@@ -472,7 +472,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             new_answer.error = result.get('error')
         new_answer.save()
         paper.update_marks('inprogress')
-        paper.update_time(datetime.now())
+        paper.set_end_time(datetime.now())
         if not result.get('success'):  # Should only happen for non-mcq questions.
             new_answer.answer = user_code
             new_answer.save()
