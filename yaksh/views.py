@@ -3,7 +3,7 @@ import string
 import os
 import stat
 from os.path import dirname, pardir, abspath, join, exists
-import datetime
+from datetime import datetime
 import collections
 import csv
 from django.http import HttpResponse
