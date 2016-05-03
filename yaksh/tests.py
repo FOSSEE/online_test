@@ -383,6 +383,8 @@ class AnswerPaperTestCases(unittest.TestCase):
     def test_set_marks (self):
         self.answer_wrong.set_marks(0.5)
         self.assertEqual(self.answer_wrong.marks, 0.5)
+        self.answer_wrong.set_marks(10.0)
+        self.assertEqual(self.answer_wrong.marks,1.0)
 
 
 ###############################################################################
