@@ -222,9 +222,14 @@ class Answer(models.Model):
     # Whether skipped or not.
     skipped = models.BooleanField(default=False)
 
+    def set_marks(self, marks):
+        if marks > self.question.points:
+            self.marks = self.question.points
+        else:
+            self.marks = marks
+
     def __unicode__(self):
         return self.answer
-
 
 ###############################################################################
 class QuizManager(models.Manager):
@@ -457,8 +462,13 @@ class AnswerPaperManager(models.Manager):
                 question_stats[question] = [0, questions[question.id]]
         return question_stats
 
-    def get_answerpapers_for_quiz(self, questionpaper_id):
-        return self.filter(question_paper_id=questionpaper_id)
+    def _get_answerpapers_for_quiz(self, questionpaper_id, status=False):
+        if not status:
+            return self.filter(question_paper_id=questionpaper_id)
+        else:
+            return self.filter(question_paper_id=questionpaper_id,
+                                status="completed")
+
 
     def _get_answerpapers_users(self, answerpapers):
         return answerpapers.values_list('user', flat=True).distinct()
@@ -485,6 +495,31 @@ class AnswerPaperManager(models.Manager):
 
     def get_total_attempt(self, questionpaper, user):
         return self.filter(question_paper=questionpaper, user=user).count()
+
+    def get_users_for_questionpaper(self, questionpaper_id):
+        return self._get_answerpapers_for_quiz(questionpaper_id, status=True)\
+            .values("user__id", "user__first_name", "user__last_name")\
+            .distinct()
+
+    def get_user_all_attempts(self, questionpaper, user):
+        return self.filter(question_paper=questionpaper, user=user)\
+                            .order_by('-attempt_number')
+
+    def get_user_data(self, user, questionpaper_id, attempt_number=None):
+        if attempt_number is not None:
+            papers = self.filter(user=user, question_paper_id=questionpaper_id,
+                                     attempt_number=attempt_number)
+        else:
+            papers = self.filter(user=user, question_paper_id=questionpaper_id)\
+                                    .order_by("-attempt_number")
+        data = {}
+        profile = user.profile if hasattr(user, 'profile') else None
+        data['user'] = user
+        data['profile'] = profile
+        data['papers'] = papers
+        data['questionpaperid'] = questionpaper_id
+        return data
+
 
 ###############################################################################
 class AnswerPaper(models.Model):
@@ -550,7 +585,7 @@ class AnswerPaper(models.Model):
 
     def completed_question(self, question_id):
         """
-            Adds the completed question to the list of answered 
+            Adds the completed question to the list of answered
             questions and returns the next question.
         """
         self.questions_answered.add(question_id)
@@ -616,7 +651,11 @@ class AnswerPaper(models.Model):
         self._update_percent()
         self._update_passed()
         self._update_status(state)
-        self.end_time = datetime.now()
+        self.save()
+
+    def set_end_time(self, datetime):
+        """ Sets end time """
+        self.end_time = datetime
         self.save()
 
     def get_question_answers(self):
@@ -682,5 +721,3 @@ class TestCase(models.Model):
 
     # Test case Expected answer in list form
     expected_answer = models.TextField(blank=True, null = True)
-
-
