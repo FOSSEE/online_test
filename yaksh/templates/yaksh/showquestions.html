@@ -19,9 +19,11 @@
 <form action="{{URL_ROOT}}/exam/manage/upload_questions/" method="post"  enctype="multipart/form-data">
 {% csrf_token %}
 {{ upload_form.as_p }}
-<button class="btn" type="submit">Upload File</button>
+<button class="btn" type="submit" name="upload" value="upload">Upload File</button>
 </form>
-
+{% if message %}
+<h4>{{ message }}</h4>
+{% endif %}
 <form name=frm action="" method="post">
 {% csrf_token %}
 <div class="row" id="selectors">
@@ -45,9 +47,12 @@
 <br>
 
 <div id="filtered-questions">
+{% if questions %}
+<h5 class="highlight"><input id="checkall" class="ignore" type="checkbox"> Select All </h5>
 {% for i in questions %}
 <input type="checkbox" name="question" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{ i }}</a><br>
 {% endfor %}
+{% endif %}
 </div>
 <br>
 <button class="btn" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question</button>&nbsp;&nbsp;

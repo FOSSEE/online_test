@@ -135,14 +135,14 @@ class QuestionTestCases(unittest.TestCase):
         """ Test dump questions into json """
         question = Question()
         questions = json.loads(question.dump_into_json(self.user1))
-        for que in questions:
-            self.assertEqual(self.question1.summary, que['summary'])
-            self.assertEqual(self.question1.language, que['language'])
-            self.assertEqual(self.question1.type, que['type'])
-            self.assertEqual(self.question1.description, que['description'])
-            self.assertEqual(self.question1.points, que['points'])
+        for q in questions:
+            self.assertEqual(self.question1.summary, q['summary'])
+            self.assertEqual(self.question1.language, q['language'])
+            self.assertEqual(self.question1.type, q['type'])
+            self.assertEqual(self.question1.description, q['description'])
+            self.assertEqual(self.question1.points, q['points'])
             self.assertTrue(self.question1.active)
-            self.assertEqual(self.question1.snippet, que['snippet'])
+            self.assertEqual(self.question1.snippet, q['snippet'])
 
     def test_load_questions_from_json(self):
         """ Test load questions into database from json """

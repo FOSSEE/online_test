@@ -783,7 +783,7 @@ def ajax_questions_filter(request):
     """Ajax call made when filtering displayed questions."""
 
     user = request.user
-    filter_dict = {}
+    filter_dict = {"user_id":user.id}
     question_type = request.POST.get('question_type')
     marks = request.POST.get('marks')
     language = request.POST.get('language')
@@ -797,7 +797,7 @@ def ajax_questions_filter(request):
     if language != "select":
         filter_dict['language'] = str(language)
 
-    questions = list(Question.objects.filter(**filter_dict).filter(user_id=user.id))
+    questions = list(Question.objects.filter(**filter_dict))
 
     return my_render_to_response('yaksh/ajax_question_filter.html',
                                   {'questions': questions})
@@ -809,23 +809,35 @@ def show_all_questions(request):
 
     user = request.user
     ci = RequestContext(request)
-    if not user.is_authenticated() or not is_moderator(user):
+    context = {}
+    if not is_moderator(user):
         raise Http404("You are not allowed to view this page !")
 
     if request.method == 'POST' and request.POST.get('delete') == 'delete':
         data = request.POST.getlist('question')
         if data is not None:
-            for i in data:
-                question = Question.objects.get(id=i).delete()
+            question = Question.objects.filter(id__in=data, user_id=user.id).delete()
+
+    if request.method == 'POST' and request.POST.get('upload') == 'upload':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            questions_file = request.FILES['file']
+            if questions_file.name.split('.')[-1] == "json":
+                questions_list = questions_file.read()
+                question = Question()
+                question.load_from_json(questions_list, user)
+            else:
+                message = "Please Upload a JSON file"
+                context['message'] = message
+
     questions = Question.objects.filter(user_id=user.id)
     form = QuestionFilterForm(user=user)
     upload_form = UploadFileForm()
-    context = {'papers': [],
-               'question': None,
-               'questions': questions,
-               'form': form,
-               'upload_form': upload_form
-               }
+    context['papers'] = []
+    context['question'] = None
+    context['questions'] = questions
+    context['form'] = form
+    context['upload_form'] = upload_form
     return my_render_to_response('yaksh/showquestions.html', context,
                                  context_instance=ci)
 
@@ -1172,23 +1184,3 @@ def download_questions(request):
                                                             .format(user)
     return response
 
-
-@login_required
-def upload_questions(request):
-    user = request.user
-    ci = RequestContext(request)
-
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-    if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            questions_file = request.FILES['file']
-            if questions_file.name.split('.')[1] == "json":
-                questions_list = questions_file.read()
-                question = Question()
-                question.load_from_json(questions_list, user)
-                return my_redirect('/exam/manage/questions')
-            else:
-                raise Http404("Please Upload a JSON file")
-    return my_redirect('/exam/manage/questions')
