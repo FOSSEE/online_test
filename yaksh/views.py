@@ -893,7 +893,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
     ci = RequestContext(request)
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
-    course_details = Course.objects.filter(creator=current_user)
+    course_details = Course.objects.filter(Q(creator=current_user)|
+                                            Q(teachers=current_user)).distinct()
     context = {"course_details": course_details}
     if quiz_id is not None:
         questionpaper_id = QuestionPaper.objects.filter(quiz_id=quiz_id)\
