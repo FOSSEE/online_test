@@ -22,11 +22,11 @@ Last login: {{ data.user.last_login }}
 
 {% if data.papers %}
 {% if data.questionpaperid %}
-<p><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{ data.user.username }}/{{ data.questionpaperid }}">
+<p><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{data.papers.0.question_paper.quiz.id}}/{{ data.user.id }}">
     Grade/correct paper</a>
 </p>
 {% else %}
-<p><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{ data.user.username }}">
+<p><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{data.papers.0.question_paper.quiz.id}}/{{ data.user.id }}">
     Grade/correct paper</a>
 {% endif %}
 
@@ -41,7 +41,7 @@ Last login: {{ data.user.last_login }}
 Attempt Number: {{ paper.attempt_number }}<br/>
 Questions correctly answered: {{ paper.get_answered_str }} <br/>
 Total attempts at questions: {{ paper.answers.count }} <br/>
-Marks obtained: {{ paper.get_total_marks }} <br/>
+Marks obtained: {{ paper.marks_obtained }} <br/>
 Start time: {{ paper.start_time }} <br/>
 User IP address: {{ paper.user_ip }} 
 </p>
@@ -75,9 +75,12 @@ User IP address: {{ paper.user_ip }}
 {% endif %} {# if data.papers #}
 <br />
 <hr />
-<a href="{{URL_ROOT}}/exam/manage/gradeuser/{{ data.user.username }}/">
-    Grade/correct paper</a>
-<br/>
+
+{% with data.papers.0 as paper %}
+<a href="{{URL_ROOT}}/exam/manage/gradeuser/{{paper.question_paper.quiz.id}}/{{ data.user.id }}/">Grade/correct paper</a>
+{% endwith %}
+<br />
+
 {% if data.papers.count > 1 %}
 <a href="{{URL_ROOT}}/exam/manage/monitor/">Monitor quiz</a>
 {% else %}

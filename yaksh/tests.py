@@ -355,6 +355,11 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertTrue(self.answerpaper.passed)
         self.assertFalse(self.answerpaper.is_attempt_inprogress())
 
+    def test_set_end_time(self):
+        current_time = datetime.now()
+        self.answerpaper.set_end_time(current_time)
+        self.assertEqual(self.answerpaper.end_time,current_time)
+
     def test_get_question_answer(self):
         """ Test get_question_answer() method of Answer Paper"""
         answered = self.answerpaper.get_question_answers()
@@ -374,6 +379,13 @@ class AnswerPaperTestCases(unittest.TestCase):
         answers = self.answerpaper.get_previous_answers(self.questions[1])
         self.assertEqual(answers.count(), 1)
         self.assertTrue(answers[0], self.answer_wrong)
+
+    def test_set_marks (self):
+        self.answer_wrong.set_marks(0.5)
+        self.assertEqual(self.answer_wrong.marks, 0.5)
+        self.answer_wrong.set_marks(10.0)
+        self.assertEqual(self.answer_wrong.marks,1.0)
+
 
 ###############################################################################
 class CourseTestCases(unittest.TestCase):

@@ -3,7 +3,7 @@ import string
 import os
 import stat
 from os.path import dirname, pardir, abspath, join, exists
-import datetime
+from datetime import datetime
 import collections
 import csv
 from django.http import HttpResponse
@@ -472,6 +472,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             new_answer.error = result.get('error')
         new_answer.save()
         paper.update_marks('inprogress')
+        paper.set_end_time(datetime.now())
         if not result.get('success'):  # Should only happen for non-mcq questions.
             new_answer.answer = user_code
             new_answer.save()
@@ -548,6 +549,7 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
         paper = AnswerPaper.objects.get(user=user, question_paper=q_paper,
                 attempt_number=attempt_num)
         paper.update_marks()
+        paper.set_end_time(datetime.now())
         if paper.percent == 100:
             message = "You answered all the questions correctly.\
                        You have been logged out successfully,\
@@ -760,25 +762,6 @@ def monitor(request, questionpaper_id=None):
                                  context_instance=ci)
 
 
-def get_user_data(username, questionpaper_id=None):
-    """For a given username, this returns a dictionary of important data
-    related to the user including all the user's answers submitted.
-    """
-    user = User.objects.get(username=username)
-    papers = AnswerPaper.objects.filter(user=user)
-    if questionpaper_id is not None:
-        papers = papers.filter(question_paper_id=questionpaper_id).order_by(
-                '-attempt_number')
-
-    data = {}
-    profile = user.profile if hasattr(user, 'profile') else None
-    data['user'] = user
-    data['profile'] = profile
-    data['papers'] = papers
-    data['questionpaperid'] = questionpaper_id
-    return data
-
-
 @login_required
 def show_all_users(request):
     """Shows all the users who have taken various exams/quiz."""
@@ -842,14 +825,13 @@ def show_all_questions(request):
                                  context_instance=ci)
 
 @login_required
-def user_data(request, username, questionpaper_id=None):
+def user_data(request, user_id, questionpaper_id=None):
     """Render user data."""
-
     current_user = request.user
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
-
-    data = get_user_data(username, questionpaper_id)
+    user = User.objects.get(id=user_id)
+    data = AnswerPaper.objects.get_user_data(user, questionpaper_id)
 
     context = {'data': data}
     return my_render_to_response('yaksh/user_data.html', context,
@@ -903,7 +885,7 @@ def download_csv(request, questionpaper_id):
 
 
 @login_required
-def grade_user(request, username, questionpaper_id=None):
+def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
     """Present an interface with which we can easily grade a user's papers
     and update all their marks and also give comments for each paper.
     """
@@ -911,26 +893,50 @@ def grade_user(request, username, questionpaper_id=None):
     ci = RequestContext(request)
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
-    data = get_user_data(username, questionpaper_id)
-    if request.method == 'POST':
+    course_details = Course.objects.filter(Q(creator=current_user)|
+                                            Q(teachers=current_user)).distinct()
+    context = {"course_details": course_details}
+    if quiz_id is not None:
+        questionpaper_id = QuestionPaper.objects.filter(quiz_id=quiz_id)\
+                                                        .values("id")
+        user_details = AnswerPaper.objects.get_users_for_questionpaper\
+                                            (questionpaper_id)
+        context = {"users": user_details, "quiz_id": quiz_id}
+        if user_id is not None:
+
+            attempts = AnswerPaper.objects.get_user_all_attempts\
+                                            (questionpaper_id, user_id)
+            try:
+                if attempt_number is None:
+                    attempt_number = attempts[0].attempt_number
+            except IndexError:
+                raise Http404('No attempts for paper')
+
+            user = User.objects.get(id=user_id)
+            data = AnswerPaper.objects.get_user_data(user, questionpaper_id,
+                                                     attempt_number
+                                                     )
+
+            context = {'data': data, "quiz_id": quiz_id, "users": user_details,
+                    "attempts": attempts, "user_id": user_id
+                    }
+    if request.method == "POST":
         papers = data['papers']
         for paper in papers:
             for question, answers in paper.get_question_answers().iteritems():
                 marks = float(request.POST.get('q%d_marks' % question.id, 0))
-                last_ans = answers[-1]
-                last_ans.marks = marks
-                last_ans.save()
+                answers = answers[-1]
+                answers.set_marks(marks)
+                answers.save()
+            paper.update_marks()
             paper.comments = request.POST.get(
                 'comments_%d' % paper.question_paper.id, 'No comments')
             paper.save()
 
-        context = {'data': data}
-        return my_render_to_response('yaksh/user_data.html', context,
-                                     context_instance=ci)
-    else:
-        context = {'data': data}
-        return my_render_to_response('yaksh/grade_user.html', context,
-                                     context_instance=ci)
+
+    return my_render_to_response('yaksh/grade_user.html',
+                                context, context_instance=ci
+                                )
 
 
 @csrf_exempt
