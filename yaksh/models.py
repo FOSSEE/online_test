@@ -23,7 +23,6 @@ class Profile(models.Model):
     department = models.CharField(max_length=64)
     position = models.CharField(max_length=64)
 
-
 languages = (
         ("python", "Python"),
         ("bash", "Bash"),
@@ -71,6 +70,8 @@ class Course(models.Model):
     requests = models.ManyToManyField(User, related_name='requests')
     rejected = models.ManyToManyField(User, related_name='rejected')
     created_on = models.DateTimeField(auto_now_add=True)
+    teachers = models.ManyToManyField(User, related_name='teachers')
+
 
     def request(self, *users):
         self.requests.add(*users)
@@ -104,6 +105,9 @@ class Course(models.Model):
     def is_creator(self, user):
         return self.creator == user
 
+    def is_teacher(self, user):
+        return True if user in self.teachers.all() else False
+
     def is_self_enroll(self):
         return True if self.enrollment == enrollment_methods[1][0] else False
 
@@ -115,6 +119,15 @@ class Course(models.Model):
 
     def deactivate(self):
         self.active = False
+
+    def add_teachers(self, *teachers):
+        self.teachers.add(*teachers)
+
+    def get_teachers(self):
+        return self.teachers.all()
+
+    def remove_teachers(self, *teachers):
+        self.teachers.remove(*teachers)
 
     def __unicode__(self):
         return self.name

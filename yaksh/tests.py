@@ -3,7 +3,7 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, TestCase, Course
 import json
 from datetime import datetime, timedelta
-
+from django.contrib.auth.models import Group
 
 def setUpModule():
     # create user profile
@@ -55,18 +55,18 @@ def tearDownModule():
 ###############################################################################
 class ProfileTestCases(unittest.TestCase):
     def setUp(self):
-        self.user = User.objects.get(pk=1)
+        self.user1 = User.objects.get(pk=1)
         self.profile = Profile.objects.get(pk=1)
+        self.user2 = User.objects.get(pk=3)
 
     def test_user_profile(self):
         """ Test user profile"""
-        self.assertEqual(self.user.username, 'demo_user')
+        self.assertEqual(self.user1.username, 'demo_user')
         self.assertEqual(self.profile.user.username, 'demo_user')
         self.assertEqual(int(self.profile.roll_number), 1)
         self.assertEqual(self.profile.institute, 'IIT')
         self.assertEqual(self.profile.department, 'Chemical')
         self.assertEqual(self.profile.position, 'Student')
-
 
 ###############################################################################
 class QuestionTestCases(unittest.TestCase):
@@ -437,3 +437,20 @@ class CourseTestCases(unittest.TestCase):
     def test_get_quizzes(self):
         """ Test get_quizzes method of Courses"""
         self.assertSequenceEqual(self.course.get_quizzes(), [self.quiz1, self.quiz2])
+
+    def test_add_teachers(self):
+        """ Test to add teachers to a course"""
+        self.course.add_teachers(self.student1, self.student2)
+        self.assertSequenceEqual(self.course.get_teachers(), [self.student1, self.student2])
+
+    def test_remove_teachers(self):
+        """ Test to remove teachers from a course"""
+        self.course.add_teachers(self.student1, self.student2)
+        self.course.remove_teachers(self.student1)
+        self.assertSequenceEqual(self.course.get_teachers(), [self.student2])
+
+    def test_is_teacher(self):
+        """ Test to check if user is teacher"""
+        self.course.add_teachers(self.student2)
+        result = self.course.is_teacher(self.student2)
+        self.assertTrue(result)
