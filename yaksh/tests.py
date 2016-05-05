@@ -72,22 +72,22 @@ class ProfileTestCases(unittest.TestCase):
 class QuestionTestCases(unittest.TestCase):
     def setUp(self):
         # Single question details
-        self.user = User.objects.get(pk=1)
-        self.user1 = User.objects.get(pk=2)
-        self.question = Question(summary='Demo question', language='Python',
+        self.user1 = User.objects.get(pk=1)
+        self.user2 = User.objects.get(pk=2)
+        self.question1 = Question(summary='Demo question', language='Python',
                                  type='Code', active=True,
                                  description='Write a function', points=1.0,
-                                 snippet='def myfunc()', user=self.user)
-        self.question.save()
-
-        self.question1 = Question(summary='Demo Json', language='python',
-                                 type='code', active=True,
-                                 description='factorial of a no', points=2.0,
-                                 snippet='def fact()', user=self.user1)
+                                 snippet='def myfunc()', user=self.user1)
         self.question1.save()
 
-        self.question.tags.add('python', 'function')
-        self.testcase = TestCase(question=self.question,
+        self.question2 = Question(summary='Demo Json', language='python',
+                                 type='code', active=True,
+                                 description='factorial of a no', points=2.0,
+                                 snippet='def fact()', user=self.user2)
+        self.question2.save()
+
+        self.question1.tags.add('python', 'function')
+        self.testcase = TestCase(question=self.question1,
                                  func_name='def myfunc', kw_args='a=10,b=11',
                                  pos_args='12,13', expected_answer='15')
         answer_data = { "test": "",
@@ -99,7 +99,7 @@ class QuestionTestCases(unittest.TestCase):
                                             "kw_args": {"a": "10",
                                                         "b": "11"}
                                         }],
-                        "id": self.question.id,
+                        "id": self.question1.id,
                         "ref_code_path": "",
                         }
         self.answer_data_json = json.dumps(answer_data)
@@ -112,37 +112,38 @@ class QuestionTestCases(unittest.TestCase):
 
     def test_question(self):
         """ Test question """
-        self.assertEqual(self.question.summary, 'Demo question')
-        self.assertEqual(self.question.language, 'Python')
-        self.assertEqual(self.question.type, 'Code')
-        self.assertFalse(self.question.options)
-        self.assertEqual(self.question.description, 'Write a function')
-        self.assertEqual(self.question.points, 1.0)
-        self.assertTrue(self.question.active)
-        self.assertEqual(self.question.snippet, 'def myfunc()')
+        self.assertEqual(self.question1.summary, 'Demo question')
+        self.assertEqual(self.question1.language, 'Python')
+        self.assertEqual(self.question1.type, 'Code')
+        self.assertFalse(self.question1.options)
+        self.assertEqual(self.question1.description, 'Write a function')
+        self.assertEqual(self.question1.points, 1.0)
+        self.assertTrue(self.question1.active)
+        self.assertEqual(self.question1.snippet, 'def myfunc()')
         tag_list = []
-        for tag in self.question.tags.all():
+        for tag in self.question1.tags.all():
                     tag_list.append(tag.name)
         self.assertEqual(tag_list, ['python', 'function'])
 
     def test_consolidate_answer_data(self):
         """ Test consolidate_answer_data function """
-        result = self.question.consolidate_answer_data([self.testcase],
+        result = self.question1.consolidate_answer_data([self.testcase],
                                                          self.user_answer)
         self.assertEqual(result, self.answer_data_json)
 
     def test_dump_questions_into_json(self):
         """ Test dump questions into json """
         question = Question()
-        questions = json.loads(question.dump_into_json(self.user1))
+        question_id = ['24']
+        questions = json.loads(question.dump_into_json(question_id, self.user1))
         for q in questions:
-            self.assertEqual(self.question1.summary, q['summary'])
-            self.assertEqual(self.question1.language, q['language'])
-            self.assertEqual(self.question1.type, q['type'])
-            self.assertEqual(self.question1.description, q['description'])
-            self.assertEqual(self.question1.points, q['points'])
-            self.assertTrue(self.question1.active)
-            self.assertEqual(self.question1.snippet, q['snippet'])
+            self.assertEqual(self.question2.summary, q['summary'])
+            self.assertEqual(self.question2.language, q['language'])
+            self.assertEqual(self.question2.type, q['type'])
+            self.assertEqual(self.question2.description, q['description'])
+            self.assertEqual(self.question2.points, q['points'])
+            self.assertTrue(self.question2.active)
+            self.assertEqual(self.question2.snippet, q['snippet'])
 
     def test_load_questions_from_json(self):
         """ Test load questions into database from json """

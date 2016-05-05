@@ -11,18 +11,17 @@
 
 {% block manage %}
 
-{% if questions %}
-<a href="{{URL_ROOT}}/exam/manage/download_questions/">Download Questions</a><br>
-{% endif %}
-
 <h4>Upload json file for adding questions</h4>
-<form action="{{URL_ROOT}}/exam/manage/upload_questions/" method="post"  enctype="multipart/form-data">
+<form action="" method="post"  enctype="multipart/form-data">
 {% csrf_token %}
 {{ upload_form.as_p }}
 <button class="btn" type="submit" name="upload" value="upload">Upload File</button>
 </form>
 {% if message %}
 <h4>{{ message }}</h4>
+{% endif %}
+{% if msg %}
+<h4>{{ msg }}</h4>
 {% endif %}
 <form name=frm action="" method="post">
 {% csrf_token %}
@@ -56,6 +55,9 @@
 </div>
 <br>
 <button class="btn" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question</button>&nbsp;&nbsp;
-<button class="btn" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>
+<button class="btn" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>&nbsp;&nbsp;
+{% if questions %}
+<button class="btn" type="submit" name='download' value='download'>Download Selected</button>
+{% endif %}
 </form>
 {% endblock %}

@@ -89,7 +89,7 @@ urlpatterns += [
     url(r'^manage/addteacher/(?P<course_id>\d+)/$', views.add_teacher),
     url(r'^manage/allotted_course/$', views.allotted_courses),
     url(r'^manage/remove_teachers/(?P<course_id>\d+)/$', views.remove_teachers),
-    url(r'^manage/download_questions/$', views.download_questions),
+    url(r'^manage/download_questions/$', views.show_all_questions),
     url(r'^manage/upload_questions/$', views.show_all_questions)
 ]
 

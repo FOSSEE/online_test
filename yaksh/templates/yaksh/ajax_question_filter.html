@@ -7,7 +7,8 @@
        {% for question in questions %}
             <li>
                 <label>
-                    <input type="checkbox" name="question" data-qid="{{question.id}}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{ question }}</a><br>
+                    <input type="checkbox" name="question" data-qid="{{question.id}}" value=
+                    "{{question.id}}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{ question }}</a><br>
                 </label>
              </li>
         {% endfor %}

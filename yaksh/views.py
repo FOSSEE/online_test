@@ -783,7 +783,7 @@ def ajax_questions_filter(request):
     """Ajax call made when filtering displayed questions."""
 
     user = request.user
-    filter_dict = {"user_id":user.id}
+    filter_dict = {"user_id": user.id}
     question_type = request.POST.get('question_type')
     marks = request.POST.get('marks')
     language = request.POST.get('language')
@@ -813,22 +813,36 @@ def show_all_questions(request):
     if not is_moderator(user):
         raise Http404("You are not allowed to view this page !")
 
-    if request.method == 'POST' and request.POST.get('delete') == 'delete':
-        data = request.POST.getlist('question')
-        if data is not None:
-            question = Question.objects.filter(id__in=data, user_id=user.id).delete()
+    if request.method == 'POST':
+        if request.POST.get('delete') == 'delete':
+            data = request.POST.getlist('question')
+            if data is not None:
+                question = Question.objects.filter(id__in=data, user_id=user.id).delete()
 
-    if request.method == 'POST' and request.POST.get('upload') == 'upload':
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            questions_file = request.FILES['file']
-            if questions_file.name.split('.')[-1] == "json":
-                questions_list = questions_file.read()
+        if request.POST.get('upload') == 'upload':
+            form = UploadFileForm(request.POST, request.FILES)
+            if form.is_valid():
+                questions_file = request.FILES['file']
+                if questions_file.name.split('.')[-1] == "json":
+                    questions_list = questions_file.read()
+                    question = Question()
+                    question.load_from_json(questions_list, user)
+                else:
+                    message = "Please Upload a JSON file"
+                    context['message'] = message
+
+        if request.POST.get('download') == 'download':
+            question_ids = request.POST.getlist('question')
+            if question_ids:
                 question = Question()
-                question.load_from_json(questions_list, user)
+                questions = question.dump_into_json(question_ids, user)
+                response = HttpResponse(questions, content_type='text/json')
+                response['Content-Disposition'] = 'attachment; filename=\
+                                            "{0}_questions.json"'.format(user)
+                return response
             else:
-                message = "Please Upload a JSON file"
-                context['message'] = message
+                msg = "Please select atleast one question"
+                context['msg'] = msg
 
     questions = Question.objects.filter(user_id=user.id)
     form = QuestionFilterForm(user=user)
@@ -1170,17 +1184,3 @@ def remove_teachers(request, course_id):
         teachers = User.objects.filter(id__in=teacher_ids)
         course.remove_teachers(*teachers)
     return my_redirect('/exam/manage/courses')
-
-
-@login_required
-def download_questions(request):
-    user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-    question = Question()
-    questions = question.dump_into_json(user)
-    response = HttpResponse(questions, content_type='text/json')
-    response['Content-Disposition'] = 'attachment; filename="{0}_questions.json"'\
-                                                            .format(user)
-    return response
-

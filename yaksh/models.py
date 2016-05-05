@@ -211,8 +211,8 @@ class Question(models.Model):
 
         return json.dumps(question_info_dict)
 
-    def dump_into_json(self, user):
-        questions = Question.objects.filter(user_id = user.id)
+    def dump_into_json(self, question_ids, user):
+        questions = Question.objects.filter(id__in = question_ids, user_id = user.id)
         questions_dict = [{'summary': question.summary,
                         'description': question.description,
                         'points': question.points, 'test': question.test,
@@ -511,7 +511,7 @@ class AnswerPaperManager(models.Manager):
         return answerpapers.values_list('user', flat=True).distinct()
 
     def get_latest_attempts(self, questionpaper_id):
-        papers = self.get_answerpapers_for_quiz(questionpaper_id)
+        papers = self._get_answerpapers_for_quiz(questionpaper_id)
         users = self._get_answerpapers_users(papers)
         latest_attempts = []
         for user in users:
