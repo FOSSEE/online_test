@@ -213,13 +213,16 @@ class Question(models.Model):
 
     def dump_into_json(self, question_ids, user):
         questions = Question.objects.filter(id__in = question_ids, user_id = user.id)
-        questions_dict = [{'summary': question.summary,
-                        'description': question.description,
+        questions_dict = []
+        for question in questions:
+            q_dict = {'summary': question.summary, 'description': question.description,
                         'points': question.points, 'test': question.test,
                         'ref_code_path': question.ref_code_path,
                         'options': question.options, 'language': question.language,
                         'type': question.type, 'active': question.active,
-                        'snippet': question.snippet} for question in questions]
+                        'snippet': question.snippet}
+            questions_dict.append(q_dict)
+
         return json.dumps(questions_dict, indent=2)
 
     def load_from_json(self, questions_list, user):
