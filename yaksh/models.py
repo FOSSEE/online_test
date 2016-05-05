@@ -225,12 +225,8 @@ class Question(models.Model):
     def load_from_json(self, questions_list, user):
         questions = json.loads(questions_list)
         for question in questions:
-            Question.objects.get_or_create(summary=question['summary'],
-                description=question['description'], points=question['points'],
-                test=question['test'], ref_code_path=question['ref_code_path'],
-                options=question['options'], language=question['language'],
-                type=question['type'], active=question['active'],
-                snippet=question['snippet'], user=user)
+            question['user'] = user
+            Question.objects.get_or_create(**question)
 
     def __unicode__(self):
         return self.summary
