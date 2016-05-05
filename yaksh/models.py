@@ -173,6 +173,9 @@ class Question(models.Model):
     # Tags for the Question.
     tags = TaggableManager(blank=True)
 
+    # user for particular question
+    user = models.ForeignKey(User, related_name="user")
+
     def consolidate_answer_data(self, test_cases, user_answer):
         test_case_data_dict = []
         question_info_dict = {}
@@ -207,6 +210,26 @@ class Question(models.Model):
         question_info_dict['test'] = self.test
 
         return json.dumps(question_info_dict)
+
+    def dump_into_json(self, question_ids, user):
+        questions = Question.objects.filter(id__in = question_ids, user_id = user.id)
+        questions_dict = []
+        for question in questions:
+            q_dict = {'summary': question.summary, 'description': question.description,
+                        'points': question.points, 'test': question.test,
+                        'ref_code_path': question.ref_code_path,
+                        'options': question.options, 'language': question.language,
+                        'type': question.type, 'active': question.active,
+                        'snippet': question.snippet}
+            questions_dict.append(q_dict)
+
+        return json.dumps(questions_dict, indent=2)
+
+    def load_from_json(self, questions_list, user):
+        questions = json.loads(questions_list)
+        for question in questions:
+            question['user'] = user
+            Question.objects.get_or_create(**question)
 
     def __unicode__(self):
         return self.summary
@@ -487,7 +510,7 @@ class AnswerPaperManager(models.Manager):
         return answerpapers.values_list('user', flat=True).distinct()
 
     def get_latest_attempts(self, questionpaper_id):
-        papers = self.get_answerpapers_for_quiz(questionpaper_id)
+        papers = self._get_answerpapers_for_quiz(questionpaper_id)
         users = self._get_answerpapers_users(papers)
         latest_attempts = []
         for user in users:

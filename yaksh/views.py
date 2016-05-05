@@ -23,7 +23,7 @@ from yaksh.models import Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm, TestCaseFormSet,\
-                QuestionFilterForm, CourseForm, ProfileForm
+                QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
@@ -166,6 +166,8 @@ def add_question(request, question_id=None):
                 test_case_formset = add_or_delete_test_form(request.POST, form.save(commit=False))
                 if 'save_question' in request.POST:
                     qtn = form.save(commit=False)
+                    qtn.user = user
+                    qtn.save()
                     test_case_formset = TestCaseFormSet(request.POST, prefix='test',  instance=qtn)
                     form.save()
                     question = Question.objects.order_by("-id")[0]
@@ -780,7 +782,8 @@ def show_all_users(request):
 def ajax_questions_filter(request):
     """Ajax call made when filtering displayed questions."""
 
-    filter_dict = {}
+    user = request.user
+    filter_dict = {"user_id": user.id}
     question_type = request.POST.get('question_type')
     marks = request.POST.get('marks')
     language = request.POST.get('language')
@@ -806,21 +809,49 @@ def show_all_questions(request):
 
     user = request.user
     ci = RequestContext(request)
-    if not user.is_authenticated() or not is_moderator(user):
+    context = {}
+    if not is_moderator(user):
         raise Http404("You are not allowed to view this page !")
 
-    if request.method == 'POST' and request.POST.get('delete') == 'delete':
-        data = request.POST.getlist('question')
-        if data is not None:
-            for i in data:
-                question = Question.objects.get(id=i).delete()
-    questions = Question.objects.all()
-    form = QuestionFilterForm()
-    context = {'papers': [],
-               'question': None,
-               'questions': questions,
-               'form': form
-               }
+    if request.method == 'POST':
+        if request.POST.get('delete') == 'delete':
+            data = request.POST.getlist('question')
+            if data is not None:
+                question = Question.objects.filter(id__in=data, user_id=user.id).delete()
+
+        if request.POST.get('upload') == 'upload':
+            form = UploadFileForm(request.POST, request.FILES)
+            if form.is_valid():
+                questions_file = request.FILES['file']
+                if questions_file.name.split('.')[-1] == "json":
+                    questions_list = questions_file.read()
+                    question = Question()
+                    question.load_from_json(questions_list, user)
+                else:
+                    message = "Please Upload a JSON file"
+                    context['message'] = message
+
+        if request.POST.get('download') == 'download':
+            question_ids = request.POST.getlist('question')
+            if question_ids:
+                question = Question()
+                questions = question.dump_into_json(question_ids, user)
+                response = HttpResponse(questions, content_type='text/json')
+                response['Content-Disposition'] = 'attachment; filename=\
+                                            "{0}_questions.json"'.format(user)
+                return response
+            else:
+                msg = "Please select atleast one question"
+                context['msg'] = msg
+
+    questions = Question.objects.filter(user_id=user.id)
+    form = QuestionFilterForm(user=user)
+    upload_form = UploadFileForm()
+    context['papers'] = []
+    context['question'] = None
+    context['questions'] = questions
+    context['form'] = form
+    context['upload_form'] = upload_form
     return my_render_to_response('yaksh/showquestions.html', context,
                                  context_instance=ci)
 
@@ -944,9 +975,11 @@ def ajax_questionpaper(request, query):
     """
         During question paper creation, ajax call made to get question details.
     """
+
+    user = request.user
     if query == 'marks':
         question_type = request.POST.get('question_type')
-        questions = Question.objects.filter(type=question_type)
+        questions = Question.objects.filter(type=question_type, user=user)
         marks = questions.values_list('points').distinct()
         return my_render_to_response('yaksh/ajax_marks.html', {'marks': marks})
     elif query == 'questions':
@@ -958,7 +991,7 @@ def ajax_questionpaper(request, query):
         random_question_list = ",".join(random_questions).split(',')
         question_list = fixed_question_list + random_question_list
         questions = list(Question.objects.filter(type=question_type,
-                                            points=marks_selected))
+                                            points=marks_selected, user=user))
         questions = [question for question in questions \
                 if not str(question.id) in question_list]
         return my_render_to_response('yaksh/ajax_questions.html',
