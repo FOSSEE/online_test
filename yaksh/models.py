@@ -8,7 +8,8 @@ from django.contrib.auth.models import User
 from django.forms.models import model_to_dict
 from django.contrib.contenttypes.models import ContentType 
 from taggit.managers import TaggableManager
-
+from django.utils import timezone
+import pytz
 
 languages = (
         ("python", "Python"),
@@ -46,6 +47,9 @@ test_status = (
                 ('inprogress', 'Inprogress'),
                 ('completed', 'Completed'),
               )
+
+# get current timezone info
+tz = pytz.timezone(timezone.get_current_timezone_name())
 
 def get_assignment_dir(instance, filename):
     return '%s/%s' % (instance.user.roll_number, instance.assignmentQuestion.id)
@@ -291,12 +295,12 @@ class Quiz(models.Model):
 
     # The start date of the quiz.
     start_date_time = models.DateTimeField("Start Date and Time of the quiz",
-                                        default=datetime.now(),
+                                        default=timezone.now(),
                                         null=True)
 
     # The end date and time of the quiz
     end_date_time = models.DateTimeField("End Date and Time of the quiz",
-                                        default=datetime(2199, 1, 1, 0, 0, 0, 0),
+                                        default=datetime(2199, 1, 1, tzinfo=tz),
                                         null=True)
 
     # This is always in minutes.
@@ -331,7 +335,7 @@ class Quiz(models.Model):
 
 
     def is_expired(self):
-        return not self.start_date_time <= datetime.now() < self.end_date_time
+        return not self.start_date_time <= timezone.now() < self.end_date_time
 
     def has_prerequisite(self):
         return True if self.prerequisite else False
@@ -409,7 +413,7 @@ class QuestionPaper(models.Model):
             last_attempt = AnswerPaper.objects.get_user_last_attempt(user=user,
                            questionpaper=self)
             if last_attempt:
-                time_lag = (datetime.today() - last_attempt.start_time).days
+                time_lag = (datetime.today() - last_attempt.start_time.replace(tzinfo=None)).days
                 return time_lag >= self.quiz.time_between_attempts
             else:
                 return True
