@@ -9,6 +9,7 @@ from django.forms.models import inlineformset_factory
 from django.db.models import Q
 from string import letters, punctuation, digits
 import datetime
+import pytz
 
 languages = (
     ("select", "Select Language"),
@@ -57,6 +58,7 @@ class UserRegisterForm(forms.Form):
                 (max_length=64, help_text='Department you work/study at')
     position = forms.CharField\
         (max_length=64, help_text='Student/Faculty/Researcher/Industry/etc.')
+    timezone = forms.ChoiceField(choices=[(tz, tz) for tz in pytz.common_timezones])
 
     def clean_username(self):
         u_name = self.cleaned_data["username"]
@@ -102,6 +104,7 @@ class UserRegisterForm(forms.Form):
         new_profile.institute = cleaned_data["institute"]
         new_profile.department = cleaned_data["department"]
         new_profile.position = cleaned_data["position"]
+        new_profile.timezone = cleaned_data["timezone"]
         new_profile.save()
 
         return u_name, pwd
@@ -196,7 +199,7 @@ class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['first_name', 'last_name', 'institute',
-                'department', 'roll_number', 'position']
+                'department', 'roll_number', 'position', 'timezone']
 
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
