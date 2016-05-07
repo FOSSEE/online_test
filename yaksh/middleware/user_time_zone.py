@@ -1,7 +1,7 @@
 import pytz
 
 from django.utils import timezone
-from yaksh.models import Profile
+
 
 class TimezoneMiddleware(object):
     """ Middleware to get user's timezone and activate timezone 
