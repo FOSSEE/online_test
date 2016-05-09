@@ -40,31 +40,46 @@ class JavaCodeEvaluator(CodeEvaluator):
             return None
         else:
             ref_code_path = test_case
-            clean_ref_code_path, clean_test_case_path = self._set_test_code_file_path(ref_code_path)
+            clean_ref_code_path, clean_test_case_path = \
+                     self._set_test_code_file_path(ref_code_path)
 
             if not isfile(clean_ref_code_path):
-                return False, "No file at %s or Incorrect path" % clean_ref_code_path
+                msg = "No file at %s or Incorrect path" % clean_ref_code_path
+                return False, msg
             if not isfile(self.submit_code_path):
-                return False, 'No file at %s or Incorrect path' % self.submit_code_path
+                msg = "No file at %s or Incorrect path" % self.submit_code_path
+                return False, msg
 
             user_code_directory = os.getcwd() + '/'
-            self.write_to_submit_code_file(self.submit_code_path, user_answer)
+            self.write_to_submit_code_file(self.submit_code_path, 
+                user_answer
+            )
             ref_file_name = (clean_ref_code_path.split('/')[-1]).split('.')[0]
-            self.user_output_path = self.set_file_paths(user_code_directory, 'Test')
-            self.ref_output_path = self.set_file_paths(user_code_directory, ref_file_name)
-            
-            compile_command, self.compile_main = self.get_commands(clean_ref_code_path, user_code_directory)
-            self.run_command_args = "java -cp {0} {1}".format(user_code_directory,
-                                                         ref_file_name)
+            self.user_output_path = self.set_file_paths(user_code_directory, 
+                'Test'
+            )
+            self.ref_output_path = self.set_file_paths(user_code_directory,
+                ref_file_name
+            )
+            compile_command, self.compile_main = self.get_commands(
+                clean_ref_code_path,
+                user_code_directory
+            )
+            self.run_command_args = "java -cp {0} {1}".format(
+                user_code_directory,
+                ref_file_name
+            )
             self.compiled_user_answer = self._run_command(compile_command,
-                                     shell=True,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE)
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
 
             self.compiled_test_code = self._run_command(self.compile_main,
-                                     shell=True,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE)
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
 
             return self.compiled_user_answer, self.compiled_test_code
 

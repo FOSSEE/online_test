@@ -36,6 +36,7 @@ class _LanguageRegistry(object):
         test_case_register = self._register[language]
         cls = test_case_register.get(test_case_type)
         module_name, class_name = cls.rsplit(".", 1)
+        import yaksh.python_assertion_evaluator
         # load the module, will raise ImportError if module cannot be loaded
         get_module = importlib.import_module(module_name)
         # get the class, will raise AttributeError if class cannot be found

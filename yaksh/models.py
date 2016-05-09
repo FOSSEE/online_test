@@ -201,11 +201,14 @@ class Question(models.Model):
         questions = Question.objects.filter(id__in = question_ids, user_id = user.id)
         questions_dict = []
         for question in questions:
-            q_dict = {'summary': question.summary, 'description': question.description,
-                        'points': question.points, 'language': question.language,
-                        'type': question.type, 'active': question.active,
-                        'test_case_type': question.test_case_type,
-                        'snippet': question.snippet}
+            q_dict = {'summary': question.summary, 
+                         'description': question.description,
+                         'points': question.points,
+                         'language': question.language,
+                         'type': question.type,
+                         'active': question.active,
+                         'test_case_type': question.test_case_type,
+                         'snippet': question.snippet}
             questions_dict.append(q_dict)
 
         return json.dumps(questions_dict, indent=2)
@@ -217,14 +220,24 @@ class Question(models.Model):
             Question.objects.get_or_create(**question)
 
     def get_test_cases(self, **kwargs):
-        test_case_ctype = ContentType.objects.get(app_label="yaksh", model=self.test_case_type)
-        test_cases = test_case_ctype.get_all_objects_for_this_type(question=self, **kwargs)
+        test_case_ctype = ContentType.objects.get(app_label="yaksh",
+             model=self.test_case_type
+        )
+        test_cases = test_case_ctype.get_all_objects_for_this_type(
+            question=self, 
+            **kwargs
+        )
 
         return test_cases
 
     def get_test_case(self, **kwargs):
-        test_case_ctype = ContentType.objects.get(app_label="yaksh", model=self.test_case_type)
-        test_case = test_case_ctype.get_object_for_this_type(question=self, **kwargs)
+        test_case_ctype = ContentType.objects.get(app_label="yaksh",
+            model=self.test_case_type
+        )
+        test_case = test_case_ctype.get_object_for_this_type(
+            question=self, 
+            **kwargs
+        )
 
         return test_case
 
@@ -368,10 +381,13 @@ class QuestionPaper(models.Model):
 
     def make_answerpaper(self, user, ip, attempt_num):
         """Creates an  answer paper for the user to attempt the quiz"""
-        ans_paper = AnswerPaper(user=user, user_ip=ip, attempt_number=attempt_num)
+        ans_paper = AnswerPaper(user=user,
+            user_ip=ip,
+            attempt_number=attempt_num
+        )
         ans_paper.start_time = datetime.now()
-        ans_paper.end_time = ans_paper.start_time \
-                             + timedelta(minutes=self.quiz.duration)
+        ans_paper.end_time = ans_paper.start_time + \
+            timedelta(minutes=self.quiz.duration)
         ans_paper.question_paper = self
         ans_paper.save()
         questions = self._get_questions_for_answerpaper()
@@ -750,7 +766,9 @@ class StandardTestCase(TestCase):
         return {"test_case": self.test_case}
 
     def __unicode__(self):
-        return u'Question: {0} | Test Case: {1}'.format(self.question, self.test_case)
+        return u'Question: {0} | Test Case: {1}'.format(self.question,
+            self.test_case
+        )
 
 
 class StdoutBasedTestCase(TestCase):
@@ -760,7 +778,9 @@ class StdoutBasedTestCase(TestCase):
         return {"expected_output": self.expected_output}
 
     def __unicode__(self):
-        return u'Question: {0} | Exp. Output: {1}'.format(self.question, self.expected_output)
+        return u'Question: {0} | Exp. Output: {1}'.format(self.question,
+            self.expected_output
+        )
 
 
 class McqTestCase(TestCase):
@@ -771,4 +791,6 @@ class McqTestCase(TestCase):
         return {"options": self.options, "correct": self.correct}
 
     def __unicode__(self):
-        return u'Question: {0} | Correct: {1}'.format(self.question, self.correct)
+        return u'Question: {0} | Correct: {1}'.format(self.question,
+            self.correct
+        )

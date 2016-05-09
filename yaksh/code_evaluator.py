@@ -89,6 +89,11 @@ class CodeEvaluator(object):
         self._change_dir(self.in_dir)
 
     def safe_evaluate(self, user_answer, test_case_data):
+        """
+        Handles code evaluation along with compilation, signal handling
+        and Exception handling
+        """
+
         # Add a new signal handler for the execution of this code.
         prev_handler = create_signal_handler()
         success = False

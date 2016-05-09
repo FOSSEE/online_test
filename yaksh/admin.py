@@ -1,5 +1,5 @@
-from yaksh.models import Question, Quiz, TestCase,\
-							StandardTestCase, StdoutBasedTestCase
+from yaksh.models import Question, Quiz
+from yaksh.models import TestCase, StandardTestCase, StdoutBasedTestCase
 from django.contrib import admin
 
 admin.site.register(Question)

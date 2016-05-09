@@ -14,7 +14,8 @@ class ScilabCodeEvaluator(CodeEvaluator):
     """Tests the Scilab code obtained from Code Server"""
     def setup(self):
         super(ScilabCodeEvaluator, self).setup()
-        self.submit_code_path = self.create_submit_code_file('function.sci')
+        self.submit_code_path = \
+            self.create_submit_code_file('function.sci')
 
     def teardown(self):
         super(ScilabCodeEvaluator, self).teardown()
@@ -23,8 +24,10 @@ class ScilabCodeEvaluator(CodeEvaluator):
 
     def check_code(self, user_answer, test_case):
         ref_code_path = test_case
-        clean_ref_path, clean_test_case_path = self._set_test_code_file_path(ref_code_path)
-        user_answer, terminate_commands = self._remove_scilab_exit(user_answer.lstrip())
+        clean_ref_path, clean_test_case_path = \
+            self._set_test_code_file_path(ref_code_path)
+        user_answer, terminate_commands = \
+            self._remove_scilab_exit(user_answer.lstrip())
 
         success = False
         self.write_to_submit_code_file(self.submit_code_path, user_answer)
@@ -35,12 +38,15 @@ class ScilabCodeEvaluator(CodeEvaluator):
                         code.\n Otherwise your code will not be evaluated\
                         correctly.\n"
 
-        cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(clean_ref_path)
+        cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(
+            clean_ref_path
+        )
         cmd += ' | timeout 8 scilab-cli -nb'
         ret = self._run_command(cmd,
-                                shell=True,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
         proc, stdout, stderr = ret 
 
         # Get only the error.

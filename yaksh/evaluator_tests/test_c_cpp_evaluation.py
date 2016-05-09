@@ -8,14 +8,15 @@ class CEvaluationTestCases(unittest.TestCase):
         self.test_case_data = [{"test_case": "c_cpp_files/main.cpp"}]
         self.in_dir = "/tmp"
         self.timeout_msg = ("Code took more than {0} seconds to run. "
-                            "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
+            "You probably have an infinite loop in your"
+            " code.").format(SERVER_TIMEOUT)
 
     def test_correct_answer(self):
         user_answer = "int add(int a, int b)\n{return a+b;}"
         get_class = CppCodeEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.test_case_data
-                }
+            'test_case_data': self.test_case_data
+        }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get('success'))
         self.assertEquals(result.get('error'), "Correct answer")

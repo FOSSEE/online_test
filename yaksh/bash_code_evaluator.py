@@ -50,41 +50,52 @@ class BashCodeEvaluator(CodeEvaluator):
         get_ref_path, get_test_case_path = ref_code_path.strip().split(',')
         get_ref_path = get_ref_path.strip()
         get_test_case_path = get_test_case_path.strip()
-        clean_ref_code_path, clean_test_case_path = self._set_test_code_file_path(get_ref_path,
-                                                             get_test_case_path)
+        clean_ref_code_path, clean_test_case_path = \
+            self._set_test_code_file_path(get_ref_path, get_test_case_path)
 
         if not isfile(clean_ref_code_path):
-            return False, "No file at %s or Incorrect path" % clean_ref_code_path
+            msg = "No file at %s or Incorrect path" % clean_ref_code_path
+            return False, msg
         if not isfile(self.submit_code_path):
-            return False, "No file at %s or Incorrect path" % self.submit_code_path
+            msg = "No file at %s or Incorrect path" % self.submit_code_path
+            return False, msg
         if not os.access(clean_ref_code_path, os.X_OK):
-            return False, "Script %s is not executable" % clean_ref_code_path
+            msg = "Script %s is not executable" % clean_ref_code_path
+            return False, msg
         if not os.access(self.submit_code_path, os.X_OK):
-            return False, "Script %s is not executable" % self.submit_code_path
+            msg = "Script %s is not executable" % self.submit_code_path
+            return False, msg
 
         success = False
         self.write_to_submit_code_file(self.submit_code_path, user_answer)
 
         if clean_test_case_path is None or "":
-            ret = self._run_command(clean_ref_code_path, stdin=None,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+            ret = self._run_command(clean_ref_code_path,
+                stdin=None,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
             proc, inst_stdout, inst_stderr = ret
-            ret = self._run_command(self.submit_code_path, stdin=None,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+            ret = self._run_command(self.submit_code_path,
+                stdin=None,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
             proc, stdnt_stdout, stdnt_stderr = ret
             if inst_stdout == stdnt_stdout:
                 return True, "Correct answer"
             else:
                 err = "Error: expected %s, got %s" % (inst_stderr,
-                                                      stdnt_stderr)
+                    stdnt_stderr
+                )
                 return False, err
         else:
             if not isfile(clean_test_case_path):
-                return False, "No test case at %s" % clean_test_case_path
+                msg = "No test case at %s" % clean_test_case_path
+                return False, msg
             if not os.access(clean_ref_code_path, os.R_OK):
-                return False, "Test script %s, not readable" % clean_test_case_path
+                msg = "Test script %s, not readable" % clean_test_case_path
+                return False, msg
             # valid_answer is True, so that we can stop once a test case fails
             valid_answer = True
             # loop_count has to be greater than or equal to one.
@@ -95,20 +106,27 @@ class BashCodeEvaluator(CodeEvaluator):
             for test_case in test_cases:
                 loop_count += 1
                 if valid_answer:
-                    args = [clean_ref_code_path] + [x for x in test_case.split()]
-                    ret = self._run_command(args, stdin=None,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
+                    args = [clean_ref_code_path] + \
+                        [x for x in test_case.split()]
+                    ret = self._run_command(args,
+                        stdin=None,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE
+                    )
                     proc, inst_stdout, inst_stderr = ret
-                    args = [self.submit_code_path]+[x for x in test_case.split()]
-                    ret = self._run_command(args, stdin=None,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
+                    args = [self.submit_code_path] + \
+                        [x for x in test_case.split()]
+                    ret = self._run_command(args,
+                        stdin=None,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
                     proc, stdnt_stdout, stdnt_stderr = ret
                     valid_answer = inst_stdout == stdnt_stdout
             if valid_answer and (num_lines == loop_count):
                 return True, "Correct answer"
             else:
-                err = "Error:expected %s, got %s" % (inst_stdout+inst_stderr,
-                                                     stdnt_stdout+stdnt_stderr)
+                err = ("Error:expected"
+                    " %s, got %s").format(inst_stdout+inst_stderr,
+                        stdnt_stdout+stdnt_stderr
+                    )
                 return False, err

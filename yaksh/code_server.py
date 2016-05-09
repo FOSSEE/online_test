@@ -62,8 +62,11 @@ class CodeServer(object):
         """Calls relevant EvaluateCode class based on language to check the
          answer code
         """
-        code_evaluator = create_evaluator_instance(language, test_case_type, json_data,
-                                                             in_dir)
+        code_evaluator = create_evaluator_instance(language, 
+            test_case_type,
+            json_data,
+            in_dir
+        )
         data = unpack_json(json_data)
         result = code_evaluator.evaluate(**data)
 

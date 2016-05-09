@@ -42,7 +42,9 @@ class PythonStdoutEvaluator(CodeEvaluator):
         tb = None
         if expected_output in user_answer:
             success = False
-            err = "Incorrect Answer: Please avoid printing the expected output directly"
+            err = ("Incorrect Answer: Please avoid "
+                "printing the expected output directly"
+            )
         elif self.output_value == expected_output:
             success = True
             err = "Correct answer"

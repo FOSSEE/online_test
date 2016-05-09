@@ -75,22 +75,33 @@ class QuestionTestCases(unittest.TestCase):
         # Single question details
         self.user1 = User.objects.get(pk=1)
         self.user2 = User.objects.get(pk=2)
-        self.question1 = Question(summary='Demo question', language='Python',
-                                 type='Code', active=True,
-                                 test_case_type='standardtestcase',
-                                 description='Write a function', points=1.0,
-                                 snippet='def myfunc()', user=self.user1)
+        self.question1 = Question(summary='Demo question',
+            language='Python',
+            type='Code',
+            active=True,
+            test_case_type='standardtestcase',
+            description='Write a function',
+            points=1.0,
+            snippet='def myfunc()',
+            user=self.user1
+        )
         self.question1.save()
 
-        self.question2 = Question(summary='Demo Json', language='python',
-                                 type='code', active=True,
-                                 description='factorial of a no', points=2.0,
-                                 snippet='def fact()', user=self.user2)
+        self.question2 = Question(summary='Demo Json', 
+            language='python',
+            type='code', 
+            active=True,
+            description='factorial of a no', 
+            points=2.0,
+            snippet='def fact()', 
+            user=self.user2
+        )
         self.question2.save()
 
         self.question1.tags.add('python', 'function')
         self.assertion_testcase = StandardTestCase(question=self.question1,
-                                 test_case='assert myfunc(12, 13) == 15')
+            test_case='assert myfunc(12, 13) == 15'
+        )
         self.user_answer = "demo_answer"
         questions_data = [{"snippet": "def fact()", "active": True, "points": 1.0,
                         "description": "factorial of a no",
@@ -182,7 +193,9 @@ class QuestionPaperTestCases(unittest.TestCase):
 
         # create question paper
         self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
-                                  total_marks=0.0, shuffle_questions=True)
+            total_marks=0.0,
+            shuffle_questions=True
+        )
 
         # add fixed set of questions to the question paper
         self.question_paper.fixed_questions.add(self.questions[3],
@@ -190,23 +203,29 @@ class QuestionPaperTestCases(unittest.TestCase):
         # create two QuestionSet for random questions
         # QuestionSet 1
         self.question_set_1 = QuestionSet.objects.create(marks=2,
-                                                         num_questions=2)
+            num_questions=2
+        )
 
         # add pool of questions for random sampling
-        self.question_set_1.questions.add(self.questions[6], self.questions[7],
-                                          self.questions[8], self.questions[9])
+        self.question_set_1.questions.add(self.questions[6],
+            self.questions[7],
+            self.questions[8],
+            self.questions[9]
+        )
         # add question set 1 to random questions in Question Paper
         self.question_paper.random_questions.add(self.question_set_1)
 
         # QuestionSet 2
         self.question_set_2 = QuestionSet.objects.create(marks=3,
-                                                         num_questions=3)
+            num_questions=3
+        )
 
         # add pool of questions
         self.question_set_2.questions.add(self.questions[11],
-                                          self.questions[12],
-                                          self.questions[13],
-                                          self.questions[14])
+            self.questions[12],
+            self.questions[13],
+            self.questions[14]
+        )
         # add question set 2
         self.question_paper.random_questions.add(self.question_set_2)
 
@@ -215,8 +234,10 @@ class QuestionPaperTestCases(unittest.TestCase):
 
         self.user = User.objects.get(pk=1)
 
-        self.attempted_papers = AnswerPaper.objects.filter(question_paper=self.question_paper,
-                                                        user=self.user)
+        self.attempted_papers = AnswerPaper.objects.filter(
+            question_paper=self.question_paper,
+            user=self.user
+        )
 
     def test_questionpaper(self):
         """ Test question paper"""
@@ -235,7 +256,8 @@ class QuestionPaperTestCases(unittest.TestCase):
         """ Test get_random_questions() method of Question Paper"""
         random_questions_set_1 = self.question_set_1.get_random_questions()
         random_questions_set_2 = self.question_set_2.get_random_questions()
-        total_random_questions = len(random_questions_set_1 + random_questions_set_2)
+        total_random_questions = len(random_questions_set_1 + \
+            random_questions_set_2)
         self.assertEqual(total_random_questions, 5)
 
         # To check whether random questions are from random_question_set
@@ -286,12 +308,15 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # create answerpaper
         self.answerpaper = AnswerPaper(user=self.user,
-                                       question_paper=self.question_paper,
-                                       start_time=self.start_time,
-                                       end_time=self.end_time,
-                                       user_ip=self.ip)
-        self.attempted_papers = AnswerPaper.objects.filter(question_paper=self.question_paper,
-                                                        user=self.user)
+            question_paper=self.question_paper,
+            start_time=self.start_time,
+            end_time=self.end_time,
+            user_ip=self.ip
+        )
+        self.attempted_papers = AnswerPaper.objects.filter(
+            question_paper=self.question_paper,
+            user=self.user
+        )
         already_attempted = self.attempted_papers.count()
         self.answerpaper.attempt_number = already_attempted + 1
         self.answerpaper.save()
@@ -300,9 +325,14 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.answerpaper.save()
         # answers for the Answer Paper
         self.answer_right = Answer(question=Question.objects.get(id=1),
-                                   answer="Demo answer", correct=True, marks=1)
+            answer="Demo answer", 
+            correct=True, marks=1
+        )
         self.answer_wrong = Answer(question=Question.objects.get(id=2),
-                                   answer="My answer", correct=False, marks=0)
+            answer="My answer",
+            correct=False,
+            marks=0
+        )
         self.answer_right.save()
         self.answer_wrong.save()
         self.answerpaper.answers.add(self.answer_right)
@@ -448,12 +478,14 @@ class CourseTestCases(unittest.TestCase):
 
     def test_get_quizzes(self):
         """ Test get_quizzes method of Courses"""
-        self.assertSequenceEqual(self.course.get_quizzes(), [self.quiz1, self.quiz2])
+        self.assertSequenceEqual(self.course.get_quizzes(),
+                                     [self.quiz1, self.quiz2])
 
     def test_add_teachers(self):
         """ Test to add teachers to a course"""
         self.course.add_teachers(self.student1, self.student2)
-        self.assertSequenceEqual(self.course.get_teachers(), [self.student1, self.student2])
+        self.assertSequenceEqual(self.course.get_teachers(), 
+                                     [self.student1, self.student2])
 
     def test_remove_teachers(self):
         """ Test to remove teachers from a course"""
@@ -472,42 +504,61 @@ class CourseTestCases(unittest.TestCase):
 class TestCaseTestCases(unittest.TestCase):
     def setUp(self):
         self.user = User.objects.get(pk=1)
-        self.question1 = Question(summary='Demo question 1', language='Python',
-                                 type='Code', active=True,
-                                 description='Write a function', points=1.0,
-                                 test_case_type="standardtestcase", user=self.user,
-                                 snippet='def myfunc()'
-                                )
-        self.question2 = Question(summary='Demo question 2', language='Python',
-                                 type='Code', active=True,
-                                 description='Write to standard output', points=1.0,
-                                 test_case_type="stdoutbasedtestcase", user=self.user,
-                                 snippet='def myfunc()'
-                                )
+        self.question1 = Question(summary='Demo question 1', 
+            language='Python',
+            type='Code', 
+            active=True,
+            description='Write a function', 
+            points=1.0,
+            test_case_type="standardtestcase", 
+            user=self.user,
+            snippet='def myfunc()'
+        )
+        self.question2 = Question(summary='Demo question 2', 
+             language='Python',
+             type='Code', 
+             active=True,
+             description='Write to standard output', 
+             points=1.0,
+             test_case_type="stdoutbasedtestcase", 
+             user=self.user,
+             snippet='def myfunc()'
+        )
         self.question1.save()
         self.question2.save()
-        self.assertion_testcase = StandardTestCase(question=self.question1,
-                                 test_case='assert myfunc(12, 13) == 15')
-        self.stdout_based_testcase = StdoutBasedTestCase(question=self.question2,
-                                 expected_output='Hello World')
+        self.assertion_testcase = StandardTestCase(
+            question=self.question1,
+            test_case='assert myfunc(12, 13) == 15'
+        )
+        self.stdout_based_testcase = StdoutBasedTestCase(
+            question=self.question2,
+            expected_output='Hello World'
+        )
         self.assertion_testcase.save()
         self.stdout_based_testcase.save()
         answer_data = {"user_answer": "demo_answer",
-                         "test_case_data": [{"test_case": "assert myfunc(12, 13) == 15"}],
-                    }
+            "test_case_data": [
+                {"test_case": "assert myfunc(12, 13) == 15"}
+            ]
+        }
         self.answer_data_json = json.dumps(answer_data)
 
     def test_assertion_testcase(self):
         """ Test question """
         self.assertEqual(self.assertion_testcase.question, self.question1)
-        self.assertEqual(self.assertion_testcase.test_case, 'assert myfunc(12, 13) == 15')
+        self.assertEqual(self.assertion_testcase.test_case, 
+                             'assert myfunc(12, 13) == 15')
 
     def test_stdout_based_testcase(self):
         """ Test question """
         self.assertEqual(self.stdout_based_testcase.question, self.question2)
-        self.assertEqual(self.stdout_based_testcase.expected_output, 'Hello World')
+        self.assertEqual(self.stdout_based_testcase.expected_output, 
+            'Hello World'
+        )
 
     def test_consolidate_answer_data(self):
         """ Test consolidate answer data model method """
-        result = self.question1.consolidate_answer_data(user_answer="demo_answer")
+        result = self.question1.consolidate_answer_data(
+            user_answer="demo_answer"
+        )
         self.assertEqual(result, self.answer_data_json)

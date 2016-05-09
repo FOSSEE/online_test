@@ -9,11 +9,12 @@ from textwrap import dedent
 class PythonAssertionEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.test_case_data = [{"test_case": 'assert(add(1,2)==3)'},
-                                {"test_case": 'assert(add(-1,2)==1)'},
-                                {"test_case":  'assert(add(-1,-2)==-3)'},
-                            ]
+            {"test_case": 'assert(add(-1,2)==1)'},
+            {"test_case":  'assert(add(-1,-2)==-3)'},
+        ]
         self.timeout_msg = ("Code took more than {0} seconds to run. "
-                            "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
+            "You probably have an infinite loop in"
+            " your code.").format(SERVER_TIMEOUT)
 
     def test_correct_answer(self):
         user_answer = "def add(a,b):\n\treturn a + b"
@@ -33,14 +34,16 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
-        self.assertEqual(result.get('error'), "AssertionError  in: assert(add(1,2)==3)")
+        self.assertEqual(result.get('error'),
+            "AssertionError  in: assert(add(1,2)==3)"
+        )
 
     def test_infinite_loop(self):
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-                    'test_case_data': self.test_case_data
-                }
+            'test_case_data': self.test_case_data
+        }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
         self.assertEqual(result.get('error'), self.timeout_msg)
@@ -50,12 +53,18 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         def add(a, b);
             return a + b
         """)
-        syntax_error_msg = ["Traceback", "call", "File", "line", "<string>",
-                            "SyntaxError", "invalid syntax"]
+        syntax_error_msg = ["Traceback", 
+            "call", 
+            "File", 
+            "line", 
+            "<string>",
+            "SyntaxError", 
+            "invalid syntax"
+        ]
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-                    'test_case_data': self.test_case_data
-                }
+            'test_case_data': self.test_case_data
+        }
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
@@ -68,12 +77,17 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         def add(a, b):
         return a + b
         """)
-        indent_error_msg = ["Traceback", "call", "File", "line", "<string>",
-                            "IndentationError", "indented block"]
+        indent_error_msg = ["Traceback", "call", 
+            "File",
+            "line",
+            "<string>",
+            "IndentationError",
+            "indented block"
+        ]
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-                    'test_case_data': self.test_case_data
-                }
+            'test_case_data': self.test_case_data
+        }
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
@@ -83,11 +97,16 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
     def test_name_error(self):
         user_answer = ""
-        name_error_msg = ["Traceback", "call", "NameError", "name", "defined"]
+        name_error_msg = ["Traceback", 
+            "call",
+            "NameError",
+            "name",
+            "defined"
+        ]
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-                    'test_case_data': self.test_case_data
-                }
+            'test_case_data': self.test_case_data
+        }
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
@@ -100,12 +119,15 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         def add(a, b):
             return add(3, 3)
         """)
-        recursion_error_msg = ["Traceback", "call", "RuntimeError",
-                                "maximum recursion depth exceeded"]
+        recursion_error_msg = ["Traceback",
+            "call", 
+            "RuntimeError",
+            "maximum recursion depth exceeded"
+        ]
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-                    'test_case_data': self.test_case_data
-                }
+            'test_case_data': self.test_case_data
+        }
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
@@ -118,11 +140,16 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         def add(a):
             return a + b
         """)
-        type_error_msg = ["Traceback", "call", "TypeError", "exactly", "argument"]
+        type_error_msg = ["Traceback", 
+            "call", 
+            "TypeError",
+            "exactly",
+            "argument"
+        ]
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-                    'test_case_data': self.test_case_data
-                }
+            'test_case_data': self.test_case_data
+        }
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
@@ -136,7 +163,12 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
             c = 'a'
             return int(a) + int(b) + int(c)
         """)
-        value_error_msg = ["Traceback", "call", "ValueError", "invalid literal", "base"]
+        value_error_msg = ["Traceback",
+            "call",
+            "ValueError",
+            "invalid literal",
+            "base"
+        ]
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
                     'test_case_data': self.test_case_data
@@ -152,14 +184,15 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.test_case_data = [{"expected_output": "0 1 1 2 3"}]
         self.timeout_msg = ("Code took more than {0} seconds to run. "
-                            "You probably have an infinite loop in your code.").format(SERVER_TIMEOUT)
+            "You probably have an infinite loop"
+            " in your code.").format(SERVER_TIMEOUT)
 
     def test_correct_answer(self):
         user_answer = "a,b=0,1\nfor i in range(5):\n\tprint a,\n\ta,b=b,a+b"
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer,
-                    'test_case_data': self.test_case_data
-                }
+            'test_case_data': self.test_case_data
+        }
         result = get_class.evaluate(**kwargs)
         self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
@@ -168,19 +201,21 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         user_answer = "a,b=0,1\nfor i in range(5):\n\tprint b,\n\ta,b=b,a+b"
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.test_case_data
-                }
+            'test_case_data': self.test_case_data
+        }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
         self.assertEqual(result.get('error'), "Incorrect Answer")
 
     def test_direct_printed_answer(self):
         user_answer = "print '0 1 1 2 3'"
-        error_msg = "Incorrect Answer: Please avoid printing the expected output directly"
+        error_msg = ("Incorrect Answer: Please avoid printing"
+            " the expected output directly"
+        )
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.test_case_data
-                }
+            'test_case_data': self.test_case_data
+        }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
         self.assertEqual(result.get('error'), error_msg)
@@ -189,8 +224,8 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer,
-                    'test_case_data': self.test_case_data
-                }
+            'test_case_data': self.test_case_data
+        }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
         self.assertEqual(result.get('error'), 'Incorrect Answer')
