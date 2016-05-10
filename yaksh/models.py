@@ -5,23 +5,10 @@ from itertools import islice, cycle
 from collections import Counter
 from django.db import models
 from django.contrib.auth.models import User
+from django.forms.models import model_to_dict
+from django.contrib.contenttypes.models import ContentType 
 from taggit.managers import TaggableManager
 
-
-###############################################################################
-class ConcurrentUser(models.Model):
-    concurrent_user = models.OneToOneField(User, null=False)
-    session_key = models.CharField(null=False, max_length=40)
-
-
-###############################################################################
-class Profile(models.Model):
-    """Profile for a user to store roll number and other details."""
-    user = models.OneToOneField(User)
-    roll_number = models.CharField(max_length=20)
-    institute = models.CharField(max_length=128)
-    department = models.CharField(max_length=64)
-    position = models.CharField(max_length=64)
 
 languages = (
         ("python", "Python"),
@@ -45,6 +32,12 @@ enrollment_methods = (
     ("open", "Open Course"),
     )
 
+test_case_types = (
+        ("standardtestcase", "Standard Testcase"),
+        ("stdoutbasedtestcase", "Stdout Based Testcase"),
+        ("mcqtestcase", "MCQ Testcase"),
+    )
+
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
 days_between_attempts = ((j, j) for j in range(401))
@@ -54,9 +47,14 @@ test_status = (
                 ('completed', 'Completed'),
               )
 
-
 def get_assignment_dir(instance, filename):
     return '%s/%s' % (instance.user.roll_number, instance.assignmentQuestion.id)
+
+def get_model_class(model):
+    ctype = ContentType.objects.get(app_label="yaksh", model=model)
+    model_class = ctype.model_class()
+
+    return model_class
 
 
 ###############################################################################
@@ -132,6 +130,21 @@ class Course(models.Model):
     def __unicode__(self):
         return self.name
 
+###############################################################################
+class ConcurrentUser(models.Model):
+    concurrent_user = models.OneToOneField(User, null=False)
+    session_key = models.CharField(null=False, max_length=40)
+
+
+###############################################################################
+class Profile(models.Model):
+    """Profile for a user to store roll number and other details."""
+    user = models.OneToOneField(User)
+    roll_number = models.CharField(max_length=20)
+    institute = models.CharField(max_length=128)
+    department = models.CharField(max_length=64)
+    position = models.CharField(max_length=64)
+
 
 ###############################################################################
 class Question(models.Model):
@@ -146,16 +159,6 @@ class Question(models.Model):
     # Number of points for the question.
     points = models.FloatField(default=1.0)
 
-    # Answer for MCQs.
-    test = models.TextField(blank=True)
-
-    # Test cases file paths (comma seperated for reference code path and test case code path)
-    # Applicable for CPP, C, Java and Scilab
-    ref_code_path = models.TextField(blank=True)
-
-    # Any multiple choice options. Place one option per line.
-    options = models.TextField(blank=True)
-
     # The language for question.
     language = models.CharField(max_length=24,
                                 choices=languages)
@@ -163,64 +166,49 @@ class Question(models.Model):
     # The type of question.
     type = models.CharField(max_length=24, choices=question_types)
 
+    # The type of evaluator
+    test_case_type = models.CharField(max_length=24, choices=test_case_types)
+    
     # Is this question active or not. If it is inactive it will not be used
     # when creating a QuestionPaper.
     active = models.BooleanField(default=True)
 
-    # Snippet of code provided to the user.
-    snippet = models.CharField(max_length=256, blank=True)
-
     # Tags for the Question.
     tags = TaggableManager(blank=True)
+
+    # Snippet of code provided to the user.
+    snippet = models.CharField(max_length=256, blank=True)
 
     # user for particular question
     user = models.ForeignKey(User, related_name="user")
 
-    def consolidate_answer_data(self, test_cases, user_answer):
-        test_case_data_dict = []
-        question_info_dict = {}
+    def consolidate_answer_data(self, user_answer):
+        question_data = {}
+        test_case_data = []
 
-        for test_case in test_cases:
-            kw_args_dict = {}
-            pos_args_list = []
+        test_cases = self.get_test_cases()
 
-            test_case_data = {}
-            test_case_data['test_id'] = test_case.id
-            test_case_data['func_name'] = test_case.func_name
-            test_case_data['expected_answer'] = test_case.expected_answer
+        for test in test_cases:
+            test_case_as_dict = test.get_field_value()
+            test_case_data.append(test_case_as_dict)
 
-            if test_case.kw_args:
-                for args in test_case.kw_args.split(","):
-                    arg_name, arg_value = args.split("=")
-                    kw_args_dict[arg_name.strip()] = arg_value.strip()
+        question_data['test_case_data'] = test_case_data
+        question_data['user_answer'] = user_answer
 
-            if test_case.pos_args:
-                for args in test_case.pos_args.split(","):
-                    pos_args_list.append(args.strip())
-
-            test_case_data['kw_args'] = kw_args_dict
-            test_case_data['pos_args'] = pos_args_list
-            test_case_data_dict.append(test_case_data)
-
-        # question_info_dict['language'] = self.language
-        question_info_dict['id'] = self.id
-        question_info_dict['user_answer'] = user_answer
-        question_info_dict['test_parameter'] = test_case_data_dict
-        question_info_dict['ref_code_path'] = self.ref_code_path
-        question_info_dict['test'] = self.test
-
-        return json.dumps(question_info_dict)
+        return json.dumps(question_data)
 
     def dump_into_json(self, question_ids, user):
         questions = Question.objects.filter(id__in = question_ids, user_id = user.id)
         questions_dict = []
         for question in questions:
-            q_dict = {'summary': question.summary, 'description': question.description,
-                        'points': question.points, 'test': question.test,
-                        'ref_code_path': question.ref_code_path,
-                        'options': question.options, 'language': question.language,
-                        'type': question.type, 'active': question.active,
-                        'snippet': question.snippet}
+            q_dict = {'summary': question.summary, 
+                         'description': question.description,
+                         'points': question.points,
+                         'language': question.language,
+                         'type': question.type,
+                         'active': question.active,
+                         'test_case_type': question.test_case_type,
+                         'snippet': question.snippet}
             questions_dict.append(q_dict)
 
         return json.dumps(questions_dict, indent=2)
@@ -230,6 +218,28 @@ class Question(models.Model):
         for question in questions:
             question['user'] = user
             Question.objects.get_or_create(**question)
+
+    def get_test_cases(self, **kwargs):
+        test_case_ctype = ContentType.objects.get(app_label="yaksh",
+             model=self.test_case_type
+        )
+        test_cases = test_case_ctype.get_all_objects_for_this_type(
+            question=self, 
+            **kwargs
+        )
+
+        return test_cases
+
+    def get_test_case(self, **kwargs):
+        test_case_ctype = ContentType.objects.get(app_label="yaksh",
+            model=self.test_case_type
+        )
+        test_case = test_case_ctype.get_object_for_this_type(
+            question=self, 
+            **kwargs
+        )
+
+        return test_case
 
     def __unicode__(self):
         return self.summary
@@ -371,10 +381,13 @@ class QuestionPaper(models.Model):
 
     def make_answerpaper(self, user, ip, attempt_num):
         """Creates an  answer paper for the user to attempt the quiz"""
-        ans_paper = AnswerPaper(user=user, user_ip=ip, attempt_number=attempt_num)
+        ans_paper = AnswerPaper(user=user,
+            user_ip=ip,
+            attempt_number=attempt_num
+        )
         ans_paper.start_time = datetime.now()
-        ans_paper.end_time = ans_paper.start_time \
-                             + timedelta(minutes=self.quiz.duration)
+        ans_paper.end_time = ans_paper.start_time + \
+            timedelta(minutes=self.quiz.duration)
         ans_paper.question_paper = self
         ans_paper.save()
         questions = self._get_questions_for_answerpaper()
@@ -746,14 +759,38 @@ class AssignmentUpload(models.Model):
 class TestCase(models.Model):
     question = models.ForeignKey(Question, blank=True, null = True)
 
-    # Test case function name
-    func_name = models.CharField(blank=True, null = True, max_length=200)
+class StandardTestCase(TestCase):
+    test_case = models.TextField(blank=True)
 
-    # Test case Keyword arguments in dict form
-    kw_args = models.TextField(blank=True, null = True)
+    def get_field_value(self):
+        return {"test_case": self.test_case}
 
-    # Test case Positional arguments in list form
-    pos_args = models.TextField(blank=True, null = True)
+    def __unicode__(self):
+        return u'Question: {0} | Test Case: {1}'.format(self.question,
+            self.test_case
+        )
 
-    # Test case Expected answer in list form
-    expected_answer = models.TextField(blank=True, null = True)
+
+class StdoutBasedTestCase(TestCase):
+    expected_output = models.TextField(blank=True)
+
+    def get_field_value(self):
+        return {"expected_output": self.expected_output}
+
+    def __unicode__(self):
+        return u'Question: {0} | Exp. Output: {1}'.format(self.question,
+            self.expected_output
+        )
+
+
+class McqTestCase(TestCase):
+    options = models.TextField()
+    correct = models.BooleanField(default=False)
+
+    def get_field_value(self):
+        return {"options": self.options, "correct": self.correct}
+
+    def __unicode__(self):
+        return u'Question: {0} | Correct: {1}'.format(self.question,
+            self.correct
+        )

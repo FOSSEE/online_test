@@ -109,34 +109,6 @@ function textareaformat()
 		document.getElementById('my').innerHTML = document.getElementById('id_description').value ;
 	});
 
-	$('#id_test').bind('focus', function( event ){
-         document.getElementById("id_test").rows=5;
-         document.getElementById("id_test").cols=40;
-      });
-
-	$('#id_test').bind('blur', function( event ){
-         document.getElementById("id_test").rows=1;
-         document.getElementById("id_test").cols=40;
-      });
-      
-	$('#id_options').bind('focus', function( event ){
-         document.getElementById("id_options").rows=5;
-         document.getElementById("id_options").cols=40;
-      });
-	$('#id_options').bind('blur', function( event ){
-         document.getElementById("id_options").rows=1;
-         document.getElementById("id_options").cols=40;
-      });
-      
-      $('#id_snippet').bind('focus', function( event ){
-         document.getElementById("id_snippet").rows=5;
-         document.getElementById("id_snippet").cols=40;
-      });
-	$('#id_snippet').bind('blur', function( event ){
-         document.getElementById("id_snippet").rows=1;
-         document.getElementById("id_snippet").cols=40;
-      });
-
 
         $('#id_type').bind('focus', function(event){
             var type = document.getElementById('id_type');
@@ -147,32 +119,7 @@ function textareaformat()
             var language = document.getElementById('id_language');
             language.style.border = '1px solid #ccc';
         });
-	
-	$('#id_type').bind('change',function(event){
-		var value = document.getElementById('id_type').value;
-		if(value == 'mcq' || value == 'mcc')
-		{
-			document.getElementById('id_options').style.visibility='visible';
-			document.getElementById('label_option').innerHTML="Options :";
-		}
-		else
-		{
-			document.getElementById('id_options').style.visibility='hidden';
-			document.getElementById('label_option').innerHTML = "";
-		}
-	});
-		document.getElementById('my').innerHTML = document.getElementById('id_description').value ;
-		var value = document.getElementById('id_type').value;
-		if(value == 'mcq' || value == 'mcc')
-		{
-			document.getElementById('id_options').style.visibility='visible';
-			document.getElementById('label_option').innerHTML="Options :"
-		}
-		else
-		{
-			document.getElementById('id_options').style.visibility='hidden';
-			document.getElementById('label_option').innerHTML = "";
-		}	
+		document.getElementById('my').innerHTML = document.getElementById('id_description').value ;	
 }
 
 function autosubmit()
@@ -189,17 +136,5 @@ function autosubmit()
             type.style.border = 'solid red';
             return false;
 		}
-
-
-	if (type.value == 'mcq' || type.value == 'mcc')
-	{
-		var value = document.getElementById('id_options').value;
-		if(value.split('\n').length < 4)
-		{
-			alert("Please Enter 4 options. One option per line.");
-			return false;
-		}
-		return true;
-	}
 
 }

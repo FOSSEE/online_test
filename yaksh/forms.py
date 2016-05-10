@@ -1,8 +1,10 @@
 from django import forms
-from yaksh.models import Profile, Quiz, Question, TestCase, Course
+from yaksh.models import get_model_class, Profile, Quiz, Question, TestCase, Course, StandardTestCase, StdoutBasedTestCase
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType 
+
 from taggit.managers import TaggableManager
 from taggit.forms import TagField
 from django.forms.models import inlineformset_factory
@@ -28,12 +30,26 @@ question_types = (
     ("upload", "Assignment Upload"),
     )
 
+test_case_types = (
+        ("standardtestcase", "Standard Testcase"),
+        ("stdoutbasedtestcase", "Stdout Based Testcase"),
+        ("mcqtestcase", "MCQ Testcase"),
+    )
+
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
 
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
 days_between_attempts = ((j, j) for j in range(401))
+
+def get_object_form(model, exclude_fields=None):  
+    model_class = get_model_class(model)
+    class _ObjectForm(forms.ModelForm):
+        class Meta:
+            model = model_class
+            exclude = exclude_fields
+    return _ObjectForm
 
 
 class UserRegisterForm(forms.Form):
@@ -178,10 +194,6 @@ class QuestionFilterForm(forms.Form):
                                 (choices=languages))
     question_type = forms.CharField(max_length=8, widget=forms.Select\
                                     (choices=question_types))
-
-
-TestCaseFormSet = inlineformset_factory(Question, TestCase, fields='__all__',
-                        can_order=False, can_delete=False, extra=1)
 
 
 class CourseForm(forms.ModelForm):
