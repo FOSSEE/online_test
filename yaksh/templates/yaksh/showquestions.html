@@ -57,7 +57,8 @@
 <button class="btn" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question</button>&nbsp;&nbsp;
 <button class="btn" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>&nbsp;&nbsp;
 {% if questions %}
-<button class="btn" type="submit" name='download' value='download'>Download Selected</button>
+<button class="btn" type="submit" name='download' value='download'>Download Selected</button>&nbsp;&nbsp;
+<button class="btn" type="submit" name="test" value="test">Test Selected</button>
 {% endif %}
 </form>
 {% endblock %}
