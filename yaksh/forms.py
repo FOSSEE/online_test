@@ -159,7 +159,7 @@ class QuizForm(forms.ModelForm):
 
     class Meta:
         model = Quiz
-        fields = '__all__'
+        exclude = ["is_trial"]
 
 
 class QuestionForm(forms.ModelForm):
@@ -200,7 +200,7 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ['name', 'active', 'enrollment']
-
+        exclude = ["is_trial"]
 
 class ProfileForm(forms.ModelForm):
     """ profile form for students and moderators """
@@ -209,6 +209,7 @@ class ProfileForm(forms.ModelForm):
         model = Profile
         fields = ['first_name', 'last_name', 'institute',
                 'department', 'roll_number', 'position']
+        
 
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
