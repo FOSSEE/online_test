@@ -22,4 +22,9 @@
   <center><button class="btn" type="submit" id="submit" name="questionpaper">Design Question Paper</button>
   <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button> </center>
 </form>
+{% if quiz_id %}
+    <p>You can check the quiz by attempting it in the following modes:</p>
+  	<button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/usermode/{{quiz_id}}");'>User Mode</button> </center>
+  	<button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/godmode/{{quiz_id}}");'>God Mode</button> </center>
+ {% endif %}
 {% endblock %}
