@@ -849,7 +849,7 @@ def show_all_questions(request):
             trial_paper = test_mode(user, "test_questions", question_ids, None)
             trial_paper.update_total_marks()
             trial_paper.save()
-            return my_redirect("/exam/start/{0}".format(trial_paper.id))
+            return my_redirect("/exam/start/1/{0}".format(trial_paper.id))
 
 
     questions = Question.objects.filter(user_id=user.id)
@@ -1212,4 +1212,4 @@ def test_mode(user, mode, questions_list=None, quiz_id=None):
 def test_quiz(request, mode,quiz_id):
     current_user = request.user
     trial_questionpaper = test_mode(current_user, mode, None, quiz_id)
-    return my_redirect("/exam/start/{0}".format(trial_questionpaper.id))
+    return my_redirect("/exam/start/1/{0}".format(trial_questionpaper.id))
