@@ -1,6 +1,5 @@
 {% extends "manage.html" %}
 
-
 {% block subtitle %}Add Question{% endblock %}
 
 {% block css %}
@@ -25,25 +24,24 @@
   <tr><td>Points:<td><button class="btn-mini" type="button" onClick="increase(frm);">+</button>{{ form.points }}<button class="btn-mini" type="button" onClick="decrease(frm);">-</button>{{ form.points.errors }} 
     <tr><td><strong>Rendered: </strong><td><p id='my'></p>
   <tr><td>Description: <td>{{ form.description}}  {{form.description.errors}}
-  <tr><td>Snippet: <td>{{ form.snippet }}{{ form.snippet.errors }}</td></tD></td></tr>
   <tr><td>Tags: <td>{{ form.tags }}
-  <tr><td id='label_option'>Options: <td>{{ form.options }}  {{form.options.errors}}
-  <tr><td id='label_solution'>Test: <td>{{ form.test }}  {{form.test.errors}}
-  <tr><td id='label_ref_code_path'>Reference Code Path: <td>{{ form.ref_code_path }}  {{form.ref_code_path.errors}}
+  <tr><td> Test Case Type: <td> {{ form.test_case_type }}{{ form.test_case_type.errors }}
 
-    <form method="post" action="">
-      {% if formset%}
-        {{ formset.management_form }}
-        {% for form in formset %}
-          {{ form }}
-        {% endfor %}
-      {% endif %}
-    </form>
+  <div class="form-group">
+      {{ test_case_formset.management_form }}
+
+      {% for form in test_case_formset %}
+        <div class="link-formset">
+            {{ form }}
+        </div>
+      {% endfor %}
+
+  </div>
+
   </table></center>
-  <center><button class="btn" type="submit" name="add_test">Add Test Case</button>
-  <button class="btn" type="submit" name="delete_test">Remove Test Case</button>
-  </center><br>
-  <center><button class="btn" type="submit" name="save_question">Save</button>
-  <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Cancel</button> </center>
+  <center>
+    <button class="btn" type="submit" name="save_question">Save & Add Testcase</button>
+    <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Back to Questions</button>
+  </center>
 </form>
 {% endblock %}

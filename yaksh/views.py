@@ -15,15 +15,17 @@ from django.db.models import Sum, Max, Q
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.forms.models import inlineformset_factory
 from taggit.models import Tag
 from itertools import chain
 import json
 # Local imports.
-from yaksh.models import Quiz, Question, QuestionPaper, QuestionSet, Course
+from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
-                QuestionForm, RandomQuestionForm, TestCaseFormSet,\
-                QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm
+                QuestionForm, RandomQuestionForm,\
+                QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
+                get_object_form
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
@@ -142,90 +144,77 @@ def results_user(request):
 
 
 @login_required
-def add_question(request, question_id=None):
+def add_question(request):
     """To add a new question in the database.
     Create a new question and store it."""
-
-    def add_or_delete_test_form(post_request, instance):
-        request_copy = post_request.copy()
-        if 'add_test' in post_request:
-            request_copy['test-TOTAL_FORMS'] = int(request_copy['test-TOTAL_FORMS']) + 1
-        elif 'delete_test' in post_request:
-            request_copy['test-TOTAL_FORMS'] = int(request_copy['test-TOTAL_FORMS']) - 1
-        test_case_formset = TestCaseFormSet(request_copy, prefix='test', instance=instance)
-        return test_case_formset
-
     user = request.user
     ci = RequestContext(request)
-    if not user.is_authenticated() or not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-    if request.method == "POST":
-        form = QuestionForm(request.POST)
-        if form.is_valid():
-            if question_id is None:
-                test_case_formset = add_or_delete_test_form(request.POST, form.save(commit=False))
-                if 'save_question' in request.POST:
-                    qtn = form.save(commit=False)
-                    qtn.user = user
-                    qtn.save()
-                    test_case_formset = TestCaseFormSet(request.POST, prefix='test',  instance=qtn)
-                    form.save()
-                    question = Question.objects.order_by("-id")[0]
-                    if test_case_formset.is_valid():
-                        test_case_formset.save()
-                    else:
-                        return my_render_to_response('yaksh/add_question.html',
-                                                     {'form': form,
-                                                     'formset': test_case_formset},
-                                                     context_instance=ci)
 
-                    return my_redirect("/exam/manage/questions")
-
-                return my_render_to_response('yaksh/add_question.html',
-                                             {'form': form,
-                                             'formset': test_case_formset},
-                                             context_instance=ci)
-            else:
-                d = Question.objects.get(id=question_id)
-                form = QuestionForm(request.POST, instance=d)
-                test_case_formset = add_or_delete_test_form(request.POST, d)
-                if 'save_question' in request.POST:
-                    qtn = form.save(commit=False)
-                    test_case_formset = TestCaseFormSet(request.POST, prefix='test',  instance=qtn)
-                    form.save()
-                    question = Question.objects.get(id=question_id)
-                    if test_case_formset.is_valid():
-                        test_case_formset.save()
-                    return my_redirect("/exam/manage/questions")
-                return my_render_to_response('yaksh/add_question.html',
-                                             {'form': form,
-                                             'formset': test_case_formset},
-                                             context_instance=ci)
-
+    if request.method == "POST" and 'save_question' in request.POST:
+        question_form = QuestionForm(request.POST)
+        if question_form.is_valid():
+            new_question = question_form.save(commit=False)
+            new_question.user = user
+            new_question.save()
+            return my_redirect("/exam/manage/addquestion/{0}".format(new_question.id))
         else:
-            test_case_formset = TestCaseFormSet(prefix='test', instance=Question())
             return my_render_to_response('yaksh/add_question.html',
-                                         {'form': form,
-                                         'formset': test_case_formset},
+                                         {'form': question_form},
                                          context_instance=ci)
     else:
-        if question_id is None:
-            form = QuestionForm()
-            test_case_formset = TestCaseFormSet(prefix='test', instance=Question())
-            return my_render_to_response('yaksh/add_question.html',
-                                         {'form': form,
-                                         'formset': test_case_formset},
-                                         context_instance=ci)
+        question_form = QuestionForm()
+        return my_render_to_response('yaksh/add_question.html',
+                                     {'form': question_form},
+                                     context_instance=ci)
+
+@login_required
+def edit_question(request, question_id=None):
+    """To add a new question in the database.
+    Create a new question and store it."""
+    user = request.user
+    ci = RequestContext(request)
+    if not question_id:
+        raise Http404('No Question Found')
+
+    question_instance = Question.objects.get(id=question_id)
+
+    if request.method == "POST" and 'save_question' in request.POST:
+        question_form = QuestionForm(request.POST, instance=question_instance)
+        if question_form.is_valid():
+            new_question = question_form.save(commit=False)
+            test_case_type = question_form.cleaned_data.get('test_case_type')
+            test_case_form_class = get_object_form(model=test_case_type, exclude_fields=['question'])
+            test_case_model_class = get_model_class(test_case_type)
+            TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class, extra=1)
+            test_case_formset = TestCaseInlineFormSet(request.POST, request.FILES, instance=new_question)
+            if test_case_formset.is_valid():
+                new_question.save()
+                test_case_formset.save()
+            return my_redirect("/exam/manage/addquestion/{0}".format(new_question.id))
         else:
-            d = Question.objects.get(id=question_id)
-            form = QuestionForm(instance=d)
-            test_case_formset = TestCaseFormSet(prefix='test', instance=d)
-
+            test_case_type = question_form.cleaned_data.get('test_case_type')
+            test_case_form_class = get_object_form(model=test_case_type, exclude_fields=['question'])
+            test_case_model_class = get_model_class(test_case_type)
+            TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class, extra=1)
+            test_case_formset = TestCaseInlineFormSet(request.POST, request.FILES, instance=question_instance)
             return my_render_to_response('yaksh/add_question.html',
-                                         {'form': form,
-                                         'formset': test_case_formset},
+                                         {'form': question_form,
+                                         'test_case_formset': test_case_formset,
+                                         'question_id': question_id},
                                          context_instance=ci)
+    else:
+        question_form = QuestionForm(instance=question_instance)
+        test_case_type = question_instance.test_case_type
+        test_case_form_class = get_object_form(model=test_case_type, exclude_fields=['question'])
+        test_case_model_class = get_model_class(test_case_type)
+        TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class, extra=1)
+        test_case_formset = TestCaseInlineFormSet(instance=question_instance)
 
+        return my_render_to_response('yaksh/add_question.html',
+                                     {'form': question_form,
+                                     'test_case_formset': test_case_formset,
+                                     'question_id': question_id},
+                                     context_instance=ci)
 
 @login_required
 def add_quiz(request, quiz_id=None):
@@ -401,7 +390,9 @@ def show_question(request, question, paper, error_message=None):
     if paper.time_left() <= 0:
         reason='Your time is up!'
         return complete(request, reason, paper.attempt_number, paper.question_paper.id)
-    context = {'question': question, 'paper': paper, 'error_message': error_message}
+    test_cases = question.get_test_cases()
+    context = {'question': question, 'paper': paper, 'error_message': error_message,
+                'test_cases': test_cases}
     answers = paper.get_previous_answers(question)
     if answers:
         context['last_attempt'] = answers[0]
@@ -470,8 +461,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         # If we were not skipped, we were asked to check.  For any non-mcq
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
-        test_cases = TestCase.objects.filter(question=question)
-        json_data = question.consolidate_answer_data(test_cases, user_answer) \
+        json_data = question.consolidate_answer_data(user_answer) \
                         if question.type == 'code' else None
         correct, result = validate_answer(user, user_answer, question, json_data)
         if correct:
@@ -518,17 +508,18 @@ def validate_answer(user, user_answer, question, json_data=None):
 
     if user_answer is not None:
         if question.type == 'mcq':
-            if user_answer.strip() == question.test.strip():
+            expected_answer = question.get_test_case(correct=True).options
+            if user_answer.strip() == expected_answer.strip():
                 correct = True
-                message = 'Correct answer'
         elif question.type == 'mcc':
-            answers = set(question.test.splitlines())
-            if set(user_answer) == answers:
+            expected_answers = []
+            for opt in question.get_test_cases(correct=True):
+                expected_answers.append(opt.options)
+            if set(user_answer) == set(expected_answers):
                 correct = True
-                message = 'Correct answer'
         elif question.type == 'code':
             user_dir = get_user_dir(user)
-            json_result = code_server.run_code(question.language, json_data, user_dir)
+            json_result = code_server.run_code(question.language, question.test_case_type, json_data, user_dir)
             result = json.loads(json_result)
             if result.get('success'):
                 correct = True
@@ -871,6 +862,7 @@ def show_all_questions(request):
     context['upload_form'] = upload_form
     return my_render_to_response('yaksh/showquestions.html', context,
                                  context_instance=ci)
+
 
 @login_required
 def user_data(request, user_id, questionpaper_id=None):
