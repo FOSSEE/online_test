@@ -74,7 +74,8 @@ class UserRegisterForm(forms.Form):
                 (max_length=64, help_text='Department you work/study at')
     position = forms.CharField\
         (max_length=64, help_text='Student/Faculty/Researcher/Industry/etc.')
-    timezone = forms.ChoiceField(choices=[(tz, tz) for tz in pytz.common_timezones])
+    timezone = forms.ChoiceField(choices=[(tz, tz) for tz in pytz.common_timezones],
+                                initial=pytz.utc)
 
     def clean_username(self):
         u_name = self.cleaned_data["username"]
