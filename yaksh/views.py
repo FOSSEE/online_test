@@ -130,7 +130,6 @@ def quizlist_user(request):
                 'courses': courses,
                 'quizzes_taken': user_answerpapers,
             }
-
     return my_render_to_response("yaksh/quizzes_user.html", context)
 
 
@@ -288,8 +287,8 @@ rights/permissions and log in."""
         question_papers = QuestionPaper.objects.filter(quiz__course__creator=user,
                                                         quiz__is_trial=False
                                                         )
-        trial_course = Course.objects.delete_trial_course(user)
-        trial_quiz = Quiz.objects.delete_trial_quiz(user)
+        trial_course = Course.objects.delete_all_trial_courses(user)
+        trial_quiz = Quiz.objects.delete_all_trial_quizzes(user)
         users_per_paper = []
         for paper in question_papers:
             answer_papers = AnswerPaper.objects.filter(question_paper=paper)
@@ -350,8 +349,12 @@ def start(request, questionpaper_id=None, attempt_num=None):
     if not quest_paper.quiz.course.is_enrolled(user) :
         raise Http404('You are not allowed to view this page!')
     # prerequisite check and passing criteria
+    if quest_paper.quiz.is_expired():
+        if is_moderator(user):
+            return redirect("/exam/manage")
+        return redirect("/exam/quizzes")
     if quest_paper.quiz.has_prerequisite() and  not quest_paper.is_prerequisite_passed(user):
-        return quizlist_user(request)
+        return redirect("/exam/quizzes")
     # if any previous attempt
     last_attempt = AnswerPaper.objects.get_user_last_attempt(
             questionpaper=quest_paper, user=user)
@@ -359,7 +362,7 @@ def start(request, questionpaper_id=None, attempt_num=None):
         return show_question(request, last_attempt.current_question(), last_attempt)
     # allowed to start
     if not quest_paper.can_attempt_now(user):
-        return quizlist_user(request)
+        return redirect("/exam/quizzes")
     if attempt_num is None:
         attempt_number = 1 if not last_attempt else last_attempt.attempt_number +1
         context = {'user': user, 'questionpaper': quest_paper,
@@ -806,7 +809,7 @@ def ajax_questions_filter(request):
 
 @login_required
 def show_all_questions(request):
-    """Show a list of all the questions currently in the databse."""
+    """Show a list of all the questions currently in the database."""
 
     user = request.user
     ci = RequestContext(request)
@@ -844,6 +847,7 @@ def show_all_questions(request):
             else:
                 msg = "Please select atleast one question"
                 context['msg'] = msg
+        
         if request.POST.get('test') == 'test':
             question_ids = request.POST.getlist("question")
             trial_paper = test_mode(user, "test_questions", question_ids, None)
@@ -1194,22 +1198,26 @@ def remove_teachers(request, course_id):
         course.remove_teachers(*teachers)
     return my_redirect('/exam/manage/courses')
 
-def test_mode(user, mode, questions_list=None, quiz_id=None): 
+def test_mode(user, mode, questions_list=None, quiz_id=None):
+    """creates a trial question paper for the moderators"""
+
     if questions_list is not None and mode == "test_questions":
         trial_course = Course.objects.create_trial_course(user)
         trial_quiz = Quiz.objects.create_trial_quiz(trial_course,user)
-        trial_questionpaper = QuestionPaper.objects.add_details_trial_questionpaper(trial_quiz,
-                                                    None, questions_list
-                                                    )
+        trial_questionpaper = QuestionPaper.objects\
+                                .create_trial_paper_to_test_questions\
+                                (trial_quiz, questions_list)
     else:
-        trial_quiz = Quiz.objects.copy_original_quiz(quiz_id, user, mode)
-        trial_questionpaper = QuestionPaper.objects.add_details_trial_questionpaper(trial_quiz,
-                                                    quiz_id, None
-                                                    )
+        trial_quiz = Quiz.objects.create_trial_from_quiz(quiz_id, user, mode)
+        trial_questionpaper = QuestionPaper.objects\
+                                .create_trial_paper_to_test_quiz\
+                                (trial_quiz, quiz_id)
     return trial_questionpaper
 
 @login_required
 def test_quiz(request, mode,quiz_id):
+    """creates a trial quiz for the moderators"""
+
     current_user = request.user
     trial_questionpaper = test_mode(current_user, mode, None, quiz_id)
-    return my_redirect("/exam/start/1/{0}".format(trial_questionpaper.id))
+    return my_redirect("/exam/start/{0}".format(trial_questionpaper.id))
