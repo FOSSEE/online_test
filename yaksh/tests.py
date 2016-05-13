@@ -6,6 +6,7 @@ import json
 from datetime import datetime, timedelta
 from django.contrib.auth.models import Group
 
+
 def setUpModule():
     # create user profile
     user = User.objects.create_user(username='demo_user',
@@ -153,9 +154,12 @@ class QuestionTestCases(unittest.TestCase):
 ###############################################################################
 class QuizTestCases(unittest.TestCase):
     def setUp(self):
+        self.creator = User.objects.get(pk=1)
+        self.teacher = User.objects.get(pk=2)
         self.quiz1 = Quiz.objects.get(pk=1)
         self.quiz2 = Quiz.objects.get(pk=2)
-
+        self.trial_course = Course.objects.create_trial_course(self.creator)
+        
     def test_quiz(self):
         """ Test Quiz"""
         self.assertEqual((self.quiz1.start_date_time).strftime('%Y-%m-%d'),
@@ -182,6 +186,69 @@ class QuizTestCases(unittest.TestCase):
         for quiz in quizzes:
             self.assertTrue(quiz.active)
 
+    def test_create_trial_quiz(self):
+        """Test to check if trial quiz is created"""
+        trial_quiz = Quiz.objects.create_trial_quiz(self.trial_course,
+                                                     self.creator
+                                                     )
+        self.assertEqual(trial_quiz.course, self.trial_course)
+        self.assertEqual(trial_quiz.duration, 1000)
+        self.assertEqual(trial_quiz.description, "trial_quiz")
+        self.assertTrue(trial_quiz.is_trial)
+        self.assertEqual(trial_quiz.time_between_attempts, 0)
+        
+    def test_create_trial_from_quiz_godmode(self):
+        """Test to check if a copy of original quiz is created in godmode"""
+        trial_quiz = Quiz.objects.create_trial_from_quiz(self.quiz1.id,
+                                                         self.creator,
+                                                         "godmode"
+                                                         )
+        self.assertEqual(trial_quiz.description, "demo quiz_trial")
+        self.assertTrue(trial_quiz.is_trial)
+        self.assertEqual(trial_quiz.duration, 1000)
+        self.assertTrue(trial_quiz.active)
+        self.assertEqual(trial_quiz.end_date_time,
+                         datetime(2199, 1, 1, 0, 0, 0, 0)
+                         )
+        self.assertEqual(trial_quiz.time_between_attempts, 0)
+
+    def test_create_trial_from_quiz_usermode(self):
+        """Test to check if a copy of original quiz is created in usermode"""
+        trial_quiz = Quiz.objects.create_trial_from_quiz(self.quiz1.id,
+                                                         self.creator,
+                                                         "usermode"
+                                                         )
+        self.assertEqual(trial_quiz.description, "demo quiz_trial")
+        self.assertTrue(trial_quiz.is_trial)
+        self.assertEqual(trial_quiz.duration, self.quiz1.duration)
+        self.assertEqual(trial_quiz.active, self.quiz1.active)
+        self.assertEqual(trial_quiz.start_date_time,
+                         self.quiz1.start_date_time
+                         )
+        self.assertEqual(trial_quiz.end_date_time,
+                         self.quiz1.end_date_time
+                         )
+        self.assertEqual(trial_quiz.time_between_attempts, 0)
+
+    def test_delete_all_trial_quizzes_creator(self):
+        Quiz.objects.create_trial_from_quiz(self.quiz1.id,
+                                             self.creator,
+                                             "godmode"
+                                             )
+        Quiz.objects.delete_all_trial_quizzes(self.creator)
+        self.assertFalse(Quiz.objects.filter(course__creator=self.creator,
+                                                 is_trial=True).exists()
+                                                )
+    def test_delete_all_trial_quizzes_added_teacher(self):
+        self.trial_course.add_teachers(self.teacher)
+        Quiz.objects.create_trial_from_quiz(self.quiz1.id,
+                                             self.creator,
+                                             "godmode"
+                                             )
+        Quiz.objects.delete_all_trial_quizzes(self.teacher)
+        self.assertFalse(Quiz.objects.filter(course__teachers=self.teacher,
+                                             is_trial=True).exists()
+                                            )
 
 ###############################################################################
 class QuestionPaperTestCases(unittest.TestCase):
@@ -239,6 +306,11 @@ class QuestionPaperTestCases(unittest.TestCase):
             user=self.user
         )
 
+        ### For Test case
+        self.questions_list=[self.questions[3].id, self.questions[5].id]
+        trial_course = Course.objects.create_trial_course(self.user)
+        trial_quiz = Quiz.objects.create_trial_quiz(trial_course, self.user)
+
     def test_questionpaper(self):
         """ Test question paper"""
         self.assertEqual(self.question_paper.quiz.description, 'demo quiz')
@@ -291,7 +363,28 @@ class QuestionPaperTestCases(unittest.TestCase):
         # test can_attempt_now(self):
         self.assertFalse(self.question_paper.can_attempt_now(self.user))
 
+        def test_create_trial_paper_test_quiz(self):
+            trial_paper = QuestionPaper.objects.create_trial_paper_test_questions\
+                                                 (trial_quiz,
+                                                  self.question_paper.id
+                                                 )
+            self.assertEqual(trial_paper.quiz, trial_quiz)
+            self.assertEqual(trial_paper.fixed_questions.all(),
+                              self.question_paper.fixed_questions.all()
+                             )
+            self.assertEqual(trial_paper.random_questions.all(),
+                              self.question_paper.random_questions.all()
+                             )
 
+        def test_create_trial_paper_test_questions(self):
+            trial_paper = QuestionPaper.objects.create_trial_paper(trial_quiz,
+                                                 self.questions_list
+                                                 )
+            self.assertEqual(trial_paper.quiz, trial_quiz)
+            self.assertEqual(self.questions_list,
+                             self.question_paper.fixed_questions\
+                              .values_list("id", flat=True)
+                             )
 ###############################################################################
 class AnswerPaperTestCases(unittest.TestCase):
     @classmethod
@@ -427,6 +520,7 @@ class CourseTestCases(unittest.TestCase):
         self.quiz1 = Quiz.objects.get(pk=1)
         self.quiz2 = Quiz.objects.get(pk=2)
 
+
     def test_is_creator(self):
         """ Test is_creator method of Course"""
         self.assertTrue(self.course.is_creator(self.creator))
@@ -498,6 +592,21 @@ class CourseTestCases(unittest.TestCase):
         self.course.add_teachers(self.student2)
         result = self.course.is_teacher(self.student2)
         self.assertTrue(result)
+
+    def test_create_trial_course(self):
+        """Test to check if trial course is created"""
+        # Test for manager method create_trial_course
+        trial_course = Course.objects.create_trial_course(self.creator)
+        self.assertEqual(trial_course.name,"trial_course")
+        self.assertEqual(trial_course.enrollment, "open")
+        self.assertTrue(trial_course.active)
+        self.assertEqual(trial_course.students.get(user=self.creator.id), self.creator)
+        self.assertTrue(trial_course.is_trial)
+        
+    def test_delete_all_trial_courses(self):
+        Course.objects.create_trial_course(self.creator)
+        Course.objects.delete_all_trial_courses(self.creator)
+        self.assertFalse(Course.objects.filter(creator=self.creator, is_trial=True).exists())
 
 
 ###############################################################################
