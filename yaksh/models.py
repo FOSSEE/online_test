@@ -421,7 +421,7 @@ class QuestionPaperManager(models.Manager):
         
     def create_trial_paper_to_test_questions(self, trial_quiz,
                                              questions_list):
-    """Creates a trial question paper to test selected questions"""
+        """Creates a trial question paper to test selected questions"""
         if questions_list is not None:
             trial_questionpaper=self.create(quiz=trial_quiz,
                                         total_marks=10,
