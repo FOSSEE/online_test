@@ -408,6 +408,7 @@ class Quiz(models.Model):
 class QuestionPaperManager(models.Manager):
 
     def _create_trial_from_questionpaper(self, original_quiz_id):
+        """Creates a copy of the original questionpaper"""
         trial_questionpaper = self.get(quiz_id = original_quiz_id)
         trial_questions = {"fixed_questions": trial_questionpaper\
                                                 .fixed_questions.all(),
@@ -418,7 +419,9 @@ class QuestionPaperManager(models.Manager):
         trial_questionpaper.save()
         return trial_questionpaper, trial_questions
         
-    def create_trial_paper_to_test_questions(self, trial_quiz, questions_list):
+    def create_trial_paper_to_test_questions(self, trial_quiz,
+                                             questions_list):
+    """Creates a trial question paper to test selected questions"""
         if questions_list is not None:
             trial_questionpaper=self.create(quiz=trial_quiz,
                                         total_marks=10,
@@ -427,6 +430,7 @@ class QuestionPaperManager(models.Manager):
             return trial_questionpaper
 
     def create_trial_paper_to_test_quiz(self, trial_quiz, original_quiz_id):
+        """Creates a trial question paper to test quiz."""
         trial_questionpaper, trial_questions = self._create_trial_from_questionpaper\
                                                         (original_quiz_id)
         trial_questionpaper.quiz = trial_quiz
