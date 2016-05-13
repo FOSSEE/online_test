@@ -363,8 +363,8 @@ class QuestionPaperTestCases(unittest.TestCase):
         # test can_attempt_now(self):
         self.assertFalse(self.question_paper.can_attempt_now(self.user))
 
-        def test_create_trial_paper_test_quiz(self):
-            trial_paper = QuestionPaper.objects.create_trial_paper_test_questions\
+        def test_create_trial_paper_to_test_quiz(self):
+            trial_paper = QuestionPaper.objects.create_trial_paper_to_test_quiz\
                                                  (trial_quiz,
                                                   self.question_paper.id
                                                  )
@@ -376,10 +376,11 @@ class QuestionPaperTestCases(unittest.TestCase):
                               self.question_paper.random_questions.all()
                              )
 
-        def test_create_trial_paper_test_questions(self):
-            trial_paper = QuestionPaper.objects.create_trial_paper(trial_quiz,
-                                                 self.questions_list
-                                                 )
+        def test_create_trial_paper_to_test_questions(self):
+            trial_paper = QuestionPaper.objects.\
+                             create_trial_paper_to_test_questions(
+                                    trial_quiz, self.questions_list
+                                    )
             self.assertEqual(trial_paper.quiz, trial_quiz)
             self.assertEqual(self.questions_list,
                              self.question_paper.fixed_questions\
@@ -602,7 +603,7 @@ class CourseTestCases(unittest.TestCase):
         self.assertTrue(trial_course.active)
         self.assertEqual(trial_course.students.get(user=self.creator.id), self.creator)
         self.assertTrue(trial_course.is_trial)
-        
+
     def test_delete_all_trial_courses(self):
         Course.objects.create_trial_course(self.creator)
         Course.objects.delete_all_trial_courses(self.creator)
