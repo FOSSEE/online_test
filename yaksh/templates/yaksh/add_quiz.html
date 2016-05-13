@@ -11,6 +11,7 @@
 {% endblock %}
 {% block onload %} onload="javascript:test();"  {% endblock %}
 {% block manage %}
+
 <form name=frm id=frm action="" method="post" >
   {% csrf_token %}
   <center>
@@ -18,13 +19,33 @@
   {{ form.as_table }}
   </table>
   </center>
-    
+
   <center><button class="btn" type="submit" id="submit" name="questionpaper">Design Question Paper</button>
+
   <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button> </center>
+  
 </form>
 {% if quiz_id %}
-    <p>You can check the quiz by attempting it in the following modes:</p>
-  	<button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/usermode/{{quiz_id}}");'>User Mode</button> </center>
-  	<button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/godmode/{{quiz_id}}");'>God Mode</button> </center>
+
+    <h5>You can check the quiz by attempting it in the following modes:</h5>
+    <center>
+  	<button class="btn" type="button" name="button" onClick='usermode("{{URL_ROOT}}/exam/manage/usermode/{{quiz_id}}");'>User Mode</button>
+    
+  	<button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/godmode/{{quiz_id}}");'>God Mode</button> 
+    <a href="" onclick="$('#help').show(); return false;">Help </a>
+    </center>
+    <br/>
+   <div style="display: none;" id="help">
+   <ol>
+   <li><b>User Mode:</b> Attempt quiz the way normal users will attempt i.e. -
+   <ul>
+   <li><i>Quiz will have the same duration as that of the original quiz.</li>
+   <li>Quiz won't start if the course is inactive or the quiz time has expired.</li>
+   <li>You will be notified about quiz prerequisites.(You can still attempt the quiz though)</i></li>
+   </ul>
+   </p>
+   <li> <b>God Mode:</b> Attempt quiz without any time or eligibilty constraints.</p>
+   <a href="" onclick="$('#help').hide(); return false"> Close </a>
+   </div>
  {% endif %}
 {% endblock %}
