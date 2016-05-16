@@ -367,6 +367,8 @@ def start(request, questionpaper_id=None, attempt_num=None):
         attempt_number = 1 if not last_attempt else last_attempt.attempt_number +1
         context = {'user': user, 'questionpaper': quest_paper,
                    'attempt_num': attempt_number}
+        if is_moderator(user):
+            context["user"] = "moderator"
         return my_render_to_response('yaksh/intro.html', context,
                                      context_instance=ci)
     else:

@@ -39,8 +39,11 @@
           </li>
          </ul>
           <p> We hope you enjoy taking this exam !!!</p>
-
+          {% if user == "moderator" %}
+          <form action="{{URL_ROOT}}/exam/manage/" method="post" align="center">
+          {%else%}
           <form action="{{URL_ROOT}}/exam/quizzes/" method="post" align="center">
+          {% endif %}
            {% csrf_token %}
            <center><button class="btn" name="home">Home</button></center>
           </form>
