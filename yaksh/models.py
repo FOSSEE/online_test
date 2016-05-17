@@ -48,9 +48,6 @@ test_status = (
                 ('completed', 'Completed'),
               )
 
-# get current timezone info
-tz = pytz.timezone(timezone.get_current_timezone_name())
-
 def get_assignment_dir(instance, filename):
     return '%s/%s' % (instance.user.roll_number, instance.assignmentQuestion.id)
 
@@ -302,7 +299,9 @@ class Quiz(models.Model):
 
     # The end date and time of the quiz
     end_date_time = models.DateTimeField("End Date and Time of the quiz",
-                                        default=datetime(2199, 1, 1, tzinfo=tz),
+                                        default=datetime(2199, 1, 1,
+                                        tzinfo=pytz.timezone\
+                                        (timezone.get_current_timezone_name())),
                                         null=True)
 
     # This is always in minutes.
