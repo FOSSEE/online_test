@@ -204,7 +204,6 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ['name', 'active', 'enrollment']
-        exclude = ["is_trial"]
 
 class ProfileForm(forms.ModelForm):
     """ profile form for students and moderators """
