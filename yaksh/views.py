@@ -7,6 +7,7 @@ from datetime import datetime
 import collections
 import csv
 from django.http import HttpResponse
+from django.core.urlresolvers import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
@@ -22,12 +23,13 @@ from taggit.models import Tag
 from itertools import chain
 import json
 # Local imports.
-from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
-from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase
+from yaksh.models import get_model_class, Quiz, Question, QuestionPaper,\
+    QuestionSet, Course, Profile, Answer, AnswerPaper, User, TestCase,\
+    has_profile
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
-                QuestionForm, RandomQuestionForm,\
-                QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
-                get_object_form
+    QuestionForm, RandomQuestionForm,\
+    QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
+    get_object_form
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
@@ -69,10 +71,6 @@ def is_moderator(user):
     """Check if the user is having moderator rights"""
     if user.groups.filter(name='moderator').count() == 1:
         return True
-
-def has_profile(user):
-    """ check if user has profile """
-    return True if hasattr(user, 'profile') else False
 
 def add_to_group(users):
     """ add users to moderator group """
@@ -232,7 +230,7 @@ def add_quiz(request, quiz_id=None):
             form = QuizForm(request.POST, user=user)
             if form.is_valid():
                 form.save()
-                return my_redirect("/exam/manage/designquestionpaper")
+                return my_redirect(reverse('yaksh:design_questionpaper'))
         else:
             quiz = Quiz.objects.get(id=quiz_id)
             form = QuizForm(request.POST, user=user, instance=quiz)
@@ -240,10 +238,6 @@ def add_quiz(request, quiz_id=None):
                 form.save()
                 context["quiz_id"] = quiz_id
                 return my_redirect("/exam/manage/")
-
-        context["form"] = form
-        return my_render_to_response('yaksh/add_quiz.html', context,
-                                     context_instance=ci)
     else:
         if quiz_id is None:
             form = QuizForm(user=user)
@@ -792,20 +786,6 @@ def monitor(request, questionpaper_id=None):
             'latest_attempts': latest_attempts,}
     return my_render_to_response('yaksh/monitor.html', context,
                                  context_instance=ci)
-
-
-@login_required
-def show_all_users(request):
-    """Shows all the users who have taken various exams/quiz."""
-
-    user = request.user
-    if not user.is_authenticated() or not is_moderator(user):
-        raise Http404('You are not allowed to view this page !')
-    user = User.objects.filter(username__contains="")
-    questionpaper = AnswerPaper.objects.all()
-    context = {'question': questionpaper}
-    return my_render_to_response('yaksh/showusers.html', context,
-                                 context_instance=RequestContext(request))
 
 
 @csrf_exempt

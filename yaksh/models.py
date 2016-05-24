@@ -58,6 +58,10 @@ def get_model_class(model):
 
     return model_class
 
+def has_profile(user):
+    """ check if user has profile """
+    return True if hasattr(user, 'profile') else False
+
 
 ###############################################################################
 class CourseManager(models.Manager):

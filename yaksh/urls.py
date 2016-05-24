@@ -4,6 +4,7 @@ from django.contrib.auth.views import password_reset, password_reset_confirm,\
         password_reset_done, password_reset_complete, password_change,\
         password_change_done
 
+app_name = 'yaksh'
 urlpatterns = [
     url(r'^forgotpassword/$', password_reset, name="password_reset"),
     url(r'^password_reset/(?P<uidb64>[0-9A-Za-z]+)-(?P<token>.+)/$',
@@ -19,7 +20,7 @@ urlpatterns = [
 ]
 urlpatterns += [
     url(r'^$', views.index),
-    url(r'^login/$', views.user_login),
+    url(r'^login/$', views.user_login, name='login'),
     url(r'^quizzes/$', views.quizlist_user),
     url(r'^results/$', views.results_user),
     url(r'^start/$', views.start),
@@ -42,8 +43,8 @@ urlpatterns += [
     url(r'^manage/$', views.prof_manage),
     url(r'^manage/addquestion/$', views.add_question),
     url(r'^manage/addquestion/(?P<question_id>\d+)/$', views.edit_question),
-    url(r'^manage/addquiz/$', views.add_quiz),
-    url(r'^manage/addquiz/(?P<quiz_id>\d+)/$', views.add_quiz),
+    url(r'^manage/addquiz/$', views.add_quiz, name='add_quiz'),
+    url(r'^manage/addquiz/(?P<quiz_id>\d+)/$', views.add_quiz, name='edit_quiz'),
     url(r'^manage/gradeuser/$', views.grade_user),
     url(r'^manage/gradeuser/(?P<quiz_id>\d+)/$',views.grade_user),
     url(r'^manage/gradeuser/(?P<quiz_id>\d+)/(?P<user_id>\d+)/$',views.grade_user),
@@ -57,7 +58,7 @@ urlpatterns += [
     url(r'^manage/user_data/(?P<user_id>\d+)/(?P<questionpaper_id>\d+)/$',
         views.user_data),
     url(r'^manage/user_data/(?P<user_id>\d+)/$', views.user_data),
-    url(r'^manage/designquestionpaper/$', views.design_questionpaper),
+    url(r'^manage/designquestionpaper/$', views.design_questionpaper, name='design_questionpaper'),
     url(r'^manage/designquestionpaper/(?P<questionpaper_id>\d+)/$',\
                                                         views.design_questionpaper),
     url(r'^manage/statistics/question/(?P<questionpaper_id>\d+)/$',
@@ -78,17 +79,17 @@ urlpatterns += [
     url(r'manage/toggle_status/(?P<course_id>\d+)/$', views.toggle_course_status),
     url(r'^ajax/questionpaper/(?P<query>.+)/$', views.ajax_questionpaper),
     url(r'^ajax/questions/filter/$', views.ajax_questions_filter),
-    url(r'^editprofile/$', views.edit_profile),
-    url(r'^viewprofile/$', views.view_profile),
+    url(r'^editprofile/$', views.edit_profile, name='edit_profile'),
+    url(r'^viewprofile/$', views.view_profile, name='view_profile'),
     url(r'^manage/enroll/(?P<course_id>\d+)/$', views.enroll),
     url(r'manage/enroll/rejected/(?P<course_id>\d+)/$',
         views.enroll, {'was_rejected': True}),
     url(r'manage/enrolled/reject/(?P<course_id>\d+)/$',
         views.reject, {'was_enrolled': True}),
     url(r'^manage/searchteacher/(?P<course_id>\d+)/$', views.search_teacher),
-    url(r'^manage/addteacher/(?P<course_id>\d+)/$', views.add_teacher),
+    url(r'^manage/addteacher/(?P<course_id>\d+)/$', views.add_teacher, name='add_teacher'),
     url(r'^manage/allotted_course/$', views.allotted_courses),
-    url(r'^manage/remove_teachers/(?P<course_id>\d+)/$', views.remove_teachers),
+    url(r'^manage/remove_teachers/(?P<course_id>\d+)/$', views.remove_teachers, name='remove_teacher'),
     url(r'^manage/download_questions/$', views.show_all_questions),
     url(r'^manage/upload_questions/$', views.show_all_questions),
     url(r'^manage/(?P<mode>[\w\-]+)/(?P<quiz_id>\d+)/$', views.test_quiz)

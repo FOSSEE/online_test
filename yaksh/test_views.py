@@ -1,0 +1,621 @@
+from datetime import datetime
+
+from django.contrib.auth.models import Group
+from django.core.urlresolvers import reverse
+from django.test import TestCase
+from django.test import Client
+
+from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
+    QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
+    StdoutBasedTestCase, has_profile
+
+
+class TestProfile(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        # Create User without profile
+        self.user1_plaintext_pass = 'demo1'
+        self.user1 = User.objects.create_user(
+            username='demo_user1',
+            password=self.user1_plaintext_pass,
+            email='demo1@test.com'
+        )
+
+        # Create User with profile
+        self.user2_plaintext_pass = 'demo2'
+        self.user2 = User.objects.create_user(
+            username='demo_user2',
+            password=self.user2_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo2@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user2,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Student'
+        )
+
+    def tearDown(self):
+        self.client.logout()
+        self.user1.delete()
+        self.user2.delete()
+
+    def test_has_profile_for_user_without_profile(self):
+        """
+        If no profile exists for user passed as argument return False
+        """
+        has_profile_status = has_profile(self.user1)
+        self.assertFalse(has_profile_status)
+
+    def test_has_profile_for_user_with_profile(self):
+        """
+        If profile exists for user passed as argument return True
+        """
+        has_profile_status = has_profile(self.user2)
+        self.assertTrue(has_profile_status)
+
+
+    def test_view_profile_denies_anonymous(self):
+        """
+        If not logged in redirect to login page
+        """
+        response = self.client.get(reverse('yaksh:view_profile'), follow=True)
+        redirect_destination = '/exam/login/?next=%2Fexam%2Fviewprofile%2F'
+        self.assertRedirects(response, redirect_destination)
+
+    def test_view_profile_get_for_user_without_profile(self):
+        """
+        If no profile exists a blank profile form will be displayed
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:view_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/editprofile.html')
+
+    def test_view_profile_get_for_user_with_profile(self):
+        """
+        If profile exists a viewprofile.html template will be rendered
+        """
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:view_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/view_profile.html')
+
+    def test_edit_profile_post(self):
+        """
+        POST request to edit_profile view should update the user's profile
+        """
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        response = self.client.post(reverse('yaksh:edit_profile'),
+            data={
+                'user': self.user2,
+                'first_name': 'new_first_name',
+                'last_name': 'new_last_name',
+                'roll_number': 20,
+                'institute': 'new_institute',
+                'department': 'Aerospace',
+                'position': 'new_position'
+            }
+        )
+        updated_profile_user = User.objects.get(id=self.user2.id)
+        updated_profile = Profile.objects.get(user=updated_profile_user)
+        self.assertEqual(updated_profile_user.first_name, 'new_first_name')
+        self.assertEqual(updated_profile_user.last_name, 'new_last_name')
+        self.assertEqual(updated_profile.roll_number, '20')
+        self.assertEqual(updated_profile.institute, 'new_institute')
+        self.assertEqual(updated_profile.department, 'Aerospace')
+        self.assertEqual(updated_profile.position, 'new_position')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/profile_updated.html')
+
+    def test_edit_profile_get(self):
+        """
+        GET request to edit profile should display profile form
+        """
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:edit_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/editprofile.html')
+
+class TestAddQuiz(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator') 
+
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator'
+        )
+
+        # Create Student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+
+        self.course = Course.objects.create(name="Python Course",
+            enrollment="Enroll Request", creator=self.user)
+
+        self.pre_req_quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+            duration=30, active=True,
+            attempts_allowed=-1, time_between_attempts=0,
+            description='pre requisite quiz', pass_criteria=40,
+            language='Python', prerequisite=None,
+            course=self.course
+        )
+
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+            duration=30, active=True,
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz', pass_criteria=40,
+            language='Python', prerequisite=self.pre_req_quiz,
+            course=self.course
+        )
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.student.delete()
+        self.quiz.delete()
+        self.pre_req_quiz.delete()
+        self.course.delete()
+
+    def test_view_profile_denies_anonymous(self):
+        """
+        If not logged in redirect to login page
+        """
+        response = self.client.get(reverse('yaksh:add_quiz'), follow=True)
+        redirect_destination = '/exam/login/?next=%2Fexam%2Fmanage%2Faddquiz%2F'
+        self.assertRedirects(response, redirect_destination)
+
+    def test_view_profile_denies_non_moderator(self):
+        """
+        If not moderator in redirect to login page
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        response = self.client.get(reverse('yaksh:add_quiz'), follow=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_add_quiz_get(self):
+        """
+        GET request to add question should display add quiz form
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:add_quiz'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/add_quiz.html')
+        self.assertIsNotNone(response.context['form'])
+
+    def test_add_quiz_post_existing_quiz(self):
+        """
+        POST request to add quiz should edit quiz if quiz exists
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.post(reverse('yaksh:edit_quiz',
+            kwargs={'quiz_id': self.quiz.id}),
+            data={
+                'start_date_time': datetime(2016, 1, 10, 9, 0, 15, 0),
+                'end_date_time': datetime(2016, 1, 15, 9, 0, 15, 0),
+                'duration': 30,
+                'active': False,
+                'attempts_allowed': 5,
+                'time_between_attempts': 1,
+                'description': 'updated demo quiz',
+                'pass_criteria': 40,
+                'language': 'java',
+                'prerequisite': self.pre_req_quiz.id,
+                'course': self.course.id
+            }
+        )
+
+        updated_quiz = Quiz.objects.get(id=self.quiz.id)
+        self.assertEqual(updated_quiz.start_date_time,
+            datetime(2016, 1, 10, 9, 0, 15, 0)
+        )
+        self.assertEqual(updated_quiz.end_date_time,
+            datetime(2016, 1, 15, 9, 0, 15, 0)
+        )
+        self.assertEqual(updated_quiz.duration, 30)
+        self.assertEqual(updated_quiz.active, False)
+        self.assertEqual(updated_quiz.attempts_allowed, 5)
+        self.assertEqual(updated_quiz.time_between_attempts, 1)
+        self.assertEqual(updated_quiz.description, 'updated demo quiz')
+        self.assertEqual(updated_quiz.pass_criteria, 40)
+        self.assertEqual(updated_quiz.language, 'java')
+        self.assertEqual(updated_quiz.prerequisite, self.pre_req_quiz)
+        self.assertEqual(updated_quiz.course, self.course)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/exam/manage/')
+
+    def test_add_quiz_post_new_quiz(self):
+        """
+        POST request to add quiz should add new quiz if no quiz exists
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.post(reverse('yaksh:add_quiz'),
+            data={
+                'start_date_time': datetime(2016, 1, 10, 9, 0, 15, 0),
+                'end_date_time': datetime(2016, 1, 15, 9, 0, 15, 0),
+                'duration': 50,
+                'active': True,
+                'attempts_allowed': -1,
+                'time_between_attempts': 2,
+                'description': 'new demo quiz',
+                'pass_criteria': 50,
+                'language': 'python',
+                'prerequisite': self.pre_req_quiz.id,
+                'course': self.course.id
+            }
+        )
+
+
+        quiz_list = Quiz.objects.all().order_by('-id')
+        new_quiz = quiz_list[0]
+        self.assertEqual(new_quiz.start_date_time,
+            datetime(2016, 1, 10, 9, 0, 15, 0)
+        )
+        self.assertEqual(new_quiz.end_date_time,
+            datetime(2016, 1, 15, 9, 0, 15, 0)
+        )
+        self.assertEqual(new_quiz.duration, 50)
+        self.assertEqual(new_quiz.active, True)
+        self.assertEqual(new_quiz.attempts_allowed, -1)
+        self.assertEqual(new_quiz.time_between_attempts, 2)
+        self.assertEqual(new_quiz.description, 'new demo quiz')
+        self.assertEqual(new_quiz.pass_criteria, 50)
+        self.assertEqual(new_quiz.language, 'python')
+        self.assertEqual(new_quiz.prerequisite, self.pre_req_quiz)
+        self.assertEqual(new_quiz.course, self.course)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/exam/manage/designquestionpaper/')
+
+class TestAddTeacher(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator') 
+
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator'
+        )
+
+        # Create Student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+
+        self.course = Course.objects.create(name="Python Course",
+            enrollment="Enroll Request", creator=self.user)
+
+        self.pre_req_quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+            duration=30, active=True,
+            attempts_allowed=-1, time_between_attempts=0,
+            description='pre requisite quiz', pass_criteria=40,
+            language='Python', prerequisite=None,
+            course=self.course
+        )
+
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+            duration=30, active=True,
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz', pass_criteria=40,
+            language='Python', prerequisite=self.pre_req_quiz,
+            course=self.course
+        )
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.student.delete()
+        self.quiz.delete()
+        self.pre_req_quiz.delete()
+        self.course.delete()
+
+    def test_add_teacher_denies_anonymous(self):
+        """
+        If not logged in redirect to login page
+        """
+        response = self.client.get(reverse('yaksh:add_teacher',
+                kwargs={'course_id': self.course.id}
+            ),
+            follow=True
+        )
+        redirect_destination = ('/exam/login/?next=%2Fexam'
+            '%2Fmanage%2Faddteacher%2F{0}%2F'.format(self.course.id))
+        self.assertRedirects(response, redirect_destination)
+
+    def test_add_teacher_denies_non_moderator(self):
+        """
+        If not moderator redirect to login page
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        response = self.client.get(reverse('yaksh:add_teacher',
+                kwargs={'course_id': self.course.id}
+            ),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_add_teacher_get(self):
+        """
+        GET request to add teacher should display list of teachers
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:add_teacher',
+                kwargs={'course_id': self.course.id}
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/addteacher.html')
+        self.assertEqual(response.context['course'], self.course)
+
+    def test_add_teacher_post(self):
+        """
+        POST request to add teacher should add teachers to a course
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        teacher_id_list = []
+
+        for i in range(5):
+            teacher = User.objects.create_user(
+                username='demo_teacher{}'.format(i),
+                password='demo_teacher_pass{}'.format(i),
+                first_name='teacher_first_name{}'.format(i),
+                last_name='teacher_last_name{}'.format(i),
+                email='demo{}@test.com'.format(i)
+            )
+
+            teacher_profile = Profile.objects.create(
+                user=teacher,
+                roll_number='T{}'.format(i),
+                institute='IIT',
+                department='Chemical',
+                position='Teacher'
+            )
+            teacher_id_list.append(teacher.id)
+
+        response = self.client.post(reverse('yaksh:add_teacher',
+                kwargs={'course_id': self.course.id}
+            ),
+            data={'check': teacher_id_list}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/addteacher.html')
+        self.assertEqual(response.context['status'], True)
+        for t_id in teacher_id_list:
+            teacher_object = User.objects.get(id=t_id)
+            self.assertIn(teacher_object, response.context['teachers_added'])
+            self.assertIn(teacher_object, self.course.teachers.all())
+
+class TestRemoveTeacher(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator') 
+
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator'
+        )
+
+        # Create Student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+
+        self.course = Course.objects.create(name="Python Course",
+            enrollment="Enroll Request", creator=self.user)
+
+        self.pre_req_quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+            duration=30, active=True,
+            attempts_allowed=-1, time_between_attempts=0,
+            description='pre requisite quiz', pass_criteria=40,
+            language='Python', prerequisite=None,
+            course=self.course
+        )
+
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+            duration=30, active=True,
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz', pass_criteria=40,
+            language='Python', prerequisite=self.pre_req_quiz,
+            course=self.course
+        )
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.student.delete()
+        self.quiz.delete()
+        self.pre_req_quiz.delete()
+        self.course.delete()
+
+    def test_remove_teacher_denies_anonymous(self):
+        """
+        If not logged in redirect to login page
+        """
+        response = self.client.get(reverse('yaksh:remove_teacher',
+                kwargs={'course_id': self.course.id}
+            ),
+            follow=True
+        )
+        redirect_destination = ('/exam/login/?next=%2Fexam'
+            '%2Fmanage%2Fremove_teachers%2F{0}%2F'.format(self.course.id))
+        self.assertRedirects(response, redirect_destination)
+
+    def test_remove_teacher_denies_non_moderator(self):
+        """
+        If not moderator redirect to login page
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        response = self.client.get(reverse('yaksh:remove_teacher',
+                kwargs={'course_id': self.course.id}
+            ),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_remove_teacher_post(self):
+        """
+        POST request should remove moderator from course
+        """
+        teacher_id_list = []
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        for i in range(5):
+            teacher = User.objects.create_user(
+                username='remove_teacher{}'.format(i),
+                password='remove_teacher_pass{}'.format(i),
+                first_name='remove_teacher_first_name{}'.format(i),
+                last_name='remove_teacher_last_name{}'.format(i),
+                email='remove_teacher{}@test.com'.format(i)
+            )
+
+            teacher_profile = Profile.objects.create(
+                user=teacher,
+                roll_number='RT{}'.format(i),
+                institute='IIT',
+                department='Aeronautical',
+                position='Teacher'
+            )
+            teacher_id_list.append(teacher.id)
+            self.course.teachers.add(teacher)
+
+        response = self.client.post(reverse('yaksh:remove_teacher',
+                kwargs={'course_id': self.course.id}
+            ),
+            data={'remove': teacher_id_list}
+        )
+
+        self.assertEqual(response.status_code, 302)
+        redirect_destination = '/exam/manage/courses/'
+        self.assertRedirects(response, redirect_destination)
+        for t_id in teacher_id_list:
+            teacher = User.objects.get(id=t_id) 
+            self.assertNotIn(teacher, self.course.teachers.all())
