@@ -163,7 +163,7 @@ class Profile(models.Model):
     department = models.CharField(max_length=64)
     position = models.CharField(max_length=64)
     timezone = models.CharField(max_length=64,
-                                choices=[(tz, tz) for tz in pytz.common_timezones])
+        choices=[(tz, tz) for tz in pytz.common_timezones])
 
 
 ###############################################################################

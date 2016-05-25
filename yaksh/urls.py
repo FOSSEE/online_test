@@ -21,7 +21,7 @@ urlpatterns = [
 urlpatterns += [
     url(r'^$', views.index),
     url(r'^login/$', views.user_login, name='login'),
-    url(r'^quizzes/$', views.quizlist_user),
+    url(r'^quizzes/$', views.quizlist_user, name='quizlist_user'),
     url(r'^results/$', views.results_user),
     url(r'^start/$', views.start),
     url(r'^start/(?P<questionpaper_id>\d+)/$', views.start),
@@ -38,9 +38,9 @@ urlpatterns += [
         views.skip),
     url(r'^(?P<q_id>\d+)/skip/(?P<next_q>\d+)/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$',
         views.skip),
-    url(r'^enroll_request/(?P<course_id>\d+)/$', views.enroll_request),
-    url(r'^self_enroll/(?P<course_id>\d+)/$', views.self_enroll),
-    url(r'^manage/$', views.prof_manage),
+    url(r'^enroll_request/(?P<course_id>\d+)/$', views.enroll_request, name='enroll_request'),
+    url(r'^self_enroll/(?P<course_id>\d+)/$', views.self_enroll, name='self_enroll'),
+    url(r'^manage/$', views.prof_manage, name='manage'),
     url(r'^manage/addquestion/$', views.add_question),
     url(r'^manage/addquestion/(?P<question_id>\d+)/$', views.edit_question),
     url(r'^manage/addquiz/$', views.add_quiz, name='add_quiz'),
@@ -67,9 +67,9 @@ urlpatterns += [
         views.show_statistics),
     url(r'^manage/monitor/download_csv/(?P<questionpaper_id>\d+)/$',
         views.download_csv),
-    url(r'manage/courses/$', views.courses),
-    url(r'manage/add_course/$', views.add_course),
-    url(r'manage/course_detail/(?P<course_id>\d+)/$', views.course_detail),
+    url(r'manage/courses/$', views.courses, name='courses'),
+    url(r'manage/add_course/$', views.add_course, name='add_course'),
+    url(r'manage/course_detail/(?P<course_id>\d+)/$', views.course_detail, name='course_detail'),
     url(r'manage/enroll/(?P<course_id>\d+)/(?P<user_id>\d+)/$', views.enroll),
     url(r'manage/enroll/rejected/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
         views.enroll, {'was_rejected': True}),
@@ -94,5 +94,3 @@ urlpatterns += [
     url(r'^manage/upload_questions/$', views.show_all_questions),
     url(r'^manage/(?P<mode>[\w\-]+)/(?P<quiz_id>\d+)/$', views.test_quiz)
 ]
-
-    

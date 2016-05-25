@@ -69,7 +69,7 @@ def get_user_dir(user):
 
 def is_moderator(user):
     """Check if the user is having moderator rights"""
-    if user.groups.filter(name='moderator').count() == 1:
+    if user.groups.filter(name='moderator').exists():
         return True
 
 def add_to_group(users):
@@ -219,7 +219,6 @@ def edit_question(request, question_id=None):
 def add_quiz(request, quiz_id=None):
     """To add a new quiz in the database.
     Create a new quiz and store it."""
-
     user = request.user
     ci = RequestContext(request)
     if not is_moderator(user):
@@ -612,7 +611,10 @@ def enroll_request(request, course_id):
     ci = RequestContext(request)
     course = get_object_or_404(Course, pk=course_id)
     course.request(user)
-    return my_redirect('/exam/manage/')
+    if is_moderator(user):
+        return my_redirect('/exam/manage/')
+    else:
+        return my_redirect('/exam/quizzes/')
 
 
 @login_required
@@ -623,7 +625,10 @@ def self_enroll(request, course_id):
     if course.is_self_enroll():
         was_rejected = False
         course.enroll(was_rejected, user)
-    return my_redirect('/exam/manage/')
+    if is_moderator(user):
+        return my_redirect('/exam/manage/')
+    else:
+        return my_redirect('/exam/quizzes/')
 
 
 @login_required
