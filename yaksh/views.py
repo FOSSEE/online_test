@@ -6,7 +6,7 @@ from os.path import dirname, pardir, abspath, join, exists
 from datetime import datetime
 import collections
 import csv
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpResponse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
