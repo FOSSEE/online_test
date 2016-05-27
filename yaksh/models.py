@@ -7,7 +7,7 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.forms.models import model_to_dict
-from django.contrib.contenttypes.models import ContentType 
+from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
 from django.utils import timezone
 import pytz
@@ -62,20 +62,18 @@ def get_model_class(model):
 ###############################################################################
 class CourseManager(models.Manager):
 
-    def create_trial_course(self,user):
+    def create_trial_course(self, user):
         """Creates a trial course for testing questions"""
-        trial_course = self.create(name="trial_course",
-                                    enrollment="open",
-                                    creator=user,
-                                    is_trial=True
-                                    )
-        trial_course.enroll(False,user)
+        trial_course = self.create(name="trial_course", enrollment="open",
+                                   creator=user, is_trial=True)
+        trial_course.enroll(False, user)
         return trial_course
 
     def delete_all_trial_courses(self, user):
         """Deletes all trial course for a user."""
-        trial_course = self.filter(creator=user,is_trial=True)
+        trial_course = self.filter(creator=user, is_trial=True)
         trial_course.delete()
+
 
 ###############################################################################
 class Course(models.Model):
@@ -300,19 +298,20 @@ class Answer(models.Model):
     def __unicode__(self):
         return self.answer
 
+
 ###############################################################################
 class QuizManager(models.Manager):
     def get_active_quizzes(self):
-        return self.filter(active=True,is_trial=False)
+        return self.filter(active=True, is_trial=False)
 
-    def create_trial_quiz(self,trial_course,user):
+    def create_trial_quiz(self, trial_course, user):
         """Creates a trial quiz for testing questions"""
         trial_quiz = self.create(course=trial_course,
                                  duration=1000,
                                  description="trial_quiz",
                                  is_trial=True,
                                  time_between_attempts=0
-                                )
+                                 )
         return trial_quiz
 
     def create_trial_from_quiz(self, original_quiz_id, user, mode):
@@ -333,9 +332,9 @@ class QuizManager(models.Manager):
         return trial_quiz
 
     def delete_all_trial_quizzes(self, user):
-        trial_quiz = self.filter(Q(course__creator=user)|Q(course__teachers=user), 
-                                is_trial=True
-                                )
+        trial_quiz = self.filter(Q(course__creator=user) |
+                                 Q(course__teachers=user), is_trial=True
+                                 )
         trial_quiz.delete()
 
 
@@ -409,37 +408,38 @@ class QuestionPaperManager(models.Manager):
 
     def _create_trial_from_questionpaper(self, original_quiz_id):
         """Creates a copy of the original questionpaper"""
-        trial_questionpaper = self.get(quiz_id = original_quiz_id)
-        trial_questions = {"fixed_questions": trial_questionpaper\
-                                                .fixed_questions.all(),
-                            "random_questions": trial_questionpaper\
-                                                .random_questions.all()
-                            }
+        trial_questionpaper = self.get(quiz_id=original_quiz_id)
+        trial_questions = {"fixed_questions": trial_questionpaper
+                           .fixed_questions.all(),
+                           "random_questions": trial_questionpaper
+                           .random_questions.all()
+                           }
         trial_questionpaper.pk = None
         trial_questionpaper.save()
         return trial_questionpaper, trial_questions
-        
+
     def create_trial_paper_to_test_questions(self, trial_quiz,
                                              questions_list):
         """Creates a trial question paper to test selected questions"""
         if questions_list is not None:
-            trial_questionpaper=self.create(quiz=trial_quiz,
-                                        total_marks=10,
-                                        )
+            trial_questionpaper = self.create(quiz=trial_quiz,
+                                              total_marks=10,
+                                              )
             trial_questionpaper.fixed_questions.add(*questions_list)
             return trial_questionpaper
 
     def create_trial_paper_to_test_quiz(self, trial_quiz, original_quiz_id):
         """Creates a trial question paper to test quiz."""
         trial_questionpaper, trial_questions = self._create_trial_from_questionpaper\
-                                                        (original_quiz_id)
+            (original_quiz_id)
         trial_questionpaper.quiz = trial_quiz
         trial_questionpaper.fixed_questions\
-                            .add(*trial_questions["fixed_questions"])
+            .add(*trial_questions["fixed_questions"])
         trial_questionpaper.random_questions\
-                            .add(*trial_questions["random_questions"])
+            .add(*trial_questions["random_questions"])
         trial_questionpaper.save()
         return trial_questionpaper
+
 
 ###############################################################################
 class QuestionPaper(models.Model):
