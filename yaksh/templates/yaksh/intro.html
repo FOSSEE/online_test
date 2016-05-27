@@ -12,7 +12,9 @@
               </div>
          {% else %}
               <div class="alert">
-                  You can attempt this Quiz at any time between {{ questionpaper.quiz.start_date_time }} GMT and {{ questionpaper.quiz.end_date_time }} GMT
+              {% load tz %}
+              {% get_current_timezone as TIME_ZONE %}
+                  You can attempt this Quiz at any time between {{ questionpaper.quiz.start_date_time }} {{ TIME_ZONE }} and {{ questionpaper.quiz.end_date_time }} {{ TIME_ZONE }}
                   <br/>
                   You are not allowed to attempt the Quiz before or after this duration
               <br/>
