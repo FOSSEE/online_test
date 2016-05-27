@@ -4,8 +4,8 @@ python:
   - "2.7"
 
 env:
-  - DJANGO=1.5.7
   - DJANGO=1.6.4
+  - DJANGO=1.9
 
 # command to install dependencies
 install:
@@ -19,5 +19,4 @@ before_install:
 
 # command to run tests
 script:
-  - test $DJANGO=1.5.7 && nosetests ./yaksh/evaluator_tests/
   - python manage.py test yaksh
