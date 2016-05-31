@@ -268,9 +268,7 @@ def show_all_questionpapers(request, questionpaper_id=None):
         return my_render_to_response('yaksh/showquestionpapers.html', context,
                                      context_instance=ci)
     else:
-        qu_papers = QuestionPaper.objects.get(id=questionpaper_id,
-                                              is_trial=False
-                                              )
+        qu_papers = QuestionPaper.objects.get(id=questionpaper_id)
         quiz = qu_papers.quiz
         fixed_questions = qu_papers.fixed_questions.all()
         random_questions = qu_papers.random_questions.all()
@@ -595,7 +593,7 @@ def add_course(request):
 def enroll_request(request, course_id):
     user = request.user
     ci = RequestContext(request)
-    course = get_object_or_404(Course, pk=course_id, is_trial=False)
+    course = get_object_or_404(Course, pk=course_id)
     course.request(user)
     return my_redirect('/exam/manage/')
 
@@ -604,7 +602,7 @@ def enroll_request(request, course_id):
 def self_enroll(request, course_id):
     user = request.user
     ci = RequestContext(request)
-    course = get_object_or_404(Course, pk=course_id, is_trial=False)
+    course = get_object_or_404(Course, pk=course_id)
     if course.is_self_enroll():
         was_rejected = False
         course.enroll(was_rejected, user)
@@ -630,7 +628,7 @@ def course_detail(request, course_id):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
 
-    course = get_object_or_404(Course, pk=course_id, is_trial=False)
+    course = get_object_or_404(Course, pk=course_id)
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
 
@@ -645,7 +643,7 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
 
-    course = get_object_or_404(Course, pk=course_id, is_trial=False)
+    course = get_object_or_404(Course, pk=course_id)
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
 
@@ -668,7 +666,7 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
 
-    course = get_object_or_404(Course, pk=course_id, is_trial=False)
+    course = get_object_or_404(Course, pk=course_id)
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
 
@@ -690,7 +688,7 @@ def toggle_course_status(request, course_id):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
 
-    course = get_object_or_404(Course, pk=course_id, is_trial=False)
+    course = get_object_or_404(Course, pk=course_id)
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
 
@@ -855,7 +853,7 @@ def show_all_questions(request):
 
         if request.POST.get('test') == 'test':
             question_ids = request.POST.getlist("question")
-            trial_paper = test_mode(user, "test_questions", question_ids, None)
+            trial_paper = test_mode(user, False, question_ids, None)
             trial_paper.update_total_marks()
             trial_paper.save()
             return my_redirect("/exam/start/1/{0}".format(trial_paper.id))
@@ -891,7 +889,7 @@ def download_csv(request, questionpaper_id):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    quiz = Quiz.objects.get(questionpaper=questionpaper_id,is_trial=False)
+    quiz = Quiz.objects.get(questionpaper=questionpaper_id)
 
     if not quiz.course.is_creator(user) and not quiz.course.is_teacher(user):
         raise Http404('The question paper does not belong to your course')
@@ -1125,7 +1123,7 @@ def search_teacher(request, course_id):
         raise Http404('You are not allowed to view this page!')
 
     context = {}
-    course = get_object_or_404(Course, creator=user, pk=course_id, is_trial=False)
+    course = get_object_or_404(Course, creator=user, pk=course_id)
     context['course'] = course
 
     if request.method == 'POST':
@@ -1157,7 +1155,7 @@ def add_teacher(request, course_id):
         raise Http404('You are not allowed to view this page!')
 
     context = {}
-    course = get_object_or_404(Course, creator=user, pk=course_id, is_trial=False)
+    course = get_object_or_404(Course, creator=user, pk=course_id)
     context['course'] = course
 
     if request.method == 'POST':
@@ -1183,7 +1181,7 @@ def allotted_courses(request):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
-    courses = Course.objects.filter(teachers=user, is_trial=False)
+    courses = Course.objects.filter(teachers=user)
     return my_render_to_response('yaksh/courses.html', {'courses': courses},
                                         context_instance=ci)
 
@@ -1196,9 +1194,7 @@ def remove_teachers(request, course_id):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
-    course = get_object_or_404(Course, creator=user,
-                               pk=course_id, is_trial=False
-                               )
+    course = get_object_or_404(Course, creator=user, pk=course_id)
     if request.method == "POST":
         teacher_ids = request.POST.getlist('remove')
         teachers = User.objects.filter(id__in=teacher_ids)
@@ -1206,27 +1202,27 @@ def remove_teachers(request, course_id):
     return my_redirect('/exam/manage/courses')
 
 
-def test_mode(user, mode, questions_list=None, quiz_id=None):
+def test_mode(user, godmode=False, questions_list=None, quiz_id=None):
     """creates a trial question paper for the moderators"""
 
-    if questions_list is not None and mode == "test_questions":
+    if questions_list is not None:
         trial_course = Course.objects.create_trial_course(user)
         trial_quiz = Quiz.objects.create_trial_quiz(trial_course, user)
         trial_questionpaper = QuestionPaper.objects\
                                            .create_trial_paper_to_test_questions\
                                             (trial_quiz, questions_list)
     else:
-        trial_quiz = Quiz.objects.create_trial_from_quiz(quiz_id, user, mode)
+        trial_quiz = Quiz.objects.create_trial_from_quiz(quiz_id, user, godmode)
         trial_questionpaper = QuestionPaper.objects\
                                            .create_trial_paper_to_test_quiz\
-                                           (trial_quiz, quiz_id)
+                                            (trial_quiz, quiz_id)
     return trial_questionpaper
 
 
 @login_required
 def test_quiz(request, mode, quiz_id):
     """creates a trial quiz for the moderators"""
-
+    godmode = True if mode == "godmode" else False
     current_user = request.user
-    trial_questionpaper = test_mode(current_user, mode, None, quiz_id)
+    trial_questionpaper = test_mode(current_user, godmode, None, quiz_id)
     return my_redirect("/exam/start/{0}".format(trial_questionpaper.id))
