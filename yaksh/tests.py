@@ -202,7 +202,7 @@ class QuizTestCases(unittest.TestCase):
         """Test to check if a copy of original quiz is created in godmode"""
         trial_quiz = Quiz.objects.create_trial_from_quiz(self.quiz1.id,
                                                          self.creator,
-                                                         "godmode"
+                                                         True
                                                          )
         self.assertEqual(trial_quiz.description, "demo quiz_trial")
         self.assertTrue(trial_quiz.is_trial)
@@ -217,7 +217,7 @@ class QuizTestCases(unittest.TestCase):
         """Test to check if a copy of original quiz is created in usermode"""
         trial_quiz = Quiz.objects.create_trial_from_quiz(self.quiz1.id,
                                                          self.creator,
-                                                         "usermode"
+                                                         False
                                                          )
         self.assertEqual(trial_quiz.description, "demo quiz_trial")
         self.assertTrue(trial_quiz.is_trial)
@@ -234,7 +234,7 @@ class QuizTestCases(unittest.TestCase):
     def test_delete_all_trial_quizzes_creator(self):
         Quiz.objects.create_trial_from_quiz(self.quiz1.id,
                                             self.creator,
-                                            "godmode"
+                                            True
                                             )
         Quiz.objects.delete_all_trial_quizzes(self.creator)
         self.assertFalse(Quiz.objects.filter(course__creator=self.creator,
@@ -245,7 +245,7 @@ class QuizTestCases(unittest.TestCase):
         self.trial_course.add_teachers(self.teacher)
         Quiz.objects.create_trial_from_quiz(self.quiz1.id,
                                             self.creator,
-                                            "godmode"
+                                            True
                                             )
         Quiz.objects.delete_all_trial_quizzes(self.teacher)
         self.assertFalse(Quiz.objects.filter(course__teachers=self.teacher,
