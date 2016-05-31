@@ -314,7 +314,7 @@ class QuizManager(models.Manager):
                                  )
         return trial_quiz
 
-    def create_trial_from_quiz(self, original_quiz_id, user, mode):
+    def create_trial_from_quiz(self, original_quiz_id, user, godmode):
         """Creates a trial quiz from existing quiz"""
         trial_quiz = self.get(id=original_quiz_id)
         trial_quiz.course.enroll(False, user)
@@ -323,7 +323,7 @@ class QuizManager(models.Manager):
         trial_quiz.is_trial = True
         trial_quiz.time_between_attempts = 0
         trial_quiz.prerequisite = None
-        if mode == "godmode":
+        if godmode:
             trial_quiz.duration = 1000
             trial_quiz.active = True
             trial_quiz.start_date_time = datetime.now()
@@ -459,8 +459,6 @@ class QuestionPaper(models.Model):
 
     # Total marks for the question paper.
     total_marks = models.FloatField()
-
-#    is_trial = models.BooleanField(default=False)
 
     objects = QuestionPaperManager()
 
