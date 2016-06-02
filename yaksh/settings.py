@@ -21,14 +21,16 @@ URL_ROOT = ''
 
 code_evaluators = {
     "python": {"standardtestcase": "python_assertion_evaluator.PythonAssertionEvaluator",
-        "stdoutbasedtestcase": "python_stdout_evaluator.PythonStdoutEvaluator"
-    },
+               "stdiobasedtestcase": "python_stdio_evaluator.PythonStdioEvaluator"
+               },
     "c": {"standardtestcase": "cpp_code_evaluator.CppCodeEvaluator",
-        "stdiobasedtestcase": "cpp_stdio_evaluator.CppStdioEvaluator"},
+          "stdiobasedtestcase": "cpp_stdio_evaluator.CppStdioEvaluator"
+          },
     "cpp": {"standardtestcase": "cpp_code_evaluator.CppCodeEvaluator",
-        "stdiobasedtestcase": "cpp_stdio_evaluator.CppStdioEvaluator"},
+            "stdiobasedtestcase": "cpp_stdio_evaluator.CppStdioEvaluator"
+            },
     "java": {"standardtestcase": "java_code_evaluator.JavaCodeEvaluator",
-        "stdiobasedtestcase": "java_stdio_evaluator.JavaStdioEvaluator"},
+             "stdiobasedtestcase": "java_stdio_evaluator.JavaStdioEvaluator"},
     "bash": {"standardtestcase": "bash_code_evaluator.BashCodeEvaluator"},
     "scilab": {"standardtestcase": "scilab_code_evaluator.ScilabCodeEvaluator"},
 }

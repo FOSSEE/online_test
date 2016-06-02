@@ -888,9 +888,9 @@ class StandardTestCase(TestCase):
         )
 
 
-class StdIOBasedTestCase(TestCase):
+class StdioBasedTestCase(TestCase):
     expected_input = models.TextField(blank=True)
-    expected_output = models.TextField(blank=True)
+    expected_output = models.TextField()
 
     def get_field_value(self):
         return {"expected_output": self.expected_output,

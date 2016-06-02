@@ -68,13 +68,13 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.test_case_data = [{'expected_output': '11',
                                'expected_input': '5\n6'}]
-        evaluator.SERVER_TIMEOUT = 9
+        evaluator.SERVER_TIMEOUT = 4
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in"
                             " your code.").format(evaluator.SERVER_TIMEOUT)
 
     def teardown(self):
-        evaluator.SERVER_TIMEOUT = 2
+        evaluator.SERVER_TIMEOUT = 4
 
     def test_correct_answer(self):
         user_answer = dedent("""
