@@ -1,7 +1,7 @@
 import unittest
 import os
 from yaksh.python_assertion_evaluator import PythonAssertionEvaluator
-from yaksh.python_stdout_evaluator import PythonStdoutEvaluator
+from yaksh.python_stdio_evaluator import PythonStdioEvaluator
 from yaksh.settings import SERVER_TIMEOUT
 from textwrap import dedent
 
@@ -164,15 +164,15 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
             return int(a) + int(b) + int(c)
         """)
         value_error_msg = ["Traceback",
-            "call",
-            "ValueError",
-            "invalid literal",
-            "base"
-        ]
+                           "call",
+                           "ValueError",
+                           "invalid literal",
+                           "base"
+                           ]
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-                    'test_case_data': self.test_case_data
-                }
+                  'test_case_data': self.test_case_data
+                  }
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
@@ -180,55 +180,150 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         for msg in value_error_msg:
             self.assertIn(msg, result.get("error"))
 
-class PythonStdoutEvaluationTestCases(unittest.TestCase):
+
+class PythonStdioEvaluationTestCases(unittest.TestCase):
     def setUp(self):
-        self.test_case_data = [{"expected_output": "0 1 1 2 3"}]
+        self.test_case_data = [{"expected_input": None,
+                                "expected_output": "0 1 1 2 3"
+                                }]
+
         self.timeout_msg = ("Code took more than {0} seconds to run. "
-            "You probably have an infinite loop"
-            " in your code.").format(SERVER_TIMEOUT)
+                            "You probably have an infinite loop"
+                            " in your code.").format(SERVER_TIMEOUT)
 
     def test_correct_answer(self):
         user_answer = "a,b=0,1\nfor i in range(5):\n\tprint a,\n\ta,b=b,a+b"
-        get_class = PythonStdoutEvaluator()
+        get_class = PythonStdioEvaluator()
         kwargs = {'user_answer': user_answer,
-            'test_case_data': self.test_case_data
-        }
+                  'test_case_data': self.test_case_data
+                  }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
         user_answer = "a,b=0,1\nfor i in range(5):\n\tprint b,\n\ta,b=b,a+b"
-        get_class = PythonStdoutEvaluator()
-        kwargs = {'user_answer': user_answer, 
-            'test_case_data': self.test_case_data
-        }
+        get_class = PythonStdioEvaluator()
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data
+                  }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
-        self.assertEqual(result.get('error'), "Incorrect Answer")
+        self.assertIn("Incorrect Answer", result.get('error'))
 
     def test_direct_printed_answer(self):
         user_answer = "print '0 1 1 2 3'"
         error_msg = ("Incorrect Answer: Please avoid printing"
-            " the expected output directly"
-        )
-        get_class = PythonStdoutEvaluator()
-        kwargs = {'user_answer': user_answer, 
-            'test_case_data': self.test_case_data
-        }
+                     " the expected output directly"
+                     )
+        get_class = PythonStdioEvaluator()
+
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data
+                  }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
         self.assertEqual(result.get('error'), error_msg)
 
     def test_infinite_loop(self):
-        user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
-        get_class = PythonStdoutEvaluator()
+        user_answer = "def add(a, b):\n\twhile True:\n\t\tpass\nadd(1,2)"
+        get_class = PythonStdioEvaluator()
         kwargs = {'user_answer': user_answer,
-            'test_case_data': self.test_case_data
-        }
+                  'test_case_data': self.test_case_data
+                  }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
-        self.assertEqual(result.get('error'), 'Incorrect Answer')
+        self.assertEqual(result.get('error'), self.timeout_msg)
+
+
+class PythonStdIOEvaluator(unittest.TestCase):
+
+    def setUp(self):
+        self.timeout_msg = ("Code took more than {0} seconds to run. "
+                            "You probably have an infinite loop"
+                            " in your code.").format(SERVER_TIMEOUT)
+
+    def test_add_two_integers_correct(self):
+        self.test_case_data = [{"expected_input": "1\n2",
+                                "expected_output": "3"
+                                }]
+        user_answer = dedent("""
+                                a = int(raw_input())
+                                b = int(raw_input())
+                                print a+b
+                             """
+                             )
+
+        get_class = PythonStdioEvaluator()
+
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data
+                  }
+        result = get_class.evaluate(**kwargs)
+        self.assertTrue(result.get('success'))
+        self.assertIn("Correct Answer", result.get('error'))
+
+    def test_add_two_lists(self):
+        self.test_case_data = [{"expected_input": "[1,2,3]\n[5,6,7]",
+                                "expected_output": "[1, 2, 3, 5, 6, 7]"
+                                }]
+        user_answer = dedent("""
+                                from ast import literal_eval
+                                a = literal_eval(raw_input())
+                                b = literal_eval(raw_input())
+                                print a+b
+                             """
+                             )
+
+        get_class = PythonStdioEvaluator()
+
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data
+                  }
+        result = get_class.evaluate(**kwargs)
+        self.assertTrue(result.get('success'))
+        self.assertIn("Correct Answer", result.get('error'))
+
+    def test_find_string_in_sentence(self):
+        self.test_case_data = [{"expected_input": """the quick brown fox jumps\
+                                                     over the lazy dog\nthe""",
+                                "expected_output": "2"
+                                }]
+        user_answer = dedent("""
+                                a = raw_input()
+                                b = raw_input()
+                                print (a.count(b))
+                             """
+                             )
+
+        get_class = PythonStdioEvaluator()
+
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data
+                  }
+        result = get_class.evaluate(**kwargs)
+        self.assertTrue(result.get('success'))
+        self.assertIn("Correct Answer", result.get('error'))
+
+    def test_add_two_integers_incorrect(self):
+        self.test_case_data = [{"expected_input": "1\n2",
+                                "expected_output": "4"
+                                }]
+        user_answer = dedent("""
+                                a = int(raw_input())
+                                b = int(raw_input())
+                                print a+b
+                             """
+                             )
+
+        get_class = PythonStdioEvaluator()
+
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data
+                  }
+        result = get_class.evaluate(**kwargs)
+        self.assertFalse(result.get('success'))
+        self.assertIn("Incorrect Answer", result.get('error'))
 
 
 if __name__ == '__main__':
