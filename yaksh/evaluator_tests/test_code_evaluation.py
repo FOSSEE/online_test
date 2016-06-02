@@ -17,7 +17,7 @@ class RegistryTestCase(unittest.TestCase):
         )
         code_evaluators['python'] = \
         {"standardtestcase": assertion_evaluator_path,
-        "stdoutbasedtestcase": stdout_evaluator_path
+        "stdiobasedtestcase": stdout_evaluator_path
         }
 
     def test_set_register(self):
@@ -35,7 +35,7 @@ class RegistryTestCase(unittest.TestCase):
         )
         self.registry_object.register("python", 
             {"standardtestcase": assertion_evaluator_path,
-                "stdoutbasedtestcase": stdout_evaluator_path
+                "stdiobasedtestcase": stdout_evaluator_path
             }
         )
         self.assertEquals(evaluator_class, class_name)
