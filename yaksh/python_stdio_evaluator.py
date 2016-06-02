@@ -29,12 +29,7 @@ class PythonStdioEvaluator(CodeEvaluator):
         submitted = compile(user_answer, '<string>', mode='exec')
         if expected_input:
             input_buffer = StringIO()
-            try:
-                literal_input = literal_eval(expected_input.split("\n"))
-            except ValueError:
-                literal_input = expected_input.split("\n")
-            for inputs in literal_input:
-                input_buffer.write(str(inputs)+'\n')
+            input_buffer.write(expected_input)
             input_buffer.seek(0)
             sys.stdin = input_buffer
 
