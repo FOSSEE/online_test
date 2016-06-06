@@ -299,10 +299,12 @@ class Quiz(models.Model):
 
     # The end date and time of the quiz
     end_date_time = models.DateTimeField("End Date and Time of the quiz",
-                                        default=datetime(2199, 1, 1,
-                                        tzinfo=pytz.timezone\
-                                        (timezone.get_current_timezone_name())),
-                                        null=True)
+                                         default=datetime(2199, 1, 1,
+                                                          tzinfo=pytz.timezone
+                                                         (timezone.
+                                                          get_current_timezone_name())
+                                                          ),
+                                         null=True)
 
     # This is always in minutes.
     duration = models.IntegerField("Duration of quiz in minutes", default=20)
