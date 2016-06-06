@@ -4,6 +4,8 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     StdoutBasedTestCase
 import json
 from datetime import datetime, timedelta
+from django.utils import timezone
+import pytz
 from django.contrib.auth.models import Group
 
 def setUpModule():
@@ -31,16 +33,20 @@ def setUpModule():
         Question.objects.create(summary='Q%d' % (i), points=1, type='code', user=user)
 
     # create a quiz
-    quiz = Quiz.objects.create(start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
-                        end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0),
+    quiz = Quiz.objects.create(start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0,
+                                                        tzinfo=pytz.utc),
+                        end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0,
+                                               tzinfo=pytz.utc),
                         duration=30, active=True,
                         attempts_allowed=1, time_between_attempts=0,
                         description='demo quiz', pass_criteria=0,
                         language='Python', prerequisite=None,
                         course=course)
 
-    Quiz.objects.create(start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0),
-                        end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+    Quiz.objects.create(start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0,
+                                                 tzinfo=pytz.utc),
+                        end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0,
+                                               tzinfo=pytz.utc),
                         duration=30, active=False,
                         attempts_allowed=-1, time_between_attempts=0,
                         description='demo quiz', pass_criteria=40,
@@ -303,7 +309,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.question_paper = QuestionPaper(quiz=self.quiz, total_marks=3)
         self.question_paper.save()
         self.questions = Question.objects.filter(id__in=[1,2,3])
-        self.start_time = datetime.now()
+        self.start_time = timezone.now()
         self.end_time = self.start_time + timedelta(minutes=20)
 
         # create answerpaper
@@ -386,7 +392,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertFalse(self.answerpaper.is_attempt_inprogress())
 
     def test_set_end_time(self):
-        current_time = datetime.now()
+        current_time = timezone.now()
         self.answerpaper.set_end_time(current_time)
         self.assertEqual(self.answerpaper.end_time,current_time)
 
