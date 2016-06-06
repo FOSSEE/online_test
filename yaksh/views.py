@@ -392,7 +392,7 @@ def show_question(request, question, paper, error_message=None):
 
     answers = paper.get_previous_answers(question)
     if answers:
-        last_attempt = "{}\n{}".format(question.snippet, answers[0].answer)
+        last_attempt = answers[0].answer
         context['last_attempt'] = last_attempt.encode('unicode-escape')
         # context['last_attempt'] = answers[0].answer.encode('unicode-escape')
     ci = RequestContext(request)
