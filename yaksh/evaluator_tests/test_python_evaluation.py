@@ -181,7 +181,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
             self.assertIn(msg, result.get("error"))
 
 
-class PythonStdioEvaluationTestCases(unittest.TestCase):
+class PythonStdoutEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.test_case_data = [{"expected_input": None,
                                 "expected_output": "0 1 1 2 3"

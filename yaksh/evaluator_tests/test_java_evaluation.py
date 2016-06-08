@@ -7,7 +7,7 @@ from yaksh.settings import SERVER_TIMEOUT
 from textwrap import dedent
 
 
-class JavaEvaluationTestCases(unittest.TestCase):
+class JavaAssertionEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.test_case_data = [
             {"test_case": "java_files/main_square.java"}

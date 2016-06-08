@@ -6,7 +6,7 @@ from yaksh.settings import SERVER_TIMEOUT
 from textwrap import dedent
 
 
-class CEvaluationTestCases(unittest.TestCase):
+class CAssertionEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.test_case_data = [{"test_case": "c_cpp_files/main.cpp"}]
         self.in_dir = "/tmp"

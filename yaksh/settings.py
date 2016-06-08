@@ -31,6 +31,10 @@ code_evaluators = {
             },
     "java": {"standardtestcase": "java_code_evaluator.JavaCodeEvaluator",
              "stdiobasedtestcase": "java_stdio_evaluator.JavaStdioEvaluator"},
-    "bash": {"standardtestcase": "bash_code_evaluator.BashCodeEvaluator"},
+
+    "bash": {"standardtestcase": "bash_code_evaluator.BashCodeEvaluator",
+            "stdiobasedtestcase": "bash_stdio_evaluator.BashStdioEvaluator"
+             },
+
     "scilab": {"standardtestcase": "scilab_code_evaluator.ScilabCodeEvaluator"},
 }
