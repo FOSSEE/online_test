@@ -42,7 +42,7 @@ test_case_types = (
 
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
-days_between_attempts = ((j, j) for j in range(401))
+days_between_attempts = [(j, j) for j in range(401)]
 
 test_status = (
                 ('inprogress', 'Inprogress'),

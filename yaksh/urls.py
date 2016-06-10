@@ -4,7 +4,7 @@ from django.contrib.auth.views import password_reset, password_reset_confirm,\
         password_reset_done, password_reset_complete, password_change,\
         password_change_done
 
-app_name = 'yaksh'
+# app_name = 'yaksh'
 urlpatterns = [
     url(r'^forgotpassword/$', password_reset, name="password_reset"),
     url(r'^password_reset/(?P<uidb64>[0-9A-Za-z]+)-(?P<token>.+)/$',

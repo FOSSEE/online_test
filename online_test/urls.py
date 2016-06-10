@@ -9,5 +9,5 @@ urlpatterns = [
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^exam/', include('yaksh.urls')),
+    url(r'^exam/', include('yaksh.urls', namespace='yaksh', app_name='yaksh')),
 ]
