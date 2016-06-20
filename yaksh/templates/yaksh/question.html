@@ -142,7 +142,14 @@ function call_skip(url)
   <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br>
   <font size=3 face=arial> {{ question.description|safe }} </font>
   <br><font size=3 face=arial> Language: {{ question.language }} </font><br>
-
+  {% if files %}
+  <h4>Files to download for this question</h4>
+  {% for file in files %}
+  {% if file.question_id == question.id %}
+  <h5><a href="{{file.files.url}}">{{file.files.name}}</a></h5>
+  {% endif %}
+  {% endfor %}
+  {% endif %}
   {% if question.type == "code" %}
   <br><h4>Output:</h4></br>
     {% if error_message %}
