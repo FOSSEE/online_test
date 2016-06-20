@@ -88,7 +88,7 @@ class CodeEvaluator(object):
     def setup(self):
         self._change_dir(self.in_dir)
 
-    def safe_evaluate(self, user_answer, test_case_data):
+    def safe_evaluate(self, user_answer, test_case_data, file_paths=None):
         """
         Handles code evaluation along with compilation, signal handling
         and Exception handling
@@ -101,8 +101,8 @@ class CodeEvaluator(object):
         # Do whatever testing needed.
         try:
             for test_case in test_case_data:
-                self.compile_code(user_answer, **test_case)
-                success, err = self.check_code(user_answer, **test_case)
+                self.compile_code(user_answer, file_paths, **test_case)
+                success, err = self.check_code(user_answer, file_paths, **test_case)
                 if not success:
                     break
 
@@ -124,7 +124,7 @@ class CodeEvaluator(object):
     def check_code(self):
         raise NotImplementedError("check_code method not implemented")
 
-    def compile_code(self, user_answer, **kwargs):
+    def compile_code(self, user_answer, file_paths, **kwargs):
         pass
 
     def create_submit_code_file(self, file_name):
@@ -135,7 +135,6 @@ class CodeEvaluator(object):
             submit_f.close()
 
         return submit_path
-
 
     def write_to_submit_code_file(self, file_path, user_answer):
         """ Write the code (`answer`) to a file"""
