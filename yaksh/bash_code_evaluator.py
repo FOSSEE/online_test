@@ -9,6 +9,7 @@ import importlib
 
 # local imports
 from code_evaluator import CodeEvaluator
+from copy_delete_files import CopyDeleteFiles
 
 
 class BashCodeEvaluator(CodeEvaluator):
@@ -22,8 +23,11 @@ class BashCodeEvaluator(CodeEvaluator):
         # Delete the created file.
         super(BashCodeEvaluator, self).teardown()
         os.remove(self.submit_code_path)
+        if self.files_list:
+            file_delete = CopyDeleteFiles()
+            file_delete.delete_files(self.files_list)
 
-    def check_code(self, user_answer, test_case):
+    def check_code(self, user_answer, file_paths, test_case):
         """ Function validates student script using instructor script as
         reference. Test cases can optionally be provided.  The first argument
         ref_path, is the path to instructor script, it is assumed to
@@ -53,6 +57,10 @@ class BashCodeEvaluator(CodeEvaluator):
         clean_ref_code_path, clean_test_case_path = \
             self._set_test_code_file_path(get_ref_path, get_test_case_path)
 
+        self.files_list = []
+        if file_paths:
+            file_copy = CopyDeleteFiles()
+            self.files_list = file_copy.copy_files(file_paths)
         if not isfile(clean_ref_code_path):
             msg = "No file at %s or Incorrect path" % clean_ref_code_path
             return False, msg
@@ -67,6 +75,7 @@ class BashCodeEvaluator(CodeEvaluator):
             return False, msg
 
         success = False
+        user_answer = user_answer.replace("\r", "")
         self.write_to_submit_code_file(self.submit_code_path, user_answer)
 
         if clean_test_case_path is None or "":
@@ -114,6 +123,12 @@ class BashCodeEvaluator(CodeEvaluator):
                         stderr=subprocess.PIPE
                     )
                     proc, inst_stdout, inst_stderr = ret
+                    if self.files_list:
+                        file_delete = CopyDeleteFiles()
+                        file_delete.delete_files(self.files_list)
+                    if file_paths:
+                        file_copy = CopyDeleteFiles()
+                        self.files_list = file_copy.copy_files(file_paths)
                     args = [self.submit_code_path] + \
                         [x for x in test_case.split()]
                     ret = self._run_command(args,
@@ -126,7 +141,7 @@ class BashCodeEvaluator(CodeEvaluator):
                 return True, "Correct answer"
             else:
                 err = ("Error:expected"
-                    " %s, got %s").format(inst_stdout+inst_stderr,
+                    " {0}, got {1}").format(inst_stdout+inst_stderr,
                         stdnt_stdout+stdnt_stderr
                     )
                 return False, err

@@ -8,6 +8,7 @@ import importlib
 
 # local imports
 from code_evaluator import CodeEvaluator
+from copy_delete_files import CopyDeleteFiles
 
 
 class CppCodeEvaluator(CodeEvaluator):
@@ -22,6 +23,13 @@ class CppCodeEvaluator(CodeEvaluator):
         super(CppCodeEvaluator, self).teardown()
         # Delete the created file.
         os.remove(self.submit_code_path)
+        if os.path.exists(self.ref_output_path):
+            os.remove(self.ref_output_path)
+        if os.path.exists(self.user_output_path):
+            os.remove(self.user_output_path)
+        if self.files_list:
+            file_delete = CopyDeleteFiles()
+            file_delete.delete_files(self.files_list)
 
     def set_file_paths(self):
         user_output_path = os.getcwd() + '/output'
@@ -38,14 +46,17 @@ class CppCodeEvaluator(CodeEvaluator):
                                                 ref_output_path)
         return compile_command, compile_main
 
-    def compile_code(self,  user_answer, test_case):
+    def compile_code(self,  user_answer, file_paths, test_case):
+        self.files_list = []
         if self.compiled_user_answer and self.compiled_test_code:
             return None
         else:
             ref_code_path = test_case
             clean_ref_code_path, clean_test_case_path = \
                 self._set_test_code_file_path(ref_code_path)
-
+            if file_paths:
+                file_copy = CopyDeleteFiles()
+                self.files_list = file_copy.copy_files(file_paths)
             if not isfile(clean_ref_code_path):
                 msg = "No file at %s or Incorrect path" % clean_ref_code_path
                 return False, msg
@@ -57,7 +68,7 @@ class CppCodeEvaluator(CodeEvaluator):
             self.user_output_path, self.ref_output_path = self.set_file_paths()
             self.compile_command, self.compile_main = self.get_commands(
                 clean_ref_code_path,
-                self.user_output_path, 
+                self.user_output_path,
                 self.ref_output_path
             )
             self.compiled_user_answer = self._run_command(
@@ -76,7 +87,7 @@ class CppCodeEvaluator(CodeEvaluator):
 
             return self.compiled_user_answer, self.compiled_test_code
 
-    def check_code(self, user_answer, test_case):
+    def check_code(self, user_answer, file_paths, test_case):
         """ Function validates student code using instructor code as
         reference.The first argument ref_code_path, is the path to
         instructor code, it is assumed to have executable permission.
@@ -117,7 +128,6 @@ class CppCodeEvaluator(CodeEvaluator):
                     success, err = True, "Correct answer"
                 else:
                     err = stdout + "\n" + stderr
-                os.remove(self.ref_output_path)
             else:
                 err = "Error:"
                 try:
@@ -129,7 +139,6 @@ class CppCodeEvaluator(CodeEvaluator):
                             err = err + "\n" + e
                 except:
                         err = err + "\n" + main_err
-            os.remove(self.user_output_path)
         else:
             err = "Compilation Error:"
             try:

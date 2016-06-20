@@ -8,6 +8,7 @@ from contextlib import contextmanager
 
 # local imports
 from code_evaluator import CodeEvaluator
+from copy_delete_files import CopyDeleteFiles
 
 
 @contextmanager
@@ -25,7 +26,18 @@ def redirect_stdout():
 class PythonStdoutEvaluator(CodeEvaluator):
     """Tests the Python code obtained from Code Server"""
 
-    def compile_code(self, user_answer, expected_output):
+    def teardown(self):
+        super(PythonStdoutEvaluator, self).teardown()
+        # Delete the created file.
+        if self.files_list:
+            file_delete = CopyDeleteFiles()
+            file_delete.delete_files(self.files_list)
+
+    def compile_code(self, user_answer, file_paths, expected_output):
+        self.files_list = []
+        if file_paths:
+            file_copy = CopyDeleteFiles()
+            self.files_list = file_copy.copy_files(file_paths)
         if hasattr(self, 'output_value'):
             return None
         else:
@@ -36,9 +48,8 @@ class PythonStdoutEvaluator(CodeEvaluator):
             self.output_value = output_buffer.getvalue()
             return self.output_value
 
-    def check_code(self, user_answer, expected_output):
+    def check_code(self, user_answer, file_paths, expected_output):
         success = False
-
         tb = None
         if expected_output in user_answer:
             success = False
@@ -52,7 +63,5 @@ class PythonStdoutEvaluator(CodeEvaluator):
         else:
             success = False
             err = "Incorrect Answer"
-
         del tb
         return success, err
-
