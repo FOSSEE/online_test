@@ -136,6 +136,7 @@ class QuestionTestCases(unittest.TestCase):
             self.assertEqual(self.question2.points, q['points'])
             self.assertTrue(self.question2.active)
             self.assertEqual(self.question2.snippet, q['snippet'])
+            self.assertEqual(self.question2.get_test_cases(), q['testcase'])
 
     def test_load_questions_from_json(self):
         """ Test load questions into database from json """
