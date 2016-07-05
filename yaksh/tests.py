@@ -194,7 +194,7 @@ class QuizTestCases(unittest.TestCase):
                                                     )
         self.assertEqual(trial_quiz.course, self.trial_course)
         self.assertEqual(trial_quiz.duration, 1000)
-        self.assertEqual(trial_quiz.description, "trial_quiz")
+        self.assertEqual(trial_quiz.description, "trial_questions")
         self.assertTrue(trial_quiz.is_trial)
         self.assertEqual(trial_quiz.time_between_attempts, 0)
 
@@ -204,7 +204,7 @@ class QuizTestCases(unittest.TestCase):
                                                          self.creator,
                                                          True
                                                          )
-        self.assertEqual(trial_quiz.description, "trial_orig_id_1")
+        self.assertEqual(trial_quiz.description, "Trial_orig_id_1_godmode")
         self.assertTrue(trial_quiz.is_trial)
         self.assertEqual(trial_quiz.duration, 1000)
         self.assertTrue(trial_quiz.active)
@@ -219,7 +219,7 @@ class QuizTestCases(unittest.TestCase):
                                                          self.creator,
                                                          False
                                                          )
-        self.assertEqual(trial_quiz.description, "trial_orig_id_2")
+        self.assertEqual(trial_quiz.description, "Trial_orig_id_2_usermode")
         self.assertTrue(trial_quiz.is_trial)
         self.assertEqual(trial_quiz.duration, self.quiz2.duration)
         self.assertEqual(trial_quiz.active, self.quiz2.active)

@@ -1240,5 +1240,9 @@ def test_quiz(request, mode, quiz_id):
     """creates a trial quiz for the moderators"""
     godmode = True if mode == "godmode" else False
     current_user = request.user
+    quiz = Quiz.objects.get(id=quiz_id)
+    if (quiz.is_expired() or not quiz.active) and not godmode:
+        return my_redirect('/exam/manage')
+
     trial_questionpaper = test_mode(current_user, godmode, None, quiz_id)
     return my_redirect("/exam/start/{0}".format(trial_questionpaper.id))

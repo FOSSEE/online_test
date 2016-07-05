@@ -303,7 +303,7 @@ class QuizManager(models.Manager):
         """Creates a trial quiz for testing questions"""
         trial_quiz = self.create(course=trial_course,
                                  duration=1000,
-                                 description="trial_quiz",
+                                 description="trial_questions",
                                  is_trial=True,
                                  time_between_attempts=0
                                  )
@@ -311,9 +311,11 @@ class QuizManager(models.Manager):
 
     def create_trial_from_quiz(self, original_quiz_id, user, godmode):
         """Creates a trial quiz from existing quiz"""
-        trial_quiz_name = "trial_orig_id_{0}".format(original_quiz_id)
+        trial_quiz_name = "Trial_orig_id_{0}_{1}".format(original_quiz_id,
+                                                        "godmode" if godmode else "usermode"
+                                                        )
         
-        if self.filter(description=trial_quiz_name).exists() and not godmode:
+        if self.filter(description=trial_quiz_name).exists():
             trial_quiz = self.get(description=trial_quiz_name)
             
         else:
