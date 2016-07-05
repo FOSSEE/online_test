@@ -204,7 +204,7 @@ class QuizTestCases(unittest.TestCase):
                                                          self.creator,
                                                          True
                                                          )
-        self.assertEqual(trial_quiz.description, "demo quiz_trial")
+        self.assertEqual(trial_quiz.description, "trial_orig_id_1")
         self.assertTrue(trial_quiz.is_trial)
         self.assertEqual(trial_quiz.duration, 1000)
         self.assertTrue(trial_quiz.active)
@@ -215,42 +215,21 @@ class QuizTestCases(unittest.TestCase):
 
     def test_create_trial_from_quiz_usermode(self):
         """Test to check if a copy of original quiz is created in usermode"""
-        trial_quiz = Quiz.objects.create_trial_from_quiz(self.quiz1.id,
+        trial_quiz = Quiz.objects.create_trial_from_quiz(self.quiz2.id,
                                                          self.creator,
                                                          False
                                                          )
-        self.assertEqual(trial_quiz.description, "demo quiz_trial")
+        self.assertEqual(trial_quiz.description, "trial_orig_id_2")
         self.assertTrue(trial_quiz.is_trial)
-        self.assertEqual(trial_quiz.duration, self.quiz1.duration)
-        self.assertEqual(trial_quiz.active, self.quiz1.active)
+        self.assertEqual(trial_quiz.duration, self.quiz2.duration)
+        self.assertEqual(trial_quiz.active, self.quiz2.active)
         self.assertEqual(trial_quiz.start_date_time,
-                         self.quiz1.start_date_time
+                         self.quiz2.start_date_time
                          )
         self.assertEqual(trial_quiz.end_date_time,
-                         self.quiz1.end_date_time
+                         self.quiz2.end_date_time
                          )
         self.assertEqual(trial_quiz.time_between_attempts, 0)
-
-    def test_delete_all_trial_quizzes_creator(self):
-        Quiz.objects.create_trial_from_quiz(self.quiz1.id,
-                                            self.creator,
-                                            True
-                                            )
-        Quiz.objects.delete_all_trial_quizzes(self.creator)
-        self.assertFalse(Quiz.objects.filter(course__creator=self.creator,
-                                             is_trial=True).exists()
-                         )
-
-    def test_delete_all_trial_quizzes_added_teacher(self):
-        self.trial_course.add_teachers(self.teacher)
-        Quiz.objects.create_trial_from_quiz(self.quiz1.id,
-                                            self.creator,
-                                            True
-                                            )
-        Quiz.objects.delete_all_trial_quizzes(self.teacher)
-        self.assertFalse(Quiz.objects.filter(course__teachers=self.teacher,
-                                             is_trial=True).exists()
-                         )
 
 
 ###############################################################################
@@ -610,12 +589,6 @@ class CourseTestCases(unittest.TestCase):
                          self.creator
                          )
         self.assertTrue(trial_course.is_trial)
-
-    def test_delete_all_trial_courses(self):
-        Course.objects.create_trial_course(self.creator)
-        Course.objects.delete_all_trial_courses(self.creator)
-        self.assertFalse(Course.objects.filter(creator=self.creator,
-                                               is_trial=True).exists())
 
 
 ###############################################################################

@@ -283,12 +283,20 @@ def prof_manage(request):
     """Take credentials of the user with professor/moderator
 rights/permissions and log in."""
     user = request.user
+    ci = RequestContext(request)
     if user.is_authenticated() and is_moderator(user):
         question_papers = QuestionPaper.objects.filter(quiz__course__creator=user,
                                                        quiz__is_trial=False
                                                        )
-        trial_course = Course.objects.delete_all_trial_courses(user)
-        trial_quiz = Quiz.objects.delete_all_trial_quizzes(user)
+        trial_quiz = Quiz.objects.filter(course__creator=user, is_trial=True)
+        if request.method == "POST":
+            delete_quiz = request.POST.getlist('delete_quiz')
+            for quiz_id in delete_quiz:
+                quiz = Quiz.objects.get(id=quiz_id)
+                if quiz.course.is_trial == True:
+                    quiz.course.delete()
+                else:
+                    quiz.delete()
         users_per_paper = []
         for paper in question_papers:
             answer_papers = AnswerPaper.objects.filter(question_paper=paper)
@@ -298,8 +306,10 @@ rights/permissions and log in."""
                     passed=False).count()
             temp = paper, answer_papers, users_passed, users_failed
             users_per_paper.append(temp)
-        context = {'user': user, 'users_per_paper': users_per_paper}
-        return my_render_to_response('manage.html', context)
+        context = {'user': user, 'users_per_paper': users_per_paper,
+                   'trial_quiz': trial_quiz
+                   }
+        return my_render_to_response('manage.html', context, context_instance=ci)
     return my_redirect('/exam/login/')
 
 
@@ -354,6 +364,8 @@ def start(request, questionpaper_id=None, attempt_num=None):
             return redirect("/exam/manage")
         return redirect("/exam/quizzes")
     if quest_paper.quiz.has_prerequisite() and not quest_paper.is_prerequisite_passed(user):
+        if is_moderator(user):
+            return redirect("/exam/manage")
         return redirect("/exam/quizzes")
     # if any previous attempt
     last_attempt = AnswerPaper.objects.get_user_last_attempt(
@@ -362,6 +374,8 @@ def start(request, questionpaper_id=None, attempt_num=None):
         return show_question(request, last_attempt.current_question(), last_attempt)
     # allowed to start
     if not quest_paper.can_attempt_now(user):
+        if is_moderator(user):
+            return redirect("/exam/manage")
         return redirect("/exam/quizzes")
     if attempt_num is None:
         attempt_number = 1 if not last_attempt else last_attempt.attempt_number +1
@@ -848,15 +862,17 @@ def show_all_questions(request):
                                             "{0}_questions.json"'.format(user)
                 return response
             else:
-                msg = "Please select atleast one question"
-                context['msg'] = msg
+                context['msg'] = "Please select atleast one question to download"
 
         if request.POST.get('test') == 'test':
             question_ids = request.POST.getlist("question")
-            trial_paper = test_mode(user, False, question_ids, None)
-            trial_paper.update_total_marks()
-            trial_paper.save()
-            return my_redirect("/exam/start/1/{0}".format(trial_paper.id))
+            if question_ids:
+                trial_paper = test_mode(user, False, question_ids, None)
+                trial_paper.update_total_marks()
+                trial_paper.save()
+                return my_redirect("/exam/start/1/{0}".format(trial_paper.id))
+            else:
+                context["msg"] = "Please select atleast one question to test"
 
     questions = Question.objects.filter(user_id=user.id)
     form = QuestionFilterForm(user=user)
@@ -1189,7 +1205,7 @@ def allotted_courses(request):
 @login_required
 def remove_teachers(request, course_id):
     """  remove user from a course """
-
+ 
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')

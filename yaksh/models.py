@@ -69,11 +69,6 @@ class CourseManager(models.Manager):
         trial_course.enroll(False, user)
         return trial_course
 
-    def delete_all_trial_courses(self, user):
-        """Deletes all trial course for a user."""
-        trial_course = self.filter(creator=user, is_trial=True)
-        trial_course.delete()
-
 
 ###############################################################################
 class Course(models.Model):
@@ -316,27 +311,26 @@ class QuizManager(models.Manager):
 
     def create_trial_from_quiz(self, original_quiz_id, user, godmode):
         """Creates a trial quiz from existing quiz"""
-        trial_quiz = self.get(id=original_quiz_id)
-        trial_quiz.course.enroll(False, user)
-        trial_quiz.pk = None
-        trial_quiz.description += "_trial"
-        trial_quiz.is_trial = True
-        trial_quiz.time_between_attempts = 0
-        trial_quiz.prerequisite = None
-        if godmode:
-            trial_quiz.duration = 1000
-            trial_quiz.active = True
-            trial_quiz.start_date_time = datetime.now()
-            trial_quiz.end_date_time = datetime(2199, 1, 1, 0, 0, 0, 0)
-        trial_quiz.save()
+        trial_quiz_name = "trial_orig_id_{0}".format(original_quiz_id)
+        
+        if self.filter(description=trial_quiz_name).exists() and not godmode:
+            trial_quiz = self.get(description=trial_quiz_name)
+            
+        else:
+            trial_quiz = self.get(id=original_quiz_id)
+            trial_quiz.course.enroll(False, user)
+            trial_quiz.pk = None
+            trial_quiz.description = trial_quiz_name
+            trial_quiz.is_trial = True
+            trial_quiz.time_between_attempts = 0
+            trial_quiz.prerequisite = None
+            if godmode:
+                trial_quiz.duration = 1000
+                trial_quiz.active = True
+                trial_quiz.start_date_time = timezone.now()
+                trial_quiz.end_date_time = datetime(2199, 1, 1, 0, 0, 0, 0)
+            trial_quiz.save()
         return trial_quiz
-
-    def delete_all_trial_quizzes(self, user):
-        trial_quiz = self.filter(Q(course__creator=user) |
-                                 Q(course__teachers=user), is_trial=True
-                                 )
-        trial_quiz.delete()
-
 
 ###############################################################################
 class Quiz(models.Model):
@@ -430,14 +424,17 @@ class QuestionPaperManager(models.Manager):
 
     def create_trial_paper_to_test_quiz(self, trial_quiz, original_quiz_id):
         """Creates a trial question paper to test quiz."""
-        trial_questionpaper, trial_questions = self._create_trial_from_questionpaper\
-            (original_quiz_id)
-        trial_questionpaper.quiz = trial_quiz
-        trial_questionpaper.fixed_questions\
-            .add(*trial_questions["fixed_questions"])
-        trial_questionpaper.random_questions\
-            .add(*trial_questions["random_questions"])
-        trial_questionpaper.save()
+        if self.filter(quiz=trial_quiz).exists():
+            trial_questionpaper = self.get(quiz=trial_quiz)
+        else:
+            trial_questionpaper, trial_questions = self._create_trial_from_questionpaper\
+                (original_quiz_id)
+            trial_questionpaper.quiz = trial_quiz
+            trial_questionpaper.fixed_questions\
+                .add(*trial_questions["fixed_questions"])
+            trial_questionpaper.random_questions\
+                .add(*trial_questions["random_questions"])
+            trial_questionpaper.save()
         return trial_questionpaper
 
 

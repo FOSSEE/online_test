@@ -77,6 +77,21 @@
                     <h5>Click on the button given below to add a new course.</h5>
                     <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/add_course");'>Add New Course</button>
                 </center>
+                {% if trial_quiz %}
+                  <h5/> You have trial papers.
+                  <table class="bordered-table zebra-striped">
+                  <form action="" method="post">
+                  {% csrf_token %}
+                   {% for quiz in trial_quiz %}
+                  <tr>
+                  <td> <input type = "checkbox" name="delete_quiz" value = {{quiz.id}}></input></td>
+                  <td> <a href="{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}">{{quiz.description}}</td>
+                  </tr>
+                  {% endfor %}
+                  </table>
+                  <center><button class="btn" type="submit">Delete Selected</button></center>
+                  </form>
+                  {% endif %}
 {% endblock %}
             </div>
          </div>
