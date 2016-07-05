@@ -87,13 +87,14 @@ class QuestionTestCases(unittest.TestCase):
         )
         self.question1.save()
 
-        self.question2 = Question(summary='Demo Json', 
+        self.question2 = Question(summary='Demo Json',
             language='python',
-            type='code', 
+            type='code',
             active=True,
-            description='factorial of a no', 
+            description='factorial of a no',
+            test_case_type='standardtestcase',
             points=2.0,
-            snippet='def fact()', 
+            snippet='def fact()',
             user=self.user2
         )
         self.question2.save()
@@ -102,11 +103,19 @@ class QuestionTestCases(unittest.TestCase):
         self.assertion_testcase = StandardTestCase(question=self.question1,
             test_case='assert myfunc(12, 13) == 15'
         )
+        self.upload_test_case = StandardTestCase(question=self.question2,
+            test_case='assert fact(3) == 6'
+        )
+        self.upload_test_case.save()
         self.user_answer = "demo_answer"
-        questions_data = [{"snippet": "def fact()", "active": True, "points": 1.0,
-                        "description": "factorial of a no",
-                        "language": "Python", "type": "Code",
-                        "summary": "Json Demo"}]
+        self.test_case_upload_data = [{"test_case": "assert fact(3)==6"}]
+        questions_data = [{"snippet": "def fact()", "active": True,
+                           "points": 1.0,
+                           "description": "factorial of a no",
+                           "language": "Python", "type": "Code",
+                           "test_case_type": "standardtestcase",
+                           "testcase": self.test_case_upload_data,
+                           "summary": "Json Demo"}]
         self.json_questions_data = json.dumps(questions_data)
 
     def test_question(self):
@@ -126,8 +135,9 @@ class QuestionTestCases(unittest.TestCase):
     def test_dump_questions_into_json(self):
         """ Test dump questions into json """
         question = Question()
-        question_id = ['24']
-        questions = json.loads(question.dump_into_json(question_id, self.user1))
+        question_id = [self.question2.id]
+        questions = json.loads(question.dump_into_json(question_id, self.user2))
+        test_case = self.question2.get_test_cases()
         for q in questions:
             self.assertEqual(self.question2.summary, q['summary'])
             self.assertEqual(self.question2.language, q['language'])
@@ -136,13 +146,15 @@ class QuestionTestCases(unittest.TestCase):
             self.assertEqual(self.question2.points, q['points'])
             self.assertTrue(self.question2.active)
             self.assertEqual(self.question2.snippet, q['snippet'])
-            self.assertEqual(self.question2.get_test_cases(), q['testcase'])
+            self.assertEqual(self.question2.test_case_type, q['test_case_type'])
+            self.assertEqual([case.get_field_value() for case in test_case], q['testcase'])
 
     def test_load_questions_from_json(self):
         """ Test load questions into database from json """
         question = Question()
         result = question.load_from_json(self.json_questions_data, self.user1)
         question_data = Question.objects.get(pk=25)
+        test_case = question_data.get_test_cases()
         self.assertEqual(question_data.summary, 'Json Demo')
         self.assertEqual(question_data.language, 'Python')
         self.assertEqual(question_data.type, 'Code')
@@ -150,6 +162,8 @@ class QuestionTestCases(unittest.TestCase):
         self.assertEqual(question_data.points, 1.0)
         self.assertTrue(question_data.active)
         self.assertEqual(question_data.snippet, 'def fact()')
+        self.assertEqual(question_data.test_case_type, 'standardtestcase')
+        self.assertEqual([case.get_field_value() for case in test_case], self.test_case_upload_data)
 
 ###############################################################################
 class QuizTestCases(unittest.TestCase):
