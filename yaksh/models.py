@@ -4,9 +4,10 @@ from random import sample, shuffle
 from itertools import islice, cycle
 from collections import Counter
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import User
 from django.forms.models import model_to_dict
-from django.contrib.contenttypes.models import ContentType 
+from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
 from django.utils import timezone
 import pytz
@@ -59,6 +60,17 @@ def get_model_class(model):
 
 
 ###############################################################################
+class CourseManager(models.Manager):
+
+    def create_trial_course(self, user):
+        """Creates a trial course for testing questions"""
+        trial_course = self.create(name="trial_course", enrollment="open",
+                                   creator=user, is_trial=True)
+        trial_course.enroll(False, user)
+        return trial_course
+
+
+###############################################################################
 class Course(models.Model):
     """ Course for students"""
     name = models.CharField(max_length=128)
@@ -70,7 +82,8 @@ class Course(models.Model):
     rejected = models.ManyToManyField(User, related_name='rejected')
     created_on = models.DateTimeField(auto_now_add=True)
     teachers = models.ManyToManyField(User, related_name='teachers')
-
+    is_trial = models.BooleanField(default=False)
+    objects = CourseManager()
 
     def request(self, *users):
         self.requests.add(*users)
@@ -111,7 +124,7 @@ class Course(models.Model):
         return True if self.enrollment == enrollment_methods[1][0] else False
 
     def get_quizzes(self):
-        return self.quiz_set.all()
+        return self.quiz_set.filter(is_trial=False)
 
     def activate(self):
         self.active = True
@@ -280,10 +293,47 @@ class Answer(models.Model):
     def __unicode__(self):
         return self.answer
 
+
 ###############################################################################
 class QuizManager(models.Manager):
     def get_active_quizzes(self):
-        return self.filter(active=True)
+        return self.filter(active=True, is_trial=False)
+
+    def create_trial_quiz(self, trial_course, user):
+        """Creates a trial quiz for testing questions"""
+        trial_quiz = self.create(course=trial_course,
+                                 duration=1000,
+                                 description="trial_questions",
+                                 is_trial=True,
+                                 time_between_attempts=0
+                                 )
+        return trial_quiz
+
+    def create_trial_from_quiz(self, original_quiz_id, user, godmode):
+        """Creates a trial quiz from existing quiz"""
+        trial_quiz_name = "Trial_orig_id_{0}_{1}".format(original_quiz_id,
+                                                        "godmode" if godmode else "usermode"
+                                                        )
+        
+        if self.filter(description=trial_quiz_name).exists():
+            trial_quiz = self.get(description=trial_quiz_name)
+            
+        else:
+            trial_quiz = self.get(id=original_quiz_id)
+            trial_quiz.course.enroll(False, user)
+            trial_quiz.pk = None
+            trial_quiz.description = trial_quiz_name
+            trial_quiz.is_trial = True
+            trial_quiz.time_between_attempts = 0
+            trial_quiz.prerequisite = None
+            if godmode:
+                trial_quiz.duration = 1000
+                trial_quiz.active = True
+                trial_quiz.start_date_time = timezone.now()
+                trial_quiz.end_date_time = datetime(2199, 1, 1, 0, 0, 0, 0)
+            trial_quiz.save()
+        return trial_quiz
+
 ###############################################################################
 class Quiz(models.Model):
     """A quiz that students will participate in. One can think of this
@@ -331,6 +381,8 @@ class Quiz(models.Model):
     time_between_attempts = models.IntegerField("Number of Days",\
             choices=days_between_attempts)
 
+    is_trial = models.BooleanField(default=False)
+
     objects = QuizManager()
 
     class Meta:
@@ -342,11 +394,52 @@ class Quiz(models.Model):
 
     def has_prerequisite(self):
         return True if self.prerequisite else False
-
+    
     def __unicode__(self):
         desc = self.description or 'Quiz'
         return '%s: on %s for %d minutes' % (desc, self.start_date_time,
                                              self.duration)
+
+
+###############################################################################
+class QuestionPaperManager(models.Manager):
+
+    def _create_trial_from_questionpaper(self, original_quiz_id):
+        """Creates a copy of the original questionpaper"""
+        trial_questionpaper = self.get(quiz_id=original_quiz_id)
+        trial_questions = {"fixed_questions": trial_questionpaper
+                           .fixed_questions.all(),
+                           "random_questions": trial_questionpaper
+                           .random_questions.all()
+                           }
+        trial_questionpaper.pk = None
+        trial_questionpaper.save()
+        return trial_questionpaper, trial_questions
+
+    def create_trial_paper_to_test_questions(self, trial_quiz,
+                                             questions_list):
+        """Creates a trial question paper to test selected questions"""
+        if questions_list is not None:
+            trial_questionpaper = self.create(quiz=trial_quiz,
+                                              total_marks=10,
+                                              )
+            trial_questionpaper.fixed_questions.add(*questions_list)
+            return trial_questionpaper
+
+    def create_trial_paper_to_test_quiz(self, trial_quiz, original_quiz_id):
+        """Creates a trial question paper to test quiz."""
+        if self.filter(quiz=trial_quiz).exists():
+            trial_questionpaper = self.get(quiz=trial_quiz)
+        else:
+            trial_questionpaper, trial_questions = self._create_trial_from_questionpaper\
+                (original_quiz_id)
+            trial_questionpaper.quiz = trial_quiz
+            trial_questionpaper.fixed_questions\
+                .add(*trial_questions["fixed_questions"])
+            trial_questionpaper.random_questions\
+                .add(*trial_questions["random_questions"])
+            trial_questionpaper.save()
+        return trial_questionpaper
 
 
 ###############################################################################
@@ -367,6 +460,8 @@ class QuestionPaper(models.Model):
 
     # Total marks for the question paper.
     total_marks = models.FloatField()
+
+    objects = QuestionPaperManager()
 
     def update_total_marks(self):
         """ Updates the total marks for the Question Paper"""

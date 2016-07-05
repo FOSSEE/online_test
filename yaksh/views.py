@@ -125,14 +125,13 @@ def quizlist_user(request):
     user = request.user
     avail_quizzes = Quiz.objects.get_active_quizzes()
     user_answerpapers = AnswerPaper.objects.filter(user=user)
-    courses = Course.objects.filter(active=True)
+    courses = Course.objects.filter(active=True, is_trial=False)
 
     context = { 'quizzes': avail_quizzes,
                 'user': user,
                 'courses': courses,
                 'quizzes_taken': user_answerpapers,
             }
-
     return my_render_to_response("yaksh/quizzes_user.html", context)
 
 
@@ -227,7 +226,7 @@ def add_quiz(request, quiz_id=None):
     ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-
+    context = {}
     if request.method == "POST":
         if quiz_id is None:
             form = QuizForm(request.POST, user=user)
@@ -239,18 +238,22 @@ def add_quiz(request, quiz_id=None):
             form = QuizForm(request.POST, user=user, instance=quiz)
             if form.is_valid():
                 form.save()
+                context["quiz_id"] = quiz_id
                 return my_redirect("/exam/manage/")
-        return my_render_to_response('yaksh/add_quiz.html',
-                             {'form': form},
-                             context_instance=ci)
+
+        context["form"] = form
+        return my_render_to_response('yaksh/add_quiz.html', context,
+                                     context_instance=ci)
     else:
         if quiz_id is None:
             form = QuizForm(user=user)
         else:
             quiz = Quiz.objects.get(id=quiz_id)
             form = QuizForm(user=user, instance=quiz)
+            context["quiz_id"] = quiz_id
+        context["form"] = form
         return my_render_to_response('yaksh/add_quiz.html',
-                                     {'form': form},
+                                     context,
                                      context_instance=ci)
 
 
@@ -262,7 +265,7 @@ def show_all_questionpapers(request, questionpaper_id=None):
         raise Http404('You are not allowed to view this page!')
 
     if questionpaper_id is None:
-        qu_papers = QuestionPaper.objects.all()
+        qu_papers = QuestionPaper.objects.filter(is_trial=False)
         context = {'papers': qu_papers}
         return my_render_to_response('yaksh/showquestionpapers.html', context,
                                      context_instance=ci)
@@ -282,8 +285,20 @@ def prof_manage(request):
     """Take credentials of the user with professor/moderator
 rights/permissions and log in."""
     user = request.user
+    ci = RequestContext(request)
     if user.is_authenticated() and is_moderator(user):
-        question_papers = QuestionPaper.objects.filter(quiz__course__creator=user)
+        question_papers = QuestionPaper.objects.filter(quiz__course__creator=user,
+                                                       quiz__is_trial=False
+                                                       )
+        trial_quiz = Quiz.objects.filter(course__creator=user, is_trial=True)
+        if request.method == "POST":
+            delete_quiz = request.POST.getlist('delete_quiz')
+            for quiz_id in delete_quiz:
+                quiz = Quiz.objects.get(id=quiz_id)
+                if quiz.course.is_trial == True:
+                    quiz.course.delete()
+                else:
+                    quiz.delete()
         users_per_paper = []
         for paper in question_papers:
             answer_papers = AnswerPaper.objects.filter(question_paper=paper)
@@ -293,8 +308,10 @@ rights/permissions and log in."""
                     passed=False).count()
             temp = paper, answer_papers, users_passed, users_failed
             users_per_paper.append(temp)
-        context = {'user': user, 'users_per_paper': users_per_paper}
-        return my_render_to_response('manage.html', context)
+        context = {'user': user, 'users_per_paper': users_per_paper,
+                   'trial_quiz': trial_quiz
+                   }
+        return my_render_to_response('manage.html', context, context_instance=ci)
     return my_redirect('/exam/login/')
 
 
@@ -341,11 +358,17 @@ def start(request, questionpaper_id=None, attempt_num=None):
         msg = 'Quiz not found, please contact your '\
             'instructor/administrator. Please login again thereafter.'
         return complete(request, msg, attempt_num, questionpaper_id=None)
-    if not quest_paper.quiz.course.is_enrolled(user) :
+    if not quest_paper.quiz.course.is_enrolled(user):
         raise Http404('You are not allowed to view this page!')
     # prerequisite check and passing criteria
-    if quest_paper.quiz.has_prerequisite() and  not quest_paper.is_prerequisite_passed(user):
-        return quizlist_user(request)
+    if quest_paper.quiz.is_expired():
+        if is_moderator(user):
+            return redirect("/exam/manage")
+        return redirect("/exam/quizzes")
+    if quest_paper.quiz.has_prerequisite() and not quest_paper.is_prerequisite_passed(user):
+        if is_moderator(user):
+            return redirect("/exam/manage")
+        return redirect("/exam/quizzes")
     # if any previous attempt
     last_attempt = AnswerPaper.objects.get_user_last_attempt(
             questionpaper=quest_paper, user=user)
@@ -353,11 +376,15 @@ def start(request, questionpaper_id=None, attempt_num=None):
         return show_question(request, last_attempt.current_question(), last_attempt)
     # allowed to start
     if not quest_paper.can_attempt_now(user):
-        return quizlist_user(request)
+        if is_moderator(user):
+            return redirect("/exam/manage")
+        return redirect("/exam/quizzes")
     if attempt_num is None:
         attempt_number = 1 if not last_attempt else last_attempt.attempt_number +1
         context = {'user': user, 'questionpaper': quest_paper,
                    'attempt_num': attempt_number}
+        if is_moderator(user):
+            context["user"] = "moderator"
         return my_render_to_response('yaksh/intro.html', context,
                                      context_instance=ci)
     else:
@@ -604,7 +631,7 @@ def courses(request):
     ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
-    courses = Course.objects.filter(creator=user)
+    courses = Course.objects.filter(creator=user, is_trial=False)
     return my_render_to_response('yaksh/courses.html', {'courses': courses},
                                 context_instance=ci)
 
@@ -725,8 +752,10 @@ def monitor(request, questionpaper_id=None):
         raise Http404('You are not allowed to view this page!')
 
     if questionpaper_id is None:
-        q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user)|
-                                    Q(quiz__course__teachers=user)).distinct()
+        q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user) |
+                                               Q(quiz__course__teachers=user),
+                                               quiz__course__is_trial=False
+                                               ).distinct()
         context = {'papers': [],
                    'quiz': None,
                    'quizzes': q_paper}
@@ -734,9 +763,10 @@ def monitor(request, questionpaper_id=None):
                                      context_instance=ci)
     # quiz_id is not None.
     try:
-        q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user)|
-                                        Q(quiz__course__teachers=user),
-                                        id=questionpaper_id).distinct()
+        q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user) |
+                                               Q(quiz__course__teachers=user),
+                                               quiz__course__is_trial=False,
+                                               id=questionpaper_id).distinct()
     except QuestionPaper.DoesNotExist:
         papers = []
         q_paper = None
@@ -798,7 +828,7 @@ def ajax_questions_filter(request):
 
 @login_required
 def show_all_questions(request):
-    """Show a list of all the questions currently in the databse."""
+    """Show a list of all the questions currently in the database."""
 
     user = request.user
     ci = RequestContext(request)
@@ -834,8 +864,17 @@ def show_all_questions(request):
                                             "{0}_questions.json"'.format(user)
                 return response
             else:
-                msg = "Please select atleast one question"
-                context['msg'] = msg
+                context['msg'] = "Please select atleast one question to download"
+
+        if request.POST.get('test') == 'test':
+            question_ids = request.POST.getlist("question")
+            if question_ids:
+                trial_paper = test_mode(user, False, question_ids, None)
+                trial_paper.update_total_marks()
+                trial_paper.save()
+                return my_redirect("/exam/start/1/{0}".format(trial_paper.id))
+            else:
+                context["msg"] = "Please select atleast one question to test"
 
     questions = Question.objects.filter(user_id=user.id)
     form = QuestionFilterForm(user=user)
@@ -918,14 +957,15 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
     ci = RequestContext(request)
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
-    course_details = Course.objects.filter(Q(creator=current_user)|
-                                            Q(teachers=current_user)).distinct()
+    course_details = Course.objects.filter(Q(creator=current_user) |
+                                           Q(teachers=current_user),
+                                           is_trial=False).distinct()
     context = {"course_details": course_details}
     if quiz_id is not None:
         questionpaper_id = QuestionPaper.objects.filter(quiz_id=quiz_id)\
                                                         .values("id")
-        user_details = AnswerPaper.objects.get_users_for_questionpaper\
-                                            (questionpaper_id)
+        user_details = AnswerPaper.objects\
+                                  .get_users_for_questionpaper(questionpaper_id)
         context = {"users": user_details, "quiz_id": quiz_id}
         if user_id is not None:
 
@@ -1167,7 +1207,7 @@ def allotted_courses(request):
 @login_required
 def remove_teachers(request, course_id):
     """  remove user from a course """
-
+ 
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
@@ -1178,3 +1218,33 @@ def remove_teachers(request, course_id):
         teachers = User.objects.filter(id__in=teacher_ids)
         course.remove_teachers(*teachers)
     return my_redirect('/exam/manage/courses')
+
+
+def test_mode(user, godmode=False, questions_list=None, quiz_id=None):
+    """creates a trial question paper for the moderators"""
+
+    if questions_list is not None:
+        trial_course = Course.objects.create_trial_course(user)
+        trial_quiz = Quiz.objects.create_trial_quiz(trial_course, user)
+        trial_questionpaper = QuestionPaper.objects\
+                                           .create_trial_paper_to_test_questions\
+                                            (trial_quiz, questions_list)
+    else:
+        trial_quiz = Quiz.objects.create_trial_from_quiz(quiz_id, user, godmode)
+        trial_questionpaper = QuestionPaper.objects\
+                                           .create_trial_paper_to_test_quiz\
+                                            (trial_quiz, quiz_id)
+    return trial_questionpaper
+
+
+@login_required
+def test_quiz(request, mode, quiz_id):
+    """creates a trial quiz for the moderators"""
+    godmode = True if mode == "godmode" else False
+    current_user = request.user
+    quiz = Quiz.objects.get(id=quiz_id)
+    if (quiz.is_expired() or not quiz.active) and not godmode:
+        return my_redirect('/exam/manage')
+
+    trial_questionpaper = test_mode(current_user, godmode, None, quiz_id)
+    return my_redirect("/exam/start/{0}".format(trial_questionpaper.id))

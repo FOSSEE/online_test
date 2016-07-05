@@ -163,7 +163,7 @@ class QuizForm(forms.ModelForm):
 
     class Meta:
         model = Quiz
-        fields = '__all__'
+        exclude = ["is_trial"]
 
 
 class QuestionForm(forms.ModelForm):
@@ -204,7 +204,6 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ['name', 'active', 'enrollment']
-
 
 class ProfileForm(forms.ModelForm):
     """ profile form for students and moderators """
