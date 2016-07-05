@@ -412,11 +412,18 @@ def show_question(request, question, paper, error_message=None):
         reason='Your time is up!'
         return complete(request, reason, paper.attempt_number, paper.question_paper.id)
     test_cases = question.get_test_cases()
-    context = {'question': question, 'paper': paper, 'error_message': error_message,
-                'test_cases': test_cases}
+    context = {'question': question,
+        'paper': paper,
+        'error_message': error_message,
+        'test_cases': test_cases,
+        'last_attempt': question.snippet.encode('unicode-escape')
+    }
+
     answers = paper.get_previous_answers(question)
     if answers:
-        context['last_attempt'] = answers[0]
+        last_attempt = answers[0].answer
+        context['last_attempt'] = last_attempt.encode('unicode-escape')
+        # context['last_attempt'] = answers[0].answer.encode('unicode-escape')
     ci = RequestContext(request)
     return my_render_to_response('yaksh/question.html', context,
                                  context_instance=ci)
