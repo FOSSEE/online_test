@@ -299,10 +299,12 @@ class Quiz(models.Model):
 
     # The end date and time of the quiz
     end_date_time = models.DateTimeField("End Date and Time of the quiz",
-                                        default=datetime(2199, 1, 1,
-                                        tzinfo=pytz.timezone\
-                                        (timezone.get_current_timezone_name())),
-                                        null=True)
+                                         default=datetime(2199, 1, 1,
+                                                          tzinfo=pytz.timezone
+                                                         (timezone.
+                                                          get_current_timezone_name())
+                                                          ),
+                                         null=True)
 
     # This is always in minutes.
     duration = models.IntegerField("Duration of quiz in minutes", default=20)
@@ -390,7 +392,7 @@ class QuestionPaper(models.Model):
             user_ip=ip,
             attempt_number=attempt_num
         )
-        ans_paper.start_time = datetime.now()
+        ans_paper.start_time = timezone.now()
         ans_paper.end_time = ans_paper.start_time + \
             timedelta(minutes=self.quiz.duration)
         ans_paper.question_paper = self
@@ -414,7 +416,7 @@ class QuestionPaper(models.Model):
             last_attempt = AnswerPaper.objects.get_user_last_attempt(user=user,
                            questionpaper=self)
             if last_attempt:
-                time_lag = (datetime.today() - last_attempt.start_time.replace(tzinfo=None)).days
+                time_lag = (timezone.now() - last_attempt.start_time).days
                 return time_lag >= self.quiz.time_between_attempts
             else:
                 return True
@@ -660,7 +662,7 @@ class AnswerPaper(models.Model):
 
     def time_left(self):
         """Return the time remaining for the user in seconds."""
-        dt = datetime.now() - self.start_time.replace(tzinfo=None)
+        dt = timezone.now() - self.start_time
         try:
             secs = dt.total_seconds()
         except AttributeError:

@@ -16,6 +16,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.forms.models import inlineformset_factory
+from django.utils import timezone
+import pytz
 from taggit.models import Tag
 from itertools import chain
 import json
@@ -464,7 +466,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             new_answer.error = result.get('error')
         new_answer.save()
         paper.update_marks('inprogress')
-        paper.set_end_time(datetime.now())
+        paper.set_end_time(timezone.now())
         if not result.get('success'):  # Should only happen for non-mcq questions.
             new_answer.answer = user_code
             new_answer.save()
@@ -542,7 +544,7 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
         paper = AnswerPaper.objects.get(user=user, question_paper=q_paper,
                 attempt_number=attempt_num)
         paper.update_marks()
-        paper.set_end_time(datetime.now())
+        paper.set_end_time(timezone.now())
         if paper.percent == 100:
             message = "You answered all the questions correctly.\
                        You have been logged out successfully,\
