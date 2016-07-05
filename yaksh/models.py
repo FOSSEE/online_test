@@ -184,7 +184,7 @@ class Question(models.Model):
 
     # The type of evaluator
     test_case_type = models.CharField(max_length=24, choices=test_case_types)
-    
+
     # Is this question active or not. If it is inactive it will not be used
     # when creating a QuestionPaper.
     active = models.BooleanField(default=True)
@@ -214,17 +214,19 @@ class Question(models.Model):
         return json.dumps(question_data)
 
     def dump_into_json(self, question_ids, user):
-        questions = Question.objects.filter(id__in = question_ids, user_id = user.id)
+        questions = Question.objects.filter(id__in=question_ids, user_id=user.id)
         questions_dict = []
         for question in questions:
-            q_dict = {'summary': question.summary, 
-                         'description': question.description,
-                         'points': question.points,
-                         'language': question.language,
-                         'type': question.type,
-                         'active': question.active,
-                         'test_case_type': question.test_case_type,
-                         'snippet': question.snippet}
+            test_case = question.get_test_cases()
+            q_dict = {'summary': question.summary,
+                      'description': question.description,
+                      'points': question.points,
+                      'language': question.language,
+                      'type': question.type,
+                      'active': question.active,
+                      'test_case_type': question.test_case_type,
+                      'snippet': question.snippet,
+                      'testcase': [case.get_field_value() for case in test_case]}
             questions_dict.append(q_dict)
 
         return json.dumps(questions_dict, indent=2)
@@ -233,7 +235,11 @@ class Question(models.Model):
         questions = json.loads(questions_list)
         for question in questions:
             question['user'] = user
-            Question.objects.get_or_create(**question)
+            test_cases = question.pop('testcase')
+            que, result = Question.objects.get_or_create(**question)
+            model_class = get_model_class(que.test_case_type)
+            for test_case in test_cases:
+                model_class.objects.get_or_create(question=que, **test_case)
 
     def get_test_cases(self, **kwargs):
         test_case_ctype = ContentType.objects.get(app_label="yaksh",

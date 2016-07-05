@@ -226,4 +226,3 @@ class ProfileForm(forms.ModelForm):
 
 class UploadFileForm(forms.Form):
     file = forms.FileField()
-
