@@ -230,9 +230,8 @@ class QuizTestCases(unittest.TestCase):
         self.assertEqual(trial_quiz.duration, 1000)
         self.assertTrue(trial_quiz.active)
         self.assertEqual(trial_quiz.end_date_time,
-                         datetime(2199, 1, 1, 0, 0, 0, 0,
-                         tzinfo=pytz.utc.zone)
-                          )
+                         datetime(2199, 1, 1, 0, 0, 0, 0, tzinfo=pytz.utc)
+                         )
         self.assertEqual(trial_quiz.time_between_attempts, 0)
 
     def test_create_trial_from_quiz_usermode(self):
