@@ -163,7 +163,9 @@ class Profile(models.Model):
     department = models.CharField(max_length=64)
     position = models.CharField(max_length=64)
     timezone = models.CharField(max_length=64,
-        choices=[(tz, tz) for tz in pytz.common_timezones])
+                                default=pytz.utc.zone,
+                                choices=[(tz, tz) for tz in pytz.common_timezones]
+                                )
 
 
 ###############################################################################
@@ -340,7 +342,9 @@ class QuizManager(models.Manager):
                 trial_quiz.duration = 1000
                 trial_quiz.active = True
                 trial_quiz.start_date_time = timezone.now()
-                trial_quiz.end_date_time = datetime(2199, 1, 1, 0, 0, 0, 0)
+                trial_quiz.end_date_time = datetime(2199, 1, 1, 0, 0, 0, 0,
+						    tzinfo=pytz.utc
+						    )
             trial_quiz.save()
         return trial_quiz
 
