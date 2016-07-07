@@ -189,13 +189,14 @@ function call_skip(url)
          <br><button class="btn" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
          {% else %}
          <button class="btn" type="submit" name="check" id="check" onClick="submitCode();">Check Answer</button>&nbsp;&nbsp;
+         <button class="btn" type="button" onclick="reset_editor()" name="reset" id="reset">Reset Answer</button>
+
          {% endif %}
          {% if paper.unanswered.all|length != 1 %}
              <button class="btn"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')" name="skip" id="skip">Attempt Later</button>&nbsp;&nbsp;
          {% endif %}
-         <button class="btn" type="button" onclick="reset_editor()" name="reset" id="reset">Reset Answer</button>
          </form>
-</div>     
+</div>
 
     <!-- Modal -->
     <div class="modal fade " id="upload_alert" >
