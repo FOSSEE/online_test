@@ -92,8 +92,6 @@ LOGIN_REDIRECT_URL = '/exam/'
 
 SOCIAL_AUTH_LOGIN_ERROR_URL = '/exam/login/'
 
-LOGIN_REDIRECT_URL = '/exam'
-
 EMAIL_USE_TLS = False
 
 EMAIL_HOST = 'your_email_host'
