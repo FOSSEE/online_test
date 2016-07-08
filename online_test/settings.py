@@ -86,7 +86,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-LOGIN_URL = '/exam/login'
+LOGIN_URL = '/exam/login/'
+
+LOGIN_REDIRECT_URL = '/exam/'
 
 EMAIL_USE_TLS = False
 
