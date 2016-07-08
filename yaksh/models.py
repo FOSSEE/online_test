@@ -336,10 +336,11 @@ class QuizManager(models.Manager):
             trial_quiz.pk = None
             trial_quiz.description = trial_quiz_name
             trial_quiz.is_trial = True
-            trial_quiz.time_between_attempts = 0
             trial_quiz.prerequisite = None
             if godmode:
+                trial_quiz.time_between_attempts = 0
                 trial_quiz.duration = 1000
+                trial_quiz.attempts_allowed = -1
                 trial_quiz.active = True
                 trial_quiz.start_date_time = timezone.now()
                 trial_quiz.end_date_time = datetime(2199, 1, 1, 0, 0, 0, 0,
