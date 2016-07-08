@@ -20,10 +20,10 @@
         <br><center><a href="{{URL_ROOT}}/exam/forgotpassword/">Forgot Password?</a></center><br>
         <center><a href="{{URL_ROOT}}/exam/register/">New User? Sign-Up </a></center>
         <h3> Login with </h3>
-        <a class="btn btn-social-icon btn-google" href="{% url 'social:begin' 'google-oauth2' %}?next={{ request.path }}">
+        <a class="btn btn-social-icon btn-google" href="{% url 'social:begin' 'google-oauth2' %}">
             <span class="fa fa-google" style="background-color: #dd4b39;" ></span>
         </a>
-        <a class="btn btn-social-icon btn-facebook"  href="{% url 'social:begin' 'facebook' %}?next={{ request.path }}">
+        <a class="btn btn-social-icon btn-facebook"  href="{% url 'social:begin' 'facebook' %}">
             <span class="fa fa-facebook" style="background-color: #3b5998;" ></span>
         </a>
         </form>
