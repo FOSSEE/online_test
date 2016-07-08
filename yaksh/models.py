@@ -42,7 +42,7 @@ test_case_types = (
 
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
-days_between_attempts = ((j, j) for j in range(401))
+days_between_attempts = [(j, j) for j in range(401)]
 
 test_status = (
                 ('inprogress', 'Inprogress'),
@@ -57,6 +57,10 @@ def get_model_class(model):
     model_class = ctype.model_class()
 
     return model_class
+
+def has_profile(user):
+    """ check if user has profile """
+    return True if hasattr(user, 'profile') else False
 
 
 ###############################################################################
@@ -159,7 +163,7 @@ class Profile(models.Model):
     department = models.CharField(max_length=64)
     position = models.CharField(max_length=64)
     timezone = models.CharField(max_length=64,
-                                choices=[(tz, tz) for tz in pytz.common_timezones])
+        choices=[(tz, tz) for tz in pytz.common_timezones])
 
 
 ###############################################################################
