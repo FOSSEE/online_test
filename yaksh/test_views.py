@@ -142,7 +142,8 @@ class TestAddQuiz(TestCase):
     def setUp(self):
         self.client = Client()
 
-        self.mod_group = Group.objects.create(name='moderator') 
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
 
         # Create Moderator with profile
         self.user_plaintext_pass = 'demo'
@@ -180,8 +181,8 @@ class TestAddQuiz(TestCase):
             enrollment="Enroll Request", creator=self.user)
 
         self.pre_req_quiz = Quiz.objects.create(
-            start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0),
-            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+            start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
             duration=30, active=True,
             attempts_allowed=-1, time_between_attempts=0,
             description='pre requisite quiz', pass_criteria=40,
@@ -190,8 +191,8 @@ class TestAddQuiz(TestCase):
         )
 
         self.quiz = Quiz.objects.create(
-            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0),
-            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
             duration=30, active=True,
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
@@ -252,8 +253,8 @@ class TestAddQuiz(TestCase):
         response = self.client.post(reverse('yaksh:edit_quiz',
             kwargs={'quiz_id': self.quiz.id}),
             data={
-                'start_date_time': '2016-01-10 09:00:15', #datetime(2016, 1, 10, 9, 0, 15, 0, tzone),
-                'end_date_time': '2016-01-15 09:00:15', #datetime(2016, 1, 15, 9, 0, 15, 0, tzone),
+                'start_date_time': '2016-01-10 09:00:15',
+                'end_date_time': '2016-01-15 09:00:15',
                 'duration': 30,
                 'active': False,
                 'attempts_allowed': 5,
@@ -298,8 +299,8 @@ class TestAddQuiz(TestCase):
         tzone = pytz.timezone('UTC')
         response = self.client.post(reverse('yaksh:add_quiz'),
             data={
-                'start_date_time': '2016-01-10 09:00:15', #datetime(2016, 1, 10, 9, 0, 15, 0, tzone),
-                'end_date_time': '2016-01-15 09:00:15', #datetime(2016, 1, 15, 9, 0, 15, 0, tzone),
+                'start_date_time': '2016-01-10 09:00:15',
+                'end_date_time': '2016-01-15 09:00:15',
                 'duration': 50,
                 'active': True,
                 'attempts_allowed': -1,
@@ -336,7 +337,8 @@ class TestAddTeacher(TestCase):
     def setUp(self):
         self.client = Client()
 
-        self.mod_group = Group.objects.create(name='moderator') 
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
 
         # Create Moderator with profile
         self.user_plaintext_pass = 'demo'
@@ -374,8 +376,8 @@ class TestAddTeacher(TestCase):
             enrollment="Enroll Request", creator=self.user)
 
         self.pre_req_quiz = Quiz.objects.create(
-            start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0),
-            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+            start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
             duration=30, active=True,
             attempts_allowed=-1, time_between_attempts=0,
             description='pre requisite quiz', pass_criteria=40,
@@ -384,8 +386,8 @@ class TestAddTeacher(TestCase):
         )
 
         self.quiz = Quiz.objects.create(
-            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0),
-            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
             duration=30, active=True,
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
@@ -493,7 +495,8 @@ class TestRemoveTeacher(TestCase):
     def setUp(self):
         self.client = Client()
 
-        self.mod_group = Group.objects.create(name='moderator') 
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
 
         # Create Moderator with profile
         self.user_plaintext_pass = 'demo'
@@ -531,8 +534,8 @@ class TestRemoveTeacher(TestCase):
             enrollment="Enroll Request", creator=self.user)
 
         self.pre_req_quiz = Quiz.objects.create(
-            start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0),
-            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+            start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
             duration=30, active=True,
             attempts_allowed=-1, time_between_attempts=0,
             description='pre requisite quiz', pass_criteria=40,
@@ -541,8 +544,8 @@ class TestRemoveTeacher(TestCase):
         )
 
         self.quiz = Quiz.objects.create(
-            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0),
-            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0),
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
             duration=30, active=True,
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
@@ -623,8 +626,11 @@ class TestRemoveTeacher(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        redirect_destination = '/exam/manage/courses/'
-        self.assertRedirects(response, redirect_destination)
+        redirect_destination = '/exam/manage/courses'
+        self.assertRedirects(response, redirect_destination,
+            status_code=302,
+            target_status_code=301
+        )
         for t_id in teacher_id_list:
             teacher = User.objects.get(id=t_id) 
             self.assertNotIn(teacher, self.course.teachers.all())
