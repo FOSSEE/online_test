@@ -67,7 +67,7 @@ class TestProfile(TestCase):
         If not logged in redirect to login page
         """
         response = self.client.get(reverse('yaksh:view_profile'), follow=True)
-        redirect_destination = '/exam/login/?next=%2Fexam%2Fviewprofile%2F'
+        redirect_destination = '/exam/login/?next=/exam/viewprofile/'
         self.assertRedirects(response, redirect_destination)
 
     def test_view_profile_get_for_user_without_profile(self):
@@ -213,7 +213,7 @@ class TestAddQuiz(TestCase):
         If not logged in redirect to login page
         """
         response = self.client.get(reverse('yaksh:add_quiz'), follow=True)
-        redirect_destination = '/exam/login/?next=%2Fexam%2Fmanage%2Faddquiz%2F'
+        redirect_destination = '/exam/login/?next=/exam/manage/addquiz/'
         self.assertRedirects(response, redirect_destination)
 
     def test_view_profile_denies_non_moderator(self):
@@ -412,8 +412,8 @@ class TestAddTeacher(TestCase):
             ),
             follow=True
         )
-        redirect_destination = ('/exam/login/?next=%2Fexam'
-            '%2Fmanage%2Faddteacher%2F{0}%2F'.format(self.course.id))
+        redirect_destination = ('/exam/login/?next=/exam'
+            '/manage/addteacher/{0}/'.format(self.course.id))
         self.assertRedirects(response, redirect_destination)
 
     def test_add_teacher_denies_non_moderator(self):
@@ -569,8 +569,8 @@ class TestRemoveTeacher(TestCase):
             ),
             follow=True
         )
-        redirect_destination = ('/exam/login/?next=%2Fexam'
-            '%2Fmanage%2Fremove_teachers%2F{0}%2F'.format(self.course.id))
+        redirect_destination = ('/exam/login/?next=/exam'
+            '/manage/remove_teachers/{0}/'.format(self.course.id))
         self.assertRedirects(response, redirect_destination)
 
     def test_remove_teacher_denies_non_moderator(self):
@@ -714,8 +714,8 @@ class TestCourses(TestCase):
         response = self.client.get(reverse('yaksh:courses'),
             follow=True
         )
-        redirect_destination = ('/exam/login/?next=%2Fexam'
-            '%2Fmanage%2Fcourses%2F')
+        redirect_destination = ('/exam/login/?next=/exam'
+            '/manage/courses/')
         self.assertRedirects(response, redirect_destination)
 
     def test_courses_denies_non_moderator(self):
@@ -824,8 +824,8 @@ class TestCourseDetail(TestCase):
         response = self.client.get(reverse('yaksh:add_course'),
             follow=True
         )
-        redirect_destination = ('/exam/login/?next=%2Fexam'
-            '%2Fmanage%2Fadd_course%2F')
+        redirect_destination = ('/exam/login/?next=/exam'
+            '/manage/add_course/')
         self.assertRedirects(response, redirect_destination)
 
     def test_course_detail_denies_non_moderator(self):
@@ -950,8 +950,8 @@ class TestEnrollRequest(TestCase):
             ),
             follow=True
         )
-        redirect_destination = ('/exam/login/?next=%2Fexam'
-            '%2Fenroll_request%2F{}%2F'.format(self.course.id))
+        redirect_destination = ('/exam/login/?next=/exam'
+            '/enroll_request/{}/'.format(self.course.id))
         self.assertRedirects(response, redirect_destination)
 
     def test_enroll_request_get_for_student(self):
@@ -1054,8 +1054,8 @@ class TestSelfEnroll(TestCase):
             ),
             follow=True
         )
-        redirect_destination = ('/exam/login/?next=%2Fexam'
-            '%2Fself_enroll%2F{}%2F'.format(self.course.id))
+        redirect_destination = ('/exam/login/?next=/exam'
+            '/self_enroll/{}/'.format(self.course.id))
         self.assertRedirects(response, redirect_destination)
 
     def test_enroll_request_get_for_student(self):
