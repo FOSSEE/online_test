@@ -4,7 +4,9 @@
 {% block pagetitle %} Online Test {% endblock %}
 {% block formtitle %}Login{% endblock %}
 {% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/bootstrap-social.css" type="text/css" />
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/login.css" type="text/css" /> 
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/font-awesome.css" type="text/css" />
 {% endblock %}
 {% block content %}
 
@@ -17,6 +19,13 @@
         <center><button class="btn" type="submit">Login</button>&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn" type="reset">Cancel</button></center>
         <br><center><a href="{{URL_ROOT}}/exam/forgotpassword/">Forgot Password?</a></center><br>
         <center><a href="{{URL_ROOT}}/exam/register/">New User? Sign-Up </a></center>
+        <h3> Login with </h3>
+        <a class="btn btn-social-icon btn-google" href="{% url 'social:begin' 'google-oauth2' %}?next={{ request.path }}">
+            <span class="fa fa-google" style="background-color: #dd4b39;" ></span>
+        </a>
+        <a class="btn btn-social-icon btn-facebook"  href="{% url 'social:begin' 'facebook' %}?next={{ request.path }}">
+            <span class="fa fa-facebook" style="background-color: #3b5998;" ></span>
+        </a>
         </form>
       
 {% endblock content %}

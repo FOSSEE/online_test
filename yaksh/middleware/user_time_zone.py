@@ -8,8 +8,8 @@ class TimezoneMiddleware(object):
         if user timezone is not available default value 'UTC' is activated """
     def process_request(self, request):
         user = request.user
+        user_tz = 'UTC'
         if hasattr(user, 'profile'):
-            user_tz = user.profile.timezone
-            timezone.activate(pytz.timezone(user_tz))
-        else:
-            timezone.activate(pytz.timezone('UTC'))
+            if user.profile.timezone:
+                user_tz = user.profile.timezone
+        timezone.activate(pytz.timezone(user_tz))
