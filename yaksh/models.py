@@ -288,13 +288,7 @@ class QuestionsFileUpload(models.Model):
     question = models.ForeignKey(Question, related_name="question")
     extract = models.BooleanField(default=False)
 
-    def delete_all_files(self, files):
-        for file in files:
-            if os.path.exists(file.files.path):
-                shutil.rmtree(os.path.dirname(file.files.path))
-            file.delete()
-
-    def delete_selected_files(self, files):
+    def delete_files(self, files):
         for file in files:
             if os.path.exists(file.files.path):
                 os.remove(file.files.path)
@@ -302,7 +296,7 @@ class QuestionsFileUpload(models.Model):
                     os.rmdir(os.path.dirname(file.files.path))
             file.delete()
 
-    def extract_files(self, files):
+    def set_extract_status(self, files):
         for file in files:
             if file.extract:
                 file.extract = False
