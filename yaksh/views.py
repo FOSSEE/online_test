@@ -22,11 +22,11 @@ import pytz
 from taggit.models import Tag
 from itertools import chain
 import json
-import shutil
+
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
-from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, QuestionsFileUpload,
-                         has_profile
+from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, QuestionsFileUpload,\
+                        has_profile
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm,\
                 QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
