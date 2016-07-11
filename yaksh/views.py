@@ -189,7 +189,7 @@ def edit_question(request, question_id=None):
         if remove_files_id:
             files = QuestionsFileUpload.objects.filter(id__in=remove_files_id)
             file = QuestionsFileUpload()
-            file.delete_selected_files(files)
+            file.delete_files(files)
     if request.method == "POST" and 'save_question' in request.POST:
         question_form = QuestionForm(request.POST, instance=question_instance)
         form = FileForm(request.POST, request.FILES)
@@ -201,7 +201,7 @@ def edit_question(request, question_id=None):
         if extract_files_id:
             files = QuestionsFileUpload.objects.filter(id__in=extract_files_id)
             file = QuestionsFileUpload()
-            file.extract_files(files)
+            file.set_extract_status(files)
         if question_form.is_valid():
             new_question = question_form.save(commit=False)
             test_case_type = question_form.cleaned_data.get('test_case_type')
@@ -862,7 +862,7 @@ def show_all_questions(request):
                     files = QuestionsFileUpload.objects.filter(question_id=question.id)
                     if files:
                         file = QuestionsFileUpload()
-                        file.delete_all_files(files)
+                        file.delete_files(files)
                 questions.delete()
 
         if request.POST.get('upload') == 'upload':
