@@ -7,7 +7,7 @@ import importlib
 
 # local imports
 from code_evaluator import CodeEvaluator, TimeoutException
-from copy_delete_files import CopyDeleteFiles
+from file_utils import copy_files, delete_files
 
 
 class PythonAssertionEvaluator(CodeEvaluator):
@@ -20,15 +20,13 @@ class PythonAssertionEvaluator(CodeEvaluator):
     def teardown(self):
         super(PythonAssertionEvaluator, self).teardown()
         # Delete the created file.
-        if self.files_list:
-            file_delete = CopyDeleteFiles()
-            file_delete.delete_files(self.files_list)
+        if self.files:
+            delete_files(self.files)
 
     def compile_code(self, user_answer, file_paths, test_case):
-        self.files_list = []
+        self.files = []
         if file_paths:
-            file_copy = CopyDeleteFiles()
-            self.files_list = file_copy.copy_files(file_paths)
+            self.files = copy_files(file_paths)
         if self.exec_scope:
             return None
         else:

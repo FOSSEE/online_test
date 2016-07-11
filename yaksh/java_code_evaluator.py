@@ -8,7 +8,7 @@ import importlib
 
 # local imports
 from code_evaluator import CodeEvaluator
-from copy_delete_files import CopyDeleteFiles
+from file_utils import copy_files, delete_files
 
 
 class JavaCodeEvaluator(CodeEvaluator):
@@ -27,9 +27,8 @@ class JavaCodeEvaluator(CodeEvaluator):
             os.remove(self.user_output_path)
         if os.path.exists(self.ref_output_path):
             os.remove(self.ref_output_path)
-        if self.files_list:
-            file_delete = CopyDeleteFiles()
-            file_delete.delete_files(self.files_list)
+        if self.files:
+            delete_files(self.files)
 
     def get_commands(self, clean_ref_code_path, user_code_directory):
         compile_command = 'javac  {0}'.format(self.submit_code_path),
@@ -44,7 +43,7 @@ class JavaCodeEvaluator(CodeEvaluator):
         return output_path
 
     def compile_code(self, user_answer, file_paths, test_case):
-        self.files_list = []
+        self.files = []
         if self.compiled_user_answer and self.compiled_test_code:
             return None
         else:
@@ -52,8 +51,7 @@ class JavaCodeEvaluator(CodeEvaluator):
             clean_ref_code_path, clean_test_case_path = \
                      self._set_test_code_file_path(ref_code_path)
             if file_paths:
-                file_copy = CopyDeleteFiles()
-                self.files_list = file_copy.copy_files(file_paths)
+                self.files = copy_files(file_paths)
             if not isfile(clean_ref_code_path):
                 msg = "No file at %s or Incorrect path" % clean_ref_code_path
                 return False, msg
