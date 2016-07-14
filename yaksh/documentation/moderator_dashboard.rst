@@ -14,3 +14,4 @@ The following pages explain the various functions available for moderators
    moderator_docs/creating_course.rst
    moderator_docs/creating_quiz.rst
    moderator_docs/creating_question.rst
+   moderator_docs/other_features.rst

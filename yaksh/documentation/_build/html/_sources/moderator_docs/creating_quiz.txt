@@ -11,7 +11,7 @@ Creating a Quiz
 ---------------	
 	.. image:: ../images/add_quiz.jpg
 	
-	.. note :: It is important to have created or uploaded questions before creating a quiz. Click here to know how to add questions.
+	.. note :: It is important to have created or uploaded questions before creating a quiz. 
 
 	In courses click on **Add Quiz** button to add a quiz.
 	
