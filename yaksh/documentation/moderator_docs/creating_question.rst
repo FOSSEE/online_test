@@ -29,7 +29,7 @@ Setting up questions
 
 	* **Tags** - Type of label or metadata tag making it easier to find specific type of questions.
 
-	* ** Snippet** - Snippet is used to give any default value or default code or command. This will be displayed in the answer form. This is used only for code questions.
+	* **Snippet** - Snippet is used to give any default value or default code or command. This will be displayed in the answer form. This is used only for code questions.
 
 	* **Test case type** - Test cases or answers are to be added. There are multiple type of test cases - 
 		
@@ -88,4 +88,7 @@ Features in Question
 
 	* **Test Questions**
 			
-			Select questions from the list of question displayed on the Questions page. Click on Test selected button. This will take you to a quiz with the selected questions. **Note** - This will not create an actual quiz but a trial quiz. This quiz is hidden from the students and only for moderator to view. You can delete the quiz from moderator's dashboard. 
+			Select questions from the list of question displayed on the Questions page. Click on Test selected button. This will take you to a quiz with the selected questions. 
+
+			.. Note:: This will not create an actual quiz but a trial quiz. This quiz is hidden from the students and only for moderator to view. You can delete the quiz from moderator's dashboard. 
+
