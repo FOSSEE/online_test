@@ -1,0 +1,282 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Quizzes &mdash; Yaksh July 2016 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Yaksh July 2016 documentation" href="../index.html"/>
+        <link rel="up" title="Moderator’s Dashboard" href="../moderator_dashboard.html"/>
+        <link rel="next" title="Questions" href="creating_question.html"/>
+        <link rel="prev" title="Courses" href="creating_course.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Yaksh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../moderator_dashboard.html">Moderator&#8217;s Dashboard</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="creating_course.html">Courses</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Quizzes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-quiz">Creating a Quiz</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#designing-question-paper">Designing Question Paper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#editing-a-quiz">Editing a Quiz</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="creating_question.html">Questions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="other_features.html">Other Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../about_yaksh.html">About Yaksh</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Yaksh</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../moderator_dashboard.html">Moderator&#8217;s Dashboard</a> &raquo;</li>
+      
+    <li>Quizzes</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/moderator_docs/creating_quiz.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="quizzes">
+<h1>Quizzes<a class="headerlink" href="#quizzes" title="Permalink to this headline">¶</a></h1>
+<p>Quizzes are intrinsically associated with a course, hence to view and/or edit a quiz, we need to navigate to the courses page.</p>
+<div class="section" id="creating-a-quiz">
+<h2>Creating a Quiz<a class="headerlink" href="#creating-a-quiz" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><img alt="../_images/add_quiz.jpg" src="../_images/add_quiz.jpg" />
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">It is important to have created or uploaded questions before creating a quiz.</p>
+</div>
+<p>In courses click on <strong>Add Quiz</strong> button to add a quiz.</p>
+<ul class="simple">
+<li><strong>Course</strong> - Select a course from Course field. This field is mandatory.</li>
+<li><strong>Start Date and Time of quiz</strong> - The date and time after which the quiz can be taken.</li>
+<li><strong>End Date and Time of quiz</strong> - The date and time after which the quiz is deactivated and cannot be attempted.</li>
+<li><strong>Duration</strong> - Duration of quiz to be written in minutes.</li>
+<li><strong>Active</strong> - If the quiz is active or not.</li>
+<li><strong>Description</strong> - Description or name of the quiz.</li>
+<li><strong>Passing Percentage</strong> - Minimum percentage required to pass the test.</li>
+<li><strong>Prerequisite</strong> - Set a prerequisite quiz to be passed before attempting the current quiz.</li>
+<li><strong>Language</strong> - Programming language on which the quiz is based.</li>
+<li><strong>Attempts allowed</strong> - Number of attempts that a student can take of the current quiz.</li>
+<li><strong>Number of Days</strong> - Number of days between attempts.</li>
+</ul>
+<p>Once a quiz parameters have been set click on <strong>design questionpaper</strong> button to add questions into a quiz.</p>
+</div></blockquote>
+</div>
+<div class="section" id="designing-question-paper">
+<h2>Designing Question Paper<a class="headerlink" href="#designing-question-paper" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><img alt="../_images/design_questionpaper.jpg" src="../_images/design_questionpaper.jpg" />
+<p>A quiz can have fixed as well as random questions. Fixed questions are those question that are bound to appear for every student taking the quiz. In random questions a pool of questions is given and number of questions to be picked from the pool is set. Hence for different students, different questions from the pool will appear.</p>
+<p>To add questions to a questionpaper</p>
+<ul class="simple">
+<li>Select Question type and marks and a list of questions will be displayed will be in the <strong>select questions to add</strong> section. Do this for both fixed questions and random questions.</li>
+<li>Select shuffle paper if you want to jumble up the question sequence for every student and for every attempt.</li>
+<li>Click on save question paper to save it or preview question paper to preview it.</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="editing-a-quiz">
+<h2>Editing a Quiz<a class="headerlink" href="#editing-a-quiz" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>In Courses page, click on the quiz link to edit the quiz. Then change the parameters and click on design question paper to save it. This will redirect you to the moderator dashboard.</p>
+<dl class="docutils">
+<dt>In edit quiz you can also attempt the quiz in two modes -</dt>
+<dd><ul class="first last">
+<li><p class="first"><strong>God Mode</strong> - In God mode you can attempt quiz without any time or eligibilty constraints.</p>
+</li>
+<li><p class="first"><strong>User Mode</strong> - In user mode you can attempt quiz the way normal users will attempt i.e.</p>
+<blockquote>
+<div><ul class="simple">
+<li>Quiz will have the same duration as that of the original quiz.</li>
+<li>Quiz won&#8217;t start if the course is inactive or the quiz time has expired.</li>
+<li>You will be notified about quiz prerequisites.(You can still attempt the quiz though)</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="creating_question.html" class="btn btn-neutral float-right" title="Questions" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="creating_course.html" class="btn btn-neutral" title="Courses" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, FOSSEE.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'July 2016',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
