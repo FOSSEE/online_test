@@ -1,8 +1,13 @@
 Yaksh
 ========
+
 [![Build Status](https://travis-ci.org/FOSSEE/online_test.svg?branch=master)](https://travis-ci.org/FOSSEE/online_test)
+[![Documentation Status](https://readthedocs.org/projects/yaksh/badge/?version=latest)](http://yaksh.readthedocs.io/en/latest/?badge=latest)
+
+To get a hang of the Yaksh interface please refer to the user documentation at (http://yaksh.readthedocs.io)
 
 This is a Quickstart guide to help users setup a trial instance. If you wish to deploy Yaksh in a production environment here is a [Production Deployment Guide] (https://github.com/FOSSEE/online_test/blob/master/README_production.md)
+
 
 #### Introduction
 
