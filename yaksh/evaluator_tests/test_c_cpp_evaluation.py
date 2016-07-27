@@ -82,7 +82,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
 
     def test_array_input(self):
         self.test_case_data = [{'expected_output': '561',
-                                'expected_input': '5,6,1'}]
+                                'expected_input': '5\n6\n1'}]
         user_answer = dedent("""
         #include<stdio.h>
         int main(void){
