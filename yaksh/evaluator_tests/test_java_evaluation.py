@@ -97,7 +97,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
     def test_array_input(self):
 
         self.test_case_data = [{'expected_output': '561',
-                                'expected_input': '5,6,1'}]
+                                'expected_input': '5\n6\n1'}]
         user_answer = dedent("""
         import java.util.Scanner;
         class Test
@@ -176,6 +176,26 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
         {public static void main(String[] args){
          int a = 5;
          int b = 6;
+         System.out.print(a+b);
+        }}""")
+        get_class = JavaStdioEvaluator()
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data
+                  }
+        result = get_class.evaluate(**kwargs)
+        self.assertEquals(result.get('error'), "Correct Answer")
+        self.assertTrue(result.get('success'))
+
+    def test_string_input(self):
+        self.test_case_data = [{'expected_output': 'HelloWorld',
+                               'expected_input': 'Hello\nWorld'}]
+        user_answer = dedent("""
+        import java.util.Scanner;
+        class Test
+        {public static void main(String[] args){
+         Scanner s = new Scanner(System.in);
+         String a = s.nextLine();
+         String b = s.nextLine();
          System.out.print(a+b);
         }}""")
         get_class = JavaStdioEvaluator()
