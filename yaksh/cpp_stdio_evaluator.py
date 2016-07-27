@@ -22,7 +22,6 @@ class CppStdioEvaluator(CodeEvaluator):
     def set_file_paths(self):
         user_output_path = os.getcwd() + '/output'
         ref_output_path = os.getcwd() + '/executable'
-
         return user_output_path, ref_output_path
 
     def get_commands(self, user_output_path, ref_output_path):
@@ -30,7 +29,6 @@ class CppStdioEvaluator(CodeEvaluator):
                                                       user_output_path)
         compile_main = 'g++ {0} -o {1}'.format(user_output_path,
                                                ref_output_path)
-
         return compile_command, compile_main
 
     def compile_code(self, user_answer, expected_input, expected_output):
@@ -101,5 +99,4 @@ class CppStdioEvaluator(CodeEvaluator):
                         err = err + "\n" + e
             except:
                 err = err + "\n" + stdnt_stderr
-
         return success, err

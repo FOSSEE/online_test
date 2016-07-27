@@ -25,7 +25,6 @@ class JavaStdioEvaluator(CodeEvaluator):
 
     def get_commands(self):
         compile_command = 'javac {0}'.format(self.submit_code_path)
-
         return compile_command
 
     def compile_code(self, user_answer, expected_input, expected_output):
@@ -73,5 +72,4 @@ class JavaStdioEvaluator(CodeEvaluator):
                         err = err + "\n" + e
             except:
                 err = err + "\n" + stdnt_stderr
-
         return success, err
