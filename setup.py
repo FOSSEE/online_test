@@ -26,7 +26,8 @@ setup(
         'django==1.9.5',
         'mysql-python==1.2.5',
         'django-taggit==0.18.1',
-        'pytz==2016.4'
+        'pytz==2016.4',
+        'python-social-auth==0.2.19'
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

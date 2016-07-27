@@ -224,9 +224,19 @@ function call_skip(url)
   // Get the textarea node
   var textarea_node = document.querySelector('#answer');
 
+  var lang = "{{ question.language }}"
+  var mode_dict = {
+    'python': 'python',
+    'c': 'text/x-csrc',
+    'cpp': 'text/x-c++src',
+    'java': 'text/x-java',
+    'bash': 'text/x-sh',
+    'scilab': 'text/x-csrc'
+  }
+
   // Code mirror Options
   var options = {
-      mode: "{{ question.language }}",
+      mode: mode_dict[lang],
       gutter: true,
       lineNumbers: true,
    
