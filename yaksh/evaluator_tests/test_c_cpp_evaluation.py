@@ -56,7 +56,7 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
         self.assertEquals(result.get("error"), self.timeout_msg)
 
 
-class CStdioEvaluationTestCases(unittest.TestCase):
+class CppStdioEvaluationTestCases(unittest.TestCase):
 
     def setUp(self):
         self.test_case_data = [{'expected_output': '11', 'expected_input': '5\n6'}]
@@ -181,16 +181,7 @@ class CStdioEvaluationTestCases(unittest.TestCase):
         self.assertEquals(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
-
-class CppStdioEvaluationTestCases(unittest.TestCase):
-
-    def setUp(self):
-        self.test_case_data = [{'expected_output': '11', 'expected_input': '5\n6'}]
-        self.timeout_msg = ("Code took more than {0} seconds to run. "
-                            "You probably have an infinite loop in"
-                            " your code.").format(SERVER_TIMEOUT)
-
-    def test_correct_answer(self):
+    def test_cpp_correct_answer(self):
         user_answer = dedent("""
         #include<iostream>
         using namespace std;
@@ -207,9 +198,9 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         self.assertEquals(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
-    def test_array_input(self):
+    def test_cpp_array_input(self):
         self.test_case_data = [{'expected_output': '561',
-                                'expected_input': '5,6,1'}]
+                                'expected_input': '5\n6\n1'}]
         user_answer = dedent("""
         #include<iostream>
         using namespace std;
@@ -228,7 +219,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         self.assertEquals(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
-    def test_string_input(self):
+    def test_cpp_string_input(self):
         self.test_case_data = [{'expected_output': 'abc',
                                 'expected_input': 'abc'}]
         user_answer = dedent("""
@@ -247,7 +238,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         self.assertEquals(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
-    def test_incorrect_answer(self):
+    def test_cpp_incorrect_answer(self):
         user_answer = dedent("""
         #include<iostream>
         using namespace std;
@@ -264,7 +255,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         self.assertIn("Incorrect", result.get('error'))
         self.assertTrue(result.get('error').splitlines > 1)
 
-    def test_error(self):
+    def test_cpp_error(self):
         user_answer = dedent("""
         #include<iostream>
         using namespace std;
@@ -280,7 +271,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         self.assertFalse(result.get("success"))
         self.assertTrue("Compilation Error" in result.get("error"))
 
-    def test_infinite_loop(self):
+    def test_cpp_infinite_loop(self):
         user_answer = dedent("""
         #include<iostream>
         using namespace std;
@@ -296,7 +287,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         self.assertFalse(result.get("success"))
         self.assertEquals(result.get("error"), self.timeout_msg)
 
-    def test_only_stdout(self):
+    def test_cpp_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
                                'expected_input': ''}]
         user_answer = dedent("""
