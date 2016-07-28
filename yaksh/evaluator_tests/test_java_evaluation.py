@@ -3,18 +3,19 @@ import os
 from yaksh import code_evaluator as evaluator
 from yaksh.java_code_evaluator import JavaCodeEvaluator
 from yaksh.settings import SERVER_TIMEOUT
-
+from textwrap import dedent
 
 class JavaEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.test_case_data = [
             {"test_case": "java_files/main_square.java"}
         ]
-        self.in_dir = "/tmp"
+        self.in_dir = os.getcwd()
         evaluator.SERVER_TIMEOUT = 9
         self.timeout_msg = ("Code took more than {0} seconds to run. "
             "You probably have an infinite loop in"
             " your code.").format(evaluator.SERVER_TIMEOUT)
+        self.file_paths = None
 
     def tearDown(self):
         evaluator.SERVER_TIMEOUT = 2
@@ -23,7 +24,8 @@ class JavaEvaluationTestCases(unittest.TestCase):
         user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a;\n\t}\n}"
         get_class = JavaCodeEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.test_case_data
+                    'test_case_data': self.test_case_data,
+                    'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs)
         self.assertEquals(result.get('error'), "Correct answer")
@@ -33,7 +35,8 @@ class JavaEvaluationTestCases(unittest.TestCase):
         user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a;\n\t}\n}"
         get_class = JavaCodeEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.test_case_data
+                    'test_case_data': self.test_case_data,
+                    'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
@@ -44,7 +47,8 @@ class JavaEvaluationTestCases(unittest.TestCase):
         user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a"
         get_class = JavaCodeEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.test_case_data
+                    'test_case_data': self.test_case_data,
+                    'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs) 
         self.assertFalse(result.get("success"))
@@ -54,12 +58,44 @@ class JavaEvaluationTestCases(unittest.TestCase):
         user_answer = "class Test {\n\tint square_num(int a) {\n\t\twhile(0==0){\n\t\t}\n\t}\n}"
         get_class = JavaCodeEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.test_case_data
+                    'test_case_data': self.test_case_data,
+                    'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs) 
         self.assertFalse(result.get("success"))
         self.assertEquals(result.get("error"), self.timeout_msg)
 
+    def test_file_based_assert(self):
+        self.file_paths = [(os.getcwd()+"/yaksh/test.txt", False)]
+        self.test_case_data = [
+            {"test_case": "java_files/read_file.java"}
+        ]
+        user_answer = dedent("""
+            import java.io.BufferedReader;
+            import java.io.FileReader;
+            import java.io.IOException;
+            class Test{
+            String readFile() throws IOException {
+            BufferedReader br = new BufferedReader(new FileReader("test.txt"));
+            try {
+                StringBuilder sb = new StringBuilder();
+                String line = br.readLine();
+                while (line != null) {
+                    sb.append(line);
+                    line = br.readLine();}
+                return sb.toString();
+            } finally {
+                br.close();
+            }}}
+            """)
+        get_class = JavaCodeEvaluator(self.in_dir)
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data,
+                  'file_paths': self.file_paths
+                  }
+        result = get_class.evaluate(**kwargs)
+        self.assertTrue(result.get("success"))
+        self.assertEquals(result.get("error"), "Correct answer")
 
 if __name__ == '__main__':
     unittest.main()

@@ -15,13 +15,15 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         self.timeout_msg = ("Code took more than {0} seconds to run. "
             "You probably have an infinite loop in"
             " your code.").format(SERVER_TIMEOUT)
+        self.file_paths = None
 
     def test_correct_answer(self):
         user_answer = "def add(a,b):\n\treturn a + b"
         get_class = PythonAssertionEvaluator()
-        kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.test_case_data
-                }
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data,
+                  'file_paths': self.file_paths
+                  }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get('success'))
         self.assertEqual(result.get('error'), "Correct answer")
@@ -30,8 +32,9 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         user_answer = "def add(a,b):\n\treturn a - b"
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-                    'test_case_data': self.test_case_data
-                }
+                  'test_case_data': self.test_case_data,
+                  'file_paths': self.file_paths
+                  }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
         self.assertEqual(result.get('error'),
@@ -42,7 +45,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-            'test_case_data': self.test_case_data
+            'test_case_data': self.test_case_data,
+            'file_paths': self.file_paths
         }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
@@ -63,7 +67,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         ]
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-            'test_case_data': self.test_case_data
+            'test_case_data': self.test_case_data,
+            'file_paths': self.file_paths
         }
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
@@ -86,7 +91,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         ]
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-            'test_case_data': self.test_case_data
+            'test_case_data': self.test_case_data,
+            'file_paths': self.file_paths
         }
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
@@ -105,7 +111,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         ]
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-            'test_case_data': self.test_case_data
+            'test_case_data': self.test_case_data,
+            'file_paths': self.file_paths
         }
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
@@ -126,7 +133,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         ]
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-            'test_case_data': self.test_case_data
+            'test_case_data': self.test_case_data,
+            'file_paths': self.file_paths
         }
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
@@ -148,7 +156,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         ]
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-            'test_case_data': self.test_case_data
+            'test_case_data': self.test_case_data,
+            'file_paths': self.file_paths
         }
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
@@ -171,7 +180,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         ]
         get_class = PythonAssertionEvaluator()
         kwargs = {'user_answer': user_answer,
-                    'test_case_data': self.test_case_data
+                    'test_case_data': self.test_case_data,
+                    'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
@@ -180,18 +190,37 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         for msg in value_error_msg:
             self.assertIn(msg, result.get("error"))
 
+    def test_file_based_assert(self):
+        self.test_case_data = [{"test_case": "assert(ans()=='2')"}]
+        self.file_paths = [(os.getcwd()+"/yaksh/test.txt", False)]
+        user_answer = dedent("""
+            def ans():
+                with open("test.txt") as f:
+                    return f.read()[0]
+            """)
+        get_class = PythonAssertionEvaluator()
+        kwargs = {'user_answer': user_answer,
+            'test_case_data': self.test_case_data,
+            'file_paths': self.file_paths
+        }
+        result = get_class.evaluate(**kwargs)
+        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertTrue(result.get('success'))
+
 class PythonStdoutEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.test_case_data = [{"expected_output": "0 1 1 2 3"}]
         self.timeout_msg = ("Code took more than {0} seconds to run. "
             "You probably have an infinite loop"
             " in your code.").format(SERVER_TIMEOUT)
+        self.file_paths = None
 
     def test_correct_answer(self):
         user_answer = "a,b=0,1\nfor i in range(5):\n\tprint a,\n\ta,b=b,a+b"
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer,
-            'test_case_data': self.test_case_data
+            'test_case_data': self.test_case_data,
+            'file_paths': self.file_paths
         }
         result = get_class.evaluate(**kwargs)
         self.assertEqual(result.get('error'), "Correct answer")
@@ -201,7 +230,8 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         user_answer = "a,b=0,1\nfor i in range(5):\n\tprint b,\n\ta,b=b,a+b"
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer, 
-            'test_case_data': self.test_case_data
+            'test_case_data': self.test_case_data,
+            'file_paths': self.file_paths
         }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
@@ -214,7 +244,8 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         )
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer, 
-            'test_case_data': self.test_case_data
+            'test_case_data': self.test_case_data,
+            'file_paths': self.file_paths
         }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
@@ -224,12 +255,28 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
         get_class = PythonStdoutEvaluator()
         kwargs = {'user_answer': user_answer,
-            'test_case_data': self.test_case_data
+            'test_case_data': self.test_case_data,
+            'file_paths': self.file_paths
         }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
         self.assertEqual(result.get('error'), 'Incorrect Answer')
 
+    def test_file_based_answer(self):
+        self.test_case_data = [{"expected_output": "2\n\n"}]
+        self.file_paths = [(os.getcwd()+"/yaksh/test.txt", False)]
+        user_answer = dedent("""
+            with open("test.txt") as f:
+                print f.read()
+            """)
+        get_class = PythonStdoutEvaluator()
+        kwargs = {'user_answer': user_answer,
+            'test_case_data': self.test_case_data,
+            'file_paths': self.file_paths
+        }
+        result = get_class.evaluate(**kwargs)
+        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':
     unittest.main()

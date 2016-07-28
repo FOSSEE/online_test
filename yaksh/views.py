@@ -22,14 +22,15 @@ import pytz
 from taggit.models import Tag
 from itertools import chain
 import json
+
 # Local imports.
-from yaksh.models import get_model_class, Quiz, Question, QuestionPaper,\
-    QuestionSet, Course, Profile, Answer, AnswerPaper, User, TestCase,\
-    has_profile
+from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
+from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
+                        has_profile
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
-    QuestionForm, RandomQuestionForm,\
-    QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
-    get_object_form
+                QuestionForm, RandomQuestionForm,\
+                QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
+                get_object_form, FileForm
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
@@ -151,19 +152,27 @@ def add_question(request):
 
     if request.method == "POST" and 'save_question' in request.POST:
         question_form = QuestionForm(request.POST)
+        form = FileForm(request.POST, request.FILES)
         if question_form.is_valid():
             new_question = question_form.save(commit=False)
             new_question.user = user
             new_question.save()
+            files = request.FILES.getlist('file_field')
+            if files:
+                for file in files:
+                    FileUpload.objects.get_or_create(question=new_question, file=file)
             return my_redirect("/exam/manage/addquestion/{0}".format(new_question.id))
         else:
             return my_render_to_response('yaksh/add_question.html',
-                                         {'form': question_form},
+                                         {'form': question_form,
+                                          'upload_form': form},
                                          context_instance=ci)
     else:
         question_form = QuestionForm()
+        form = FileForm()
         return my_render_to_response('yaksh/add_question.html',
-                                     {'form': question_form},
+                                     {'form': question_form,
+                                      'upload_form': form},
                                      context_instance=ci)
 
 @login_required
@@ -176,9 +185,24 @@ def edit_question(request, question_id=None):
         raise Http404('No Question Found')
 
     question_instance = Question.objects.get(id=question_id)
-
+    if request.method == "POST" and 'delete_files' in request.POST:
+        remove_files_id = request.POST.getlist('clear')
+        if remove_files_id:
+            files = FileUpload.objects.filter(id__in=remove_files_id)
+            for file in files:
+                file.remove()
     if request.method == "POST" and 'save_question' in request.POST:
         question_form = QuestionForm(request.POST, instance=question_instance)
+        form = FileForm(request.POST, request.FILES)
+        files = request.FILES.getlist('file_field')
+        extract_files_id = request.POST.getlist('extract')
+        if files:
+            for file in files:
+                FileUpload.objects.get_or_create(question=question_instance, file=file)
+        if extract_files_id:
+            files = FileUpload.objects.filter(id__in=extract_files_id)
+            for file in files:
+                file.set_extract_status()
         if question_form.is_valid():
             new_question = question_form.save(commit=False)
             test_case_type = question_form.cleaned_data.get('test_case_type')
@@ -196,23 +220,29 @@ def edit_question(request, question_id=None):
             test_case_model_class = get_model_class(test_case_type)
             TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class, extra=1)
             test_case_formset = TestCaseInlineFormSet(request.POST, request.FILES, instance=question_instance)
+            uploaded_files = FileUpload.objects.filter(question_id=question_instance.id)
             return my_render_to_response('yaksh/add_question.html',
                                          {'form': question_form,
                                          'test_case_formset': test_case_formset,
-                                         'question_id': question_id},
+                                         'question_id': question_id,
+                                         'upload_form': form,
+                                         'uploaded_files': uploaded_files},
                                          context_instance=ci)
     else:
         question_form = QuestionForm(instance=question_instance)
+        form = FileForm()
         test_case_type = question_instance.test_case_type
         test_case_form_class = get_object_form(model=test_case_type, exclude_fields=['question'])
         test_case_model_class = get_model_class(test_case_type)
         TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class, extra=1)
         test_case_formset = TestCaseInlineFormSet(instance=question_instance)
-
+        uploaded_files = FileUpload.objects.filter(question_id=question_instance.id)
         return my_render_to_response('yaksh/add_question.html',
                                      {'form': question_form,
                                      'test_case_formset': test_case_formset,
-                                     'question_id': question_id},
+                                     'question_id': question_id,
+                                     'upload_form': form,
+                                     'uploaded_files': uploaded_files},
                                      context_instance=ci)
 
 @login_required
@@ -405,18 +435,14 @@ def show_question(request, question, paper, error_message=None):
         reason='Your time is up!'
         return complete(request, reason, paper.attempt_number, paper.question_paper.id)
     test_cases = question.get_test_cases()
-    context = {'question': question,
-        'paper': paper,
-        'error_message': error_message,
-        'test_cases': test_cases,
-        'last_attempt': question.snippet.encode('unicode-escape')
-    }
-
+    files = FileUpload.objects.filter(question_id=question.id)
+    context = {'question': question, 'paper': paper, 'error_message': error_message,
+                'test_cases': test_cases, 'files': files,
+                'last_attempt': question.snippet.encode('unicode-escape')}
     answers = paper.get_previous_answers(question)
     if answers:
         last_attempt = answers[0].answer
         context['last_attempt'] = last_attempt.encode('unicode-escape')
-        # context['last_attempt'] = answers[0].answer.encode('unicode-escape')
     ci = RequestContext(request)
     return my_render_to_response('yaksh/question.html', context,
                                  context_instance=ci)
@@ -832,7 +858,12 @@ def show_all_questions(request):
         if request.POST.get('delete') == 'delete':
             data = request.POST.getlist('question')
             if data is not None:
-                question = Question.objects.filter(id__in=data, user_id=user.id).delete()
+                questions = Question.objects.filter(id__in=data, user_id=user.id)
+                files = FileUpload.objects.filter(question_id__in=questions)
+                if files:
+                    for file in files:
+                        file.remove()
+                questions.delete()
 
         if request.POST.get('upload') == 'upload':
             form = UploadFileForm(request.POST, request.FILES)

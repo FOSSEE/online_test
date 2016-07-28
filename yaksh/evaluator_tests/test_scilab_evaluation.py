@@ -7,17 +7,19 @@ from yaksh.settings import SERVER_TIMEOUT
 class ScilabEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.test_case_data = [{"test_case": "scilab_files/test_add.sce"}]
-        self.in_dir = "/tmp"
+        self.in_dir = os.getcwd()
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop" 
                             " in your code.").format(SERVER_TIMEOUT)
+        self.file_paths = None
 
     def test_correct_answer(self):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a+b;\nendfunction")
         get_class = ScilabCodeEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.test_case_data
+                    'test_case_data': self.test_case_data,
+                    'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs)
         self.assertEquals(result.get('error'), "Correct answer")
@@ -28,7 +30,8 @@ class ScilabEvaluationTestCases(unittest.TestCase):
                         "\n\tc=a+b;\ndis(\tendfunction")
         get_class = ScilabCodeEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.test_case_data
+                    'test_case_data': self.test_case_data,
+                    'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs) 
         self.assertFalse(result.get("success"))
@@ -40,7 +43,8 @@ class ScilabEvaluationTestCases(unittest.TestCase):
                         "\n\tc=a-b;\nendfunction")
         get_class = ScilabCodeEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.test_case_data
+                    'test_case_data': self.test_case_data,
+                    'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
@@ -52,7 +56,8 @@ class ScilabEvaluationTestCases(unittest.TestCase):
                         "\n\tc=a;\nwhile(1==1)\nend\nendfunction")
         get_class = ScilabCodeEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer, 
-                    'test_case_data': self.test_case_data
+                    'test_case_data': self.test_case_data,
+                    'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs) 
         self.assertFalse(result.get("success"))

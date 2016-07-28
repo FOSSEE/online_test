@@ -92,6 +92,10 @@ LOGIN_REDIRECT_URL = '/exam/'
 
 SOCIAL_AUTH_LOGIN_ERROR_URL = '/exam/login/'
 
+MEDIA_URL = "/data/"
+
+MEDIA_ROOT = os.path.join(BASE_DIR+"/yaksh/", "data")
+
 EMAIL_USE_TLS = False
 
 EMAIL_HOST = 'your_email_host'
