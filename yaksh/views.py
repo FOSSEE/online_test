@@ -25,7 +25,7 @@ import json
 
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
-from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, QuestionsFileUpload,\
+from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
                         has_profile
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm,\
@@ -160,7 +160,7 @@ def add_question(request):
             files = request.FILES.getlist('file_field')
             if files:
                 for file in files:
-                    QuestionsFileUpload.objects.get_or_create(question=new_question, files=file)
+                    FileUpload.objects.get_or_create(question=new_question, file=file)
             return my_redirect("/exam/manage/addquestion/{0}".format(new_question.id))
         else:
             return my_render_to_response('yaksh/add_question.html',
@@ -188,9 +188,9 @@ def edit_question(request, question_id=None):
     if request.method == "POST" and 'delete_files' in request.POST:
         remove_files_id = request.POST.getlist('clear')
         if remove_files_id:
-            files = QuestionsFileUpload.objects.filter(id__in=remove_files_id)
-            file = QuestionsFileUpload()
-            file.delete_files(files)
+            files = FileUpload.objects.filter(id__in=remove_files_id)
+            for file in files:
+                file.remove()
     if request.method == "POST" and 'save_question' in request.POST:
         question_form = QuestionForm(request.POST, instance=question_instance)
         form = FileForm(request.POST, request.FILES)
@@ -198,11 +198,11 @@ def edit_question(request, question_id=None):
         extract_files_id = request.POST.getlist('extract')
         if files:
             for file in files:
-                QuestionsFileUpload.objects.get_or_create(question=question_instance, files=file)
+                FileUpload.objects.get_or_create(question=question_instance, file=file)
         if extract_files_id:
-            files = QuestionsFileUpload.objects.filter(id__in=extract_files_id)
-            file = QuestionsFileUpload()
-            file.set_extract_status(files)
+            files = FileUpload.objects.filter(id__in=extract_files_id)
+            for file in files:
+                file.set_extract_status()
         if question_form.is_valid():
             new_question = question_form.save(commit=False)
             test_case_type = question_form.cleaned_data.get('test_case_type')
@@ -220,7 +220,7 @@ def edit_question(request, question_id=None):
             test_case_model_class = get_model_class(test_case_type)
             TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class, extra=1)
             test_case_formset = TestCaseInlineFormSet(request.POST, request.FILES, instance=question_instance)
-            uploaded_files = QuestionsFileUpload.objects.filter(question_id=question_instance.id)
+            uploaded_files = FileUpload.objects.filter(question_id=question_instance.id)
             return my_render_to_response('yaksh/add_question.html',
                                          {'form': question_form,
                                          'test_case_formset': test_case_formset,
@@ -236,7 +236,7 @@ def edit_question(request, question_id=None):
         test_case_model_class = get_model_class(test_case_type)
         TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class, extra=1)
         test_case_formset = TestCaseInlineFormSet(instance=question_instance)
-        uploaded_files = QuestionsFileUpload.objects.filter(question_id=question_instance.id)
+        uploaded_files = FileUpload.objects.filter(question_id=question_instance.id)
         return my_render_to_response('yaksh/add_question.html',
                                      {'form': question_form,
                                      'test_case_formset': test_case_formset,
@@ -435,7 +435,7 @@ def show_question(request, question, paper, error_message=None):
         reason='Your time is up!'
         return complete(request, reason, paper.attempt_number, paper.question_paper.id)
     test_cases = question.get_test_cases()
-    files = QuestionsFileUpload.objects.filter(question_id=question.id)
+    files = FileUpload.objects.filter(question_id=question.id)
     context = {'question': question, 'paper': paper, 'error_message': error_message,
                 'test_cases': test_cases, 'files': files,
                 'last_attempt': question.snippet.encode('unicode-escape')}
@@ -859,11 +859,10 @@ def show_all_questions(request):
             data = request.POST.getlist('question')
             if data is not None:
                 questions = Question.objects.filter(id__in=data, user_id=user.id)
-                for question in questions:
-                    files = QuestionsFileUpload.objects.filter(question_id=question.id)
-                    if files:
-                        file = QuestionsFileUpload()
-                        file.delete_files(files)
+                files = FileUpload.objects.filter(question_id__in=questions)
+                if files:
+                    for file in files:
+                        file.remove()
                 questions.delete()
 
         if request.POST.get('upload') == 'upload':
