@@ -13,7 +13,7 @@ def copy_files(file_paths):
         file_name = os.path.basename(file_path)
         files.append(file_name)
         shutil.copy(file_path, os.getcwd())
-        if extract:
+        if extract and zipfile.is_zipfile(file_name):
             unzip = zipfile.ZipFile(file_name)
             for zip_files in unzip.namelist():
                 files.append(zip_files)
@@ -25,9 +25,9 @@ def copy_files(file_paths):
 def delete_files(files):
     """ Delete Files from current directory """
 
-    for content in files:
-        if os.path.exists(content):
-            if os.path.isfile(content):
-                os.remove(content)
+    for file in files:
+        if os.path.exists(file):
+            if os.path.isfile(file):
+                os.remove(file)
             else:
-                shutil.rmtree(content)
+                shutil.rmtree(file)
