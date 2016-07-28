@@ -33,7 +33,7 @@
   <input type="checkbox" name="clear" value="{{file.id}}">&nbsp;delete</input>&nbsp;
   <input type="checkbox" name="extract" value="{{file.id}}" >{% if file.extract %} dont extract{% else %}
   extract{% endif %}</input><br>
-  <a href="{{file.files.url}}">{{ file.files.name }}</a>
+  <a href="{{file.file.url}}">{{ file.file.name }}</a>
   <br>
   {% endfor %}{% endif %}
   <div class="form-group">
