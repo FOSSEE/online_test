@@ -221,9 +221,9 @@ class Question(models.Model):
 
         question_data['test_case_data'] = test_case_data
         question_data['user_answer'] = user_answer
-        files = QuestionsFileUpload.objects.filter(question=self)
+        files = FileUpload.objects.filter(question=self)
         if files:
-            question_data['file_paths'] = [(file.files.path, file.extract)
+            question_data['file_paths'] = [(file.file.path, file.extract)
                                            for file in files]
 
         return json.dumps(question_data)
@@ -283,26 +283,24 @@ class Question(models.Model):
 
 
 ###############################################################################
-class QuestionsFileUpload(models.Model):
-    files = models.FileField(upload_to=get_upload_dir, blank=True)
+class FileUpload(models.Model):
+    file = models.FileField(upload_to=get_upload_dir, blank=True)
     question = models.ForeignKey(Question, related_name="question")
     extract = models.BooleanField(default=False)
 
-    def delete_files(self, files):
-        for file in files:
-            if os.path.exists(file.files.path):
-                os.remove(file.files.path)
-                if os.listdir(os.path.dirname(file.files.path)) == []:
-                    os.rmdir(os.path.dirname(file.files.path))
-            file.delete()
+    def remove(self):
+        if os.path.exists(self.file.path):
+            os.remove(self.file.path)
+            if os.listdir(os.path.dirname(self.file.path)) == []:
+                os.rmdir(os.path.dirname(self.file.path))
+        self.delete()
 
-    def set_extract_status(self, files):
-        for file in files:
-            if file.extract:
-                file.extract = False
-            else:
-                file.extract = True
-            file.save()
+    def set_extract_status(self):
+        if self.extract:
+            self.extract = False
+        else:
+            self.extract = True
+        self.save()
 
 
 ###############################################################################
