@@ -9,7 +9,7 @@ class Evaluator(object):
             error_msg = "Expected Output is {0} ".\
                         format(repr(expected_output))
         else:
-            error_msg = " Given Input is {0} \n Expected Output is {1} ".\
+            error_msg = " Given Input is\n {0} \n Expected Output is {1} ".\
                         format(expected_input, repr(expected_output))
         if output_err == '':
             if user_output == expected_output:

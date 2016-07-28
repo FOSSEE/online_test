@@ -97,10 +97,10 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
         user_answer = dedent(""" #!/bin/bash
                              read A
                              read B
-                             echo -n `expr $A + $B`
+                             echo -n `expr $A - $B`
                              """
                              )
-        test_case_data = [{'expected_output': '12', 'expected_input': '5\n6'}]
+        test_case_data = [{'expected_output': '11', 'expected_input': '5\n6'}]
         get_class = BashStdioEvaluator()
         kwargs = {"user_answer": user_answer,
                   "test_case_data": test_case_data

@@ -211,20 +211,6 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         self.assertFalse(result.get('success'))
         self.assertIn("Incorrect Answer", result.get('error'))
 
-    def test_direct_printed_answer(self):
-        user_answer = "print '0 1 1 2 3'"
-        error_msg = ("Incorrect Answer: Please avoid printing"
-                     " the expected output directly"
-                     )
-        get_class = PythonStdioEvaluator()
-
-        kwargs = {'user_answer': user_answer,
-                  'test_case_data': self.test_case_data
-                  }
-        result = get_class.evaluate(**kwargs)
-        self.assertFalse(result.get('success'))
-        self.assertEqual(result.get('error'), error_msg)
-
     def test_infinite_loop(self):
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass\nadd(1,2)"
         get_class = PythonStdioEvaluator()

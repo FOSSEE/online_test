@@ -30,7 +30,7 @@ class BashStdioEvaluator(CodeEvaluator):
     def check_code(self, user_answer, expected_input, expected_output):
         success = False
         expected_input = str(expected_input).replace('\r', '')
-        proc = subprocess.Popen(["bash ./Test.sh"],
+        proc = subprocess.Popen("bash ./Test.sh",
                                 shell=True,
                                 stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE,
