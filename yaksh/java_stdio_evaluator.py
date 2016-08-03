@@ -6,6 +6,7 @@ from os.path import isfile
 #local imports
 from code_evaluator import CodeEvaluator
 from stdio_evaluator import Evaluator
+from file_utils import copy_files, delete_files
 
 
 class JavaStdioEvaluator(CodeEvaluator):
@@ -18,6 +19,8 @@ class JavaStdioEvaluator(CodeEvaluator):
     def teardown(self):
         super(JavaStdioEvaluator, self).teardown()
         os.remove(self.submit_code_path)
+        if self.files:
+            delete_files(self.files)
 
     def set_file_paths(self, directory, file_name):
         output_path = "{0}{1}.class".format(directory, file_name)
@@ -27,10 +30,13 @@ class JavaStdioEvaluator(CodeEvaluator):
         compile_command = 'javac {0}'.format(self.submit_code_path)
         return compile_command
 
-    def compile_code(self, user_answer, expected_input, expected_output):
+    def compile_code(self, user_answer, file_paths, expected_input, expected_output):
+        self.files = []
         if not isfile(self.submit_code_path):
             msg = "No file at %s or Incorrect path" % self.submit_code_path
             return False, msg
+        if file_paths:
+            self.files = copy_files(file_paths)
         user_code_directory = os.getcwd() + '/'
         self.write_to_submit_code_file(self.submit_code_path, user_answer)
         self.user_output_path = self.set_file_paths(user_code_directory,
@@ -44,7 +50,7 @@ class JavaStdioEvaluator(CodeEvaluator):
                                                       )
         return self.compiled_user_answer
 
-    def check_code(self, user_answer, expected_input, expected_output):
+    def check_code(self, user_answer, file_paths, expected_input, expected_output):
         success = False
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)

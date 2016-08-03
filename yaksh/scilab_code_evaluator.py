@@ -8,6 +8,7 @@ import importlib
 
 # local imports
 from code_evaluator import CodeEvaluator
+from file_utils import copy_files, delete_files
 
 
 class ScilabCodeEvaluator(CodeEvaluator):
@@ -21,8 +22,13 @@ class ScilabCodeEvaluator(CodeEvaluator):
         super(ScilabCodeEvaluator, self).teardown()
         # Delete the created file.
         os.remove(self.submit_code_path)
+        if self.files:
+            delete_files(self.files)
 
-    def check_code(self, user_answer, test_case):
+    def check_code(self, user_answer, file_paths, test_case):
+        self.files = []
+        if file_paths:
+            self.files = copy_files(file_paths)
         ref_code_path = test_case
         clean_ref_path, clean_test_case_path = \
             self._set_test_code_file_path(ref_code_path)
@@ -60,7 +66,6 @@ class ScilabCodeEvaluator(CodeEvaluator):
                 err = add_err + stdout
         else:
             err = add_err + stderr
-
         return success, err
 
     def _remove_scilab_exit(self, string):

@@ -175,6 +175,11 @@ class QuestionForm(forms.ModelForm):
         exclude = ['user']
 
 
+class FileForm(forms.Form):
+    file_field = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
+                                 required=False)
+
+
 class RandomQuestionForm(forms.Form):
     question_type = forms.CharField(max_length=8, widget=forms.Select\
                                     (choices=question_types))
@@ -211,7 +216,7 @@ class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['first_name', 'last_name', 'institute',
-                'department', 'roll_number', 'position', 'timezone']
+                  'department', 'roll_number', 'position', 'timezone']
 
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)

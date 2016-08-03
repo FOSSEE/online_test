@@ -11,6 +11,8 @@ from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
 from django.utils import timezone
 import pytz
+import os
+import shutil
 
 languages = (
         ("python", "Python"),
@@ -61,6 +63,9 @@ def get_model_class(model):
 def has_profile(user):
     """ check if user has profile """
     return True if hasattr(user, 'profile') else False
+
+def get_upload_dir(instance, filename):
+    return "question_%s/%s" % (instance.question.id, filename)
 
 
 ###############################################################################
@@ -216,6 +221,10 @@ class Question(models.Model):
 
         question_data['test_case_data'] = test_case_data
         question_data['user_answer'] = user_answer
+        files = FileUpload.objects.filter(question=self)
+        if files:
+            question_data['file_paths'] = [(file.file.path, file.extract)
+                                           for file in files]
 
         return json.dumps(question_data)
 
@@ -252,7 +261,7 @@ class Question(models.Model):
              model=self.test_case_type
         )
         test_cases = test_case_ctype.get_all_objects_for_this_type(
-            question=self, 
+            question=self,
             **kwargs
         )
 
@@ -263,7 +272,7 @@ class Question(models.Model):
             model=self.test_case_type
         )
         test_case = test_case_ctype.get_object_for_this_type(
-            question=self, 
+            question=self,
             **kwargs
         )
 
@@ -271,6 +280,27 @@ class Question(models.Model):
 
     def __unicode__(self):
         return self.summary
+
+
+###############################################################################
+class FileUpload(models.Model):
+    file = models.FileField(upload_to=get_upload_dir, blank=True)
+    question = models.ForeignKey(Question, related_name="question")
+    extract = models.BooleanField(default=False)
+
+    def remove(self):
+        if os.path.exists(self.file.path):
+            os.remove(self.file.path)
+            if os.listdir(os.path.dirname(self.file.path)) == []:
+                os.rmdir(os.path.dirname(self.file.path))
+        self.delete()
+
+    def set_extract_status(self):
+        if self.extract:
+            self.extract = False
+        else:
+            self.extract = True
+        self.save()
 
 
 ###############################################################################

@@ -15,19 +15,27 @@
 {% block onload %} onload='javascript:textareaformat();' {% endblock %}
 
 {% block manage %}
-<form action="" method="post" name=frm onSubmit="return autosubmit();">
+<form action="" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
   {% csrf_token %}
   <center><table class=span1>
   <tr><td>Summary: <td>{{ form.summary }}{{ form.summary.errors }}
   <tr><td> Language: <td> {{form.language}}{{form.language.errors}}
   <tr><td> Active: <td> {{ form.active }}{{form.active.errors}} &nbsp; Type: &nbsp;{{ form.type }}{{form.type.errors}}
-  <tr><td>Points:<td><button class="btn-mini" type="button" onClick="increase(frm);">+</button>{{ form.points }}<button class="btn-mini" type="button" onClick="decrease(frm);">-</button>{{ form.points.errors }} 
+  <tr><td>Points:<td><button class="btn-mini" type="button" onClick="increase(frm);">+</button>{{form.points }}<button class="btn-mini" type="button" onClick="decrease(frm);">-</button>{{ form.points.errors }} 
     <tr><td><strong>Rendered: </strong><td><p id='my'></p>
   <tr><td>Description: <td>{{ form.description}}  {{form.description.errors}}
   <tr><td>Tags: <td>{{ form.tags }}
   <tr><td>Snippet: <td>{{ form.snippet }}
   <tr><td> Test Case Type: <td> {{ form.test_case_type }}{{ form.test_case_type.errors }}
-
+  <tr><td> File: <td> {{ upload_form.file_field }}{{ upload_form.file_field.errors }}
+  {% if uploaded_files %}<br><b>Uploaded files:</b><br>Check the box to delete or extract files<br>
+  {% for file in uploaded_files %}
+  <input type="checkbox" name="clear" value="{{file.id}}">&nbsp;delete</input>&nbsp;
+  <input type="checkbox" name="extract" value="{{file.id}}" >{% if file.extract %} dont extract{% else %}
+  extract{% endif %}</input><br>
+  <a href="{{file.file.url}}">{{ file.file.name }}</a>
+  <br>
+  {% endfor %}{% endif %}
   <div class="form-group">
       {{ test_case_formset.management_form }}
 
@@ -43,6 +51,7 @@
   <center>
     <button class="btn" type="submit" name="save_question">Save & Add Testcase</button>
     <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Back to Questions</button>
+    <button class="btn" type="submit" name="delete_files">Delete Selected Files</button>
   </center>
 </form>
 {% endblock %}

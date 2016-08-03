@@ -6,6 +6,7 @@ from os.path import isfile
 #local imports
 from code_evaluator import CodeEvaluator
 from stdio_evaluator import Evaluator
+from file_utils import copy_files, delete_files
 
 
 class CppStdioEvaluator(CodeEvaluator):
@@ -18,6 +19,8 @@ class CppStdioEvaluator(CodeEvaluator):
     def teardown(self):
         super(CppStdioEvaluator, self).teardown()
         os.remove(self.submit_code_path)
+        if self.files:
+            delete_files(self.files)
 
     def set_file_paths(self):
         user_output_path = os.getcwd() + '/output'
@@ -31,8 +34,11 @@ class CppStdioEvaluator(CodeEvaluator):
                                                ref_output_path)
         return compile_command, compile_main
 
-    def compile_code(self, user_answer, expected_input, expected_output):
+    def compile_code(self, user_answer, file_paths, expected_input, expected_output):
 
+        self.files = []
+        if file_paths:
+            self.files = copy_files(file_paths)
         if not isfile(self.submit_code_path):
             msg = "No file at %s or Incorrect path" % self.submit_code_path
             return False, msg
@@ -56,7 +62,7 @@ class CppStdioEvaluator(CodeEvaluator):
                                                     )
         return self.compiled_user_answer, self.compiled_test_code
 
-    def check_code(self, user_answer, expected_input, expected_output):
+    def check_code(self, user_answer, file_paths, expected_input, expected_output):
         success = False
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)

@@ -6,7 +6,7 @@ from os.path import isfile
 #local imports
 from code_evaluator import CodeEvaluator
 from stdio_evaluator import Evaluator
-
+from file_utils import copy_files, delete_files
 
 class BashStdioEvaluator(CodeEvaluator):
     """Evaluates Bash StdIO based code"""
@@ -18,8 +18,13 @@ class BashStdioEvaluator(CodeEvaluator):
     def teardown(self):
         super(BashStdioEvaluator, self).teardown()
         os.remove(self.submit_code_path)
+        if self.files:
+            delete_files(self.files)
 
-    def compile_code(self, user_answer, expected_input, expected_output):
+    def compile_code(self, user_answer, file_paths, expected_input, expected_output):
+        self.files = []
+        if file_paths:
+            self.files = copy_files(file_paths)
         if not isfile(self.submit_code_path):
             msg = "No file at %s or Incorrect path" % self.submit_code_path
             return False, msg
@@ -27,7 +32,7 @@ class BashStdioEvaluator(CodeEvaluator):
         user_answer = user_answer.replace("\r", "")
         self.write_to_submit_code_file(self.submit_code_path, user_answer)
 
-    def check_code(self, user_answer, expected_input, expected_output):
+    def check_code(self, user_answer, file_paths, expected_input, expected_output):
         success = False
         expected_input = str(expected_input).replace('\r', '')
         proc = subprocess.Popen("bash ./Test.sh",
