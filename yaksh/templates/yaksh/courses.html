@@ -9,15 +9,12 @@
 {% endblock %}
 
 {% block manage %}
-<a href="{{URL_ROOT}}/exam/manage/allotted_course/">View Allotted Courses</a><br>
+
 {% if not courses %}
     <center><h4> No new Courses added </h4></center>
 {% else %}
 <center><h3> Course(s) Added</h3></center>
     {% for course in courses %}
-    {% if user != course.creator %}
-        <h4> {{course.creator.get_full_name}} added you to this course</h4>
-    {% endif %}
     <div class="row show-grid">
         <div class="span14">
             <div class="row">
@@ -79,7 +76,74 @@
     </div>
     <br><br>
     {% endfor %}
+    {% endif %}
+
+{% if allotted_courses %}
+    <center><h3> Course(s) Allotted </h3></center>
+
+    {% for course in allotted_courses %}
+        <div class="row show-grid">
+        <div class="span14">
+            <div class="row">
+                <div class="span6">
+                    <p>
+                        <b><u>Course</u></b>
+                        {% if course.active %}
+                            <span class="label success">Active</span>
+                        {% else %}
+                            <span class="label important">Closed</span>
+                        {% endif %}
+                    </p>
+                    <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">{{ course.name }}</a>
+                    </br></br>
+                    <div class="row">
+                        <div class="span6 wrap">
+                            <center><b><u> Course Creator</u></b></center>
+                            {{course.creator}}
+                            <center><b><u>Teacher(s) Added to {{ course }}</u></b></center>
+                            {% if course.get_teachers %}
+                            <div align="left">
+                            <form action="{{URL_ROOT}}/exam/manage/remove_teachers/{{ course.id }}/" method="post">
+                            {% csrf_token %}
+                            {% for teacher in course.get_teachers %}
+                            <div class="well">
+                                <div class="row">
+                                    <div class="span3" style="width: auto;">
+                                        <input type="checkbox" name="remove" value="{{ teacher.id }}">&nbsp;{{ teacher.get_full_name }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <button class="btn success" type="submit">Remove Selected</button>
+                            </div>
+                            {% else %}
+                            <center><b>No Teacher(s) Added</b></center>
+                            {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="span6">
+                    <p><b><a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher</a></b></p>
+                </div>
+                <div class="span6">
+                    <p><b><u>Quiz(zes)</u></b></p>
+                    {% if course.get_quizzes %}
+                        {% for quiz in course.get_quizzes %}
+                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}</a><br>
+                    {% endfor %}
+                    {% else %}
+                        <p><b>No quiz </b></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <br><br>
+    {% endfor %}
+{% endif %}
+    {% if courses or allotted_courses %}
     <button class="btn primary" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/add_course");'>Add New Course</button>
     <button class="btn primary" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz");'>Add New Quiz</button>
-{% endif %}
+{% endif %}    
 {% endblock %}

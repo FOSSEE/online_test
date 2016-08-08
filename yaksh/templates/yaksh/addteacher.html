@@ -18,6 +18,13 @@
 		<button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses");'>Cancel</button> </center></form>
 </div>
 <br><br>
+
+{% if message %}
+<div class="alert alert-danger">
+  <strong>Sorry!</strong> {{message}}
+</div>
+{% endif %}
+
 <form action="{{ URL_ROOT }}/exam/manage/addteacher/{{ course.id }}/" method="post">
 {% csrf_token %}
 {% if success == True %}
@@ -57,7 +64,9 @@
 {% if status == True %}
 <div class="row">
     <div class="span6 offset4 wrap">
-        <center><b><u>Teacher(s) Added</u></b></center><br>
+      <div class="alert alert-success">
+  <strong>Congrats!</strong>  Following Teachers have been added:
+</div>  
         {% if teachers_added %}
         {% for teacher in teachers_added %}
         <div class="well">

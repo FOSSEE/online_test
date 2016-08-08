@@ -664,8 +664,10 @@ def courses(request):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     courses = Course.objects.filter(creator=user, is_trial=False)
-    return my_render_to_response('yaksh/courses.html', {'courses': courses},
-                                context_instance=ci)
+    allotted_courses = Course.objects.filter(teachers=user, is_trial=False)
+    context = {'courses': courses, "allotted_courses": allotted_courses}
+    return my_render_to_response('yaksh/courses.html', context,
+                                 context_instance=ci)
 
 
 @login_required
@@ -1164,7 +1166,7 @@ def search_teacher(request, course_id):
         raise Http404('You are not allowed to view this page!')
 
     context = {}
-    course = get_object_or_404(Course, creator=user, pk=course_id)
+    course = get_object_or_404(Course, Q(creator=user)|Q(teachers=user), pk=course_id)
     context['course'] = course
 
     if request.method == 'POST':
@@ -1196,35 +1198,26 @@ def add_teacher(request, course_id):
         raise Http404('You are not allowed to view this page!')
 
     context = {}
-    course = get_object_or_404(Course, creator=user, pk=course_id)
+    course = get_object_or_404(Course, Q(creator=user)|Q(teachers=user), pk=course_id)
     context['course'] = course
 
     if request.method == 'POST':
         teacher_ids = request.POST.getlist('check')
         teachers = User.objects.filter(id__in=teacher_ids)
-        add_to_group(teachers)
-        course.add_teachers(*teachers)
-        context['status'] = True
-        context['teachers_added'] = teachers
+        if not course.creator in teachers:
+            add_to_group(teachers)
+            course.add_teachers(*teachers)
+            context['status'] = True
+            context['teachers_added'] = teachers
+        else:
+            context["message"] = "You cannot add course creator as teacher."
+        
         return my_render_to_response('yaksh/addteacher.html', context,
                                     context_instance=ci)
     else:
         return my_render_to_response('yaksh/addteacher.html', context,
                                     context_instance=ci)
 
-
-@login_required
-def allotted_courses(request):
-    """  show courses allotted to a user """
-
-    user = request.user
-    ci = RequestContext(request)
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-
-    courses = Course.objects.filter(teachers=user)
-    return my_render_to_response('yaksh/courses.html', {'courses': courses},
-                                        context_instance=ci)
 
 
 @login_required
