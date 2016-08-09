@@ -1171,21 +1171,16 @@ def search_teacher(request, course_id):
 
     if request.method == 'POST':
         u_name = request.POST.get('uname')
-        if len(u_name) == 0:
-            return my_render_to_response('yaksh/addteacher.html', context,
-                                        context_instance=ci)
-        else:
+        if not len(u_name) == 0:
             teachers = User.objects.filter(Q(username__icontains=u_name)|
                 Q(first_name__icontains=u_name)|Q(last_name__icontains=u_name)|
                 Q(email__icontains=u_name)).exclude(Q(id=user.id)|Q(is_superuser=1)|
                                                     Q(id=course.creator.id))
             context['success'] = True
             context['teachers'] = teachers
-            return my_render_to_response('yaksh/addteacher.html', context,
-                                        context_instance=ci)
-    else:
-        return my_render_to_response('yaksh/addteacher.html', context,
-                                    context_instance=ci)
+                                        
+    return my_render_to_response('yaksh/addteacher.html', context,
+                                 context_instance=ci)
 
 
 @login_required
@@ -1199,8 +1194,9 @@ def add_teacher(request, course_id):
         raise Http404('You are not allowed to view this page!')
 
     context = {}
-    course = get_object_or_404(Course, Q(creator=user)|Q(teachers=user), pk=course_id)
-    context['course'] = course
+    course = get_object_or_404(Course, pk=course_id)
+    if user == course.creator or user in course.teachers.all():
+        context['course'] = course
 
     if request.method == 'POST':
         teacher_ids = request.POST.getlist('check')
@@ -1220,10 +1216,10 @@ def remove_teachers(request, course_id):
     """  remove user from a course """
  
     user = request.user
-    if not is_moderator(user):
+    course = get_object_or_404(Course, pk=course_id)
+    if not is_moderator(user) and (user == course.creator or user in course.teachers.all()):
         raise Http404('You are not allowed to view this page!')
 
-    course = get_object_or_404(Course, Q(creator=user)|Q(teachers=user), pk=course_id)
     if request.method == "POST":
         teacher_ids = request.POST.getlist('remove')
         teachers = User.objects.filter(id__in=teacher_ids)
