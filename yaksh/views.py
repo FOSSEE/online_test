@@ -1177,7 +1177,8 @@ def search_teacher(request, course_id):
         else:
             teachers = User.objects.filter(Q(username__icontains=u_name)|
                 Q(first_name__icontains=u_name)|Q(last_name__icontains=u_name)|
-                Q(email__icontains=u_name)).exclude(Q(id=user.id)|Q(is_superuser=1))
+                Q(email__icontains=u_name)).exclude(Q(id=user.id)|Q(is_superuser=1)|
+                                                    Q(id=course.creator.id))
             context['success'] = True
             context['teachers'] = teachers
             return my_render_to_response('yaksh/addteacher.html', context,
@@ -1204,18 +1205,12 @@ def add_teacher(request, course_id):
     if request.method == 'POST':
         teacher_ids = request.POST.getlist('check')
         teachers = User.objects.filter(id__in=teacher_ids)
-        if not course.creator in teachers:
-            add_to_group(teachers)
-            course.add_teachers(*teachers)
-            context['status'] = True
-            context['teachers_added'] = teachers
-        else:
-            context["message"] = "You cannot add course creator as teacher."
+        add_to_group(teachers)
+        course.add_teachers(*teachers)
+        context['status'] = True
+        context['teachers_added'] = teachers
         
-        return my_render_to_response('yaksh/addteacher.html', context,
-                                    context_instance=ci)
-    else:
-        return my_render_to_response('yaksh/addteacher.html', context,
+    return my_render_to_response('yaksh/addteacher.html', context,
                                     context_instance=ci)
 
 
@@ -1228,7 +1223,7 @@ def remove_teachers(request, course_id):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
-    course = get_object_or_404(Course, creator=user, pk=course_id)
+    course = get_object_or_404(Course, Q(creator=user)|Q(teachers=user), pk=course_id)
     if request.method == "POST":
         teacher_ids = request.POST.getlist('remove')
         teachers = User.objects.filter(id__in=teacher_ids)
