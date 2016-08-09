@@ -570,7 +570,9 @@ class QuestionPaper(models.Model):
         if self.quiz.has_prerequisite():
             prerequisite = self._get_prequisite_paper()
             return prerequisite._is_questionpaper_passed(user)
-
+    
+    def __unicode__(self):
+        return "Question Paper for " + self.quiz.description
 
 ###############################################################################
 class QuestionSet(models.Model):
