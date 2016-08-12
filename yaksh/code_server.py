@@ -62,7 +62,7 @@ class CodeServer(object):
         """Calls relevant EvaluateCode class based on language to check the
          answer code
         """
-        code_evaluator = create_evaluator_instance(language, 
+        code_evaluator = create_evaluator_instance(language,
             test_case_type,
             json_data,
             in_dir
@@ -107,11 +107,13 @@ class ServerPool(object):
         queue = Queue(maxsize=len(ports))
         self.queue = queue
         servers = []
+        self.processes = []
         for port in ports:
             server = CodeServer(port, queue)
             servers.append(server)
             p = Process(target=server.run)
             p.start()
+            self.processes.append(p)
         self.servers = servers
 
     # Public Protocol ##########
@@ -139,6 +141,12 @@ class ServerPool(object):
         self.server = server
         server.register_instance(self)
         server.serve_forever()
+
+    def stop(self):
+        """Stop all the code server processes.
+        """
+        for proc in self.processes:
+            proc.terminate()
 
 
 ###############################################################################
