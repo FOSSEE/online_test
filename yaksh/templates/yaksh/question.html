@@ -89,9 +89,7 @@ function call_skip(url)
 	{% if paper.questions_left  %}
 	window.setTimeout(function()
 	{   
-		{% for qid in paper.questions.all  %}
-        location.href="{{ URL_ROOT }}/exam/{{ qid.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/"
-		{% endfor %}		
+        location.href="{{ URL_ROOT }}/exam/{{ paper.current_question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/"
 	}, 2000);
 	{% else %}
 	window.setTimeout(function()
