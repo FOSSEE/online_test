@@ -21,5 +21,4 @@ before_install:
 
 # command to run tests
 script:
-  - python manage.py test yaksh
-  - nosetests -v yaksh/tests
+  - python manage.py test -v yaksh
