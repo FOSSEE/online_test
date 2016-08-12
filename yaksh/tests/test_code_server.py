@@ -1,17 +1,15 @@
 import json
-from multiprocessing import Process
 try:
     from Queue import Queue
 except ImportError:
     from queue import Queue
 from threading import Thread
 import unittest
-
+import urllib
 
 from yaksh.code_server import ServerPool, SERVER_POOL_PORT
-
 from yaksh import settings
-from yaksh.xmlrpc_clients import code_server
+from yaksh.xmlrpc_clients import CodeServerProxy
 
 
 class TestCodeServer(unittest.TestCase):
@@ -23,16 +21,18 @@ class TestCodeServer(unittest.TestCase):
         ports = range(8001, 8006)
         server_pool = ServerPool(ports=ports, pool_port=SERVER_POOL_PORT)
         cls.server_pool = server_pool
-        cls.server_proc = p = Process(target=server_pool.run)
-        p.start()
-
+        cls.server_thread = t = Thread(target=server_pool.run)
+        t.start()
 
     @classmethod
     def tearDownClass(cls):
         cls.server_pool.stop()
-        cls.server_proc.terminate()
+        cls.server_thread.join()
         settings.code_evaluators['python']['standardtestcase'] = \
             "python_assertion_evaluator.PythonAssertionEvaluator"
+
+    def setUp(self):
+        self.code_server = CodeServerProxy()
 
     def test_inifinite_loop(self):
         # Given
@@ -40,7 +40,7 @@ class TestCodeServer(unittest.TestCase):
                     'test_case_data': [{'test_case':'assert 1==2'}]}
 
         # When
-        result = code_server.run_code(
+        result = self.code_server.run_code(
             'python', 'standardtestcase', json.dumps(testdata), ''
         )
 
@@ -55,7 +55,7 @@ class TestCodeServer(unittest.TestCase):
                     'test_case_data': [{'test_case':'assert f() == 1'}]}
 
         # When
-        result = code_server.run_code(
+        result = self.code_server.run_code(
             'python', 'standardtestcase', json.dumps(testdata), ''
         )
 
@@ -70,7 +70,7 @@ class TestCodeServer(unittest.TestCase):
                     'test_case_data': [{'test_case':'assert f() == 2'}]}
 
         # When
-        result = code_server.run_code(
+        result = self.code_server.run_code(
             'python', 'standardtestcase', json.dumps(testdata), ''
         )
 
@@ -87,12 +87,12 @@ class TestCodeServer(unittest.TestCase):
             """Run an infinite loop."""
             testdata = {'user_answer': 'while True: pass',
                         'test_case_data': [{'test_case':'assert 1==2'}]}
-            result = code_server.run_code(
+            result = self.code_server.run_code(
                 'python', 'standardtestcase', json.dumps(testdata), ''
             )
             results.put(json.loads(result))
 
-        N = 5
+        N = 10
         # When
         import time
         threads = []
@@ -111,6 +111,19 @@ class TestCodeServer(unittest.TestCase):
             data = results.get()
             self.assertFalse(data['success'])
             self.assertTrue('infinite loop' in data['error'])
+
+    def test_server_pool_status(self):
+        # Given
+        url = "http://localhost:%s/status"%SERVER_POOL_PORT
+
+        # When
+        data = urllib.urlopen(url).read()
+
+        # Then
+        expect = 'out of 5 are free'
+        self.assertTrue(expect in data)
+        expect = 'Load:'
+        self.assertTrue(expect in data)
 
 
 if __name__ == '__main__':

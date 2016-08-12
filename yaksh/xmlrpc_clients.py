@@ -3,6 +3,7 @@ import time
 import random
 import socket
 import json
+import urllib
 
 from settings import SERVER_PORTS, SERVER_POOL_PORT
 
@@ -21,7 +22,7 @@ class CodeServerProxy(object):
     """
     def __init__(self):
         pool_url = 'http://localhost:%d' % (SERVER_POOL_PORT)
-        self.pool_server = ServerProxy(pool_url)
+        self.pool_url = pool_url
 
     def run_code(self, language, test_case_type, json_data, user_dir):
         """Tests given code (`answer`) with the `test_code` supplied.  If the
@@ -34,7 +35,7 @@ class CodeServerProxy(object):
         ----------
         json_data contains;
         user_answer : str
-            The user's answer for the question. 
+            The user's answer for the question.
         test_code : str
             The test code to check the user code with.
         language : str
@@ -57,21 +58,7 @@ class CodeServerProxy(object):
         return result
 
     def _get_server(self):
-        # Get a suitable server from our pool of servers.  This may block.  We
-        # try about 60 times, essentially waiting at most for about 30 seconds.
-        done, count = False, 60
-
-        while not done and count > 0:
-            try:
-                port = self.pool_server.get_server_port()
-            except socket.error:
-                # Wait a while try again.
-                time.sleep(random.random())
-                count -= 1
-            else:
-                done = True
-        if not done:
-            raise ConnectionError("Couldn't connect to a server!")
+        port = json.loads(urllib.urlopen(self.pool_url).read())
         proxy = ServerProxy('http://localhost:%d' % port)
         return proxy
 
