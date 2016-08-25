@@ -15,8 +15,11 @@
 {% else %}
 <center><h3> Course(s) Added</h3></center>
     {% for course in courses %}
-    {% if user != course.creator %}
+    {% if user != course.creator and course.name != "Demo_course"%}
         <h4> {{course.creator.get_full_name}} added you to this course</h4>
+    {% endif %}
+    {% if course.name == "Demo_course" %}
+        <h4> This is Demo Course </h4>
     {% endif %}
     <div class="row show-grid">
         <div class="span14">
