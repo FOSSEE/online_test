@@ -48,6 +48,7 @@
                 {% endif %}
                 <table>
                     <th>Quiz</th>
+                    <th>View Answer Paper</th>
                     <th>Pre requisite quiz</th>
                     {% for quiz in quizzes %}
                         {% if quiz.course_id == course.id %}
@@ -62,6 +63,13 @@
                                     {{ quiz.description }} <span class="label important">INACTIVE</span><br>
                                 </td>
                             {% endif %}
+                            <td>
+                                {% if quiz.view_answerpaper %}
+                                    <a href="{{ URL_ROOT }}/exam/view_answerpaper/{{ quiz.questionpaper_set.get.id }}/"><i class="fa fa-eye" aria-hidden="true"></i> Can View </a>
+                                {% else%}
+                                    <a><i class="fa fa-eye-slash" aria-hidden="true"></i> Cannot view now </a>
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if quiz.prerequisite %}
                                     You have to pass {{ quiz.prerequisite.description }} for taking {{ paper.quiz.description }}

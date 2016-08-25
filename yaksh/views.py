@@ -530,7 +530,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                 msg = "Please submit a valid option or code"
                 return show_question(request, question, paper, msg)
             elif question.type == 'code' and user_answer:
-                msg = "Correct Output"
+                msg = 'Correct Output'
                 paper.completed_question(question.id)
                 return show_question(request, question, paper, msg)
             else:
@@ -558,12 +558,14 @@ def validate_answer(user, user_answer, question, json_data=None):
             expected_answer = question.get_test_case(correct=True).options
             if user_answer.strip() == expected_answer.strip():
                 correct = True
+                result['error'] = 'Correct Answer'
         elif question.type == 'mcc':
             expected_answers = []
             for opt in question.get_test_cases(correct=True):
                 expected_answers.append(opt.options)
             if set(user_answer) == set(expected_answers):
                 correct = True
+                result['error'] = 'Correct Answer'
         elif question.type == 'code':
             user_dir = get_user_dir(user)
             json_result = code_server.run_code(question.language, question.test_case_type, json_data, user_dir)
@@ -1271,3 +1273,15 @@ def test_quiz(request, mode, quiz_id):
 
     trial_questionpaper = test_mode(current_user, godmode, None, quiz_id)
     return my_redirect("/exam/start/{0}".format(trial_questionpaper.id))
+
+
+@login_required
+def view_answerpaper(request, questionpaper_id):
+    user = request.user
+    quiz = get_object_or_404(QuestionPaper, pk=questionpaper_id).quiz
+    if quiz.view_answerpaper:
+        data = AnswerPaper.objects.get_user_data(user, questionpaper_id)
+        context = {'data': data, 'quiz': quiz}
+        return my_render_to_response('yaksh/view_answerpaper.html', context)
+    else:
+        return my_redirect('/exam/quizzes/')
