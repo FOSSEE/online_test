@@ -22,6 +22,7 @@ import pytz
 from taggit.models import Tag
 from itertools import chain
 import json
+import zipfile
 
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
@@ -73,12 +74,29 @@ def is_moderator(user):
     if user.groups.filter(name='moderator').exists():
         return True
 
+
 def add_to_group(users):
     """ add users to moderator group """
     group = Group.objects.get(name="moderator")
     for user in users:
         if not is_moderator(user):
             user.groups.add(group)
+
+
+def extract_files(questions_file):
+    if zipfile.is_zipfile(questions_file):
+        zip_file = zipfile.ZipFile(questions_file, 'r')
+        zip_file.extractall()
+
+
+def read_json(json_file, user):
+    question = Question()
+    if os.path.exists(json_file):
+        with open(json_file, 'r') as q_file:
+            questions_list = q_file.read()
+            question.load_from_json(questions_list, user)
+            os.remove(json_file)
+
 
 def index(request):
     """The start page.
@@ -663,9 +681,11 @@ def courses(request):
     ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
-    courses = Course.objects.filter(creator=user, is_trial=False)
+    demo_user = User.objects.get(username="demo_user")
+    courses = Course.objects.filter(Q(creator=user) | Q(creator=demo_user),
+                                    is_trial=False)
     return my_render_to_response('yaksh/courses.html', {'courses': courses},
-                                context_instance=ci)
+                                 context_instance=ci)
 
 
 @login_required
@@ -869,22 +889,24 @@ def show_all_questions(request):
             form = UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
                 questions_file = request.FILES['file']
-                if questions_file.name.split('.')[-1] == "json":
-                    questions_list = questions_file.read()
-                    question = Question()
-                    question.load_from_json(questions_list, user)
+                file_name = questions_file.name.split('.')
+                if file_name[-1] == "zip":
+                    extract_files(questions_file)
+                    read_json("questions_dump.json", user)
                 else:
-                    message = "Please Upload a JSON file"
+                    message = "Please Upload a ZIP file"
                     context['message'] = message
 
         if request.POST.get('download') == 'download':
             question_ids = request.POST.getlist('question')
             if question_ids:
                 question = Question()
-                questions = question.dump_into_json(question_ids, user)
-                response = HttpResponse(questions, content_type='text/json')
-                response['Content-Disposition'] = 'attachment; filename=\
-                                            "{0}_questions.json"'.format(user)
+                zip_file = question.dump_into_json(question_ids, user)
+                response = HttpResponse(content_type='application/zip')
+                response['Content-Disposition'] = '''attachment;\
+                                          filename={0}_questions.zip'''.format(user)
+                zip_file.seek(0)
+                response.write(zip_file.read())
                 return response
             else:
                 context['msg'] = "Please select atleast one question to download"
