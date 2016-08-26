@@ -232,14 +232,14 @@ class Question(models.Model):
 
         return json.dumps(question_data)
 
-    def dump_into_json(self, question_ids, user):
+    def dump_questions(self, question_ids, user):
         questions = Question.objects.filter(id__in=question_ids, user_id=user.id)
         questions_dict = []
         zip_file_name = StringIO()
         zip_file = zipfile.ZipFile(zip_file_name, "a")
         for question in questions:
             test_case = question.get_test_cases()
-            files = question._add_and_get_files(zip_file)
+            file_names = question._add_and_get_files(zip_file)
             q_dict = {'summary': question.summary,
                       'description': question.description,
                       'points': question.points, 'language': question.language,
@@ -247,20 +247,20 @@ class Question(models.Model):
                       'test_case_type': question.test_case_type,
                       'snippet': question.snippet,
                       'testcase': [case.get_field_value() for case in test_case],
-                      'files': files}
+                      'files': file_names}
             questions_dict.append(q_dict)
         question._add_json_to_zip(zip_file, questions_dict)
         return zip_file_name
 
-    def load_from_json(self, questions_list, user):
+    def load_questions(self, questions_list, user):
         questions = json.loads(questions_list)
-        ques = Question()
         for question in questions:
             question['user'] = user
-            files = question.pop('files')
+            file_names = question.pop('files')
             test_cases = question.pop('testcase')
             que, result = Question.objects.get_or_create(**question)
-            que._add_files_to_db(files)
+            if file_names:
+                que._add_files_to_db(file_names)
             model_class = get_model_class(que.test_case_type)
             for test_case in test_cases:
                 model_class.objects.get_or_create(question=que, **test_case)
@@ -289,18 +289,19 @@ class Question(models.Model):
 
     def _add_and_get_files(self, zip_file):
         files = FileUpload.objects.filter(question=self)
-        for file in files:
-            zip_file.write(file.file.path, (os.path.basename(file.file.path)))
-        files_list = [os.path.basename(file.file.name) for file in files]
+        files_list = []
+        for f in files:
+            zip_file.write(f.file.path, (os.path.basename(f.file.path)))
+            files_list = os.path.basename(f.file.path)
         return files_list
 
-    def _add_files_to_db(self, files):
-        if files:
-            for file_name in files:
-                file = open(file_name, 'r')
-                django_file = File(file)
-                f = FileUpload.objects.get_or_create(file=django_file, question=self)
-                os.remove(file_name)
+    def _add_files_to_db(self, file_names):
+        for file_name in file_names:
+            que_file = open(file_name, 'r')
+            #Converting to Python file object with some Django-specific additions
+            django_file = File(que_file)
+            f = FileUpload.objects.get_or_create(file=django_file, question=self)
+            os.remove(file_name)
 
     def _add_json_to_zip(self, zip_file, q_dict):
         json_data = json.dumps(q_dict, indent=2)

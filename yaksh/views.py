@@ -94,7 +94,7 @@ def read_json(json_file, user):
     if os.path.exists(json_file):
         with open(json_file, 'r') as q_file:
             questions_list = q_file.read()
-            question.load_from_json(questions_list, user)
+            question.load_questions(questions_list, user)
             os.remove(json_file)
 
 
@@ -901,7 +901,7 @@ def show_all_questions(request):
             question_ids = request.POST.getlist('question')
             if question_ids:
                 question = Question()
-                zip_file = question.dump_into_json(question_ids, user)
+                zip_file = question.dump_questions(question_ids, user)
                 response = HttpResponse(content_type='application/zip')
                 response['Content-Disposition'] = '''attachment;\
                                           filename={0}_questions.zip'''.format(user)
