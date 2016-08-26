@@ -149,7 +149,7 @@ class QuestionTestCases(unittest.TestCase):
         """ Test dump questions into json """
         question = Question()
         question_id = [self.question2.id]
-        questions_zip = question.dump_into_json(question_id, self.user2)
+        questions_zip = question.dump_questions(question_id, self.user2)
         zip_file = zipfile.ZipFile(questions_zip, "r")
         zip_file.extractall("/tmp/")
         test_case = self.question2.get_test_cases()
@@ -173,7 +173,7 @@ class QuestionTestCases(unittest.TestCase):
         f_path = os.path.join(os.getcwd(), "yaksh", "data",
                               "question_25", "tmp", "test.txt")
         question = Question()
-        result = question.load_from_json(self.json_questions_data, self.user1)
+        result = question.load_questions(self.json_questions_data, self.user1)
         question_data = Question.objects.get(pk=25)
         file = FileUpload.objects.get(question=25)
         test_case = question_data.get_test_cases()
