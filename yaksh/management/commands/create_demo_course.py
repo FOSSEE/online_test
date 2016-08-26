@@ -72,3 +72,5 @@ class Command(BaseCommand):
         status = create_demo_course()
         if status:
             self.stdout.write("Successfully Created")
+        else:
+            self.stdout.write("Unable to create Demo Course")
