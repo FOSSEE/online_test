@@ -14,10 +14,14 @@ install:
   - pip install -q Django==$DJANGO
   - pip install -q pytz==2016.4
   - pip install -q python-social-auth==0.2.19
+  - pip install selenium
 
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y scilab
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3 # give xvfb some time to start
 
 # command to run tests
 script:

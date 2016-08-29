@@ -1,12 +1,18 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 import multiprocessing
 import argparse
 
 class SeleniumTest():
     def __init__(self, url, quiz_name):
-        self.driver = webdriver.Firefox()
+        try:
+            self.driver = webdriver.PhantomJS()
+        except WebDriverException:
+            self.driver = webdriver.Firefox()
         self.quiz_name = quiz_name
         self.url = url
 
@@ -88,32 +94,33 @@ class SeleniumTest():
 
         # Correct Answer
         loop_count = 1
-        answer = '\"#!/bin/bash\\ncat $1| cut -d: -f2 | paste -d:  $3 - $2\"'
+        answer = '\"#!/bin/bash\\n[[ $# -eq 2 ]] && echo $(( $1 + $2 )) && exit $(( $1 + $2 ))\"'
         self.submit_answer(question_label, answer, loop_count)
 
     def open_quiz(self):
         # open quiz link
         quiz_link_elem = self.driver.find_element_by_link_text(self.quiz_name).click()
-        self.driver.implicitly_wait(2)
      
         # Get page elements
-        start_exam_elem = self.driver.find_element_by_name("start")
+        start_exam_elem = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.NAME, "start"))
+        )
         start_exam_elem.click()
-
-        quit_exam_elem = self.driver.find_element_by_name("quit")
 
         self.test_c_question(question_label=3)
         self.test_python_question(question_label=1)
         self.test_bash_question(question_label=2)
 
     def close_quiz(self):
-        self.driver.implicitly_wait(5)
-        quit_link_elem = self.driver.find_element_by_id("login_again")
+        quit_link_elem = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.ID, "login_again"))
+        )
         quit_link_elem.click()
 
     def logout(self):
-        self.driver.implicitly_wait(5)
-        logout_link_elem = self.driver.find_element_by_id("logout")
+        logout_link_elem = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.ID, "logout"))
+        )
         logout_link_elem.click()
 
 def user_gen(url, ids):
@@ -121,21 +128,21 @@ def user_gen(url, ids):
 
 def wrap_run_load_test(args):
     url = "http://yaksh.fossee.aero.iitb.ac.in/exam/"
-    quiz_name = "sel quiz 1"
+    quiz_name = "yaksh_demo_quiz"
     selenium_test = SeleniumTest(url=url, quiz_name=quiz_name)
     return selenium_test.run_load_test(*args)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('url', type=str, help="url of the website being tested")
     parser.add_argument('start', type=int, help="Starting user id")
     parser.add_argument("-n", "--number", type=int, default=10, help="number of users")
     opts = parser.parse_args()
 
-    url = "http://yaksh.fossee.aero.iitb.ac.in/exam/"
     quiz_name = "yaksh demo quiz"
-    selenium_test = SeleniumTest(url=url, quiz_name=quiz_name)
+    selenium_test = SeleniumTest(url=opts.url, quiz_name=quiz_name)
     pool = multiprocessing.Pool(opts.number)
-    pool.map(wrap_run_load_test, user_gen(url, range(opts.start, opts.start + opts.number)))
+    pool.map(wrap_run_load_test, user_gen(opts.url, range(opts.start, opts.start + opts.number)))
     pool.close()
     pool.join()
 

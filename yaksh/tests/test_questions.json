@@ -21,7 +21,7 @@
     "snippet": "#!/bin/bash", 
     "testcase": [
       {
-        "test_case": "/src/yaksh/bash_files/sample.sh,/src/yaksh/bash_files/sample.args"
+        "test_case": "bash_files/sample.sh, bash_files/sample.args"
       }
     ], 
     "points": 1.0, 
