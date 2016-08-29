@@ -1166,8 +1166,11 @@ def search_teacher(request, course_id):
         raise Http404('You are not allowed to view this page!')
 
     context = {}
-    course = get_object_or_404(Course, Q(creator=user)|Q(teachers=user), pk=course_id)
+    course = get_object_or_404(Course, pk=course_id)
     context['course'] = course
+
+    if user != course.creator and user not in course.teachers.all():
+       raise Http404('You are not allowed to view this page!')
 
     if request.method == 'POST':
         u_name = request.POST.get('uname')
@@ -1197,6 +1200,8 @@ def add_teacher(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
     if user == course.creator or user in course.teachers.all():
         context['course'] = course
+    else:
+        raise Http404('You are not allowed to view this page!')
 
     if request.method == 'POST':
         teacher_ids = request.POST.getlist('check')
@@ -1217,7 +1222,7 @@ def remove_teachers(request, course_id):
  
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
-    if not is_moderator(user) and (user == course.creator or user in course.teachers.all()):
+    if not is_moderator(user) and (user != course.creator and user not in course.teachers.all()):
         raise Http404('You are not allowed to view this page!')
 
     if request.method == "POST":
