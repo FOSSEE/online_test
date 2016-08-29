@@ -460,10 +460,12 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
                             correct=False, skipped=True)
         new_answer.save()
         paper.answers.add(new_answer)
-    if next_q is None:
-        next_q = paper.skip(q_id) if paper.skip(q_id) else question
-    else:
+    if next_q is not None:
         next_q = get_object_or_404(Question, pk=next_q)
+        if next_q not in paper.questions_unanswered.all():
+            return show_question(request, question,  paper)
+    else:
+        next_q = paper.next_question(q_id)
     return show_question(request, next_q, paper)
 
 
@@ -475,7 +477,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             question_paper=questionpaper_id)
     question = get_object_or_404(Question, pk=q_id)
     if question in paper.questions_answered.all():
-        next_q = paper.skip(q_id)
+        next_q = paper.next_question(q_id)
         return show_question(request, next_q, paper)
 
     if request.method == 'POST':
