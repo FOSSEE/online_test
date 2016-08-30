@@ -454,16 +454,22 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
     paper = get_object_or_404(AnswerPaper, user=request.user, attempt_number=attempt_num,
             question_paper=questionpaper_id)
     question = get_object_or_404(Question, pk=q_id)
+    if question in paper.questions_answered.all():
+        next_q = paper.next_question(q_id)
+        return show_question(request, next_q, paper)
+
     if request.method == 'POST' and question.type == 'code':
         user_code = request.POST.get('answer')
         new_answer = Answer(question=question, answer=user_code,
                             correct=False, skipped=True)
         new_answer.save()
         paper.answers.add(new_answer)
-    if next_q is None:
-        next_q = paper.skip(q_id) if paper.skip(q_id) else question
-    else:
+    if next_q is not None:
         next_q = get_object_or_404(Question, pk=next_q)
+        if next_q not in paper.questions_unanswered.all():
+            return show_question(request, question,  paper)
+    else:
+        next_q = paper.next_question(q_id)
     return show_question(request, next_q, paper)
 
 
@@ -475,7 +481,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             question_paper=questionpaper_id)
     question = get_object_or_404(Question, pk=q_id)
     if question in paper.questions_answered.all():
-        next_q = paper.skip(q_id)
+        next_q = paper.next_question(q_id)
         return show_question(request, next_q, paper)
 
     if request.method == 'POST':
@@ -504,7 +510,9 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                             correct=False)
         new_answer.save()
         paper.answers.add(new_answer)
-
+        if not user_answer:
+            msg = "Please submit a valid option or code"
+            return show_question(request, question, paper, msg)
         # If we were not skipped, we were asked to check.  For any non-mcq
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
@@ -525,17 +533,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             new_answer.save()
             return show_question(request, question, paper, result.get('error'))
         else:
-            # Display the same question if user_answer is None
-            if not user_answer:
-                msg = "Please submit a valid option or code"
-                return show_question(request, question, paper, msg)
-            elif question.type == 'code' and user_answer:
-                msg = "Correct Output"
-                paper.completed_question(question.id)
-                return show_question(request, question, paper, msg)
-            else:
-                next_q = paper.completed_question(question.id)
-                return show_question(request, next_q, paper)
+            next_q = paper.completed_question(question.id)
+            return show_question(request, next_q, paper)
     else:
         return show_question(request, question, paper)
 
@@ -558,11 +557,13 @@ def validate_answer(user, user_answer, question, json_data=None):
             expected_answer = question.get_test_case(correct=True).options
             if user_answer.strip() == expected_answer.strip():
                 correct = True
+                result['error'] = 'Correct answer'
         elif question.type == 'mcc':
             expected_answers = []
             for opt in question.get_test_cases(correct=True):
                 expected_answers.append(opt.options)
             if set(user_answer) == set(expected_answers):
+                result['error'] = 'Correct answer'
                 correct = True
         elif question.type == 'code':
             user_dir = get_user_dir(user)
