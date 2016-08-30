@@ -69,7 +69,7 @@ def tearDownModule():
     shutil.rmtree(dir_path1)
     shutil.rmtree(dir_path2)
     shutil.rmtree(dir_path3)
-    #shutil.rmtree(dir_path4)
+    shutil.rmtree(dir_path4)
 
 
 ###############################################################################
@@ -148,7 +148,7 @@ class QuestionTestCases(unittest.TestCase):
                            "language": "Python", "type": "Code",
                            "test_case_type": "standardtestcase",
                            "testcase": self.test_case_upload_data,
-                           "files": [file1],
+                           "files": [[file1, 0]],
                            "summary": "Json Demo"}]
         self.json_questions_data = json.dumps(questions_data)
 
@@ -191,7 +191,7 @@ class QuestionTestCases(unittest.TestCase):
                 self.assertTrue(self.question2.active)
                 self.assertEqual(self.question2.snippet, q['snippet'])
                 self.assertEqual(self.question2.test_case_type, q['test_case_type'])
-                self.assertEqual(os.path.basename(que_file.file.path), q['files'][0])
+                self.assertEqual(os.path.basename(que_file.file.path), q['files'][0][0])
                 self.assertEqual([case.get_field_value() for case in test_case], q['testcase'])
         for file in zip_file.namelist():
             os.remove(os.path.join(tmp_path, file))
