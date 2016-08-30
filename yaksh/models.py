@@ -16,6 +16,7 @@ import pytz
 import os
 import shutil
 import zipfile
+import tempfile
 
 
 languages = (
@@ -292,7 +293,7 @@ class Question(models.Model):
         files_list = []
         for f in files:
             zip_file.write(f.file.path, (os.path.basename(f.file.path)))
-            files_list = os.path.basename(f.file.path)
+            files_list.append(os.path.basename(f.file.path))
         return files_list
 
     def _add_files_to_db(self, file_names):
@@ -305,11 +306,13 @@ class Question(models.Model):
 
     def _add_json_to_zip(self, zip_file, q_dict):
         json_data = json.dumps(q_dict, indent=2)
-        with open("questions_dump.json", "w") as json_file:
+        tmp_file_path = tempfile.mkdtemp()
+        json_path = os.path.join(tmp_file_path, "questions_dump.json")
+        with open(json_path, "w") as json_file:
             json_file.write(json_data)
-        zip_file.write(json_file.name)
+        zip_file.write(json_path, os.path.basename(json_path))
         zip_file.close()
-        os.remove(json_file.name)
+        shutil.rmtree(tmp_file_path)
 
     def __unicode__(self):
         return self.summary
@@ -603,7 +606,9 @@ class QuestionPaper(models.Model):
         if self.quiz.has_prerequisite():
             prerequisite = self._get_prequisite_paper()
             return prerequisite._is_questionpaper_passed(user)
-
+    
+    def __unicode__(self):
+        return "Question Paper for " + self.quiz.description
 
 ###############################################################################
 class QuestionSet(models.Model):
@@ -817,21 +822,28 @@ class AnswerPaper(models.Model):
             Adds the completed question to the list of answered
             questions and returns the next question.
         """
+        next_question = self.next_question(question_id)
         self.questions_answered.add(question_id)
         self.questions_unanswered.remove(question_id)
+        if next_question.id == int(question_id):
+            return None
+        return next_question
 
-        return self.current_question()
-
-    def skip(self, question_id):
+    def next_question(self, question_id):
         """
             Skips the current question and returns the next sequentially
              available question.
         """
-        questions = self.questions_unanswered.all()
-        question_cycle = cycle(questions)
-        for question in question_cycle:
-            if question.id==int(question_id):
-                return question_cycle.next()
+        unanswered_questions = self.questions_unanswered.all()
+        questions = list(unanswered_questions.values_list('id', flat=True))
+        if len(questions) == 0:
+            return None
+        try:
+            index =  questions.index(int(question_id))
+            next_id = questions[index+1]
+        except (ValueError, IndexError):
+            next_id = questions[0]
+        return unanswered_questions.get(id=next_id)
 
     def time_left(self):
         """Return the time remaining for the user in seconds."""

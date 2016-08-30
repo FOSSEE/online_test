@@ -11,7 +11,7 @@ from django.core.files import File
 import zipfile
 import os
 import shutil
-
+import tempfile
 
 def setUpModule():
     # create user profile
@@ -62,6 +62,14 @@ def tearDownModule():
     User.objects.all().delete()
     Question.objects.all().delete()
     Quiz.objects.all().delete()
+    dir_path1 = os.path.join(os.getcwd(), "yaksh", "data","question_25")
+    dir_path2 = os.path.join(os.getcwd(), "yaksh", "data","question_22")
+    dir_path3 = os.path.join(os.getcwd(), "yaksh", "data","question_24")
+    dir_path4 = os.path.join(os.getcwd(), "yaksh", "data","question_27")
+    shutil.rmtree(dir_path1)
+    shutil.rmtree(dir_path2)
+    shutil.rmtree(dir_path3)
+    #shutil.rmtree(dir_path4)
 
 
 ###############################################################################
@@ -109,8 +117,21 @@ class QuestionTestCases(unittest.TestCase):
             user=self.user2
         )
         self.question2.save()
+
+        # create a temp directory and add files for loading questions test
         file_path = os.path.join(os.getcwd(), "yaksh", "test.txt")
-        shutil.copy(file_path, "/tmp/")
+        self.load_tmp_path = tempfile.mkdtemp()
+        shutil.copy(file_path, self.load_tmp_path)
+        file1 = os.path.join(self.load_tmp_path, "test.txt")
+
+        # create a temp directory and add files for dumping questions test
+        self.dump_tmp_path = tempfile.mkdtemp()
+        shutil.copy(file_path, self.dump_tmp_path)
+        file2 = os.path.join(self.dump_tmp_path, "test.txt")
+        file = open(file2, "r")
+        django_file = File(file)
+        file = FileUpload.objects.create(file=django_file, question=self.question2)
+
         self.question1.tags.add('python', 'function')
         self.assertion_testcase = StandardTestCase(question=self.question1,
             test_case='assert myfunc(12, 13) == 15'
@@ -127,9 +148,13 @@ class QuestionTestCases(unittest.TestCase):
                            "language": "Python", "type": "Code",
                            "test_case_type": "standardtestcase",
                            "testcase": self.test_case_upload_data,
-                           "files": ['/tmp/test.txt'],
+                           "files": [file1],
                            "summary": "Json Demo"}]
         self.json_questions_data = json.dumps(questions_data)
+
+    def tearDown(self):
+        shutil.rmtree(self.load_tmp_path)
+        shutil.rmtree(self.dump_tmp_path)
 
     def test_question(self):
         """ Test question """
@@ -145,15 +170,17 @@ class QuestionTestCases(unittest.TestCase):
                     tag_list.append(tag.name)
         self.assertEqual(tag_list, ['python', 'function'])
 
-    def test_dump_questions_into_json(self):
+    def test_dump_questions(self):
         """ Test dump questions into json """
         question = Question()
         question_id = [self.question2.id]
         questions_zip = question.dump_questions(question_id, self.user2)
+        que_file = FileUpload.objects.get(question=self.question2.id)
         zip_file = zipfile.ZipFile(questions_zip, "r")
-        zip_file.extractall("/tmp/")
+        tmp_path = tempfile.mkdtemp()
+        zip_file.extractall(tmp_path)
         test_case = self.question2.get_test_cases()
-        with open("/tmp/questions_dump.json", "r") as f:
+        with open("{0}/questions_dump.json".format(tmp_path), "r") as f:
             questions = json.loads(f.read())
             for q in questions:
                 self.assertEqual(self.question2.summary, q['summary'])
@@ -164,14 +191,13 @@ class QuestionTestCases(unittest.TestCase):
                 self.assertTrue(self.question2.active)
                 self.assertEqual(self.question2.snippet, q['snippet'])
                 self.assertEqual(self.question2.test_case_type, q['test_case_type'])
+                self.assertEqual(os.path.basename(que_file.file.path), q['files'][0])
                 self.assertEqual([case.get_field_value() for case in test_case], q['testcase'])
         for file in zip_file.namelist():
-            os.remove(os.path.join("/tmp/", file))
+            os.remove(os.path.join(tmp_path, file))
 
-    def test_load_questions_from_json(self):
+    def test_load_questions(self):
         """ Test load questions into database from json """
-        f_path = os.path.join(os.getcwd(), "yaksh", "data",
-                              "question_25", "tmp", "test.txt")
         question = Question()
         result = question.load_questions(self.json_questions_data, self.user1)
         question_data = Question.objects.get(pk=25)
@@ -187,8 +213,6 @@ class QuestionTestCases(unittest.TestCase):
         self.assertEqual(question_data.test_case_type, 'standardtestcase')
         self.assertEqual(os.path.basename(file.file.path), "test.txt")
         self.assertEqual([case.get_field_value() for case in test_case], self.test_case_upload_data)
-        rm_dir = os.path.dirname(os.path.dirname(f_path))
-        shutil.rmtree(rm_dir)
 
 
 ###############################################################################
@@ -442,7 +466,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.answerpaper.save()
         # answers for the Answer Paper
         self.answer_right = Answer(question=Question.objects.get(id=1),
-            answer="Demo answer", 
+            answer="Demo answer",
             correct=True, marks=1
         )
         self.answer_wrong = Answer(question=Question.objects.get(id=2),
@@ -476,19 +500,84 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Test completed_question() method of Answer Paper
         question = self.answerpaper.completed_question(1)
         self.assertEqual(self.answerpaper.questions_left(), 2)
-        # Test skip() method of Answer Paper
+
+        # Test next_question() method of Answer Paper
         current_question = self.answerpaper.current_question()
         self.assertEqual(current_question.id, 2)
-        next_question_id = self.answerpaper.skip(current_question.id)
+
+        # When
+        next_question_id = self.answerpaper.next_question(current_question.id)
+
+        # Then
         self.assertTrue(next_question_id is not None)
         self.assertEqual(next_question_id.id, 3)
+
+        # Given, here question is already answered
+        current_question_id = 1
+
+        # When
+        next_question_id = self.answerpaper.next_question(current_question_id)
+
+        # Then
+        self.assertTrue(next_question_id is not None)
+        self.assertEqual(next_question_id.id, 2)
+
+        # Given, wrong question id
+        current_question_id = 12
+
+        # When
+        next_question_id = self.answerpaper.next_question(current_question_id)
+
+        # Then
+        self.assertTrue(next_question_id is not None)
+        self.assertEqual(next_question_id.id, 2)
+
+        # Given, last question in the list
+        current_question_id = 3
+
+        # When
+        next_question_id = self.answerpaper.next_question(current_question_id)
+
+        # Then
+        self.assertTrue(next_question_id is not None)
+        self.assertEqual(next_question_id.id, 2)
+
+        # Test get_questions_answered() method
+        # When
         questions_answered = self.answerpaper.get_questions_answered()
+
+        # Then
         self.assertEqual(questions_answered.count(), 1)
         self.assertSequenceEqual(questions_answered, [self.questions[0]])
+
+        # When
         questions_unanswered = self.answerpaper.get_questions_unanswered()
+
+        # Then
         self.assertEqual(questions_unanswered.count(), 2)
         self.assertSequenceEqual(questions_unanswered,
                                  [self.questions[1], self.questions[2]])
+
+        # Test completed_question and next_question
+        # When all questions are answered
+        current_question = self.answerpaper.completed_question(2)
+
+        # Then
+        self.assertEqual(self.answerpaper.questions_left(), 1)
+        self.assertEqual(current_question.id, 3)
+
+        # When
+        current_question = self.answerpaper.completed_question(3)
+
+        # Then
+        self.assertEqual(self.answerpaper.questions_left(), 0)
+        self.assertTrue(current_question is None)
+
+        # When
+        next_question_id = self.answerpaper.next_question(current_question_id)
+
+        # Then
+        self.assertTrue(next_question_id is None)
 
     def test_update_marks(self):
         """ Test update_marks method of AnswerPaper"""
@@ -602,7 +691,7 @@ class CourseTestCases(unittest.TestCase):
     def test_add_teachers(self):
         """ Test to add teachers to a course"""
         self.course.add_teachers(self.student1, self.student2)
-        self.assertSequenceEqual(self.course.get_teachers(), 
+        self.assertSequenceEqual(self.course.get_teachers(),
                                      [self.student1, self.student2])
 
     def test_remove_teachers(self):
@@ -634,23 +723,23 @@ class CourseTestCases(unittest.TestCase):
 class TestCaseTestCases(unittest.TestCase):
     def setUp(self):
         self.user = User.objects.get(pk=1)
-        self.question1 = Question(summary='Demo question 1', 
+        self.question1 = Question(summary='Demo question 1',
             language='Python',
-            type='Code', 
+            type='Code',
             active=True,
-            description='Write a function', 
+            description='Write a function',
             points=1.0,
-            test_case_type="standardtestcase", 
+            test_case_type="standardtestcase",
             user=self.user,
             snippet='def myfunc()'
         )
-        self.question2 = Question(summary='Demo question 2', 
+        self.question2 = Question(summary='Demo question 2',
              language='Python',
-             type='Code', 
+             type='Code',
              active=True,
-             description='Write to standard output', 
+             description='Write to standard output',
              points=1.0,
-             test_case_type="stdoutbasedtestcase", 
+             test_case_type="stdoutbasedtestcase",
              user=self.user,
              snippet='def myfunc()'
         )
@@ -676,13 +765,13 @@ class TestCaseTestCases(unittest.TestCase):
     def test_assertion_testcase(self):
         """ Test question """
         self.assertEqual(self.assertion_testcase.question, self.question1)
-        self.assertEqual(self.assertion_testcase.test_case, 
+        self.assertEqual(self.assertion_testcase.test_case,
                              'assert myfunc(12, 13) == 15')
 
     def test_stdout_based_testcase(self):
         """ Test question """
         self.assertEqual(self.stdout_based_testcase.question, self.question2)
-        self.assertEqual(self.stdout_based_testcase.expected_output, 
+        self.assertEqual(self.stdout_based_testcase.expected_output,
             'Hello World'
         )
 
