@@ -293,15 +293,17 @@ class Question(models.Model):
         files_list = []
         for f in files:
             zip_file.write(f.file.path, (os.path.basename(f.file.path)))
-            files_list.append(os.path.basename(f.file.path))
+            files_list.append(((os.path.basename(f.file.path)), f.extract))
         return files_list
 
     def _add_files_to_db(self, file_names):
-        for file_name in file_names:
+        for file_name, extract in file_names:
             que_file = open(file_name, 'r')
             #Converting to Python file object with some Django-specific additions
             django_file = File(que_file)
-            f = FileUpload.objects.get_or_create(file=django_file, question=self)
+            f = FileUpload.objects.get_or_create(file=django_file,
+                                                 question=self,
+                                                 extract=extract)
             os.remove(file_name)
 
     def _add_json_to_zip(self, zip_file, q_dict):
@@ -313,6 +315,13 @@ class Question(models.Model):
         zip_file.write(json_path, os.path.basename(json_path))
         zip_file.close()
         shutil.rmtree(tmp_file_path)
+
+    def read_json(self, json_file, user):
+        if os.path.exists(json_file):
+            with open(json_file, 'r') as q_file:
+                questions_list = q_file.read()
+                self.load_questions(questions_list, user)
+            os.remove(json_file)
 
     def __unicode__(self):
         return self.summary
