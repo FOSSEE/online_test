@@ -1,7 +1,7 @@
 import os
 from django.core.management.base import BaseCommand
 from yaksh.models import Course, Question, Quiz, QuestionPaper, Profile, FileUpload
-from yaksh.views import extract_files, read_json
+from yaksh.file_utils import extract_files
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.files import File
@@ -46,7 +46,8 @@ def create_demo_course():
     f_path = os.path.join(os.getcwd(), 'yaksh', 'fixtures', 'demo_questions.json')
     zip_file_path = os.path.join(os.getcwd(), 'yaksh', 'fixtures', 'demo_questions.zip')
     extract_files(zip_file_path)
-    read_json("questions_dump.json", user)
+    ques = Question()
+    ques.read_json("questions_dump.json", user)
 
     questions = Question.objects.filter(active=True, summary="Demo_Question")
 
