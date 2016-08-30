@@ -1279,7 +1279,7 @@ def test_quiz(request, mode, quiz_id):
 def view_answerpaper(request, questionpaper_id):
     user = request.user
     quiz = get_object_or_404(QuestionPaper, pk=questionpaper_id).quiz
-    if quiz.view_answerpaper:
+    if quiz.view_answerpaper and user in quiz.course.students.all():
         data = AnswerPaper.objects.get_user_data(user, questionpaper_id)
         context = {'data': data, 'quiz': quiz}
         return my_render_to_response('yaksh/view_answerpaper.html', context)
