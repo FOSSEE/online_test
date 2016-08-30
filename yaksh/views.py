@@ -454,16 +454,22 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
     paper = get_object_or_404(AnswerPaper, user=request.user, attempt_number=attempt_num,
             question_paper=questionpaper_id)
     question = get_object_or_404(Question, pk=q_id)
+    if question in paper.questions_answered.all():
+        next_q = paper.next_question(q_id)
+        return show_question(request, next_q, paper)
+
     if request.method == 'POST' and question.type == 'code':
         user_code = request.POST.get('answer')
         new_answer = Answer(question=question, answer=user_code,
                             correct=False, skipped=True)
         new_answer.save()
         paper.answers.add(new_answer)
-    if next_q is None:
-        next_q = paper.skip(q_id) if paper.skip(q_id) else question
-    else:
+    if next_q is not None:
         next_q = get_object_or_404(Question, pk=next_q)
+        if next_q not in paper.questions_unanswered.all():
+            return show_question(request, question,  paper)
+    else:
+        next_q = paper.next_question(q_id)
     return show_question(request, next_q, paper)
 
 
@@ -475,7 +481,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             question_paper=questionpaper_id)
     question = get_object_or_404(Question, pk=q_id)
     if question in paper.questions_answered.all():
-        next_q = paper.skip(q_id)
+        next_q = paper.next_question(q_id)
         return show_question(request, next_q, paper)
 
     if request.method == 'POST':
@@ -504,7 +510,9 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                             correct=False)
         new_answer.save()
         paper.answers.add(new_answer)
-
+        if not user_answer:
+            msg = "Please submit a valid option or code"
+            return show_question(request, question, paper, msg)
         # If we were not skipped, we were asked to check.  For any non-mcq
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
@@ -525,17 +533,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             new_answer.save()
             return show_question(request, question, paper, result.get('error'))
         else:
-            # Display the same question if user_answer is None
-            if not user_answer:
-                msg = "Please submit a valid option or code"
-                return show_question(request, question, paper, msg)
-            elif question.type == 'code' and user_answer:
-                msg = 'Correct Output'
-                paper.completed_question(question.id)
-                return show_question(request, question, paper, msg)
-            else:
-                next_q = paper.completed_question(question.id)
-                return show_question(request, next_q, paper)
+            next_q = paper.completed_question(question.id)
+            return show_question(request, next_q, paper)
     else:
         return show_question(request, question, paper)
 
@@ -558,14 +557,14 @@ def validate_answer(user, user_answer, question, json_data=None):
             expected_answer = question.get_test_case(correct=True).options
             if user_answer.strip() == expected_answer.strip():
                 correct = True
-                result['error'] = 'Correct Answer'
+                result['error'] = 'Correct answer'
         elif question.type == 'mcc':
             expected_answers = []
             for opt in question.get_test_cases(correct=True):
                 expected_answers.append(opt.options)
             if set(user_answer) == set(expected_answers):
+                result['error'] = 'Correct answer'
                 correct = True
-                result['error'] = 'Correct Answer'
         elif question.type == 'code':
             user_dir = get_user_dir(user)
             json_result = code_server.run_code(question.language, question.test_case_type, json_data, user_dir)
@@ -666,8 +665,10 @@ def courses(request):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     courses = Course.objects.filter(creator=user, is_trial=False)
-    return my_render_to_response('yaksh/courses.html', {'courses': courses},
-                                context_instance=ci)
+    allotted_courses = Course.objects.filter(teachers=user, is_trial=False)
+    context = {'courses': courses, "allotted_courses": allotted_courses}
+    return my_render_to_response('yaksh/courses.html', context,
+                                 context_instance=ci)
 
 
 @login_required
@@ -1166,25 +1167,24 @@ def search_teacher(request, course_id):
         raise Http404('You are not allowed to view this page!')
 
     context = {}
-    course = get_object_or_404(Course, creator=user, pk=course_id)
+    course = get_object_or_404(Course, pk=course_id)
     context['course'] = course
+
+    if user != course.creator and user not in course.teachers.all():
+       raise Http404('You are not allowed to view this page!')
 
     if request.method == 'POST':
         u_name = request.POST.get('uname')
-        if len(u_name) == 0:
-            return my_render_to_response('yaksh/addteacher.html', context,
-                                        context_instance=ci)
-        else:
+        if not len(u_name) == 0:
             teachers = User.objects.filter(Q(username__icontains=u_name)|
                 Q(first_name__icontains=u_name)|Q(last_name__icontains=u_name)|
-                Q(email__icontains=u_name)).exclude(Q(id=user.id)|Q(is_superuser=1))
+                Q(email__icontains=u_name)).exclude(Q(id=user.id)|Q(is_superuser=1)|
+                                                    Q(id=course.creator.id))
             context['success'] = True
             context['teachers'] = teachers
-            return my_render_to_response('yaksh/addteacher.html', context,
-                                        context_instance=ci)
-    else:
-        return my_render_to_response('yaksh/addteacher.html', context,
-                                    context_instance=ci)
+                                        
+    return my_render_to_response('yaksh/addteacher.html', context,
+                                 context_instance=ci)
 
 
 @login_required
@@ -1198,8 +1198,11 @@ def add_teacher(request, course_id):
         raise Http404('You are not allowed to view this page!')
 
     context = {}
-    course = get_object_or_404(Course, creator=user, pk=course_id)
-    context['course'] = course
+    course = get_object_or_404(Course, pk=course_id)
+    if user == course.creator or user in course.teachers.all():
+        context['course'] = course
+    else:
+        raise Http404('You are not allowed to view this page!')
 
     if request.method == 'POST':
         teacher_ids = request.POST.getlist('check')
@@ -1208,25 +1211,10 @@ def add_teacher(request, course_id):
         course.add_teachers(*teachers)
         context['status'] = True
         context['teachers_added'] = teachers
-        return my_render_to_response('yaksh/addteacher.html', context,
-                                    context_instance=ci)
-    else:
-        return my_render_to_response('yaksh/addteacher.html', context,
+        
+    return my_render_to_response('yaksh/addteacher.html', context,
                                     context_instance=ci)
 
-
-@login_required
-def allotted_courses(request):
-    """  show courses allotted to a user """
-
-    user = request.user
-    ci = RequestContext(request)
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-
-    courses = Course.objects.filter(teachers=user)
-    return my_render_to_response('yaksh/courses.html', {'courses': courses},
-                                        context_instance=ci)
 
 
 @login_required
@@ -1234,10 +1222,10 @@ def remove_teachers(request, course_id):
     """  remove user from a course """
  
     user = request.user
-    if not is_moderator(user):
+    course = get_object_or_404(Course, pk=course_id)
+    if not is_moderator(user) and (user != course.creator and user not in course.teachers.all()):
         raise Http404('You are not allowed to view this page!')
 
-    course = get_object_or_404(Course, creator=user, pk=course_id)
     if request.method == "POST":
         teacher_ids = request.POST.getlist('remove')
         teachers = User.objects.filter(id__in=teacher_ids)

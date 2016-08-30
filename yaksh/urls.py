@@ -98,7 +98,6 @@ urlpatterns += [
         views.reject, {'was_enrolled': True}),
     url(r'^manage/searchteacher/(?P<course_id>\d+)/$', views.search_teacher),
     url(r'^manage/addteacher/(?P<course_id>\d+)/$', views.add_teacher, name='add_teacher'),
-    url(r'^manage/allotted_course/$', views.allotted_courses),
     url(r'^manage/remove_teachers/(?P<course_id>\d+)/$', views.remove_teachers, name='remove_teacher'),
     url(r'^manage/download_questions/$', views.show_all_questions),
     url(r'^manage/upload_questions/$', views.show_all_questions),
