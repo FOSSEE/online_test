@@ -35,11 +35,15 @@
     Autocheck: {{ answers.0.error }}
     {% else %}{# non-mcq questions #}
     <p>Student answer: </p>
+    {% for answer in answers %}
+    {% if not answer.skipped %}
     <pre>
-    {% for answer in answers %}################################################################################
+    ###############################################################################
     {{ answer.answer.strip }}
     # Autocheck: {{ answer.error }}
-    {% endfor %}</pre>
+    </pre>
+    {% endif %}
+    {% endfor %}
     {% endif %}
     {% with answers|last as answer %}
     <p><em>Obtained Marks: {{answer.marks}} </em> </p>
