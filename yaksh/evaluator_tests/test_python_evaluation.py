@@ -318,12 +318,12 @@ class PythonStdIOEvaluator(unittest.TestCase):
 
     def test_add_two_integers_incorrect(self):
         self.test_case_data = [{"expected_input": "1\n2",
-                                "expected_output": "4"
+                                "expected_output": "3"
                                 }]
         user_answer = dedent("""
                                 a = int(raw_input())
                                 b = int(raw_input())
-                                print a+b
+                                print a-b
                              """
                              )
 
