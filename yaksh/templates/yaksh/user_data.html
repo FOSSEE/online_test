@@ -50,11 +50,12 @@ User IP address: {{ paper.user_ip }}
 <h3> Answers </h3>
 {% for question, answers in paper.get_question_answers.items %}
 <p><strong> Question: {{ question.id }}. {{ question.summary }} (Points: {{ question.points }})</strong> </p>
-{% if question.type == "mcq" %}
-<p> Choices: 
-{% for option in question.options.strip.splitlines %} {{option}}, {% endfor %}
+{% if question.type == "mcq" or question.type == "mcc" %}
+<p> Choices:
+{% for testcase in question.get_test_cases %} <br>{{ testcase.options }} {% endfor %}
 </p>
 <p>Student answer: {{ answers.0 }}</p>
+Autocheck: {{ answers.0.error }}
 {% else %}{# non-mcq questions #}
 {% for answer in answers %}
 {% if not answer.skipped %}

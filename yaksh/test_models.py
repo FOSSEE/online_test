@@ -252,6 +252,18 @@ class QuizTestCases(unittest.TestCase):
                          )
         self.assertEqual(trial_quiz.time_between_attempts, 0)
 
+    def test_view_answerpaper(self):
+        self.assertFalse(self.quiz1.view_answerpaper)
+        self.assertFalse(self.quiz2.view_answerpaper)
+
+        # When
+        self.quiz1.view_answerpaper = True
+        self.quiz1.save()
+
+        # Then
+        self.assertTrue(self.quiz1.view_answerpaper)
+
+
 
 ###############################################################################
 class QuestionPaperTestCases(unittest.TestCase):

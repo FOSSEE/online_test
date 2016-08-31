@@ -428,6 +428,9 @@ class Quiz(models.Model):
 
     is_trial = models.BooleanField(default=False)
 
+    view_answerpaper = models.BooleanField('Allow student to view their answer\
+                                            paper', default=False)
+
     objects = QuizManager()
 
     class Meta:
