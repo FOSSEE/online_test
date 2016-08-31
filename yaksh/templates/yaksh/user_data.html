@@ -56,11 +56,15 @@ User IP address: {{ paper.user_ip }}
 </p>
 <p>Student answer: {{ answers.0 }}</p>
 {% else %}{# non-mcq questions #}
-<pre> 
-{% for answer in answers %}################################################################################
+{% for answer in answers %}
+{% if not answer.skipped %}
+<pre>
+###############################################################################
 {{ answer.answer.strip }}
 # Autocheck: {{ answer.error }}
-{% endfor %}</pre>
+</pre>
+{% endif %}
+{% endfor %}
 {% endif %}
 {% with answers|last as answer %}
 <p><em>Marks: {{answer.marks}} </em> </p>

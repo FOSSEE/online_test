@@ -9,8 +9,9 @@ env:
 
 # command to install dependencies
 install:
+  - pip install tornado
   - pip install git+https://github.com/FOSSEE/online_test.git#egg=yaksh-0.1
-  - pip install -q Django==$DJANGO --use-mirrors
+  - pip install -q Django==$DJANGO
   - pip install -q pytz==2016.4
   - pip install -q python-social-auth==0.2.19
 
@@ -20,4 +21,4 @@ before_install:
 
 # command to run tests
 script:
-  - python manage.py test yaksh
+  - python manage.py test -v 2 yaksh

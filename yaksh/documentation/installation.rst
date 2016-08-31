@@ -65,3 +65,51 @@ This starts the code server
 **And entering the following admin credentials**
 	* Username: admin
 	* Password: admin
+
+Running The Code Server
+-----------------------
+
+**Local Instance**:
+
+In a new terminal run the command::
+
+	sudo python /path/to/code_server.py
+
+Keep this instance running in the background
+
+**Using Docker**:
+
+1. Install docker 
+
+2. Create a Docker Image using the Docker file:
+
+	* Go to the directory where the project is located::
+
+		cd /path/to/online_test
+
+	* Build a docker image using the Dockerfile::
+
+		sudo docker build --tag=yaksh_code_server:v1 .
+
+3. Start a Docker container::
+
+		docker run -d -p 8001:8001 -p 53579:53579 -v /path/to/online_test/yaksh/output:/src/yaksh/output yaksh_code_server:v1
+
+**Note**:
+	* The default ports on which the code server runs and the pool port on which the former ports are available is specified in online_test/yaksh/settings.py. The code server also supports multiple ports
+
+	* The server port is 8001 by default, this can be changed in the settings::
+	
+		SERVER_PORTS = 8001
+
+	* Multiple ports can be specified as::
+	
+		SERVER_PORTS = [8001, 8002, 8003, 8004, 8005] # Or use range(8001, 8040) for larger number of ports
+
+	* The default pool port is 53579 by default, this can be changed in the settings::
+	
+		SERVER_POOL_PORT = 53579
+
+	* The docker command to start a docker container when using multiple ports is::
+	
+		docker run -d -p 8001-8039:8001-8039 -p 53579:53579 yaksh_code_server:v1

@@ -424,7 +424,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.answerpaper.save()
         # answers for the Answer Paper
         self.answer_right = Answer(question=Question.objects.get(id=1),
-            answer="Demo answer", 
+            answer="Demo answer",
             correct=True, marks=1
         )
         self.answer_wrong = Answer(question=Question.objects.get(id=2),
@@ -458,19 +458,84 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Test completed_question() method of Answer Paper
         question = self.answerpaper.completed_question(1)
         self.assertEqual(self.answerpaper.questions_left(), 2)
-        # Test skip() method of Answer Paper
+
+        # Test next_question() method of Answer Paper
         current_question = self.answerpaper.current_question()
         self.assertEqual(current_question.id, 2)
-        next_question_id = self.answerpaper.skip(current_question.id)
+
+        # When
+        next_question_id = self.answerpaper.next_question(current_question.id)
+
+        # Then
         self.assertTrue(next_question_id is not None)
         self.assertEqual(next_question_id.id, 3)
+
+        # Given, here question is already answered
+        current_question_id = 1
+
+        # When
+        next_question_id = self.answerpaper.next_question(current_question_id)
+
+        # Then
+        self.assertTrue(next_question_id is not None)
+        self.assertEqual(next_question_id.id, 2)
+
+        # Given, wrong question id
+        current_question_id = 12
+
+        # When
+        next_question_id = self.answerpaper.next_question(current_question_id)
+
+        # Then
+        self.assertTrue(next_question_id is not None)
+        self.assertEqual(next_question_id.id, 2)
+
+        # Given, last question in the list
+        current_question_id = 3
+
+        # When
+        next_question_id = self.answerpaper.next_question(current_question_id)
+
+        # Then
+        self.assertTrue(next_question_id is not None)
+        self.assertEqual(next_question_id.id, 2)
+
+        # Test get_questions_answered() method
+        # When
         questions_answered = self.answerpaper.get_questions_answered()
+
+        # Then
         self.assertEqual(questions_answered.count(), 1)
         self.assertSequenceEqual(questions_answered, [self.questions[0]])
+
+        # When
         questions_unanswered = self.answerpaper.get_questions_unanswered()
+
+        # Then
         self.assertEqual(questions_unanswered.count(), 2)
         self.assertSequenceEqual(questions_unanswered,
                                  [self.questions[1], self.questions[2]])
+
+        # Test completed_question and next_question
+        # When all questions are answered
+        current_question = self.answerpaper.completed_question(2)
+
+        # Then
+        self.assertEqual(self.answerpaper.questions_left(), 1)
+        self.assertEqual(current_question.id, 3)
+
+        # When
+        current_question = self.answerpaper.completed_question(3)
+
+        # Then
+        self.assertEqual(self.answerpaper.questions_left(), 0)
+        self.assertTrue(current_question is None)
+
+        # When
+        next_question_id = self.answerpaper.next_question(current_question_id)
+
+        # Then
+        self.assertTrue(next_question_id is None)
 
     def test_update_marks(self):
         """ Test update_marks method of AnswerPaper"""
@@ -584,7 +649,7 @@ class CourseTestCases(unittest.TestCase):
     def test_add_teachers(self):
         """ Test to add teachers to a course"""
         self.course.add_teachers(self.student1, self.student2)
-        self.assertSequenceEqual(self.course.get_teachers(), 
+        self.assertSequenceEqual(self.course.get_teachers(),
                                      [self.student1, self.student2])
 
     def test_remove_teachers(self):
@@ -616,21 +681,21 @@ class CourseTestCases(unittest.TestCase):
 class TestCaseTestCases(unittest.TestCase):
     def setUp(self):
         self.user = User.objects.get(pk=1)
-        self.question1 = Question(summary='Demo question 1', 
+        self.question1 = Question(summary='Demo question 1',
             language='Python',
-            type='Code', 
+            type='Code',
             active=True,
-            description='Write a function', 
+            description='Write a function',
             points=1.0,
-            test_case_type="standardtestcase", 
+            test_case_type="standardtestcase",
             user=self.user,
             snippet='def myfunc()'
         )
-        self.question2 = Question(summary='Demo question 2', 
+        self.question2 = Question(summary='Demo question 2',
              language='Python',
-             type='Code', 
+             type='Code',
              active=True,
-             description='Write to standard output', 
+             description='Write to standard output',
              points=1.0,
              test_case_type="stdiobasedtestcase", 
              user=self.user,
@@ -658,13 +723,13 @@ class TestCaseTestCases(unittest.TestCase):
     def test_assertion_testcase(self):
         """ Test question """
         self.assertEqual(self.assertion_testcase.question, self.question1)
-        self.assertEqual(self.assertion_testcase.test_case, 
+        self.assertEqual(self.assertion_testcase.test_case,
                              'assert myfunc(12, 13) == 15')
 
     def test_stdout_based_testcase(self):
         """ Test question """
         self.assertEqual(self.stdout_based_testcase.question, self.question2)
-        self.assertEqual(self.stdout_based_testcase.expected_output, 
+        self.assertEqual(self.stdout_based_testcase.expected_output,
             'Hello World'
         )
 
