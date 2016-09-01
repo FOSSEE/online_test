@@ -38,7 +38,7 @@ enrollment_methods = (
 
 test_case_types = (
         ("standardtestcase", "Standard Testcase"),
-        ("stdoutbasedtestcase", "Stdout Based Testcase"),
+        ("stdiobasedtestcase", "StdIO Based Testcase"),
         ("mcqtestcase", "MCQ Testcase"),
     )
 
@@ -930,15 +930,17 @@ class StandardTestCase(TestCase):
         )
 
 
-class StdoutBasedTestCase(TestCase):
-    expected_output = models.TextField(blank=True)
+class StdioBasedTestCase(TestCase):
+    expected_input = models.TextField(blank=True)
+    expected_output = models.TextField()
 
     def get_field_value(self):
-        return {"expected_output": self.expected_output}
+        return {"expected_output": self.expected_output,
+               "expected_input": self.expected_input}
 
     def __unicode__(self):
-        return u'Question: {0} | Exp. Output: {1}'.format(self.question,
-            self.expected_output
+        return u'Question: {0} | Exp. Output: {1} | Exp. Input: {2}'.format(self.question,
+            self.expected_output, self.expected_input
         )
 
 

@@ -1,7 +1,7 @@
 import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdoutBasedTestCase
+    StdioBasedTestCase
 import json
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -709,7 +709,7 @@ class TestCaseTestCases(unittest.TestCase):
              active=True,
              description='Write to standard output',
              points=1.0,
-             test_case_type="stdoutbasedtestcase",
+             test_case_type="stdiobasedtestcase", 
              user=self.user,
              snippet='def myfunc()'
         )
@@ -719,7 +719,7 @@ class TestCaseTestCases(unittest.TestCase):
             question=self.question1,
             test_case='assert myfunc(12, 13) == 15'
         )
-        self.stdout_based_testcase = StdoutBasedTestCase(
+        self.stdout_based_testcase = StdioBasedTestCase(
             question=self.question2,
             expected_output='Hello World'
         )

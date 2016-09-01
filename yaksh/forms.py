@@ -1,9 +1,9 @@
 from django import forms
-from yaksh.models import get_model_class, Profile, Quiz, Question, TestCase, Course, StandardTestCase, StdoutBasedTestCase
+from yaksh.models import get_model_class, Profile, Quiz, Question, TestCase, Course, StandardTestCase, StdioBasedTestCase
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType 
+from django.contrib.contenttypes.models import ContentType
 
 from taggit.managers import TaggableManager
 from taggit.forms import TagField
@@ -33,7 +33,7 @@ question_types = (
 
 test_case_types = (
         ("standardtestcase", "Standard Testcase"),
-        ("stdoutbasedtestcase", "Stdout Based Testcase"),
+        ("stdiobasedtestcase", "Stdio Based Testcase"),
         ("mcqtestcase", "MCQ Testcase"),
     )
 
