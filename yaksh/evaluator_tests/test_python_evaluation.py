@@ -117,7 +117,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
-        self.assertEqual(2, len(err))
+        self.assertEqual(3, len(err))
         for msg in name_error_msg:
             self.assertIn(msg, result.get("error"))
 
@@ -139,7 +139,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
-        self.assertEqual(2, len(err))
+        self.assertEqual(969, len(err))
         for msg in recursion_error_msg:
             self.assertIn(msg, result.get("error"))
 
@@ -162,7 +162,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
-        self.assertEqual(2, len(err))
+        self.assertEqual(3, len(err))
         for msg in type_error_msg:
             self.assertIn(msg, result.get("error"))
 
@@ -186,7 +186,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs)
         err = result.get("error").splitlines()
         self.assertFalse(result.get("success"))
-        self.assertEqual(2, len(err))
+        self.assertEqual(4, len(err))
         for msg in value_error_msg:
             self.assertIn(msg, result.get("error"))
 
