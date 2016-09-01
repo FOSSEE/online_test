@@ -102,6 +102,10 @@ function call_skip(url)
      </div>
    </div>
 </div>
+<form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" class="pull-right">
+        {% csrf_token %}
+        <button class="btn" type="submit" name="quit">Quit Exam</button>
+</form>
 <div class = "container">
   <div class="sidebar">
     <p>Question Navigator </p>
@@ -124,26 +128,17 @@ function call_skip(url)
   </div>
 </div>
 <div class="span13">
-  <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font></h4><br>
+  <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font>
+  </h4>
+  <h4><font size=3 face=arial> {{ question.language|title }} {{ question.type|title }} Question</font></h4><br>
   <font size=3 face=arial> {{ question.description|safe }} </font>
-  <br><font size=3 face=arial> Language: {{ question.language }} </font><br>
   {% if files %}
   <h4>Files to download for this question</h4>
-  {% for file in files %}
-  {% if file.question_id == question.id %}
-  <h5><a href="{{file.file.url}}">{{file.file.name}}</a></h5>
+  {% for f_name in files %}
+  {% if f_name.question_id == question.id %}
+  <h5><a href="{{f_name.file.url}}">{{f_name.file.name}}</a></h5>
   {% endif %}
   {% endfor %}
-  {% endif %}
-  {% if question.type == "code" %}
-  <br><h4>Output:</h4></br>
-    {% if error_message %}
-    <div class="alert alert-error">
-      <textarea class="error" readonly="yes">{{ error_message }}</textarea>
-	{% else %}
-	  <textarea class="error_msg" readonly="yes"  placeholder="Please submit your answer below"></textarea>
-	{% endif %}
-	</div>
   {% endif %}
 <br> 
          <p id="status"></p>
@@ -176,9 +171,19 @@ function call_skip(url)
          {% if question.type == "code" %}
 
          <h4>Program:</h4>
-        <textarea name="answer" id="answer"></textarea> 
-<br>
+         <textarea name="answer" id="answer"></textarea>
+         <br>
 
+         {% endif %}
+         {% if question.type == "code" %}
+         <br><h4>Output:</h4></br>
+         {% if error_message %}
+          <div class="alert alert-error">
+          <textarea class="error" readonly="yes">{{ error_message }}</textarea>
+          {% else %}
+           <textarea class="error_msg" readonly="yes"></textarea>
+          {% endif %}
+          </div>
          {% endif %}
  
          {% if question.type == "mcq" or question.type == "mcc"%}
@@ -195,7 +200,6 @@ function call_skip(url)
          {% endif %}
          </form>
 </div>
-
     <!-- Modal -->
     <div class="modal fade " id="upload_alert" >
       <div class="modal-dialog">
@@ -212,10 +216,6 @@ function call_skip(url)
         </div>
       </div>
    </div>
-	<form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" class="pull-right">
-        {% csrf_token %}
-        <button class="btn" type="submit" name="quit">Quit Exam</button>
-	</form>
 
 <script>
   // Codemirror object, language modes and initial content
