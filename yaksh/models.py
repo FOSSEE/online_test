@@ -43,7 +43,7 @@ enrollment_methods = (
 
 test_case_types = (
         ("standardtestcase", "Standard Testcase"),
-        ("stdoutbasedtestcase", "Stdout Based Testcase"),
+        ("stdiobasedtestcase", "StdIO Based Testcase"),
         ("mcqtestcase", "MCQ Testcase"),
     )
 
@@ -301,9 +301,9 @@ class Question(models.Model):
             que_file = open(file_name, 'r')
             #Converting to Python file object with some Django-specific additions
             django_file = File(que_file)
-            f = FileUpload.objects.get_or_create(file=django_file,
-                                                 question=self,
-                                                 extract=extract)
+            FileUpload.objects.get_or_create(file=django_file,
+                                             question=self,
+                                             extract=extract)
             os.remove(file_name)
 
     def _add_json_to_zip(self, zip_file, q_dict):
@@ -472,6 +472,9 @@ class Quiz(models.Model):
             choices=days_between_attempts)
 
     is_trial = models.BooleanField(default=False)
+
+    view_answerpaper = models.BooleanField('Allow student to view their answer\
+                                            paper', default=False)
 
     objects = QuizManager()
 
@@ -972,15 +975,17 @@ class StandardTestCase(TestCase):
         )
 
 
-class StdoutBasedTestCase(TestCase):
-    expected_output = models.TextField(blank=True)
+class StdioBasedTestCase(TestCase):
+    expected_input = models.TextField(blank=True)
+    expected_output = models.TextField()
 
     def get_field_value(self):
-        return {"expected_output": self.expected_output}
+        return {"expected_output": self.expected_output,
+               "expected_input": self.expected_input}
 
     def __unicode__(self):
-        return u'Question: {0} | Exp. Output: {1}'.format(self.question,
-            self.expected_output
+        return u'Question: {0} | Exp. Output: {1} | Exp. Input: {2}'.format(self.question,
+            self.expected_output, self.expected_input
         )
 
 

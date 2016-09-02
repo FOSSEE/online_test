@@ -5,10 +5,11 @@ from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test import Client
+from django.utils import timezone
 
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdoutBasedTestCase, has_profile
+    StdioBasedTestCase, has_profile
 
 
 class TestProfile(TestCase):
@@ -632,7 +633,7 @@ class TestRemoveTeacher(TestCase):
             target_status_code=301
         )
         for t_id in teacher_id_list:
-            teacher = User.objects.get(id=t_id) 
+            teacher = User.objects.get(id=t_id)
             self.assertNotIn(teacher, self.course.teachers.all())
 
 
@@ -756,7 +757,7 @@ class TestCourseDetail(TestCase):
     def setUp(self):
         self.client = Client()
 
-        self.mod_group = Group.objects.create(name='moderator') 
+        self.mod_group = Group.objects.create(name='moderator')
 
         # Create Moderator with profile
         self.user1_plaintext_pass = 'demo1'
@@ -850,7 +851,7 @@ class TestCourseDetail(TestCase):
         """
         self.client.login(
             username=self.user2.username,
-            password=self.user2_plaintext_pass 
+            password=self.user2_plaintext_pass
         )
         response = self.client.get(reverse('yaksh:course_detail',
                 kwargs={'course_id': self.user1_course.id}
@@ -981,6 +982,148 @@ class TestEnrollRequest(TestCase):
             follow=True
         )
         self.assertRedirects(response, '/exam/manage/')
+
+class TestViewAnswerPaper(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.plaintext_pass = 'demo'
+
+        for i in range(1, 4):
+            User.objects.create_user(
+                username='demo_user{0}'.format(i),
+                password=self.plaintext_pass,
+                first_name='first_name',
+                last_name='last_name',
+                email='demo@test.com'
+            )
+
+        self.user1 = User.objects.get(pk=1)
+
+        self.course = Course.objects.create(name="Python Course",
+                                       enrollment="Enroll Request",
+                                       creator=self.user1)
+
+        self.question = Question.objects.create(summary='Dummy', points=1,
+                                               type='code', user=self.user1)
+
+        self.quiz = Quiz.objects.create(time_between_attempts=0, course=self.course,
+                                        description='demo quiz', language='Python')
+
+        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+            total_marks=1.0)
+
+        self.question_paper.fixed_questions.add(self.question)
+        self.question_paper.save()
+
+        AnswerPaper.objects.create(user_id=3,
+                attempt_number=1, question_paper=self.question_paper,
+                start_time=timezone.now(), user_ip='101.0.0.1',
+                end_time=timezone.now()+timezone.timedelta(minutes=20))
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Course.objects.all().delete()
+        Question.objects.all().delete()
+        Quiz.objects.all().delete()
+        QuestionPaper.objects.all().delete()
+        AnswerPaper.objects.all().delete()
+
+    def test_anonymous_user(self):
+        # Given, user not logged in
+        redirect_destination = ('/exam/login/?next=/exam'
+            '/view_answerpaper/{0}/'.format(self.question_paper.id))
+
+        # When
+        response = self.client.get(reverse('yaksh:view_answerpaper',
+                kwargs={'questionpaper_id': self.question_paper.id}
+            ),
+            follow=True
+        )
+
+        # Then
+        self.assertRedirects(response, redirect_destination)
+
+    def test_cannot_view(self):
+        # Given, enrolled user tries to view when not permitted by moderator
+        user2 = User.objects.get(pk=2)
+        self.course.students.add(user2)
+        self.course.save()
+        self.quiz.view_answerpaper = False
+        self.quiz.save()
+        self.client.login(
+            username=user2.username,
+            password=self.plaintext_pass
+        )
+
+        # When
+        response = self.client.get(reverse('yaksh:view_answerpaper',
+                kwargs={'questionpaper_id': self.question_paper.id}
+            ),
+            follow=True
+        )
+
+        # Then
+        self.assertRedirects(response, '/exam/quizzes/')
+
+    def test_can_view(self):
+        # Given, user enrolled and can view
+        user3 = User.objects.get(pk=3)
+        self.course.students.add(user3)
+        self.course.save()
+        answerpaper = AnswerPaper.objects.get(pk=1)
+        self.quiz.view_answerpaper = True
+        self.quiz.save()
+        self.client.login(
+            username=user3.username,
+            password=self.plaintext_pass
+        )
+
+        # When
+        response = self.client.get(reverse('yaksh:view_answerpaper',
+                kwargs={'questionpaper_id': self.question_paper.id}
+            ),
+            follow=True
+        )
+
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('data' in response.context)
+        self.assertTrue('quiz' in response.context)
+        self.assertTemplateUsed(response, 'yaksh/view_answerpaper.html')
+
+
+        # When, wrong question paper id
+        response = self.client.get(reverse('yaksh:view_answerpaper',
+                kwargs={'questionpaper_id': 190}
+            ),
+            follow=True
+        )
+
+        # Then
+        self.assertEqual(response.status_code, 404)
+
+
+    def test_view_when_not_enrolled(self):
+        # Given, user tries to view when not enrolled in the course
+        user2 = User.objects.get(pk=2)
+        self.client.login(
+            username=user2.username,
+            password=self.plaintext_pass
+        )
+        self.course.students.remove(user2)
+        self.course.save()
+        self.quiz.view_answerpaper = True
+        self.quiz.save()
+
+        # When
+        response = self.client.get(reverse('yaksh:view_answerpaper',
+                kwargs={'questionpaper_id': self.question_paper.id}
+            ),
+            follow=True
+        )
+
+        # Then
+        self.assertRedirects(response, '/exam/quizzes/')
 
 
 class TestSelfEnroll(TestCase):

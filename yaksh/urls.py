@@ -49,6 +49,7 @@ urlpatterns += [
         views.skip),
     url(r'^enroll_request/(?P<course_id>\d+)/$', views.enroll_request, name='enroll_request'),
     url(r'^self_enroll/(?P<course_id>\d+)/$', views.self_enroll, name='self_enroll'),
+    url(r'^view_answerpaper/(?P<questionpaper_id>\d+)/$', views.view_answerpaper, name='view_answerpaper'),
     url(r'^manage/$', views.prof_manage, name='manage'),
     url(r'^manage/addquestion/$', views.add_question),
     url(r'^manage/addquestion/(?P<question_id>\d+)/$', views.edit_question),

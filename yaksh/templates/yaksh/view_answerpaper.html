@@ -1,0 +1,61 @@
+{% extends "user.html" %}
+
+{% block title %} Answer Paper  for {{ quiz.description }}{% endblock title %}
+
+{% block manage %}
+
+{% block subtitle %} Answer Paper for {{ quiz.description }}{% endblock %}
+
+
+{% if not data.papers %}
+    <p><b> You have not attempted the quiz {{ quiz.description }} </b></p>
+{% else %}
+    {% for paper in data.papers %}
+    {% if forloop.counter == 2 and data.questionpaperid %}
+    <U><h2> Previous attempts </h2></U>
+    {% endif %}
+    <h2> Quiz: {{ paper.question_paper.quiz.description }} </h2>
+
+    <p>
+    Attempt Number: {{ paper.attempt_number }}<br/>
+    Questions correctly answered: {{ paper.get_answered_str }} <br/>
+    Marks obtained: {{ paper.marks_obtained }} <br/>
+    Start time: {{ paper.start_time }} <br/>
+    </p>
+
+    {% if paper.answers.count %}
+    <h3> Answers </h3>
+    {% for question, answers in paper.get_question_answers.items %}
+    <p><strong> Question: {{ question.id }}. {{ question.summary }} (Mark(s): {{ question.points }})</strong> </p>
+    {% if question.type == "mcq" or question.type == "mcc" %}
+    <p> Choices:
+    {% for testcase in question.get_test_cases %} <br>{{ testcase.options }} {% endfor %}
+    </p>
+    <p>Student answer: {{ answers.0 }}</p>
+    Autocheck: {{ answers.0.error }}
+    {% else %}{# non-mcq questions #}
+    <p>Student answer: </p>
+    {% for answer in answers %}
+    {% if not answer.skipped %}
+    <pre>
+    ###############################################################################
+    {{ answer.answer.strip }}
+    # Autocheck: {{ answer.error }}
+    </pre>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+    {% with answers|last as answer %}
+    <p><em>Obtained Marks: {{answer.marks}} </em> </p>
+    {% endwith %}
+    <hr>
+    {% endfor %} {# for question, answers ... #}
+    <h3>Teacher comments: </h3>
+    {{ paper.comments|default:"None" }}
+    <hr><hr>
+    {% endif %} {# if paper.answers.count #}
+
+    {% endfor %} {# for paper in data.papers #}
+
+{% endif %} {# if not data.papers #}
+{% endblock %}

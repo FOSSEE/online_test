@@ -1,7 +1,7 @@
 import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdoutBasedTestCase, FileUpload
+    StdioBasedTestCase, FileUpload
 import json
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -62,15 +62,11 @@ def tearDownModule():
     User.objects.all().delete()
     Question.objects.all().delete()
     Quiz.objects.all().delete()
-    dir_path1 = os.path.join(os.getcwd(), "yaksh", "data","question_25")
-    dir_path2 = os.path.join(os.getcwd(), "yaksh", "data","question_22")
-    dir_path3 = os.path.join(os.getcwd(), "yaksh", "data","question_24")
-    dir_path4 = os.path.join(os.getcwd(), "yaksh", "data","question_27")
-    shutil.rmtree(dir_path1)
-    shutil.rmtree(dir_path2)
-    shutil.rmtree(dir_path3)
-    shutil.rmtree(dir_path4)
-
+    
+    que_id_list = ["25", "22", "24", "27"]
+    for que_id in que_id_list:
+        dir_path = os.path.join(os.getcwd(), "yaksh", "data","question_{0}".format(que_id))
+        shutil.rmtree(dir_path)
 
 ###############################################################################
 class ProfileTestCases(unittest.TestCase):
@@ -293,6 +289,18 @@ class QuizTestCases(unittest.TestCase):
                          self.quiz2.end_date_time
                          )
         self.assertEqual(trial_quiz.time_between_attempts, 0)
+
+    def test_view_answerpaper(self):
+        self.assertFalse(self.quiz1.view_answerpaper)
+        self.assertFalse(self.quiz2.view_answerpaper)
+
+        # When
+        self.quiz1.view_answerpaper = True
+        self.quiz1.save()
+
+        # Then
+        self.assertTrue(self.quiz1.view_answerpaper)
+
 
 
 ###############################################################################
@@ -739,7 +747,7 @@ class TestCaseTestCases(unittest.TestCase):
              active=True,
              description='Write to standard output',
              points=1.0,
-             test_case_type="stdoutbasedtestcase",
+             test_case_type="stdiobasedtestcase", 
              user=self.user,
              snippet='def myfunc()'
         )
@@ -749,7 +757,7 @@ class TestCaseTestCases(unittest.TestCase):
             question=self.question1,
             test_case='assert myfunc(12, 13) == 15'
         )
-        self.stdout_based_testcase = StdoutBasedTestCase(
+        self.stdout_based_testcase = StdioBasedTestCase(
             question=self.question2,
             expected_output='Hello World'
         )
