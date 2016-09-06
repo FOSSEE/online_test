@@ -3,16 +3,14 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import WebDriverException
 
 import multiprocessing
 import argparse
 
 class SeleniumTest():
     def __init__(self, url, quiz_name):
-        try:
-            self.driver = webdriver.PhantomJS()
-        except WebDriverException:
-            self.driver = webdriver.Firefox()
+        self.driver = webdriver.Firefox()
         self.quiz_name = quiz_name
         self.url = url
 
@@ -94,7 +92,7 @@ class SeleniumTest():
 
         # Correct Answer
         loop_count = 1
-        answer = '\"#!/bin/bash\\n[[ $# -eq 2 ]] && echo $(( $1 + $2 )) && exit $(( $1 + $2 ))\"'
+        answer = '\"#!/bin/bash\\ncat $1 | cut -d: -f2 | paste -d: $3 - $2\"'
         self.submit_answer(question_label, answer, loop_count)
 
     def open_quiz(self):
@@ -107,8 +105,8 @@ class SeleniumTest():
         )
         start_exam_elem.click()
 
-        self.test_c_question(question_label=3)
-        self.test_python_question(question_label=1)
+        self.test_c_question(question_label=1)
+        self.test_python_question(question_label=3)
         self.test_bash_question(question_label=2)
 
     def close_quiz(self):
@@ -139,7 +137,7 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--number", type=int, default=10, help="number of users")
     opts = parser.parse_args()
 
-    quiz_name = "yaksh demo quiz"
+    quiz_name = "Demo quiz"
     selenium_test = SeleniumTest(url=opts.url, quiz_name=quiz_name)
     pool = multiprocessing.Pool(opts.number)
     pool.map(wrap_run_load_test, user_gen(opts.url, range(opts.start, opts.start + opts.number)))
