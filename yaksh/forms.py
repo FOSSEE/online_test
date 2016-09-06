@@ -153,13 +153,15 @@ class QuizForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')
+        course_id = kwargs.pop('course')
         super(QuizForm, self).__init__(*args, **kwargs)
         self.fields['prerequisite'] = forms.ModelChoiceField(
-                queryset=Quiz.objects.filter(course__creator=user))
+                queryset=Quiz.objects.filter(course__creator=user, 
+                                             is_trial=False))
         self.fields['prerequisite'].required = False
         self.fields['course'] = forms.ModelChoiceField(
-                queryset=Course.objects.filter(Q(creator=user)|
-                    Q(teachers=user)).distinct())
+                queryset=Course.objects.filter(id=course_id))
+        self.fields['course'].initial = Course.objects.get(id=course_id)
 
     class Meta:
         model = Quiz

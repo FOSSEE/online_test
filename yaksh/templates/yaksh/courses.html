@@ -65,13 +65,17 @@
                     <p><b><u>Quiz(zes)</u></b></p>
                     {% if course.get_quizzes %}
                         {% for quiz in course.get_quizzes %}
-                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}</a><br>
+                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{course.id}}/{{quiz.id}}/">{{ quiz.description }}</a><br>
+
                     {% endfor %}
                     {% else %}
                         <p><b>No quiz </b></p>
                     {% endif %}
                 </div>
             </div>
+            <br/>
+            <button class="btn primary"type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz/{{course.id}}/");'>Add New Quiz</button>
+            
         </div>
     </div>
     <br><br>
@@ -130,22 +134,21 @@
                     <p><b><u>Quiz(zes)</u></b></p>
                     {% if course.get_quizzes %}
                         {% for quiz in course.get_quizzes %}
-                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}</a><br>
+                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{course.id}}/{{quiz.id}}/">{{ quiz.description }}</a><br>
                     {% endfor %}
                     {% else %}
                         <p><b>No quiz </b></p>
                     {% endif %}
                 </div>
             </div>
+            <button class="btn primary"type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz/{{course.id}}/");'>Add New Quiz</button>
         </div>
     </div>
     <br><br>
     {% endfor %}
 {% else %}
-    <center><h4> No new Courses allotted </h4></center>
+    <center><h4> No new Courses allotted <br><br></h4></center>
 {% endif %}
-<button class="btn primary" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/add_course");'>Add New Course</button>
-    {% if courses or allotted_courses %}
-    <button class="btn primary" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz");'>Add New Quiz</button>
-{% endif %}    
+<center><button class="btn primary" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/add_course");'>Add New Course</button></center>
+
 {% endblock %}
