@@ -791,7 +791,7 @@ def monitor(request, questionpaper_id=None):
     if questionpaper_id is None:
         q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user) |
                                                Q(quiz__course__teachers=user),
-                                               quiz__course__is_trial=False
+                                               quiz__is_trial=False
                                                ).distinct()
         context = {'papers': [],
                    'quiz': None,
@@ -802,7 +802,7 @@ def monitor(request, questionpaper_id=None):
     try:
         q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user) |
                                                Q(quiz__course__teachers=user),
-                                               quiz__course__is_trial=False,
+                                               quiz__is_trial=False,
                                                id=questionpaper_id).distinct()
     except QuestionPaper.DoesNotExist:
         papers = []
