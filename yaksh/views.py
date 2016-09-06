@@ -313,7 +313,9 @@ rights/permissions and log in."""
         question_papers = QuestionPaper.objects.filter(quiz__course__creator=user,
                                                        quiz__is_trial=False
                                                        )
-        trial_quiz = Quiz.objects.filter(course__creator=user, is_trial=True)
+        trial_paper = AnswerPaper.objects.filter(user=user,
+                                                 question_paper__quiz__is_trial=True
+                                                 )
         if request.method == "POST":
             delete_quiz = request.POST.getlist('delete_quiz')
             for quiz_id in delete_quiz:
@@ -332,7 +334,7 @@ rights/permissions and log in."""
             temp = paper, answer_papers, users_passed, users_failed
             users_per_paper.append(temp)
         context = {'user': user, 'users_per_paper': users_per_paper,
-                   'trial_quiz': trial_quiz
+                   'trial_paper': trial_paper
                    }
         return my_render_to_response('manage.html', context, context_instance=ci)
     return my_redirect('/exam/login/')

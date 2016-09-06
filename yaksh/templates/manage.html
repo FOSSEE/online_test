@@ -78,15 +78,15 @@
                     <h5>Click on the button given below to add a new course.</h5>
                     <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/add_course");'>Add New Course</button>
                 </center>
-                {% if trial_quiz %}
+                {% if trial_paper %}
                   <h5/> You have trial papers.
                   <table class="bordered-table zebra-striped">
                   <form action="" method="post">
                   {% csrf_token %}
-                   {% for quiz in trial_quiz %}
+                   {% for paper in trial_paper %}
                   <tr>
-                  <td> <input type = "checkbox" name="delete_quiz" value = {{quiz.id}}></input></td>
-                  <td> <a href="{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}">{{quiz.description}}</td>
+                  <td> <input type = "checkbox" name="delete_quiz" value = {{paper.question_paper.quiz.id}}></input></td>
+                  <td> <a href="{{URL_ROOT}}/exam/manage/gradeuser/{{paper.question_paper.quiz.id}}">{{paper.question_paper.quiz.description}}</td>
                   </tr>
                   {% endfor %}
                   </table>
