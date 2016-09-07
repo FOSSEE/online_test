@@ -318,12 +318,16 @@ rights/permissions and log in."""
                                                  )
         if request.method == "POST":
             delete_quiz = request.POST.getlist('delete_quiz')
-            for quiz_id in delete_quiz:
-                quiz = Quiz.objects.get(id=quiz_id)
-                if quiz.course.is_trial == True:
-                    quiz.course.delete()
+            for answerpaper_id in delete_quiz:
+                answerpaper = AnswerPaper.objects.get(id=answerpaper_id)
+                if answerpaper.question_paper.quiz.course.is_trial == True:
+                    answerpaper.question_paper.quiz.course.delete()
                 else:
-                    quiz.delete()
+                    qpaper = answerpaper.question_paper
+                    if qpaper.answerpaper_set.count() == 1:
+                        answerpaper.question_paper.quiz.delete()
+                    else:
+                        answerpaper.delete()
         users_per_paper = []
         for paper in question_papers:
             answer_papers = AnswerPaper.objects.filter(question_paper=paper)
