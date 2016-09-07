@@ -250,7 +250,7 @@ def add_quiz(request, course_id, quiz_id=None):
     """To add a new quiz in the database.
     Create a new quiz and store it."""
     user = request.user
-    course = Course.objects.get(id=course_id)
+    course = get_object_or_404(Course, pk=course_id)
     ci = RequestContext(request)
     if not is_moderator(user) or (user != course.creator and user not in course.teachers.all()):
         raise Http404('You are not allowed to view this page!')
