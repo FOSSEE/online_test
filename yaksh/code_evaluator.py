@@ -114,7 +114,10 @@ class CodeEvaluator(object):
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
-            del tb_list[1:3]
+            if len(tb_list) > 2:
+                del tb_list[1:3]
+            else:
+                pass
             err = "Error: {0}".format("".join(tb_list))
         finally:
             # Set back any original signal handler.
