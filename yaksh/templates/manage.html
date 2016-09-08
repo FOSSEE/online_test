@@ -85,7 +85,7 @@
                   {% csrf_token %}
                    {% for paper in trial_paper %}
                   <tr>
-                  <td> <input type = "checkbox" name="delete_quiz" value = {{paper.id}}></input></td>
+                  <td> <input type = "checkbox" name="delete_paper" value = {{paper.id}}></input></td>
                   <td> <a href="{{URL_ROOT}}/exam/manage/gradeuser/{{paper.question_paper.quiz.id}}">{{paper.question_paper.quiz.description}}</td>
                   </tr>
                   {% endfor %}
