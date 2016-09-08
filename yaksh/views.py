@@ -246,33 +246,40 @@ def edit_question(request, question_id=None):
                                      context_instance=ci)
 
 @login_required
-def add_quiz(request, quiz_id=None):
+def add_quiz(request, course_id, quiz_id=None):
     """To add a new quiz in the database.
     Create a new quiz and store it."""
     user = request.user
+    course = get_object_or_404(Course, pk=course_id)
     ci = RequestContext(request)
-    if not is_moderator(user):
+    if not is_moderator(user) or (user != course.creator and user not in course.teachers.all()):
         raise Http404('You are not allowed to view this page!')
     context = {}
     if request.method == "POST":
         if quiz_id is None:
-            form = QuizForm(request.POST, user=user)
+            form = QuizForm(request.POST, user=user, course=course_id)
             if form.is_valid():
                 form.save()
                 return my_redirect(reverse('yaksh:design_questionpaper'))
+            else:
+                context["form"] = form
+                return my_render_to_response('yaksh/add_quiz.html',
+                                             context,
+                                             context_instance=ci)
         else:
             quiz = Quiz.objects.get(id=quiz_id)
-            form = QuizForm(request.POST, user=user, instance=quiz)
+            form = QuizForm(request.POST, user=user, course=course_id,
+                            instance=quiz)
             if form.is_valid():
                 form.save()
                 context["quiz_id"] = quiz_id
                 return my_redirect("/exam/manage/")
     else:
         if quiz_id is None:
-            form = QuizForm(user=user)
+            form = QuizForm(course=course_id, user=user)
         else:
             quiz = Quiz.objects.get(id=quiz_id)
-            form = QuizForm(user=user, instance=quiz)
+            form = QuizForm(user=user,course=course_id, instance=quiz)
             context["quiz_id"] = quiz_id
         context["form"] = form
         return my_render_to_response('yaksh/add_quiz.html',
