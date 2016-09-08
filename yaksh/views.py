@@ -320,15 +320,21 @@ rights/permissions and log in."""
         question_papers = QuestionPaper.objects.filter(quiz__course__creator=user,
                                                        quiz__is_trial=False
                                                        )
-        trial_quiz = Quiz.objects.filter(course__creator=user, is_trial=True)
+        trial_paper = AnswerPaper.objects.filter(user=user,
+                                                 question_paper__quiz__is_trial=True
+                                                 )
         if request.method == "POST":
-            delete_quiz = request.POST.getlist('delete_quiz')
-            for quiz_id in delete_quiz:
-                quiz = Quiz.objects.get(id=quiz_id)
-                if quiz.course.is_trial == True:
-                    quiz.course.delete()
+            delete_paper = request.POST.getlist('delete_paper')
+            for answerpaper_id in delete_paper:
+                answerpaper = AnswerPaper.objects.get(id=answerpaper_id)
+                qpaper = answerpaper.question_paper
+                if qpaper.quiz.course.is_trial == True:
+                    qpaper.quiz.course.delete()
                 else:
-                    quiz.delete()
+                    if qpaper.answerpaper_set.count() == 1:
+                        qpaper.quiz.delete()
+                    else:
+                        answerpaper.delete()
         users_per_paper = []
         for paper in question_papers:
             answer_papers = AnswerPaper.objects.filter(question_paper=paper)
@@ -339,7 +345,7 @@ rights/permissions and log in."""
             temp = paper, answer_papers, users_passed, users_failed
             users_per_paper.append(temp)
         context = {'user': user, 'users_per_paper': users_per_paper,
-                   'trial_quiz': trial_quiz
+                   'trial_paper': trial_paper
                    }
         return my_render_to_response('manage.html', context, context_instance=ci)
     return my_redirect('/exam/login/')
@@ -796,7 +802,7 @@ def monitor(request, questionpaper_id=None):
     if questionpaper_id is None:
         q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user) |
                                                Q(quiz__course__teachers=user),
-                                               quiz__course__is_trial=False
+                                               quiz__is_trial=False
                                                ).distinct()
         context = {'papers': [],
                    'quiz': None,
@@ -807,7 +813,7 @@ def monitor(request, questionpaper_id=None):
     try:
         q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user) |
                                                Q(quiz__course__teachers=user),
-                                               quiz__course__is_trial=False,
+                                               quiz__is_trial=False,
                                                id=questionpaper_id).distinct()
     except QuestionPaper.DoesNotExist:
         papers = []
