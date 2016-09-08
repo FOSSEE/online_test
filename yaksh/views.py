@@ -317,13 +317,13 @@ rights/permissions and log in."""
                                                  question_paper__quiz__is_trial=True
                                                  )
         if request.method == "POST":
-            delete_quiz = request.POST.getlist('delete_paper')
+            delete_paper = request.POST.getlist('delete_paper')
             for answerpaper_id in delete_paper:
                 answerpaper = AnswerPaper.objects.get(id=answerpaper_id)
-                if answerpaper.question_paper.quiz.course.is_trial == True:
-                    answerpaper.question_paper.quiz.course.delete()
+                qpaper = answerpaper.question_paper
+                if qpaper.quiz.course.is_trial == True:
+                    qpaper.quiz.course.delete()
                 else:
-                    qpaper = answerpaper.question_paper
                     if qpaper.answerpaper_set.count() == 1:
                         qpaper.quiz.delete()
                     else:
