@@ -126,7 +126,6 @@ def user_gen(url, ids):
 
 def wrap_run_load_test(args):
     url = "http://yaksh.fossee.aero.iitb.ac.in/exam/"
-    quiz_name = "yaksh_demo_quiz"
     selenium_test = SeleniumTest(url=url, quiz_name=quiz_name)
     return selenium_test.run_load_test(*args)
 

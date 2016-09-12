@@ -11,10 +11,10 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from yaksh.models import User, Profile, Question, Quiz, Course, QuestionPaper, TestCase
 from selenium_test import SeleniumTest
 
-from yaksh.code_server import ServerPool, SERVER_POOL_PORT, SERVER_PORTS
+from yaksh.code_server import ServerPool #SERVER_POOL_PORT, SERVER_PORTS
 from yaksh import settings
-from yaksh.xmlrpc_clients import CodeServerProxy
-from django.core.management import call_command
+# from django.core.management import call_command
+from yaksh.management.commands.create_demo_course import create_demo_course
 
 
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -31,19 +31,22 @@ class MySeleniumTests(StaticLiveServerTestCase):
             "yaksh.cpp_code_evaluator.CppCodeEvaluator"
         settings.code_evaluators['bash']['standardtestcase'] = \
             "yaksh.bash_code_evaluator.BashCodeEvaluator"
-        code_server_pool = ServerPool(ports=SERVER_PORTS, pool_port=SERVER_POOL_PORT)
+        settings.SERVER_POOL_PORT = 53578
+        code_server_pool = ServerPool(ports=settings.SERVER_PORTS, pool_port=settings.SERVER_POOL_PORT)
         cls.code_server_pool = code_server_pool
         cls.code_server_thread = t = Thread(target=code_server_pool.run)
         t.start()
 
-        call_command('create_demo_course')
+        demo_course_setup = create_demo_course()
 
     @classmethod
     def tearDownClass(cls):
-        User.objects.all().delete()
-        Question.objects.all().delete()
-        Quiz.objects.all().delete()
-        Course.objects.all().delete()
+        # User.objects.all().delete()
+        # Question.objects.all().delete()
+        # Quiz.objects.all().delete()
+        # Course.objects.all().delete()
+
+        settings.SERVER_POOL_PORT = 53579
 
         cls.code_server_pool.stop()
         cls.code_server_thread.join()
