@@ -5,6 +5,15 @@
 {% block manage %}
 
 {% block subtitle %}Data for user {{ data.user.get_full_name.title }}{% endblock %}
+
+{% block css %}
+     <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/view_answerpaper.css" type="text/css" /> 
+{% endblock %}
+
+{% block script %}
+    <script src= "{{ URL_ROOT }}/static/yaksh/js/edit_question.js"></script>
+{% endblock %}
+
 <form action="" method="post">
 <p> 
 Name: {{ data.user.get_full_name.title }} <br/>
@@ -49,28 +58,62 @@ User IP address: {{ paper.user_ip }}
 {% if paper.answers.count %}
 <h3> Answers </h3>
 {% for question, answers in paper.get_question_answers.items %}
-<p><strong> Question: {{ question.id }}. {{ question.summary }} (Points: {{ question.points }})</strong> </p>
-{% if question.type == "mcq" or question.type == "mcc" %}
-<p> Choices:
-{% for testcase in question.get_test_cases %} <br>{{ testcase.options }} {% endfor %}
-</p>
-<p>Student answer: {{ answers.0 }}</p>
-Autocheck: {{ answers.0.error }}
-{% else %}{# non-mcq questions #}
-{% for answer in answers %}
-{% if not answer.skipped %}
-<pre>
-###############################################################################
-{{ answer.answer.strip }}
-# Autocheck: {{ answer.error }}
-</pre>
-{% endif %}
-{% endfor %}
-{% endif %}
-{% with answers|last as answer %}
-<p><em>Marks: {{answer.marks}} </em> </p>
-{% endwith %}
-{% endfor %} {# for question, answers ... #}
+<div class="panel panel-info">
+        <div class="panel-heading">
+
+            <strong> Details: {{forloop.counter}}. {{ question.summary }}
+            <a href="" onClick="grade_data('show_question{{question.id}}'); return false;"> Show Question </a>
+            <span class="marks"> Mark(s): {{ question.points }} </span>
+            </strong>
+        </div>
+        <div class="panel-body" id="show_question{{question.id}}" style="display: none;">
+        
+            <h5><u>Question:</u></h5> <strong>{{ question.description|safe }}</strong>
+            {% if question.type == "mcq" or question.type == "mcc" %}
+                <h5> <u>Choices:</u></h5>
+                {% for testcase in question.get_test_cases %}
+                    <br/><strong>{{ forloop.counter }}. {{ testcase.options }}</strong>
+                    {% endfor %}
+            {% else %}
+                <h5> <u>Test cases: </u></h5>
+                    {% for testcase in question.get_test_cases %}
+                        <br/><strong>{{ forloop.counter }}. {{ testcase.test_case }}</strong>
+                    {% endfor %}
+            {%endif%}
+        </div>
+    </div>
+    {% if question.type == "mcq" or question.type == "mcc" %}
+        {% if "Correct answer" in answers.0.error %}
+            <div class="panel panel-success">
+        {% else %}
+            <div class="panel panel-danger">
+        {% endif %}
+            <div class="panel-heading">
+                Autocheck: {{ answers.0.error }}
+            </div>
+            <div class="panel-body">
+                <h5><u>Student answer:</u></h5>
+                 <pre><code>{{forloop.counter}}. {{ answers.0 }}</code></pre>
+            </div>
+            </div>
+    {% else %}
+    <h5>Student answer: </h5>
+    {% for answer in answers %}
+    {% if not answer.skipped %}
+    {% if "Correct answer" in answer.error %}
+            <div class="panel panel-success">
+        {% else %}
+            <div class="panel panel-danger">
+        {% endif %}
+    <div class="panel-heading">Autocheck: {{ answer.error }}</div>
+    <div class="panel-body"><pre><code>{{ answer.answer.strip }}</code></pre></div>
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+    <hr>
+    {% endfor %} {# for question, answers ... #}
+
 <h3>Teacher comments: </h3>
 {{ paper.comments|default:"None" }}
 {% endif %} {# if paper.answers.count #}

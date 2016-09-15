@@ -59,3 +59,18 @@ code{
 pre{
   background-color: transparent;
 }
+
+/*for grade user*/
+textarea
+{
+width : 100%;
+height : 15%;
+}
+#attempt {
+    width: 157px;
+    position: relative; left:20%;
+}
+#myContent {
+margin: 5px 10px;
+
+}
