@@ -7,6 +7,20 @@
 {% block css %}
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question_quiz.css" type="text/css" /> 
 {% endblock %}
+
+{% block script %}
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() 
+    { 
+        $("#result-table").tablesorter(); 
+    } 
+);
+</script>
+{% endblock %}
+
+
 {% block subtitle %}
   {% if not quizzes and not quiz %}
   Quiz Results
@@ -41,7 +55,8 @@
 <p>Number of papers: {{ papers|length }} </p>
 <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{papers.0.question_paper.id}}">Question Statisitics</a></p>
 <p><a href="{{URL_ROOT}}/exam/manage/monitor/download_csv/{{papers.0.question_paper.id}}">Download CSV</a></p>
-<table border="1" cellpadding="3">
+<table border="1" cellpadding="3"  id="result-table" class="tablesorter">
+    <thead>
     <tr>
     <th> Name </th>
     <th> Username </th>
@@ -52,6 +67,8 @@
     <th> Attempts </th>
     <th> Status </th>
     </tr>
+    </thead>
+    <tbody>
     {% for paper in latest_attempts %}
     <tr> 
         <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.id}}/{{paper.question_paper.id}}">{{ paper.user.get_full_name.title }}</a> </td>
@@ -64,6 +81,7 @@
         <td> {{ paper.status }} </td>
     </tr>
     {% endfor %}
+    </tbody>
 </table>
 {% else %}
 <p> No answer papers so far. </p>
