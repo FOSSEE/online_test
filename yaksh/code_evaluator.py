@@ -101,6 +101,7 @@ class CodeEvaluator(object):
         # Do whatever testing needed.
         try:
             for test_case in test_case_data:
+                success = False
                 self.compile_code(user_answer, file_paths, **test_case)
                 success, err = self.check_code(user_answer, file_paths, **test_case)
                 if not success:
@@ -116,8 +117,6 @@ class CodeEvaluator(object):
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
             if len(tb_list) > 2:
                 del tb_list[1:3]
-            else:
-                pass
             err = "Error: {0}".format("".join(tb_list))
         finally:
             # Set back any original signal handler.
