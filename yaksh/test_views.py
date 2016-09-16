@@ -213,8 +213,11 @@ class TestAddQuiz(TestCase):
         """
         If not logged in redirect to login page
         """
-        response = self.client.get(reverse('yaksh:add_quiz'), follow=True)
-        redirect_destination = '/exam/login/?next=/exam/manage/addquiz/'
+        response = self.client.get(reverse('yaksh:add_quiz',
+                                           kwargs={'course_id': self.course.id}),
+                                   follow=True
+                                   )
+        redirect_destination = '/exam/login/?next=/exam/manage/addquiz/{0}/'.format(self.course.id)
         self.assertRedirects(response, redirect_destination)
 
     def test_view_profile_denies_non_moderator(self):
@@ -225,8 +228,11 @@ class TestAddQuiz(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
-
-        response = self.client.get(reverse('yaksh:add_quiz'), follow=True)
+        course_id = self.course.id
+        response = self.client.get(reverse('yaksh:add_quiz',
+                                           kwargs={'course_id': self.course.id}),
+                                   follow=True
+                                   )
         self.assertEqual(response.status_code, 404)
 
     def test_add_quiz_get(self):
@@ -237,7 +243,9 @@ class TestAddQuiz(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:add_quiz'))
+        response = self.client.get(reverse('yaksh:add_quiz',
+                                   kwargs={'course_id': self.course.id})
+                                   )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/add_quiz.html')
         self.assertIsNotNone(response.context['form'])
@@ -252,7 +260,7 @@ class TestAddQuiz(TestCase):
         )
         tzone = pytz.timezone('UTC')
         response = self.client.post(reverse('yaksh:edit_quiz',
-            kwargs={'quiz_id': self.quiz.id}),
+            kwargs={'course_id':self.course.id, 'quiz_id': self.quiz.id}),
             data={
                 'start_date_time': '2016-01-10 09:00:15',
                 'end_date_time': '2016-01-15 09:00:15',
@@ -298,7 +306,7 @@ class TestAddQuiz(TestCase):
         )
 
         tzone = pytz.timezone('UTC')
-        response = self.client.post(reverse('yaksh:add_quiz'),
+        response = self.client.post(reverse('yaksh:add_quiz', kwargs={"course_id": self.course.id}),
             data={
                 'start_date_time': '2016-01-10 09:00:15',
                 'end_date_time': '2016-01-15 09:00:15',

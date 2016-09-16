@@ -949,7 +949,9 @@ class AnswerPaper(models.Model):
 
     def __unicode__(self):
         u = self.user
-        return u'Question paper for {0} {1}'.format(u.first_name, u.last_name)
+        q = self.question_paper.quiz
+        return u'AnswerPaper paper of {0} {1} for quiz {2}'\
+               .format(u.first_name, u.last_name, q.description)
 
 
 ###############################################################################

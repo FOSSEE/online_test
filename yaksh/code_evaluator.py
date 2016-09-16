@@ -108,9 +108,17 @@ class CodeEvaluator(object):
 
         except TimeoutException:
             err = self.timeout_msg
+        except OSError:
+            msg = traceback.format_exc(limit=0)
+            err = "Error: {0}".format(msg)
         except Exception:
-            err = "Error: {0}".format(traceback.format_exc(limit=0))
-
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
+            if len(tb_list) > 2:
+                del tb_list[1:3]
+            else:
+                pass
+            err = "Error: {0}".format("".join(tb_list))
         finally:
             # Set back any original signal handler.
             set_original_signal_handler(prev_handler)
