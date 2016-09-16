@@ -208,6 +208,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         self.assertTrue(result.get('success'))
 
     def test_single_testcase_error(self):
+        """ Tests the user answer with just an incorrect test case """
+        
         user_answer = "def palindrome(a):\n\treturn a == a[::-1]"
         test_case_data = [{"test_case": 's="abbb"\nasert palindrome(s)==False'}
                           ]
@@ -233,6 +235,9 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
 
     def test_multiple_testcase_error(self):
+        """ Tests the user answer with an correct test case
+         first and then with an incorrect test case """
+
         user_answer = "def palindrome(a):\n\treturn a == a[::-1]"
         test_case_data = [{"test_case": 'assert(palindrome("abba")==True)'},
                           {"test_case": 's="abbb"\nassert palindrome(S)==False'}
