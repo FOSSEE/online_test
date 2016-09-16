@@ -5,7 +5,9 @@
 {% block subtitle %} Grade User {% endblock %}
  
 {% block css %}
-     <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/view_answerpaper.css" type="text/css" /> 
+     <link rel="stylesheet"
+      href="{{ URL_ROOT }}/static/yaksh/css/view_answerpaper.css"
+      type="text/css" />
 {% endblock %}
 
 {% block manage %}
@@ -24,8 +26,9 @@
     {% if course.get_quizzes %}
     <td>
     {% for quiz in course.get_quizzes %}
-     <li><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}">{{quiz.description}}</a></li>
-
+     <li><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}">
+     {{quiz.description}}
+     </a></li>
     {% endfor %}
     </td>
     {% else %}
@@ -40,7 +43,8 @@
 {%if users %}
     <div id = "student" class="span2">
     {% for user in users %}
-    <p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}">{{user.user__first_name}} {{user.user__last_name}}</a></p>
+    <p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}">
+    {{user.user__first_name}} {{user.user__last_name}}</a></p>
     {% endfor %}
     </div>
 {% endif %}
@@ -177,7 +181,7 @@ Status : <b style="color: green;"> Passed </b><br/>
         name="q{{ question.id }}_marks" size="4"
         value="{{ answer.marks }}"><br><br>
     {% endwith %}
-    <hr>
+    <hr/>
     {% endfor %} {# for question, answers ... #}
 
 <h3>Teacher comments: </h3>
