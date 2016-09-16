@@ -15,11 +15,24 @@
 {% else %}
 <center><h3> Course(s) Created</h3></center>
     {% for course in courses %}
-    {% if user != course.creator and course.name != "Demo_course"%}
+    {% if user != course.creator and course.name != "Yaksh_Demo_course"%}
         <h4> {{course.creator.get_full_name}} added you to this course</h4>
     {% endif %}
-    {% if course.name == "Demo_course" %}
-        <h4> This is Demo Course </h4>
+    {% if course.name == "Yaksh_Demo_course" %}
+        <h5> This is a Demo Course 
+        <a href="" onclick="$('#help').show(); return false;">Help 
+        </a></h5>
+        <div style="display: none;" id="help">
+   <ol>
+   <li> This is a Demo Course 
+   <ul>
+   <li><i>You will not be able to edit Demo course and Demo Quiz.</li>
+   <li>You can only take Demo Quiz by User Mode or God Mode.</li>
+   <li>This is for you to get familiar with the interface.</i></li>
+   </ul>
+   </p>
+   <a href="" onclick="$('#help').hide(); return false"> Close </a>
+   </div>
     {% endif %}
     <div class="row show-grid">
         <div class="span14">
@@ -83,7 +96,7 @@
     <br><br>
     {% endfor %}
     {% endif %}
-
+<hr/>
 {% if allotted_courses %}
     <center><h3> Course(s) Allotted </h3></center>
 
@@ -150,6 +163,7 @@
 {% else %}
     <center><h4> No new Courses allotted </h4></center>
 {% endif %}
+<hr/>
 <button class="btn primary" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/add_course");'>Add New Course</button>
     {% if courses or allotted_courses %}
     <button class="btn primary" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz");'>Add New Quiz</button>
