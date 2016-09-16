@@ -52,7 +52,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         self.assertFalse(result.get('success'))
         self.assertEqual(result.get('error'), self.timeout_msg)
 
-
+    def test_syntax_error(self):
         user_answer = dedent("""
         def add(a, b);
             return a + b
@@ -207,6 +207,57 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
+    def test_single_testcase_error(self):
+        user_answer = "def palindrome(a):\n\treturn a == a[::-1]"
+        test_case_data = [{"test_case": 's="abbb"\nasert palindrome(s)==False'}
+                          ]
+        syntax_error_msg = ["Traceback",
+                          "call",
+                          "File",
+                          "line",
+                          "<string>",
+                          "SyntaxError",
+                          "invalid syntax"
+                          ]
+        get_class = PythonAssertionEvaluator()
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': test_case_data,
+                  'file_paths': self.file_paths
+                  }
+        result = get_class.evaluate(**kwargs)
+        err = result.get("error").splitlines()
+        self.assertFalse(result.get("success"))
+        self.assertEqual(5, len(err))
+        for msg in syntax_error_msg:
+            self.assertIn(msg, result.get("error"))
+
+
+    def test_multiple_testcase_error(self):
+        user_answer = "def palindrome(a):\n\treturn a == a[::-1]"
+        test_case_data = [{"test_case": 'assert(palindrome("abba")==True)'},
+                          {"test_case": 's="abbb"\nassert palindrome(S)==False'}
+                          ]
+        name_error_msg = ["Traceback",
+                          "call",
+                          "File",
+                          "line",
+                          "<string>",
+                          "NameError",
+                          "name 'S' is not defined"
+                          ]
+        get_class = PythonAssertionEvaluator()
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': test_case_data,
+                  'file_paths': self.file_paths
+                  }
+        result = get_class.evaluate(**kwargs)
+        err = result.get("error").splitlines()
+        self.assertFalse(result.get("success"))
+        self.assertEqual(3, len(err))
+        for msg in name_error_msg:
+            self.assertIn(msg, result.get("error"))
+
+
 class PythonStdoutEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.test_case_data = [{"expected_input": None,
@@ -246,7 +297,11 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
-    
+        result = get_class.evaluate(**kwargs)
+        self.assertEqual(result.get('error'), self.timeout_msg)
+        self.assertFalse(result.get('success'))
+
+
 class PythonStdIOEvaluator(unittest.TestCase):
 
     def setUp(self):
