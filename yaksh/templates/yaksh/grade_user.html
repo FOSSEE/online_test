@@ -5,11 +5,9 @@
 {% block subtitle %} Grade User {% endblock %}
  
 {% block css %}
-     <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/gradeuser.css" type="text/css" /> 
-{% endblock %}
-
-{% block script %}
-    <script src= "{{ URL_ROOT }}/static/yaksh/js/edit_question.js"></script>
+     <link rel="stylesheet"
+      href="{{ URL_ROOT }}/static/yaksh/css/view_answerpaper.css"
+      type="text/css" />
 {% endblock %}
 
 {% block manage %}
@@ -28,8 +26,9 @@
     {% if course.get_quizzes %}
     <td>
     {% for quiz in course.get_quizzes %}
-     <li><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}">{{quiz.description}}</a></li>
-
+     <li><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}">
+     {{quiz.description}}
+     </a></li>
     {% endfor %}
     </td>
     {% else %}
@@ -44,7 +43,8 @@
 {%if users %}
     <div id = "student" class="span2">
     {% for user in users %}
-    <p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}">{{user.user__first_name}} {{user.user__last_name}}</a></p>
+    <p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}">
+    {{user.user__first_name}} {{user.user__last_name}}</a></p>
     {% endfor %}
     </div>
 {% endif %}
@@ -88,6 +88,7 @@ Attempt Number: <b>{{paper.attempt_number}} </b>
 Total attempts at questions: {{ paper.answers.count }} <br/>
 Marks obtained: {{ paper.marks_obtained }} <br/>
 Start time: {{ paper.start_time }} <br/>
+End time: {{ paper.end_time }} <br/>
 {%if paper.percent%}
 Percentage obtained: {{paper.percent}}% <br/>
 {% endif %}
@@ -125,42 +126,63 @@ Status : <b style="color: green;"> Passed </b><br/>
     method="post">
 {% csrf_token %}
 {% for question, answers in paper.get_question_answers.items %}
-
-<div class="for-question">
-<p><strong> 
-    Question: {{ question.id }}. {{ question.summary }} (Points: {{ question.points }})
-</strong>
-<strong><a href="" onClick="grade_data('myContent{{question.id}}'); return false;" style="cursor:pointer;" />Details</strong></p></a>
-<div id="contentDiv">
-     <div id="myContent{{question.id}}" style="padding:5px; display:none;">
-        <p> Description : {{ question.description }} </p>
-        <p> Test : {{ question.test }} </p>
-     </div>
-</div> 
-<div class="question-form">
-
-{% if question.type == "mcq" %}
-<br>
-<p> Choices: 
-{% for option in question.options.strip.splitlines %} {{option}}, {% endfor %}
-</p>
-<p>Student answer: {{ answers.0 }}</p>
-{% else %}{# non-mcq questions #}
-<pre>
-{% for answer in answers %}################################################################################
-{{ answer.answer.strip }}
-# Autocheck: {{ answer.error }}
-{% endfor %}</pre>
-{% endif %} {# if question.type #}
-{% with answers|last as answer %}
-Marks: <input id="q{{ question.id }}" type="text" 
+<div class="panel panel-info">
+        <div class="panel-heading">
+            <strong> Details: {{forloop.counter}}. {{ question.summary }} 
+            <span class="marks"> Mark(s): {{ question.points }} </span>
+            </strong>
+        </div>
+        <div class="panel-body">
+            <h5><u>Question:</u></h5> <strong>{{ question.description|safe }}</strong>
+            {% if question.type == "mcq" or question.type == "mcc" %}
+                <h5> <u>Choices:</u></h5>
+                {% for testcase in question.get_test_cases %}
+                    <br/><strong>{{ forloop.counter }}. {{ testcase.options }}</strong>
+                    {% endfor %}
+            {% else %}
+                <h5> <u>Test cases: </u></h5>
+                    {% for testcase in question.get_test_cases %}
+                        <br/><strong>{{ forloop.counter }}. {{ testcase.test_case }}</strong>
+                    {% endfor %}
+            {%endif%}
+        </div>
+    </div>
+    {% if question.type == "mcq" or question.type == "mcc" %}
+        {% if "Correct answer" in answers.0.error %}
+            <div class="panel panel-success">
+        {% else %}
+            <div class="panel panel-danger">
+        {% endif %}
+            <div class="panel-heading">
+                Autocheck: {{ answers.0.error }}
+            </div>
+            <div class="panel-body">
+                <h5><u>Student answer:</u></h5>
+                 <pre><code>{{forloop.counter}}. {{ answers.0 }}</code></pre>
+            </div>
+            </div>
+    {% else %}
+    <h5>Student answer: </h5>
+    {% for answer in answers %}
+    {% if not answer.skipped %}
+    {% if "Correct answer" in answer.error %}
+            <div class="panel panel-success">
+        {% else %}
+            <div class="panel panel-danger">
+        {% endif %}
+    <div class="panel-heading">Autocheck: {{ answer.error }}</div>
+    <div class="panel-body"><pre><code>{{ answer.answer.strip }}</code></pre></div>
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+    {% with answers|last as answer %}
+    Marks: <input id="q{{ question.id }}" type="text" 
         name="q{{ question.id }}_marks" size="4"
         value="{{ answer.marks }}"><br><br>
-{% endwith %}
-</div>
-</div>
-{% endfor %} {# for question, answers ... #}
-
+    {% endwith %}
+    <hr/>
+    {% endfor %} {# for question, answers ... #}
 
 <h3>Teacher comments: </h3>
 <textarea id="comments_{{paper.question_paper.id}}" rows="10" cols="80" 
