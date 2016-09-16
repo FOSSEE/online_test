@@ -16,7 +16,7 @@ def create_demo_course():
     success = False
     print("Creating Demo User...")
     # create a demo user
-    user, u_status = User.objects.get_or_create(username='demo_user',
+    user, u_status = User.objects.get_or_create(username='yaksh_demo_user',
                                                 email='demo@test.com')
     user.set_password("demo")
     user.save()
@@ -24,12 +24,12 @@ def create_demo_course():
                                   institute='demo_institute',
                                   department='demo_department',
                                   position='Faculty')
-    demo_user = User.objects.filter(username='demo_user')
+    demo_user = User.objects.filter(username='yaksh_demo_user')
     add_to_group(demo_user)
 
     print("Creating Demo Course...")
     # create a demo course
-    course, c_status = Course.objects.get_or_create(name="Demo_course",
+    course, c_status = Course.objects.get_or_create(name="Yaksh_Demo_course",
                                                     enrollment="open",
                                                     creator=user)
 
@@ -42,14 +42,14 @@ def create_demo_course():
                                         duration=30, active=True,
                                         attempts_allowed=-1,
                                         time_between_attempts=0,
-                                        description='Demo_quiz', pass_criteria=0,
+                                        description='Yaksh_Demo_quiz', pass_criteria=0,
                                         language='Python', prerequisite=None,
                                         course=course)
     else:
         print("Demo Quiz Already Created")
 
     print("Creating Demo Questions...")
-    questions = Question.objects.filter(active=True, summary="Demo Question")
+    questions = Question.objects.filter(active=True, summary="Yaksh Demo Question")
     files = FileUpload.objects.filter(question__in=questions)
     if not files:
         #create demo question

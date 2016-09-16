@@ -669,7 +669,7 @@ def courses(request):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     try:
-        demo_user = User.objects.get(username="demo_user")
+        demo_user = User.objects.get(username="yaksh_demo_user")
     except User.DoesNotExist:
         demo_user = None
     courses = Course.objects.filter(Q(creator=user) | Q(creator=demo_user),
