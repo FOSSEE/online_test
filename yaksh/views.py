@@ -256,8 +256,9 @@ def add_quiz(request, course_id, quiz_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     ci = RequestContext(request)
-    if not is_moderator(user) or (user != course.creator and user not in course.teachers.all()):
-        raise Http404('You are not allowed to view this page!')
+    if course.name != "Yaksh_Demo_course":
+        if not is_moderator(user) or (user != course.creator and user not in course.teachers.all()):
+            raise Http404('You are not allowed to view this page!')
     context = {}
     if request.method == "POST":
         if quiz_id is None:
@@ -683,12 +684,16 @@ def courses(request):
         raise Http404('You are not allowed to view this page')
     try:
         demo_user = User.objects.get(username="yaksh_demo_user")
-    except User.DoesNotExist:
+        demo_course = Course.objects.get(creator=demo_user)
+    except User.DoesNotExist, Course.DoesNotExist:
         demo_user = None
-    courses = Course.objects.filter(Q(creator=user) | Q(creator=demo_user),
-                                    is_trial=False)
+        demo_course = None
+
+    courses = Course.objects.filter(creator=user, is_trial=False)
     allotted_courses = Course.objects.filter(teachers=user, is_trial=False)
-    context = {'courses': courses, "allotted_courses": allotted_courses}
+    
+    context = {'courses': courses, "allotted_courses": allotted_courses, 
+               'demo_course': demo_course}
     return my_render_to_response('yaksh/courses.html', context,
                                  context_instance=ci)
 
