@@ -20,10 +20,10 @@ from yaksh.management.commands.create_demo_course import create_demo_course
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-class MySeleniumTests(StaticLiveServerTestCase):
+class YakshSeleniumTests(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
-        super(MySeleniumTests, cls).setUpClass()
+        super(YakshSeleniumTests, cls).setUpClass()
         # setup a demo code server
         settings.code_evaluators['python']['standardtestcase'] = \
             "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
@@ -41,17 +41,17 @@ class MySeleniumTests(StaticLiveServerTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        # User.objects.all().delete()
-        # Question.objects.all().delete()
-        # Quiz.objects.all().delete()
-        # Course.objects.all().delete()
+        User.objects.all().delete()
+        Question.objects.all().delete()
+        Quiz.objects.all().delete()
+        Course.objects.all().delete()
 
         settings.SERVER_POOL_PORT = 53579
 
         cls.code_server_pool.stop()
         cls.code_server_thread.join()
 
-        super(MySeleniumTests, cls).tearDownClass()
+        super(YakshSeleniumTests, cls).tearDownClass()
 
     def test_load(self):
         url = '%s%s' % (self.live_server_url, '/exam/login/')
