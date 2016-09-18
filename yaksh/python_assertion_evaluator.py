@@ -47,8 +47,8 @@ class PythonAssertionEvaluator(CodeEvaluator):
             fname, lineno, func, text = info[-1]
             text = str(test_case).splitlines()[lineno-1]
             err = "{0} {1} in: {2}".format(type.__name__, str(value), text)
-        except TimeoutException:
-            raise
+        except Exception:
+            raise  # Exception will be caught in CodeEvaluator.
         else:
             success = True
             err = 'Correct answer'
