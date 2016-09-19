@@ -1,35 +1,42 @@
 import os
+import sys
 from django.core.management.base import BaseCommand
 from yaksh.models import Course, Question, Quiz, QuestionPaper, Profile, FileUpload
 from yaksh.file_utils import extract_files
 from yaksh.views import add_to_group
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.contrib.auth.models import Group
 from datetime import datetime, timedelta
-import pytz
-import zipfile
 
 
 def create_demo_course():
     """ creates a demo course, quiz """
 
     success = False
-    print("Creating Demo User...")
-    # create a demo user
-    user, u_status = User.objects.get_or_create(username='yaksh_demo_user',
-                                                email='demo@test.com')
-    user.set_password("demo")
-    user.save()
-    Profile.objects.get_or_create(user=user, roll_number=0,
-                                  institute='demo_institute',
-                                  department='demo_department',
-                                  position='Faculty')
-    demo_user = User.objects.filter(username='yaksh_demo_user')
-    add_to_group(demo_user)
+    group = Group.objects.filter(name="moderator")
+    if group:
+        print("Creating Demo User...")
+        # create a demo user
+        user, u_status = User.objects.get_or_create(username='yaksh_demo_user',
+                                                    email='demo@test.com')
+        user.set_password("demo")
+        user.save()
+        Profile.objects.get_or_create(user=user, roll_number=0,
+                                      institute='demo_institute',
+                                      department='demo_department',
+                                      position='Faculty')
+        # add demo user to moderator group
+        demo_user = User.objects.filter(username='yaksh_demo_user')
+        add_to_group(demo_user)
+    else:
+        print ("Please Create 'moderator' Group")
+        print ("Unable to create Demo Course")
+        sys.exit()
 
     print("Creating Demo Course...")
     # create a demo course
-    course, c_status = Course.objects.get_or_create(name="Yaksh_Demo_course",
+    course, c_status = Course.objects.get_or_create(name="Yaksh Demo course",
                                                     enrollment="open",
                                                     creator=user)
 
@@ -42,7 +49,7 @@ def create_demo_course():
                                         duration=30, active=True,
                                         attempts_allowed=-1,
                                         time_between_attempts=0,
-                                        description='Yaksh_Demo_quiz', pass_criteria=0,
+                                        description='Yaksh Demo quiz', pass_criteria=0,
                                         language='Python', prerequisite=None,
                                         course=course)
     else:
