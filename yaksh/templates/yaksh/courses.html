@@ -144,6 +144,7 @@
                     {% endif %}
                 </div>
             </div>
+            <br/>
             <button class="btn primary"type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz/{{course.id}}/");'>Add New Quiz</button>
         </div>
     </div>
@@ -156,7 +157,7 @@
 <hr/>
 {% if demo_course %}
 {% with demo_course as course %}
-    <h5> This is a Demo Course 
+    <h5> Demo Course
     <a href="" onclick="$('#help').show(); return false;">Help 
     </a></h5>
     <div style="display: none;" id="help">
@@ -199,7 +200,7 @@
         </div>
     </div>
 {% endwith %}
-{% endif %}
 <hr/>
+{% endif %}
 <center><button class="btn primary" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/add_course");'>Add New Course</button></center>
 {% endblock %}
