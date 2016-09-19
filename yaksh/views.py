@@ -256,9 +256,15 @@ def add_quiz(request, course_id, quiz_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     ci = RequestContext(request)
-    if course.name != "Yaksh_Demo_course":
-        if not is_moderator(user) or (user != course.creator and user not in course.teachers.all()):
-            raise Http404('You are not allowed to view this page!')
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    try:
+        demo_user = User.objects.get(username="yaksh_demo_user")
+    except User.DoesNotExist:
+        demo_user = None
+    if course.creator != demo_user:
+        if (user != course.creator and user not in course.teachers.all()):
+            raise Http404('You are not allowed to view this course !')
     context = {}
     if request.method == "POST":
         if quiz_id is None:
