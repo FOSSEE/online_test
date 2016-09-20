@@ -256,15 +256,8 @@ def add_quiz(request, course_id, quiz_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     ci = RequestContext(request)
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-    try:
-        demo_user = User.objects.get(username="yaksh_demo_user")
-    except User.DoesNotExist:
-        demo_user = None
-    if course.creator != demo_user:
-        if (user != course.creator and user not in course.teachers.all()):
-            raise Http404('You are not allowed to view this course !')
+    if not is_moderator(user) or (user != course.creator and user not in course.teachers.all()):
+        raise Http404('You are not allowed to view this course !')
     context = {}
     if request.method == "POST":
         if quiz_id is None:
@@ -688,18 +681,10 @@ def courses(request):
     ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
-    try:
-        demo_user = User.objects.get(username="yaksh_demo_user")
-        demo_course = Course.objects.get(creator=demo_user)
-    except User.DoesNotExist, Course.DoesNotExist:
-        demo_user = None
-        demo_course = None
-
     courses = Course.objects.filter(creator=user, is_trial=False)
     allotted_courses = Course.objects.filter(teachers=user, is_trial=False)
     
-    context = {'courses': courses, "allotted_courses": allotted_courses, 
-               'demo_course': demo_course}
+    context = {'courses': courses, "allotted_courses": allotted_courses}
     return my_render_to_response('yaksh/courses.html', context,
                                  context_instance=ci)
 
@@ -1309,3 +1294,20 @@ def view_answerpaper(request, questionpaper_id):
         return my_render_to_response('yaksh/view_answerpaper.html', context)
     else:
         return my_redirect('/exam/quizzes/')
+
+
+@login_required
+def create_demo_course(request):
+    """ creates a demo course for user """
+    user = request.user
+    ci = RequestContext(request)
+    if not is_moderator(user):
+        raise("You are not allowed to view this page")
+    demo_course = Course()
+    success = demo_course.create_demo(user)
+    if success:
+        msg = "Created Demo course successfully"
+    else:
+        msg = "Demo course already created"
+    context = {'msg': msg}
+    return my_render_to_response('manage.html', context, context_instance=ci)

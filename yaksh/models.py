@@ -17,6 +17,7 @@ import os
 import shutil
 import zipfile
 import tempfile
+from file_utils import extract_files
 
 
 languages = (
@@ -154,6 +155,23 @@ class Course(models.Model):
 
     def remove_teachers(self, *teachers):
         self.teachers.remove(*teachers)
+
+    def create_demo(self, user):
+        course = Course.objects.filter(creator=user, name="Yaksh Demo course")
+        if not course:
+            course, c_status= Course.objects.get_or_create(name="Yaksh Demo course",
+                                                           enrollment="open",
+                                                           creator=user)
+            quiz = Quiz()
+            demo_quiz = quiz.create_demo_quiz(course)
+            demo_ques = Question()
+            demo_ques.create_demo_questions(user)
+            demo_que_ppr = QuestionPaper()
+            demo_que_ppr.create_demo_que_ppr(demo_quiz)
+            success = True
+        else:
+            success = False
+        return success
 
     def __unicode__(self):
         return self.name
@@ -323,6 +341,13 @@ class Question(models.Model):
                 self.load_questions(questions_list, user)
             os.remove(json_file)
 
+    def create_demo_questions(self, user):
+        zip_file_path = os.path.join(os.getcwd(), 'yaksh',
+                                         'fixtures', 'demo_questions.zip')
+        extract_files(zip_file_path)
+        self.read_json("questions_dump.json", user)
+
+
     def __unicode__(self):
         return self.summary
 
@@ -487,6 +512,17 @@ class Quiz(models.Model):
 
     def has_prerequisite(self):
         return True if self.prerequisite else False
+
+    def create_demo_quiz(self, course):
+        demo_quiz = Quiz.objects.get_or_create(start_date_time=timezone.now(),
+                                        end_date_time=timezone.now() + timedelta(176590),
+                                        duration=30, active=True,
+                                        attempts_allowed=-1,
+                                        time_between_attempts=0,
+                                        description='Yaksh Demo quiz', pass_criteria=0,
+                                        language='Python', prerequisite=None,
+                                        course=course)
+        return demo_quiz
     
     def __unicode__(self):
         desc = self.description or 'Quiz'
@@ -618,6 +654,17 @@ class QuestionPaper(models.Model):
         if self.quiz.has_prerequisite():
             prerequisite = self._get_prequisite_paper()
             return prerequisite._is_questionpaper_passed(user)
+
+    def create_demo_que_ppr(self, demo_quiz):
+        question_paper = QuestionPaper.objects.get_or_create(quiz=demo_quiz[0],
+                                                             total_marks=5.0,
+                                                             shuffle_questions=True
+                                                             )
+        questions = Question.objects.filter(active=True,
+                                            summary="Yaksh Demo Question")
+        # add fixed set of questions to the question paper
+        for question in questions:
+            question_paper[0].fixed_questions.add(question)
     
     def __unicode__(self):
         return "Question Paper for " + self.quiz.description
