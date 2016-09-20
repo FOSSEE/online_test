@@ -159,9 +159,9 @@ class Course(models.Model):
     def create_demo(self, user):
         course = Course.objects.filter(creator=user, name="Yaksh Demo course")
         if not course:
-            course, c_status= Course.objects.get_or_create(name="Yaksh Demo course",
-                                                           enrollment="open",
-                                                           creator=user)
+            course = Course.objects.create(name="Yaksh Demo course",
+                                           enrollment="open",
+                                           creator=user)
             quiz = Quiz()
             demo_quiz = quiz.create_demo_quiz(course)
             demo_ques = Question()
@@ -514,7 +514,7 @@ class Quiz(models.Model):
         return True if self.prerequisite else False
 
     def create_demo_quiz(self, course):
-        demo_quiz = Quiz.objects.get_or_create(start_date_time=timezone.now(),
+        demo_quiz = Quiz.objects.create(start_date_time=timezone.now(),
                                         end_date_time=timezone.now() + timedelta(176590),
                                         duration=30, active=True,
                                         attempts_allowed=-1,
@@ -656,15 +656,15 @@ class QuestionPaper(models.Model):
             return prerequisite._is_questionpaper_passed(user)
 
     def create_demo_que_ppr(self, demo_quiz):
-        question_paper = QuestionPaper.objects.get_or_create(quiz=demo_quiz[0],
-                                                             total_marks=5.0,
-                                                             shuffle_questions=True
-                                                             )
+        question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
+                                                      total_marks=5.0,
+                                                      shuffle_questions=True
+                                                      )
         questions = Question.objects.filter(active=True,
                                             summary="Yaksh Demo Question")
         # add fixed set of questions to the question paper
         for question in questions:
-            question_paper[0].fixed_questions.add(question)
+            question_paper.fixed_questions.add(question)
     
     def __unicode__(self):
         return "Question Paper for " + self.quiz.description
