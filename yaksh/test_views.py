@@ -650,12 +650,6 @@ class TestCourses(TestCase):
         self.client = Client()
 
         self.mod_group = Group.objects.create(name='moderator')
-        user = User.objects.get_or_create(username='yaksh_demo_user',
-                                          password='demo',
-                                          email='demo@test.com')
-        course = Course.objects.get_or_create(name="Yaksh Demo course",
-                                              enrollment="open",
-                                              creator=user[0])
         # Create Moderator with profile
         self.user1_plaintext_pass = 'demo1'
         self.user1 = User.objects.create_user(
