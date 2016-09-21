@@ -11,13 +11,8 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from yaksh.models import User, Profile, Question, Quiz, Course, QuestionPaper, TestCase
 from selenium_test import SeleniumTest
 
-from yaksh.code_server import ServerPool #SERVER_POOL_PORT, SERVER_PORTS
+from yaksh.code_server import ServerPool
 from yaksh import settings
-# from django.core.management import call_command
-from yaksh.management.commands.create_demo_course import create_demo_course
-
-
-CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class YakshSeleniumTests(StaticLiveServerTestCase):
@@ -37,7 +32,29 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
         cls.code_server_thread = t = Thread(target=code_server_pool.run)
         t.start()
 
-        demo_course_setup = create_demo_course()
+        demo_student = User.objects.create_user(username='demo_student',
+           password='demo_student',
+           email='demo_student@test.com'
+        )
+        demo_student_profile = Profile.objects.create(user=demo_student,
+            roll_number=3, institute='IIT',
+            department='Chemical', position='Student'
+        )
+
+        demo_mod = User.objects.create_user(username='demo_mod',
+           password='demo_mod',
+           email='demo_mod@test.com'
+        )
+        demo_mod_profile = Profile.objects.create(user=demo_mod,
+            roll_number=0, institute='IIT',
+            department='Chemical', position='Moderator'
+        )
+
+        course_obj = Course()
+        course_obj.create_demo(demo_mod)
+        demo_course = Course.objects.get(id=1)
+
+        demo_course.students.add(demo_student)
 
     @classmethod
     def tearDownClass(cls):
@@ -55,6 +72,6 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
 
     def test_load(self):
         url = '%s%s' % (self.live_server_url, '/exam/login/')
-        quiz_name = "Demo_quiz"
+        quiz_name = "Yaksh Demo quiz"
         selenium_test = SeleniumTest(url=url, quiz_name=quiz_name)
         selenium_test.run_load_test(url=url, username='demo_student', password='demo_student')
