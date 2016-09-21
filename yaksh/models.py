@@ -167,7 +167,7 @@ class Course(models.Model):
             demo_ques = Question()
             demo_ques.create_demo_questions(user)
             demo_que_ppr = QuestionPaper()
-            demo_que_ppr.create_demo_que_ppr(demo_quiz)
+            demo_que_ppr.create_demo_quiz_ppr(demo_quiz)
             success = True
         else:
             success = False
@@ -655,7 +655,7 @@ class QuestionPaper(models.Model):
             prerequisite = self._get_prequisite_paper()
             return prerequisite._is_questionpaper_passed(user)
 
-    def create_demo_que_ppr(self, demo_quiz):
+    def create_demo_quiz_ppr(self, demo_quiz):
         question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
                                                       total_marks=5.0,
                                                       shuffle_questions=True
