@@ -101,5 +101,6 @@ urlpatterns += [
     url(r'^manage/remove_teachers/(?P<course_id>\d+)/$', views.remove_teachers, name='remove_teacher'),
     url(r'^manage/download_questions/$', views.show_all_questions),
     url(r'^manage/upload_questions/$', views.show_all_questions),
-    url(r'^manage/(?P<mode>[\w\-]+)/(?P<quiz_id>\d+)/$', views.test_quiz)
+    url(r'^manage/(?P<mode>[\w\-]+)/(?P<quiz_id>\d+)/$', views.test_quiz),
+    url(r'^manage/create_demo_course/$', views.create_demo_course),
 ]

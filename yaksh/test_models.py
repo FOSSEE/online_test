@@ -1,13 +1,17 @@
 import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdioBasedTestCase
+    StdioBasedTestCase, FileUpload
 import json
 from datetime import datetime, timedelta
 from django.utils import timezone
 import pytz
 from django.contrib.auth.models import Group
-
+from django.core.files import File
+import zipfile
+import os
+import shutil
+import tempfile
 
 def setUpModule():
     # create user profile
@@ -58,7 +62,11 @@ def tearDownModule():
     User.objects.all().delete()
     Question.objects.all().delete()
     Quiz.objects.all().delete()
-
+    
+    que_id_list = ["25", "22", "24", "27"]
+    for que_id in que_id_list:
+        dir_path = os.path.join(os.getcwd(), "yaksh", "data","question_{0}".format(que_id))
+        shutil.rmtree(dir_path)
 
 ###############################################################################
 class ProfileTestCases(unittest.TestCase):
@@ -106,6 +114,20 @@ class QuestionTestCases(unittest.TestCase):
         )
         self.question2.save()
 
+        # create a temp directory and add files for loading questions test
+        file_path = os.path.join(os.getcwd(), "yaksh", "test.txt")
+        self.load_tmp_path = tempfile.mkdtemp()
+        shutil.copy(file_path, self.load_tmp_path)
+        file1 = os.path.join(self.load_tmp_path, "test.txt")
+
+        # create a temp directory and add files for dumping questions test
+        self.dump_tmp_path = tempfile.mkdtemp()
+        shutil.copy(file_path, self.dump_tmp_path)
+        file2 = os.path.join(self.dump_tmp_path, "test.txt")
+        file = open(file2, "r")
+        django_file = File(file)
+        file = FileUpload.objects.create(file=django_file, question=self.question2)
+
         self.question1.tags.add('python', 'function')
         self.assertion_testcase = StandardTestCase(question=self.question1,
             test_case='assert myfunc(12, 13) == 15'
@@ -122,8 +144,13 @@ class QuestionTestCases(unittest.TestCase):
                            "language": "Python", "type": "Code",
                            "test_case_type": "standardtestcase",
                            "testcase": self.test_case_upload_data,
+                           "files": [[file1, 0]],
                            "summary": "Json Demo"}]
         self.json_questions_data = json.dumps(questions_data)
+
+    def tearDown(self):
+        shutil.rmtree(self.load_tmp_path)
+        shutil.rmtree(self.dump_tmp_path)
 
     def test_question(self):
         """ Test question """
@@ -139,28 +166,38 @@ class QuestionTestCases(unittest.TestCase):
                     tag_list.append(tag.name)
         self.assertEqual(tag_list, ['python', 'function'])
 
-    def test_dump_questions_into_json(self):
+    def test_dump_questions(self):
         """ Test dump questions into json """
         question = Question()
         question_id = [self.question2.id]
-        questions = json.loads(question.dump_into_json(question_id, self.user2))
+        questions_zip = question.dump_questions(question_id, self.user2)
+        que_file = FileUpload.objects.get(question=self.question2.id)
+        zip_file = zipfile.ZipFile(questions_zip, "r")
+        tmp_path = tempfile.mkdtemp()
+        zip_file.extractall(tmp_path)
         test_case = self.question2.get_test_cases()
-        for q in questions:
-            self.assertEqual(self.question2.summary, q['summary'])
-            self.assertEqual(self.question2.language, q['language'])
-            self.assertEqual(self.question2.type, q['type'])
-            self.assertEqual(self.question2.description, q['description'])
-            self.assertEqual(self.question2.points, q['points'])
-            self.assertTrue(self.question2.active)
-            self.assertEqual(self.question2.snippet, q['snippet'])
-            self.assertEqual(self.question2.test_case_type, q['test_case_type'])
-            self.assertEqual([case.get_field_value() for case in test_case], q['testcase'])
+        with open("{0}/questions_dump.json".format(tmp_path), "r") as f:
+            questions = json.loads(f.read())
+            for q in questions:
+                self.assertEqual(self.question2.summary, q['summary'])
+                self.assertEqual(self.question2.language, q['language'])
+                self.assertEqual(self.question2.type, q['type'])
+                self.assertEqual(self.question2.description, q['description'])
+                self.assertEqual(self.question2.points, q['points'])
+                self.assertTrue(self.question2.active)
+                self.assertEqual(self.question2.snippet, q['snippet'])
+                self.assertEqual(self.question2.test_case_type, q['test_case_type'])
+                self.assertEqual(os.path.basename(que_file.file.path), q['files'][0][0])
+                self.assertEqual([case.get_field_value() for case in test_case], q['testcase'])
+        for file in zip_file.namelist():
+            os.remove(os.path.join(tmp_path, file))
 
-    def test_load_questions_from_json(self):
+    def test_load_questions(self):
         """ Test load questions into database from json """
         question = Question()
-        result = question.load_from_json(self.json_questions_data, self.user1)
+        result = question.load_questions(self.json_questions_data, self.user1)
         question_data = Question.objects.get(pk=25)
+        file = FileUpload.objects.get(question=25)
         test_case = question_data.get_test_cases()
         self.assertEqual(question_data.summary, 'Json Demo')
         self.assertEqual(question_data.language, 'Python')
@@ -170,6 +207,7 @@ class QuestionTestCases(unittest.TestCase):
         self.assertTrue(question_data.active)
         self.assertEqual(question_data.snippet, 'def fact()')
         self.assertEqual(question_data.test_case_type, 'standardtestcase')
+        self.assertEqual(os.path.basename(file.file.path), "test.txt")
         self.assertEqual([case.get_field_value() for case in test_case], self.test_case_upload_data)
 
 

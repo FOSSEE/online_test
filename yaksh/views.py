@@ -22,6 +22,7 @@ import pytz
 from taggit.models import Tag
 from itertools import chain
 import json
+import zipfile
 
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
@@ -34,6 +35,7 @@ from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
 from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
+from file_utils import extract_files
 
 # The directory where user data can be saved.
 OUTPUT_DIR = abspath(join(dirname(__file__), 'output'))
@@ -73,12 +75,14 @@ def is_moderator(user):
     if user.groups.filter(name='moderator').exists():
         return True
 
+
 def add_to_group(users):
     """ add users to moderator group """
     group = Group.objects.get(name="moderator")
     for user in users:
         if not is_moderator(user):
             user.groups.add(group)
+
 
 def index(request):
     """The start page.
@@ -253,7 +257,7 @@ def add_quiz(request, course_id, quiz_id=None):
     course = get_object_or_404(Course, pk=course_id)
     ci = RequestContext(request)
     if not is_moderator(user) or (user != course.creator and user not in course.teachers.all()):
-        raise Http404('You are not allowed to view this page!')
+        raise Http404('You are not allowed to view this course !')
     context = {}
     if request.method == "POST":
         if quiz_id is None:
@@ -679,6 +683,7 @@ def courses(request):
         raise Http404('You are not allowed to view this page')
     courses = Course.objects.filter(creator=user, is_trial=False)
     allotted_courses = Course.objects.filter(teachers=user, is_trial=False)
+    
     context = {'courses': courses, "allotted_courses": allotted_courses}
     return my_render_to_response('yaksh/courses.html', context,
                                  context_instance=ci)
@@ -885,22 +890,25 @@ def show_all_questions(request):
             form = UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
                 questions_file = request.FILES['file']
-                if questions_file.name.split('.')[-1] == "json":
-                    questions_list = questions_file.read()
-                    question = Question()
-                    question.load_from_json(questions_list, user)
+                file_name = questions_file.name.split('.')
+                if file_name[-1] == "zip":
+                    ques = Question()
+                    extract_files(questions_file)
+                    ques.read_json("questions_dump.json", user)
                 else:
-                    message = "Please Upload a JSON file"
+                    message = "Please Upload a ZIP file"
                     context['message'] = message
 
         if request.POST.get('download') == 'download':
             question_ids = request.POST.getlist('question')
             if question_ids:
                 question = Question()
-                questions = question.dump_into_json(question_ids, user)
-                response = HttpResponse(questions, content_type='text/json')
-                response['Content-Disposition'] = 'attachment; filename=\
-                                            "{0}_questions.json"'.format(user)
+                zip_file = question.dump_questions(question_ids, user)
+                response = HttpResponse(content_type='application/zip')
+                response['Content-Disposition'] = '''attachment;\
+                                          filename={0}_questions.zip'''.format(user)
+                zip_file.seek(0)
+                response.write(zip_file.read())
                 return response
             else:
                 context['msg'] = "Please select atleast one question to download"
@@ -1286,3 +1294,20 @@ def view_answerpaper(request, questionpaper_id):
         return my_render_to_response('yaksh/view_answerpaper.html', context)
     else:
         return my_redirect('/exam/quizzes/')
+
+
+@login_required
+def create_demo_course(request):
+    """ creates a demo course for user """
+    user = request.user
+    ci = RequestContext(request)
+    if not is_moderator(user):
+        raise("You are not allowed to view this page")
+    demo_course = Course()
+    success = demo_course.create_demo(user)
+    if success:
+        msg = "Created Demo course successfully"
+    else:
+        msg = "Demo course already created"
+    context = {'msg': msg}
+    return my_render_to_response('manage.html', context, context_instance=ci)

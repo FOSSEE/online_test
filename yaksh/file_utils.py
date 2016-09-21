@@ -13,12 +13,10 @@ def copy_files(file_paths):
         file_name = os.path.basename(file_path)
         files.append(file_name)
         shutil.copy(file_path, os.getcwd())
-        if extract and zipfile.is_zipfile(file_name):
-            unzip = zipfile.ZipFile(file_name)
-            for zip_files in unzip.namelist():
-                files.append(zip_files)
-            unzip.extractall()
-            unzip.close()
+        if extract:
+            z_files = extract_files(file_name)
+            for file in z_files:
+                files.append(file)
     return files
 
 
@@ -31,3 +29,15 @@ def delete_files(files):
                 os.remove(file)
             else:
                 shutil.rmtree(file)
+
+
+def extract_files(zip_file):
+    zfiles = []
+    if zipfile.is_zipfile(zip_file):
+        zip_file = zipfile.ZipFile(zip_file, 'r')
+        for z_file in zip_file.namelist():
+            zfiles.append(z_file)
+        zip_file.extractall()
+        zip_file.close()
+        return zfiles
+

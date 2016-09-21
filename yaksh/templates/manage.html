@@ -77,6 +77,26 @@
                     <h4>Moderator's Dashboard!</h4>
                     <h5>Click on the button given below to add a new course.</h5>
                     <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/add_course");'>Add New Course</button>
+                    <h5>Click on the button to Create a Demo course.
+                    <a href="" onclick="$('#help').show(); return false;">Help </a></h5>
+                    <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/create_demo_course");'>Create Demo Course</button>
+                    <div style="display: none;" id="help">
+                    <ol>
+                    <ul>
+                    <li>A Demo Course and Demo Quiz will be created (Click Courses link on nav bar to view courses).</li>
+                    <li>Some Demo Questions are also created for you (Click Questions link on nav bar to view questions).</li>
+                    <li>In Courses you can view Demo Quiz.</li>
+                    <li>Click on the Demo Quiz and Click on User Mode or God Mode to take the quiz.
+                    </li>
+                    <li>You can also edit the Demo quiz.
+                    </li>
+                    </ul>
+                    </p>
+                    <a href="" onclick="$('#help').hide(); return false"> Close </a>
+                    </div>
+                    {% if msg %}
+                    <h4>{{ msg }}</h4>
+                    {% endif %}
                 </center>
                 {% if trial_paper %}
                   <h5/> You have trial papers.
