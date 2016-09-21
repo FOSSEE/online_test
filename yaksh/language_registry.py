@@ -1,6 +1,10 @@
-from settings import code_evaluators
+from __future__ import absolute_import
 import importlib
 import json
+import six  
+
+# Local imports
+from .settings import code_evaluators
 
 registry = None
     
@@ -24,7 +28,7 @@ def create_evaluator_instance(language, test_case_type, json_data, in_dir):
 class _LanguageRegistry(object):
     def __init__(self):
         self._register = {}
-        for language, module in code_evaluators.iteritems():
+        for language, module in six.iteritems(code_evaluators):
             self._register[language] = None
 
     # Public Protocol ##########

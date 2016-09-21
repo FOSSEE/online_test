@@ -1,5 +1,6 @@
+#!/usr/bin/env python
+from __future__ import absolute_import
 import sys
-from SimpleXMLRPCServer import SimpleXMLRPCServer
 import pwd
 import os
 import stat
@@ -9,8 +10,15 @@ import traceback
 from multiprocessing import Process, Queue
 import subprocess
 import re
-# Local imports.
-from settings import SERVER_TIMEOUT
+
+try:
+    from SimpleXMLRPCServer import SimpleXMLRPCServer
+except ImportError:
+    # The above import will not work on Python-3.x.
+    from xmlrpc.server import SimpleXMLRPCServer
+
+# Local imports
+from .settings import SERVER_TIMEOUT
 
 MY_DIR = abspath(dirname(__file__))
 

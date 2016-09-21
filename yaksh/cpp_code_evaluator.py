@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
 import traceback
 import pwd
 import os
@@ -6,9 +7,9 @@ from os.path import join, isfile
 import subprocess
 import importlib
 
-# local imports
-from code_evaluator import CodeEvaluator
-from file_utils import copy_files, delete_files
+# Local imports
+from .code_evaluator import CodeEvaluator
+from .file_utils import copy_files, delete_files
 
 
 class CppCodeEvaluator(CodeEvaluator):

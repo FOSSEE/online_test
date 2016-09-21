@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import unittest
 import os
 from yaksh import code_evaluator as evaluator
@@ -30,7 +31,7 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                     'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -65,7 +66,7 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs) 
         self.assertFalse(result.get("success"))
-        self.assertEquals(result.get("error"), self.timeout_msg)
+        self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_file_based_assert(self):
         self.file_paths = [(os.getcwd()+"/yaksh/test.txt", False)]
@@ -97,7 +98,7 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                   }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get("success"))
-        self.assertEquals(result.get("error"), "Correct answer")
+        self.assertEqual(result.get("error"), "Correct answer")
 
 class JavaStdioEvaluationTestCases(unittest.TestCase):
 
@@ -127,7 +128,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
@@ -149,7 +150,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -202,7 +203,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                   }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
-        self.assertEquals(result.get("error"), self.timeout_msg)
+        self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
@@ -219,7 +220,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
     def test_string_input(self):
@@ -239,7 +240,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':

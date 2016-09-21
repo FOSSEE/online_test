@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import unittest
 import os
 from yaksh.bash_code_evaluator import BashCodeEvaluator
@@ -28,7 +29,7 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get('success'))
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
 
     def test_error(self):
         user_answer = ("#!/bin/bash\n[[ $# -eq 2 ]] "
@@ -52,7 +53,7 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
-        self.assertEquals(result.get("error"), self.timeout_msg)
+        self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_file_based_assert(self):
         self.file_paths = [(os.getcwd()+"/yaksh/test.txt", False)]
@@ -67,7 +68,7 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get("success"))
-        self.assertEquals(result.get("error"), "Correct answer")
+        self.assertEqual(result.get("error"), "Correct answer")
 
 class BashStdioEvaluationTestCases(unittest.TestCase):
     def setUp(self):
@@ -88,7 +89,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                   "test_case_data": test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
@@ -108,7 +109,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                   "test_case_data": test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -142,7 +143,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                   "test_case_data": test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':

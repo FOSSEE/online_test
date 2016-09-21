@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import unittest
 import os
 from yaksh.python_assertion_evaluator import PythonAssertionEvaluator

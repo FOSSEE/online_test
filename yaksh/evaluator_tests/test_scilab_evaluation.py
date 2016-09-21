@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import unittest
 import os
 from yaksh import code_evaluator as evaluator
@@ -22,7 +23,7 @@ class ScilabEvaluationTestCases(unittest.TestCase):
                     'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_error(self):
@@ -61,7 +62,7 @@ class ScilabEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs) 
         self.assertFalse(result.get("success"))
-        self.assertEquals(result.get("error"), self.timeout_msg)
+        self.assertEqual(result.get("error"), self.timeout_msg)
 
 if __name__ == '__main__':
     unittest.main()

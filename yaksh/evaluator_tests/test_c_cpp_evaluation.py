@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import unittest
 import os
 from yaksh.cpp_code_evaluator import CppCodeEvaluator
@@ -24,7 +25,7 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
         }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get('success'))
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
 
     def test_incorrect_answer(self):
         user_answer = "int add(int a, int b)\n{return a-b;}"
@@ -58,7 +59,7 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
-        self.assertEquals(result.get("error"), self.timeout_msg)
+        self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_file_based_assert(self):
         self.file_paths = [(os.getcwd()+"/yaksh/test.txt", False)]
@@ -82,7 +83,7 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
                   }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get('success'))
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
 
 class CppStdioEvaluationTestCases(unittest.TestCase):
 
@@ -106,7 +107,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
@@ -126,7 +127,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
     def test_string_input(self):
@@ -144,7 +145,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -191,7 +192,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
-        self.assertEquals(result.get("error"), self.timeout_msg)
+        self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
@@ -207,7 +208,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
     def test_cpp_correct_answer(self):
@@ -224,7 +225,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
     def test_cpp_array_input(self):
@@ -245,7 +246,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
     def test_cpp_string_input(self):
@@ -264,7 +265,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
     def test_cpp_incorrect_answer(self):
@@ -314,7 +315,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
-        self.assertEquals(result.get("error"), self.timeout_msg)
+        self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_cpp_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
@@ -331,7 +332,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct Answer")
         self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':

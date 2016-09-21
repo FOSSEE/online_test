@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
 import traceback
 import os
 from os.path import join, isfile
@@ -6,9 +7,9 @@ import subprocess
 import re
 import importlib
 
-# local imports
-from code_evaluator import CodeEvaluator
-from file_utils import copy_files, delete_files
+# Local imports
+from .code_evaluator import CodeEvaluator
+from .file_utils import copy_files, delete_files
 
 
 class ScilabCodeEvaluator(CodeEvaluator):

@@ -1,16 +1,23 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
 import sys
 import traceback
 import os
 from os.path import join
 import importlib
 from contextlib import contextmanager
-from ast import literal_eval
-# local imports
-from code_evaluator import CodeEvaluator
-from StringIO import StringIO
-from file_utils import copy_files, delete_files
 from textwrap import dedent
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
+# Local imports
+from .code_evaluator import CodeEvaluator
+from .file_utils import copy_files, delete_files
+
+
 @contextmanager
 def redirect_stdout():
     new_target = StringIO()
@@ -43,7 +50,7 @@ class PythonStdioEvaluator(CodeEvaluator):
             sys.stdin = input_buffer
         with redirect_stdout() as output_buffer:
             exec_scope = {}
-            exec submitted in exec_scope
+            exec(submitted, exec_scope)
         self.output_value = output_buffer.getvalue().rstrip("\n")
         return self.output_value
 

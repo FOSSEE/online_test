@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import unittest
 import os
 from yaksh import python_assertion_evaluator
@@ -38,7 +39,7 @@ class RegistryTestCase(unittest.TestCase):
                 "stdiobasedtestcase": stdout_evaluator_path
             }
         )
-        self.assertEquals(evaluator_class, class_name)
+        self.assertEqual(evaluator_class, class_name)
 
     def tearDown(self):
         self.registry_object = None
