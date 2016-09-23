@@ -1132,12 +1132,207 @@ class TestViewAnswerPaper(TestCase):
         self.assertRedirects(response, '/exam/quizzes/')
 
 
-class TestSelfEnroll(TestCase):
+class TestGrader(TestCase):
     def setUp(self):
         self.client = Client()
 
         self.mod_group = Group.objects.create(name='moderator')
 
+        # Create Moderator with profile
+        self.user1_plaintext_pass = 'demo1'
+        self.user1 = User.objects.create_user(
+            username='demo_user1',
+            password=self.user1_plaintext_pass,
+            first_name='user1_first_name',
+            last_name='user1_last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user1,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        self.user2_plaintext_pass = 'demo2'
+        self.user2 = User.objects.create_user(
+            username='demo_user2',
+            password=self.user2_plaintext_pass,
+            first_name='user2_first_name',
+            last_name='user2_last_name',
+            email='demo2@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user2,
+            roll_number=10,
+            institute='IIT',
+            department='Aeronautical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Create Student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user1)
+        self.mod_group.user_set.add(self.user2)
+
+        self.course = Course.objects.create(name="Python Course",
+            enrollment="Enroll Request", creator=self.user1)
+
+        self.question = Question.objects.create(summary='Dummy', points=1,
+                                               type='code', user=self.user1)
+
+        self.quiz = Quiz.objects.create(time_between_attempts=0, course=self.course,
+                                        description='demo quiz', language='Python')
+
+        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+            total_marks=1.0)
+
+        self.question_paper.fixed_questions.add(self.question)
+        self.question_paper.save()
+
+        self.answerpaper = AnswerPaper.objects.create(user_id=3,
+                attempt_number=1, question_paper=self.question_paper,
+                start_time=timezone.now(), user_ip='101.0.0.1',
+                end_time=timezone.now()+timezone.timedelta(minutes=20))
+
+    def tearDown(self):
+        self.client.logout()
+        self.user1.delete()
+        self.user2.delete()
+        self.student.delete()
+        self.course.delete()
+
+    def test_grader_denies_anonymous(self):
+        # Given
+        redirect_destination = ('/exam/login/?next=/exam/manage/grader/')
+
+        # When
+        response = self.client.get(reverse('yaksh:grader'), follow=True)
+
+        # Then
+        self.assertRedirects(response, redirect_destination)
+
+
+    def test_grader_denies_students(self):
+        # Given
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        # When
+        response = self.client.get(reverse('yaksh:grader'), follow=True)
+
+        # Then
+        self.assertEqual(response.status_code, 404)
+
+
+    def test_regrade_denies_anonymous(self):
+        # Given
+        redirect_destination = ('/exam/login/?next=/exam/manage/regrade/answerpaper/1/1/1/')
+
+        # When
+        response = self.client.get(reverse('yaksh:regrade',
+            kwargs={'course_id': self.course.id,
+                'question_id': self.question.id,
+                'answerpaper_id': self.answerpaper.id}),
+            follow=True)
+
+        # Then
+        self.assertRedirects(response, redirect_destination)
+
+
+    def test_regrade_denies_students(self):
+        # Given
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        # When
+        response = self.client.get(reverse('yaksh:regrade',
+                kwargs={'course_id': self.course.id,
+                    'question_id': self.question.id,
+                    'answerpaper_id': self.answerpaper.id}),
+                follow=True)
+
+        # Then
+        self.assertEqual(response.status_code, 404)
+
+
+    def test_grader_by_moderator(self):
+        # Given
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+
+        # When
+        response = self.client.get(reverse('yaksh:grader'),
+                follow=True)
+
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('courses' in response.context)
+        self.assertTemplateUsed(response, 'yaksh/regrade.html')
+
+
+    def test_regrade_by_moderator(self):
+        # Given
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+
+        # When
+        response = self.client.get(reverse('yaksh:regrade',
+            kwargs={'course_id': self.course.id,
+                'question_id': self.question.id,
+                'answerpaper_id': self.answerpaper.id}),
+            follow=True)
+
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('courses' in response.context)
+        self.assertTrue('details' in response.context)
+        self.assertTemplateUsed(response, 'yaksh/regrade.html')
+
+
+    def test_regrade_denies_moderator_not_in_course(self):
+        # Given
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+
+        # When
+        response = self.client.get(reverse('yaksh:regrade',
+            kwargs={'course_id': self.course.id,
+                'question_id': self.question.id,
+                'answerpaper_id': self.answerpaper.id}),
+            follow=True)
+
+        # Then
+        self.assertEqual(response.status_code, 404)
+
+class TestSelfEnroll(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
         # Create Moderator with profile
         self.user1_plaintext_pass = 'demo1'
         self.user1 = User.objects.create_user(

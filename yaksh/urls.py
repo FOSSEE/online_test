@@ -101,5 +101,14 @@ urlpatterns += [
     url(r'^manage/remove_teachers/(?P<course_id>\d+)/$', views.remove_teachers, name='remove_teacher'),
     url(r'^manage/download_questions/$', views.show_all_questions),
     url(r'^manage/upload_questions/$', views.show_all_questions),
-    url(r'^manage/(?P<mode>[\w\-]+)/(?P<quiz_id>\d+)/$', views.test_quiz)
+    url(r'^manage/grader/$', views.grader, name='grader'),
+    url(r'^manage/regrade/question/(?P<course_id>\d+)/(?P<question_id>\d+)/$',
+            views.regrade, name='regrade'),
+    url(r'^manage/regrade/questionpaper/(?P<course_id>\d+)/(?P<question_id>\d+)/(?P<questionpaper_id>\d+)/$',
+            views.regrade, name='regrade'),
+    url(r'^manage/regrade/answerpaper/(?P<course_id>\d+)/(?P<question_id>\d+)/(?P<answerpaper_id>\d+)/$',
+            views.regrade, name='regrade'),
+    url(r'^manage/regrade/paper/(?P<course_id>\d+)/(?P<answerpaper_id>\d+)/$',
+            views.regrade, name='regrade'),
+    url(r'^manage/(?P<mode>[\w\-]+)/(?P<quiz_id>\d+)/$', views.test_quiz),
 ]

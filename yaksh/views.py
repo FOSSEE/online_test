@@ -1,8 +1,6 @@
 import random
 import string
 import os
-import stat
-from os.path import dirname, pardir, abspath, join, exists
 from datetime import datetime
 import collections
 import csv
@@ -22,7 +20,6 @@ import pytz
 from taggit.models import Tag
 from itertools import chain
 import json
-
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
@@ -31,12 +28,9 @@ from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm,\
                 QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
                 get_object_form, FileForm
-from yaksh.xmlrpc_clients import code_server
 from settings import URL_ROOT
 from yaksh.models import AssignmentUpload
 
-# The directory where user data can be saved.
-OUTPUT_DIR = abspath(join(dirname(__file__), 'output'))
 
 
 def my_redirect(url):
@@ -53,19 +47,6 @@ def my_render_to_response(template, context=None, **kwargs):
     else:
         context['URL_ROOT'] = URL_ROOT
     return render_to_response(template, context, **kwargs)
-
-
-def get_user_dir(user):
-    """Return the output directory for the user."""
-
-    user_dir = join(OUTPUT_DIR, str(user.username))
-    if not exists(user_dir):
-        os.mkdir(user_dir)
-        # Make it rwx by others.
-        os.chmod(user_dir, stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH
-                 | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
-                 | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
-    return user_dir
 
 
 def is_moderator(user):
@@ -430,7 +411,7 @@ def start(request, questionpaper_id=None, attempt_num=None):
             raise Http404(msg)
         new_paper = quest_paper.make_answerpaper(user, ip, attempt_num)
         # Make user directory.
-        user_dir = get_user_dir(user)
+        user_dir = new_paper.user.profile.get_user_dir()
         return show_question(request, new_paper.current_question(), new_paper)
 
 
@@ -531,7 +512,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         # safely in a separate process (the code_server.py) running as nobody.
         json_data = question.consolidate_answer_data(user_answer) \
                         if question.type == 'code' else None
-        correct, result = validate_answer(user, user_answer, question, json_data)
+        correct, result = paper.validate_answer(user_answer, question, json_data)
         if correct:
             new_answer.correct = correct
             new_answer.marks = question.points
@@ -551,40 +532,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     else:
         return show_question(request, question, paper)
 
-
-def validate_answer(user, user_answer, question, json_data=None):
-    """
-        Checks whether the answer submitted by the user is right or wrong.
-        If right then returns correct = True, success and
-        message = Correct answer.
-        success is True for MCQ's and multiple correct choices because
-        only one attempt are allowed for them.
-        For code questions success is True only if the answer is correct.
-    """
-
-    result = {'success': True, 'error': 'Incorrect answer'}
-    correct = False
-
-    if user_answer is not None:
-        if question.type == 'mcq':
-            expected_answer = question.get_test_case(correct=True).options
-            if user_answer.strip() == expected_answer.strip():
-                correct = True
-                result['error'] = 'Correct answer'
-        elif question.type == 'mcc':
-            expected_answers = []
-            for opt in question.get_test_cases(correct=True):
-                expected_answers.append(opt.options)
-            if set(user_answer) == set(expected_answers):
-                result['error'] = 'Correct answer'
-                correct = True
-        elif question.type == 'code':
-            user_dir = get_user_dir(user)
-            json_result = code_server.run_code(question.language, question.test_case_type, json_data, user_dir)
-            result = json.loads(json_result)
-            if result.get('success'):
-                correct = True
-    return correct, result
 
 
 def quit(request, reason=None, attempt_num=None, questionpaper_id=None):
@@ -1229,7 +1176,6 @@ def add_teacher(request, course_id):
                                     context_instance=ci)
 
 
-
 @login_required
 def remove_teachers(request, course_id):
     """  remove user from a course """
@@ -1286,3 +1232,38 @@ def view_answerpaper(request, questionpaper_id):
         return my_render_to_response('yaksh/view_answerpaper.html', context)
     else:
         return my_redirect('/exam/quizzes/')
+
+
+@login_required
+def grader(request, extra_context=None):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    courses = Course.objects.filter(is_trial=False)
+    user_courses = list(courses.filter(creator=user)) + list(courses.filter(teachers=user))
+    context = {'courses': user_courses}
+    if extra_context:
+        context.update(extra_context)
+    return my_render_to_response('yaksh/regrade.html', context)
+
+
+@login_required
+def regrade(request, course_id, question_id=None, answerpaper_id=None, questionpaper_id=None):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    if not is_moderator(user) or (user != course.creator and user not in course.teachers.all()):
+        raise Http404('You are not allowed to view this page!')
+    details = []
+    if answerpaper_id is not None and question_id is None:
+        answerpaper = get_object_or_404(AnswerPaper, pk=answerpaper_id)
+        for question in answerpaper.questions.all():
+            details.append(answerpaper.regrade(question.id))
+    if questionpaper_id is not None and question_id is not None:
+        answerpapers = AnswerPaper.objects.filter(questions=question_id,
+                question_paper_id=questionpaper_id)
+        for answerpaper in answerpapers:
+            details.append(answerpaper.regrade(question_id))
+    if answerpaper_id is not None and question_id is not None:
+        answerpaper = get_object_or_404(AnswerPaper, pk=answerpaper_id)
+        details.append(answerpaper.regrade(question_id))
+    return grader(request, extra_context={'details': details})

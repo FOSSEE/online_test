@@ -12,7 +12,14 @@ from taggit.managers import TaggableManager
 from django.utils import timezone
 import pytz
 import os
+import stat
+from os.path import join, abspath, dirname, exists
 import shutil
+from yaksh.xmlrpc_clients import code_server
+
+
+# The directory where user data can be saved.
+OUTPUT_DIR = abspath(join(dirname(__file__), 'output'))
 
 languages = (
         ("python", "Python"),
@@ -171,6 +178,18 @@ class Profile(models.Model):
                                 default=pytz.utc.zone,
                                 choices=[(tz, tz) for tz in pytz.common_timezones]
                                 )
+
+    def get_user_dir(self):
+        """Return the output directory for the user."""
+
+        user_dir = join(OUTPUT_DIR, str(self.user.username))
+        if not exists(user_dir):
+            os.mkdir(user_dir)
+            # Make it rwx by others.
+            os.chmod(user_dir, stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH
+                     | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+                     | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
+        return user_dir
 
 
 ###############################################################################
@@ -901,6 +920,71 @@ class AnswerPaper(models.Model):
     def get_previous_answers(self, question):
         if question.type == 'code':
             return self.answers.filter(question=question).order_by('-id')
+
+    def validate_answer(self, user_answer, question, json_data=None):
+        """
+            Checks whether the answer submitted by the user is right or wrong.
+            If right then returns correct = True, success and
+            message = Correct answer.
+            success is True for MCQ's and multiple correct choices because
+            only one attempt are allowed for them.
+            For code questions success is True only if the answer is correct.
+        """
+
+        result = {'success': True, 'error': 'Incorrect answer'}
+        correct = False
+        if user_answer is not None:
+            if question.type == 'mcq':
+                expected_answer = question.get_test_case(correct=True).options
+                if user_answer.strip() == expected_answer.strip():
+                    correct = True
+                    result['error'] = 'Correct answer'
+            elif question.type == 'mcc':
+                expected_answers = []
+                for opt in question.get_test_cases(correct=True):
+                    expected_answers.append(opt.options)
+                if set(user_answer) == set(expected_answers):
+                    result['error'] = 'Correct answer'
+                    correct = True
+            elif question.type == 'code':
+                user_dir = self.user.profile.get_user_dir()
+                json_result = code_server.run_code(question.language,
+                        question.test_case_type, json_data, user_dir)
+                result = json.loads(json_result)
+                if result.get('success'):
+                    correct = True
+        return correct, result
+
+    def regrade(self, question_id):
+        try:
+            question = self.questions.get(id=question_id)
+            msg = 'User: {0}; Quiz: {1}; Question: {2}.\n'.format(
+                    self.user, self.question_paper.quiz.description, question)
+        except Question.DoesNotExist:
+            msg = 'User: {0}; Quiz: {1} Question id: {2}.\n'.format(
+                    self.user, self.question_paper.quiz.description, question_id)
+            return False, msg + 'Question not in the answer paper.'
+        user_answer = self.answers.filter(question=question).last()
+        if not user_answer:
+            return False, msg + 'Did not answer.'
+        if question.type == 'mcc':
+            try:
+                answer = eval(user_answer.answer)
+                if type(answer) is not list:
+                    return False, msg + 'MCC answer not a list.'
+            except Exception as e:
+                return False, msg + 'MCC answer submission error'
+        else:
+            answer = user_answer.answer
+        json_data = question.consolidate_answer_data(answer) \
+                            if question.type == 'code' else None
+        correct, result = self.validate_answer(answer, question, json_data)
+        user_answer.marks = question.points if correct else 0.0
+        user_answer.correct = correct
+        user_answer.error = result.get('error')
+        user_answer.save()
+        self.update_marks('complete')
+        return True, msg
 
     def __unicode__(self):
         u = self.user
