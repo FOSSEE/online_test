@@ -2,7 +2,7 @@ import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdioBasedTestCase, FileUpload, McqTestCase
-from yaksh.code_server import ServerPool, SERVER_POOL_PORT
+from yaksh.code_server import ServerPool
 from yaksh import settings
 from yaksh.xmlrpc_clients import CodeServerProxy
 import json
@@ -526,7 +526,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         settings.code_evaluators['python']['standardtestcase'] = \
             "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
         ports = range(9001, 9002)
-        server_pool = ServerPool(ports=ports, pool_port=SERVER_POOL_PORT)
+        server_pool = ServerPool(ports=ports, pool_port=56782)
         self.server_pool = server_pool
         self.server_thread = t = Thread(target=server_pool.run)
         t.start()
