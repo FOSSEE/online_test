@@ -1131,6 +1131,108 @@ class TestViewAnswerPaper(TestCase):
         self.assertRedirects(response, '/exam/quizzes/')
 
 
+class TestSelfEnroll(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
+        # Create Moderator with profile
+        self.user1_plaintext_pass = 'demo1'
+        self.user1 = User.objects.create_user(
+            username='demo_user1',
+            password=self.user1_plaintext_pass,
+            first_name='user1_first_name',
+            last_name='user1_last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user1,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        self.user2_plaintext_pass = 'demo2'
+        self.user2 = User.objects.create_user(
+            username='demo_user2',
+            password=self.user2_plaintext_pass,
+            first_name='user2_first_name',
+            last_name='user2_last_name',
+            email='demo2@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user2,
+            roll_number=10,
+            institute='IIT',
+            department='Aeronautical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Create Student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user1)
+        self.mod_group.user_set.add(self.user2)
+
+        self.course = Course.objects.create(name="Python Course",
+            enrollment="Enroll Request", creator=self.user1)
+
+    def tearDown(self):
+        self.client.logout()
+        self.user1.delete()
+        self.user2.delete()
+        self.student.delete()
+        self.course.delete()
+
+    def test_self_enroll_denies_anonymous(self):
+        response = self.client.get(reverse('yaksh:self_enroll',
+                kwargs={'course_id': self.course.id}
+            ),
+            follow=True
+        )
+        redirect_destination = ('/exam/login/?next=/exam'
+            '/self_enroll/{}/'.format(self.course.id))
+        self.assertRedirects(response, redirect_destination)
+
+    def test_enroll_request_get_for_student(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        response = self.client.get(reverse('yaksh:self_enroll',
+                kwargs={'course_id': self.course.id}
+            ),
+            follow=True
+        )
+        self.assertRedirects(response, '/exam/quizzes/')
+
+    def test_enroll_request_get_for_moderator(self):
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+
+        response = self.client.get(reverse('yaksh:self_enroll',
+                kwargs={'course_id': self.course.id}
+            ),
+            follow=True
+        )
+        self.assertRedirects(response, '/exam/manage/')
+
+
 class TestGrader(TestCase):
     def setUp(self):
         self.client = Client()
@@ -1209,11 +1311,12 @@ class TestGrader(TestCase):
                 end_time=timezone.now()+timezone.timedelta(minutes=20))
 
     def tearDown(self):
-        self.client.logout()
-        self.user1.delete()
-        self.user2.delete()
-        self.student.delete()
-        self.course.delete()
+        User.objects.all().delete()
+        Course.objects.all().delete()
+        Question.objects.all().delete()
+        Quiz.objects.all().delete()
+        QuestionPaper.objects.all().delete()
+        AnswerPaper.objects.all().delete()
 
     def test_grader_denies_anonymous(self):
         # Given
@@ -1327,104 +1430,3 @@ class TestGrader(TestCase):
 
         # Then
         self.assertEqual(response.status_code, 404)
-
-class TestSelfEnroll(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.mod_group = Group.objects.create(name='moderator')
-        # Create Moderator with profile
-        self.user1_plaintext_pass = 'demo1'
-        self.user1 = User.objects.create_user(
-            username='demo_user1',
-            password=self.user1_plaintext_pass,
-            first_name='user1_first_name',
-            last_name='user1_last_name',
-            email='demo@test.com'
-        )
-
-        Profile.objects.create(
-            user=self.user1,
-            roll_number=10,
-            institute='IIT',
-            department='Chemical',
-            position='Moderator',
-            timezone='UTC'
-        )
-
-        self.user2_plaintext_pass = 'demo2'
-        self.user2 = User.objects.create_user(
-            username='demo_user2',
-            password=self.user2_plaintext_pass,
-            first_name='user2_first_name',
-            last_name='user2_last_name',
-            email='demo2@test.com'
-        )
-
-        Profile.objects.create(
-            user=self.user2,
-            roll_number=10,
-            institute='IIT',
-            department='Aeronautical',
-            position='Moderator',
-            timezone='UTC'
-        )
-
-        # Create Student
-        self.student_plaintext_pass = 'demo_student'
-        self.student = User.objects.create_user(
-            username='demo_student',
-            password=self.student_plaintext_pass,
-            first_name='student_first_name',
-            last_name='student_last_name',
-            email='demo_student@test.com'
-        )
-
-        # Add to moderator group
-        self.mod_group.user_set.add(self.user1)
-        self.mod_group.user_set.add(self.user2)
-
-        self.course = Course.objects.create(name="Python Course",
-            enrollment="Enroll Request", creator=self.user1)
-
-    def tearDown(self):
-        self.client.logout()
-        self.user1.delete()
-        self.user2.delete()
-        self.student.delete()
-        self.course.delete()
-
-    def test_self_enroll_denies_anonymous(self):
-        response = self.client.get(reverse('yaksh:self_enroll',
-                kwargs={'course_id': self.course.id}
-            ),
-            follow=True
-        )
-        redirect_destination = ('/exam/login/?next=/exam'
-            '/self_enroll/{}/'.format(self.course.id))
-        self.assertRedirects(response, redirect_destination)
-
-    def test_enroll_request_get_for_student(self):
-        self.client.login(
-            username=self.student.username,
-            password=self.student_plaintext_pass
-        )
-
-        response = self.client.get(reverse('yaksh:self_enroll',
-                kwargs={'course_id': self.course.id}
-            ),
-            follow=True
-        )
-        self.assertRedirects(response, '/exam/quizzes/')
-
-    def test_enroll_request_get_for_moderator(self):
-        self.client.login(
-            username=self.user2.username,
-            password=self.user2_plaintext_pass
-        )
-
-        response = self.client.get(reverse('yaksh:self_enroll',
-                kwargs={'course_id': self.course.id}
-            ),
-            follow=True
-        )
-        self.assertRedirects(response, '/exam/manage/')
