@@ -41,3 +41,4 @@ apache/*
 migrations
 wsgi.log
 *.sqlite3
+data/

@@ -11,7 +11,7 @@
 
 {% block manage %}
 
-<h4>Upload json file for adding questions</h4>
+<h4>Upload ZIP file for adding questions</h4>
 <form action="" method="post"  enctype="multipart/form-data">
 {% csrf_token %}
 {{ upload_form.as_p }}

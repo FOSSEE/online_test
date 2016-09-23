@@ -111,4 +111,5 @@ urlpatterns += [
     url(r'^manage/regrade/paper/(?P<course_id>\d+)/(?P<answerpaper_id>\d+)/$',
             views.regrade, name='regrade'),
     url(r'^manage/(?P<mode>[\w\-]+)/(?P<quiz_id>\d+)/$', views.test_quiz),
+    url(r'^manage/create_demo_course/$', views.create_demo_course),
 ]

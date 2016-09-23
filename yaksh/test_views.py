@@ -650,7 +650,6 @@ class TestCourses(TestCase):
         self.client = Client()
 
         self.mod_group = Group.objects.create(name='moderator')
-
         # Create Moderator with profile
         self.user1_plaintext_pass = 'demo1'
         self.user1 = User.objects.create_user(

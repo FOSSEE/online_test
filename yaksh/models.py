@@ -10,16 +10,22 @@ from django.forms.models import model_to_dict
 from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
 from django.utils import timezone
+from django.core.files import File
+from StringIO import StringIO
 import pytz
 import os
 import stat
 from os.path import join, abspath, dirname, exists
 import shutil
+import zipfile
+import tempfile
+from file_utils import extract_files
 from yaksh.xmlrpc_clients import code_server
 
 
 # The directory where user data can be saved.
 OUTPUT_DIR = abspath(join(dirname(__file__), 'output'))
+
 
 languages = (
         ("python", "Python"),
@@ -157,6 +163,23 @@ class Course(models.Model):
     def remove_teachers(self, *teachers):
         self.teachers.remove(*teachers)
 
+    def create_demo(self, user):
+        course = Course.objects.filter(creator=user, name="Yaksh Demo course")
+        if not course:
+            course = Course.objects.create(name="Yaksh Demo course",
+                                           enrollment="open",
+                                           creator=user)
+            quiz = Quiz()
+            demo_quiz = quiz.create_demo_quiz(course)
+            demo_ques = Question()
+            demo_ques.create_demo_questions(user)
+            demo_que_ppr = QuestionPaper()
+            demo_que_ppr.create_demo_quiz_ppr(demo_quiz)
+            success = True
+        else:
+            success = False
+        return success
+
     def __unicode__(self):
         return self.name
 
@@ -247,30 +270,35 @@ class Question(models.Model):
 
         return json.dumps(question_data)
 
-    def dump_into_json(self, question_ids, user):
+    def dump_questions(self, question_ids, user):
         questions = Question.objects.filter(id__in=question_ids, user_id=user.id)
         questions_dict = []
+        zip_file_name = StringIO()
+        zip_file = zipfile.ZipFile(zip_file_name, "a")
         for question in questions:
             test_case = question.get_test_cases()
+            file_names = question._add_and_get_files(zip_file)
             q_dict = {'summary': question.summary,
                       'description': question.description,
-                      'points': question.points,
-                      'language': question.language,
-                      'type': question.type,
-                      'active': question.active,
+                      'points': question.points, 'language': question.language,
+                      'type': question.type, 'active': question.active,
                       'test_case_type': question.test_case_type,
                       'snippet': question.snippet,
-                      'testcase': [case.get_field_value() for case in test_case]}
+                      'testcase': [case.get_field_value() for case in test_case],
+                      'files': file_names}
             questions_dict.append(q_dict)
+        question._add_json_to_zip(zip_file, questions_dict)
+        return zip_file_name
 
-        return json.dumps(questions_dict, indent=2)
-
-    def load_from_json(self, questions_list, user):
+    def load_questions(self, questions_list, user):
         questions = json.loads(questions_list)
         for question in questions:
             question['user'] = user
+            file_names = question.pop('files')
             test_cases = question.pop('testcase')
             que, result = Question.objects.get_or_create(**question)
+            if file_names:
+                que._add_files_to_db(file_names)
             model_class = get_model_class(que.test_case_type)
             for test_case in test_cases:
                 model_class.objects.get_or_create(question=que, **test_case)
@@ -296,6 +324,48 @@ class Question(models.Model):
         )
 
         return test_case
+
+    def _add_and_get_files(self, zip_file):
+        files = FileUpload.objects.filter(question=self)
+        files_list = []
+        for f in files:
+            zip_file.write(f.file.path, (os.path.basename(f.file.path)))
+            files_list.append(((os.path.basename(f.file.path)), f.extract))
+        return files_list
+
+    def _add_files_to_db(self, file_names):
+        for file_name, extract in file_names:
+            que_file = open(file_name, 'r')
+            #Converting to Python file object with some Django-specific additions
+            django_file = File(que_file)
+            FileUpload.objects.get_or_create(file=django_file,
+                                             question=self,
+                                             extract=extract)
+            os.remove(file_name)
+
+    def _add_json_to_zip(self, zip_file, q_dict):
+        json_data = json.dumps(q_dict, indent=2)
+        tmp_file_path = tempfile.mkdtemp()
+        json_path = os.path.join(tmp_file_path, "questions_dump.json")
+        with open(json_path, "w") as json_file:
+            json_file.write(json_data)
+        zip_file.write(json_path, os.path.basename(json_path))
+        zip_file.close()
+        shutil.rmtree(tmp_file_path)
+
+    def read_json(self, json_file, user):
+        if os.path.exists(json_file):
+            with open(json_file, 'r') as q_file:
+                questions_list = q_file.read()
+                self.load_questions(questions_list, user)
+            os.remove(json_file)
+
+    def create_demo_questions(self, user):
+        zip_file_path = os.path.join(os.getcwd(), 'yaksh',
+                                         'fixtures', 'demo_questions.zip')
+        extract_files(zip_file_path)
+        self.read_json("questions_dump.json", user)
+
 
     def __unicode__(self):
         return self.summary
@@ -461,6 +531,17 @@ class Quiz(models.Model):
 
     def has_prerequisite(self):
         return True if self.prerequisite else False
+
+    def create_demo_quiz(self, course):
+        demo_quiz = Quiz.objects.create(start_date_time=timezone.now(),
+                                        end_date_time=timezone.now() + timedelta(176590),
+                                        duration=30, active=True,
+                                        attempts_allowed=-1,
+                                        time_between_attempts=0,
+                                        description='Yaksh Demo quiz', pass_criteria=0,
+                                        language='Python', prerequisite=None,
+                                        course=course)
+        return demo_quiz
     
     def __unicode__(self):
         desc = self.description or 'Quiz'
@@ -592,6 +673,17 @@ class QuestionPaper(models.Model):
         if self.quiz.has_prerequisite():
             prerequisite = self._get_prequisite_paper()
             return prerequisite._is_questionpaper_passed(user)
+
+    def create_demo_quiz_ppr(self, demo_quiz):
+        question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
+                                                      total_marks=5.0,
+                                                      shuffle_questions=True
+                                                      )
+        questions = Question.objects.filter(active=True,
+                                            summary="Yaksh Demo Question")
+        # add fixed set of questions to the question paper
+        for question in questions:
+            question_paper.fixed_questions.add(question)
     
     def __unicode__(self):
         return "Question Paper for " + self.quiz.description
