@@ -2,6 +2,9 @@ import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdioBasedTestCase, FileUpload, McqTestCase
+from yaksh.code_server import ServerPool, SERVER_POOL_PORT
+from yaksh import settings
+from yaksh.xmlrpc_clients import CodeServerProxy
 import json
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -12,6 +15,7 @@ import zipfile
 import os
 import shutil
 import tempfile
+from threading import Thread
 
 def setUpModule():
     # create user profile
@@ -518,6 +522,22 @@ class AnswerPaperTestCases(unittest.TestCase):
             correct = True
         )
         self.mcc_based_testcase.save()
+
+        settings.code_evaluators['python']['standardtestcase'] = \
+            "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
+        ports = range(9001, 9002)
+        server_pool = ServerPool(ports=ports, pool_port=SERVER_POOL_PORT)
+        self.server_pool = server_pool
+        self.server_thread = t = Thread(target=server_pool.run)
+        t.start()
+        self.code_server = CodeServerProxy()
+
+    @classmethod
+    def tearDownClass(self):
+        self.server_pool.stop()
+        self.server_thread.join()
+        settings.code_evaluators['python']['standardtestcase'] = \
+            "python_assertion_evaluator.PythonAssertionEvaluator"
 
     def test_validate_and_regrade_mcc_question(self):
         # Given
