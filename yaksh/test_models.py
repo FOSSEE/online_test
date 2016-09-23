@@ -2,9 +2,6 @@ import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdioBasedTestCase, FileUpload, McqTestCase
-from yaksh.code_server import ServerPool
-from yaksh import settings
-from yaksh.xmlrpc_clients import CodeServerProxy
 import json
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -15,7 +12,6 @@ import zipfile
 import os
 import shutil
 import tempfile
-from threading import Thread
 
 def setUpModule():
     # create user profile
@@ -523,22 +519,6 @@ class AnswerPaperTestCases(unittest.TestCase):
         )
         self.mcc_based_testcase.save()
 
-        settings.code_evaluators['python']['standardtestcase'] = \
-            "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
-        ports = range(9001, 9002)
-        server_pool = ServerPool(ports=ports, pool_port=56782)
-        self.server_pool = server_pool
-        self.server_thread = t = Thread(target=server_pool.run)
-        t.start()
-        self.code_server = CodeServerProxy()
-
-    @classmethod
-    def tearDownClass(self):
-        self.server_pool.stop()
-        self.server_thread.join()
-        settings.code_evaluators['python']['standardtestcase'] = \
-            "python_assertion_evaluator.PythonAssertionEvaluator"
-
     def test_validate_and_regrade_mcc_question(self):
         # Given
         mcc_answer = ['a']
@@ -612,43 +592,6 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 0)
         self.assertFalse(self.answer.correct)
-
-    def test_validate_and_regrade_code_question(self):
-        # Given
-        code_answer = 'def add(a, b):\n return a'
-        self.answer = Answer(question=self.question1,
-            answer=code_answer,
-        )
-        self.answer.save()
-        self.answerpaper.answers.add(self.answer)
-
-        # When
-        json_data = self.question1.consolidate_answer_data(code_answer)
-        correct, result = self.answerpaper.validate_answer(code_answer,
-                self.question1, json_data)
-
-        # Then
-        self.assertFalse(correct)
-        self.assertFalse(result['success'])
-        self.assertTrue('AssertionError' in result['error'])
-        self.assertFalse(self.answer.correct)
-        self.assertEqual(self.answer.marks, 0)
-
-        # Given
-        self.answer.answer = 'def add(a, b):\n return a+b'
-        self.answer.save()
-        self.answerpaper.percent = None
-        self.answerpaper.save()
-
-        # When
-        details = self.answerpaper.regrade(self.question1.id)
-
-        # Then
-        self.answer = self.answerpaper.answers.filter(question=self.question1).last()
-        self.assertTrue(details[0])
-        self.assertEqual(self.answer.marks, 1)
-        self.assertTrue(self.answerpaper.percent is not None)
-        self.assertTrue(self.answer.correct)
 
 
     def test_answerpaper(self):
