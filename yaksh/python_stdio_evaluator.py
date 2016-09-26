@@ -53,11 +53,11 @@ class PythonStdioEvaluator(CodeEvaluator):
         tb = None
         if self.output_value == expected_output:
             success = True
-            err = "Correct Answer"
+            err = "Correct answer"
         else:
             success = False
             err = dedent("""
-                Incorrect Answer:
+                Incorrect answer:
                 Given input - {0}
                 Expected output - {1}
                 Your output - {2}
