@@ -135,6 +135,7 @@ class CodeEvaluator(object):
     def teardown(self):
         # Cancel the signal
         delete_signal_handler()
+        self._change_dir(MY_DIR)
 
     def check_code(self):
         raise NotImplementedError("check_code method not implemented")
@@ -184,7 +185,7 @@ class CodeEvaluator(object):
             proc.kill()
             # Re-raise exception.
             raise
-        return proc, stdout, stderr
+        return proc, stdout.decode('utf-8'), stderr.decode('utf-8')
 
     def _change_dir(self, in_dir):
         if in_dir is not None and isdir(in_dir):

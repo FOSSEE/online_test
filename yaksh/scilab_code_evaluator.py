@@ -20,11 +20,11 @@ class ScilabCodeEvaluator(CodeEvaluator):
             self.create_submit_code_file('function.sci')
 
     def teardown(self):
-        super(ScilabCodeEvaluator, self).teardown()
         # Delete the created file.
         os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
+        super(ScilabCodeEvaluator, self).teardown()
 
     def check_code(self, user_answer, file_paths, test_case):
         self.files = []

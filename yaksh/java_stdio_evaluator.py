@@ -18,10 +18,10 @@ class JavaStdioEvaluator(StdIOEvaluator):
         self.submit_code_path = self.create_submit_code_file('Test.java')
 
     def teardown(self):
-        super(JavaStdioEvaluator, self).teardown()
         os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
+        super(JavaStdioEvaluator, self).teardown()
 
     def set_file_paths(self, directory, file_name):
         output_path = "{0}{1}.class".format(directory, file_name)

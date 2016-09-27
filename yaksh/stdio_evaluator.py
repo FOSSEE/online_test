@@ -15,8 +15,10 @@ class StdIOEvaluator(CodeEvaluator):
     def evaluate_stdio(self, user_answer, proc, expected_input, expected_output):
         success = False
         ip = expected_input.replace(",", " ")
-        print (type(expected_input), type(ip))
-        user_output, output_err = proc.communicate(input='{0}\n'.format(ip))
+        encoded_input = '{0}\n'.format(ip).encode('utf-8')
+        user_output_bytes, output_err_bytes = proc.communicate(encoded_input)
+        user_output = user_output_bytes.decode('utf-8')
+        output_err = output_err_bytes.decode('utf-8')
         expected_output = expected_output.replace("\r", "")
         if not expected_input:
             error_msg = "Expected Output is {0} ".\
@@ -31,5 +33,5 @@ class StdIOEvaluator(CodeEvaluator):
                 err = " Incorrect answer\n" + error_msg +\
                       "\n Your output is {0}".format(repr(user_output))
         else:
-            err = "Error:"+"\n"+output_err
+            err = "Error:\n {0}".format(output_err)
         return success, err

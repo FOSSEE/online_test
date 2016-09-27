@@ -18,13 +18,13 @@ class CppStdioEvaluator(StdIOEvaluator):
         self.submit_code_path = self.create_submit_code_file('main.c')
 
     def teardown(self):
-        super(CppStdioEvaluator, self).teardown()
         os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
+        super(CppStdioEvaluator, self).teardown()
 
     def set_file_paths(self):
-        user_output_path = os.getcwd() + '/output'
+        user_output_path = os.getcwd() + '/output_file'
         ref_output_path = os.getcwd() + '/executable'
         return user_output_path, ref_output_path
 

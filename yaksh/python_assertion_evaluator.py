@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import absolute_import
+from six.moves import input
 import sys
 import traceback
 import os
@@ -19,10 +20,10 @@ class PythonAssertionEvaluator(CodeEvaluator):
         self.exec_scope = None
 
     def teardown(self):
-        super(PythonAssertionEvaluator, self).teardown()
         # Delete the created file.
         if self.files:
             delete_files(self.files)
+        super(PythonAssertionEvaluator, self).teardown()
 
     def compile_code(self, user_answer, file_paths, test_case):
         self.files = []

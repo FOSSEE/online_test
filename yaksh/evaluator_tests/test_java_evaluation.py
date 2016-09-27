@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 import unittest
 import os
+import shutil
+import tempfile
 from yaksh import code_evaluator as evaluator
 from yaksh.java_code_evaluator import JavaCodeEvaluator
 from yaksh.java_stdio_evaluator import JavaStdioEvaluator
@@ -10,10 +12,13 @@ from textwrap import dedent
 
 class JavaAssertionEvaluationTestCases(unittest.TestCase):
     def setUp(self):
+        with open('/tmp/test.txt', 'wb') as f:
+            f.write('2'.encode('ascii'))
+        tmp_in_dir_path = tempfile.mkdtemp()
         self.test_case_data = [
             {"test_case": "java_files/main_square.java"}
         ]
-        self.in_dir = os.getcwd()
+        self.in_dir = tmp_in_dir_path
         evaluator.SERVER_TIMEOUT = 9
         self.timeout_msg = ("Code took more than {0} seconds to run. "
             "You probably have an infinite loop in"
@@ -21,7 +26,8 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
         self.file_paths = None
 
     def tearDown(self):
-        evaluator.SERVER_TIMEOUT = 2
+        os.remove('/tmp/test.txt')
+        shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
         user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a;\n\t}\n}"
@@ -43,8 +49,10 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
-        self.assertIn("Incorrect:", result.get('error'))
-        self.assertTrue(result.get('error').splitlines > 1)
+        lines_of_error = len(result.get('error').splitlines())
+        self.assertFalse(result.get('success'))
+        self.assertIn("Incorrect", result.get('error'))
+        self.assertTrue(lines_of_error > 1)
 
     def test_error(self):
         user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a"
@@ -69,7 +77,7 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
         self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_file_based_assert(self):
-        self.file_paths = [(os.getcwd()+"/yaksh/test.txt", False)]
+        self.file_paths = [("/tmp/test.txt", False)]
         self.test_case_data = [
             {"test_case": "java_files/read_file.java"}
         ]
@@ -169,9 +177,10 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
+        lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
         self.assertIn("Incorrect", result.get('error'))
-        self.assertTrue(result.get('error').splitlines > 1)
+        self.assertTrue(lines_of_error > 1)
 
     def test_error(self):
 

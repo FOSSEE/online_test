@@ -32,10 +32,10 @@ class PythonStdioEvaluator(CodeEvaluator):
     """Tests the Python code obtained from Code Server"""
 
     def teardown(self):
-        super(PythonStdioEvaluator, self).teardown()
         # Delete the created file.
         if self.files:
             delete_files(self.files)
+        super(PythonStdioEvaluator, self).teardown()
 
 
     def compile_code(self, user_answer, file_paths, expected_input, expected_output):

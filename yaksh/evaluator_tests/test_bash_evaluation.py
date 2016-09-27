@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 import unittest
 import os
+import shutil
+import tempfile
 from yaksh.bash_code_evaluator import BashCodeEvaluator
 from yaksh.bash_stdio_evaluator import BashStdioEvaluator
 from yaksh.settings import SERVER_TIMEOUT
@@ -9,14 +11,22 @@ from textwrap import dedent
 
 class BashAssertionEvaluationTestCases(unittest.TestCase):
     def setUp(self):
+        with open('/tmp/test.txt', 'wb') as f:
+            f.write('2'.encode('ascii'))
+        tmp_in_dir_path = tempfile.mkdtemp()
         self.test_case_data = [
             {"test_case": "bash_files/sample.sh,bash_files/sample.args"}
         ]
-        self.in_dir = os.getcwd()
+        tmp_in_dir_path = tempfile.mkdtemp()
+        self.in_dir = tmp_in_dir_path
         self.timeout_msg = ("Code took more than {0} seconds to run. "
             "You probably have an infinite loop in your"
             " code.").format(SERVER_TIMEOUT)
         self.file_paths = None
+
+    def tearDown(self):
+        os.remove('/tmp/test.txt')
+        shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
         user_answer = ("#!/bin/bash\n[[ $# -eq 2 ]]"
@@ -56,7 +66,7 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
         self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_file_based_assert(self):
-        self.file_paths = [(os.getcwd()+"/yaksh/test.txt", False)]
+        self.file_paths = [('/tmp/test.txt', False)]
         self.test_case_data = [
             {"test_case": "bash_files/sample1.sh,bash_files/sample1.args"}
         ]
