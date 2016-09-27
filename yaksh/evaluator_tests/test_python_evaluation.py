@@ -344,7 +344,7 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
         result = evaluator.evaluate(**kwargs)
 
         # Then
-        self.assertEqual(result.get('error'), "Correct Answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -360,7 +360,7 @@ class PythonStdoutEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assertIn("Incorrect Answer", result.get('error'))
+        self.assertIn("Incorrect answer", result.get('error'))
 
     def test_infinite_loop(self):
         # Given
@@ -404,7 +404,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(result.get('success'))
-        self.assertIn("Correct Answer", result.get('error'))
+        self.assertIn("Correct answer", result.get('error'))
 
     def test_correct_answer_list(self):
         # Given
@@ -427,7 +427,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(result.get('success'))
-        self.assertIn("Correct Answer", result.get('error'))
+        self.assertIn("Correct answer", result.get('error'))
 
     def test_correct_answer_string(self):
         # Given
@@ -451,7 +451,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(result.get('success'))
-        self.assertIn("Correct Answer", result.get('error'))
+        self.assertIn("Correct answer", result.get('error'))
 
     def test_incorrect_answer_integer(self):
         # Given
@@ -474,7 +474,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assertIn("Incorrect Answer", result.get('error'))
+        self.assertIn("Incorrect answer", result.get('error'))
 
     def test_file_based_answer(self):
         # Given
@@ -497,7 +497,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         result = evaluator.evaluate(**kwargs)
 
         # Then
-        self.assertEqual(result.get('error'), "Correct Answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':
