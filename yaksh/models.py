@@ -21,10 +21,7 @@ import zipfile
 import tempfile
 from file_utils import extract_files
 from yaksh.xmlrpc_clients import code_server
-
-
-# The directory where user data can be saved.
-OUTPUT_DIR = abspath(join(dirname(__file__), 'output'))
+from django.conf import settings
 
 
 languages = (
@@ -205,9 +202,9 @@ class Profile(models.Model):
     def get_user_dir(self):
         """Return the output directory for the user."""
 
-        user_dir = join(OUTPUT_DIR, str(self.user.username))
+        user_dir = join(settings.OUTPUT_DIR, str(self.user.username))
         if not exists(user_dir):
-            os.mkdir(user_dir)
+            os.makedirs(user_dir)
             # Make it rwx by others.
             os.chmod(user_dir, stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH
                      | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
