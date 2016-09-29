@@ -1,9 +1,10 @@
+from __future__ import unicode_literals
+
 # Local imports
 from code_evaluator import CodeEvaluator
 
 
 class StdIOEvaluator(CodeEvaluator):
-
     def setup(self):
         super(StdIOEvaluator, self).setup()
         pass

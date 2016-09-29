@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import unicode_literals
 import unittest
 import os
 from yaksh import python_assertion_evaluator

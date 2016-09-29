@@ -23,7 +23,7 @@ that returns an available server.
 """
 
 # Standard library imports
-from __future__ import absolute_import
+from __future__ import unicode_literals
 import json
 from multiprocessing import Process, Queue
 import os

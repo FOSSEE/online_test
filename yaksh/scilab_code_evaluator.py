@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from __future__ import absolute_import
+from __future__ import unicode_literals
 import traceback
 import os
 from os.path import join, isfile
