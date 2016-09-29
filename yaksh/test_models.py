@@ -1,7 +1,7 @@
 import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdioBasedTestCase, FileUpload
+    StdioBasedTestCase, FileUpload, McqTestCase
 import json
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -454,6 +454,9 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.questions = Question.objects.filter(id__in=[1,2,3])
         self.start_time = timezone.now()
         self.end_time = self.start_time + timedelta(minutes=20)
+        self.question1 = self.questions.get(id=1)
+        self.question2 = self.questions.get(id=2)
+        self.question3 = self.questions.get(id=3)
 
         # create answerpaper
         self.answerpaper = AnswerPaper(user=self.user,
@@ -486,6 +489,110 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.answer_wrong.save()
         self.answerpaper.answers.add(self.answer_right)
         self.answerpaper.answers.add(self.answer_wrong)
+
+        self.question1.language = 'python'
+        self.question1.test_case_type = 'standardtestcase'
+        self.question1.save()
+        self.question2.language = 'python'
+        self.question2.type = 'mcq'
+        self.question2.test_case_type = 'mcqtestcase'
+        self.question2.save()
+        self.question3.language = 'python'
+        self.question3.type = 'mcc'
+        self.question3.test_case_type = 'mcqtestcase'
+        self.question3.save()
+        self.assertion_testcase = StandardTestCase(
+            question=self.question1,
+            test_case='assert add(1, 3) == 4'
+        )
+        self.assertion_testcase.save()
+        self.mcq_based_testcase = McqTestCase(
+            options = 'a',
+            question=self.question2,
+            correct = True
+        )
+        self.mcq_based_testcase.save()
+        self.mcc_based_testcase = McqTestCase(
+            question=self.question3,
+            options = 'a',
+            correct = True
+        )
+        self.mcc_based_testcase.save()
+
+    def test_validate_and_regrade_mcc_question(self):
+        # Given
+        mcc_answer = ['a']
+        self.answer = Answer(question=self.question3,
+            answer=mcc_answer,
+        )
+        self.answer.save()
+        self.answerpaper.answers.add(self.answer)
+
+        # When
+        json_data = None
+        correct, result = self.answerpaper.validate_answer(mcc_answer,
+                self.question3, json_data)
+
+        # Then
+        self.assertTrue(correct)
+        self.assertTrue(result['success'])
+        self.assertEqual(result['error'], 'Correct answer')
+        self.answer.correct = True
+        self.answer.marks = 1
+
+        # Given
+        self.answer.correct = True
+        self.answer.marks = 1
+
+        self.answer.answer = ['a', 'b']
+        self.answer.save()
+
+        # When
+        details = self.answerpaper.regrade(self.question3.id)
+
+        # Then
+        self.answer = self.answerpaper.answers.filter(question=self.question3).last()
+        self.assertTrue(details[0])
+        self.assertEqual(self.answer.marks, 0)
+        self.assertFalse(self.answer.correct)
+
+    def test_validate_and_regrade_mcq_question(self):
+        # Given
+        mcq_answer = 'a'
+        self.answer = Answer(question=self.question2,
+            answer=mcq_answer,
+        )
+        self.answer.save()
+        self.answerpaper.answers.add(self.answer)
+
+        # When
+        json_data = None
+        correct, result = self.answerpaper.validate_answer(mcq_answer,
+                self.question2, json_data)
+
+        # Then
+        self.assertTrue(correct)
+        self.assertTrue(result['success'])
+        self.assertEqual(result['error'], 'Correct answer')
+        self.answer.correct = True
+        self.answer.marks = 1
+
+        # Given
+        self.answer.correct = True
+        self.answer.marks = 1
+
+        self.answer.answer = 'b'
+        self.answer.save()
+
+        # When
+        details = self.answerpaper.regrade(self.question2.id)
+
+        # Then
+        self.answer = self.answerpaper.answers.filter(question=self.question2).last()
+        self.assertTrue(details[0])
+        self.assertEqual(self.answer.marks, 0)
+        self.assertFalse(self.answer.correct)
+
 
     def test_answerpaper(self):
         """ Test Answer Paper"""
@@ -747,7 +854,7 @@ class TestCaseTestCases(unittest.TestCase):
              active=True,
              description='Write to standard output',
              points=1.0,
-             test_case_type="stdiobasedtestcase", 
+             test_case_type="stdiobasedtestcase",
              user=self.user,
              snippet='def myfunc()'
         )

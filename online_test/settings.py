@@ -10,8 +10,11 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 from yaksh.pipeline.settings import AUTH_PIPELINE
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import tempfile
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
+# The directory where user data can be saved.
+OUTPUT_DIR = os.path.join(tempfile.gettempdir(), 'output')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
