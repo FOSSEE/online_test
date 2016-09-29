@@ -62,11 +62,15 @@ How to write Test cases
 		Finally click on Save & Add Testcase Button to save the test case.
 
 
-	* **Create Standard out Based Test Case**
+	* **Create Standard Input/Output Based Test Case**
 
-			Select Stdout Based TestCase from Test Case Type field and click on Save & Add Testcase button to save the question.
+			Select StdIO Based TestCase from Test Case Type field and click on Save & Add Testcase button to save the question.
 
-			In Expected Output Field type the expected output for a particular question. For e.g type 6 if the output of the user code is 6.
+			In Expected input field, enter the value(s) that will be passed to the students' code through a standard I/O stream.
+
+			.. note::  If there are multiple input values in a test case, enter the values in new line.
+
+			In Expected Output Field, enter the expected output for that test case. For e.g type 6 if the output of the user code is 6.
 
 	* **Create MCQ Based Test Case**
 

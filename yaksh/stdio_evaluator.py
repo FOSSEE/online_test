@@ -1,6 +1,18 @@
-class Evaluator(object):
+# Local imports
+from code_evaluator import CodeEvaluator
 
-    def evaluate(self, user_answer, proc, expected_input, expected_output):
+
+class StdIOEvaluator(CodeEvaluator):
+
+    def setup(self):
+        super(StdIOEvaluator, self).setup()
+        pass
+
+    def teardown(self):
+        super(StdIOEvaluator, self).teardown()
+        pass
+
+    def evaluate_stdio(self, user_answer, proc, expected_input, expected_output):
         success = False
         ip = expected_input.replace(",", " ")
         user_output, output_err = proc.communicate(input='{0}\n'.format(ip))
@@ -13,9 +25,9 @@ class Evaluator(object):
                         format(expected_input, repr(expected_output))
         if output_err == '':
             if user_output == expected_output:
-                success, err = True, "Correct Answer"
+                success, err = True, "Correct answer"
             else:
-                err = " Incorrect Answer\n" + error_msg +\
+                err = " Incorrect answer\n" + error_msg +\
                       "\n Your output is {0}".format(repr(user_output))
         else:
             err = "Error:"+"\n"+output_err

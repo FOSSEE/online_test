@@ -127,7 +127,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct Answer")
+        self.assertEquals(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
@@ -149,7 +149,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct Answer")
+        self.assertEquals(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -219,7 +219,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct Answer")
+        self.assertEquals(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_string_input(self):
@@ -239,7 +239,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct Answer")
+        self.assertEquals(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':

@@ -4,12 +4,11 @@ import os
 from os.path import isfile
 
 #local imports
-from code_evaluator import CodeEvaluator
-from stdio_evaluator import Evaluator
+from stdio_evaluator import StdIOEvaluator
 from file_utils import copy_files, delete_files
 
 
-class JavaStdioEvaluator(CodeEvaluator):
+class JavaStdioEvaluator(StdIOEvaluator):
     """Evaluates Java StdIO based code"""
 
     def setup(self):
@@ -61,11 +60,10 @@ class JavaStdioEvaluator(CodeEvaluator):
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE
                                     )
-            evaluator = Evaluator()
-            success, err = evaluator.evaluate(user_answer, proc,
-                                              expected_input,
-                                              expected_output
-                                              )
+            success, err = self.evaluate_stdio(user_answer, proc,
+                                               expected_input,
+                                               expected_output
+                                               )
             os.remove(self.user_output_path)
         else:
             err = "Compilation Error:"
