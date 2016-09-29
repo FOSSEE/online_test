@@ -135,7 +135,7 @@ class CodeEvaluator(object):
     def teardown(self):
         # Cancel the signal
         delete_signal_handler()
-        self._change_dir(MY_DIR)
+        self._change_dir(dirname(MY_DIR))
 
     def check_code(self):
         raise NotImplementedError("check_code method not implemented")
