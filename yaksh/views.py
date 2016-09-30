@@ -21,6 +21,7 @@ from taggit.models import Tag
 from itertools import chain
 import json
 import zipfile
+import six
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
@@ -29,9 +30,9 @@ from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm,\
                 QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
                 get_object_form, FileForm
-from settings import URL_ROOT
+from .settings import URL_ROOT
 from yaksh.models import AssignmentUpload
-from file_utils import extract_files
+from .file_utils import extract_files
 
 
 
@@ -982,7 +983,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
     if request.method == "POST":
         papers = data['papers']
         for paper in papers:
-            for question, answers in paper.get_question_answers().iteritems():
+            for question, answers in six.iteritems(paper.get_question_answers()):
                 marks = float(request.POST.get('q%d_marks' % question.id, 0))
                 answers = answers[-1]
                 answers.set_marks(marks)
