@@ -111,6 +111,10 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
 class JavaStdioEvaluationTestCases(unittest.TestCase):
 
     def setUp(self):
+        with open('/tmp/test.txt', 'wb') as f:
+            f.write('2'.encode('ascii'))
+        tmp_in_dir_path = tempfile.mkdtemp()
+        self.in_dir = tmp_in_dir_path
         self.test_case_data = [{'expected_output': '11',
                                'expected_input': '5\n6'}]
         evaluator.SERVER_TIMEOUT = 4
@@ -118,8 +122,10 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                             "You probably have an infinite loop in"
                             " your code.").format(evaluator.SERVER_TIMEOUT)
 
-    def teardown(self):
+    def tearDown(self):
         evaluator.SERVER_TIMEOUT = 4
+        os.remove('/tmp/test.txt')
+        shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
         user_answer = dedent("""
@@ -131,7 +137,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          int b = s.nextInt();
          System.out.print(a+b);
         }}""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
@@ -153,7 +159,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          a[i] = s.nextInt();
          System.out.print(a[i]);}
         }}""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
@@ -172,7 +178,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          int b = s.nextInt();
          System.out.print(a);
         }}""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
@@ -189,7 +195,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
         {
          System.out.print("a");
         }""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
@@ -206,7 +212,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          {
          System.out.print("a");}
         }}""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
@@ -224,7 +230,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          int b = 6;
          System.out.print(a+b);
         }}""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
@@ -244,13 +250,45 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          String b = s.nextLine();
          System.out.print(a+b);
         }}""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
         self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
+
+    def test_file_based_stdout(self):
+        self.file_paths = [("/tmp/test.txt", False)]
+        self.test_case_data = [{'expected_output': '2',
+                               'expected_input': ''}]
+        user_answer = dedent("""
+            import java.io.BufferedReader;
+            import java.io.FileReader;
+            import java.io.IOException;
+            class Test{
+            public static void main(String[] args) throws IOException {
+            BufferedReader br = new BufferedReader(new FileReader("test.txt"));
+            try {
+                StringBuilder sb = new StringBuilder();
+                String line = br.readLine();
+                while (line != null) {
+                    sb.append(line);
+                    line = br.readLine();}
+                System.out.print(sb.toString());
+            } finally {
+                br.close();
+            }}}
+            """)
+        get_class = JavaStdioEvaluator(self.in_dir)
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data,
+                  'file_paths': self.file_paths
+                  }
+        result = get_class.evaluate(**kwargs)
+        self.assertTrue(result.get("success"))
+        self.assertEqual(result.get("error"), "Correct answer")
+
 
 if __name__ == '__main__':
     unittest.main()
