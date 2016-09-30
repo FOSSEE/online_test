@@ -54,7 +54,7 @@
         </div>
     </div>
     {% if question.type == "mcq" or question.type == "mcc" %}
-        {% if "Correct answer" in answers.0.error %}
+        {% if answers.0.correct %}
             <div class="panel panel-success">
         {% else %}
             <div class="panel panel-danger">

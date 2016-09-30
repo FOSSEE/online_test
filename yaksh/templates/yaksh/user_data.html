@@ -83,7 +83,7 @@ User IP address: {{ paper.user_ip }}
         </div>
     </div>
     {% if question.type == "mcq" or question.type == "mcc" %}
-        {% if "Correct answer" in answers.0.error %}
+        {% if in answers.0 %}
             <div class="panel panel-success">
         {% else %}
             <div class="panel panel-danger">
