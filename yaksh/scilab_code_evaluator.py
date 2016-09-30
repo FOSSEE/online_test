@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import traceback
 import os
 from os.path import join, isfile
@@ -6,9 +7,9 @@ import subprocess
 import re
 import importlib
 
-# local imports
-from code_evaluator import CodeEvaluator
-from file_utils import copy_files, delete_files
+# Local imports
+from .code_evaluator import CodeEvaluator
+from .file_utils import copy_files, delete_files
 
 
 class ScilabCodeEvaluator(CodeEvaluator):
@@ -19,11 +20,11 @@ class ScilabCodeEvaluator(CodeEvaluator):
             self.create_submit_code_file('function.sci')
 
     def teardown(self):
-        super(ScilabCodeEvaluator, self).teardown()
         # Delete the created file.
         os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
+        super(ScilabCodeEvaluator, self).teardown()
 
     def check_code(self, user_answer, file_paths, test_case):
         self.files = []

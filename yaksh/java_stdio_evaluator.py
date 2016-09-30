@@ -1,11 +1,12 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import subprocess
 import os
 from os.path import isfile
 
-#local imports
-from stdio_evaluator import StdIOEvaluator
-from file_utils import copy_files, delete_files
+#Local imports
+from .stdio_evaluator import StdIOEvaluator
+from .file_utils import copy_files, delete_files
 
 
 class JavaStdioEvaluator(StdIOEvaluator):
@@ -16,10 +17,10 @@ class JavaStdioEvaluator(StdIOEvaluator):
         self.submit_code_path = self.create_submit_code_file('Test.java')
 
     def teardown(self):
-        super(JavaStdioEvaluator, self).teardown()
         os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
+        super(JavaStdioEvaluator, self).teardown()
 
     def set_file_paths(self, directory, file_name):
         output_path = "{0}{1}.class".format(directory, file_name)

@@ -1,13 +1,22 @@
+from __future__ import unicode_literals
 import unittest
 import os
+import tempfile
+import shutil
+from textwrap import dedent
+
+# Local import
 from yaksh.python_assertion_evaluator import PythonAssertionEvaluator
 from yaksh.python_stdio_evaluator import PythonStdioEvaluator
 from yaksh.settings import SERVER_TIMEOUT
-from textwrap import dedent
 
 
 class PythonAssertionEvaluationTestCases(unittest.TestCase):
     def setUp(self):
+        with open('/tmp/test.txt', 'wb') as f:
+            f.write('2'.encode('ascii'))
+        tmp_in_dir_path = tempfile.mkdtemp()
+        self.in_dir = tmp_in_dir_path
         self.test_case_data = [{"test_case": 'assert(add(1,2)==3)'},
                                {"test_case": 'assert(add(-1,2)==1)'},
                                {"test_case":  'assert(add(-1,-2)==-3)'},
@@ -16,6 +25,10 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             "You probably have an infinite loop in"
                             " your code.").format(SERVER_TIMEOUT)
         self.file_paths = None
+
+    def tearDown(self):
+        os.remove('/tmp/test.txt')
+        shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
         # Given
@@ -159,7 +172,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         """)
         recursion_error_msg = ["Traceback",
                                "call",
-                               "RuntimeError",
                                "maximum recursion depth exceeded"
                                ]
         kwargs = {'user_answer': user_answer,
@@ -174,7 +186,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(969, len(err))
         for msg in recursion_error_msg:
             self.assertIn(msg, result.get("error"))
 
@@ -187,7 +198,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         type_error_msg = ["Traceback",
                           "call",
                           "TypeError",
-                          "exactly",
                           "argument"
                           ]
         kwargs = {'user_answer': user_answer,
@@ -238,7 +248,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
     def test_file_based_assert(self):
         # Given
         self.test_case_data = [{"test_case": "assert(ans()=='2')"}]
-        self.file_paths = [(os.getcwd()+"/yaksh/test.txt", False)]
+        self.file_paths = [('/tmp/test.txt', False)]
         user_answer = dedent("""
             def ans():
                 with open("test.txt") as f:
@@ -322,65 +332,10 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
             self.assertIn(msg, result.get("error"))
 
 
-class PythonStdoutEvaluationTestCases(unittest.TestCase):
-    def setUp(self):
-        self.test_case_data = [{"expected_input": None,
-                                "expected_output": "0 1 1 2 3"
-                                }]
-
-        self.timeout_msg = ("Code took more than {0} seconds to run. "
-                            "You probably have an infinite loop"
-                            " in your code.").format(SERVER_TIMEOUT)
-
-    def test_correct_answer(self):
-        # Given
-        user_answer = "a,b=0,1\nfor i in range(5):\n\tprint a,\n\ta,b=b,a+b"
-        kwargs = {'user_answer': user_answer,
-                  'test_case_data': self.test_case_data,
-                  }
-
-        # When
-        evaluator = PythonStdioEvaluator()
-        result = evaluator.evaluate(**kwargs)
-
-        # Then
-        self.assertEqual(result.get('error'), "Correct answer")
-        self.assertTrue(result.get('success'))
-
-    def test_incorrect_answer(self):
-        # Given
-        user_answer = "a,b=0,1\nfor i in range(5):\n\tprint b,\n\ta,b=b,a+b"
-        kwargs = {'user_answer': user_answer,
-                  'test_case_data': self.test_case_data,
-                  }
-
-        # When
-        evaluator = PythonStdioEvaluator()
-        result = evaluator.evaluate(**kwargs)
-
-        # Then
-        self.assertFalse(result.get('success'))
-        self.assertIn("Incorrect answer", result.get('error'))
-
-    def test_infinite_loop(self):
-        # Given
-        user_answer = "def add(a, b):\n\twhile True:\n\t\tpass\nadd(1,2)"
-        kwargs = {'user_answer': user_answer,
-                  'test_case_data': self.test_case_data
-                  }
-
-        # When
-        evaluator = PythonStdioEvaluator()
-        result = evaluator.evaluate(**kwargs)
-
-        # Then
-        self.assertEqual(result.get('error'), self.timeout_msg)
-        self.assertFalse(result.get('success'))
-
-
 class PythonStdIOEvaluationTestCases(unittest.TestCase):
-
     def setUp(self):
+        with open('/tmp/test.txt', 'wb') as f:
+            f.write('2'.encode('ascii'))
         self.file_paths = None
 
     def test_correct_answer_integer(self):
@@ -389,9 +344,9 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                                 "expected_output": "3"
                                 }]
         user_answer = dedent("""
-                                a = input()
-                                b = input()
-                                print a+b
+                                a = int(input())
+                                b = int(input())
+                                print(a+b)
                              """
                              )
         kwargs = {'user_answer': user_answer,
@@ -408,13 +363,16 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
 
     def test_correct_answer_list(self):
         # Given
-        self.test_case_data = [{"expected_input": "[1,2,3]\n[5,6,7]",
+        self.test_case_data = [{"expected_input": "1,2,3\n5,6,7",
                                 "expected_output": "[1, 2, 3, 5, 6, 7]"
                                 }]
         user_answer = dedent("""
-                                a = input()
-                                b = input()
-                                print a+b
+                                from six.moves import input
+                                input_a = input()
+                                input_b = input()
+                                a = [int(i) for i in input_a.split(',')]
+                                b = [int(i) for i in input_b.split(',')]
+                                print(a+b)
                              """
                              )
         kwargs = {'user_answer': user_answer,
@@ -431,14 +389,14 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
 
     def test_correct_answer_string(self):
         # Given
-        self.test_case_data = [{"expected_input": """the quick brown fox jumps\
-                                                     over the lazy dog\nthe""",
+        self.test_case_data = [{"expected_input": ("the quick brown fox jumps over the lazy dog\nthe"),
                                 "expected_output": "2"
                                 }]
         user_answer = dedent("""
-                                a = raw_input()
-                                b = raw_input()
-                                print (a.count(b))
+                                from six.moves import input
+                                a = str(input())
+                                b = str(input())
+                                print(a.count(b))
                              """
                              )
         kwargs = {'user_answer': user_answer,
@@ -459,9 +417,9 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                                 "expected_output": "3"
                                 }]
         user_answer = dedent("""
-                                a = input()
-                                b = input()
-                                print a-b
+                                a = int(input())
+                                b = int(input())
+                                print(a-b)
                              """
                              )
         kwargs = {'user_answer': user_answer,
@@ -479,12 +437,12 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
     def test_file_based_answer(self):
         # Given
         self.test_case_data = [{"expected_input": "", "expected_output": "2"}]
-        self.file_paths = [(os.getcwd()+"/yaksh/test.txt", False)]
+        self.file_paths = [('/tmp/test.txt', False)]
 
         user_answer = dedent("""
                             with open("test.txt") as f:
                                 a = f.read()
-                                print a[0]
+                                print(a[0])
                              """
                              )
         kwargs = {'user_answer': user_answer,
@@ -499,6 +457,27 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         # Then
         self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
+
+    def test_infinite_loop(self):
+        # Given
+        test_case_data = [{"expected_input": "1\n2",
+                                "expected_output": "3"
+                                }]
+        timeout_msg = ("Code took more than {0} seconds to run. "
+                            "You probably have an infinite loop in"
+                            " your code.").format(SERVER_TIMEOUT)
+        user_answer = "while True:\n\tpass"
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': test_case_data
+                  }
+
+        # When
+        evaluator = PythonStdioEvaluator()
+        result = evaluator.evaluate(**kwargs)
+
+        # Then
+        self.assertEqual(result.get('error'), timeout_msg)
+        self.assertFalse(result.get('success'))
 
 if __name__ == '__main__':
     unittest.main()
