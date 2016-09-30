@@ -5,8 +5,7 @@ import os
 from os.path import isfile
 
 #local imports
-from .code_evaluator import CodeEvaluator
-from .stdio_evaluator import Evaluator
+from .stdio_evaluator import StdIOEvaluator
 from .file_utils import copy_files, delete_files
 
 

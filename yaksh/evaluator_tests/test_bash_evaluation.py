@@ -99,7 +99,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                   "test_case_data": test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct Answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
@@ -119,7 +119,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                   "test_case_data": test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct Answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -153,7 +153,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                   "test_case_data": test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct Answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':

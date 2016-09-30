@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 # Local imports
-from code_evaluator import CodeEvaluator
+from .code_evaluator import CodeEvaluator
 
 
 class StdIOEvaluator(CodeEvaluator):
