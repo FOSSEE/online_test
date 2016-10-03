@@ -10,12 +10,9 @@ env:
 
 # command to install dependencies
 install:
-  - pip install tornado
-  - pip install git+https://github.com/FOSSEE/online_test.git#egg=yaksh-0.1
+  - if [[$TRAVIS_PYTHON_VERSION == 2.7 ]]; then pip install -r requirements/requirements-py2.txt; fi
+  - if [[$TRAVIS_PYTHON_VERSION == 3.5 ]]; then pip install -r requirements/requirements-py3.txt; fi
   - pip install -q Django==$DJANGO
-  - pip install -q pytz==2016.4
-  - pip install -q python-social-auth==0.2.19
-  - pip install selenium
 
 before_install:
   - sudo apt-get update -qq
