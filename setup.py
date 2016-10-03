@@ -1,10 +1,27 @@
 import os
 from setuptools import setup, find_packages
+import sys
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
 
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
+
+install_requires=[
+    'django==1.9.5',
+    'django-taggit==0.18.1',
+    'pytz==2016.4',
+    'python-social-auth==0.2.19',
+    'tornado',
+]
+if sys.version_info[:2] == (2, 7):
+    install_requires+=[
+        'mysql-python==1.2.5'
+]
+if sys.version_info[0] >= 3:
+    install_requires+=[
+        'mysqlclient==1.3.9'
+]
 
 setup(
     name='yaksh',
@@ -22,13 +39,7 @@ setup(
     },
     description='A django app to conduct online tests.',
     long_description=README,
-    install_requires=[
-        'django==1.9.5',
-        'mysql-python==1.2.5',
-        'django-taggit==0.18.1',
-        'pytz==2016.4',
-        'python-social-auth==0.2.19'
-    ],
+    install_requires=install_requires,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',

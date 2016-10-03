@@ -10,8 +10,7 @@ env:
 
 # command to install dependencies
 install:
-  - if [[$TRAVIS_PYTHON_VERSION == 2.7 ]]; then pip install -r requirements/requirements-py2.txt; fi
-  - if [[$TRAVIS_PYTHON_VERSION == 3.5 ]]; then pip install -r requirements/requirements-py3.txt; fi
+  - pip install git+https://github.com/FOSSEE/online_test.git#egg=yaksh-0.1
   - pip install -q Django==$DJANGO
 
 before_install:
