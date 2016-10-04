@@ -271,7 +271,7 @@ class Question(models.Model):
         return json.dumps(question_data)
 
     def dump_questions(self, question_ids, user):
-        questions = Question.objects.filter(id__in=question_ids, user_id=user.id)
+        questions = Question.objects.filter(id__in=question_ids, user_id=user.id, active=True)
         questions_dict = []
         zip_file_name = string_io()
         zip_file = zipfile.ZipFile(zip_file_name, "a")
@@ -764,8 +764,9 @@ class AnswerPaperManager(models.Manager):
                                                              attempt_number)
         questions = self.get_all_questions(questionpaper_id, attempt_number)
         all_questions = Question.objects.filter(
-            id__in=set(questions)
-        ).order_by('type')
+                id__in=set(questions),
+                active=True
+            ).order_by('type')
         for question in all_questions:
             if question.id in questions_answered:
                 question_stats[question] = [questions_answered[question.id],
