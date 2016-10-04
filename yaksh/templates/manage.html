@@ -46,6 +46,12 @@
          <div class="page-header">
 <h3><center>{% block subtitle %}Welcome {{ user.first_name.title }} {{user.last_name.title}} !{% endblock %}</center></h3><br>
          </div>
+         <div class="row">
+            <div class="col-md-12">
+         {% block new_manage %}
+         {% endblock %}
+            </div>
+         </div>
          <div class=row>
             <div class=span14>
             {% block manage %}
