@@ -2,6 +2,7 @@ language: python
 
 python:
   - "2.7"
+  - "3.5"
 
 env:
   - DJANGO=1.8.13
@@ -9,12 +10,8 @@ env:
 
 # command to install dependencies
 install:
-  - pip install tornado
   - pip install git+https://github.com/FOSSEE/online_test.git#egg=yaksh-0.1
   - pip install -q Django==$DJANGO
-  - pip install -q pytz==2016.4
-  - pip install -q python-social-auth==0.2.19
-  - pip install selenium
 
 before_install:
   - sudo apt-get update -qq

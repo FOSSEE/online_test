@@ -1,11 +1,12 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import subprocess
 import os
 from os.path import isfile
 
-# local imports
-from stdio_evaluator import StdIOEvaluator
-from file_utils import copy_files, delete_files
+#local imports
+from .stdio_evaluator import StdIOEvaluator
+from .file_utils import copy_files, delete_files
 
 
 class BashStdioEvaluator(StdIOEvaluator):

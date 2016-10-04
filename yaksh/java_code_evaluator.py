@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import traceback
 import pwd
 import os
@@ -6,9 +7,9 @@ from os.path import join, isfile
 import subprocess
 import importlib
 
-# local imports
-from code_evaluator import CodeEvaluator
-from file_utils import copy_files, delete_files
+# Local imports
+from .code_evaluator import CodeEvaluator
+from .file_utils import copy_files, delete_files
 
 
 class JavaCodeEvaluator(CodeEvaluator):
@@ -18,9 +19,10 @@ class JavaCodeEvaluator(CodeEvaluator):
         self.submit_code_path = self.create_submit_code_file('Test.java')
         self.compiled_user_answer = None
         self.compiled_test_code = None
+        self.user_output_path = ""
+        self.ref_output_path = ""
 
     def teardown(self):
-        super(JavaCodeEvaluator, self).teardown()
         # Delete the created file.
         os.remove(self.submit_code_path)
         if os.path.exists(self.user_output_path):
@@ -29,6 +31,8 @@ class JavaCodeEvaluator(CodeEvaluator):
             os.remove(self.ref_output_path)
         if self.files:
             delete_files(self.files)
+        super(JavaCodeEvaluator, self).teardown()
+
 
     def get_commands(self, clean_ref_code_path, user_code_directory):
         compile_command = 'javac  {0}'.format(self.submit_code_path),

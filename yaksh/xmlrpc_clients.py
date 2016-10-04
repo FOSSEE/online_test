@@ -1,11 +1,19 @@
-from xmlrpclib import ServerProxy
+from __future__ import unicode_literals
 import time
 import random
 import socket
 import json
 import urllib
+from six.moves import urllib
 
-from settings import SERVER_PORTS, SERVER_POOL_PORT
+try:
+    from xmlrpclib import ServerProxy
+except ImportError:
+    # The above import will not work on Python-3.x.
+    from xmlrpc.client import ServerProxy
+
+# Local imports
+from .settings import SERVER_PORTS, SERVER_POOL_PORT
 
 
 class ConnectionError(Exception):
@@ -58,7 +66,8 @@ class CodeServerProxy(object):
         return result
 
     def _get_server(self):
-        port = json.loads(urllib.urlopen(self.pool_url).read())
+        response = urllib.request.urlopen(self.pool_url)
+        port = json.loads(response.read().decode('utf-8'))
         proxy = ServerProxy('http://localhost:%d' % port)
         return proxy
 

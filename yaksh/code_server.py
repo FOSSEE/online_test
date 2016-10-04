@@ -23,7 +23,7 @@ that returns an available server.
 """
 
 # Standard library imports
-from SimpleXMLRPCServer import SimpleXMLRPCServer
+from __future__ import unicode_literals
 import json
 from multiprocessing import Process, Queue
 import os
@@ -36,6 +36,12 @@ import subprocess
 import sys
 
 try:
+    from SimpleXMLRPCServer import SimpleXMLRPCServer
+except ImportError:
+    # The above import will not work on Python-3.x.
+    from xmlrpc.server import SimpleXMLRPCServer
+
+try:
     from urllib import unquote
 except ImportError:
     # The above import will not work on Python-3.x.
@@ -45,9 +51,9 @@ except ImportError:
 from tornado.ioloop import IOLoop
 from tornado.web import Application, RequestHandler
 
-# Local imports.
-from settings import SERVER_PORTS, SERVER_POOL_PORT
-from language_registry import create_evaluator_instance, unpack_json
+# Local imports
+from .settings import SERVER_PORTS, SERVER_POOL_PORT
+from .language_registry import create_evaluator_instance, unpack_json
 
 
 MY_DIR = abspath(dirname(__file__))

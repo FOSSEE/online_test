@@ -11,7 +11,10 @@ from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
 from django.utils import timezone
 from django.core.files import File
-from StringIO import StringIO
+try:
+    from StringIO import StringIO as string_io
+except ImportError:
+    from io import BytesIO as string_io
 import pytz
 import os
 import stat
@@ -19,7 +22,7 @@ from os.path import join, abspath, dirname, exists
 import shutil
 import zipfile
 import tempfile
-from file_utils import extract_files
+from .file_utils import extract_files
 from yaksh.xmlrpc_clients import code_server
 from django.conf import settings
 
@@ -177,7 +180,7 @@ class Course(models.Model):
             success = False
         return success
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 ###############################################################################
@@ -270,7 +273,7 @@ class Question(models.Model):
     def dump_questions(self, question_ids, user):
         questions = Question.objects.filter(id__in=question_ids, user_id=user.id)
         questions_dict = []
-        zip_file_name = StringIO()
+        zip_file_name = string_io()
         zip_file = zipfile.ZipFile(zip_file_name, "a")
         for question in questions:
             test_case = question.get_test_cases()
@@ -364,7 +367,7 @@ class Question(models.Model):
         self.read_json("questions_dump.json", user)
 
 
-    def __unicode__(self):
+    def __str__(self):
         return self.summary
 
 
@@ -418,7 +421,7 @@ class Answer(models.Model):
         else:
             self.marks = marks
 
-    def __unicode__(self):
+    def __str__(self):
         return self.answer
 
 
@@ -540,7 +543,7 @@ class Quiz(models.Model):
                                         course=course)
         return demo_quiz
     
-    def __unicode__(self):
+    def __str__(self):
         desc = self.description or 'Quiz'
         return '%s: on %s for %d minutes' % (desc, self.start_date_time,
                                              self.duration)
@@ -682,7 +685,7 @@ class QuestionPaper(models.Model):
         for question in questions:
             question_paper.fixed_questions.add(question)
     
-    def __unicode__(self):
+    def __str__(self):
         return "Question Paper for " + self.quiz.description
 
 ###############################################################################
@@ -702,7 +705,7 @@ class QuestionSet(models.Model):
 
     def get_random_questions(self):
         """ Returns random questions from set of questions"""
-        return sample(self.questions.all(), self.num_questions)
+        return sample(list(self.questions.all()), self.num_questions)
 
 
 ###############################################################################
@@ -1075,7 +1078,7 @@ class AnswerPaper(models.Model):
         self.update_marks('complete')
         return True, msg
 
-    def __unicode__(self):
+    def __str__(self):
         u = self.user
         q = self.question_paper.quiz
         return u'AnswerPaper paper of {0} {1} for quiz {2}'\
@@ -1099,7 +1102,7 @@ class StandardTestCase(TestCase):
     def get_field_value(self):
         return {"test_case": self.test_case}
 
-    def __unicode__(self):
+    def __str__(self):
         return u'Question: {0} | Test Case: {1}'.format(self.question,
             self.test_case
         )
@@ -1113,7 +1116,7 @@ class StdioBasedTestCase(TestCase):
         return {"expected_output": self.expected_output,
                "expected_input": self.expected_input}
 
-    def __unicode__(self):
+    def __str__(self):
         return u'Question: {0} | Exp. Output: {1} | Exp. Input: {2}'.format(self.question,
             self.expected_output, self.expected_input
         )
@@ -1126,7 +1129,7 @@ class McqTestCase(TestCase):
     def get_field_value(self):
         return {"options": self.options, "correct": self.correct}
 
-    def __unicode__(self):
+    def __str__(self):
         return u'Question: {0} | Correct: {1}'.format(self.question,
             self.correct
         )

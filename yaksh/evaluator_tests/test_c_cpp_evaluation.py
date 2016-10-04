@@ -1,5 +1,8 @@
+from __future__ import absolute_import
 import unittest
 import os
+import shutil
+import tempfile
 from yaksh.cpp_code_evaluator import CppCodeEvaluator
 from yaksh.cpp_stdio_evaluator import CppStdioEvaluator
 from yaksh.settings import SERVER_TIMEOUT
@@ -8,12 +11,19 @@ from textwrap import dedent
 
 class CAssertionEvaluationTestCases(unittest.TestCase):
     def setUp(self):
+        with open('/tmp/test.txt', 'wb') as f:
+            f.write('2'.encode('ascii'))
+        tmp_in_dir_path = tempfile.mkdtemp()
         self.test_case_data = [{"test_case": "c_cpp_files/main.cpp"}]
-        self.in_dir = os.getcwd()
+        self.in_dir = tmp_in_dir_path
         self.timeout_msg = ("Code took more than {0} seconds to run. "
             "You probably have an infinite loop in your"
             " code.").format(SERVER_TIMEOUT)
         self.file_paths = None
+
+    def tearDown(self):
+        os.remove('/tmp/test.txt')
+        shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
         user_answer = "int add(int a, int b)\n{return a+b;}"
@@ -24,7 +34,7 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
         }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get('success'))
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
 
     def test_incorrect_answer(self):
         user_answer = "int add(int a, int b)\n{return a-b;}"
@@ -34,9 +44,10 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
                     'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs)
+        lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
         self.assertIn("Incorrect:", result.get('error'))
-        self.assertTrue(result.get('error').splitlines > 1)
+        self.assertTrue(lines_of_error > 1)
 
     def test_compilation_error(self):
         user_answer = "int add(int a, int b)\n{return a+b}"
@@ -58,10 +69,10 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
-        self.assertEquals(result.get("error"), self.timeout_msg)
+        self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_file_based_assert(self):
-        self.file_paths = [(os.getcwd()+"/yaksh/test.txt", False)]
+        self.file_paths = [('/tmp/test.txt', False)]
         self.test_case_data = [{"test_case": "c_cpp_files/file_data.c"}]
         user_answer = dedent("""
             #include<stdio.h>
@@ -82,7 +93,7 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
                   }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get('success'))
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
 
 class CppStdioEvaluationTestCases(unittest.TestCase):
 
@@ -106,7 +117,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
@@ -126,7 +137,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_string_input(self):
@@ -144,7 +155,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -159,9 +170,10 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
+        lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
         self.assertIn("Incorrect", result.get('error'))
-        self.assertTrue(result.get('error').splitlines > 1)
+        self.assertTrue(lines_of_error > 1)
 
     def test_error(self):
         user_answer = dedent("""
@@ -191,7 +203,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
-        self.assertEquals(result.get("error"), self.timeout_msg)
+        self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
@@ -207,7 +219,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_cpp_correct_answer(self):
@@ -224,7 +236,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_cpp_array_input(self):
@@ -245,7 +257,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_cpp_string_input(self):
@@ -264,7 +276,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_cpp_incorrect_answer(self):
@@ -280,9 +292,10 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
+        lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
         self.assertIn("Incorrect", result.get('error'))
-        self.assertTrue(result.get('error').splitlines > 1)
+        self.assertTrue(lines_of_error > 1)
 
     def test_cpp_error(self):
         user_answer = dedent("""
@@ -314,7 +327,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
-        self.assertEquals(result.get("error"), self.timeout_msg)
+        self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_cpp_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
@@ -331,7 +344,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':

@@ -9,7 +9,11 @@ from taggit.managers import TaggableManager
 from taggit.forms import TagField
 from django.forms.models import inlineformset_factory
 from django.db.models import Q
-from string import letters, punctuation, digits
+try:
+    from string import letters
+except ImportError:
+    from string import ascii_letters as letters
+from string import punctuation, digits
 import datetime
 import pytz
 
