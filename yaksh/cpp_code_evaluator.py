@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import traceback
 import pwd
 import os
@@ -6,9 +7,9 @@ from os.path import join, isfile
 import subprocess
 import importlib
 
-# local imports
-from code_evaluator import CodeEvaluator
-from file_utils import copy_files, delete_files
+# Local imports
+from .code_evaluator import CodeEvaluator
+from .file_utils import copy_files, delete_files
 
 
 class CppCodeEvaluator(CodeEvaluator):
@@ -18,9 +19,10 @@ class CppCodeEvaluator(CodeEvaluator):
         self.submit_code_path = self.create_submit_code_file('submit.c')
         self.compiled_user_answer = None
         self.compiled_test_code = None
+        self.user_output_path = ""
+        self.ref_output_path = ""
 
     def teardown(self):
-        super(CppCodeEvaluator, self).teardown()
         # Delete the created file.
         os.remove(self.submit_code_path)
         if os.path.exists(self.ref_output_path):
@@ -29,9 +31,11 @@ class CppCodeEvaluator(CodeEvaluator):
             os.remove(self.user_output_path)
         if self.files:
             delete_files(self.files)
+        super(CppCodeEvaluator, self).teardown()
+
 
     def set_file_paths(self):
-        user_output_path = os.getcwd() + '/output'
+        user_output_path = os.getcwd() + '/output_file'
         ref_output_path = os.getcwd() + '/executable'
 
         return user_output_path, ref_output_path
@@ -104,7 +108,6 @@ class CppCodeEvaluator(CodeEvaluator):
         Returns (False, error_msg): If mandatory arguments are not files or
         if the required permissions are not given to the file(s).
         """
-
         success = False
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
@@ -125,28 +128,28 @@ class CppCodeEvaluator(CodeEvaluator):
                 if proc.returncode == 0:
                     success, err = True, "Correct answer"
                 else:
-                    err = stdout + "\n" + stderr
+                    err = "{0} \n {1}".format(stdout, stderr)
             else:
                 err = "Error:"
                 try:
                     error_lines = main_err.splitlines()
                     for e in error_lines:
                         if ':' in e:
-                            err = err + "\n" + e.split(":", 1)[1]
+                            err = "{0} \n {1}".format(err, e.split(":", 1)[1])
                         else:
-                            err = err + "\n" + e
+                            err = "{0} \n {1}".format(err, e)
                 except:
-                        err = err + "\n" + main_err
+                        err = "{0} \n {1}".format(err, main_err)
         else:
             err = "Compilation Error:"
             try:
                 error_lines = stdnt_stderr.splitlines()
                 for e in error_lines:
                     if ':' in e:
-                        err = err + "\n" + e.split(":", 1)[1]
+                        err = "{0} \n {1}".format(err, e.split(":", 1)[1])
                     else:
-                        err = err + "\n" + e
+                        err = "{0} \n {1}".format(err, e)
             except:
-                err = err + "\n" + stdnt_stderr
+                err = "{0} \n {1}".format(err, stdnt_stderr)
 
         return success, err

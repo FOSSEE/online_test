@@ -1,15 +1,15 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import subprocess
 import os
 from os.path import isfile
 
-#local imports
-from code_evaluator import CodeEvaluator
-from stdio_evaluator import Evaluator
-from file_utils import copy_files, delete_files
+#Local imports
+from .stdio_evaluator import StdIOEvaluator
+from .file_utils import copy_files, delete_files
 
 
-class JavaStdioEvaluator(CodeEvaluator):
+class JavaStdioEvaluator(StdIOEvaluator):
     """Evaluates Java StdIO based code"""
 
     def setup(self):
@@ -17,10 +17,10 @@ class JavaStdioEvaluator(CodeEvaluator):
         self.submit_code_path = self.create_submit_code_file('Test.java')
 
     def teardown(self):
-        super(JavaStdioEvaluator, self).teardown()
         os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
+        super(JavaStdioEvaluator, self).teardown()
 
     def set_file_paths(self, directory, file_name):
         output_path = "{0}{1}.class".format(directory, file_name)
@@ -61,11 +61,10 @@ class JavaStdioEvaluator(CodeEvaluator):
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE
                                     )
-            evaluator = Evaluator()
-            success, err = evaluator.evaluate(user_answer, proc,
-                                              expected_input,
-                                              expected_output
-                                              )
+            success, err = self.evaluate_stdio(user_answer, proc,
+                                               expected_input,
+                                               expected_output
+                                               )
             os.remove(self.user_output_path)
         else:
             err = "Compilation Error:"

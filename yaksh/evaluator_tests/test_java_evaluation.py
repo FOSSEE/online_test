@@ -1,5 +1,8 @@
+from __future__ import unicode_literals
 import unittest
 import os
+import shutil
+import tempfile
 from yaksh import code_evaluator as evaluator
 from yaksh.java_code_evaluator import JavaCodeEvaluator
 from yaksh.java_stdio_evaluator import JavaStdioEvaluator
@@ -9,10 +12,13 @@ from textwrap import dedent
 
 class JavaAssertionEvaluationTestCases(unittest.TestCase):
     def setUp(self):
+        with open('/tmp/test.txt', 'wb') as f:
+            f.write('2'.encode('ascii'))
+        tmp_in_dir_path = tempfile.mkdtemp()
         self.test_case_data = [
             {"test_case": "java_files/main_square.java"}
         ]
-        self.in_dir = os.getcwd()
+        self.in_dir = tmp_in_dir_path
         evaluator.SERVER_TIMEOUT = 9
         self.timeout_msg = ("Code took more than {0} seconds to run. "
             "You probably have an infinite loop in"
@@ -20,7 +26,8 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
         self.file_paths = None
 
     def tearDown(self):
-        evaluator.SERVER_TIMEOUT = 2
+        os.remove('/tmp/test.txt')
+        shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
         user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a;\n\t}\n}"
@@ -30,7 +37,7 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                     'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -42,8 +49,10 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get('success'))
-        self.assertIn("Incorrect:", result.get('error'))
-        self.assertTrue(result.get('error').splitlines > 1)
+        lines_of_error = len(result.get('error').splitlines())
+        self.assertFalse(result.get('success'))
+        self.assertIn("Incorrect", result.get('error'))
+        self.assertTrue(lines_of_error > 1)
 
     def test_error(self):
         user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a"
@@ -65,10 +74,10 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs) 
         self.assertFalse(result.get("success"))
-        self.assertEquals(result.get("error"), self.timeout_msg)
+        self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_file_based_assert(self):
-        self.file_paths = [(os.getcwd()+"/yaksh/test.txt", False)]
+        self.file_paths = [("/tmp/test.txt", False)]
         self.test_case_data = [
             {"test_case": "java_files/read_file.java"}
         ]
@@ -97,11 +106,15 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                   }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get("success"))
-        self.assertEquals(result.get("error"), "Correct answer")
+        self.assertEqual(result.get("error"), "Correct answer")
 
 class JavaStdioEvaluationTestCases(unittest.TestCase):
 
     def setUp(self):
+        with open('/tmp/test.txt', 'wb') as f:
+            f.write('2'.encode('ascii'))
+        tmp_in_dir_path = tempfile.mkdtemp()
+        self.in_dir = tmp_in_dir_path
         self.test_case_data = [{'expected_output': '11',
                                'expected_input': '5\n6'}]
         evaluator.SERVER_TIMEOUT = 4
@@ -109,8 +122,10 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                             "You probably have an infinite loop in"
                             " your code.").format(evaluator.SERVER_TIMEOUT)
 
-    def teardown(self):
+    def tearDown(self):
         evaluator.SERVER_TIMEOUT = 4
+        os.remove('/tmp/test.txt')
+        shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
         user_answer = dedent("""
@@ -122,12 +137,12 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          int b = s.nextInt();
          System.out.print(a+b);
         }}""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct Answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
@@ -144,12 +159,12 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          a[i] = s.nextInt();
          System.out.print(a[i]);}
         }}""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct Answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -163,14 +178,15 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          int b = s.nextInt();
          System.out.print(a);
         }}""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
+        lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
         self.assertIn("Incorrect", result.get('error'))
-        self.assertTrue(result.get('error').splitlines > 1)
+        self.assertTrue(lines_of_error > 1)
 
     def test_error(self):
 
@@ -179,7 +195,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
         {
          System.out.print("a");
         }""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
@@ -196,13 +212,13 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          {
          System.out.print("a");}
         }}""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
-        self.assertEquals(result.get("error"), self.timeout_msg)
+        self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
@@ -214,12 +230,12 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          int b = 6;
          System.out.print(a+b);
         }}""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct Answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
 
     def test_string_input(self):
@@ -234,13 +250,45 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          String b = s.nextLine();
          System.out.print(a+b);
         }}""")
-        get_class = JavaStdioEvaluator()
+        get_class = JavaStdioEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data
                   }
         result = get_class.evaluate(**kwargs)
-        self.assertEquals(result.get('error'), "Correct Answer")
+        self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
+
+    def test_file_based_stdout(self):
+        self.file_paths = [("/tmp/test.txt", False)]
+        self.test_case_data = [{'expected_output': '2',
+                               'expected_input': ''}]
+        user_answer = dedent("""
+            import java.io.BufferedReader;
+            import java.io.FileReader;
+            import java.io.IOException;
+            class Test{
+            public static void main(String[] args) throws IOException {
+            BufferedReader br = new BufferedReader(new FileReader("test.txt"));
+            try {
+                StringBuilder sb = new StringBuilder();
+                String line = br.readLine();
+                while (line != null) {
+                    sb.append(line);
+                    line = br.readLine();}
+                System.out.print(sb.toString());
+            } finally {
+                br.close();
+            }}}
+            """)
+        get_class = JavaStdioEvaluator(self.in_dir)
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data,
+                  'file_paths': self.file_paths
+                  }
+        result = get_class.evaluate(**kwargs)
+        self.assertTrue(result.get("success"))
+        self.assertEqual(result.get("error"), "Correct answer")
+
 
 if __name__ == '__main__':
     unittest.main()

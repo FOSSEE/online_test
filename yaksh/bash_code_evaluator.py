@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import traceback
 import pwd
 import os
@@ -8,8 +9,8 @@ import subprocess
 import importlib
 
 # local imports
-from code_evaluator import CodeEvaluator
-from file_utils import copy_files, delete_files
+from .code_evaluator import CodeEvaluator
+from .file_utils import copy_files, delete_files
 
 
 class BashCodeEvaluator(CodeEvaluator):

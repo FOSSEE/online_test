@@ -1,15 +1,15 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import subprocess
 import os
 from os.path import isfile
 
-#local imports
-from code_evaluator import CodeEvaluator
-from stdio_evaluator import Evaluator
-from file_utils import copy_files, delete_files
+#Local imports
+from .stdio_evaluator import StdIOEvaluator
+from .file_utils import copy_files, delete_files
 
 
-class CppStdioEvaluator(CodeEvaluator):
+class CppStdioEvaluator(StdIOEvaluator):
     """Evaluates C StdIO based code"""
 
     def setup(self):
@@ -17,13 +17,13 @@ class CppStdioEvaluator(CodeEvaluator):
         self.submit_code_path = self.create_submit_code_file('main.c')
 
     def teardown(self):
-        super(CppStdioEvaluator, self).teardown()
         os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
+        super(CppStdioEvaluator, self).teardown()
 
     def set_file_paths(self):
-        user_output_path = os.getcwd() + '/output'
+        user_output_path = os.getcwd() + '/output_file'
         ref_output_path = os.getcwd() + '/executable'
         return user_output_path, ref_output_path
 
@@ -76,11 +76,10 @@ class CppStdioEvaluator(CodeEvaluator):
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE
                                         )
-                evaluator = Evaluator()
-                success, err = evaluator.evaluate(user_answer, proc,
-                                                  expected_input,
-                                                  expected_output
-                                                  )
+                success, err = self.evaluate_stdio(user_answer, proc,
+                                                   expected_input,
+                                                   expected_output
+                                                   )
                 os.remove(self.ref_output_path)
             else:
                 err = "Error:"

@@ -1,5 +1,6 @@
+#!/usr/bin/env python
+from __future__ import unicode_literals
 import sys
-from SimpleXMLRPCServer import SimpleXMLRPCServer
 import pwd
 import os
 import stat
@@ -9,8 +10,15 @@ import traceback
 from multiprocessing import Process, Queue
 import subprocess
 import re
-# Local imports.
-from settings import SERVER_TIMEOUT
+
+try:
+    from SimpleXMLRPCServer import SimpleXMLRPCServer
+except ImportError:
+    # The above import will not work on Python-3.x.
+    from xmlrpc.server import SimpleXMLRPCServer
+
+# Local imports
+from .settings import SERVER_TIMEOUT
 
 MY_DIR = abspath(dirname(__file__))
 
@@ -127,6 +135,7 @@ class CodeEvaluator(object):
     def teardown(self):
         # Cancel the signal
         delete_signal_handler()
+        self._change_dir(dirname(MY_DIR))
 
     def check_code(self):
         raise NotImplementedError("check_code method not implemented")
@@ -176,7 +185,7 @@ class CodeEvaluator(object):
             proc.kill()
             # Re-raise exception.
             raise
-        return proc, stdout, stderr
+        return proc, stdout.decode('utf-8'), stderr.decode('utf-8')
 
     def _change_dir(self, in_dir):
         if in_dir is not None and isdir(in_dir):

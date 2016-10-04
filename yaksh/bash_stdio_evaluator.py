@@ -1,14 +1,15 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import subprocess
 import os
 from os.path import isfile
 
 #local imports
-from code_evaluator import CodeEvaluator
-from stdio_evaluator import Evaluator
-from file_utils import copy_files, delete_files
+from .stdio_evaluator import StdIOEvaluator
+from .file_utils import copy_files, delete_files
 
-class BashStdioEvaluator(CodeEvaluator):
+
+class BashStdioEvaluator(StdIOEvaluator):
     """Evaluates Bash StdIO based code"""
 
     def setup(self):
@@ -41,9 +42,8 @@ class BashStdioEvaluator(CodeEvaluator):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE
                                 )
-        evaluator = Evaluator()
-        success, err = evaluator.evaluate(user_answer, proc,
-                                          expected_input,
-                                          expected_output
-                                          )
+        success, err = self.evaluate_stdio(user_answer, proc,
+                                           expected_input,
+                                           expected_output
+                                           )
         return success, err

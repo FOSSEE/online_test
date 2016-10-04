@@ -1,16 +1,23 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import sys
 import traceback
 import os
 from os.path import join
 import importlib
 from contextlib import contextmanager
-from ast import literal_eval
-# local imports
-from code_evaluator import CodeEvaluator
-from StringIO import StringIO
-from file_utils import copy_files, delete_files
 from textwrap import dedent
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
+# Local imports
+from .code_evaluator import CodeEvaluator
+from .file_utils import copy_files, delete_files
+
+
 @contextmanager
 def redirect_stdout():
     new_target = StringIO()
@@ -25,10 +32,10 @@ class PythonStdioEvaluator(CodeEvaluator):
     """Tests the Python code obtained from Code Server"""
 
     def teardown(self):
-        super(PythonStdioEvaluator, self).teardown()
         # Delete the created file.
         if self.files:
             delete_files(self.files)
+        super(PythonStdioEvaluator, self).teardown()
 
 
     def compile_code(self, user_answer, file_paths, expected_input, expected_output):
@@ -43,7 +50,7 @@ class PythonStdioEvaluator(CodeEvaluator):
             sys.stdin = input_buffer
         with redirect_stdout() as output_buffer:
             exec_scope = {}
-            exec submitted in exec_scope
+            exec(submitted, exec_scope)
         self.output_value = output_buffer.getvalue().rstrip("\n")
         return self.output_value
 
@@ -53,11 +60,11 @@ class PythonStdioEvaluator(CodeEvaluator):
         tb = None
         if self.output_value == expected_output:
             success = True
-            err = "Correct Answer"
+            err = "Correct answer"
         else:
             success = False
             err = dedent("""
-                Incorrect Answer:
+                Incorrect answer:
                 Given input - {0}
                 Expected output - {1}
                 Your output - {2}
