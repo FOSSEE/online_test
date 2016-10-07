@@ -623,8 +623,7 @@ class QuestionPaper(models.Model):
 
     def _get_questions_for_answerpaper(self):
         """ Returns fixed and random questions for the answer paper"""
-        questions = []
-        questions = list(self.fixed_questions.all())
+        questions = list(self.fixed_questions.filter(active=True))
         for question_set in self.random_questions.all():
             questions += question_set.get_random_questions()
         return questions
@@ -993,7 +992,7 @@ class AnswerPaper(models.Model):
         return q_a
 
     def get_questions(self):
-        return self.questions.all()
+        return self.questions.filter(active=True)
 
     def get_questions_answered(self):
         return self.questions_answered.all()

@@ -1085,6 +1085,86 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
                                 )
 
 
+<<<<<<< HEAD
+=======
+@csrf_exempt
+def ajax_questionpaper(request, query):
+    """
+        During question paper creation, ajax call made to get question details.
+    """
+
+    user = request.user
+    if query == 'marks':
+        question_type = request.POST.get('question_type')
+        questions = Question.objects.filter(type=question_type, user=user, active=True)
+        marks = questions.values_list('points').distinct()
+        return my_render_to_response('yaksh/ajax_marks.html', {'marks': marks})
+    elif query == 'questions':
+        question_type = request.POST['question_type']
+        marks_selected = request.POST['marks']
+        fixed_questions = request.POST.getlist('fixed_list[]')
+        fixed_question_list = ",".join(fixed_questions).split(',')
+        random_questions = request.POST.getlist('random_list[]')
+        random_question_list = ",".join(random_questions).split(',')
+        question_list = fixed_question_list + random_question_list
+        questions = list(Question.objects.filter(type=question_type,
+                                            points=marks_selected,
+                                            user=user,
+                                            active=True)
+                                        )
+        questions = [question for question in questions \
+                if not str(question.id) in question_list]
+        return my_render_to_response('yaksh/ajax_questions.html',
+                              {'questions': questions})
+
+
+@login_required
+def design_questionpaper(request):
+    user = request.user
+    ci = RequestContext(request)
+
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+
+    if request.method == 'POST':
+        fixed_questions = request.POST.getlist('fixed')
+        random_questions = request.POST.getlist('random')
+        random_number = request.POST.getlist('number')
+        is_shuffle = request.POST.get('shuffle_questions', False)
+        if is_shuffle == 'on':
+            is_shuffle = True
+
+        question_paper = QuestionPaper(shuffle_questions=is_shuffle)
+        quiz = Quiz.objects.order_by("-id")[0]
+        tot_marks = 0
+        question_paper.quiz = quiz
+        question_paper.total_marks = tot_marks
+        question_paper.save()
+        if fixed_questions:
+            fixed_questions_ids = ",".join(fixed_questions)
+            fixed_questions_ids_list = fixed_questions_ids.split(',')
+            for question_id in fixed_questions_ids_list:
+                question_paper.fixed_questions.add(question_id)
+        if random_questions:
+            for random_question, num in zip(random_questions, random_number):
+                qid = random_question.split(',')[0]
+                question = Question.objects.get(id=int(qid))
+                marks = question.points
+                question_set = QuestionSet(marks=marks, num_questions=num)
+                question_set.save()
+                for question_id in random_question.split(','):
+                    question_set.questions.add(question_id)
+                    question_paper.random_questions.add(question_set)
+        question_paper.update_total_marks()
+        question_paper.save()
+        return my_redirect('/exam/manage/courses')
+    else:
+        form = RandomQuestionForm()
+        context = {'form': form, 'questionpaper':True}
+        return my_render_to_response('yaksh/design_questionpaper.html',
+                                     context, context_instance=ci)
+
+>>>>>>> Minor fixes: Hide question instead of deletion
 @login_required
 def view_profile(request):
     """ view moderators and users profile """
