@@ -604,10 +604,10 @@ class QuestionPaper(models.Model):
     random_questions = models.ManyToManyField("QuestionSet")
 
     # Option to shuffle questions, each time a new question paper is created.
-    shuffle_questions = models.BooleanField(default=False)
+    shuffle_questions = models.BooleanField(default=False, blank=False)
 
     # Total marks for the question paper.
-    total_marks = models.FloatField()
+    total_marks = models.FloatField(default=0.0, blank=True)
 
     objects = QuestionPaperManager()
 

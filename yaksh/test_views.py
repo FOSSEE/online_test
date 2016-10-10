@@ -294,7 +294,7 @@ class TestAddQuiz(TestCase):
         self.assertEqual(updated_quiz.course, self.course)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/exam/manage/')
+        self.assertRedirects(response, '/exam/manage/courses/')
 
     def test_add_quiz_post_new_quiz(self):
         """
@@ -340,7 +340,7 @@ class TestAddQuiz(TestCase):
         self.assertEqual(new_quiz.course, self.course)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/exam/manage/designquestionpaper/')
+        self.assertRedirects(response, '/exam/manage/courses/')
 
 class TestAddTeacher(TestCase):
     def setUp(self):
