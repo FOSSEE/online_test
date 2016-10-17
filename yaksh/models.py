@@ -363,7 +363,6 @@ class Question(models.Model):
         if os.path.exists(json_file):
             with open(json_file, 'r') as q_file:
                 questions_list = q_file.read()
-                print(questions_list)
                 self.load_questions(questions_list, user, file_path, files)
 
     def create_demo_questions(self, user):
