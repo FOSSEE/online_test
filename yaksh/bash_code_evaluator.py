@@ -22,10 +22,10 @@ class BashCodeEvaluator(CodeEvaluator):
 
     def teardown(self):
         # Delete the created file.
-        super(BashCodeEvaluator, self).teardown()
         os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
+        super(BashCodeEvaluator, self).teardown()
 
     def check_code(self, user_answer, file_paths, test_case):
         """ Function validates student script using instructor script as
