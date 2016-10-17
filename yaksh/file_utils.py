@@ -2,7 +2,7 @@ import shutil
 import os
 import zipfile
 import tempfile
-from online_test.settings import OUTPUT_DIR
+
 
 def copy_files(file_paths):
     """ Copy Files to current directory, takes
@@ -15,7 +15,7 @@ def copy_files(file_paths):
         files.append(file_name)
         shutil.copy(file_path, os.getcwd())
         if extract:
-            z_files, path = extract_files(file_name, OUTPUT_DIR)
+            z_files, path = extract_files(file_name, os.getcwd())
             for file in z_files:
                 files.append(file)
     return files
