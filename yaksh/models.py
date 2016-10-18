@@ -340,7 +340,7 @@ class Question(models.Model):
             q_file = os.path.join(path, file_name)
             if os.path.exists(q_file):
                 que_file = open(q_file, 'r')
-                #Converting to Python file object with
+                # Converting to Python file object with
                 # some Django-specific additions
                 django_file = File(que_file)
                 file_upload = FileUpload()
