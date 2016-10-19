@@ -245,6 +245,10 @@ class Question(models.Model):
     # user for particular question
     user = models.ForeignKey(User, related_name="user")
 
+    # hook to evaluate user output
+    hook = models.TextField(blank=True)
+
+
     def consolidate_answer_data(self, user_answer):
         question_data = {}
         test_case_data = []
@@ -258,6 +262,10 @@ class Question(models.Model):
         question_data['test_case_data'] = test_case_data
         question_data['user_answer'] = user_answer
         files = FileUpload.objects.filter(question=self)
+
+        if self.hook:
+            question_data["hook_code"] = self.hook
+
         if files:
             question_data['file_paths'] = [(file.file.path, file.extract)
                                            for file in files]

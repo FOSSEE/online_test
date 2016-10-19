@@ -99,7 +99,8 @@ class CodeEvaluator(object):
                 os.makedirs(self.in_dir)
         self._change_dir(self.in_dir)
 
-    def safe_evaluate(self, user_answer, test_case_data, file_paths=None):
+    def safe_evaluate(self, user_answer, test_case_data,
+                      file_paths=None, hook_code=None):
         """
         Handles code evaluation along with compilation, signal handling
         and Exception handling
@@ -201,3 +202,15 @@ class CodeEvaluator(object):
             if ord(c) is not 26 and ord(c) is not 0:
                 stripped = stripped + c
         return ''.join(stripped)
+
+    def evaluate_hook(self, user_output, code):
+        """Allows moderator to fine check the output of the user"""
+        success = False
+        err = None
+        try:
+            _check_hook_answer = compile(code, '<string>', mode='exec')
+            exec _check_hook_answer
+            success, err = python_hook(user_output)
+        except Exception:
+            raise
+        return success, err
