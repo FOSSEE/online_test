@@ -470,7 +470,6 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         kwargs = {'user_answer': user_answer,
                   'test_case_data': test_case_data
                   }
-
         # When
         evaluator = PythonStdioEvaluator()
         result = evaluator.evaluate(**kwargs)
@@ -478,6 +477,38 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         # Then
         self.assertEqual(result.get('error'), timeout_msg)
         self.assertFalse(result.get('success'))
+    
+    def test_hook_evaluator(self):
+
+      # Given
+      self.test_case_data = [{"expected_input": "1\n2",
+                              "expected_output": "3"
+                             }]
+      user_answer = dedent("""
+                              a = input()
+                              b = input()
+                              print a+b
+                           """
+                           )
+      hook = dedent("""
+                       def python_hook(user_output):
+                           if int(user_output) == 3:
+                               success = True
+                               err = "Correct answer"
+                           else:
+                               print user_output
+                               success = False
+                               err = "Incorrect answer"
+                           return success, err
+                    """
+                    )
+
+      kwargs = {'user_answer': user_answer,
+                'test_case_data': self.test_case_data,
+                'hook_code': hook}
+      self.assertTrue(result.get('success'))
+      self.assertIn("Correct answer", result.get('error'))
+
 
 if __name__ == '__main__':
     unittest.main()

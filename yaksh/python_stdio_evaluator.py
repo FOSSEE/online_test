@@ -54,24 +54,28 @@ class PythonStdioEvaluator(CodeEvaluator):
         self.output_value = output_buffer.getvalue().rstrip("\n")
         return self.output_value
 
-    def check_code(self, user_answer, file_paths, expected_input, expected_output):
+    def check_code(self, user_answer, file_paths, expected_input,
+                   expected_output, hook_code=None):
         success = False
 
         tb = None
-        if self.output_value == expected_output:
-            success = True
-            err = "Correct answer"
+        if hook_code:
+            success, err = self.evaluate_hook(self.output_value, hook_code)
         else:
-            success = False
-            err = dedent("""
-                Incorrect answer:
-                Given input - {0}
-                Expected output - {1}
-                Your output - {2}
-                """
-                         .format(expected_input,
-                                 expected_output, self.output_value
-                                 )
-                         )
-        del tb
-        return success, err
+            if self.output_value == expected_output:
+                success = True
+                err = "Correct answer"
+            else:
+                success = False
+                err = dedent("""
+                    Incorrect answer:
+                    Given input - {0}
+                    Expected output - {1}
+                    Your output - {2}
+                    """
+                             .format(expected_input,
+                                     expected_output, self.output_value
+                                     )
+                             )
+            del tb
+            return success, err
