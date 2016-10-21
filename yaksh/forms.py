@@ -177,7 +177,7 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
-        exclude = ['user']
+        exclude = ['user', 'active']
 
 
 class FileForm(forms.Form):

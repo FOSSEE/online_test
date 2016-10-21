@@ -915,12 +915,10 @@ def show_all_questions(request):
         if request.POST.get('delete') == 'delete':
             data = request.POST.getlist('question')
             if data is not None:
-                questions = Question.objects.filter(id__in=data, user_id=user.id)
-                files = FileUpload.objects.filter(question_id__in=questions)
-                if files:
-                    for file in files:
-                        file.remove()
-                questions.delete()
+                questions = Question.objects.filter(id__in=data, user_id=user.id, active=True)
+                for question in questions:
+                    question.active = False
+                    question.save()
 
         if request.POST.get('upload') == 'upload':
             form = UploadFileForm(request.POST, request.FILES)
@@ -959,7 +957,7 @@ def show_all_questions(request):
             else:
                 context["msg"] = "Please select atleast one question to test"
 
-    questions = Question.objects.filter(user_id=user.id)
+    questions = Question.objects.filter(user_id=user.id, active=True)
     form = QuestionFilterForm(user=user)
     upload_form = UploadFileForm()
     context['papers'] = []

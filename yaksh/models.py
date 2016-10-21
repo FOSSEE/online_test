@@ -271,7 +271,7 @@ class Question(models.Model):
         return json.dumps(question_data)
 
     def dump_questions(self, question_ids, user):
-        questions = Question.objects.filter(id__in=question_ids, user_id=user.id)
+        questions = Question.objects.filter(id__in=question_ids, user_id=user.id, active=True)
         questions_dict = []
         zip_file_name = string_io()
         zip_file = zipfile.ZipFile(zip_file_name, "a")
@@ -623,8 +623,7 @@ class QuestionPaper(models.Model):
 
     def _get_questions_for_answerpaper(self):
         """ Returns fixed and random questions for the answer paper"""
-        questions = []
-        questions = list(self.fixed_questions.all())
+        questions = list(self.fixed_questions.filter(active=True))
         for question_set in self.random_questions.all():
             questions += question_set.get_random_questions()
         return questions
@@ -764,8 +763,9 @@ class AnswerPaperManager(models.Manager):
                                                              attempt_number)
         questions = self.get_all_questions(questionpaper_id, attempt_number)
         all_questions = Question.objects.filter(
-            id__in=set(questions)
-        ).order_by('type')
+                id__in=set(questions),
+                active=True
+            ).order_by('type')
         for question in all_questions:
             if question.id in questions_answered:
                 question_stats[question] = [questions_answered[question.id],
@@ -992,7 +992,7 @@ class AnswerPaper(models.Model):
         return q_a
 
     def get_questions(self):
-        return self.questions.all()
+        return self.questions.filter(active=True)
 
     def get_questions_answered(self):
         return self.questions_answered.all()

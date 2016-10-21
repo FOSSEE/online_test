@@ -20,7 +20,7 @@
   <center><table class=span1>
   <tr><td>Summary: <td>{{ form.summary }}{{ form.summary.errors }}
   <tr><td> Language: <td> {{form.language}}{{form.language.errors}}
-  <tr><td> Active: <td> {{ form.active }}{{form.active.errors}} &nbsp; Type: &nbsp;{{ form.type }}{{form.type.errors}}
+  <tr><td> Type: <td> {{ form.type }}{{form.type.errors}}
   <tr><td>Points:<td><button class="btn-mini" type="button" onClick="increase(frm);">+</button>{{form.points }}<button class="btn-mini" type="button" onClick="decrease(frm);">-</button>{{ form.points.errors }} 
     <tr><td><strong>Rendered: </strong><td><p id='my'></p>
   <tr><td>Description: <td>{{ form.description}}  {{form.description.errors}}
