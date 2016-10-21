@@ -22,7 +22,7 @@ from os.path import join, abspath, dirname, exists
 import shutil
 import zipfile
 import tempfile
-from .file_utils import extract_files
+from .file_utils import extract_files, delete_files
 from yaksh.xmlrpc_clients import code_server
 from django.conf import settings
 
@@ -174,7 +174,7 @@ class Course(models.Model):
             demo_ques = Question()
             demo_ques.create_demo_questions(user)
             demo_que_ppr = QuestionPaper()
-            demo_que_ppr.create_demo_quiz_ppr(demo_quiz)
+            demo_que_ppr.create_demo_quiz_ppr(demo_quiz, user)
             success = True
         else:
             success = False
@@ -290,7 +290,7 @@ class Question(models.Model):
         question._add_json_to_zip(zip_file, questions_dict)
         return zip_file_name
 
-    def load_questions(self, questions_list, user):
+    def load_questions(self, questions_list, user, file_path=None, files_list=None):
         questions = json.loads(questions_list)
         for question in questions:
             question['user'] = user
@@ -298,10 +298,12 @@ class Question(models.Model):
             test_cases = question.pop('testcase')
             que, result = Question.objects.get_or_create(**question)
             if file_names:
-                que._add_files_to_db(file_names)
+                que._add_files_to_db(file_names, file_path)
             model_class = get_model_class(que.test_case_type)
             for test_case in test_cases:
                 model_class.objects.get_or_create(question=que, **test_case)
+        if files_list:
+            delete_files(files_list, file_path)
 
     def get_test_cases(self, **kwargs):
         test_case_ctype = ContentType.objects.get(app_label="yaksh",
@@ -333,15 +335,18 @@ class Question(models.Model):
             files_list.append(((os.path.basename(f.file.path)), f.extract))
         return files_list
 
-    def _add_files_to_db(self, file_names):
+    def _add_files_to_db(self, file_names, path):
         for file_name, extract in file_names:
-            que_file = open(file_name, 'r')
-            #Converting to Python file object with some Django-specific additions
-            django_file = File(que_file)
-            FileUpload.objects.get_or_create(file=django_file,
-                                             question=self,
-                                             extract=extract)
-            os.remove(file_name)
+            q_file = os.path.join(path, file_name)
+            if os.path.exists(q_file):
+                que_file = open(q_file, 'r')
+                # Converting to Python file object with
+                # some Django-specific additions
+                django_file = File(que_file)
+                file_upload = FileUpload()
+                file_upload.question = self
+                file_upload.extract = extract
+                file_upload.file.save(file_name, django_file, save=True)
 
     def _add_json_to_zip(self, zip_file, q_dict):
         json_data = json.dumps(q_dict, indent=2)
@@ -353,18 +358,18 @@ class Question(models.Model):
         zip_file.close()
         shutil.rmtree(tmp_file_path)
 
-    def read_json(self, json_file, user):
+    def read_json(self, file_path, user, files=None):
+        json_file = os.path.join(file_path, "questions_dump.json")
         if os.path.exists(json_file):
             with open(json_file, 'r') as q_file:
                 questions_list = q_file.read()
-                self.load_questions(questions_list, user)
-            os.remove(json_file)
+                self.load_questions(questions_list, user, file_path, files)
 
     def create_demo_questions(self, user):
         zip_file_path = os.path.join(os.getcwd(), 'yaksh',
-                                         'fixtures', 'demo_questions.zip')
-        extract_files(zip_file_path)
-        self.read_json("questions_dump.json", user)
+                                     'fixtures', 'demo_questions.zip')
+        files, extract_path = extract_files(zip_file_path)
+        self.read_json(extract_path, user, files)
 
 
     def __str__(self):
@@ -673,13 +678,14 @@ class QuestionPaper(models.Model):
             prerequisite = self._get_prequisite_paper()
             return prerequisite._is_questionpaper_passed(user)
 
-    def create_demo_quiz_ppr(self, demo_quiz):
+    def create_demo_quiz_ppr(self, demo_quiz, user):
         question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
                                                       total_marks=5.0,
                                                       shuffle_questions=True
                                                       )
         questions = Question.objects.filter(active=True,
-                                            summary="Yaksh Demo Question")
+                                            summary="Yaksh Demo Question",
+                                            user=user)
         # add fixed set of questions to the question paper
         for question in questions:
             question_paper.fixed_questions.add(question)

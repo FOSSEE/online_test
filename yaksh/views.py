@@ -927,8 +927,8 @@ def show_all_questions(request):
                 file_name = questions_file.name.split('.')
                 if file_name[-1] == "zip":
                     ques = Question()
-                    extract_files(questions_file)
-                    ques.read_json("questions_dump.json", user)
+                    files, extract_path = extract_files(questions_file)
+                    ques.read_json(extract_path, user, files)
                 else:
                     message = "Please Upload a ZIP file"
                     context['message'] = message

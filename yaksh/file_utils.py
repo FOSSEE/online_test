@@ -1,6 +1,7 @@
 import shutil
 import os
 import zipfile
+import tempfile
 
 
 def copy_files(file_paths):
@@ -14,16 +15,19 @@ def copy_files(file_paths):
         files.append(file_name)
         shutil.copy(file_path, os.getcwd())
         if extract:
-            z_files = extract_files(file_name)
+            z_files, path = extract_files(file_name, os.getcwd())
             for file in z_files:
                 files.append(file)
     return files
 
 
-def delete_files(files):
-    """ Delete Files from current directory """
-
-    for file in files:
+def delete_files(files, file_path=None):
+    """ Delete Files from directory """
+    for file_name in files:
+        if file_path:
+            file = os.path.join(file_path, file_name)
+        else:
+            file = file_name
         if os.path.exists(file):
             if os.path.isfile(file):
                 os.remove(file)
@@ -31,13 +35,18 @@ def delete_files(files):
                 shutil.rmtree(file)
 
 
-def extract_files(zip_file):
+def extract_files(zip_file, path=None):
+    """ extract files from zip """
     zfiles = []
     if zipfile.is_zipfile(zip_file):
         zip_file = zipfile.ZipFile(zip_file, 'r')
         for z_file in zip_file.namelist():
             zfiles.append(z_file)
-        zip_file.extractall()
+        if path:
+            extract_path = path
+        else:
+            extract_path = tempfile.gettempdir()
+        zip_file.extractall(extract_path)
         zip_file.close()
-        return zfiles
+        return zfiles, extract_path
 
