@@ -415,8 +415,6 @@ def start(request, questionpaper_id=None, attempt_num=None):
             msg = 'You do not have a profile and cannot take the quiz!'
             raise Http404(msg)
         new_paper = quest_paper.make_answerpaper(user, ip, attempt_num)
-        # Make user directory.
-        user_dir = new_paper.user.profile.get_user_dir()
         return show_question(request, new_paper.current_question(), new_paper)
 
 
