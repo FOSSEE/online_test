@@ -96,7 +96,7 @@ class CodeEvaluator(object):
     def setup(self):
         if self.in_dir:
             if not os.path.exists(self.in_dir):
-                os.mkdir(self.in_dir)
+                os.makedirs(self.in_dir)
         self._change_dir(self.in_dir)
 
     def safe_evaluate(self, user_answer, test_case_data, file_paths=None):
