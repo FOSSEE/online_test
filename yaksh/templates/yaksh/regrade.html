@@ -1,18 +1,8 @@
 {% extends "manage.html" %}
 
-{% block title %} Grader {% endblock title %}
+{% block pagetitle %} Grader {% endblock pagetitle %}
 
-{% block css %}
-<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/bootstrap.css" />
-{% endblock %}
-{% block subtitle %}
-    Grader
-    {% endblock %}
-    {% block script %}
-    <script src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js"></script>
-    <script src="{{ URL_ROOT }}/static/yaksh/js/bootstrap.min.js"></script>
-    {% endblock %}
-    {% block manage %}
+{% block content %}
 
 <div class="row">
  <div class="col-md-3">

@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}Instructions and Rules {% endblock %}
-{% block pagetitle %}Online Test {% endblock %}
-{% block formtitle %}Important instructions & rules {% endblock %}
+{% block pagetitle %} OnlineTest Instructions and Rules
+<h3> Important instructions & rules </h3>
+{% endblock pagetitle %}
 {% block content %}
 
          {% if questionpaper.quiz.is_expired %}
@@ -35,22 +35,28 @@
           </li>
           <li> <strong>You are <strong>not allowed</strong> to use any internet resources, i.e. no google etc.</strong> </li>
           <li> Do not copy or share the questions or answers with anyone until the exam is complete <strong>for everyone</strong>.</li>
-          <li> <strong>All</strong> your attempts at the questions are logged. Do not try to outsmart and break the testing system.  If you do, we know who you are and we will expell you from the course.  You have been warned.
+          <li> <strong>All</strong> your attempts at the questions are logged. Do not try to outsmart and break the testing system.  If you do, we know who you are and we will expel you from the course.  You have been warned.
           </li>
          </ul>
-          <p> We hope you enjoy taking this exam !!!</p>
-          {% if user == "moderator" %}
-          <form action="{{URL_ROOT}}/exam/manage/" method="post" align="center">
-          {%else%}
-          <form action="{{URL_ROOT}}/exam/quizzes/" method="post" align="center">
-          {% endif %}
-           {% csrf_token %}
-           <center><button class="btn" name="home">Home</button></center>
+         <p> We hope you enjoy taking this exam !!!</p>
+        <div class="row">
+            <div class="col-md-6">
+              {% if user == "moderator" %}
+              <form action="{{URL_ROOT}}/exam/manage/" method="post" align="center">
+              {%else%}
+              <form action="{{URL_ROOT}}/exam/quizzes/" method="post" align="center">
+              {% endif %}
+              {% csrf_token %}
+              <center><button class="btn btn-primary" name="home">Home</button></center>
           </form>
-          {% if not questionpaper.quiz.is_expired %}
-              <form action="{{URL_ROOT}}/exam/start/{{ attempt_num }}/{{ questionpaper.id }}/" method="post" align="center">
-               {% csrf_token %}
-               <center><button class="btn" type="submit" name="start">Start Exam!</button></center>
-              </form>
-          {% endif %}
+            </div>
+            <div class="col-md-6">
+                  {% if not questionpaper.quiz.is_expired %}
+                      <form action="{{URL_ROOT}}/exam/start/{{ attempt_num }}/{{ questionpaper.id }}/" method="post" align="center">
+                       {% csrf_token %}
+                       <center><button class="btn btn-success" type="submit" name="start"> Start Exam <span class="glyphicon glyphicon-chevron-right"></span></button></center>
+                      </form>
+                  {% endif %}
+            </div>
+        </div>
 {% endblock content %}

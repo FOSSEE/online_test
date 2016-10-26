@@ -1,16 +1,10 @@
 {% extends "user.html" %}
 
-
-{% block subtitle %}Results{% endblock %}
-
-{% block css %}
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question_quiz.css" type="text/css" />
-{% endblock %}
-
-{% block manage %}
-<form action="" method="post" name=frm>
+{% block pagetitle %} Results {% endblock pagetitle %}
+{% block content %}
+<form>
   {% csrf_token %}
-  <center><table class="span6">
+  <center><table class="table well">
     <th>Quiz Description
     <th>Obtained Marks
     <th>Maximum Marks

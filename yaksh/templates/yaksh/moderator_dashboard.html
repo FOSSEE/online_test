@@ -1,0 +1,69 @@
+{% extends "manage.html" %}
+{% block pagetitle %} Moderator's Dashboard {% endblock pagetitle %}
+
+{% block content %}
+
+<center><h4>List of quizzes! Click on the given links to have a look at answer papers for a quiz.</h4></center>
+<table class="table table-bordered">
+    <th>Quiz</th>
+    <th>Taken By</th>
+    <th>No. of users Passed</th>
+    <th>No. of users Failed</th>
+    {% for paper, answer_papers, users_passed, users_failed in users_per_paper %}
+        <tr>
+            <td>
+                <a href="{{URL_ROOT}}/exam/manage/monitor/{{paper.id}}/">{{ paper.quiz.description }}</a>
+            </td>
+            <td>
+                {{ answer_papers|length }} user(s)
+            </td>
+            <td>
+                {{ users_passed }}
+            </td>
+            <td>
+                {{ users_failed }}
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+<hr>
+<center>
+    <h5>Click on the button given below to add a new course.</h5>
+    <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/add_course");'>Add New Course</button>
+    <h5>Click on the button to Create a Demo course.
+    <a href="" onclick="$('#help').show(); return false;">Help </a></h5>
+    <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/create_demo_course");'>Create Demo Course</button>
+    <div style="display: none;" id="help">
+    <ol>
+    <ul>
+    <li>A Demo Course and Demo Quiz will be created (Click Courses link on nav bar to view courses).</li>
+    <li>Some Demo Questions are also created for you (Click Questions link on nav bar to view questions).</li>
+    <li>In Courses you can view Demo Quiz.</li>
+    <li>Click on the Demo Quiz and Click on User Mode or God Mode to take the quiz.
+    </li>
+    <li>You can also edit the Demo quiz.
+    </li>
+    </ul>
+    </p>
+    <a href="" onclick="$('#help').hide(); return false"> Close </a>
+    </div>
+    {% if msg %}
+    <h4>{{ msg }}</h4>
+    {% endif %}
+</center>
+{% if trial_paper %}
+  <h5/> You have trial papers.
+  <table class="table table-bordered">
+  <form action="" method="post">
+  {% csrf_token %}
+   {% for paper in trial_paper %}
+  <tr>
+  <td> <input type = "checkbox" name="delete_paper" value = {{paper.id}}></input></td>
+  <td> <a href="{{URL_ROOT}}/exam/manage/gradeuser/{{paper.question_paper.quiz.id}}">{{paper.question_paper.quiz.description}}</a></td>
+  </tr>
+  {% endfor %}
+  </table>
+  <center><button class="btn" type="submit">Delete Selected</button></center>
+  </form>
+  {% endif %}
+{% endblock %}

@@ -333,7 +333,7 @@ rights/permissions and log in."""
         context = {'user': user, 'users_per_paper': users_per_paper,
                    'trial_paper': trial_paper
                    }
-        return my_render_to_response('manage.html', context, context_instance=ci)
+        return my_render_to_response('yaksh/moderator_dashboard.html', context, context_instance=ci)
     return my_redirect('/exam/login/')
 
 

@@ -10,7 +10,7 @@
 <script src="{{ URL_ROOT }}/static/yaksh/js/add_quiz.js"></script>
 {% endblock %}
 {% block onload %} onload="javascript:test();"  {% endblock %}
-{% block manage %}
+{% block content %}
 
 <form name=frm id=frm action="" method="post" >
   {% csrf_token %}

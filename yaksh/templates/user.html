@@ -1,61 +1,19 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-   <head>
-     <title>
-       {% block title %}
-       {% endblock %}
-     </title>
-
-   {% block meta %}
-	<meta charset="utf-8">
-   	<meta name="description" content="">
-	<meta name="author" content="">
-   {% endblock %}
-
-   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/base.css" type="text/css" />
-   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/font-awesome.css" type="text/css" />
-   {% block css %}
-   {% endblock %}
-
-   {% block script %}
-   {% endblock %}
-   </head>
-
-<body {% block onload %}{% endblock %}>
-<div class="topbar">
-  <div class="fill">
-     <div class="container">
-        <h3 class="brand"><strong>Online Test</h3></strong>
-    	<ul>
-	      <li><a href="{{ URL_ROOT }}/exam/quizzes">Quizzes</a></li>
-        <li><a href="{{ URL_ROOT }}/exam/results">Results</a></li>
-        <li><a href="{{ URL_ROOT }}/exam/viewprofile">My Profile</a></li>
-        <li><a href="{{ URL_ROOT }}/exam/changepassword">Change Password</a></li>
-      </ul>
-	<ul style="float:right;">
-	<li><strong><a style='cursor:pointer' onClick='location.replace("{{URL_ROOT}}/exam/complete/");' id='logout'>Log out</a></strong></li>
-        </ul>
-     </div>
-   </div>
-</div>
-  <div class="container">
-     <div class="content">
-         <div class="page-header">
-		<h3><center>{% block subtitle %}Welcome {{ user.first_name.title }}  {{user.last_name.title}} {% endblock %}</center></h3><br>
-         </div>
-         <div class=row>
-            <div class=span14>
-               {% block manage %}
-	       {% endblock %}
-            </div>
-         </div>
-     </div>
-     <footer>
-     <p>&copy; FOSSEE group, IIT Bombay</p>
-     </footer>
-  </div>
-
-</body>
-</html>
+{% extends "base.html" %}
+{% block nav %}
+    <nav class="navbar navbar-fixed-top navbar-inverse">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="{{ URL_ROOT }}/exam/manage/"> Online Test </a>
+        </div>
+        <div id="navbar">
+          <ul class="nav navbar-nav">
+	        <li><a href="{{ URL_ROOT }}/exam/quizzes">Quizzes</a></li>
+            <li><a href="{{ URL_ROOT }}/exam/results">Results</a></li>
+            <li><a href="{{ URL_ROOT }}/exam/viewprofile">My Profile</a></li>
+            <li><a href="{{ URL_ROOT }}/exam/changepassword">Change Password</a></li>
+            <li><a style='cursor:pointer' onClick='location.replace("{{URL_ROOT}}/exam/complete/");'>Log out</a></li>
+          </ul>
+        </div><!-- /.navbar -->
+      </div><!-- /.container -->
+    </nav><!-- /.navbar -->
+{% endblock %}

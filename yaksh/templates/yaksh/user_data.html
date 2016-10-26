@@ -1,14 +1,8 @@
 {% extends "manage.html" %}
 
-{% block title %} Data for user {{ data.user.get_full_name.title }} {% endblock title %}
+{% block pagetitle %} Data for user {{ data.user.get_full_name.title }} {% endblock pagetitle %}
 
-{% block manage %}
-
-{% block subtitle %}Data for user {{ data.user.get_full_name.title }}{% endblock %}
-
-{% block css %}
-     <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/view_answerpaper.css" type="text/css" /> 
-{% endblock %}
+{% block content %}
 
 {% block script %}
     <script src= "{{ URL_ROOT }}/static/yaksh/js/edit_question.js"></script>
@@ -63,7 +57,7 @@ User IP address: {{ paper.user_ip }}
 
             <strong> Details: {{forloop.counter}}. {{ question.summary }}
             <a href="" onClick="grade_data('show_question{{question.id}}'); return false;"> Show Question </a>
-            <span class="marks"> Mark(s): {{ question.points }} </span>
+            <span class="marks pull-right"> Mark(s): {{ question.points }} </span>
             </strong>
         </div>
         <div class="panel-body" id="show_question{{question.id}}" style="display: none;">

@@ -1,19 +1,11 @@
 {% extends "manage.html" %}
 
-{% block title %} Grade User {% endblock title %}
+{% block pagetitle %} Grade User {% endblock pagetitle %}
 
-{% block subtitle %} Grade User {% endblock %}
- 
-{% block css %}
-     <link rel="stylesheet"
-      href="{{ URL_ROOT }}/static/yaksh/css/view_answerpaper.css"
-      type="text/css" />
-{% endblock %}
-
-{% block manage %}
+{% block content %}
 
 {% if course_details %}
-    <table id = "course-details" class = "zebra-striped">
+    <table id="course-details" class="table table-bordered">
     <tr>
     <th>Courses</th> 
     <th> Quizzes </th>
@@ -21,12 +13,12 @@
 
     {% for course in course_details %}
     <tr>
-    <td><ul>{{course.name}} </td>
+    <td><ul class="list-group">{{course.name}} </td>
 
     {% if course.get_quizzes %}
     <td>
     {% for quiz in course.get_quizzes %}
-     <li><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}">
+     <li class="list-group-item"><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}">
      {{quiz.description}}
      </a></li>
     {% endfor %}
@@ -41,7 +33,7 @@
 
 <div class="row">
 {%if users %}
-    <div id = "student" class="span2">
+    <div id = "student" class="col-md-2">
     {% for user in users %}
     <p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}">
     {{user.user__first_name}} {{user.user__last_name}}</a></p>
@@ -51,7 +43,7 @@
 
 
 
-<div id = "paper" class="span12">
+<div id = "paper" class="col-md-10">
 {% if data %}
 
 
@@ -102,7 +94,7 @@ Status : <b style="color: green;"> Passed </b><br/>
 {% if paper.answers.count %}
 
 <h4> Report </h4><br>
-<table class="zebra-striped">
+<table class="table table-bordered">
     <th>Questions</th>
     <th>Marks Obtained</th>
     {% for question, answers in paper.get_question_answers.items %}
@@ -129,7 +121,7 @@ Status : <b style="color: green;"> Passed </b><br/>
 <div class="panel panel-info">
         <div class="panel-heading">
             <strong> Details: {{forloop.counter}}. {{ question.summary }} 
-            <span class="marks"> Mark(s): {{ question.points }} </span>
+            <span class="marks pull-right"> Mark(s): {{ question.points }} </span>
             </strong>
         </div>
         <div class="panel-body">
@@ -183,12 +175,12 @@ Status : <b style="color: green;"> Passed </b><br/>
     {% endwith %}
     <hr/>
     {% endfor %} {# for question, answers ... #}
-
+<div class="form-group">
 <h3>Teacher comments: </h3>
-<textarea id="comments_{{paper.question_paper.id}}" rows="10" cols="80" 
+<textarea id="comments_{{paper.question_paper.id}}" class="form-control"
     name="comments_{{ paper.question_paper.id }}">{{ paper.comments }}</textarea>
-<br>
-<br><button class="btn" type="submit" name="submit_{{paper.quiz.id}}">Save Marks</button>
+</div>
+<br><button class="btn btn-primary" type="submit" name="submit_{{paper.quiz.id}}">Save Marks</button>
 
 </form>
 </div>

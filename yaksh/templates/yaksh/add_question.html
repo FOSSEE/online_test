@@ -1,23 +1,21 @@
 {% extends "manage.html" %}
 
-{% block subtitle %}Add Question{% endblock %}
+{% block pagetitle %} Add Question {% endblock pagetitle %}
 
 {% block css %}
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question_quiz.css" type="text/css" />
 <link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/autotaggit.css" />
 {% endblock %}
 
 {% block script %}
-<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.4.2.min.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/add_question.js"></script>
 {% endblock %}
 
 {% block onload %} onload='javascript:textareaformat();' {% endblock %}
 
-{% block manage %}
+{% block content %}
 <form action="" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
   {% csrf_token %}
-  <center><table class=span1>
+  <center><table class="table">
   <tr><td>Summary: <td>{{ form.summary }}{{ form.summary.errors }}
   <tr><td> Language: <td> {{form.language}}{{form.language.errors}}
   <tr><td> Active: <td> {{ form.active }}{{form.active.errors}} &nbsp; Type: &nbsp;{{ form.type }}{{form.type.errors}}

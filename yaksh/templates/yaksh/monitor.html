@@ -1,15 +1,11 @@
 {% extends "manage.html" %}
 
-{% block title %} Quiz results {% endblock title %}
+{% block pagetitle %} Quiz results {% endblock pagetitle %}
 
 {% block meta %} <meta http-equiv="refresh" content="30"/> {% endblock meta %}
 
-{% block css %}
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question_quiz.css" type="text/css" /> 
-{% endblock %}
 
 {% block script %}
-<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js" type="text/javascript"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function() 
@@ -32,7 +28,7 @@ $(document).ready(function()
   {{ quiz.description }} Results
   {% endif %}
 {% endblock %}
-{% block manage %}
+{% block content %}
   {% if not quizzes and not quiz %}
     <center><h5> No quizzes available. </h5></center>
   {% endif %}
@@ -40,9 +36,9 @@ $(document).ready(function()
 {# ############################################################### #}
 {# This is rendered when we are just viewing exam/monitor #}
 {% if quizzes %}
-<ul>
+<ul class="list-group">
 {% for q in quizzes %}
-<li><a href="{{URL_ROOT}}/exam/manage/monitor/{{q.id}}/">{{ q.quiz.description }}</a></li>
+<li class="list-group-item"><a href="{{URL_ROOT}}/exam/manage/monitor/{{q.id}}/">{{ q.quiz.description }}</a></li>
 {% endfor %}
 </ul>
 {% endif %}
@@ -55,7 +51,7 @@ $(document).ready(function()
 <p>Number of papers: {{ papers|length }} </p>
 <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{papers.0.question_paper.id}}">Question Statisitics</a></p>
 <p><a href="{{URL_ROOT}}/exam/manage/monitor/download_csv/{{papers.0.question_paper.id}}">Download CSV</a></p>
-<table border="1" cellpadding="3"  id="result-table" class="tablesorter">
+<table id="result-table" class="tablesorter table">
     <thead>
     <tr>
     <th> Name </th>

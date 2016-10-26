@@ -1,12 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Good bye!{% endblock %}
-
 {% block pagetitle %}Online Test{% endblock %}
 {% block content %}
 {% csrf_token %}
     {% if paper.questions_answered.all or paper.questions_unanswered.all %}
-			<br><center><table class="bordered-table zebra-striped span8"
+			<br><center><table class="table table-bordered"
 			 style="text-align:left;">
 				<tr><td><b>Submitted Questions</b></td>
 				<td>

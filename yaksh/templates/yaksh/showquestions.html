@@ -1,21 +1,20 @@
 {% extends "manage.html" %}
 
 
-{% block subtitle %}List of Questions {% endblock %}
+{% block pagetitle %} List of Questions {% endblock pagetitle %}
 
 {% block script %}
-<script src="{{ URL_ROOT }}/static/yaksh/js/min.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/show_question.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/question_filter.js"></script>
 {% endblock %}
 
-{% block manage %}
+{% block content %}
 
 <h4>Upload ZIP file for adding questions</h4>
 <form action="" method="post"  enctype="multipart/form-data">
 {% csrf_token %}
 {{ upload_form.as_p }}
-<button class="btn" type="submit" name="upload" value="upload">Upload File</button>
+<button class="btn btn-primary" type="submit" name="upload" value="upload">Upload File <span class="glyphicon glyphicon-open"></span></button>
 </form>
 {% if message %}
 <h4>{{ message }}</h4>
@@ -27,38 +26,34 @@
 {% csrf_token %}
 <div class="row" id="selectors">
     <h5 style="padding-left: 20px;">Filters</h5>
-    <div class="span4">
+    <div class="col-md-3">
         {{ form.question_type }}
     </div>
-    <div class="span4">
+    <div class="col-md-3">
         {{ form.language }}
     </div>
-    <div class="span4">
+    <div class="col-md-3">
         {{ form.marks }}
     </div>
 </div>
 <br>
-<div class="row">
-<div class="span16">
-    <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}");'>Clear Filters</button>
-</div>
-</div>
+    <button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>Clear Filters</button>
 <br>
 
 <div id="filtered-questions">
 {% if questions %}
-<h5 class="highlight"><input id="checkall" class="ignore" type="checkbox"> Select All </h5>
+<h5><input id="checkall" type="checkbox"> Select All </h5>
 {% for i in questions %}
 <input type="checkbox" name="question" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{ i }}</a><br>
 {% endfor %}
 {% endif %}
 </div>
 <br>
-<button class="btn" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question</button>&nbsp;&nbsp;
-<button class="btn" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>&nbsp;&nbsp;
+<button class="btn btn-primary" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question <span class="glyphicon glyphicon-plus"></span></button>&nbsp;&nbsp;
 {% if questions %}
-<button class="btn" type="submit" name='download' value='download'>Download Selected</button>&nbsp;&nbsp;
-<button class="btn" type="submit" name="test" value="test">Test Selected</button>
+<button class="btn btn-primary" type="submit" name='download' value='download'>Download Selected <span class="glyphicon glyphicon-save"></span></button>&nbsp;&nbsp;
+<button class="btn btn-primary" type="submit" name="test" value="test">Test Selected</button>&nbsp;&nbsp;
 {% endif %}
+<button class="btn btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected <span class="glyphicon glyphicon-minus"></span></button>
 </form>
 {% endblock %}
