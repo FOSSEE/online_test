@@ -206,12 +206,6 @@ class Profile(models.Model):
         """Return the output directory for the user."""
 
         user_dir = join(settings.OUTPUT_DIR, str(self.user.username))
-        if not exists(user_dir):
-            os.makedirs(user_dir)
-            # Make it rwx by others.
-            os.chmod(user_dir, stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH
-                     | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
-                     | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP)
         return user_dir
 
 
@@ -680,7 +674,7 @@ class QuestionPaper(models.Model):
 
     def create_demo_quiz_ppr(self, demo_quiz, user):
         question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
-                                                      total_marks=5.0,
+                                                      total_marks=7.0,
                                                       shuffle_questions=True
                                                       )
         questions = Question.objects.filter(active=True,
