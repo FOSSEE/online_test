@@ -8,7 +8,7 @@ from yaksh.java_code_evaluator import JavaCodeEvaluator
 from yaksh.java_stdio_evaluator import JavaStdioEvaluator
 from yaksh.settings import SERVER_TIMEOUT
 from textwrap import dedent
-
+import subprocess
 
 class JavaAssertionEvaluationTestCases(unittest.TestCase):
     def setUp(self):
@@ -75,6 +75,7 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs) 
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
+        self.assertEqual(1, subprocess.call(["pgrep", "java"]))
 
     def test_file_based_assert(self):
         self.file_paths = [("/tmp/test.txt", False)]
@@ -219,6 +220,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
+        self.assertEqual(1, subprocess.call(["pgrep", "java"]))
 
     def test_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
