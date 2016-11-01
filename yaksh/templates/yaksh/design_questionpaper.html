@@ -5,7 +5,6 @@
 {% block subtitle %} Design Question Paper {% endblock %}
 
 {% block css %}
-    <link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/bootstrap.css" />
     <link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/question_paper_creation.css" />
 <style>
 select
@@ -29,7 +28,7 @@ select
     {% csrf_token %}
     <input type=hidden name="is_active" id="is_active" value="{{ state }}">
 <center><b>Manual mode to design the {{lang}}  Question Paper</center><br>
-    <ul class="tabs" data-tabs="tabs">
+    <ul class="nav nav-tabs tabs" data-tabs="tabs">
     <li class="active" id="fixed-tab">
         <a href="#fixed-questions" id="fixed">
             STEP 1<br>
