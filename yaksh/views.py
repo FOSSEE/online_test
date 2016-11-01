@@ -299,7 +299,7 @@ def show_all_questionpapers(request, questionpaper_id=None):
 @login_required
 def prof_manage(request):
     """Take credentials of the user with professor/moderator
-rights/permissions and log in."""
+    rights/permissions and log in."""
     user = request.user
     ci = RequestContext(request)
     if user.is_authenticated() and is_moderator(user):
@@ -584,7 +584,7 @@ def add_course(request):
             new_course = form.save(commit=False)
             new_course.creator = user
             new_course.save()
-            return my_render_to_response('manage.html', {'course': new_course})
+            return my_redirect('/exam/manage/')
         else:
             return my_render_to_response('yaksh/add_course.html',
                                          {'form': form},
