@@ -17,10 +17,10 @@ class BashStdioEvaluator(StdIOEvaluator):
         self.submit_code_path = self.create_submit_code_file('Test.sh')
 
     def teardown(self):
-        super(BashStdioEvaluator, self).teardown()
         os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
+        super(BashStdioEvaluator, self).teardown()
 
     def compile_code(self, user_answer, file_paths, expected_input, expected_output):
         self.files = []

@@ -1,6 +1,6 @@
 from django import forms
-from yaksh.models import get_model_class, Profile, Quiz, Question, TestCase, Course, StandardTestCase, StdioBasedTestCase
-
+from yaksh.models import get_model_class, Profile, Quiz, Question, TestCase, Course,\
+                         QuestionPaper, StandardTestCase, StdioBasedTestCase
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -177,7 +177,7 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
-        exclude = ['user']
+        exclude = ['user', 'active']
 
 
 class FileForm(forms.Form):
@@ -199,7 +199,7 @@ class QuestionFilterForm(forms.Form):
         super(QuestionFilterForm, self).__init__(*args, **kwargs)
         questions = Question.objects.filter(user_id=user.id)
         points_list = questions.values_list('points', flat=True).distinct()
-        points_options = [('select', 'Select Marks')]
+        points_options = [(None, 'Select Marks')]
         points_options.extend([(point, point) for point in points_list])
         self.fields['marks'] = forms.FloatField(widget=forms.Select\
                                                     (choices=points_options))
@@ -214,6 +214,7 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ['name', 'active', 'enrollment']
+
 
 class ProfileForm(forms.ModelForm):
     """ profile form for students and moderators """
@@ -236,3 +237,9 @@ class ProfileForm(forms.ModelForm):
 
 class UploadFileForm(forms.Form):
     file = forms.FileField()
+
+
+class QuestionPaperForm(forms.ModelForm):
+    class Meta:
+        model = QuestionPaper
+        fields = ['shuffle_questions']

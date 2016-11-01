@@ -18,11 +18,10 @@
     {% if user != course.creator %}
         <h4> {{course.creator.get_full_name}} added you to this course</h4>
     {% endif %}
-    
     <div class="row show-grid">
         <div class="span14">
             <div class="row">
-                <div class="span6">
+                <div class="span4">
                     <p>
                         <b><u>Course</u></b>
                         {% if course.active %}
@@ -35,7 +34,7 @@
                     </br></br>
                     {% if user == course.creator %}
                     <div class="row">
-                        <div class="span6 wrap">
+                        <div class="span3 wrap">
                             <center><b><u>Teacher(s) Added to {{ course }}</u></b></center>
                             {% if course.get_teachers %}
                             <div align="left">
@@ -65,12 +64,23 @@
                     <p><b><a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher</a></b></p>
                 </div>
                 {% endif %}
-                <div class="span6">
-                    <p><b><u>Quiz(zes)</u></b></p>
+                <div class="span4" style="text-align:left">
                     {% if course.get_quizzes %}
-                        {% for quiz in course.get_quizzes %}
+                        <p><b><u>Quiz(zes)</u></b></p>
+                            {% for quiz in course.get_quizzes %}
                             <a href="{{URL_ROOT}}/exam/manage/addquiz/{{course.id}}/{{quiz.id}}/">{{ quiz.description }}</a><br>
-
+                    {% endfor %}
+                </div>
+                <div class="span4" style="text-align:left">
+                    <p><b><u>Question Paper(s)</u></b></p>
+                    {% for quiz in course.get_quizzes %}
+                    {% if quiz.questionpaper_set.get %}
+                    <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/">Question Paper for {{ quiz.description }}</a><br>
+                    {% else %}
+                    <p><b>No Question Paper </b>
+                    <button class="btn small primary" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/quiz/designquestionpaper/{{ quiz.id }}/");'>Add</button>
+                    </p>
+                    {% endif %}
                     {% endfor %}
                     {% else %}
                         <p><b>No quiz </b></p>
@@ -79,7 +89,6 @@
             </div>
             <br/>
             <button class="btn primary"type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz/{{course.id}}/");'>Add New Quiz</button>
-            
         </div>
     </div>
     <br><br>

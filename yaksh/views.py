@@ -29,7 +29,7 @@ from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUploa
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm,\
                 QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
-                get_object_form, FileForm
+                get_object_form, FileForm, QuestionPaperForm
 from .settings import URL_ROOT
 from yaksh.models import AssignmentUpload
 from .file_utils import extract_files
@@ -246,7 +246,7 @@ def add_quiz(request, course_id, quiz_id=None):
             form = QuizForm(request.POST, user=user, course=course_id)
             if form.is_valid():
                 form.save()
-                return my_redirect(reverse('yaksh:design_questionpaper'))
+                return my_redirect("/exam/manage/courses/")
             else:
                 context["form"] = form
                 return my_render_to_response('yaksh/add_quiz.html',
@@ -259,7 +259,7 @@ def add_quiz(request, course_id, quiz_id=None):
             if form.is_valid():
                 form.save()
                 context["quiz_id"] = quiz_id
-                return my_redirect("/exam/manage/")
+                return my_redirect("/exam/manage/courses/")
     else:
         if quiz_id is None:
             form = QuizForm(course=course_id, user=user)
@@ -415,8 +415,6 @@ def start(request, questionpaper_id=None, attempt_num=None):
             msg = 'You do not have a profile and cannot take the quiz!'
             raise Http404(msg)
         new_paper = quest_paper.make_answerpaper(user, ip, attempt_num)
-        # Make user directory.
-        user_dir = new_paper.user.profile.get_user_dir()
         return show_question(request, new_paper.current_question(), new_paper)
 
 
@@ -631,7 +629,6 @@ def courses(request):
         raise Http404('You are not allowed to view this page')
     courses = Course.objects.filter(creator=user, is_trial=False)
     allotted_courses = Course.objects.filter(teachers=user, is_trial=False)
-    
     context = {'courses': courses, "allotted_courses": allotted_courses}
     return my_render_to_response('yaksh/courses.html', context,
                                  context_instance=ci)
@@ -813,6 +810,95 @@ def ajax_questions_filter(request):
                                   {'questions': questions})
 
 
+def _get_questions(user, question_type, marks):
+    if question_type is None and marks is None:
+        return None
+    if question_type:
+        questions = Question.objects.filter(type=question_type, user=user)
+        if marks:
+            questions = questions.filter(points=marks)
+    return questions
+
+
+def _remove_already_present(questionpaper_id, questions):
+    if questionpaper_id is None:
+        return questions
+    questionpaper = QuestionPaper.objects.get(pk=questionpaper_id)
+    questions = questions.exclude(
+            id__in=questionpaper.fixed_questions.values_list('id', flat=True))
+    for random_set in questionpaper.random_questions.all():
+        questions = questions.exclude(
+                id__in=random_set.questions.values_list('id', flat=True))
+    return questions
+
+
+@login_required
+def design_questionpaper(request, quiz_id, questionpaper_id=None):
+    user = request.user
+
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+
+    filter_form = QuestionFilterForm(user=user)
+    questions = None
+    marks = None
+    state = None
+    if questionpaper_id is None:
+        question_paper = QuestionPaper.objects.get_or_create(quiz_id=quiz_id)[0]
+    else:
+        question_paper = get_object_or_404(QuestionPaper, id=questionpaper_id)
+    qpaper_form = QuestionPaperForm(instance=question_paper)
+
+    if request.method == 'POST':
+
+        filter_form = QuestionFilterForm(request.POST, user=user)
+        qpaper_form = QuestionPaperForm(request.POST, instance=question_paper)
+        question_type = request.POST.get('question_type', None)
+        marks = request.POST.get('marks', None)
+        state = request.POST.get('is_active', None)
+
+        if 'add-fixed' in request.POST:
+            question_ids = request.POST.getlist('questions', None)
+            for question in Question.objects.filter(id__in=question_ids):
+                question_paper.fixed_questions.add(question)
+
+        if 'remove-fixed' in request.POST:
+            question_ids = request.POST.getlist('added-questions', None)
+            question_paper.fixed_questions.remove(*question_ids)
+
+        if 'add-random' in request.POST:
+            question_ids = request.POST.getlist('random_questions', None)
+            num_of_questions = request.POST.get('num_of_questions', 1)
+            if question_ids and marks:
+                random_set = QuestionSet(marks=marks, num_questions=num_of_questions)
+                random_set.save()
+                for question in Question.objects.filter(id__in=question_ids):
+                    random_set.questions.add(question)
+                question_paper.random_questions.add(random_set)
+
+        if 'remove-random' in request.POST:
+            random_set_ids = request.POST.getlist('random_sets', None)
+            question_paper.random_questions.remove(*random_set_ids)
+
+        if 'save' in request.POST or 'back' in request.POST:
+            qpaper_form.save()
+            return my_redirect('/exam/manage/courses/')
+
+        if marks:
+            questions = _get_questions(user, question_type, marks)
+            questions = _remove_already_present(questionpaper_id, questions)
+
+        question_paper.update_total_marks()
+        question_paper.save()
+    random_sets = question_paper.random_questions.all()
+    fixed_questions = question_paper.fixed_questions.all()
+    context = {'qpaper_form': qpaper_form, 'filter_form': filter_form, 'qpaper':
+            question_paper, 'questions': questions, 'fixed_questions': fixed_questions,
+            'state': state, 'random_sets': random_sets}
+    return my_render_to_response('yaksh/design_questionpaper.html', context,
+            context_instance=RequestContext(request))
+
+
 @login_required
 def show_all_questions(request):
     """Show a list of all the questions currently in the database."""
@@ -827,12 +913,10 @@ def show_all_questions(request):
         if request.POST.get('delete') == 'delete':
             data = request.POST.getlist('question')
             if data is not None:
-                questions = Question.objects.filter(id__in=data, user_id=user.id)
-                files = FileUpload.objects.filter(question_id__in=questions)
-                if files:
-                    for file in files:
-                        file.remove()
-                questions.delete()
+                questions = Question.objects.filter(id__in=data, user_id=user.id, active=True)
+                for question in questions:
+                    question.active = False
+                    question.save()
 
         if request.POST.get('upload') == 'upload':
             form = UploadFileForm(request.POST, request.FILES)
@@ -841,8 +925,8 @@ def show_all_questions(request):
                 file_name = questions_file.name.split('.')
                 if file_name[-1] == "zip":
                     ques = Question()
-                    extract_files(questions_file)
-                    ques.read_json("questions_dump.json", user)
+                    files, extract_path = extract_files(questions_file)
+                    ques.read_json(extract_path, user, files)
                 else:
                     message = "Please Upload a ZIP file"
                     context['message'] = message
@@ -871,7 +955,7 @@ def show_all_questions(request):
             else:
                 context["msg"] = "Please select atleast one question to test"
 
-    questions = Question.objects.filter(user_id=user.id)
+    questions = Question.objects.filter(user_id=user.id, active=True)
     form = QuestionFilterForm(user=user)
     upload_form = UploadFileForm()
     context['papers'] = []
@@ -999,80 +1083,6 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
                                 )
 
 
-@csrf_exempt
-def ajax_questionpaper(request, query):
-    """
-        During question paper creation, ajax call made to get question details.
-    """
-
-    user = request.user
-    if query == 'marks':
-        question_type = request.POST.get('question_type')
-        questions = Question.objects.filter(type=question_type, user=user)
-        marks = questions.values_list('points').distinct()
-        return my_render_to_response('yaksh/ajax_marks.html', {'marks': marks})
-    elif query == 'questions':
-        question_type = request.POST['question_type']
-        marks_selected = request.POST['marks']
-        fixed_questions = request.POST.getlist('fixed_list[]')
-        fixed_question_list = ",".join(fixed_questions).split(',')
-        random_questions = request.POST.getlist('random_list[]')
-        random_question_list = ",".join(random_questions).split(',')
-        question_list = fixed_question_list + random_question_list
-        questions = list(Question.objects.filter(type=question_type,
-                                            points=marks_selected, user=user))
-        questions = [question for question in questions \
-                if not str(question.id) in question_list]
-        return my_render_to_response('yaksh/ajax_questions.html',
-                              {'questions': questions})
-
-
-@login_required
-def design_questionpaper(request):
-    user = request.user
-    ci = RequestContext(request)
-
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-
-    if request.method == 'POST':
-        fixed_questions = request.POST.getlist('fixed')
-        random_questions = request.POST.getlist('random')
-        random_number = request.POST.getlist('number')
-        is_shuffle = request.POST.get('shuffle_questions', False)
-        if is_shuffle == 'on':
-            is_shuffle = True
-
-        question_paper = QuestionPaper(shuffle_questions=is_shuffle)
-        quiz = Quiz.objects.order_by("-id")[0]
-        tot_marks = 0
-        question_paper.quiz = quiz
-        question_paper.total_marks = tot_marks
-        question_paper.save()
-        if fixed_questions:
-            fixed_questions_ids = ",".join(fixed_questions)
-            fixed_questions_ids_list = fixed_questions_ids.split(',')
-            for question_id in fixed_questions_ids_list:
-                question_paper.fixed_questions.add(question_id)
-        if random_questions:
-            for random_question, num in zip(random_questions, random_number):
-                qid = random_question.split(',')[0]
-                question = Question.objects.get(id=int(qid))
-                marks = question.points
-                question_set = QuestionSet(marks=marks, num_questions=num)
-                question_set.save()
-                for question_id in random_question.split(','):
-                    question_set.questions.add(question_id)
-                    question_paper.random_questions.add(question_set)
-        question_paper.update_total_marks()
-        question_paper.save()
-        return my_redirect('/exam/manage/courses')
-    else:
-        form = RandomQuestionForm()
-        context = {'form': form, 'questionpaper':True}
-        return my_render_to_response('yaksh/design_questionpaper.html',
-                                     context, context_instance=ci)
-
 @login_required
 def view_profile(request):
     """ view moderators and users profile """
@@ -1151,7 +1161,6 @@ def search_teacher(request, course_id):
                                                     Q(id=course.creator.id))
             context['success'] = True
             context['teachers'] = teachers
-                                        
     return my_render_to_response('yaksh/addteacher.html', context,
                                  context_instance=ci)
 
@@ -1180,7 +1189,6 @@ def add_teacher(request, course_id):
         course.add_teachers(*teachers)
         context['status'] = True
         context['teachers_added'] = teachers
-        
     return my_render_to_response('yaksh/addteacher.html', context,
                                     context_instance=ci)
 
@@ -1188,7 +1196,7 @@ def add_teacher(request, course_id):
 @login_required
 def remove_teachers(request, course_id):
     """  remove user from a course """
- 
+
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     if not is_moderator(user) and (user != course.creator and user not in course.teachers.all()):
