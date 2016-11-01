@@ -1,21 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %} View Profile {% endblock %}
-
-{% block pagetitle %} Online Test {% endblock %}
-{% block css %}
-<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/base.css" />
-
-{% endblock %}
+{% block pagetitle %} My Profile {% endblock %}
 {% block content %}
 <ul>
-  <a href="{{ URL_ROOT }}/exam/editprofile/">Edit Profile</a>
-  <a href="{{ URL_ROOT }}/exam/">Back to Home</a>
+  <a class="btn btn-primary" href="{{ URL_ROOT }}/exam/editprofile/">Edit Profile</a>
+  <a class="btn btn-primary" href="{{ URL_ROOT }}/exam/">Back to Home</a>
 </ul>
-<div class="span14">
-  <center>
-  <h2>Your Profile Information</h2>
-  <table class="span1">
+  <table class="table">
   <tr>
     <th><label for="id_first_name"><h5>First name:</h5></label></th>
     <th><label for="id_first_name"><h5>{{ user.first_name }}</h5></label></th>
@@ -45,6 +36,4 @@
     <th><label for="id_position"><h5>{{ user.profile.position }}</h5></label></th>
   </tr>
   </table>
-  </center>
-</div>
 {% endblock %}
