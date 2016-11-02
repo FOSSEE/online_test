@@ -7,6 +7,8 @@ import tempfile
 from yaksh import code_evaluator as evaluator
 from yaksh.scilab_code_evaluator import ScilabCodeEvaluator
 from yaksh.settings import SERVER_TIMEOUT
+import subprocess
+import time
 
 class ScilabEvaluationTestCases(unittest.TestCase):
     def setUp(self):
@@ -71,6 +73,8 @@ class ScilabEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs) 
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
+        time.sleep(4)
+        self.assertEqual(1, subprocess.call(["pgrep", "scilab-cli-bin"]))
 
 if __name__ == '__main__':
     unittest.main()

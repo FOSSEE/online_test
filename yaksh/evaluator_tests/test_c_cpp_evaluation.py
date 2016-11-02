@@ -7,7 +7,7 @@ from yaksh.cpp_code_evaluator import CppCodeEvaluator
 from yaksh.cpp_stdio_evaluator import CppStdioEvaluator
 from yaksh.settings import SERVER_TIMEOUT
 from textwrap import dedent
-
+import subprocess
 
 class CAssertionEvaluationTestCases(unittest.TestCase):
     def setUp(self):
@@ -70,6 +70,7 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
+        self.assertEqual(1, subprocess.call(["pgrep", "executable"]))
 
     def test_file_based_assert(self):
         self.file_paths = [('/tmp/test.txt', False)]
@@ -204,6 +205,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
+        self.assertEqual(1, subprocess.call(["pgrep", "java"]))
 
     def test_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
@@ -328,6 +330,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
+        self.assertEqual(1, subprocess.call(["pgrep", "java"]))
 
     def test_cpp_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',

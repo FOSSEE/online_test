@@ -7,6 +7,7 @@ from yaksh.bash_code_evaluator import BashCodeEvaluator
 from yaksh.bash_stdio_evaluator import BashStdioEvaluator
 from yaksh.settings import SERVER_TIMEOUT
 from textwrap import dedent
+import subprocess
 
 
 class BashAssertionEvaluationTestCases(unittest.TestCase):
@@ -64,6 +65,7 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
+        self.assertEqual(1, subprocess.call(["pgrep", "submit.sh"]))
 
     def test_file_based_assert(self):
         self.file_paths = [('/tmp/test.txt', False)]

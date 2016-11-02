@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
-
 # Local imports
-from .code_evaluator import CodeEvaluator
+from .code_evaluator import CodeEvaluator, TimeoutException
+import os
+import signal
 
 
 class StdIOEvaluator(CodeEvaluator):
@@ -17,9 +18,13 @@ class StdIOEvaluator(CodeEvaluator):
         success = False
         ip = expected_input.replace(",", " ")
         encoded_input = '{0}\n'.format(ip).encode('utf-8')
-        user_output_bytes, output_err_bytes = proc.communicate(encoded_input)
-        user_output = user_output_bytes.decode('utf-8')
-        output_err = output_err_bytes.decode('utf-8')
+        try:
+            user_output_bytes, output_err_bytes = proc.communicate(encoded_input)
+            user_output = user_output_bytes.decode('utf-8')
+            output_err = output_err_bytes.decode('utf-8')
+        except TimeoutException:
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+            raise
         expected_output = expected_output.replace("\r", "")
         if not expected_input:
             error_msg = "Expected Output is {0} ".\

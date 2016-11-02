@@ -74,7 +74,8 @@ class CppStdioEvaluator(StdIOEvaluator):
                                         shell=True,
                                         stdin=subprocess.PIPE,
                                         stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE
+                                        stderr=subprocess.PIPE,
+                                        preexec_fn=os.setpgrp
                                         )
                 success, err = self.evaluate_stdio(user_answer, proc,
                                                    expected_input,

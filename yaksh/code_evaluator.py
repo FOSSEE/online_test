@@ -181,11 +181,14 @@ class CodeEvaluator(object):
         stdout and stderr.
         """
         try:
-            proc = subprocess.Popen(cmd_args, *args, **kw)
+            proc = subprocess.Popen(cmd_args,  preexec_fn=os.setpgrp, *args, **kw)
+            # Set the subprocess into a group process.
             stdout, stderr = proc.communicate()
         except TimeoutException:
             # Runaway code, so kill it.
-            proc.kill()
+            # kill the entire group.
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+
             # Re-raise exception.
             raise
         return proc, stdout.decode('utf-8'), stderr.decode('utf-8')
