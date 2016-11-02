@@ -17,6 +17,7 @@ class PythonAssertionEvaluator(CodeEvaluator):
     def setup(self):
         super(PythonAssertionEvaluator, self).setup()
         self.exec_scope = None
+        self.files = []
 
     def teardown(self):
         # Delete the created file.
@@ -24,8 +25,7 @@ class PythonAssertionEvaluator(CodeEvaluator):
             delete_files(self.files)
         super(PythonAssertionEvaluator, self).teardown()
 
-    def compile_code(self, user_answer, file_paths, test_case):
-        self.files = []
+    def compile_code(self, user_answer, file_paths, test_case, marks):
         if file_paths:
             self.files = copy_files(file_paths)
         if self.exec_scope:
@@ -36,8 +36,9 @@ class PythonAssertionEvaluator(CodeEvaluator):
             exec(submitted, self.exec_scope)
             return self.exec_scope
 
-    def check_code(self, user_answer, file_paths, test_case):
+    def check_code(self, user_answer, file_paths, partial_grading, test_case, marks):
         success = False
+        test_case_marks = 0.0
         try:
             tb = None
             _tests = compile(test_case, '<string>', mode='exec')
@@ -53,5 +54,6 @@ class PythonAssertionEvaluator(CodeEvaluator):
         else:
             success = True
             err = 'Correct answer'
+            test_case_marks = float(marks) if partial_grading else 0.0
         del tb
-        return success, err
+        return success, err, test_case_marks

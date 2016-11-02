@@ -62,7 +62,9 @@ class CodeServerProxy(object):
             server = self._get_server()
             result = server.check_code(language, test_case_type, json_data, user_dir)
         except ConnectionError:
-            result = json.dumps({'success': False, 'error': 'Unable to connect to any code servers!'})
+            result = json.dumps({'success': False,
+                'marks': 0.0,
+                'error': 'Unable to connect to any code servers!'})
         return result
 
     def _get_server(self):
