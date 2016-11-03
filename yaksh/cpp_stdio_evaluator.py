@@ -14,6 +14,7 @@ class CppStdioEvaluator(StdIOEvaluator):
 
     def setup(self):
         super(CppStdioEvaluator, self).setup()
+        self.files = []
         self.submit_code_path = self.create_submit_code_file('main.c')
 
     def teardown(self):
@@ -34,9 +35,7 @@ class CppStdioEvaluator(StdIOEvaluator):
                                                ref_output_path)
         return compile_command, compile_main
 
-    def compile_code(self, user_answer, file_paths, expected_input, expected_output):
-
-        self.files = []
+    def compile_code(self, user_answer, file_paths, expected_input, expected_output, marks):
         if file_paths:
             self.files = copy_files(file_paths)
         if not isfile(self.submit_code_path):
@@ -62,8 +61,11 @@ class CppStdioEvaluator(StdIOEvaluator):
                                                     )
         return self.compiled_user_answer, self.compiled_test_code
 
-    def check_code(self, user_answer, file_paths, expected_input, expected_output):
+    def check_code(self, user_answer, file_paths, partial_grading,
+        expected_input, expected_output, marks):
         success = False
+        test_case_marks = 0.0
+
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
         if stdnt_stderr == '':
@@ -104,4 +106,5 @@ class CppStdioEvaluator(StdIOEvaluator):
                         err = err + "\n" + e
             except:
                 err = err + "\n" + stdnt_stderr
-        return success, err
+        test_case_marks = float(marks) if partial_grading and success else 0.0
+        return success, err, test_case_marks

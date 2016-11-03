@@ -16,6 +16,7 @@ class CppCodeEvaluator(CodeEvaluator):
     """Tests the C code obtained from Code Server"""
     def setup(self):
         super(CppCodeEvaluator, self).setup()
+        self.files = []
         self.submit_code_path = self.create_submit_code_file('submit.c')
         self.compiled_user_answer = None
         self.compiled_test_code = None
@@ -49,8 +50,7 @@ class CppCodeEvaluator(CodeEvaluator):
                                                 ref_output_path)
         return compile_command, compile_main
 
-    def compile_code(self,  user_answer, file_paths, test_case):
-        self.files = []
+    def compile_code(self, user_answer, file_paths, test_case, marks):
         if self.compiled_user_answer and self.compiled_test_code:
             return None
         else:
@@ -89,7 +89,7 @@ class CppCodeEvaluator(CodeEvaluator):
 
             return self.compiled_user_answer, self.compiled_test_code
 
-    def check_code(self, user_answer, file_paths, test_case):
+    def check_code(self, user_answer, file_paths, partial_grading, test_case, marks):
         """ Function validates student code using instructor code as
         reference.The first argument ref_code_path, is the path to
         instructor code, it is assumed to have executable permission.
@@ -109,6 +109,8 @@ class CppCodeEvaluator(CodeEvaluator):
         if the required permissions are not given to the file(s).
         """
         success = False
+        test_case_marks = 0.0
+
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
 
@@ -127,6 +129,7 @@ class CppCodeEvaluator(CodeEvaluator):
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
                     success, err = True, "Correct answer"
+                    test_case_marks = float(marks) if partial_grading else 0.0
                 else:
                     err = "{0} \n {1}".format(stdout, stderr)
             else:
@@ -152,4 +155,4 @@ class CppCodeEvaluator(CodeEvaluator):
             except:
                 err = "{0} \n {1}".format(err, stdnt_stderr)
 
-        return success, err
+        return success, err, test_case_marks

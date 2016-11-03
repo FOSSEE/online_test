@@ -16,6 +16,7 @@ class JavaCodeEvaluator(CodeEvaluator):
     """Tests the Java code obtained from Code Server"""
     def setup(self):
         super(JavaCodeEvaluator, self).setup()
+        self.files = []
         self.submit_code_path = self.create_submit_code_file('Test.java')
         self.compiled_user_answer = None
         self.compiled_test_code = None
@@ -46,8 +47,7 @@ class JavaCodeEvaluator(CodeEvaluator):
         output_path = "{0}{1}.class".format(directory, file_name)
         return output_path
 
-    def compile_code(self, user_answer, file_paths, test_case):
-        self.files = []
+    def compile_code(self, user_answer, file_paths, test_case, marks):
         if self.compiled_user_answer and self.compiled_test_code:
             return None
         else:
@@ -96,7 +96,7 @@ class JavaCodeEvaluator(CodeEvaluator):
 
             return self.compiled_user_answer, self.compiled_test_code
 
-    def check_code(self, user_answer, file_paths, test_case):
+    def check_code(self, user_answer, file_paths, partial_grading, test_case, marks):
         """ Function validates student code using instructor code as
         reference.The first argument ref_code_path, is the path to
         instructor code, it is assumed to have executable permission.
@@ -117,6 +117,8 @@ class JavaCodeEvaluator(CodeEvaluator):
 
         """
         success = False
+        test_case_marks = 0.0
+
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
 
@@ -134,6 +136,7 @@ class JavaCodeEvaluator(CodeEvaluator):
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
                     success, err = True, "Correct answer"
+                    test_case_marks = float(marks) if partial_grading else 0.0
                 else:
                     err = stdout + "\n" + stderr
             else:
@@ -158,4 +161,4 @@ class JavaCodeEvaluator(CodeEvaluator):
                         err = err + "\n" + e
             except:
                 err = err + "\n" + stdnt_stderr
-        return success, err
+        return success, err, test_case_marks

@@ -17,6 +17,7 @@ class BashCodeEvaluator(CodeEvaluator):
     # Private Protocol ##########
     def setup(self):
         super(BashCodeEvaluator, self).setup()
+        self.files = []
         self.submit_code_path = self.create_submit_code_file('submit.sh')
         self._set_file_as_executable(self.submit_code_path)
 
@@ -27,7 +28,7 @@ class BashCodeEvaluator(CodeEvaluator):
             delete_files(self.files)
         super(BashCodeEvaluator, self).teardown()
 
-    def check_code(self, user_answer, file_paths, test_case):
+    def check_code(self, file_paths, partial_grading, test_case, marks):
         """ Function validates student script using instructor script as
         reference. Test cases can optionally be provided.  The first argument
         ref_path, is the path to instructor script, it is assumed to
@@ -57,7 +58,6 @@ class BashCodeEvaluator(CodeEvaluator):
         clean_ref_code_path, clean_test_case_path = \
             self._set_test_code_file_path(get_ref_path, get_test_case_path)
 
-        self.files = []
         if file_paths:
             self.files = copy_files(file_paths)
         if not isfile(clean_ref_code_path):
@@ -74,6 +74,8 @@ class BashCodeEvaluator(CodeEvaluator):
             return False, msg
 
         success = False
+        test_case_marks = 0.0
+
         user_answer = user_answer.replace("\r", "")
         self.write_to_submit_code_file(self.submit_code_path, user_answer)
 
@@ -91,19 +93,20 @@ class BashCodeEvaluator(CodeEvaluator):
             )
             proc, stdnt_stdout, stdnt_stderr = ret
             if inst_stdout == stdnt_stdout:
-                return True, "Correct answer"
+                test_case_marks = float(marks) if partial_grading else 0.0
+                return True, "Correct answer", test_case_marks
             else:
                 err = "Error: expected %s, got %s" % (inst_stderr,
                     stdnt_stderr
                 )
-                return False, err
+                return False, err, test_case_marks
         else:
             if not isfile(clean_test_case_path):
                 msg = "No test case at %s" % clean_test_case_path
-                return False, msg
+                return False, msg, test_case_marks
             if not os.access(clean_ref_code_path, os.R_OK):
                 msg = "Test script %s, not readable" % clean_test_case_path
-                return False, msg
+                return False, msg, test_case_marks
             # valid_answer is True, so that we can stop once a test case fails
             valid_answer = True
             # loop_count has to be greater than or equal to one.
@@ -133,10 +136,11 @@ class BashCodeEvaluator(CodeEvaluator):
                     proc, stdnt_stdout, stdnt_stderr = ret
                     valid_answer = inst_stdout == stdnt_stdout
             if valid_answer and (num_lines == loop_count):
-                return True, "Correct answer"
+                test_case_marks = float(marks) if partial_grading else 0.0
+                return True, "Correct answer", test_case_marks
             else:
                 err = ("Error:expected"
                     " {0}, got {1}").format(inst_stdout+inst_stderr,
                         stdnt_stdout+stdnt_stderr
                     )
-                return False, err
+                return False, err, test_case_marks
