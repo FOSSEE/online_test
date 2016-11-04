@@ -50,4 +50,4 @@ class BashStdioEvaluator(StdIOEvaluator):
                                            expected_output
                                            )
         test_case_marks = float(marks) if partial_grading and success else 0.0
-        return success, err
+        return success, err, test_case_marks

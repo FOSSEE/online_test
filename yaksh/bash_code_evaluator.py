@@ -28,7 +28,7 @@ class BashCodeEvaluator(CodeEvaluator):
             delete_files(self.files)
         super(BashCodeEvaluator, self).teardown()
 
-    def check_code(self, file_paths, partial_grading, test_case, marks):
+    def check_code(self, user_answer, file_paths, partial_grading, test_case, marks):
         """ Function validates student script using instructor script as
         reference. Test cases can optionally be provided.  The first argument
         ref_path, is the path to instructor script, it is assumed to

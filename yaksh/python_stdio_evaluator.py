@@ -31,6 +31,10 @@ def redirect_stdout():
 class PythonStdioEvaluator(CodeEvaluator):
     """Tests the Python code obtained from Code Server"""
 
+    def setup(self):
+        super(PythonStdioEvaluator, self).setup()
+        self.files = []
+
     def teardown(self):
         # Delete the created file.
         if self.files:
@@ -38,8 +42,7 @@ class PythonStdioEvaluator(CodeEvaluator):
         super(PythonStdioEvaluator, self).teardown()
 
 
-    def compile_code(self, user_answer, file_paths, expected_input, expected_output):
-        self.files = []
+    def compile_code(self, user_answer, file_paths, expected_input, expected_output, marks):
         if file_paths:
             self.files = copy_files(file_paths)
         submitted = compile(user_answer, '<string>', mode='exec')
@@ -54,13 +57,15 @@ class PythonStdioEvaluator(CodeEvaluator):
         self.output_value = output_buffer.getvalue().rstrip("\n")
         return self.output_value
 
-    def check_code(self, user_answer, file_paths, expected_input, expected_output):
+    def check_code(self, user_answer, file_paths, partial_grading, expected_input, expected_output, marks):
         success = False
+        test_case_marks = 0.0
 
         tb = None
         if self.output_value == expected_output:
             success = True
             err = "Correct answer"
+            test_case_marks = marks
         else:
             success = False
             err = dedent("""
@@ -74,4 +79,4 @@ class PythonStdioEvaluator(CodeEvaluator):
                                  )
                          )
         del tb
-        return success, err
+        return success, err, test_case_marks

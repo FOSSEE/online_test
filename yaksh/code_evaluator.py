@@ -123,6 +123,7 @@ class CodeEvaluator(object):
                 )
                 if success:
                     marks += test_case_marks
+                    error = err
                 else:
                     error += err + "\n"
 

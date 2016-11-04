@@ -11,7 +11,9 @@ from yaksh.settings import SERVER_TIMEOUT
 class ScilabEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         tmp_in_dir_path = tempfile.mkdtemp()
-        self.test_case_data = [{"test_case": "scilab_files/test_add.sce"}]
+        self.test_case_data = [{"test_case": "scilab_files/test_add.sce",
+                                "marks": 0.0
+                                }]
         self.in_dir = tmp_in_dir_path
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop" 
@@ -25,7 +27,8 @@ class ScilabEvaluationTestCases(unittest.TestCase):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a+b;\nendfunction")
         get_class = ScilabCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer, 
+        kwargs = {'user_answer': user_answer,
+                    'partial_grading': True,
                     'test_case_data': self.test_case_data,
                     'file_paths': self.file_paths
                 }
@@ -37,7 +40,8 @@ class ScilabEvaluationTestCases(unittest.TestCase):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a+b;\ndis(\tendfunction")
         get_class = ScilabCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer, 
+        kwargs = {'user_answer': user_answer,
+                    'partial_grading': True, 
                     'test_case_data': self.test_case_data,
                     'file_paths': self.file_paths
                 }
@@ -50,7 +54,8 @@ class ScilabEvaluationTestCases(unittest.TestCase):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a-b;\nendfunction")
         get_class = ScilabCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer, 
+        kwargs = {'user_answer': user_answer,
+                    'partial_grading': True,
                     'test_case_data': self.test_case_data,
                     'file_paths': self.file_paths
                 }
@@ -64,7 +69,8 @@ class ScilabEvaluationTestCases(unittest.TestCase):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a;\nwhile(1==1)\nend\nendfunction")
         get_class = ScilabCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer, 
+        kwargs = {'user_answer': user_answer,
+                    'partial_grading': True,
                     'test_case_data': self.test_case_data,
                     'file_paths': self.file_paths
                 }
