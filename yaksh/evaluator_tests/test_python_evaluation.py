@@ -61,7 +61,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         result = evaluator.evaluate(**kwargs)
 
         # Then
-        print repr(result.get('error'))
         self.assertFalse(result.get('success'))
         self.assertEqual(result.get('error'),
                         ('AssertionError  in: assert(add(1,2)==3)\n'

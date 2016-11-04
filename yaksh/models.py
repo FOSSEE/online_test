@@ -941,14 +941,10 @@ class AnswerPaper(models.Model):
 
     def _update_marks_obtained(self):
         """Updates the total marks earned by student for this paper."""
-        # marks = sum([x.marks for x in self.answers.filter(marks__gt=0.0)])
-        # if not marks:
-        #     self.marks_obtained = 0
-        # else:
-        #     self.marks_obtained = marks
         marks = 0
         for question in self.questions.all():
-            max_marks = max([a.marks for a in self.answers.filter(question=question)])
+            marks_list = [a.marks for a in self.answers.filter(question=question)]
+            max_marks = max(marks_list) if marks_list else 0.0
             marks += max_marks
         self.marks_obtained = marks
 
@@ -1128,10 +1124,12 @@ class StandardTestCase(TestCase):
 class StdioBasedTestCase(TestCase):
     expected_input = models.TextField(blank=True)
     expected_output = models.TextField()
+    marks = models.FloatField(default=0.0)
 
     def get_field_value(self):
         return {"expected_output": self.expected_output,
-               "expected_input": self.expected_input}
+               "expected_input": self.expected_input,
+               "marks": self.marks}
 
     def __str__(self):
         return u'Question: {0} | Exp. Output: {1} | Exp. Input: {2}'.format(self.question,
