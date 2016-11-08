@@ -1,29 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}Login{% endblock title %}
-{% block pagetitle %} Online Test {% endblock %}
-{% block formtitle %}Login{% endblock %}
-{% block css %}
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/bootstrap-social.css" type="text/css" />
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/login.css" type="text/css" /> 
-{% endblock %}
+{% block pagetitle %}YAKSH Online Test {% endblock %}
+
 {% block content %}
 
         <form action="" method="post">
         {% csrf_token %}
           
-        <center><table class=span1>
+        <center><table class="table">
         {{ form.as_table }}
         </table></center>
-        <center><button class="btn" type="submit">Login</button>&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn" type="reset">Cancel</button></center>
-        <br><center><a href="{{URL_ROOT}}/exam/forgotpassword/">Forgot Password?</a></center><br>
-        <center><a href="{{URL_ROOT}}/exam/register/">New User? Sign-Up </a></center>
+        <button class="btn btn-primary" type="submit">Login</button>&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" type="reset">Cancel</button>
+        <a href="{{URL_ROOT}}/exam/forgotpassword/">Forgot Password?</a>
+        <a href="{{URL_ROOT}}/exam/register/">New User? Sign-Up </a>
         <h3> Login with </h3>
         <a class="btn btn-social-icon btn-google" href="{% url 'social:begin' 'google-oauth2' %}">
-            <span class="fa fa-google" style="background-color: #dd4b39;" ></span>
+            <span class="fa fa-google" style="font-size:32px;color:red" ></span>
         </a>
         <a class="btn btn-social-icon btn-facebook"  href="{% url 'social:begin' 'facebook' %}">
-            <span class="fa fa-facebook" style="background-color: #3b5998;" ></span>
+            <span class="fa fa-facebook-square" style="font-size:32px"></span>
         </a>
         </form>
       

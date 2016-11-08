@@ -1,18 +1,8 @@
 {% extends "manage.html" %}
 
-{% block title %} Grader {% endblock title %}
+{% block pagetitle %} Grader {% endblock pagetitle %}
 
-{% block css %}
-<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/bootstrap.css" />
-{% endblock %}
-{% block subtitle %}
-    Grader
-    {% endblock %}
-    {% block script %}
-    <script src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js"></script>
-    <script src="{{ URL_ROOT }}/static/yaksh/js/bootstrap.min.js"></script>
-    {% endblock %}
-    {% block manage %}
+{% block content %}
 
 <div class="row">
  <div class="col-md-3">
@@ -44,8 +34,8 @@
       </span></h4>
        <div id="questions_quizzes{{ course.id }}" class="collapse">
         {% for quiz in course.quiz_set.all %}
-         <p><a href="#questions_questions{{ quiz.id }}" data-toggle="collapse">Quiz: {{ quiz }}</a></p>
-          <div id="questions_questions{{ quiz.id }}" class="collapse">
+          <p><a href="#questions_questions{{ course.id }}{{ quiz.id }}" data-toggle="collapse">Quiz: {{ quiz }}</a></p>
+          <div id="questions_questions{{ course.id }}{{ quiz.id }}" class="collapse">
            {% with questionpaper=quiz.questionpaper_set.get %}
             <p class="bg-info"> Questions: </p>
             <ol class="list-group">
@@ -80,8 +70,8 @@
      </span></h4>
      <div id="quizzes_quizzes{{ course.id }}" class="collapse">
       {% for quiz in course.quiz_set.all %}
-       <p><a href="#quizzes_papers{{ quiz.id }}" data-toggle="collapse">Quiz: {{ quiz }}</a></p>
-       <div id="quizzes_papers{{ quiz.id }}" class="collapse">
+      <p><a href="#quizzes_papers{{ course.id }}{{ quiz.id }}" data-toggle="collapse">Quiz: {{ quiz }}</a></p>
+       <div id="quizzes_papers{{ course.id }}{{ quiz.id }}" class="collapse">
        <ol class="list-group">
        {% for answerpaper in quiz.questionpaper_set.get.answerpaper_set.all %}
        <li class="list-group">
@@ -114,8 +104,8 @@
       </span></h4>
       <div id="users_users{{ course.id }}" class="collapse">
        {% for user in course.students.all %}
-        <p><a href="#users_papers{{ user.id }}" data-toggle="collapse"> Answer Papers for {{ user.get_full_name }}</a></p>
-         <div id="users_papers{{ user.id }}" class="collapse">
+       <p><a href="#users_papers{{ course.id }}{{ user.id }}" data-toggle="collapse"> Answer Papers for {{ user.get_full_name }}</a></p>
+        <div id="users_papers{{ course.id }}{{ user.id }}" class="collapse">
          <ol class="list-group">
          {% for answerpaper in user.answerpaper_set.all %}
          <li class="list-group"> Quiz: {{answerpaper.question_paper.quiz.description }}; Attempt Number: {{ answerpaper.attempt_number }}

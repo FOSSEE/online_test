@@ -1,24 +1,18 @@
 {% extends "manage.html" %}
 
-{% block title %} Statistics {% endblock title %}
+{% block pagetitle %} Statistics for {{ quiz.description }}{% endblock pagetitle %}
 
-{% block css %}
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question_quiz.css" type="text/css" />
-{% endblock %}
-{% block subtitle %}
-Statistics for {{quiz.description}}
-{% endblock %}
-{% block manage %}
+{% block content %}
 <div class="row">
-    <div class="span2">
+    <div class="col-md-2">
 {% for attempt in attempts %}
     <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{questionpaper_id}}/{{attempt}}">Attempt {{ attempt }}</a></p>
     {% endfor %}
 </div>
-<div class="span10">
+<div class="col-md-9">
 {% if question_stats %}
     <p><b>Total number of participants: {{ total }}</b></p>
-    <table class="bordered-table zebra-striped">
+    <table class="table table-bordered">
         <tr><th>Question</th><th>Type</th><th>Total</th><th>Answered</th></tr>
         {% for question, value in question_stats.items  %}
         <tr><td>{{ question.summary }}</td><td>{{ question.type }}</td><td>{{value.1}}</td><td>{{ value.0 }} ({% widthratio value.0 value.1 100 %}%)</td></tr>

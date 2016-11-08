@@ -1,13 +1,8 @@
 {% extends "user.html" %}
-{% block css %}
-<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/view_answerpaper.css" />
-{% endblock %}
 
-{% block title %} Answer Paper  for {{ quiz.description }}{% endblock title %}
+{% block pagetitle %} Answer Paper  for {{ quiz.description }}{% endblock pagetitle %}
 
-{% block manage %}
-
-{% block subtitle %} Answer Paper for {{ quiz.description }}{% endblock %}
+{% block content %}
 
 {% if not data.papers %}
     <p><b> You have not attempted the quiz {{ quiz.description }} </b></p>
@@ -39,7 +34,7 @@
     <div class="panel panel-info">
         <div class="panel-heading">
             <strong> Details: {{forloop.counter}}. {{ question.summary }} 
-            <span class="marks"> Mark(s): {{ question.points }} </span>
+            <span class="marks pull-right"> Mark(s): {{ question.points }} </span>
             </strong>
         </div>
         <div class="panel-body">

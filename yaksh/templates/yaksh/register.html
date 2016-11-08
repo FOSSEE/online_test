@@ -1,20 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Registration form {% endblock %}
 
-{% block pagetitle %}Online Test {% endblock %}
-{% block formtitle %}Please fill in the following details {% endblock %}
+{% block pagetitle %} Online Test Registration {% endblock %}
 
 {% block content %}
 
-
-
 <form action="" method="post">
     {% csrf_token %}
-    <center><table class=span1>
+    <h3> Please fill in the following details:</h3>
+    <center>
+        <table class="table">
     {{ form.as_table }}
     </table></center>
-    <center><button class="btn" type="submit">Register</button>&nbsp;&nbsp;<button class="btn" type="reset">Cancel</button></center>
+    <center><button class="btn btn-primary" type="submit">Register</button>&nbsp;&nbsp;<button class="btn btn-primary" type="reset">Cancel</button></center>
 </form>
 
 {% endblock content %}

@@ -3,35 +3,27 @@
 
 {% block subtitle %}Hello {{ user.first_name }}, welcome to your dashboard !{% endblock %}
 
-{% block css %}
-<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/course.css" />
-{% endblock %}
 
-{% block script %}
-<script src="{{ URL_ROOT }}/static/yaksh/js/bootstrap-alert.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/quizzes_user.js"></script>
-{% endblock %}
-
-
-{% block manage %}
+{% block pagetitle %} Student's Dashboard {% endblock pagetitle %}
+{% block content %}
 
 <center><b><u>Available Courses</u></b></center><br>
 {% for course in courses %}
-<div class="row show-grid">
-    <div class="span14">
+<div class="row well">
+    <div class="col-md-12">
         <div class="row">
-            <div class="span6">
+            <div class="col-md-4">
                 <h4><b><u> {{ course.name }} by {{ course.creator }}</u></b></h4>
             </div>
-             <div class="span6">
-                {% if user in course.requests.all %} <span class="label warning">Request Pending </span>
-                {% elif user in course.rejected.all %}<span class="label important">Request Rejected</span>
-                {% elif user in course.students.all %}<span class="label notice">Enrolled</span>
+             <div class="col-md-4">
+                {% if user in course.requests.all %} <span class="label label-warning">Request Pending </span>
+                {% elif user in course.rejected.all %}<span class="label label-danger">Request Rejected</span>
+                {% elif user in course.students.all %}<span class="label label-info">Enrolled</span>
                 {% else %}
                         {% if course.is_self_enroll %}
-                            <a class="btn success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.id }}">Enroll</a>
+                            <a class="btn btn-success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.id }}">Enroll</a>
                         {% else %}
-                            <a class="btn success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.id }}">Enroll Request</a>
+                            <a class="btn btn-success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.id }}">Enroll</a>
                         {% endif %}
                 {% endif %}
              </div>
@@ -46,7 +38,7 @@
                 {% if not quizzes %}
                     <h5>No active quizzes for you</h5>
                 {% endif %}
-                <table>
+                <table class="table table-bordered">
                     <th>Quiz</th>
                     <th>View Answer Paper</th>
                     <th>Pre requisite quiz</th>
@@ -60,7 +52,7 @@
                             {% else %}
                                 <td>
                                     <a href="{{ URL_ROOT }}/exam/start/{{quiz.questionpaper_set.get.id}}">{{ quiz.description }}</a><br>
-                                    {{ quiz.description }} <span class="label important">INACTIVE</span><br>
+                                    {{ quiz.description }} <span class="label label-danger">INACTIVE</span><br>
                                 </td>
                             {% endif %}
                             <td>
@@ -84,13 +76,13 @@
             {% endif %}
         </div>
     </div>
-</div><!--/row show-grid-->
+</div><!--/row-->
  </br>
 {% endfor %}
 <hr>
 <h4>List of quizzes taken by you so far</h4>
 {% if quizzes_taken %}
-    <table class="bordered-table zebra-striped">
+    <table class="table table-bordered">
         <th>Quiz</th>
         <th>Result</th>
         <th>Marks Obtained</th>

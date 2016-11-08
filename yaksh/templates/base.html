@@ -15,8 +15,8 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/bootstrap.min.css">
-  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/base.css">
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/font-awesome.css" type="text/css" />
+  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/theme.css" type="text/css" />
 
   <style>
     body {
@@ -32,30 +32,31 @@
 
   {% block css %}
   {% endblock %}
-  <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.4.2.min.js"></script>
+  <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js"></script>
   <script src="{{ URL_ROOT }}/static/yaksh/js/bootstrap.min.js"></script>
   {% block script %}
   {% endblock %}
 </head>
 
-<body 
-  {% block onload %}
-  {% endblock %}>
+<body {% block onload %} {% endblock %}>
+  {% block nav %}
+  {% endblock %}
   <div class="container">
      <div class="content">
          <div class="page-header">
-		    <h1><Strong><center>{% block pagetitle %} {% endblock pagetitle %}</center></strong></h1>
+             <h3><center>{% block pagetitle %}{% endblock pagetitle %}</center></h2>
          </div>
          <div class=row>
-            <div class=span12>
-               <h3><center>{% block formtitle %} {% endblock formtitle %}</center></h3><br>
+            <div class=col-md-12>
 	       {% block content %}
 	       {% endblock %}
             </div>
          </div>
      </div>
-     <footer>
-     <p align="center">&copy; FOSSEE group, IIT Bombay</p>
+     <footer class="footer">
+     <div class="container">
+         <p align="center">Developed by FOSSEE group, IIT Bombay</p>
+     </div>
      </footer>
   </div>
 

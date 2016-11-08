@@ -4,15 +4,12 @@
 
 {% block subtitle %} {{ course.name }} {% endblock %}
 
-{% block css %}
-<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/course.css" />
-{% endblock %}
 {% block script %}
 <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/course.js"></script>
 {% endblock %}
-{% block manage %}
+{% block content %}
 <div class="row">
-    <div class="span6 wrap">
+    <div class="col-md-6">
         <center><b><u>Requests</u></b></center><br>
         {% if course.get_requests %}
         <input type="checkbox" class="checkall"/>&nbsp;<font size="2">Select all</font>
@@ -22,7 +19,7 @@
         {% for request in course.get_requests %}
         <div class="well">
             <div class="row">
-                <div class="span3" style="padding-top:10px">
+                <div class="col-md-3" style="padding-top:10px">
                     <input type="checkbox" name="check" value="{{ request.id }}">&nbsp;
                     <a href="#" data-toggle="tooltip" title=" Full Name: {{ request.get_full_name }}&#013;Institute: {{ request.profile.institute }}&#013;Department: {{ request.profile.department}}&#013;Roll Number: {{ request.profile.roll_number }}">&nbsp;{{ request.username }}</a>
                 </div>
@@ -35,7 +32,7 @@
         {% endif %}
         </form>
     </div>
-    <div class="span6 wrap">
+    <div class="col-md-6">
         <center><b><u>Rejected</u></b></center><br>
         {% if course.get_rejected %}
         <input type="checkbox" class="enroll"/>&nbsp;<font size="2">Select all</font>
@@ -45,15 +42,15 @@
         {% csrf_token %}
         <div class="well">
             <div class="row">
-                <div class="span4" style="padding-top:10px">
+                <div class="col-md-4" style="padding-top:10px">
                 <input type="checkbox" name="check" value="{{ rejected.id }}">&nbsp;
                 <a href="#" data-toggle="tooltip" title=" Full Name: {{ rejected.get_full_name }}&#013;Institute: {{ rejected.profile.institute }}&#013;Department: {{ rejected.profile.department}}&#013;Roll Number: {{ rejected.profile.roll_number }}">&nbsp;{{ rejected.username }}</a>
                 </div>
-                <a class="btn success" href="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/{{ rejected.id }}/"> Enroll </a>
+                <a class="btn btn-success" href="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/{{ rejected.id }}/"> Enroll </a>
             </div>
         </div>
         {% endfor %}
-        <button class="btn success" type="submit" name='enroll' value='enroll'>Enroll Selected</button>
+        <button class="btn btn-success" type="submit" name='enroll' value='enroll'>Enroll Selected</button>
         </div>
         {% endif %}
         </form>
@@ -61,7 +58,7 @@
 </div>
 <br>
 <div class="row">
-    <div class="span6 offset4 wrap">
+    <div class="col-md-6">
         <center><b><u>Enrolled</u></b></center><br>
         {% if course.get_enrolled %}
         <input type="checkbox" class="reject"/>&nbsp;<font size="2">Select all</font>
@@ -71,21 +68,21 @@
         {% csrf_token %}
         <div class="well">
             <div class="row">
-                <div class="span4" style="padding-top:10px">
+                <div class="col-md-4" style="padding-top:10px">
                 <input type="checkbox" name="check" value="{{ enrolled.id }}">&nbsp;
                 <a href="#" data-toggle="tooltip" title=" Full Name: {{ enrolled.get_full_name }}&#013;Institute: {{ enrolled.profile.institute }}&#013;Department: {{ enrolled.profile.department}}&#013;Roll Number: {{ enrolled.profile.roll_number }}">&nbsp;{{ enrolled.username }}</a>
                 </div>
-                <a class="btn danger" href="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/{{ enrolled.id }}/"> Reject </a>
+                <a class="btn btn-danger" href="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/{{ enrolled.id }}/"> Reject </a>
             </div>
         </div>
         {% endfor %}
-        <button class="btn danger" type="submit" name='reject' value='reject'>Reject Selected</button>
+        <button class="btn btn-danger" type="submit" name='reject' value='reject'>Reject Selected</button>
 	    </div>
         {% endif %}
         </form>
     </div>
 </div>
 <div class="pull-right">
-            <a class="btn primary" href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">{% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}</a>
+            <a class="btn btn-primary" href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">{% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}</a>
 </div>
 {% endblock %}
