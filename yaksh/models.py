@@ -1090,14 +1090,10 @@ class AnswerPaper(models.Model):
             user_answer.marks = (question.points * result['weightage'] / 
                 question.get_maximum_test_case_weightage()) \
                 if question.partial_grading and question.type == 'code' else question.points
-            # user_answer.marks = question.points * result['weightage'] \
-            #     if question.partial_grading and question.type == 'code' else question.points
         else:
             user_answer.marks = (question.points * result['weightage'] / 
                 question.get_maximum_test_case_weightage()) \
                 if question.partial_grading and question.type == 'code' else 0
-            # user_answer.marks = question.points * result['weightage'] \
-            #     if question.partial_grading and question.type == 'code' else 0
         user_answer.save()
         self.update_marks('completed')
         return True, msg

@@ -86,10 +86,10 @@ class CodeEvaluator(object):
         """
 
         self.setup()
-        success, error, marks = self.safe_evaluate(**kwargs)
+        success, error, weightage = self.safe_evaluate(**kwargs)
         self.teardown()
 
-        result = {'success': success, 'error': error, 'marks': marks}
+        result = {'success': success, 'error': error, 'weightage': weightage}
         return result
 
     # Private Protocol ##########
