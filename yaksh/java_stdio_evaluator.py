@@ -31,7 +31,7 @@ class JavaStdioEvaluator(StdIOEvaluator):
         compile_command = 'javac {0}'.format(self.submit_code_path)
         return compile_command
 
-    def compile_code(self, user_answer, file_paths, expected_input, expected_output, marks):
+    def compile_code(self, user_answer, file_paths, expected_input, expected_output, weightage):
         if not isfile(self.submit_code_path):
             msg = "No file at %s or Incorrect path" % self.submit_code_path
             return False, msg
@@ -51,9 +51,9 @@ class JavaStdioEvaluator(StdIOEvaluator):
         return self.compiled_user_answer
 
     def check_code(self, user_answer, file_paths, partial_grading,
-        expected_input, expected_output, marks):
+        expected_input, expected_output, weightage):
         success = False
-        test_case_marks = 0.0
+        test_case_weightage = 0.0
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
         if stdnt_stderr == '' or "error" not in stdnt_stderr:
@@ -79,5 +79,5 @@ class JavaStdioEvaluator(StdIOEvaluator):
                         err = err + "\n" + e
             except:
                 err = err + "\n" + stdnt_stderr
-        test_case_marks = float(marks) if partial_grading and success else 0.0
-        return success, err, test_case_marks
+        test_case_weightage = float(weightage) if partial_grading and success else 0.0
+        return success, err, test_case_weightage

@@ -27,7 +27,7 @@ class ScilabCodeEvaluator(CodeEvaluator):
             delete_files(self.files)
         super(ScilabCodeEvaluator, self).teardown()
 
-    def check_code(self, user_answer, file_paths, partial_grading, test_case, marks):
+    def check_code(self, user_answer, file_paths, partial_grading, test_case, weightage):
         if file_paths:
             self.files = copy_files(file_paths)
         ref_code_path = test_case
@@ -37,7 +37,7 @@ class ScilabCodeEvaluator(CodeEvaluator):
             self._remove_scilab_exit(user_answer.lstrip())
 
         success = False
-        test_case_marks = 0.0
+        test_case_weightage = 0.0
 
         self.write_to_submit_code_file(self.submit_code_path, user_answer)
         # Throw message if there are commmands that terminates scilab
@@ -65,12 +65,12 @@ class ScilabCodeEvaluator(CodeEvaluator):
             stdout = self._strip_output(stdout)
             if proc.returncode == 5:
                 success, err = True, "Correct answer"
-                test_case_marks = float(marks) if partial_grading else 0.0
+                test_case_weightage = float(weightage) if partial_grading else 0.0
             else:
                 err = add_err + stdout
         else:
             err = add_err + stderr
-        return success, err, test_case_marks
+        return success, err, test_case_weightage
 
     def _remove_scilab_exit(self, string):
         """

@@ -17,7 +17,7 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
         tmp_in_dir_path = tempfile.mkdtemp()
         self.test_case_data = [
             {"test_case": "java_files/main_square.java",
-            "marks": 0.0
+            "weightage": 0.0
             }
         ]
         self.in_dir = tmp_in_dir_path
@@ -86,7 +86,7 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
         self.file_paths = [("/tmp/test.txt", False)]
         self.test_case_data = [
             {"test_case": "java_files/read_file.java",
-            "marks": 0.0
+            "weightage": 0.0
             }
         ]
         user_answer = dedent("""
@@ -126,7 +126,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
         self.in_dir = tmp_in_dir_path
         self.test_case_data = [{'expected_output': '11',
                                'expected_input': '5\n6',
-                               'marks': 0.0
+                               'weightage': 0.0
                                }]
         evaluator.SERVER_TIMEOUT = 4
         self.timeout_msg = ("Code took more than {0} seconds to run. "
@@ -161,7 +161,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
 
         self.test_case_data = [{'expected_output': '561',
                                 'expected_input': '5\n6\n1',
-                                'marks': 0.0
+                                'weightage': 0.0
                                 }]
         user_answer = dedent("""
         import java.util.Scanner;
@@ -241,7 +241,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
     def test_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
                                'expected_input': '',
-                               'marks': 0.0
+                               'weightage': 0.0
                                }]
         user_answer = dedent("""
         class Test
@@ -262,7 +262,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
     def test_string_input(self):
         self.test_case_data = [{'expected_output': 'HelloWorld',
                                'expected_input': 'Hello\nWorld',
-                               'marks': 0.0
+                               'weightage': 0.0
                                }]
         user_answer = dedent("""
         import java.util.Scanner;
@@ -286,7 +286,7 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
         self.file_paths = [("/tmp/test.txt", False)]
         self.test_case_data = [{'expected_output': '2',
                                'expected_input': '',
-                               'marks': 0.0
+                               'weightage': 0.0
                                }]
         user_answer = dedent("""
             import java.io.BufferedReader;

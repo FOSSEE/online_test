@@ -42,7 +42,7 @@ class PythonStdioEvaluator(CodeEvaluator):
         super(PythonStdioEvaluator, self).teardown()
 
 
-    def compile_code(self, user_answer, file_paths, expected_input, expected_output, marks):
+    def compile_code(self, user_answer, file_paths, expected_input, expected_output, weightage):
         if file_paths:
             self.files = copy_files(file_paths)
         submitted = compile(user_answer, '<string>', mode='exec')
@@ -57,15 +57,16 @@ class PythonStdioEvaluator(CodeEvaluator):
         self.output_value = output_buffer.getvalue().rstrip("\n")
         return self.output_value
 
-    def check_code(self, user_answer, file_paths, partial_grading, expected_input, expected_output, marks):
+    def check_code(self, user_answer, file_paths, partial_grading, expected_input,
+         expected_output, weightage):
         success = False
-        test_case_marks = 0.0
+        test_case_weightage = 0.0
 
         tb = None
         if self.output_value == expected_output:
             success = True
             err = "Correct answer"
-            test_case_marks = marks
+            test_case_weightage = weightage
         else:
             success = False
             err = dedent("""
@@ -73,10 +74,10 @@ class PythonStdioEvaluator(CodeEvaluator):
                 Given input - {0}
                 Expected output - {1}
                 Your output - {2}
-                """
-                         .format(expected_input,
-                                 expected_output, self.output_value
-                                 )
-                         )
+                """.format(expected_input,
+                     expected_output,
+                     self.output_value
+                    )
+                )
         del tb
-        return success, err, test_case_marks
+        return success, err, test_case_weightage

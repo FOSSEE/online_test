@@ -35,12 +35,12 @@ class TestCodeServer(unittest.TestCase):
     def setUp(self):
         self.code_server = CodeServerProxy()
 
-    def test_inifinite_loop(self):
+    def test_infinite_loop(self):
         # Given
         testdata = {'user_answer': 'while True: pass',
-                    'partial_grading': True,
+                    'partial_grading': False,
                     'test_case_data': [{'test_case':'assert 1==2', 
-                        'marks': 0.0
+                        'weightage': 0.0
                         }
                     ]}
 
@@ -57,9 +57,9 @@ class TestCodeServer(unittest.TestCase):
     def test_correct_answer(self):
         # Given
         testdata = {'user_answer': 'def f(): return 1',
-                    'partial_grading': True,
+                    'partial_grading': False,
                     'test_case_data': [{'test_case':'assert f() == 1',
-                        'marks': 0.0
+                        'weightage': 0.0
                         }
                     ]}
 
@@ -76,9 +76,9 @@ class TestCodeServer(unittest.TestCase):
     def test_wrong_answer(self):
         # Given
         testdata = {'user_answer': 'def f(): return 1',
-                    'partial_grading': True,
+                    'partial_grading': False,
                     'test_case_data': [{'test_case':'assert f() == 2',
-                        'marks': 0.0
+                        'weightage': 0.0
                         }
                     ]}
 
@@ -99,9 +99,9 @@ class TestCodeServer(unittest.TestCase):
         def run_code():
             """Run an infinite loop."""
             testdata = {'user_answer': 'while True: pass',
-                        'partial_grading': True,
+                        'partial_grading': False,
                         'test_case_data': [{'test_case':'assert 1==2',
-                            'marks': 0.0
+                            'weightage': 0.0
                             }
                         ]}
             result = self.code_server.run_code(

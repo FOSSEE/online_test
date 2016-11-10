@@ -15,7 +15,7 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
         self.test_case_data = [{"test_case": "c_cpp_files/main.cpp",
-                                "marks": 0.0
+                                "weightage": 0.0
                                 }]
         self.in_dir = tmp_in_dir_path
         self.timeout_msg = ("Code took more than {0} seconds to run. "
@@ -80,7 +80,7 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
     def test_file_based_assert(self):
         self.file_paths = [('/tmp/test.txt', False)]
         self.test_case_data = [{"test_case": "c_cpp_files/file_data.c",
-                                "marks": 0.0
+                                "weightage": 0.0
                                 }]
         user_answer = dedent("""
             #include<stdio.h>
@@ -108,7 +108,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.test_case_data = [{'expected_output': '11',
                                 'expected_input': '5\n6',
-                                'marks': 0.0
+                                'weightage': 0.0
                                 }]
         self.in_dir = tempfile.mkdtemp()
         self.timeout_msg = ("Code took more than {0} seconds to run. "
@@ -135,7 +135,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
     def test_array_input(self):
         self.test_case_data = [{'expected_output': '561',
                                 'expected_input': '5\n6\n1',
-                                'marks': 0.0
+                                'weightage': 0.0
                                 }]
         user_answer = dedent("""
         #include<stdio.h>
@@ -158,7 +158,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
     def test_string_input(self):
         self.test_case_data = [{'expected_output': 'abc',
                                 'expected_input': 'abc',
-                                'marks': 0.0
+                                'weightage': 0.0
                                 }]
         user_answer = dedent("""
         #include<stdio.h>
@@ -229,7 +229,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
     def test_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
                                'expected_input': '',
-                                'marks': 0.0
+                                'weightage': 0.0
                                 }]
         user_answer = dedent("""
         #include<stdio.h>
@@ -267,7 +267,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
     def test_cpp_array_input(self):
         self.test_case_data = [{'expected_output': '561',
                                 'expected_input': '5\n6\n1',
-                                'marks': 0.0
+                                'weightage': 0.0
                                 }]
         user_answer = dedent("""
         #include<iostream>
@@ -291,7 +291,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
     def test_cpp_string_input(self):
         self.test_case_data = [{'expected_output': 'abc',
                                 'expected_input': 'abc',
-                                'marks': 0.0
+                                'weightage': 0.0
                                 }]
         user_answer = dedent("""
         #include<iostream>
@@ -366,7 +366,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
     def test_cpp_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
                                'expected_input': '',
-                                'marks': 0.0
+                                'weightage': 0.0
                                 }]
         user_answer = dedent("""
         #include<iostream>
