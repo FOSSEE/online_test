@@ -24,7 +24,7 @@ class PythonAssertionEvaluator(CodeEvaluator):
             delete_files(self.files)
         super(PythonAssertionEvaluator, self).teardown()
 
-    def compile_code(self, user_answer, file_paths, test_case):
+    def compile_code(self, user_answer, file_paths, hook_code, test_case):
         self.files = []
         if file_paths:
             self.files = copy_files(file_paths)
@@ -36,7 +36,7 @@ class PythonAssertionEvaluator(CodeEvaluator):
             exec(submitted, self.exec_scope)
             return self.exec_scope
 
-    def check_code(self, user_answer, file_paths, test_case):
+    def check_code(self, user_answer, file_paths, hook_code, test_case):
         success = False
         try:
             tb = None

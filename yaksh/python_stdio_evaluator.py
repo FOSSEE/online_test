@@ -37,8 +37,8 @@ class PythonStdioEvaluator(CodeEvaluator):
             delete_files(self.files)
         super(PythonStdioEvaluator, self).teardown()
 
-
-    def compile_code(self, user_answer, file_paths, expected_input, expected_output):
+    def compile_code(self, user_answer, file_paths, hook_code,
+                     expected_input=None, expected_output=None):
         self.files = []
         if file_paths:
             self.files = copy_files(file_paths)
@@ -54,13 +54,13 @@ class PythonStdioEvaluator(CodeEvaluator):
         self.output_value = output_buffer.getvalue().rstrip("\n")
         return self.output_value
 
-    def check_code(self, user_answer, file_paths, expected_input,
-                   expected_output, hook_code=None):
+    def check_code(self, user_answer, file_paths, hook_code,
+                   expected_input=None, expected_output=None):
         success = False
-
         tb = None
+
         if hook_code:
-            success, err = self.evaluate_hook(self.output_value, hook_code)
+            success, err = self.evaluate_hook(user_answer, self.output_value, hook_code)
         else:
             if self.output_value == expected_output:
                 success = True
@@ -78,4 +78,4 @@ class PythonStdioEvaluator(CodeEvaluator):
                                      )
                              )
             del tb
-            return success, err
+        return success, err
