@@ -10,7 +10,7 @@ import traceback
 from multiprocessing import Process, Queue
 import subprocess
 import re
-
+from inspect import isfunction
 try:
     from SimpleXMLRPCServer import SimpleXMLRPCServer
 except ImportError:
@@ -112,12 +112,18 @@ class CodeEvaluator(object):
 
         # Do whatever testing needed.
         try:
-            for test_case in test_case_data:
-                success = False
-                self.compile_code(user_answer, file_paths, **test_case)
-                success, err = self.check_code(user_answer, file_paths, **test_case)
-                if not success:
-                    break
+
+            if hook_code:
+                self.compile_code(user_answer, file_paths, hook_code)
+                success, err = self.check_code(user_answer, file_paths, hook_code)
+
+            else:
+                for test_case in test_case_data:
+                    success = False
+                    self.compile_code(user_answer, file_paths, hook_code,**test_case)
+                    success, err = self.check_code(user_answer, file_paths, hook_code, **test_case)
+                    if not success:
+                        break
 
         except TimeoutException:
             err = self.timeout_msg
@@ -128,7 +134,10 @@ class CodeEvaluator(object):
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
             if len(tb_list) > 2:
-                del tb_list[1:3]
+                if hook_code:
+                    del tb_list[1:4]
+                else:
+                    del tb_list[1:3]
             err = "Error: {0}".format("".join(tb_list))
         finally:
             # Set back any original signal handler.
@@ -144,7 +153,7 @@ class CodeEvaluator(object):
     def check_code(self):
         raise NotImplementedError("check_code method not implemented")
 
-    def compile_code(self, user_answer, file_paths, **kwargs):
+    def compile_code(self, user_answer, file_paths, hook_code, **kwargs):
         pass
 
     def create_submit_code_file(self, file_name):
@@ -203,14 +212,14 @@ class CodeEvaluator(object):
                 stripped = stripped + c
         return ''.join(stripped)
 
-    def evaluate_hook(self, user_output, code):
+    def evaluate_hook(self, user_answer, user_output, hook_code):
         """Allows moderator to fine check the output of the user"""
         success = False
-        err = None
         try:
-            _check_hook_answer = compile(code, '<string>', mode='exec')
-            exec _check_hook_answer
-            success, err = python_hook(user_output)
+            _check_hook_code_answer = compile(hook_code, '<string>', mode='exec')
+            exec _check_hook_code_answer
+            success, err = python_hook(user_answer, user_output)
         except Exception:
-            raise
+            msg = traceback.format_exc(limit=0)
+            err = "Error in Hook: {0}".format(msg)
         return success, err

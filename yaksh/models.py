@@ -246,7 +246,7 @@ class Question(models.Model):
     user = models.ForeignKey(User, related_name="user")
 
     # hook to evaluate user output
-    hook = models.TextField(blank=True)
+    hook_code = models.TextField(blank=True)
 
 
     def consolidate_answer_data(self, user_answer):
@@ -263,8 +263,8 @@ class Question(models.Model):
         question_data['user_answer'] = user_answer
         files = FileUpload.objects.filter(question=self)
 
-        if self.hook:
-            question_data["hook_code"] = self.hook
+        if self.hook_code:
+            question_data["hook_code"] = self.hook_code
 
         if files:
             question_data['file_paths'] = [(file.file.path, file.extract)
@@ -1118,7 +1118,7 @@ class StandardTestCase(TestCase):
 
 class StdioBasedTestCase(TestCase):
     expected_input = models.TextField(blank=True)
-    expected_output = models.TextField()
+    expected_output = models.TextField(blank=True)
 
     def get_field_value(self):
         return {"expected_output": self.expected_output,
