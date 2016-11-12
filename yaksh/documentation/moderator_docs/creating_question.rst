@@ -78,6 +78,20 @@ How to write Test cases
 
 		In Options Field type the option check the correct checkbox if the current option is correct and click on Save & Add Testcase button to save each option.
 
+	* **Create Python Hook Based Questions**
+
+		.. note:: Current implementation of this works only on Standard I/O based test case type questions. Also, **No expected input and output can be given to the question if its Python hook based type.** A Feature to add expected input is in progress.
+
+		To create a Python Hook Based Question, select test case type as StdIO test case. This will enable the Hook text box. The function **python_hook** is passed with arguments, user_answer and user_output, where user_answer is the code that the student typed and user_output is the standard output of the code. The moderator can then examine these two parameters by writing rigorous test cases and finally returning success and err.
+
+		success, err will be True and "Correct answer" respectively if the checker passes. If the checker fails, success will be False and err will be "Incorrect answer".
+
+		Lastly, click on Save & Add Testcase button to save the question.
+
+		.. note:: It is advisible to pass the user output and the moderator expected output in the err string variable, for better understanding to students.
+
+
+
 
 Features in Question
 --------------------
