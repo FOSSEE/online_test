@@ -1,5 +1,4 @@
 {% extends "manage.html" %}
-
 {% block pagetitle %} Add Question {% endblock pagetitle %}
 
 {% block css %}
@@ -8,11 +7,13 @@
 
 {% block script %}
 <script src="{{ URL_ROOT }}/static/yaksh/js/add_question.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js"></script>
 {% endblock %}
 
 {% block onload %} onload='javascript:textareaformat();' {% endblock %}
 
 {% block content %}
+
 <form action="" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
   {% csrf_token %}
   <center><table class="table">
@@ -28,12 +29,30 @@
   <tr><td> File: <td> {{ upload_form.file_field }}{{ upload_form.file_field.errors }}
   {% if uploaded_files %}<br><b>Uploaded files:</b><br>Check the box to delete or extract files<br>
   {% for file in uploaded_files %}
+
   <input type="checkbox" name="clear" value="{{file.id}}">&nbsp;delete</input>&nbsp;
   <input type="checkbox" name="extract" value="{{file.id}}" >{% if file.extract %} dont extract{% else %}
   extract{% endif %}</input><br>
   <a href="{{file.file.url}}">{{ file.file.name }}</a>
   <br>
   {% endfor %}{% endif %}
+  <tr><td> Hook Code <td> {{ form.hook_code }} <br/>
+
+   <script type="text/javascript">
+            $('#id_test_case_type').change(function(){
+
+        var textarea = $('#id_hook');
+        var select   = $(this).val();
+        textarea.attr('disabled', true);
+
+       if (select == 'stdiobasedtestcase'){
+          textarea.attr('disabled', false);
+        }
+
+       })
+  </script>
+
+
   <div class="form-group">
       {{ test_case_formset.management_form }}
 

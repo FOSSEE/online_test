@@ -16,6 +16,7 @@ except ImportError:
 from string import punctuation, digits
 import datetime
 import pytz
+from textwrap import dedent
 
 languages = (
     ("select", "Select Language"),
@@ -175,6 +176,22 @@ class QuestionForm(forms.ModelForm):
     """Creates a form to add or edit a Question.
     It has the related fields and functions required."""
 
+    def __init__(self, *args, **kwargs):
+        super(QuestionForm, self).__init__(*args, **kwargs)
+        self.fields["hook_code"].initial = dedent("""
+                                             def python_hook(user_answer, user_output):
+                                                 success=False
+                                                 err = 'Incorrect answer'
+                                                 '''user answer contains the user code
+                                                    and user output contains the std output
+                                                    of the executed code.
+                                                    always return sucess and err where
+                                                    success will be true if the output is correct.
+                                                    err will be a string.
+                                                    '''
+                                                 return success, err
+                                             """)
+
     class Meta:
         model = Question
         exclude = ['user', 'active']
@@ -208,8 +225,6 @@ class QuestionFilterForm(forms.Form):
                                 (choices=languages))
     question_type = forms.CharField(max_length=8, widget=forms.Select\
                                     (choices=question_types))
-
-
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
