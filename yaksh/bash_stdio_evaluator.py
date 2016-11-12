@@ -22,7 +22,8 @@ class BashStdioEvaluator(StdIOEvaluator):
             delete_files(self.files)
         super(BashStdioEvaluator, self).teardown()
 
-    def compile_code(self, user_answer, file_paths, expected_input, expected_output):
+    def compile_code(self, user_answer, file_paths, hook_code=None,
+                     expected_input=None, expected_output=None):
         self.files = []
         if file_paths:
             self.files = copy_files(file_paths)
@@ -33,9 +34,11 @@ class BashStdioEvaluator(StdIOEvaluator):
         user_answer = user_answer.replace("\r", "")
         self.write_to_submit_code_file(self.submit_code_path, user_answer)
 
-    def check_code(self, user_answer, file_paths, expected_input, expected_output):
+    def check_code(self, user_answer, file_paths, hook_code=None,
+                   expected_input=None, expected_output=None):
         success = False
-        expected_input = str(expected_input).replace('\r', '')
+        if expected_input:
+            expected_input = str(expected_input).replace('\r', '')
         proc = subprocess.Popen("bash ./Test.sh",
                                 shell=True,
                                 stdin=subprocess.PIPE,
@@ -44,6 +47,7 @@ class BashStdioEvaluator(StdIOEvaluator):
                                 )
         success, err = self.evaluate_stdio(user_answer, proc,
                                            expected_input,
-                                           expected_output
+                                           expected_output,
+                                           hook_code
                                            )
         return success, err

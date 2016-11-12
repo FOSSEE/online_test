@@ -17,6 +17,7 @@ class BashCodeEvaluator(CodeEvaluator):
     # Private Protocol ##########
     def setup(self):
         super(BashCodeEvaluator, self).setup()
+        self.files = []
         self.submit_code_path = self.create_submit_code_file('submit.sh')
         self._set_file_as_executable(self.submit_code_path)
 
@@ -27,7 +28,7 @@ class BashCodeEvaluator(CodeEvaluator):
             delete_files(self.files)
         super(BashCodeEvaluator, self).teardown()
 
-    def check_code(self, user_answer, file_paths, test_case):
+    def check_code(self, user_answer, file_paths, hook_code, test_case):
         """ Function validates student script using instructor script as
         reference. Test cases can optionally be provided.  The first argument
         ref_path, is the path to instructor script, it is assumed to
@@ -57,7 +58,7 @@ class BashCodeEvaluator(CodeEvaluator):
         clean_ref_code_path, clean_test_case_path = \
             self._set_test_code_file_path(get_ref_path, get_test_case_path)
 
-        self.files = []
+        
         if file_paths:
             self.files = copy_files(file_paths)
         if not isfile(clean_ref_code_path):
