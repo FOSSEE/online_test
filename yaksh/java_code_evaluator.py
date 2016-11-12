@@ -46,7 +46,7 @@ class JavaCodeEvaluator(CodeEvaluator):
         output_path = "{0}{1}.class".format(directory, file_name)
         return output_path
 
-    def compile_code(self, user_answer, file_paths, test_case):
+    def compile_code(self, user_answer, file_paths,hook_code, test_case):
         self.files = []
         if self.compiled_user_answer and self.compiled_test_code:
             return None
@@ -96,7 +96,7 @@ class JavaCodeEvaluator(CodeEvaluator):
 
             return self.compiled_user_answer, self.compiled_test_code
 
-    def check_code(self, user_answer, file_paths, test_case):
+    def check_code(self, user_answer, file_paths, hook_code, test_case):
         """ Function validates student code using instructor code as
         reference.The first argument ref_code_path, is the path to
         instructor code, it is assumed to have executable permission.
