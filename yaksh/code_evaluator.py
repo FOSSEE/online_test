@@ -10,7 +10,6 @@ import traceback
 from multiprocessing import Process, Queue
 import subprocess
 import re
-from inspect import isfunction
 try:
     from SimpleXMLRPCServer import SimpleXMLRPCServer
 except ImportError:
