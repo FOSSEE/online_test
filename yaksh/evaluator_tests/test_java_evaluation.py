@@ -322,7 +322,7 @@ class JavaHookEvaluationTestCases(unittest.TestCase):
                            """
                              )
         hook = dedent("""
-                         def python_hook(user_answer, user_output):
+                         def check_answer(user_answer, user_output):
                              if "3" in user_output \
                               and "System.out.print" in user_answer:
                                 success = True
@@ -355,7 +355,7 @@ class JavaHookEvaluationTestCases(unittest.TestCase):
                            """
                              )
         hook = dedent("""
-                         def python_hook(user_answer, user_output):
+                         def check_answer(user_answer, user_output):
                              if "3" in user_output \
                               and "System.out.print" in user_answer:
                                 success = True
@@ -389,7 +389,7 @@ class JavaHookEvaluationTestCases(unittest.TestCase):
                              }}
                              """)
         hook = dedent("""
-                         def python_hook(user_answer, user_output):
+                         def check_answer(user_answer, user_output):
                              if "3" in user_output \
                               and "System.out.print" in user_answer:
                                 success = True

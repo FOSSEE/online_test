@@ -189,7 +189,7 @@ class BashHookEvaluationTestCases(unittest.TestCase):
                            """
                              )
         hook = dedent("""
-                         def python_hook(user_answer, user_output):
+                         def check_answer(user_answer, user_output):
                              if "3" in user_output and "echo" in user_answer:
                                 success = True
                                 err = "Correct answer"
@@ -218,7 +218,7 @@ class BashHookEvaluationTestCases(unittest.TestCase):
                            """
                              )
         hook = dedent("""
-                         def python_hook(user_answer, user_output):
+                         def check_answer(user_answer, user_output):
                              if "3" in user_output and "echo" in user_answer:
                                 success = True
                                 err = "Correct answer"
@@ -245,7 +245,7 @@ class BashHookEvaluationTestCases(unittest.TestCase):
         user_answer = ("#!/bin/bash\nwhile [ 1 ] ;"
                        " do echo "" > /dev/null ; done")
         hook = dedent("""
-                       def python_hook(user_answer, user_output):
+                       def check_answer(user_answer, user_output):
                            if int(user_output) == 3:
                                success = True
                                err = "Correct answer"
@@ -281,7 +281,7 @@ class BashHookEvaluationTestCases(unittest.TestCase):
                               """)
 
         hook = dedent("""
-                        def python_hook(user_answer, user_output):
+                        def check_answer(user_answer, user_output):
                             import re
                             with open("readme.txt") as f:
                                 content = bool(any("first commit")\

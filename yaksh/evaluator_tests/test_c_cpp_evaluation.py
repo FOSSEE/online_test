@@ -383,7 +383,7 @@ class CppHookEvaluationTestCases(unittest.TestCase):
                            """
                              )
         hook = dedent("""
-                         def python_hook(user_answer, user_output):
+                         def check_answer(user_answer, user_output):
                              if "3" in user_output \
                               and "printf" in user_answer:
                                 success = True
@@ -418,7 +418,7 @@ class CppHookEvaluationTestCases(unittest.TestCase):
                            """
                              )
         hook = dedent("""
-                         def python_hook(user_answer, user_output):
+                         def check_answer(user_answer, user_output):
                              if "3" in user_output \
                               and "printf" in user_answer:
                                 success = True
@@ -453,7 +453,7 @@ class CppHookEvaluationTestCases(unittest.TestCase):
                               }"""
                              )
         hook = dedent("""
-                         def python_hook(user_answer, user_output):
+                         def check_answer(user_answer, user_output):
                              if "3" in user_output \
                               and "printf" in user_answer:
                                 success = True

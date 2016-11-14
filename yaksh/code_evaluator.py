@@ -216,8 +216,8 @@ class CodeEvaluator(object):
         success = False
         try:
             _check_hook_code_answer = compile(hook_code, '<string>', mode='exec')
-            exec _check_hook_code_answer
-            success, err = python_hook(user_answer, user_output)
+            exec (_check_hook_code_answer, globals())
+            success, err = check_answer(user_answer, user_output)
         except Exception:
             msg = traceback.format_exc(limit=0)
             err = "Error in Hook: {0}".format(msg)

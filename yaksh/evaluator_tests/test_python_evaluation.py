@@ -517,18 +517,18 @@ class PythonHookEvaluationTestCases(unittest.TestCase):
 
         # Given
         user_answer = dedent("""
-                              print 1+2
+                              print (1+2)
                            """
                              )
         hook = dedent("""
-                       def python_hook(user_answer, user_output):
-                           if int(user_output) == 3 and "print" in user_answer:
-                               success = True
-                               err = "Correct answer"
-                           else:
-                               success = False
-                               err = "Incorrect answer"
-                           return success, err
+                        def check_answer(user_answer, user_output):
+                            if int(user_output) == 3 and "print" in user_answer:
+                                success = True
+                                err = "Correct answer"
+                            else:
+                                success = False
+                                err = "Incorrect answer"
+                            return success, err
                        """
                       )
         kwargs = {'user_answer': user_answer,
@@ -546,11 +546,11 @@ class PythonHookEvaluationTestCases(unittest.TestCase):
 
         # Given
         user_answer = dedent("""
-                              print 1+3
+                              print (1+3)
                            """
                              )
         hook = dedent("""
-                       def python_hook(user_answer, user_output):
+                       def check_answer(user_answer, user_output):
                            if int(user_output) == 3:
                                success = True
                                err = "Correct answer"
@@ -579,11 +579,11 @@ class PythonHookEvaluationTestCases(unittest.TestCase):
         # Given
         user_answer = dedent("""
                               while True:
-                                print "Loop"
+                                print ("Loop")
                            """
                              )
         hook = dedent("""
-                       def python_hook(user_answer, user_output):
+                       def check_answer(user_answer, user_output):
                            if int(user_output) == 3:
                                success = True
                                err = "Correct answer"
