@@ -308,7 +308,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         result = evaluator.evaluate(**kwargs)
 
         # Then
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertIn("Correct answer", result.get('error'))
         self.assertTrue(result.get('success'))
 
     def test_single_testcase_error(self):
@@ -519,7 +519,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         result = evaluator.evaluate(**kwargs)
 
         # Then
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_infinite_loop(self):

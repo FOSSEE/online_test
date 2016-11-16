@@ -40,7 +40,7 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get('success'))
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
 
     def test_error(self):
         user_answer = ("#!/bin/bash\n[[ $# -eq 2 ]] "
@@ -84,7 +84,7 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get("success"))
-        self.assertEqual(result.get("error"), "Correct answer")
+        self.assertEqual(result.get("error"), "Correct answer\n")
 
 class BashStdioEvaluationTestCases(unittest.TestCase):
     def setUp(self):
@@ -110,7 +110,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                     "test_case_data": test_case_data
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
@@ -132,7 +132,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                     "test_case_data": test_case_data
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -172,7 +172,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                     "test_case_data": test_case_data
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':

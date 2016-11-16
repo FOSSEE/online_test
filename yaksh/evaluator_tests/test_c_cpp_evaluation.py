@@ -37,7 +37,7 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
         }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get('success'))
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
 
     def test_incorrect_answer(self):
         user_answer = "int add(int a, int b)\n{return a-b;}"
@@ -102,7 +102,7 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
                 }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get('success'))
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
 
 class CppStdioEvaluationTestCases(unittest.TestCase):
     def setUp(self):
@@ -129,7 +129,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
@@ -152,7 +152,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_string_input(self):
@@ -173,7 +173,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -243,7 +243,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_cpp_correct_answer(self):
@@ -261,7 +261,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_cpp_array_input(self):
@@ -285,7 +285,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_cpp_string_input(self):
@@ -307,7 +307,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_cpp_incorrect_answer(self):
@@ -381,7 +381,7 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':

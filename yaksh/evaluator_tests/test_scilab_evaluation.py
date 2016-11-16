@@ -33,7 +33,7 @@ class ScilabEvaluationTestCases(unittest.TestCase):
                     'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_error(self):

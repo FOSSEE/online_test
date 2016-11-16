@@ -71,7 +71,7 @@ class TestCodeServer(unittest.TestCase):
         # Then
         data = json.loads(result)
         self.assertTrue(data['success'])
-        self.assertEqual(data['error'], 'Correct answer')
+        self.assertIn('Correct answer', data['error'])
 
     def test_wrong_answer(self):
         # Given
