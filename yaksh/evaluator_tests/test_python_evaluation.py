@@ -45,7 +45,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(result.get('success'))
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertIn("Correct answer", result.get('error'))
 
     def test_incorrect_answer(self):
         # Given
@@ -62,12 +62,42 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assertEqual(result.get('error'),
-                        ('AssertionError  in: assert(add(1,2)==3)\n'
-                         'AssertionError  in: assert(add(-1,2)==1)\n'
-                         'AssertionError  in: assert(add(-1,-2)==-3)\n'
-                        )
-            )
+        self.assertIn('AssertionError  in: assert(add(1,2)==3)',
+                        result.get('error')
+                      )
+        self.assertIn('AssertionError  in: assert(add(-1,2)==1)',
+                        result.get('error')
+                      )
+        self.assertIn('AssertionError  in: assert(add(-1,-2)==-3)',
+                        result.get('error')
+                      )
+
+    def test_partial_incorrect_answer(self):
+        # Given
+        user_answer = "def add(a,b):\n\treturn abs(a) + abs(b)"
+        test_case_data = [{"test_case": 'assert(add(-1,2)==1)', 'weight': 1.0},
+                               {"test_case":  'assert(add(-1,-2)==-3)', 'weight': 1.0},
+                               {"test_case": 'assert(add(1,2)==3)', 'weight': 2.0}
+                               ]
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': test_case_data,
+                  'file_paths': self.file_paths,
+                  'partial_grading': True
+                  }
+
+        # When
+        evaluator = PythonAssertionEvaluator()
+        result = evaluator.evaluate(**kwargs)
+
+        # Then
+        self.assertFalse(result.get('success'))
+        self.assertEqual(result.get('weight'), 2.0)
+        self.assertIn('AssertionError  in: assert(add(-1,2)==1)',
+                        result.get('error')
+                      )
+        self.assertIn('AssertionError  in: assert(add(-1,-2)==-3)',
+                        result.get('error')
+                      )
 
     def test_infinite_loop(self):
         # Given

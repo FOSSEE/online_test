@@ -124,10 +124,8 @@ class CodeEvaluator(object):
                 )
                 if test_case_success:
                     weight += test_case_weight
-                    error = err
-                else:
-                    error += err + "\n"
 
+                error += err + "\n"
                 test_case_success_status[idx] = test_case_success
 
             success = all(test_case_success_status)

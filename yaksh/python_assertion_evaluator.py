@@ -68,12 +68,13 @@ class PythonAssertionEvaluator(CodeEvaluator):
             info = traceback.extract_tb(tb)
             fname, lineno, func, text = info[-1]
             text = str(test_case).splitlines()[lineno-1]
-            err = "{0} {1} in: {2}".format(type.__name__, str(value), text)
+            err = ("-----\nExpected Test Case:\n{0}\n"
+                    "Error - {1} {2} in: {3}\n-----").format(test_case, type.__name__, str(value), text)
         except Exception:
             raise  # Exception will be caught in CodeEvaluator.
         else:
             success = True
-            err = 'Correct answer'
+            err = '-----\nCorrect answer\nTest Case: {0}\n-----'.format(test_case)
             test_case_weight = float(weight) if partial_grading else 0.0
         del tb
         return success, err, test_case_weight
