@@ -55,7 +55,12 @@ class CodeServerProxy(object):
 
         Returns
         -------
-        A json string of a dict: {success: success, err: error message}.
+        A json string of a dict containing: 
+        {"success": success, "weightage": weightage, "error": error message}
+
+        success - Boolean, indicating if code was executed successfully, correctly
+        weightage - Float, indicating total weightage of all successful test cases
+        error - String, error message if success is false
         """
 
         try:

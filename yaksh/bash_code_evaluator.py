@@ -49,9 +49,11 @@ class BashCodeEvaluator(CodeEvaluator):
 
         Returns (False, error_msg): If mandatory arguments are not files or if
         the required permissions are not given to the file(s).
-
         """
         ref_code_path = test_case
+        success = False
+        test_case_weightage = 0.0
+
         get_ref_path, get_test_case_path = ref_code_path.strip().split(',')
         get_ref_path = get_ref_path.strip()
         get_test_case_path = get_test_case_path.strip()
@@ -62,19 +64,16 @@ class BashCodeEvaluator(CodeEvaluator):
             self.files = copy_files(file_paths)
         if not isfile(clean_ref_code_path):
             msg = "No file at %s or Incorrect path" % clean_ref_code_path
-            return False, msg
+            return False, msg, 0.0
         if not isfile(self.submit_code_path):
             msg = "No file at %s or Incorrect path" % self.submit_code_path
-            return False, msg
+            return False, msg, 0.0
         if not os.access(clean_ref_code_path, os.X_OK):
             msg = "Script %s is not executable" % clean_ref_code_path
-            return False, msg
+            return False, msg, 0.0
         if not os.access(self.submit_code_path, os.X_OK):
             msg = "Script %s is not executable" % self.submit_code_path
-            return False, msg
-
-        success = False
-        test_case_weightage = 0.0
+            return False, msg, 0.0
 
         user_answer = user_answer.replace("\r", "")
         self.write_to_submit_code_file(self.submit_code_path, user_answer)
@@ -99,14 +98,14 @@ class BashCodeEvaluator(CodeEvaluator):
                 err = "Error: expected %s, got %s" % (inst_stderr,
                     stdnt_stderr
                 )
-                return False, err, test_case_weightage
+                return False, err, 0.0
         else:
             if not isfile(clean_test_case_path):
                 msg = "No test case at %s" % clean_test_case_path
-                return False, msg, test_case_weightage
+                return False, msg, 0.0
             if not os.access(clean_ref_code_path, os.R_OK):
                 msg = "Test script %s, not readable" % clean_test_case_path
-                return False, msg, test_case_weightage
+                return False, msg, 0.0
             # valid_answer is True, so that we can stop once a test case fails
             valid_answer = True
             # loop_count has to be greater than or equal to one.
@@ -143,4 +142,4 @@ class BashCodeEvaluator(CodeEvaluator):
                     " {0}, got {1}").format(inst_stdout+inst_stderr,
                         stdnt_stdout+stdnt_stderr
                     )
-                return False, err, test_case_weightage
+                return False, err, 0.0
