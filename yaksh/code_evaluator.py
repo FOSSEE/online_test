@@ -108,24 +108,29 @@ class CodeEvaluator(object):
         # Add a new signal handler for the execution of this code.
         prev_handler = create_signal_handler()
         success = False
+        test_case_success_status = [False] * len(test_case_data)
         error = ""
-        weight = 0
+        weight = 0.0
 
         # Do whatever testing needed.
         try:
-            for test_case in test_case_data:
-                success = False
+            for idx, test_case in enumerate(test_case_data):
+                test_case_success = False
                 self.compile_code(user_answer, file_paths, **test_case)
-                success, err, test_case_weight = self.check_code(user_answer,
+                test_case_success, err, test_case_weight = self.check_code(user_answer,
                     file_paths,
                     partial_grading,
                     **test_case
                 )
-                if success:
+                if test_case_success:
                     weight += test_case_weight
                     error = err
                 else:
                     error += err + "\n"
+
+                test_case_success_status[idx] = test_case_success
+
+            success = all(test_case_success_status)
 
         except TimeoutException:
             error = self.timeout_msg
