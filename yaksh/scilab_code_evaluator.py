@@ -26,7 +26,7 @@ class ScilabCodeEvaluator(CodeEvaluator):
             delete_files(self.files)
         super(ScilabCodeEvaluator, self).teardown()
 
-    def check_code(self, user_answer, file_paths, test_case):
+    def check_code(self, user_answer, file_paths, hook_code, test_case):
         self.files = []
         if file_paths:
             self.files = copy_files(file_paths)

@@ -26,6 +26,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             " your code.").format(SERVER_TIMEOUT)
         self.file_paths = None
 
+        self.hook_code = None
+
     def tearDown(self):
         os.remove('/tmp/test.txt')
         shutil.rmtree(self.in_dir)
@@ -35,7 +37,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         user_answer = "def add(a,b):\n\treturn a + b"
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'hook_code': self.hook_code
                   }
 
         # When
@@ -51,7 +54,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         user_answer = "def add(a,b):\n\treturn a - b"
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'hook_code': self.hook_code
                   }
 
         # When
@@ -69,7 +73,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'hook_code': self.hook_code
                   }
 
         # When
@@ -96,7 +101,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'hook_code': self.hook_code
                   }
 
         # When
@@ -125,7 +131,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'hook_code': self.hook_code
                   }
 
         # When
@@ -150,7 +157,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                           ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'hook_code': self.hook_code
                   }
 
         # When
@@ -176,7 +184,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                                ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'hook_code': self.hook_code
                   }
 
         # When
@@ -202,7 +211,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                           ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'hook_code': self.hook_code
                   }
 
         # When
@@ -231,7 +241,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                            ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'hook_code': self.hook_code
                   }
 
         # When
@@ -256,7 +267,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
             """)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'hook_code': self.hook_code
                   }
 
         # When
@@ -284,7 +296,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'hook_code': self.hook_code
                   }
 
         # When
@@ -317,7 +330,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                           ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'hook_code': self.hook_code
                   }
 
         # When
@@ -470,7 +484,6 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         kwargs = {'user_answer': user_answer,
                   'test_case_data': test_case_data
                   }
-
         # When
         evaluator = PythonStdioEvaluator()
         result = evaluator.evaluate(**kwargs)
@@ -478,6 +491,122 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         # Then
         self.assertEqual(result.get('error'), timeout_msg)
         self.assertFalse(result.get('success'))
+
+
+class PythonHookEvaluationTestCases(unittest.TestCase):
+
+    def setUp(self):
+        with open('/tmp/test.txt', 'wb') as f:
+            f.write('2'.encode('ascii'))
+        tmp_in_dir_path = tempfile.mkdtemp()
+        self.in_dir = tmp_in_dir_path
+        self.test_case_data = [{"expected_input": None,
+                                "expected_output": None
+                                }
+                               ]
+        self.timeout_msg = ("Code took more than {0} seconds to run. "
+                            "You probably have an infinite loop in"
+                            " your code.").format(SERVER_TIMEOUT)
+        self.file_paths = None
+
+    def tearDown(self):
+        os.remove('/tmp/test.txt')
+        shutil.rmtree(self.in_dir)
+
+    def test_correct_answer(self):
+
+        # Given
+        user_answer = dedent("""
+                              print (1+2)
+                           """
+                             )
+        hook = dedent("""
+                        def check_answer(user_answer, user_output):
+                            if int(user_output) == 3 and "print" in user_answer:
+                                success = True
+                                err = "Correct answer"
+                            else:
+                                success = False
+                                err = "Incorrect answer"
+                            return success, err
+                       """
+                      )
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data,
+                  'hook_code': hook}
+        # When
+        evaluator = PythonStdioEvaluator()
+        result = evaluator.evaluate(**kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
+        self.assertIn("Correct answer", result.get('error'))
+
+    def test_incorrect_answer(self):
+
+        # Given
+        user_answer = dedent("""
+                              print (1+3)
+                           """
+                             )
+        hook = dedent("""
+                       def check_answer(user_answer, user_output):
+                           if int(user_output) == 3:
+                               success = True
+                               err = "Correct answer"
+                           else:
+                               success = False
+                               err = '''Incorrect answer.
+                                        Expected output - {0},
+                                        Your output {1}'''\
+                                         .format(3,user_output)
+                           return success, err
+                       """
+                      )
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data,
+                  'hook_code': hook}
+        # When
+        evaluator = PythonStdioEvaluator()
+        result = evaluator.evaluate(**kwargs)
+
+        # Then
+        self.assertFalse(result.get('success'))
+        self.assertIn("Incorrect answer", result.get('error'))
+
+    def test_infinite_loop(self):
+
+        # Given
+        user_answer = dedent("""
+                              while True:
+                                print ("Loop")
+                           """
+                             )
+        hook = dedent("""
+                       def check_answer(user_answer, user_output):
+                           if int(user_output) == 3:
+                               success = True
+                               err = "Correct answer"
+                           else:
+                               success = False
+                               err = '''Incorrect answer.
+                                        Expected output - {0},
+                                        Your output {1}'''\
+                                         .format(3,user_output)
+                           return success, err
+                       """
+                      )
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data,
+                  'hook_code': hook}
+        # When
+        evaluator = PythonStdioEvaluator()
+        result = evaluator.evaluate(**kwargs)
+
+        # Then
+        self.assertFalse(result.get('success'))
+        self.assertEqual(result.get('error'), self.timeout_msg)
+
 
 if __name__ == '__main__':
     unittest.main()

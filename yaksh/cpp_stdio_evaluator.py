@@ -34,7 +34,8 @@ class CppStdioEvaluator(StdIOEvaluator):
                                                ref_output_path)
         return compile_command, compile_main
 
-    def compile_code(self, user_answer, file_paths, expected_input, expected_output):
+    def compile_code(self, user_answer, file_paths, hook_code,
+                     expected_input=None, expected_output=None):
 
         self.files = []
         if file_paths:
@@ -62,9 +63,11 @@ class CppStdioEvaluator(StdIOEvaluator):
                                                     )
         return self.compiled_user_answer, self.compiled_test_code
 
-    def check_code(self, user_answer, file_paths, expected_input, expected_output):
+    def check_code(self, user_answer, file_paths, hook_code,
+                   expected_input=None, expected_output=None):
         success = False
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
+
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
         if stdnt_stderr == '':
             proc, main_out, main_err = self.compiled_test_code
@@ -78,7 +81,8 @@ class CppStdioEvaluator(StdIOEvaluator):
                                         )
                 success, err = self.evaluate_stdio(user_answer, proc,
                                                    expected_input,
-                                                   expected_output
+                                                   expected_output,
+                                                   hook_code
                                                    )
                 os.remove(self.ref_output_path)
             else:

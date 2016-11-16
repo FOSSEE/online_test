@@ -30,7 +30,8 @@ class JavaStdioEvaluator(StdIOEvaluator):
         compile_command = 'javac {0}'.format(self.submit_code_path)
         return compile_command
 
-    def compile_code(self, user_answer, file_paths, expected_input, expected_output):
+    def compile_code(self, user_answer, file_paths, hook_code=None,
+                     expected_input=None, expected_output=None):
         self.files = []
         if not isfile(self.submit_code_path):
             msg = "No file at %s or Incorrect path" % self.submit_code_path
@@ -50,7 +51,8 @@ class JavaStdioEvaluator(StdIOEvaluator):
                                                       )
         return self.compiled_user_answer
 
-    def check_code(self, user_answer, file_paths, expected_input, expected_output):
+    def check_code(self, user_answer, file_paths, hook_code=None,
+                   expected_input=None, expected_output=None):
         success = False
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
@@ -63,7 +65,8 @@ class JavaStdioEvaluator(StdIOEvaluator):
                                     )
             success, err = self.evaluate_stdio(user_answer, proc,
                                                expected_input,
-                                               expected_output
+                                               expected_output,
+                                               hook_code
                                                )
             os.remove(self.user_output_path)
         else:

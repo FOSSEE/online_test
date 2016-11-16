@@ -37,8 +37,8 @@ class PythonStdioEvaluator(CodeEvaluator):
             delete_files(self.files)
         super(PythonStdioEvaluator, self).teardown()
 
-
-    def compile_code(self, user_answer, file_paths, expected_input, expected_output):
+    def compile_code(self, user_answer, file_paths, hook_code,
+                     expected_input=None, expected_output=None):
         self.files = []
         if file_paths:
             self.files = copy_files(file_paths)
@@ -54,24 +54,28 @@ class PythonStdioEvaluator(CodeEvaluator):
         self.output_value = output_buffer.getvalue().rstrip("\n")
         return self.output_value
 
-    def check_code(self, user_answer, file_paths, expected_input, expected_output):
+    def check_code(self, user_answer, file_paths, hook_code,
+                   expected_input=None, expected_output=None):
         success = False
-
         tb = None
-        if self.output_value == expected_output:
-            success = True
-            err = "Correct answer"
+
+        if hook_code:
+            success, err = self.evaluate_hook(user_answer, self.output_value, hook_code)
         else:
-            success = False
-            err = dedent("""
-                Incorrect answer:
-                Given input - {0}
-                Expected output - {1}
-                Your output - {2}
-                """
-                         .format(expected_input,
-                                 expected_output, self.output_value
-                                 )
-                         )
-        del tb
+            if self.output_value == expected_output:
+                success = True
+                err = "Correct answer"
+            else:
+                success = False
+                err = dedent("""
+                    Incorrect answer:
+                    Given input - {0}
+                    Expected output - {1}
+                    Your output - {2}
+                    """
+                             .format(expected_input,
+                                     expected_output, self.output_value
+                                     )
+                             )
+            del tb
         return success, err

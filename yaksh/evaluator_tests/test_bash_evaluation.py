@@ -13,7 +13,6 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         with open('/tmp/test.txt', 'wb') as f:
             f.write('2'.encode('ascii'))
-        tmp_in_dir_path = tempfile.mkdtemp()
         self.test_case_data = [
             {"test_case": "bash_files/sample.sh,bash_files/sample.args"}
         ]
@@ -23,6 +22,7 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
             "You probably have an infinite loop in your"
             " code.").format(SERVER_TIMEOUT)
         self.file_paths = None
+        self.hook_code = None
 
     def tearDown(self):
         os.remove('/tmp/test.txt')
@@ -35,7 +35,8 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
         get_class = BashCodeEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer, 
                     'test_case_data': self.test_case_data,
-                    'file_paths': self.file_paths
+                    'file_paths': self.file_paths,
+                    'hook_code': self.hook_code
                 }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get('success'))
@@ -47,7 +48,8 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
         get_class = BashCodeEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer, 
                     'test_case_data': self.test_case_data,
-                    'file_paths': self.file_paths
+                    'file_paths': self.file_paths,
+                    'hook_code': self.hook_code
                 }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
@@ -59,7 +61,8 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
         get_class = BashCodeEvaluator(self.in_dir)
         kwargs = {'user_answer': user_answer, 
                     'test_case_data': self.test_case_data,
-                    'file_paths': self.file_paths
+                    'file_paths': self.file_paths,
+                    'hook_code': self.hook_code
                 }
         result = get_class.evaluate(**kwargs)
         self.assertFalse(result.get("success"))
@@ -74,7 +77,8 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
         get_class = BashCodeEvaluator()
         kwargs = {'user_answer': user_answer,
                     'test_case_data': self.test_case_data,
-                    'file_paths': self.file_paths
+                    'file_paths': self.file_paths,
+                    'hook_code': self.hook_code
                 }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get("success"))
@@ -85,6 +89,8 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in your"
                             " code.").format(SERVER_TIMEOUT)
+        tmp_in_dir_path = tempfile.mkdtemp()
+        self.in_dir = tmp_in_dir_path
 
     def test_correct_answer(self):
         user_answer = dedent(""" #!/bin/bash
@@ -94,7 +100,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                              """
                              )
         test_case_data = [{'expected_output': '11', 'expected_input': '5\n6'}]
-        get_class = BashStdioEvaluator()
+        get_class = BashStdioEvaluator(self.in_dir)
         kwargs = {"user_answer": user_answer,
                   "test_case_data": test_case_data
                   }
@@ -114,7 +120,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
         test_case_data = [{'expected_output': '1 2 3\n4 5 6\n7 8 9\n',
                            'expected_input': '1,2,3\n4,5,6\n7,8,9'
                            }]
-        get_class = BashStdioEvaluator()
+        get_class = BashStdioEvaluator(self.in_dir)
         kwargs = {"user_answer": user_answer,
                   "test_case_data": test_case_data
                   }
@@ -130,7 +136,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                              """
                              )
         test_case_data = [{'expected_output': '11', 'expected_input': '5\n6'}]
-        get_class = BashStdioEvaluator()
+        get_class = BashStdioEvaluator(self.in_dir)
         kwargs = {"user_answer": user_answer,
                   "test_case_data": test_case_data
                   }
@@ -155,6 +161,170 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
         result = get_class.evaluate(**kwargs)
         self.assertEqual(result.get('error'), "Correct answer")
         self.assertTrue(result.get('success'))
+
+
+class BashHookEvaluationTestCases(unittest.TestCase):
+
+    def setUp(self):
+        with open('/tmp/test.txt', 'wb') as f:
+            f.write('2'.encode('ascii'))
+        tmp_in_dir_path = tempfile.mkdtemp()
+        self.in_dir = tmp_in_dir_path
+        self.test_case_data = [{"expected_input": None,
+                                "expected_output": None
+                                }
+                               ]
+        self.timeout_msg = ("Code took more than {0} seconds to run. "
+                            "You probably have an infinite loop in"
+                            " your code.").format(SERVER_TIMEOUT)
+        self.file_paths = None
+
+    def tearDown(self):
+        os.remove('/tmp/test.txt')
+        shutil.rmtree(self.in_dir)
+
+    def test_correct_answer(self):
+
+        # Given
+        user_answer = dedent("""
+                              echo $((1+2))
+                           """
+                             )
+        hook = dedent("""
+                         def check_answer(user_answer, user_output):
+                             if "3" in user_output and "echo" in user_answer:
+                                success = True
+                                err = "Correct answer"
+                             else:
+                                success = False
+                                err = "Incorrect answer"
+                             return success, err
+                       """
+                      )
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data,
+                  'hook_code': hook}
+        # When
+        evaluator = BashStdioEvaluator(self.in_dir)
+        result = evaluator.evaluate(**kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
+        self.assertIn("Correct answer", result.get('error'))
+
+    def test_incorrect_answer(self):
+
+        # Given
+        user_answer = dedent("""
+                              echo $((1+3))
+                           """
+                             )
+        hook = dedent("""
+                         def check_answer(user_answer, user_output):
+                             if "3" in user_output and "echo" in user_answer:
+                                success = True
+                                err = "Correct answer"
+                             else:
+                                success = False
+                                err = "Incorrect answer"
+                             return success, err
+                       """
+                      )
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data,
+                  'hook_code': hook}
+        # When
+        evaluator = BashStdioEvaluator(self.in_dir)
+        result = evaluator.evaluate(**kwargs)
+
+        # Then
+        self.assertFalse(result.get('success'))
+        self.assertIn("Incorrect answer", result.get('error'))
+
+    def test_infinite_loop(self):
+
+        # Given
+        user_answer = ("#!/bin/bash\nwhile [ 1 ] ;"
+                       " do echo "" > /dev/null ; done")
+        hook = dedent("""
+                       def check_answer(user_answer, user_output):
+                           if int(user_output) == 3:
+                               success = True
+                               err = "Correct answer"
+                           else:
+                               success = False
+                               err = '''Incorrect answer.
+                                        Expected output - {0},
+                                        Your output {1}'''\
+                                         .format(3,user_output)
+                           return success, err
+                       """
+                      )
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data,
+                  'hook_code': hook}
+        # When
+        evaluator = BashStdioEvaluator(self.in_dir)
+        result = evaluator.evaluate(**kwargs)
+
+        # Then
+        self.assertFalse(result.get('success'))
+        self.assertEqual(result.get('error'), self.timeout_msg)
+
+    def test_git_question(self):
+
+        # Given
+        user_answer = dedent("""
+                              mkdir tmp_git
+                              cd tmp_git
+                              touch readme.txt
+                              git init
+                              git add readme.txt
+                              echo first commit >> readme.txt
+                              git commit -m "first commit" readme.txt
+                              """)
+
+        hook = dedent("""
+                        from subprocess import PIPE, Popen
+                        def check_answer(user_answer, user_output):
+                            with open("tmp_git/readme.txt") as f:
+                                content = bool(any("first commit")\
+                                          in lines for lines in f.readlines())
+
+                            keywords = ["init", "commit", "add"]
+                            ans_check = bool(all(words in user_answer\
+                                                 for words in keywords))
+                            check_init = bool("Initialized empty Git repository"\
+                                             in user_output)
+                            commit_log = Popen('''git -C tmp_git log --pretty=oneline
+                                                  --reverse | tail -1''',
+                                                shell=True, stdin=PIPE, stdout=PIPE,
+                                                stderr=PIPE)
+                            output_log, output_err = commit_log.communicate()
+                            check_log = bool("first commit" in output_log.decode("utf-8"))
+                            if all([content, check_init, ans_check, check_log]):
+                                success = True
+                                err = "Correct answer"
+                            else:
+                                success = False
+                                err = '''Incorrect answer.
+                                         Your answer is {0}
+                                         '''\
+                                          .format(user_output)
+                            return success, err
+                       """
+                      )
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': self.test_case_data,
+                  'hook_code': hook}
+        # When
+        evaluator = BashStdioEvaluator(self.in_dir)
+        result = evaluator.evaluate(**kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
+        self.assertIn("Correct answer", result.get('error'))
+
 
 if __name__ == '__main__':
     unittest.main()
