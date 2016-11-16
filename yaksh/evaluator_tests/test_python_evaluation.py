@@ -17,9 +17,9 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
         self.in_dir = tmp_in_dir_path
-        self.test_case_data = [{"test_case": 'assert(add(1,2)==3)', 'weightage': 0.0},
-                               {"test_case": 'assert(add(-1,2)==1)', 'weightage': 0.0},
-                               {"test_case":  'assert(add(-1,-2)==-3)', 'weightage': 0.0},
+        self.test_case_data = [{"test_case": 'assert(add(1,2)==3)', 'weight': 0.0},
+                               {"test_case": 'assert(add(-1,2)==1)', 'weight': 0.0},
+                               {"test_case":  'assert(add(-1,-2)==-3)', 'weight': 0.0},
                                ]
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in"
@@ -260,7 +260,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
     def test_file_based_assert(self):
         # Given
-        self.test_case_data = [{"test_case": "assert(ans()=='2')", "weightage": 0.0}]
+        self.test_case_data = [{"test_case": "assert(ans()=='2')", "weight": 0.0}]
         self.file_paths = [('/tmp/test.txt', False)]
         user_answer = dedent("""
             def ans():
@@ -287,7 +287,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         user_answer = "def palindrome(a):\n\treturn a == a[::-1]"
         test_case_data = [{"test_case": 's="abbb"\nasert palindrome(s)==False',
-                             "weightage": 0.0
+                             "weight": 0.0
                             }
                           ]
         syntax_error_msg = ["Traceback",
@@ -322,10 +322,10 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         # Given
         user_answer = "def palindrome(a):\n\treturn a == a[::-1]"
         test_case_data = [{"test_case": 'assert(palindrome("abba")==True)',
-                             "weightage": 0.0
+                             "weight": 0.0
                             },
                           {"test_case": 's="abbb"\nassert palindrome(S)==False',
-                             "weightage": 0.0
+                             "weight": 0.0
                             }
                           ]
         name_error_msg = ["Traceback",
@@ -364,7 +364,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         # Given
         self.test_case_data = [{"expected_input": "1\n2",
                                 "expected_output": "3",
-                                "weightage": 0.0
+                                "weight": 0.0
                                 }]
         user_answer = dedent("""
                                 a = int(input())
@@ -389,7 +389,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         # Given
         self.test_case_data = [{"expected_input": "1,2,3\n5,6,7",
                                 "expected_output": "[1, 2, 3, 5, 6, 7]",
-                                "weightage": 0.0
+                                "weight": 0.0
                                 }]
         user_answer = dedent("""
                                 from six.moves import input
@@ -417,7 +417,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         # Given
         self.test_case_data = [{"expected_input": ("the quick brown fox jumps over the lazy dog\nthe"),
                                 "expected_output": "2",
-                                "weightage": 0.0
+                                "weight": 0.0
                                 }]
         user_answer = dedent("""
                                 from six.moves import input
@@ -443,7 +443,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         # Given
         self.test_case_data = [{"expected_input": "1\n2",
                                 "expected_output": "3",
-                                "weightage": 0.0
+                                "weight": 0.0
                                 }]
         user_answer = dedent("""
                                 a = int(input())
@@ -468,7 +468,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         # Given
         self.test_case_data = [{"expected_input": "",
                                 "expected_output": "2",
-                                "weightage": 0.0
+                                "weight": 0.0
                                 }]
         self.file_paths = [('/tmp/test.txt', False)]
 
@@ -496,7 +496,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         # Given
         test_case_data = [{"expected_input": "1\n2",
                             "expected_output": "3",
-                            "weightage": 0.0
+                            "weight": 0.0
                             }]
         timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in"

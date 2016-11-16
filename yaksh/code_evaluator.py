@@ -82,14 +82,14 @@ class CodeEvaluator(object):
         Returns
         -------
 
-        A tuple: (success, error message, weightage).
+        A tuple: (success, error message, weight).
         """
 
         self.setup()
-        success, error, weightage = self.safe_evaluate(**kwargs)
+        success, error, weight = self.safe_evaluate(**kwargs)
         self.teardown()
 
-        result = {'success': success, 'error': error, 'weightage': weightage}
+        result = {'success': success, 'error': error, 'weight': weight}
         return result
 
     # Private Protocol ##########
@@ -109,20 +109,20 @@ class CodeEvaluator(object):
         prev_handler = create_signal_handler()
         success = False
         error = ""
-        weightage = 0
+        weight = 0
 
         # Do whatever testing needed.
         try:
             for test_case in test_case_data:
                 success = False
                 self.compile_code(user_answer, file_paths, **test_case)
-                success, err, test_case_weightage = self.check_code(user_answer,
+                success, err, test_case_weight = self.check_code(user_answer,
                     file_paths,
                     partial_grading,
                     **test_case
                 )
                 if success:
-                    weightage += test_case_weightage
+                    weight += test_case_weight
                     error = err
                 else:
                     error += err + "\n"
@@ -142,7 +142,7 @@ class CodeEvaluator(object):
             # Set back any original signal handler.
             set_original_signal_handler(prev_handler)
 
-        return success, error, weightage
+        return success, error, weight
 
     def teardown(self):
         # Cancel the signal

@@ -47,7 +47,7 @@ class JavaCodeEvaluator(CodeEvaluator):
         output_path = "{0}{1}.class".format(directory, file_name)
         return output_path
 
-    def compile_code(self, user_answer, file_paths, test_case, weightage):
+    def compile_code(self, user_answer, file_paths, test_case, weight):
         if self.compiled_user_answer and self.compiled_test_code:
             return None
         else:
@@ -96,7 +96,7 @@ class JavaCodeEvaluator(CodeEvaluator):
 
             return self.compiled_user_answer, self.compiled_test_code
 
-    def check_code(self, user_answer, file_paths, partial_grading, test_case, weightage):
+    def check_code(self, user_answer, file_paths, partial_grading, test_case, weight):
         """ Function validates student code using instructor code as
         reference.The first argument ref_code_path, is the path to
         instructor code, it is assumed to have executable permission.
@@ -117,7 +117,7 @@ class JavaCodeEvaluator(CodeEvaluator):
 
         """
         success = False
-        test_case_weightage = 0.0
+        test_case_weight = 0.0
 
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
@@ -136,7 +136,7 @@ class JavaCodeEvaluator(CodeEvaluator):
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
                     success, err = True, "Correct answer"
-                    test_case_weightage = float(weightage) if partial_grading else 0.0
+                    test_case_weight = float(weight) if partial_grading else 0.0
                 else:
                     err = stdout + "\n" + stderr
             else:
@@ -161,4 +161,4 @@ class JavaCodeEvaluator(CodeEvaluator):
                         err = err + "\n" + e
             except:
                 err = err + "\n" + stdnt_stderr
-        return success, err, test_case_weightage
+        return success, err, test_case_weight

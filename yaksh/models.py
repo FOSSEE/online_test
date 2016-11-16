@@ -325,12 +325,12 @@ class Question(models.Model):
 
         return test_case
 
-    def get_maximum_test_case_weightage(self, **kwargs):
-        max_weightage = 0.0
+    def get_maximum_test_case_weight(self, **kwargs):
+        max_weight = 0.0
         for test_case in self.get_test_cases():
-            max_weightage += test_case.weightage
+            max_weight += test_case.weight
 
-        return max_weightage
+        return max_weight
 
     def _add_and_get_files(self, zip_file):
         files = FileUpload.objects.filter(question=self)
@@ -1036,7 +1036,7 @@ class AnswerPaper(models.Model):
             For code questions success is True only if the answer is correct.
         """
 
-        result = {'success': True, 'error': 'Incorrect answer', 'weightage': 0.0}
+        result = {'success': True, 'error': 'Incorrect answer', 'weight': 0.0}
         correct = False
         if user_answer is not None:
             if question.type == 'mcq':
@@ -1087,12 +1087,12 @@ class AnswerPaper(models.Model):
         user_answer.correct = correct
         user_answer.error = result.get('error')
         if correct:
-            user_answer.marks = (question.points * result['weightage'] / 
-                question.get_maximum_test_case_weightage()) \
+            user_answer.marks = (question.points * result['weight'] / 
+                question.get_maximum_test_case_weight()) \
                 if question.partial_grading and question.type == 'code' else question.points
         else:
-            user_answer.marks = (question.points * result['weightage'] / 
-                question.get_maximum_test_case_weightage()) \
+            user_answer.marks = (question.points * result['weight'] / 
+                question.get_maximum_test_case_weight()) \
                 if question.partial_grading and question.type == 'code' else 0
         user_answer.save()
         self.update_marks('completed')
@@ -1118,11 +1118,11 @@ class TestCase(models.Model):
 
 class StandardTestCase(TestCase):
     test_case = models.TextField(blank=True)
-    weightage = models.FloatField(default=0.0)
+    weight = models.FloatField(default=0.0)
 
     def get_field_value(self):
         return {"test_case": self.test_case,
-                "weightage": self.weightage}
+                "weight": self.weight}
 
     def __str__(self):
         return u'Question: {0} | Test Case: {1}'.format(self.question,
@@ -1133,12 +1133,12 @@ class StandardTestCase(TestCase):
 class StdioBasedTestCase(TestCase):
     expected_input = models.TextField(blank=True)
     expected_output = models.TextField()
-    weightage = models.IntegerField(default=0.0)
+    weight = models.IntegerField(default=0.0)
 
     def get_field_value(self):
         return {"expected_output": self.expected_output,
                "expected_input": self.expected_input,
-               "weightage": self.weightage}
+               "weight": self.weight}
 
     def __str__(self):
         return u'Question: {0} | Exp. Output: {1} | Exp. Input: {2}'.format(self.question,

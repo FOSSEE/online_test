@@ -15,7 +15,7 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
             f.write('2'.encode('ascii'))
         self.test_case_data = [
             {"test_case": "bash_files/sample.sh,bash_files/sample.args",
-                "weightage": 0.0
+                "weight": 0.0
             }
         ]
         self.in_dir = tempfile.mkdtemp()
@@ -72,7 +72,7 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
         self.file_paths = [('/tmp/test.txt', False)]
         self.test_case_data = [
             {"test_case": "bash_files/sample1.sh,bash_files/sample1.args",
-                "weightage": 0.0
+                "weight": 0.0
             }
         ]
         user_answer = ("#!/bin/bash\ncat $1")
@@ -102,7 +102,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                              )
         test_case_data = [{'expected_output': '11',
             'expected_input': '5\n6',
-            'weightage': 0.0
+            'weight': 0.0
             }]
         get_class = BashStdioEvaluator()
         kwargs = {"user_answer": user_answer,
@@ -124,7 +124,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                              )
         test_case_data = [{'expected_output': '1 2 3\n4 5 6\n7 8 9\n',
                            'expected_input': '1,2,3\n4,5,6\n7,8,9',
-                           'weightage': 0.0
+                           'weight': 0.0
                            }]
         get_class = BashStdioEvaluator()
         kwargs = {"user_answer": user_answer,
@@ -144,7 +144,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                              )
         test_case_data = [{'expected_output': '11',
             'expected_input': '5\n6',
-            'weightage': 0.0
+            'weight': 0.0
             }]
         get_class = BashStdioEvaluator()
         kwargs = {"user_answer": user_answer,
@@ -164,7 +164,7 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                              )
         test_case_data = [{'expected_output': '10',
                            'expected_input': '',
-                           'weightage': 0.0
+                           'weight': 0.0
                            }]
         get_class = BashStdioEvaluator()
         kwargs = {"user_answer": user_answer,

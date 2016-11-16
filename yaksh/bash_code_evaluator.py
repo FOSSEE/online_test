@@ -28,7 +28,7 @@ class BashCodeEvaluator(CodeEvaluator):
             delete_files(self.files)
         super(BashCodeEvaluator, self).teardown()
 
-    def check_code(self, user_answer, file_paths, partial_grading, test_case, weightage):
+    def check_code(self, user_answer, file_paths, partial_grading, test_case, weight):
         """ Function validates student script using instructor script as
         reference. Test cases can optionally be provided.  The first argument
         ref_path, is the path to instructor script, it is assumed to
@@ -52,7 +52,7 @@ class BashCodeEvaluator(CodeEvaluator):
         """
         ref_code_path = test_case
         success = False
-        test_case_weightage = 0.0
+        test_case_weight = 0.0
 
         get_ref_path, get_test_case_path = ref_code_path.strip().split(',')
         get_ref_path = get_ref_path.strip()
@@ -92,8 +92,8 @@ class BashCodeEvaluator(CodeEvaluator):
             )
             proc, stdnt_stdout, stdnt_stderr = ret
             if inst_stdout == stdnt_stdout:
-                test_case_weightage = float(weightage) if partial_grading else 0.0
-                return True, "Correct answer", test_case_weightage
+                test_case_weight = float(weight) if partial_grading else 0.0
+                return True, "Correct answer", test_case_weight
             else:
                 err = "Error: expected %s, got %s" % (inst_stderr,
                     stdnt_stderr
@@ -135,8 +135,8 @@ class BashCodeEvaluator(CodeEvaluator):
                     proc, stdnt_stdout, stdnt_stderr = ret
                     valid_answer = inst_stdout == stdnt_stdout
             if valid_answer and (num_lines == loop_count):
-                test_case_weightage = float(weightage) if partial_grading else 0.0
-                return True, "Correct answer", test_case_weightage
+                test_case_weight = float(weight) if partial_grading else 0.0
+                return True, "Correct answer", test_case_weight
             else:
                 err = ("Error:expected"
                     " {0}, got {1}").format(inst_stdout+inst_stderr,

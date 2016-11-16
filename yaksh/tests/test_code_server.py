@@ -40,7 +40,7 @@ class TestCodeServer(unittest.TestCase):
         testdata = {'user_answer': 'while True: pass',
                     'partial_grading': False,
                     'test_case_data': [{'test_case':'assert 1==2', 
-                        'weightage': 0.0
+                        'weight': 0.0
                         }
                     ]}
 
@@ -59,7 +59,7 @@ class TestCodeServer(unittest.TestCase):
         testdata = {'user_answer': 'def f(): return 1',
                     'partial_grading': False,
                     'test_case_data': [{'test_case':'assert f() == 1',
-                        'weightage': 0.0
+                        'weight': 0.0
                         }
                     ]}
 
@@ -78,7 +78,7 @@ class TestCodeServer(unittest.TestCase):
         testdata = {'user_answer': 'def f(): return 1',
                     'partial_grading': False,
                     'test_case_data': [{'test_case':'assert f() == 2',
-                        'weightage': 0.0
+                        'weight': 0.0
                         }
                     ]}
 
@@ -101,7 +101,7 @@ class TestCodeServer(unittest.TestCase):
             testdata = {'user_answer': 'while True: pass',
                         'partial_grading': False,
                         'test_case_data': [{'test_case':'assert 1==2',
-                            'weightage': 0.0
+                            'weight': 0.0
                             }
                         ]}
             result = self.code_server.run_code(
