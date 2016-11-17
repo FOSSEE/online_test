@@ -17,9 +17,9 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
         self.in_dir = tmp_in_dir_path
-        self.test_case_data = [{"test_case": 'assert(add(1,2)==3)'},
-                               {"test_case": 'assert(add(-1,2)==1)'},
-                               {"test_case":  'assert(add(-1,-2)==-3)'},
+        self.test_case_data = [{"test_case": 'assert(add(1,2)==3)', 'weight': 0.0},
+                               {"test_case": 'assert(add(-1,2)==1)', 'weight': 0.0},
+                               {"test_case":  'assert(add(-1,-2)==-3)', 'weight': 0.0},
                                ]
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in"
@@ -35,7 +35,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         user_answer = "def add(a,b):\n\treturn a + b"
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'partial_grading': False
                   }
 
         # When
@@ -44,14 +45,15 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(result.get('success'))
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertIn("Correct answer", result.get('error'))
 
     def test_incorrect_answer(self):
         # Given
         user_answer = "def add(a,b):\n\treturn a - b"
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'partial_grading': False
                   }
 
         # When
@@ -60,16 +62,50 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assertEqual(result.get('error'),
-                         "AssertionError  in: assert(add(1,2)==3)"
-                         )
+        self.assertIn('AssertionError  in: assert(add(1,2)==3)',
+                        result.get('error')
+                      )
+        self.assertIn('AssertionError  in: assert(add(-1,2)==1)',
+                        result.get('error')
+                      )
+        self.assertIn('AssertionError  in: assert(add(-1,-2)==-3)',
+                        result.get('error')
+                      )
+
+    def test_partial_incorrect_answer(self):
+        # Given
+        user_answer = "def add(a,b):\n\treturn abs(a) + abs(b)"
+        test_case_data = [{"test_case": 'assert(add(-1,2)==1)', 'weight': 1.0},
+                               {"test_case":  'assert(add(-1,-2)==-3)', 'weight': 1.0},
+                               {"test_case": 'assert(add(1,2)==3)', 'weight': 2.0}
+                               ]
+        kwargs = {'user_answer': user_answer,
+                  'test_case_data': test_case_data,
+                  'file_paths': self.file_paths,
+                  'partial_grading': True
+                  }
+
+        # When
+        evaluator = PythonAssertionEvaluator()
+        result = evaluator.evaluate(**kwargs)
+
+        # Then
+        self.assertFalse(result.get('success'))
+        self.assertEqual(result.get('weight'), 2.0)
+        self.assertIn('AssertionError  in: assert(add(-1,2)==1)',
+                        result.get('error')
+                      )
+        self.assertIn('AssertionError  in: assert(add(-1,-2)==-3)',
+                        result.get('error')
+                      )
 
     def test_infinite_loop(self):
         # Given
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'partial_grading': False
                   }
 
         # When
@@ -96,7 +132,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'partial_grading': False
                   }
 
         # When
@@ -125,7 +162,9 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'partial_grading': False
+
                   }
 
         # When
@@ -150,7 +189,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                           ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'partial_grading': False
                   }
 
         # When
@@ -176,7 +216,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                                ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'partial_grading': False
                   }
 
         # When
@@ -202,7 +243,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                           ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'partial_grading': False
                   }
 
         # When
@@ -231,7 +273,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                            ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'partial_grading': False
                   }
 
         # When
@@ -247,7 +290,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
     def test_file_based_assert(self):
         # Given
-        self.test_case_data = [{"test_case": "assert(ans()=='2')"}]
+        self.test_case_data = [{"test_case": "assert(ans()=='2')", "weight": 0.0}]
         self.file_paths = [('/tmp/test.txt', False)]
         user_answer = dedent("""
             def ans():
@@ -256,7 +299,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
             """)
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'partial_grading': False
                   }
 
         # When
@@ -264,7 +308,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         result = evaluator.evaluate(**kwargs)
 
         # Then
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertIn("Correct answer", result.get('error'))
         self.assertTrue(result.get('success'))
 
     def test_single_testcase_error(self):
@@ -272,7 +316,9 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         """ Tests the user answer with just an incorrect test case """
 
         user_answer = "def palindrome(a):\n\treturn a == a[::-1]"
-        test_case_data = [{"test_case": 's="abbb"\nasert palindrome(s)==False'}
+        test_case_data = [{"test_case": 's="abbb"\nasert palindrome(s)==False',
+                             "weight": 0.0
+                            }
                           ]
         syntax_error_msg = ["Traceback",
                             "call",
@@ -284,7 +330,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'partial_grading': False
                   }
 
         # When
@@ -304,8 +351,12 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
          first and then with an incorrect test case """
         # Given
         user_answer = "def palindrome(a):\n\treturn a == a[::-1]"
-        test_case_data = [{"test_case": 'assert(palindrome("abba")==True)'},
-                          {"test_case": 's="abbb"\nassert palindrome(S)==False'}
+        test_case_data = [{"test_case": 'assert(palindrome("abba")==True)',
+                             "weight": 0.0
+                            },
+                          {"test_case": 's="abbb"\nassert palindrome(S)==False',
+                             "weight": 0.0
+                            }
                           ]
         name_error_msg = ["Traceback",
                           "call",
@@ -317,7 +368,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                           ]
         kwargs = {'user_answer': user_answer,
                   'test_case_data': test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'partial_grading': False
                   }
 
         # When
@@ -341,7 +393,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
     def test_correct_answer_integer(self):
         # Given
         self.test_case_data = [{"expected_input": "1\n2",
-                                "expected_output": "3"
+                                "expected_output": "3",
+                                "weight": 0.0
                                 }]
         user_answer = dedent("""
                                 a = int(input())
@@ -350,7 +403,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                              """
                              )
         kwargs = {'user_answer': user_answer,
-                  'test_case_data': self.test_case_data
+                  'test_case_data': self.test_case_data,
+                  'partial_grading': False
                   }
 
         # When
@@ -364,7 +418,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
     def test_correct_answer_list(self):
         # Given
         self.test_case_data = [{"expected_input": "1,2,3\n5,6,7",
-                                "expected_output": "[1, 2, 3, 5, 6, 7]"
+                                "expected_output": "[1, 2, 3, 5, 6, 7]",
+                                "weight": 0.0
                                 }]
         user_answer = dedent("""
                                 from six.moves import input
@@ -376,7 +431,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                              """
                              )
         kwargs = {'user_answer': user_answer,
-                  'test_case_data': self.test_case_data
+                  'test_case_data': self.test_case_data,
+                  'partial_grading': False
                   }
 
         # When
@@ -390,7 +446,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
     def test_correct_answer_string(self):
         # Given
         self.test_case_data = [{"expected_input": ("the quick brown fox jumps over the lazy dog\nthe"),
-                                "expected_output": "2"
+                                "expected_output": "2",
+                                "weight": 0.0
                                 }]
         user_answer = dedent("""
                                 from six.moves import input
@@ -400,7 +457,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                              """
                              )
         kwargs = {'user_answer': user_answer,
-                  'test_case_data': self.test_case_data
+                  'test_case_data': self.test_case_data,
+                  'partial_grading': False
                   }
 
         # When
@@ -414,7 +472,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
     def test_incorrect_answer_integer(self):
         # Given
         self.test_case_data = [{"expected_input": "1\n2",
-                                "expected_output": "3"
+                                "expected_output": "3",
+                                "weight": 0.0
                                 }]
         user_answer = dedent("""
                                 a = int(input())
@@ -424,6 +483,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                              )
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
+                  'partial_grading': False
                   }
 
         # When
@@ -436,7 +496,10 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
 
     def test_file_based_answer(self):
         # Given
-        self.test_case_data = [{"expected_input": "", "expected_output": "2"}]
+        self.test_case_data = [{"expected_input": "",
+                                "expected_output": "2",
+                                "weight": 0.0
+                                }]
         self.file_paths = [('/tmp/test.txt', False)]
 
         user_answer = dedent("""
@@ -447,7 +510,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                              )
         kwargs = {'user_answer': user_answer,
                   'test_case_data': self.test_case_data,
-                  'file_paths': self.file_paths
+                  'file_paths': self.file_paths,
+                  'partial_grading': False
                   }
 
         # When
@@ -455,20 +519,22 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         result = evaluator.evaluate(**kwargs)
 
         # Then
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_infinite_loop(self):
         # Given
         test_case_data = [{"expected_input": "1\n2",
-                                "expected_output": "3"
-                                }]
+                            "expected_output": "3",
+                            "weight": 0.0
+                            }]
         timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in"
                             " your code.").format(SERVER_TIMEOUT)
         user_answer = "while True:\n\tpass"
         kwargs = {'user_answer': user_answer,
-                  'test_case_data': test_case_data
+                  'test_case_data': test_case_data,
+                  'partial_grading': False
                   }
 
         # When

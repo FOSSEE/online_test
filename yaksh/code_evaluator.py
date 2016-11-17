@@ -82,14 +82,14 @@ class CodeEvaluator(object):
         Returns
         -------
 
-        A tuple: (success, error message).
+        A tuple: (success, error message, weight).
         """
 
         self.setup()
-        success, err = self.safe_evaluate(**kwargs)
+        success, error, weight = self.safe_evaluate(**kwargs)
         self.teardown()
 
-        result = {'success': success, 'error': err}
+        result = {'success': success, 'error': error, 'weight': weight}
         return result
 
     # Private Protocol ##########
@@ -99,7 +99,7 @@ class CodeEvaluator(object):
                 os.makedirs(self.in_dir)
         self._change_dir(self.in_dir)
 
-    def safe_evaluate(self, user_answer, test_case_data, file_paths=None):
+    def safe_evaluate(self, user_answer, partial_grading, test_case_data, file_paths=None):
         """
         Handles code evaluation along with compilation, signal handling
         and Exception handling
@@ -108,32 +108,44 @@ class CodeEvaluator(object):
         # Add a new signal handler for the execution of this code.
         prev_handler = create_signal_handler()
         success = False
+        test_case_success_status = [False] * len(test_case_data)
+        error = ""
+        weight = 0.0
 
         # Do whatever testing needed.
         try:
-            for test_case in test_case_data:
-                success = False
+            for idx, test_case in enumerate(test_case_data):
+                test_case_success = False
                 self.compile_code(user_answer, file_paths, **test_case)
-                success, err = self.check_code(user_answer, file_paths, **test_case)
-                if not success:
-                    break
+                test_case_success, err, test_case_weight = self.check_code(user_answer,
+                    file_paths,
+                    partial_grading,
+                    **test_case
+                )
+                if test_case_success:
+                    weight += test_case_weight
+
+                error += err + "\n"
+                test_case_success_status[idx] = test_case_success
+
+            success = all(test_case_success_status)
 
         except TimeoutException:
-            err = self.timeout_msg
+            error = self.timeout_msg
         except OSError:
             msg = traceback.format_exc(limit=0)
-            err = "Error: {0}".format(msg)
+            error = "Error: {0}".format(msg)
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
             if len(tb_list) > 2:
                 del tb_list[1:3]
-            err = "Error: {0}".format("".join(tb_list))
+            error = "Error: {0}".format("".join(tb_list))
         finally:
             # Set back any original signal handler.
             set_original_signal_handler(prev_handler)
 
-        return success, err
+        return success, error, weight
 
     def teardown(self):
         # Cancel the signal

@@ -55,14 +55,21 @@ class CodeServerProxy(object):
 
         Returns
         -------
-        A json string of a dict: {success: success, err: error message}.
+        A json string of a dict containing: 
+        {"success": success, "weight": weight, "error": error message}
+
+        success - Boolean, indicating if code was executed successfully, correctly
+        weight - Float, indicating total weight of all successful test cases
+        error - String, error message if success is false
         """
 
         try:
             server = self._get_server()
             result = server.check_code(language, test_case_type, json_data, user_dir)
         except ConnectionError:
-            result = json.dumps({'success': False, 'error': 'Unable to connect to any code servers!'})
+            result = json.dumps({'success': False,
+                'weight': 0.0,
+                'error': 'Unable to connect to any code servers!'})
         return result
 
     def _get_server(self):

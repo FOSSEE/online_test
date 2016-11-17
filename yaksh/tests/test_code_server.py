@@ -35,10 +35,14 @@ class TestCodeServer(unittest.TestCase):
     def setUp(self):
         self.code_server = CodeServerProxy()
 
-    def test_inifinite_loop(self):
+    def test_infinite_loop(self):
         # Given
         testdata = {'user_answer': 'while True: pass',
-                    'test_case_data': [{'test_case':'assert 1==2'}]}
+                    'partial_grading': False,
+                    'test_case_data': [{'test_case':'assert 1==2', 
+                        'weight': 0.0
+                        }
+                    ]}
 
         # When
         result = self.code_server.run_code(
@@ -53,7 +57,11 @@ class TestCodeServer(unittest.TestCase):
     def test_correct_answer(self):
         # Given
         testdata = {'user_answer': 'def f(): return 1',
-                    'test_case_data': [{'test_case':'assert f() == 1'}]}
+                    'partial_grading': False,
+                    'test_case_data': [{'test_case':'assert f() == 1',
+                        'weight': 0.0
+                        }
+                    ]}
 
         # When
         result = self.code_server.run_code(
@@ -63,12 +71,16 @@ class TestCodeServer(unittest.TestCase):
         # Then
         data = json.loads(result)
         self.assertTrue(data['success'])
-        self.assertEqual(data['error'], 'Correct answer')
+        self.assertIn('Correct answer', data['error'])
 
     def test_wrong_answer(self):
         # Given
         testdata = {'user_answer': 'def f(): return 1',
-                    'test_case_data': [{'test_case':'assert f() == 2'}]}
+                    'partial_grading': False,
+                    'test_case_data': [{'test_case':'assert f() == 2',
+                        'weight': 0.0
+                        }
+                    ]}
 
         # When
         result = self.code_server.run_code(
@@ -87,7 +99,11 @@ class TestCodeServer(unittest.TestCase):
         def run_code():
             """Run an infinite loop."""
             testdata = {'user_answer': 'while True: pass',
-                        'test_case_data': [{'test_case':'assert 1==2'}]}
+                        'partial_grading': False,
+                        'test_case_data': [{'test_case':'assert 1==2',
+                            'weight': 0.0
+                            }
+                        ]}
             result = self.code_server.run_code(
                 'python', 'standardtestcase', json.dumps(testdata), ''
             )

@@ -141,7 +141,9 @@ class QuestionTestCases(unittest.TestCase):
         )
         self.upload_test_case.save()
         self.user_answer = "demo_answer"
-        self.test_case_upload_data = [{"test_case": "assert fact(3)==6"}]
+        self.test_case_upload_data = [{"test_case": "assert fact(3)==6",
+                                        "weight": 0.0
+                                        }]
         questions_data = [{"snippet": "def fact()", "active": True,
                            "points": 1.0,
                            "description": "factorial of a no",
@@ -877,7 +879,9 @@ class TestCaseTestCases(unittest.TestCase):
         self.stdout_based_testcase.save()
         answer_data = {"user_answer": "demo_answer",
             "test_case_data": [
-                {"test_case": "assert myfunc(12, 13) == 15"}
+                {"test_case": "assert myfunc(12, 13) == 15",
+                "weight": 0.0
+                }
             ]
         }
         self.answer_data_json = json.dumps(answer_data)

@@ -163,9 +163,11 @@ function call_skip(url)
                 <div class="panel-footer">
                      {% if question.type == "code" %}
                      {% if error_message %}
-                         <p> Output Message</p>
+                         <p><h4> Output Message </h4></p>
                          <div class="alert alert-danger" role="alert">
+                         <textarea class="output" id="output" rows=10 cols=155>
                          {{ error_message }}
+                         </textarea>
                          </div>
                       {% endif %}
                      {% endif %}
