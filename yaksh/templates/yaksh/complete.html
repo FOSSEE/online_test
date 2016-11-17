@@ -4,25 +4,30 @@
 {% block content %}
 {% csrf_token %}
     {% if paper.questions_answered.all or paper.questions_unanswered.all %}
-			<br><center><table class="table table-bordered"
-			 style="text-align:left;">
-				<tr><td><b>Submitted Questions</b></td>
-				<td>
-				{% if paper.questions_answered.all %}
-					{{ paper.questions_answered.all|join:", " }}
-				{% else %}
-					<p><b>No Questions have been Submitted</b></p>
-				{% endif %}
-				</td></tr>
-				<tr><td><b>Unattempted Questions</b></td>
-				<td>
-				{% if paper.questions_unanswered.all %}
-					{{ paper.questions_unanswered.all|join:", " }}
-				{% else %}
-					<p><b>All Questions have been Submitted</b></p>
-				{% endif %}
-				</td></tr>
-        </table></center>
+<center><table class="table table-bordered" >
+        <caption> Submission Status </caption>
+        <thead>
+            <tr>
+                <th> Question</th>
+                <th> State </th>
+            </tr>
+        </thead>
+
+        {% for question in paper.questions.all %}
+            <tbody>
+                {% if question in paper.questions_answered.all %}
+                    <tr class="info">
+                    <td> {{ question.summary }} </td>
+                    <td> Attempted </td>
+                {% else %}
+                    <tr class="danger">
+                    <td> {{ question }} </td>
+                    <td> Not Attempted </td>
+                {% endif %}
+                </tr>
+            </tbody>
+        {% endfor %}
+</table></center>
     {% endif %}
 		<center><h2> Good bye! </h2></center>
 		<center><h4> {{message}} </h4></center>

@@ -1,8 +1,20 @@
 {% extends "base.html" %}
 {% load custom_filters %}
 
-{% block pagetitle %} Hi {{ paper.user.first_name.title}} {{ paper.user.last_name.title}}  Answer question {% endblock %}
+{% block nav %}
+<nav class="navbar navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+      </div>
 
+        <div id="navbar">
+            <div class="time-div" id="time_left"></div>
+          </ul>
+        </div><!-- /.navbar -->
+      </div><!-- /.container -->
+    </nav><!-- /.navbar -->
+{% endblock %}
+{% block pagetitle %} Yaksh Online Test {% endblock pagetitle %}
 {% block css %}
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question.css" type="text/css" />
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/codemirror/lib/codemirror.css" type="text/css" />
@@ -52,10 +64,10 @@ function updateClock(){
       return null;
     }
     if (t.total<=300000){
-      clock.innerHTML = "<blink><span style='color:red'><strong>" + hh + ":" + mm + ":" + ss + "</strong></span></blink>";
+        clock.innerHTML = "<blink><center><span style='color:red'><strong>" + hh + ":" + mm + ":" + ss + "</strong></center></span></blink>";
     }
     if (t.total>=300000) {
-      clock.innerHTML = "<strong>" + hh + ":" + mm + ":" + ss + "</strong>";
+        clock.innerHTML = "<center><strong>" + hh + ":" + mm + ":" + ss + "</strong></center>";
     }
   }
 
@@ -89,11 +101,9 @@ function call_skip(url)
 {% block onload %} onload="updateTime();" {% endblock %}
 
 {% block content %}
-        <b style="color: white; font-size: 14px;">You have {{ paper.questions_left }} question(s) left in {{ paper.question_paper.quiz.description }}</b>
-        <div class=time-div id="time_left"></div><br>
-<p>Question Navigator </p>
-    <div class="list-group">
-        <ul class="pagination">
+<div class="row">
+    <div class="col-md-6">
+        <ul class="pagination pagination-lg">
             {% for qid in paper.questions.all %}
                 {% if qid in paper.questions_unanswered.all %}
                 {% if qid.id == question.id %}
@@ -108,17 +118,36 @@ function call_skip(url)
             {% endfor %}
         </ul>
     </div>
-<div class="col-md-11">
-<br> 
+    <div class="col-md-5">
+        <h3>{{ paper.questions_left }} question(s) left in {{ paper.question_paper.quiz.description }}</h3>
+    </div>
+    <div class="col-md-1">
+<form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" class="pull-right">
+        {% csrf_token %}
+        <button class="btn btn-danger " type="submit" name="quit">Quit Exam <span class="glyphicon glyphicon-off"></span></button>
+</form>
+    </div>
+
+</div>
          <p id="status"></p>
          <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" enctype="multipart/form-data">
          {% csrf_token %}
          <input type=hidden name="question_id" id="question_id" value={{ question.id }}></input>
              <div class="panel panel-default">
                  <div class="panel-heading">
-                      <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font>
+                     <h4><u> {{ question.summary }}
+                             {% if question.type == "mcq" %}
+                             (MCQ)
+                             {% elif question.type == "mcc" %}
+                             (MCC)
+                             {% elif question.type == "code" %}
+                             (PROGRAMMING)
+                             {% elif question.type == "upload" %}
+                             (ASSIGNMENT UPLOAD)
+                             {% endif %}
+                         </u>
+                         <font class=pull-right>(Marks : {{ question.points }}) </font>
                       </h4>
-                      <h4><font size=3 face=arial> {{ question.language|title }} {{ question.type|title }} Question</font></h4><br>
                       <font size=3 face=arial> {{ question.description|safe }} </font>
                       {% if files %}
                       <h4>Files to download for this question</h4>
@@ -153,27 +182,18 @@ function call_skip(url)
                      <hr>
                      {% endif %}
                      {% if question.type == "code" %}
-
-                     <h4>Program:</h4>
+                     <div class="row">
+                         <div class="col-md-2">
+                             <h4>Program:</h4>
+                         </div>
+                         <div class="col-md-10">
+                             <a href="#" class="pull-right" onclick="reset_editor()" name="reset" id="reset">Reset Answer <span class="glyphicon glyphicon-refresh"></span></a>
+                             </div>
+     </div>
                      <textarea name="answer" id="answer"></textarea>
                      <br>
-
                      {% endif %}
-                 </div>
-                <div class="panel-footer">
-                     {% if question.type == "code" %}
-                     {% if error_message %}
-                         <p><h4> Output Message </h4></p>
-                         <div class="alert alert-danger" role="alert">
-                         <textarea class="output" id="output" rows=10 cols=155>
-                         {{ error_message }}
-                         </textarea>
-                         </div>
-                      {% endif %}
-                     {% endif %}
-                </div>
-             </div>
-             <div class="from-group">
+        <div class="from-group">
 
          {% if question.type == "mcq" or question.type == "mcc"%}
          <br><button class="btn btn-primary" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
@@ -181,19 +201,25 @@ function call_skip(url)
          <br><button class="btn btn-primary" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
          {% else %}
          <button class="btn btn-primary" type="submit" name="check" id="check" onClick="submitCode();">Check Answer <span class="glyphicon glyphicon-cog"></span></button>&nbsp;&nbsp;
-         <button class="btn btn-primary" type="button" onclick="reset_editor()" name="reset" id="reset">Reset Answer <span class="glyphicon glyphicon-refresh"></span></button>
-
          {% endif %}
          {% if paper.unanswered.all|length != 1 %}
          <button class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')" name="skip" id="skip">Attempt Later <span class="glyphicon glyphicon-arrow-right"></span></button>
          {% endif %}
          </div>
-         </form>
-<form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" class="pull-right">
-        {% csrf_token %}
-        <button class="btn btn-primary" type="submit" name="quit">Quit Exam <span class="glyphicon glyphicon-off"></span></button>
-</form>
-</div>
+     {% if question.type == "code" %}
+                     <div class="panel-footer">
+     {% if error_message %}
+         <p> Output Message</p>
+         <div class="alert alert-danger" role="alert">
+        <textarea style="width:100%" class="error" readonly="yes">{{ error_message }}</textarea>
+         </div>
+      {% endif %}
+     </div>
+     {% endif %}
+                 </div>
+             </div>
+
+             </form>
     <!-- Modal -->
     <div class="modal fade " id="upload_alert" >
       <div class="modal-dialog">

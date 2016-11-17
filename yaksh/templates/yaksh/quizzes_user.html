@@ -7,6 +7,7 @@
 {% block pagetitle %} Student's Dashboard {% endblock pagetitle %}
 {% block content %}
 
+<div class="row">
 <center><b><u>Available Courses</u></b></center><br>
 {% for course in courses %}
 <div class="row well">
@@ -79,6 +80,7 @@
 </div><!--/row-->
  </br>
 {% endfor %}
+</div>
 <hr>
 <h4>List of quizzes taken by you so far</h4>
 {% if quizzes_taken %}
