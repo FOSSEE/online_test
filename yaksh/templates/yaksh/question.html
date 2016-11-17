@@ -1,8 +1,20 @@
 {% extends "base.html" %}
 {% load custom_filters %}
 
-{% block pagetitle %} Hi {{ paper.user.first_name.title}} {{ paper.user.last_name.title}}  Answer question {% endblock %}
+{% block nav %}
+<nav class="navbar navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#"> Yaksh Online Test </a>
+      </div>
 
+        <div id="navbar">
+            <div class="time-div" id="time_left"></div>
+          </ul>
+        </div><!-- /.navbar -->
+      </div><!-- /.container -->
+    </nav><!-- /.navbar -->
+{% endblock %}
 {% block css %}
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question.css" type="text/css" />
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/codemirror/lib/codemirror.css" type="text/css" />
@@ -89,11 +101,9 @@ function call_skip(url)
 {% block onload %} onload="updateTime();" {% endblock %}
 
 {% block content %}
-        <b style="color: white; font-size: 14px;">You have {{ paper.questions_left }} question(s) left in {{ paper.question_paper.quiz.description }}</b>
-        <div class=time-div id="time_left"></div><br>
-<p>Question Navigator </p>
-    <div class="list-group">
-        <ul class="pagination">
+<div class="row">
+    <div class="col-md-6">
+        <ul class="pagination pagination-lg">
             {% for qid in paper.questions.all %}
                 {% if qid in paper.questions_unanswered.all %}
                 {% if qid.id == question.id %}
@@ -108,8 +118,17 @@ function call_skip(url)
             {% endfor %}
         </ul>
     </div>
-<div class="col-md-11">
-<br> 
+    <div class="col-md-5">
+        <h3>{{ paper.questions_left }} question(s) left in {{ paper.question_paper.quiz.description }}</h3>
+    </div>
+    <div class="col-md-1">
+<form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" class="pull-right">
+        {% csrf_token %}
+        <button class="btn btn-danger " type="submit" name="quit">Quit Exam <span class="glyphicon glyphicon-off"></span></button>
+</form>
+    </div>
+
+</div>
          <p id="status"></p>
          <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" enctype="multipart/form-data">
          {% csrf_token %}
@@ -153,25 +172,30 @@ function call_skip(url)
                      <hr>
                      {% endif %}
                      {% if question.type == "code" %}
-
-                     <h4>Program:</h4>
+                     <div class="row">
+                         <div class="col-md-2">
+                             <h4>Program:</h4>
+                         </div>
+                         <div class="col-md-10">
+                             <a href="#" class="pull-right" onclick="reset_editor()" name="reset" id="reset">Reset Answer <span class="glyphicon glyphicon-refresh"></span></a>
+                             </div>
+     </div>
                      <textarea name="answer" id="answer"></textarea>
                      <br>
-
+                     <div class="panel-footer">
+     {% if question.type == "code" %}
+     {% if error_message %}
+         <p> Output Message</p>
+         <div class="alert alert-danger" role="alert">
+         {{ error_message }}
+         </div>
+      {% endif %}
+     {% endif %}
+     </div>
                      {% endif %}
                  </div>
-                <div class="panel-footer">
-                     {% if question.type == "code" %}
-                     {% if error_message %}
-                         <p> Output Message</p>
-                         <div class="alert alert-danger" role="alert">
-                         {{ error_message }}
-                         </div>
-                      {% endif %}
-                     {% endif %}
-                </div>
              </div>
-             <div class="from-group">
+        <div class="from-group">
 
          {% if question.type == "mcq" or question.type == "mcc"%}
          <br><button class="btn btn-primary" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
@@ -179,19 +203,12 @@ function call_skip(url)
          <br><button class="btn btn-primary" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
          {% else %}
          <button class="btn btn-primary" type="submit" name="check" id="check" onClick="submitCode();">Check Answer <span class="glyphicon glyphicon-cog"></span></button>&nbsp;&nbsp;
-         <button class="btn btn-primary" type="button" onclick="reset_editor()" name="reset" id="reset">Reset Answer <span class="glyphicon glyphicon-refresh"></span></button>
-
          {% endif %}
          {% if paper.unanswered.all|length != 1 %}
          <button class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')" name="skip" id="skip">Attempt Later <span class="glyphicon glyphicon-arrow-right"></span></button>
          {% endif %}
          </div>
          </form>
-<form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" class="pull-right">
-        {% csrf_token %}
-        <button class="btn btn-primary" type="submit" name="quit">Quit Exam <span class="glyphicon glyphicon-off"></span></button>
-</form>
-</div>
     <!-- Modal -->
     <div class="modal fade " id="upload_alert" >
       <div class="modal-dialog">
@@ -242,7 +259,8 @@ function call_skip(url)
   editor.setValue('{{ last_attempt|escape_quotes|safe }}')
 
   function reset_editor() {
-      editor.setValue('{{ last_attempt|escape_quotes|safe }}');
+      console.log("here")
+      editor.setValue('');
       editor.clearHistory();
   }
 

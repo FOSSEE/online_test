@@ -1,27 +1,31 @@
 {% extends "base.html" %}
 
-{% block title %}Quit exam {% endblock %}
-{% block pagetitle %}Online Test {% endblock %}
+{% block pagetitle %} Yaksh Online Test {% endblock %}
 {% block content %}
-			<br><center><table class="bordered-table zebra-striped span8"
-			 style="text-align:left;">
-				<tr><td><b>Submitted Questions</b></td>
-				<td>
-				{% if paper.questions_answered.all %}
-					{{ paper.questions_answered.all|join:", " }}
-				{% else %}
-					<p><b>No Questions have been Submitted</b></p>
-				{% endif %}
-				</td></tr>
-				<tr><td><b>Unattempted Questions</b></td>
-				<td>
-				{% if paper.questions_unanswered.all %}
-					{{ paper.questions_unanswered.all|join:", " }}
-				{% else %}
-					<p><b>All Questions have been Submitted</b></p>
-				{% endif %}
-				</td></tr>
-			</table></center>
+<center><table class="table table-bordered" >
+        <caption> Submission Status </caption>
+        <thead>
+            <tr>
+                <th> Question</th>
+                <th> State </th>
+            </tr>
+        </thead>
+
+        {% for question in paper.questions.all %}
+            <tbody>
+                {% if question in paper.questions_answered.all %}
+                    <tr class="info">
+                    <td> {{ question.summary }} </td>
+                    <td> Attempted </td>
+                {% else %}
+                    <tr class="danger">
+                    <td> {{ question }} </td>
+                    <td> Not Attempted </td>
+                {% endif %}
+                </tr>
+            </tbody>
+        {% endfor %}
+</table></center>
 
 	<center><h4>Your current answers are saved.</h4></center>
 	<center><h4> Are you sure you wish to quit the exam?</h4></center>
