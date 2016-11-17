@@ -5,7 +5,6 @@
 <nav class="navbar navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
-          <a class="navbar-brand" href="#"> Yaksh Online Test </a>
       </div>
 
         <div id="navbar">
@@ -15,6 +14,7 @@
       </div><!-- /.container -->
     </nav><!-- /.navbar -->
 {% endblock %}
+{% block pagetitle %} Yaksh Online Test {% endblock pagetitle %}
 {% block css %}
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question.css" type="text/css" />
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/codemirror/lib/codemirror.css" type="text/css" />
@@ -64,10 +64,10 @@ function updateClock(){
       return null;
     }
     if (t.total<=300000){
-      clock.innerHTML = "<blink><span style='color:red'><strong>" + hh + ":" + mm + ":" + ss + "</strong></span></blink>";
+        clock.innerHTML = "<blink><center><span style='color:red'><strong>" + hh + ":" + mm + ":" + ss + "</strong></center></span></blink>";
     }
     if (t.total>=300000) {
-      clock.innerHTML = "<strong>" + hh + ":" + mm + ":" + ss + "</strong>";
+        clock.innerHTML = "<center><strong>" + hh + ":" + mm + ":" + ss + "</strong></center>";
     }
   }
 
@@ -135,9 +135,19 @@ function call_skip(url)
          <input type=hidden name="question_id" id="question_id" value={{ question.id }}></input>
              <div class="panel panel-default">
                  <div class="panel-heading">
-                      <h4><u> {{ question.summary }} </u><font class=pull-right>(Marks : {{ question.points }}) </font>
+                     <h4><u> {{ question.summary }}
+                             {% if question.type == "mcq" %}
+                             (MCQ)
+                             {% elif question.type == "mcc" %}
+                             (MCC)
+                             {% elif question.type == "code" %}
+                             (PROGRAMMING)
+                             {% elif question.type == "upload" %}
+                             (ASSIGNMENT UPLOAD)
+                             {% endif %}
+                         </u>
+                         <font class=pull-right>(Marks : {{ question.points }}) </font>
                       </h4>
-                      <h4><font size=3 face=arial> {{ question.language|title }} {{ question.type|title }} Question</font></h4><br>
                       <font size=3 face=arial> {{ question.description|safe }} </font>
                       {% if files %}
                       <h4>Files to download for this question</h4>
@@ -182,19 +192,7 @@ function call_skip(url)
      </div>
                      <textarea name="answer" id="answer"></textarea>
                      <br>
-                     <div class="panel-footer">
-     {% if question.type == "code" %}
-     {% if error_message %}
-         <p> Output Message</p>
-         <div class="alert alert-danger" role="alert">
-         {{ error_message }}
-         </div>
-      {% endif %}
-     {% endif %}
-     </div>
                      {% endif %}
-                 </div>
-             </div>
         <div class="from-group">
 
          {% if question.type == "mcq" or question.type == "mcc"%}
@@ -208,7 +206,20 @@ function call_skip(url)
          <button class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')" name="skip" id="skip">Attempt Later <span class="glyphicon glyphicon-arrow-right"></span></button>
          {% endif %}
          </div>
-         </form>
+     {% if question.type == "code" %}
+                     <div class="panel-footer">
+     {% if error_message %}
+         <p> Output Message</p>
+         <div class="alert alert-danger" role="alert">
+         {{ error_message }}
+         </div>
+      {% endif %}
+     </div>
+     {% endif %}
+                 </div>
+             </div>
+
+             </form>
     <!-- Modal -->
     <div class="modal fade " id="upload_alert" >
       <div class="modal-dialog">
@@ -259,7 +270,7 @@ function call_skip(url)
   editor.setValue('{{ last_attempt|escape_quotes|safe }}')
 
   function reset_editor() {
-      editor.setValue('');
+      editor.setValue('{{ last_attempt|escape_quotes|safe }}');
       editor.clearHistory();
   }
 
