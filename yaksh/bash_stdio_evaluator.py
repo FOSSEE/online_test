@@ -14,6 +14,7 @@ class BashStdioEvaluator(StdIOEvaluator):
 
     def setup(self):
         super(BashStdioEvaluator, self).setup()
+        self.files = []
         self.submit_code_path = self.create_submit_code_file('Test.sh')
 
     def teardown(self):
@@ -22,8 +23,7 @@ class BashStdioEvaluator(StdIOEvaluator):
             delete_files(self.files)
         super(BashStdioEvaluator, self).teardown()
 
-    def compile_code(self, user_answer, file_paths, expected_input, expected_output):
-        self.files = []
+    def compile_code(self, user_answer, file_paths, expected_input, expected_output, weight):
         if file_paths:
             self.files = copy_files(file_paths)
         if not isfile(self.submit_code_path):
@@ -33,8 +33,11 @@ class BashStdioEvaluator(StdIOEvaluator):
         user_answer = user_answer.replace("\r", "")
         self.write_to_submit_code_file(self.submit_code_path, user_answer)
 
-    def check_code(self, user_answer, file_paths, expected_input, expected_output):
+    def check_code(self, user_answer, file_paths, partial_grading,
+        expected_input, expected_output, weight):
         success = False
+        test_case_weight = 0.0
+
         expected_input = str(expected_input).replace('\r', '')
         proc = subprocess.Popen("bash ./Test.sh",
                                 shell=True,
@@ -46,4 +49,5 @@ class BashStdioEvaluator(StdIOEvaluator):
                                            expected_input,
                                            expected_output
                                            )
-        return success, err
+        test_case_weight = float(weight) if partial_grading and success else 0.0
+        return success, err, test_case_weight

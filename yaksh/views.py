@@ -517,11 +517,16 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                         if question.type == 'code' else None
         correct, result = paper.validate_answer(user_answer, question, json_data)
         if correct:
+            new_answer.marks = (question.points * result['weight'] / 
+                question.get_maximum_test_case_weight()) \
+                if question.partial_grading and question.type == 'code' else question.points
             new_answer.correct = correct
-            new_answer.marks = question.points
             new_answer.error = result.get('error')
         else:
             new_answer.error = result.get('error')
+            new_answer.marks = (question.points * result['weight'] /
+                question.get_maximum_test_case_weight()) \
+                if question.partial_grading and question.type == 'code' else 0
         new_answer.save()
         paper.update_marks('inprogress')
         paper.set_end_time(timezone.now())

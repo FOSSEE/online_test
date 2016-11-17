@@ -211,7 +211,7 @@ function call_skip(url)
      {% if error_message %}
          <p> Output Message</p>
          <div class="alert alert-danger" role="alert">
-         {{ error_message }}
+        <textarea style="width:100%" class="error" readonly="yes">{{ error_message }}</textarea>
          </div>
       {% endif %}
      </div>

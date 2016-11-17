@@ -13,12 +13,12 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         with open('/tmp/test.txt', 'wb') as f:
             f.write('2'.encode('ascii'))
-        tmp_in_dir_path = tempfile.mkdtemp()
         self.test_case_data = [
-            {"test_case": "bash_files/sample.sh,bash_files/sample.args"}
+            {"test_case": "bash_files/sample.sh,bash_files/sample.args",
+                "weight": 0.0
+            }
         ]
-        tmp_in_dir_path = tempfile.mkdtemp()
-        self.in_dir = tmp_in_dir_path
+        self.in_dir = tempfile.mkdtemp()
         self.timeout_msg = ("Code took more than {0} seconds to run. "
             "You probably have an infinite loop in your"
             " code.").format(SERVER_TIMEOUT)
@@ -33,19 +33,21 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
             " && echo $(( $1 + $2 )) && exit $(( $1 + $2 ))"
         )
         get_class = BashCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer, 
+        kwargs = {'user_answer': user_answer,
+                    'partial_grading': True,
                     'test_case_data': self.test_case_data,
                     'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get('success'))
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
 
     def test_error(self):
         user_answer = ("#!/bin/bash\n[[ $# -eq 2 ]] "
             "&& echo $(( $1 - $2 )) && exit $(( $1 - $2 ))")
         get_class = BashCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer, 
+        kwargs = {'user_answer': user_answer,
+                    'partial_grading': True,
                     'test_case_data': self.test_case_data,
                     'file_paths': self.file_paths
                 }
@@ -57,7 +59,8 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
         user_answer = ("#!/bin/bash\nwhile [ 1 ] ;"
             " do echo "" > /dev/null ; done")
         get_class = BashCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer, 
+        kwargs = {'user_answer': user_answer,
+                    'partial_grading': True,
                     'test_case_data': self.test_case_data,
                     'file_paths': self.file_paths
                 }
@@ -68,20 +71,24 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
     def test_file_based_assert(self):
         self.file_paths = [('/tmp/test.txt', False)]
         self.test_case_data = [
-            {"test_case": "bash_files/sample1.sh,bash_files/sample1.args"}
+            {"test_case": "bash_files/sample1.sh,bash_files/sample1.args",
+                "weight": 0.0
+            }
         ]
         user_answer = ("#!/bin/bash\ncat $1")
         get_class = BashCodeEvaluator()
         kwargs = {'user_answer': user_answer,
+                    'partial_grading': True,
                     'test_case_data': self.test_case_data,
                     'file_paths': self.file_paths
                 }
         result = get_class.evaluate(**kwargs)
         self.assertTrue(result.get("success"))
-        self.assertEqual(result.get("error"), "Correct answer")
+        self.assertEqual(result.get("error"), "Correct answer\n")
 
 class BashStdioEvaluationTestCases(unittest.TestCase):
     def setUp(self):
+        self.in_dir = tempfile.mkdtemp()
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in your"
                             " code.").format(SERVER_TIMEOUT)
@@ -93,13 +100,17 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                              echo -n `expr $A + $B`
                              """
                              )
-        test_case_data = [{'expected_output': '11', 'expected_input': '5\n6'}]
+        test_case_data = [{'expected_output': '11',
+            'expected_input': '5\n6',
+            'weight': 0.0
+            }]
         get_class = BashStdioEvaluator()
         kwargs = {"user_answer": user_answer,
-                  "test_case_data": test_case_data
-                  }
+                    "partial_grading": True,
+                    "test_case_data": test_case_data
+                }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
@@ -112,14 +123,16 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                             """
                              )
         test_case_data = [{'expected_output': '1 2 3\n4 5 6\n7 8 9\n',
-                           'expected_input': '1,2,3\n4,5,6\n7,8,9'
+                           'expected_input': '1,2,3\n4,5,6\n7,8,9',
+                           'weight': 0.0
                            }]
         get_class = BashStdioEvaluator()
         kwargs = {"user_answer": user_answer,
-                  "test_case_data": test_case_data
-                  }
+                    "partial_grading": True,
+                    "test_case_data": test_case_data
+                }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -129,11 +142,15 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                              echo -n `expr $A - $B`
                              """
                              )
-        test_case_data = [{'expected_output': '11', 'expected_input': '5\n6'}]
+        test_case_data = [{'expected_output': '11',
+            'expected_input': '5\n6',
+            'weight': 0.0
+            }]
         get_class = BashStdioEvaluator()
         kwargs = {"user_answer": user_answer,
-                  "test_case_data": test_case_data
-                  }
+                    "partial_grading": True,
+                    "test_case_data": test_case_data
+                }
         result = get_class.evaluate(**kwargs)
         self.assertIn("Incorrect", result.get('error'))
         self.assertFalse(result.get('success'))
@@ -146,14 +163,16 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                              """
                              )
         test_case_data = [{'expected_output': '10',
-                           'expected_input': ''
+                           'expected_input': '',
+                           'weight': 0.0
                            }]
         get_class = BashStdioEvaluator()
         kwargs = {"user_answer": user_answer,
-                  "test_case_data": test_case_data
-                  }
+                    "partial_grading": True,
+                    "test_case_data": test_case_data
+                }
         result = get_class.evaluate(**kwargs)
-        self.assertEqual(result.get('error'), "Correct answer")
+        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':

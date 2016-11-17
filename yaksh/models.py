@@ -245,6 +245,9 @@ class Question(models.Model):
     # user for particular question
     user = models.ForeignKey(User, related_name="user")
 
+    # Does this question allow partial grading
+    partial_grading = models.BooleanField(default=False)
+
     def consolidate_answer_data(self, user_answer):
         question_data = {}
         test_case_data = []
@@ -257,6 +260,7 @@ class Question(models.Model):
 
         question_data['test_case_data'] = test_case_data
         question_data['user_answer'] = user_answer
+        question_data['partial_grading'] = self.partial_grading
         files = FileUpload.objects.filter(question=self)
         if files:
             question_data['file_paths'] = [(file.file.path, file.extract)
@@ -320,6 +324,13 @@ class Question(models.Model):
         )
 
         return test_case
+
+    def get_maximum_test_case_weight(self, **kwargs):
+        max_weight = 0.0
+        for test_case in self.get_test_cases():
+            max_weight += test_case.weight
+
+        return max_weight
 
     def _add_and_get_files(self, zip_file):
         files = FileUpload.objects.filter(question=self)
@@ -937,11 +948,13 @@ class AnswerPaper(models.Model):
 
     def _update_marks_obtained(self):
         """Updates the total marks earned by student for this paper."""
-        marks = sum([x.marks for x in self.answers.filter(marks__gt=0.0)])
-        if not marks:
-            self.marks_obtained = 0
-        else:
-            self.marks_obtained = marks
+        marks = 0
+        for question in self.questions.all():
+            marks_list = [a.marks for a in self.answers.filter(question=question)]
+            max_marks = max(marks_list) if marks_list else 0.0
+            marks += max_marks
+        self.marks_obtained = marks
+
 
     def _update_percent(self):
         """Updates the percent gained by the student for this paper."""
@@ -1023,7 +1036,7 @@ class AnswerPaper(models.Model):
             For code questions success is True only if the answer is correct.
         """
 
-        result = {'success': True, 'error': 'Incorrect answer'}
+        result = {'success': True, 'error': 'Incorrect answer', 'weight': 0.0}
         correct = False
         if user_answer is not None:
             if question.type == 'mcq':
@@ -1071,11 +1084,18 @@ class AnswerPaper(models.Model):
         json_data = question.consolidate_answer_data(answer) \
                             if question.type == 'code' else None
         correct, result = self.validate_answer(answer, question, json_data)
-        user_answer.marks = question.points if correct else 0.0
         user_answer.correct = correct
         user_answer.error = result.get('error')
+        if correct:
+            user_answer.marks = (question.points * result['weight'] / 
+                question.get_maximum_test_case_weight()) \
+                if question.partial_grading and question.type == 'code' else question.points
+        else:
+            user_answer.marks = (question.points * result['weight'] / 
+                question.get_maximum_test_case_weight()) \
+                if question.partial_grading and question.type == 'code' else 0
         user_answer.save()
-        self.update_marks('complete')
+        self.update_marks('completed')
         return True, msg
 
     def __str__(self):
@@ -1098,9 +1118,11 @@ class TestCase(models.Model):
 
 class StandardTestCase(TestCase):
     test_case = models.TextField(blank=True)
+    weight = models.FloatField(default=0.0)
 
     def get_field_value(self):
-        return {"test_case": self.test_case}
+        return {"test_case": self.test_case,
+                "weight": self.weight}
 
     def __str__(self):
         return u'Question: {0} | Test Case: {1}'.format(self.question,
@@ -1111,10 +1133,12 @@ class StandardTestCase(TestCase):
 class StdioBasedTestCase(TestCase):
     expected_input = models.TextField(blank=True)
     expected_output = models.TextField()
+    weight = models.IntegerField(default=0.0)
 
     def get_field_value(self):
         return {"expected_output": self.expected_output,
-               "expected_input": self.expected_input}
+               "expected_input": self.expected_input,
+               "weight": self.weight}
 
     def __str__(self):
         return u'Question: {0} | Exp. Output: {1} | Exp. Input: {2}'.format(self.question,
