@@ -69,9 +69,13 @@ class PythonAssertionEvaluator(CodeEvaluator):
             fname, lineno, func, text = info[-1]
             text = str(test_case).splitlines()[lineno-1]
             err = ("-----\nExpected Test Case:\n{0}\n"
-                    "Error - {1} {2} in: {3}\n-----").format(test_case, type.__name__, str(value), text)
+                    "Error - {1} {2} in: {3}\n-----").format(test_case,
+                                                             type.__name__,
+                                                             str(value), text
+                                                             )
         except Exception:
-            raise  # Exception will be caught in CodeEvaluator.
+             msg = traceback.format_exc(limit=0)
+             err = "Error in Test case: {0}".format(msg)
         else:
             success = True
             err = '-----\nCorrect answer\nTest Case: {0}\n-----'.format(test_case)
