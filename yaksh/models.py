@@ -386,6 +386,7 @@ class FileUpload(models.Model):
     file = models.FileField(upload_to=get_upload_dir, blank=True)
     question = models.ForeignKey(Question, related_name="question")
     extract = models.BooleanField(default=False)
+    hide = models.BooleanField(default=False)
 
     def remove(self):
         if os.path.exists(self.file.path):
@@ -401,6 +402,12 @@ class FileUpload(models.Model):
             self.extract = True
         self.save()
 
+    def set_hide_status(self):
+        if self.hide:
+            self.hide = False
+        else:
+            self.hide = True
+        self.save()
 
 ###############################################################################
 class Answer(models.Model):
