@@ -1044,7 +1044,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
     if request.method == "POST":
         papers = data['papers']
         for paper in papers:
-            for question, answers in six.iteritems(paper.get_question_answers()):
+            for question, answers, errors in six.iteritems(paper.get_question_answers()):
                 marks = float(request.POST.get('q%d_marks' % question.id, 0))
                 answers = answers[-1]
                 answers.set_marks(marks)
