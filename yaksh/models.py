@@ -65,7 +65,7 @@ test_status = (
               )
 
 def get_assignment_dir(instance, filename):
-    return '%s/%s' % (instance.user.roll_number, instance.assignmentQuestion.id)
+    return '%s/%s/%s' % (instance.user.user, instance.assignmentQuestion.id, filename)
 
 def get_model_class(model):
     ctype = ContentType.objects.get(app_label="yaksh", model=model)
@@ -386,6 +386,7 @@ class FileUpload(models.Model):
     file = models.FileField(upload_to=get_upload_dir, blank=True)
     question = models.ForeignKey(Question, related_name="question")
     extract = models.BooleanField(default=False)
+    hide = models.BooleanField(default=False)
 
     def remove(self):
         if os.path.exists(self.file.path):
@@ -401,6 +402,12 @@ class FileUpload(models.Model):
             self.extract = True
         self.save()
 
+    def toggle_hide_status(self):
+        if self.hide:
+            self.hide = False
+        else:
+            self.hide = True
+        self.save()
 
 ###############################################################################
 class Answer(models.Model):

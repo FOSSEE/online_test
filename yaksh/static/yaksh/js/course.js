@@ -1,37 +1,37 @@
 $(document).ready(function(){
-$(".checkall").click( function(){
-        if($(this).attr("checked")) {
+$(".checkall").change( function(){
+        if($(this).prop("checked")) {
                 $("#enroll-all input:checkbox").each(function(index, element) {
-                $(this).attr('checked', true);
+                $(this).prop('checked', true);
                 });
         }
         else {
                 $("#enroll-all input:checkbox").each(function(index, element) {
-                $(this).attr('checked', false);
+                $(this).prop('checked', false);
                 });
         }
     });
-$(".enroll").click( function(){
-        if($(this).attr("checked")) {
+$(".enroll").change( function(){
+        if($(this).prop("checked")) {
                 $("#enroll input:checkbox").each(function(index, element) {
-                $(this).attr('checked', true);
+                $(this).prop('checked', true);
                 });
         }
         else {
                 $("#enroll input:checkbox").each(function(index, element) {
-                $(this).attr('checked', false);
+                $(this).prop('checked', false);
                 });
         }
     });
-$(".reject").click( function(){
-        if($(this).attr("checked")) {
+$(".reject").change( function(){
+        if($(this).prop("checked")) {
                 $("#reject input:checkbox").each(function(index, element) {
-                $(this).attr('checked', true);
+                $(this).prop('checked', true);
                 });
         }
         else {
                 $("#reject input:checkbox").each(function(index, element) {
-                $(this).attr('checked', false);
+                $(this).prop('checked', false);
                 });
         }
     });

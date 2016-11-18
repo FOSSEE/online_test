@@ -27,11 +27,14 @@
   <tr><td>Partial Grading: <td>{{ form.partial_grading }}
   <tr><td> Test Case Type: <td> {{ form.test_case_type }}{{ form.test_case_type.errors }}
   <tr><td> File: <td> {{ upload_form.file_field }}{{ upload_form.file_field.errors }}
-  {% if uploaded_files %}<br><b>Uploaded files:</b><br>Check the box to delete or extract files<br>
+  {% if uploaded_files %}<br><b>Uploaded files:</b><br>Check on delete to delete files,
+  extract to extract files and hide to hide files from student(if required)<br>
   {% for file in uploaded_files %}
   <input type="checkbox" name="clear" value="{{file.id}}">&nbsp;delete</input>&nbsp;
   <input type="checkbox" name="extract" value="{{file.id}}" >{% if file.extract %} dont extract{% else %}
-  extract{% endif %}</input><br>
+  extract{% endif %}</input>&nbsp;&nbsp;
+  <input type="checkbox" name="hide" value="{{file.id}}" >{% if file.hide %} show{% else %}
+  hide{% endif %}</input><br>
   <a href="{{file.file.url}}">{{ file.file.name }}</a>
   <br>
   {% endfor %}{% endif %}

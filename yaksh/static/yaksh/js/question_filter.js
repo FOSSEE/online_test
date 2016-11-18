@@ -32,15 +32,15 @@ $(document).ready(function(){
         question_filter()
     });
 
-    $("#checkall").live("click", function(){
-        if($(this).attr("checked")) {
+    $("#checkall").change(function(){
+        if($(this).prop("checked")) {
                 $("#filtered-questions input:checkbox").each(function(index, element) {
-                $(this).attr('checked', true);
+                $(this).prop('checked', true);
                 });
         }
         else {
                 $("#filtered-questions input:checkbox").each(function(index, element) {
-                $(this).attr('checked', false);
+                $(this).prop('checked', false);
                 });
         }
     });

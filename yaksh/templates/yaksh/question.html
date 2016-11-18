@@ -107,9 +107,12 @@ function call_skip(url)
             {% for qid in paper.questions.all %}
                 {% if qid in paper.questions_unanswered.all %}
                 {% if qid.id == question.id %}
-                <li class="active"><a href="#"data-toggle="tooltip" title="{{ qid.description }}" onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
+                <li class="active"><a href="#"data-toggle="tooltip"
+                title="{{ qid.description|striptags }}"
+                onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
                     {% else %}
-                    <li><a href="#" data-toggle="tooltip" title="{{ qid.description }}" onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
+                    <li><a href="#" data-toggle="tooltip" title="{{ qid.description|striptags }}"
+                    onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
                     {% endif %}
                 {% endif %}
                 {% if qid in paper.questions_answered.all %}
@@ -152,9 +155,7 @@ function call_skip(url)
                       {% if files %}
                       <h4>Files to download for this question</h4>
                       {% for f_name in files %}
-                      {% if f_name.question_id == question.id %}
                       <h5><a href="{{f_name.file.url}}">{{f_name.file.name}}</a></h5>
-                      {% endif %}
                       {% endfor %}
                       {% endif %}
                  </div>
