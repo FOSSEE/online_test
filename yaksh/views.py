@@ -182,6 +182,7 @@ def edit_question(request, question_id=None):
         form = FileForm(request.POST, request.FILES)
         files = request.FILES.getlist('file_field')
         extract_files_id = request.POST.getlist('extract')
+        hide_files_id = request.POST.getlist('hide')
         if files:
             for file in files:
                 FileUpload.objects.get_or_create(question=question_instance, file=file)
@@ -189,6 +190,10 @@ def edit_question(request, question_id=None):
             files = FileUpload.objects.filter(id__in=extract_files_id)
             for file in files:
                 file.set_extract_status()
+        if hide_files_id:
+            files = FileUpload.objects.filter(id__in=hide_files_id)
+            for file in files:
+                file.set_hide_status()
         if question_form.is_valid():
             new_question = question_form.save(commit=False)
             test_case_type = question_form.cleaned_data.get('test_case_type')
@@ -432,7 +437,7 @@ def show_question(request, question, paper, error_message=None):
         reason='Your time is up!'
         return complete(request, reason, paper.attempt_number, paper.question_paper.id)
     test_cases = question.get_test_cases()
-    files = FileUpload.objects.filter(question_id=question.id)
+    files = FileUpload.objects.filter(question_id=question.id, hide=False)
     context = {'question': question, 'paper': paper, 'error_message': error_message,
                 'test_cases': test_cases, 'files': files,
                 'last_attempt': question.snippet.encode('unicode-escape')}
