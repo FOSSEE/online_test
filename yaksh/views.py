@@ -193,7 +193,7 @@ def edit_question(request, question_id=None):
         if hide_files_id:
             files = FileUpload.objects.filter(id__in=hide_files_id)
             for file in files:
-                file.set_hide_status()
+                file.toggle_hide_status()
         if question_form.is_valid():
             new_question = question_form.save(commit=False)
             test_case_type = question_form.cleaned_data.get('test_case_type')

@@ -402,7 +402,7 @@ class FileUpload(models.Model):
             self.extract = True
         self.save()
 
-    def set_hide_status(self):
+    def toggle_hide_status(self):
         if self.hide:
             self.hide = False
         else:
