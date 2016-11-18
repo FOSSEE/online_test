@@ -73,6 +73,8 @@ class PythonAssertionEvaluator(CodeEvaluator):
                                                              type.__name__,
                                                              str(value), text
                                                              )
+        except TimeoutException:
+            raise
         except Exception:
              msg = traceback.format_exc(limit=0)
              err = "Error in Test case: {0}".format(msg)
