@@ -493,9 +493,9 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                 question.get_maximum_test_case_weight()) \
                 if question.partial_grading and question.type == 'code' else question.points
             new_answer.correct = correct
-            new_answer.error = result.get('error')
+            new_answer.error = json.dumps(result.get('error'))
         else:
-            new_answer.error = result.get('error')
+            new_answer.error = json.dumps(result.get('error'))
             new_answer.marks = (question.points * result['weight'] /
                 question.get_maximum_test_case_weight()) \
                 if question.partial_grading and question.type == 'code' else 0
@@ -1036,7 +1036,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
             user = User.objects.get(id=user_id)
             data = AnswerPaper.objects.get_user_data(user, questionpaper_id,
                                                      attempt_number
-                                                     )
+                                                    )
 
             context = {'data': data, "quiz_id": quiz_id, "users": user_details,
                     "attempts": attempts, "user_id": user_id

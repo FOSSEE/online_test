@@ -96,7 +96,7 @@ class Grader(object):
         Returns
         -------
 
-        A tuple: (success, error message, weight).
+        A tuple: (success, error, weight).
         """
 
         self.setup()
@@ -135,7 +135,7 @@ class Grader(object):
         prev_handler = create_signal_handler()
         success = False
         test_case_success_status = [False] * len(test_case_instances)
-        error = ""
+        error = []
         weight = 0.0
 
         # Do whatever testing needed.
@@ -148,7 +148,7 @@ class Grader(object):
                 if test_case_success:
                     weight += mark_fraction
 
-                error += err + "\n"
+                error.append(err)
                 test_case_success_status[idx] = test_case_success
 
             success = all(test_case_success_status)
@@ -157,16 +157,16 @@ class Grader(object):
                 test_case_instance.teardown()
 
         except TimeoutException:
-            error = self.timeout_msg
+            error.append(self.timeout_msg)
         except OSError:
             msg = traceback.format_exc(limit=0)
-            error = "Error: {0}".format(msg)
-        except Exception as e:
+            error.append("Error: {0}".format(msg))
+        except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
             if len(tb_list) > 2:
                 del tb_list[1:3]
-            error = "Error: {0}".format("".join(tb_list))
+            error.append("Error: {0}".format("".join(tb_list)))
         finally:
             # Set back any original signal handler.
             set_original_signal_handler(prev_handler)
