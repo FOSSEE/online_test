@@ -80,6 +80,10 @@ def has_profile(user):
 def get_upload_dir(instance, filename):
     return "question_%s/%s" % (instance.question.id, filename)
 
+def get_quiz_instructions_info():
+    file_path = os.path.join(os.getcwd(), "Quiz_instructions.txt")
+    with open(file_path, 'r') as file:
+        return file.read()
 
 ###############################################################################
 class CourseManager(models.Manager):
@@ -533,6 +537,9 @@ class Quiz(models.Model):
             choices=days_between_attempts)
 
     is_trial = models.BooleanField(default=False)
+
+    instructions = models.TextField('Instructions for Students',
+                                    default=get_quiz_instructions_info)
 
     view_answerpaper = models.BooleanField('Allow student to view their answer\
                                             paper', default=False)
