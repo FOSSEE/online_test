@@ -7,6 +7,12 @@ function test()
     {
         document.getElementById("submit").innerHTML = "Save";
     }
+    var template = "<p id='rendered_text'></p>"
+    $(template).insertBefore("#id_instructions");
+    $('#id_instructions').bind('keypress', function (event){
+    document.getElementById('rendered_text').innerHTML = document.getElementById('id_instructions').value ;
+  });
+    document.getElementById('rendered_text').innerHTML = document.getElementById('id_instructions').value ;
 }
 
 String.prototype.beginsWith = function (string) {
