@@ -46,7 +46,7 @@ def setUpModule():
                         attempts_allowed=1, time_between_attempts=0,
                         description='demo quiz', pass_criteria=0,
                         language='Python', prerequisite=None,
-                        course=course)
+                        course=course, instructions="Demo Instructions")
 
     Quiz.objects.create(start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0,
                                                  tzinfo=pytz.utc),
@@ -56,7 +56,7 @@ def setUpModule():
                         attempts_allowed=-1, time_between_attempts=0,
                         description='demo quiz', pass_criteria=40,
                         language='Python', prerequisite=quiz,
-                        course=course)
+                        course=course, instructions="Demo Instructions")
 
     with open('/tmp/test.txt', 'wb') as f:
         f.write('2'.encode('ascii'))
@@ -239,6 +239,7 @@ class QuizTestCases(unittest.TestCase):
         self.assertEqual(self.quiz1.language, 'Python')
         self.assertEqual(self.quiz1.pass_criteria, 0)
         self.assertEqual(self.quiz1.prerequisite, None)
+        self.assertEqual(self.quiz1.instructions, "Demo Instructions")
 
     def test_is_expired(self):
         self.assertFalse(self.quiz1.is_expired())
