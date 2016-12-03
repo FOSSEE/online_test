@@ -20,14 +20,16 @@
   <center>
   <table class=span1>
   {{ form.as_table }}
+  </table>
   <script type="text/javascript">
     $("#id_start_date_time").datetimepicker({format: 'Y-m-d H:i:s'});
     $("#id_end_date_time").datetimepicker({format: 'Y-m-d H:i:s'});
   </script>
-  </table>
+  <br/><br/>
   </center>
 
-  <center><button class="btn" type="submit" id="submit" name="questionpaper"> Save </button>
+  <center><button class="btn" type="submit" id="submit" name="questionpaper"> Save
+  </button>
 
   <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button> </center>
   
@@ -55,4 +57,9 @@
    <a href="" onclick="$('#help').hide(); return false"> Close </a>
    </div>
  {% endif %}
+ <style type="text/css">
+   #rendered_text{
+    width: 550px;
+   }
+ </style>
 {% endblock %}
