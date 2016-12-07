@@ -53,6 +53,8 @@ urlpatterns += [
     url(r'^manage/$', views.prof_manage, name='manage'),
     url(r'^manage/addquestion/$', views.add_question),
     url(r'^manage/addquestion/(?P<question_id>\d+)/$', views.edit_question),
+    url(r'^manage/newquestion/$', views.new_question),
+    url(r'^manage/newquestion/(?P<question_id>\d+)/$', views.new_question),
     url(r'^manage/addquiz/(?P<course_id>\d+)/$', views.add_quiz, name='add_quiz'),
     url(r'^manage/addquiz/(?P<course_id>\d+)/(?P<quiz_id>\d+)/$', views.add_quiz, name='edit_quiz'),
     url(r'^manage/gradeuser/$', views.grade_user),

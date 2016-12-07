@@ -53,6 +53,7 @@ test_case_types = (
         ("standardtestcase", "Standard Testcase"),
         ("stdiobasedtestcase", "StdIO Based Testcase"),
         ("mcqtestcase", "MCQ Testcase"),
+        ("hooktestcase", "Hook Testcase"),
     )
 
 attempts = [(i, i) for i in range(1, 6)]
@@ -1122,9 +1123,10 @@ class AssignmentUpload(models.Model):
 ################################################################################
 class TestCase(models.Model):
     question = models.ForeignKey(Question, blank=True, null = True)
+    type = models.CharField(max_length=24, choices=test_case_types, null=True)
 
 class StandardTestCase(TestCase):
-    test_case = models.TextField(blank=True)
+    test_case = models.CharField(blank=True, max_length=100)
     weight = models.FloatField(default=0.0)
 
     def get_field_value(self):
@@ -1138,8 +1140,8 @@ class StandardTestCase(TestCase):
 
 
 class StdioBasedTestCase(TestCase):
-    expected_input = models.TextField(blank=True)
-    expected_output = models.TextField()
+    expected_input = models.CharField(max_length=100, blank=True)
+    expected_output = models.CharField(max_length=100)
     weight = models.IntegerField(default=0.0)
 
     def get_field_value(self):
@@ -1154,7 +1156,7 @@ class StdioBasedTestCase(TestCase):
 
 
 class McqTestCase(TestCase):
-    options = models.TextField()
+    options = models.CharField(max_length=100)
     correct = models.BooleanField(default=False)
 
     def get_field_value(self):
@@ -1164,3 +1166,8 @@ class McqTestCase(TestCase):
         return u'Question: {0} | Correct: {1}'.format(self.question,
             self.correct
         )
+
+
+class HookTestCase(TestCase):
+    code = models.TextField()
+    weight = models.FloatField(default=0.0)

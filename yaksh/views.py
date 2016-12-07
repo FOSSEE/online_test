@@ -25,7 +25,7 @@ import six
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
-                        has_profile
+                        has_profile, StandardTestCase, McqTestCase, StdioBasedTestCase, HookTestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm,\
                 QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
@@ -130,6 +130,85 @@ def results_user(request):
 
 
 @login_required
+def new_question(request, question_id=None):
+    user = request.user
+    ci = RequestContext(request)
+
+    if question_id is None:
+        question = Question(user=user)
+        question.save()
+    else:
+        question = Question.objects.get(id=question_id)
+
+    qform = QuestionForm(instance=question)
+    fileform = FileForm()
+    StandardFormSet = inlineformset_factory(Question, StandardTestCase, extra=0, fields='__all__')
+    standardformset = StandardFormSet(instance=question)
+    StdioFormSet = inlineformset_factory(Question, StdioBasedTestCase, extra=0, fields='__all__')
+    stdioformset = StdioFormSet(instance=question)
+    McqFormSet = inlineformset_factory(Question, McqTestCase, extra=0, fields='__all__')
+    mcqformset = McqFormSet(instance=question)
+    HookFormSet = inlineformset_factory(Question, HookTestCase, extra=0, fields='__all__')
+    hookformset = HookFormSet(instance=question)
+
+    if request.method == 'POST':
+        if 'save_question' in request.POST:
+            qform = QuestionForm(request.POST, instance=question)
+            fileform = FileForm(request.POST, request.FILES)
+            if qform.is_valid():
+                question = qform.save(commit=False)
+                question.user = user
+                question.save()
+                files = request.FILES.getlist('file_field')
+                if files:
+                    for file in files:
+                        FileUpload.objects.get_or_create(question=question, file=file)
+                StandardFormSet = inlineformset_factory(Question, StandardTestCase, extra=0, fields='__all__')
+                standardformset = StandardFormSet(request.POST, request.FILES, instance=question)
+                StdioFormSet = inlineformset_factory(Question, StdioBasedTestCase, extra=0, fields='__all__')
+                stdioformset = StdioFormSet(request.POST, request.FILES, instance=question)
+                McqFormSet = inlineformset_factory(Question, McqTestCase, extra=0, fields='__all__')
+                mcqformset = McqFormSet(request.POST, request.FILES, instance=question)
+                HookFormSet = inlineformset_factory(Question, HookTestCase, extra=0, fields='__all__')
+                hookformset = HookFormSet(request.POST, request.FILES, instance=question)
+                if standardformset.is_valid():
+                    standardformset.save()
+                if mcqformset.is_valid():
+                    mcqformset.save()
+                if stdioformset.is_valid():
+                    stdioformset.save()
+                if hookformset.is_valid():
+                    hookformset.save()
+                return my_redirect("/exam/manage/newquestion/{0}".format(question.id))
+            else:
+                context = {'qform': qform, 'fileform': fileform, 'question': question, 'mcqformset': mcqformset, 'stdioformset': stdioformset,
+                        'standardformset': standardformset, 'hookformset': hookformset}
+                return my_render_to_response("yaksh/new_question.html", context, context_instance=ci)
+        else:
+            test_case_type = request.POST.get('case_type', None)
+            if test_case_type ==  'standardtestcase':
+                StandardFormSet = inlineformset_factory(Question, StandardTestCase, extra=1, fields='__all__')
+                standardformset = StandardFormSet(instance=question)
+            elif test_case_type ==  'stdiobasedtestcase':
+                StdioFormSet = inlineformset_factory(Question, StdioBasedTestCase, extra=1, fields='__all__')
+                stdioformset = StdioFormSet(instance=question)
+            elif test_case_type ==  'mcqtestcase':
+                McqFormSet = inlineformset_factory(Question, McqTestCase, extra=1, fields='__all__')
+                mcqformset = McqFormSet(instance=question)
+            elif test_case_type ==  'hooktestcase':
+                HookFormSet = inlineformset_factory(Question, HookTestCase, extra=1, fields='__all__')
+                hookformset = HookFormSet(instance=question)
+                pass
+            context = {'qform': qform, 'fileform': fileform, 'question': question, 'mcqformset': mcqformset, 'stdioformset': stdioformset,
+                    'standardformset': standardformset, 'hookformset': hookformset}
+            return my_render_to_response("yaksh/new_question.html", context, context_instance=ci)
+
+    context = {'qform': qform, 'fileform': fileform, 'question': question, 'mcqformset': mcqformset, 'stdioformset': stdioformset,
+            'standardformset': standardformset, 'hookformset': hookformset}
+    return my_render_to_response("yaksh/new_question.html", context, context_instance=ci)
+
+
+@login_required
 def add_question(request):
     """To add a new question in the database.
     Create a new question and store it."""
@@ -147,6 +226,7 @@ def add_question(request):
             if files:
                 for file in files:
                     FileUpload.objects.get_or_create(question=new_question, file=file)
+
             return my_redirect("/exam/manage/addquestion/{0}".format(new_question.id))
         else:
             return my_render_to_response('yaksh/add_question.html',
