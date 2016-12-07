@@ -19,9 +19,12 @@ except ImportError:
 
 # Local imports
 from .settings import SERVER_TIMEOUT
+from .language_registry import create_evaluator_instance
+
 
 MY_DIR = abspath(dirname(__file__))
 
+registry = None
 
 # Raised when the code times-out.
 # c.f. http://pguides.net/python/timeout-a-function
@@ -63,7 +66,8 @@ class CodeEvaluator(object):
         self.timeout_msg = msg
         self.in_dir = in_dir
 
-    def evaluate(self, **kwargs):
+
+    def evaluate(self, kwargs): #language, test_case_type, 
         """Evaluates given code with the test cases based on
         given arguments in test_case_data.
 
@@ -85,6 +89,9 @@ class CodeEvaluator(object):
         A tuple: (success, error message, weight).
         """
 
+        # self.language = language
+        # self.test_case_type = test_case_type
+
         self.setup()
         success, error, weight = self.safe_evaluate(**kwargs)
         self.teardown()
@@ -99,11 +106,13 @@ class CodeEvaluator(object):
                 os.makedirs(self.in_dir)
         self._change_dir(self.in_dir)
 
-    def safe_evaluate(self, user_answer, partial_grading, test_case_data, file_paths=None):
+    def safe_evaluate(self, **kwargs): #user_answer, partial_grading, test_case_data, file_paths=None
         """
         Handles code evaluation along with compilation, signal handling
         and Exception handling
         """
+        metadata = kwargs.get('metadata') # metadata contains user_answer, language, partial_grading, file_paths
+        test_case_data = kwargs.get('test_case_data')
 
         # Add a new signal handler for the execution of this code.
         prev_handler = create_signal_handler()
@@ -114,14 +123,16 @@ class CodeEvaluator(object):
 
         # Do whatever testing needed.
         try:
+            # Run evaluator selection registry here
             for idx, test_case in enumerate(test_case_data):
+                test_case_instance = create_evaluator_instance(metadata, test_case) #language, test_case
                 test_case_success = False
-                self.compile_code(user_answer, file_paths, **test_case)
-                test_case_success, err, test_case_weight = self.check_code(user_answer,
-                    file_paths,
-                    partial_grading,
-                    **test_case
-                )
+                test_case_instance.compile_code() #user_answer, file_paths, test_case
+                test_case_success, err, test_case_weight = test_case_instance.check_code() #**kwargs
+                # user_answer,
+                    # file_paths,
+                    # partial_grading,
+                    # **test_case
                 if test_case_success:
                     weight += test_case_weight
 
@@ -135,7 +146,7 @@ class CodeEvaluator(object):
         except OSError:
             msg = traceback.format_exc(limit=0)
             error = "Error: {0}".format(msg)
-        except Exception:
+        except Exception as e:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
             if len(tb_list) > 2:
@@ -146,6 +157,56 @@ class CodeEvaluator(object):
             set_original_signal_handler(prev_handler)
 
         return success, error, weight
+
+    # def safe_evaluate(self, user_answer, partial_grading, test_case_data, file_paths=None):
+    #     """
+    #     Handles code evaluation along with compilation, signal handling
+    #     and Exception handling
+    #     """
+
+    #     # Add a new signal handler for the execution of this code.
+    #     prev_handler = create_signal_handler()
+    #     success = False
+    #     test_case_success_status = [False] * len(test_case_data)
+    #     error = ""
+    #     weight = 0.0
+
+    #     # Do whatever testing needed.
+    #     try:
+    #         for idx, test_case in enumerate(test_case_data):
+    #             test_case_success = False
+    #             self.compile_code(user_answer, file_paths, **test_case)
+    #             test_case_success, err, test_case_weight = self.check_code(user_answer,
+    #                 file_paths,
+    #                 partial_grading,
+    #                 **test_case
+    #             )
+    #             if test_case_success:
+    #                 weight += test_case_weight
+
+    #             error += err + "\n"
+    #             test_case_success_status[idx] = test_case_success
+
+    #         success = all(test_case_success_status)
+
+    #     except TimeoutException:
+    #         error = self.timeout_msg
+    #     except OSError:
+    #         msg = traceback.format_exc(limit=0)
+    #         error = "Error: {0}".format(msg)
+    #     except Exception as e:
+    #         print "HELLOOOOO", e
+    #         exc_type, exc_value, exc_tb = sys.exc_info()
+    #         tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
+    #         if len(tb_list) > 2:
+    #             del tb_list[1:3]
+    #         error = "Error: {0}".format("".join(tb_list))
+    #     finally:
+    #         # Set back any original signal handler.
+    #         set_original_signal_handler(prev_handler)
+
+    #     return success, error, weight
+
 
     def teardown(self):
         # Cancel the signal
