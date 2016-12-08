@@ -31,24 +31,36 @@ def redirect_stdout():
 class PythonStdioEvaluator(CodeEvaluator):
     """Tests the Python code obtained from Code Server"""
 
-    def setup(self):
-        super(PythonStdioEvaluator, self).setup()
+    # def setup(self):
+    #     super(PythonStdioEvaluator, self).setup()
+    #     self.files = []
+
+    # def teardown(self):
+    #     # Delete the created file.
+    #     if self.files:
+    #         delete_files(self.files)
+    #     super(PythonStdioEvaluator, self).teardown()
+    def __init__(self, metadata, test_case_data):
         self.files = []
 
-    def teardown(self):
-        # Delete the created file.
-        if self.files:
-            delete_files(self.files)
-        super(PythonStdioEvaluator, self).teardown()
+        # Set metadata values
+        self.user_answer = metadata.get('user_answer')
+        self.file_paths = metadata.get('file_paths')
+        self.partial_grading = metadata.get('partial_grading')
+
+        # Set test case data values
+        self.expected_input = test_case_data.get('expected_input')
+        self.expected_output = test_case_data.get('expected_output')
+        self.weight = test_case_data.get('weight')        
 
 
-    def compile_code(self, user_answer, file_paths, expected_input, expected_output, weight):
-        if file_paths:
-            self.files = copy_files(file_paths)
-        submitted = compile(user_answer, '<string>', mode='exec')
-        if expected_input:
+    def compile_code(self): # user_answer, file_paths, expected_input, expected_output, weight):
+        if self.file_paths:
+            self.files = copy_files(self.file_paths)
+        submitted = compile(self.user_answer, '<string>', mode='exec')
+        if self.expected_input:
             input_buffer = StringIO()
-            input_buffer.write(expected_input)
+            input_buffer.write(self.expected_input)
             input_buffer.seek(0)
             sys.stdin = input_buffer
         with redirect_stdout() as output_buffer:
@@ -57,16 +69,15 @@ class PythonStdioEvaluator(CodeEvaluator):
         self.output_value = output_buffer.getvalue().rstrip("\n")
         return self.output_value
 
-    def check_code(self, user_answer, file_paths, partial_grading, expected_input,
-         expected_output, weight):
+    def check_code(self): # user_answer, file_paths, partial_grading, expected_input, expected_output, weight):
         success = False
         test_case_weight = 0.0
 
         tb = None
-        if self.output_value == expected_output:
+        if self.output_value == self.expected_output:
             success = True
             err = "Correct answer"
-            test_case_weight = weight
+            test_case_weight = self.weight
         else:
             success = False
             err = dedent("""
@@ -74,8 +85,8 @@ class PythonStdioEvaluator(CodeEvaluator):
                 Given input - {0}
                 Expected output - {1}
                 Your output - {2}
-                """.format(expected_input,
-                     expected_output,
+                """.format(self.expected_input,
+                     self.expected_output,
                      self.output_value
                     )
                 )
