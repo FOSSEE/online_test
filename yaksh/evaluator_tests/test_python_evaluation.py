@@ -263,7 +263,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(3, len(err))
+        self.assertEqual(9, len(err))
         for msg in name_error_msg:
             self.assertIn(msg, result.get("error"))
 
@@ -337,7 +337,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(3, len(err))
+        self.assertEqual(9, len(err))
         for msg in type_error_msg:
             self.assertIn(msg, result.get("error"))
 
@@ -377,7 +377,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(4, len(err))
+        self.assertEqual(9, len(err))
         for msg in value_error_msg:
             self.assertIn(msg, result.get("error"))
 
@@ -455,7 +455,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(5, len(err))
+        self.assertEqual(6, len(err))
         for msg in syntax_error_msg:
             self.assertIn(msg, result.get("error"))
 
@@ -476,9 +476,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                           ]
         name_error_msg = ["Traceback",
                           "call",
-                          "File",
-                          "line",
-                          "<string>",
                           "NameError",
                           "name 'S' is not defined"
                           ]
@@ -504,7 +501,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(3, len(err))
+        self.assertEqual(7, len(err))
         for msg in name_error_msg:
             self.assertIn(msg, result.get("error"))
 

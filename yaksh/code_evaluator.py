@@ -89,11 +89,9 @@ class CodeEvaluator(object):
         A tuple: (success, error message, weight).
         """
 
-        # self.language = language
-        # self.test_case_type = test_case_type
-
+        test_case_instances = self.get_evaluator_objects(kwargs)
         self.setup()
-        success, error, weight = self.safe_evaluate(**kwargs)
+        success, error, weight = self.safe_evaluate(test_case_instances)
         self.teardown()
 
         result = {'success': success, 'error': error, 'weight': weight}
@@ -106,29 +104,43 @@ class CodeEvaluator(object):
                 os.makedirs(self.in_dir)
         self._change_dir(self.in_dir)
 
-    def safe_evaluate(self, **kwargs): #user_answer, partial_grading, test_case_data, file_paths=None
+    def get_evaluator_objects(self, kwargs):
+        metadata = kwargs.get('metadata') # metadata contains user_answer, language, partial_grading, file_paths
+        test_case_data = kwargs.get('test_case_data')
+        test_case_instances = []
+
+        for test_case in test_case_data:
+            test_case_instance = create_evaluator_instance(metadata, test_case) #language, test_case
+            test_case_instances.append(test_case_instance)
+
+        return test_case_instances
+
+
+    def safe_evaluate(self, test_case_instances): #user_answer, partial_grading, test_case_data, file_paths=None
         """
         Handles code evaluation along with compilation, signal handling
         and Exception handling
         """
-        metadata = kwargs.get('metadata') # metadata contains user_answer, language, partial_grading, file_paths
-        test_case_data = kwargs.get('test_case_data')
+        # metadata = kwargs.get('metadata') # metadata contains user_answer, language, partial_grading, file_paths
+        # test_case_data = kwargs.get('test_case_data')
 
         # Add a new signal handler for the execution of this code.
         prev_handler = create_signal_handler()
         success = False
-        test_case_success_status = [False] * len(test_case_data)
+        test_case_success_status = [False] * len(test_case_instances)
         error = ""
         weight = 0.0
 
         # Do whatever testing needed.
         try:
             # Run evaluator selection registry here
-            for idx, test_case in enumerate(test_case_data):
-                test_case_instance = create_evaluator_instance(metadata, test_case) #language, test_case
+            for idx, test_case_instance in enumerate(test_case_instances):
+                # test_case_instance = create_evaluator_instance(metadata, test_case) #language, test_case
+                # self.setup()
                 test_case_success = False
                 test_case_instance.compile_code() #user_answer, file_paths, test_case
                 test_case_success, err, test_case_weight = test_case_instance.check_code() #**kwargs
+                # self.teardown()
                 # user_answer,
                     # file_paths,
                     # partial_grading,
@@ -213,64 +225,64 @@ class CodeEvaluator(object):
         delete_signal_handler()
         self._change_dir(dirname(MY_DIR))
 
-    def check_code(self):
-        raise NotImplementedError("check_code method not implemented")
+    # def check_code(self):
+    #     raise NotImplementedError("check_code method not implemented")
 
-    def compile_code(self, user_answer, file_paths, **kwargs):
-        pass
+    # def compile_code(self, user_answer, file_paths, **kwargs):
+    #     pass
 
-    def create_submit_code_file(self, file_name):
-        """ Set the file path for code (`answer`)"""
-        submit_path = abspath(file_name)
-        if not exists(submit_path):
-            submit_f = open(submit_path, 'w')
-            submit_f.close()
+    # def create_submit_code_file(self, file_name):
+    #     """ Set the file path for code (`answer`)"""
+    #     submit_path = abspath(file_name)
+    #     if not exists(submit_path):
+    #         submit_f = open(submit_path, 'w')
+    #         submit_f.close()
 
-        return submit_path
+    #     return submit_path
 
-    def write_to_submit_code_file(self, file_path, user_answer):
-        """ Write the code (`answer`) to a file"""
-        submit_f = open(file_path, 'w')
-        submit_f.write(user_answer.lstrip())
-        submit_f.close()
+    # def write_to_submit_code_file(self, file_path, user_answer):
+    #     """ Write the code (`answer`) to a file"""
+    #     submit_f = open(file_path, 'w')
+    #     submit_f.write(user_answer.lstrip())
+    #     submit_f.close()
 
     def _set_file_as_executable(self, fname):
         os.chmod(fname,  stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
                  | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
                  | stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH)
 
-    def _set_test_code_file_path(self, ref_path=None, test_case_path=None):
-        if ref_path and not ref_path.startswith('/'):
-            ref_path = join(MY_DIR, ref_path)
+    # def _set_test_code_file_path(self, ref_path=None, test_case_path=None):
+    #     if ref_path and not ref_path.startswith('/'):
+    #         ref_path = join(MY_DIR, ref_path)
 
-        if test_case_path and not test_case_path.startswith('/'):
-            test_case_path = join(MY_DIR, test_case_path)
+    #     if test_case_path and not test_case_path.startswith('/'):
+    #         test_case_path = join(MY_DIR, test_case_path)
 
-        return ref_path, test_case_path
+    #     return ref_path, test_case_path
 
-    def _run_command(self, cmd_args, *args, **kw):
-        """Run a command in a subprocess while blocking, the process is killed
-        if it takes more than 2 seconds to run.  Return the Popen object, the
-        stdout and stderr.
-        """
-        try:
-            proc = subprocess.Popen(cmd_args, *args, **kw)
-            stdout, stderr = proc.communicate()
-        except TimeoutException:
-            # Runaway code, so kill it.
-            proc.kill()
-            # Re-raise exception.
-            raise
-        return proc, stdout.decode('utf-8'), stderr.decode('utf-8')
+    # def _run_command(self, cmd_args, *args, **kw):
+    #     """Run a command in a subprocess while blocking, the process is killed
+    #     if it takes more than 2 seconds to run.  Return the Popen object, the
+    #     stdout and stderr.
+    #     """
+    #     try:
+    #         proc = subprocess.Popen(cmd_args, *args, **kw)
+    #         stdout, stderr = proc.communicate()
+    #     except TimeoutException:
+    #         # Runaway code, so kill it.
+    #         proc.kill()
+    #         # Re-raise exception.
+    #         raise
+    #     return proc, stdout.decode('utf-8'), stderr.decode('utf-8')
 
     def _change_dir(self, in_dir):
         if in_dir is not None and isdir(in_dir):
             os.chdir(in_dir)
 
-    def _remove_null_substitute_char(self, string):
-        """Returns a string without any null and substitute characters"""
-        stripped = ""
-        for c in string:
-            if ord(c) is not 26 and ord(c) is not 0:
-                stripped = stripped + c
-        return ''.join(stripped)
+    # def _remove_null_substitute_char(self, string):
+    #     """Returns a string without any null and substitute characters"""
+    #     stripped = ""
+    #     for c in string:
+    #         if ord(c) is not 26 and ord(c) is not 0:
+    #             stripped = stripped + c
+    #     return ''.join(stripped)

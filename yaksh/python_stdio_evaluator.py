@@ -14,8 +14,8 @@ except ImportError:
     from io import StringIO
 
 # Local imports
-from .code_evaluator import CodeEvaluator
 from .file_utils import copy_files, delete_files
+from .base_evaluator import BaseEvaluator
 
 
 @contextmanager
@@ -28,7 +28,7 @@ def redirect_stdout():
         sys.stdout = old_target  # restore to the previous value
 
 
-class PythonStdioEvaluator(CodeEvaluator):
+class PythonStdioEvaluator(BaseEvaluator):
     """Tests the Python code obtained from Code Server"""
 
     # def setup(self):

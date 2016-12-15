@@ -54,6 +54,7 @@ from tornado.web import Application, RequestHandler
 # Local imports
 from .settings import SERVER_PORTS, SERVER_POOL_PORT
 from .language_registry import create_evaluator_instance
+from .code_evaluator import CodeEvaluator
 
 
 MY_DIR = abspath(dirname(__file__))
@@ -89,9 +90,9 @@ class CodeServer(object):
         #     json_data,
         #     in_dir
         # )
-        data = unpack_json_to_python_obj(json_data)
+        data = self.unpack_json_to_python_obj(json_data)
         code_eval_instance = CodeEvaluator(in_dir)
-        result = code_eval_instance.evaluate(**data) #language, test_case_type, 
+        result = code_eval_instance.evaluate(data) #language, test_case_type, 
 
         # Put us back into the server pool queue since we are free now.
         self.queue.put(self.port)

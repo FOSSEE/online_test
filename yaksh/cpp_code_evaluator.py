@@ -5,17 +5,15 @@ import pwd
 import os
 from os.path import join, isfile
 import subprocess
-import importlib
 
 # Local imports
-from .code_evaluator import CodeEvaluator
 from .file_utils import copy_files, delete_files
+from .base_evaluator import BaseEvaluator
 
 
-class CppCodeEvaluator(CodeEvaluator):
+class CppCodeEvaluator(BaseEvaluator):
     """Tests the C code obtained from Code Server"""
-    def setup(self):
-        super(CppCodeEvaluator, self).setup()
+    def __init__(self, metadata, test_case_data):
         self.files = []
         self.submit_code_path = self.create_submit_code_file('submit.c')
         self.compiled_user_answer = None
@@ -23,16 +21,34 @@ class CppCodeEvaluator(CodeEvaluator):
         self.user_output_path = ""
         self.ref_output_path = ""
 
-    def teardown(self):
-        # Delete the created file.
-        os.remove(self.submit_code_path)
-        if os.path.exists(self.ref_output_path):
-            os.remove(self.ref_output_path)
-        if os.path.exists(self.user_output_path):
-            os.remove(self.user_output_path)
-        if self.files:
-            delete_files(self.files)
-        super(CppCodeEvaluator, self).teardown()
+        # Set metadata values
+        self.user_answer = metadata.get('user_answer')
+        self.file_paths = metadata.get('file_paths')
+        self.partial_grading = metadata.get('partial_grading')
+
+        # Set test case data values
+        self.test_case = test_case_data.get('test_case')
+        self.weight = test_case_data.get('weight')
+
+    # def setup(self):
+    #     super(CppCodeEvaluator, self).setup()
+    #     self.files = []
+    #     self.submit_code_path = self.create_submit_code_file('submit.c')
+    #     self.compiled_user_answer = None
+    #     self.compiled_test_code = None
+    #     self.user_output_path = ""
+    #     self.ref_output_path = ""
+
+    # def teardown(self):
+    #     # Delete the created file.
+    #     os.remove(self.submit_code_path)
+    #     if os.path.exists(self.ref_output_path):
+    #         os.remove(self.ref_output_path)
+    #     if os.path.exists(self.user_output_path):
+    #         os.remove(self.user_output_path)
+    #     if self.files:
+    #         delete_files(self.files)
+    #     super(CppCodeEvaluator, self).teardown()
 
 
     def set_file_paths(self):

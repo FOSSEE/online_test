@@ -7,11 +7,12 @@ from os.path import join
 import importlib
 
 # Local imports
-from .code_evaluator import CodeEvaluator, TimeoutException
 from .file_utils import copy_files, delete_files
+from .base_evaluator import BaseEvaluator
+from .code_evaluator import TimeoutException
 
 
-class PythonAssertionEvaluator(object):
+class PythonAssertionEvaluator(BaseEvaluator):
     """Tests the Python code obtained from Code Server"""
 
     def __init__(self, metadata, test_case_data):
@@ -31,7 +32,6 @@ class PythonAssertionEvaluator(object):
     #     # Delete the created file.
     #     if self.files:
     #         delete_files(self.files)
-
 
     # def setup(self):
     #     super(PythonAssertionEvaluator, self).setup()
@@ -98,9 +98,11 @@ class PythonAssertionEvaluator(object):
             text = str(self.test_case).splitlines()[lineno-1]
             err = ("-----\nExpected Test Case:\n{0}\n"
                     "Error - {1} {2} in: {3}\n-----").format(self.test_case, type.__name__, str(value), text)
+        except TimeoutException:
+            raise
         except Exception:
-             msg = traceback.format_exc(limit=0)
-             err = "Error in Test case: {0}".format(msg)
+            msg = traceback.format_exc(limit=0)
+            err = "Error in Test case: {0}".format(msg)
         else:
             success = True
             err = '-----\nCorrect answer\nTest Case: {0}\n-----'.format(self.test_case)
