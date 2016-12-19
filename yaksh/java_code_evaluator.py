@@ -8,20 +8,37 @@ import subprocess
 import importlib
 
 # Local imports
-from .code_evaluator import CodeEvaluator
+from .base_evaluator import BaseEvaluator
 from .file_utils import copy_files, delete_files
 
 
-class JavaCodeEvaluator(CodeEvaluator):
+class JavaCodeEvaluator(BaseEvaluator):
     """Tests the Java code obtained from Code Server"""
-    def setup(self):
-        super(JavaCodeEvaluator, self).setup()
+    def __init__(self, metadata, test_case_data):
         self.files = []
-        self.submit_code_path = self.create_submit_code_file('Test.java')
+        # self.submit_code_path = self.create_submit_code_file('Test.java')
         self.compiled_user_answer = None
         self.compiled_test_code = None
         self.user_output_path = ""
         self.ref_output_path = ""
+
+        # Set metadata values
+        self.user_answer = metadata.get('user_answer')
+        self.file_paths = metadata.get('file_paths')
+        self.partial_grading = metadata.get('partial_grading')
+
+        # Set test case data values
+        self.test_case = test_case_data.get('test_case')
+        self.weight = test_case_data.get('weight')
+
+    # def setup(self):
+    #     super(JavaCodeEvaluator, self).setup()
+    #     self.files = []
+    #     self.submit_code_path = self.create_submit_code_file('Test.java')
+    #     self.compiled_user_answer = None
+    #     self.compiled_test_code = None
+    #     self.user_output_path = ""
+    #     self.ref_output_path = ""
 
     def teardown(self):
         # Delete the created file.
@@ -32,8 +49,6 @@ class JavaCodeEvaluator(CodeEvaluator):
             os.remove(self.ref_output_path)
         if self.files:
             delete_files(self.files)
-        super(JavaCodeEvaluator, self).teardown()
-
 
     def get_commands(self, clean_ref_code_path, user_code_directory):
         compile_command = 'javac  {0}'.format(self.submit_code_path),
@@ -47,15 +62,16 @@ class JavaCodeEvaluator(CodeEvaluator):
         output_path = "{0}{1}.class".format(directory, file_name)
         return output_path
 
-    def compile_code(self, user_answer, file_paths, test_case, weight):
+    def compile_code(self): # , user_answer, file_paths, test_case, weight
         if self.compiled_user_answer and self.compiled_test_code:
             return None
         else:
-            ref_code_path = test_case
+            self.submit_code_path = self.create_submit_code_file('Test.java')
+            ref_code_path = self.test_case
             clean_ref_code_path, clean_test_case_path = \
                      self._set_test_code_file_path(ref_code_path)
-            if file_paths:
-                self.files = copy_files(file_paths)
+            if self.file_paths:
+                self.files = copy_files(self.file_paths)
             if not isfile(clean_ref_code_path):
                 msg = "No file at %s or Incorrect path" % clean_ref_code_path
                 return False, msg
@@ -65,7 +81,7 @@ class JavaCodeEvaluator(CodeEvaluator):
 
             user_code_directory = os.getcwd() + '/'
             self.write_to_submit_code_file(self.submit_code_path, 
-                user_answer
+                self.user_answer
             )
             ref_file_name = (clean_ref_code_path.split('/')[-1]).split('.')[0]
             self.user_output_path = self.set_file_paths(user_code_directory, 
@@ -82,6 +98,7 @@ class JavaCodeEvaluator(CodeEvaluator):
                 user_code_directory,
                 ref_file_name
             )
+
             self.compiled_user_answer = self._run_command(compile_command,
                 shell=True,
                 stdout=subprocess.PIPE,
@@ -96,7 +113,7 @@ class JavaCodeEvaluator(CodeEvaluator):
 
             return self.compiled_user_answer, self.compiled_test_code
 
-    def check_code(self, user_answer, file_paths, partial_grading, test_case, weight):
+    def check_code(self): #  user_answer, file_paths, partial_grading, test_case, weight
         """ Function validates student code using instructor code as
         reference.The first argument ref_code_path, is the path to
         instructor code, it is assumed to have executable permission.
@@ -136,7 +153,7 @@ class JavaCodeEvaluator(CodeEvaluator):
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
                     success, err = True, "Correct answer"
-                    test_case_weight = float(weight) if partial_grading else 0.0
+                    test_case_weight = float(seelf.weight) if self.partial_grading else 0.0
                 else:
                     err = stdout + "\n" + stderr
             else:
@@ -161,4 +178,5 @@ class JavaCodeEvaluator(CodeEvaluator):
                         err = err + "\n" + e
             except:
                 err = err + "\n" + stdnt_stderr
+
         return success, err, test_case_weight

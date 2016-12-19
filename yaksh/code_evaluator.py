@@ -4,6 +4,7 @@ import sys
 import pwd
 import os
 import stat
+import contextlib
 from os.path import isdir, dirname, abspath, join, isfile, exists
 import signal
 import traceback
@@ -30,6 +31,15 @@ registry = None
 # c.f. http://pguides.net/python/timeout-a-function
 class TimeoutException(Exception):
     pass
+
+@contextlib.contextmanager
+def change_dir(path):
+    cur_dir = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(cur_dir)
 
 
 def timeout_handler(signum, frame):
@@ -89,9 +99,10 @@ class CodeEvaluator(object):
         A tuple: (success, error message, weight).
         """
 
-        test_case_instances = self.get_evaluator_objects(kwargs)
         self.setup()
-        success, error, weight = self.safe_evaluate(test_case_instances)
+        test_case_instances = self.get_evaluator_objects(kwargs)
+        with change_dir(self.in_dir):
+            success, error, weight = self.safe_evaluate(test_case_instances)
         self.teardown()
 
         result = {'success': success, 'error': error, 'weight': weight}
@@ -102,7 +113,7 @@ class CodeEvaluator(object):
         if self.in_dir:
             if not os.path.exists(self.in_dir):
                 os.makedirs(self.in_dir)
-        self._change_dir(self.in_dir)
+        # self._change_dir(self.in_dir)
 
     def get_evaluator_objects(self, kwargs):
         metadata = kwargs.get('metadata') # metadata contains user_answer, language, partial_grading, file_paths
@@ -140,6 +151,7 @@ class CodeEvaluator(object):
                 test_case_success = False
                 test_case_instance.compile_code() #user_answer, file_paths, test_case
                 test_case_success, err, test_case_weight = test_case_instance.check_code() #**kwargs
+                test_case_instance.teardown()
                 # self.teardown()
                 # user_answer,
                     # file_paths,
@@ -223,7 +235,7 @@ class CodeEvaluator(object):
     def teardown(self):
         # Cancel the signal
         delete_signal_handler()
-        self._change_dir(dirname(MY_DIR))
+        # self._change_dir(dirname(MY_DIR))
 
     # def check_code(self):
     #     raise NotImplementedError("check_code method not implemented")
@@ -246,10 +258,10 @@ class CodeEvaluator(object):
     #     submit_f.write(user_answer.lstrip())
     #     submit_f.close()
 
-    def _set_file_as_executable(self, fname):
-        os.chmod(fname,  stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
-                 | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
-                 | stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH)
+    # def _set_file_as_executable(self, fname):
+    #     os.chmod(fname,  stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+    #              | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
+    #              | stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH)
 
     # def _set_test_code_file_path(self, ref_path=None, test_case_path=None):
     #     if ref_path and not ref_path.startswith('/'):
@@ -275,9 +287,9 @@ class CodeEvaluator(object):
     #         raise
     #     return proc, stdout.decode('utf-8'), stderr.decode('utf-8')
 
-    def _change_dir(self, in_dir):
-        if in_dir is not None and isdir(in_dir):
-            os.chdir(in_dir)
+    # def _change_dir(self, in_dir):
+    #     if in_dir is not None and isdir(in_dir):
+    #         os.chdir(in_dir)
 
     # def _remove_null_substitute_char(self, string):
     #     """Returns a string without any null and substitute characters"""

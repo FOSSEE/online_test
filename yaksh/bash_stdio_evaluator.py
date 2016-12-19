@@ -11,43 +11,54 @@ from .file_utils import copy_files, delete_files
 
 class BashStdioEvaluator(StdIOEvaluator):
     """Evaluates Bash StdIO based code"""
-
-    def setup(self):
-        super(BashStdioEvaluator, self).setup()
+    def __init__(self, metadata, test_case_data):
         self.files = []
-        self.submit_code_path = self.create_submit_code_file('Test.sh')
+
+        # Set metadata values
+        self.user_answer = metadata.get('user_answer')
+        self.file_paths = metadata.get('file_paths')
+        self.partial_grading = metadata.get('partial_grading')
+
+        # Set test case data values
+        self.expected_input = test_case_data.get('expected_input')
+        self.expected_output = test_case_data.get('expected_output')
+        self.weight = test_case_data.get('weight') 
+
+    # def setup(self):
+    #     super(BashStdioEvaluator, self).setup()
+    #     self.files = []
+    #     self.submit_code_path = self.create_submit_code_file('Test.sh')
 
     def teardown(self):
         os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
-        super(BashStdioEvaluator, self).teardown()
 
-    def compile_code(self, user_answer, file_paths, expected_input, expected_output, weight):
-        if file_paths:
-            self.files = copy_files(file_paths)
+    def compile_code(self):
+        self.submit_code_path = self.create_submit_code_file('Test.sh')
+        if self.file_paths:
+            self.files = copy_files(self.file_paths)
         if not isfile(self.submit_code_path):
             msg = "No file at %s or Incorrect path" % self.submit_code_path
             return False, msg
         user_code_directory = os.getcwd() + '/'
-        user_answer = user_answer.replace("\r", "")
-        self.write_to_submit_code_file(self.submit_code_path, user_answer)
+        self.user_answer = self.user_answer.replace("\r", "")
+        self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
 
-    def check_code(self, user_answer, file_paths, partial_grading,
-        expected_input, expected_output, weight):
+    def check_code(self):
         success = False
         test_case_weight = 0.0
 
-        expected_input = str(expected_input).replace('\r', '')
+        self.expected_input = str(self.expected_input).replace('\r', '')
         proc = subprocess.Popen("bash ./Test.sh",
                                 shell=True,
                                 stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE
                                 )
-        success, err = self.evaluate_stdio(user_answer, proc,
-                                           expected_input,
-                                           expected_output
+        success, err = self.evaluate_stdio(self.user_answer, proc,
+                                           self.expected_input,
+                                           self.expected_output
                                            )
-        test_case_weight = float(weight) if partial_grading and success else 0.0
+        test_case_weight = float(self.weight) if self.partial_grading and success else 0.0
         return success, err, test_case_weight

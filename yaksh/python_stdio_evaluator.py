@@ -35,11 +35,6 @@ class PythonStdioEvaluator(BaseEvaluator):
     #     super(PythonStdioEvaluator, self).setup()
     #     self.files = []
 
-    # def teardown(self):
-    #     # Delete the created file.
-    #     if self.files:
-    #         delete_files(self.files)
-    #     super(PythonStdioEvaluator, self).teardown()
     def __init__(self, metadata, test_case_data):
         self.files = []
 
@@ -53,6 +48,10 @@ class PythonStdioEvaluator(BaseEvaluator):
         self.expected_output = test_case_data.get('expected_output')
         self.weight = test_case_data.get('weight')        
 
+    def teardown(self):
+        # Delete the created file.
+        if self.files:
+            delete_files(self.files)
 
     def compile_code(self): # user_answer, file_paths, expected_input, expected_output, weight):
         if self.file_paths:

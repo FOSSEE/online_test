@@ -25,8 +25,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             "You probably have an infinite loop in"
                             " your code.").format(SERVER_TIMEOUT)
         self.file_paths = None
-        self.language = 'python'
-        self.test_case_type = 'standardtestcase'
 
     def tearDown(self):
         os.remove('/tmp/test.txt')

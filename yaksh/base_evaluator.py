@@ -4,7 +4,13 @@ import traceback
 import pwd
 import os
 from os.path import join, isfile
+from os.path import isdir, dirname, abspath, join, isfile, exists
 import subprocess
+import stat
+
+
+# Local imports
+from .code_evaluator import MY_DIR, TimeoutException
 
 class BaseEvaluator(object):
     """Base Evaluator class containing generic attributes and callable methods"""
@@ -64,3 +70,8 @@ class BaseEvaluator(object):
             test_case_path = join(MY_DIR, test_case_path)
 
         return ref_path, test_case_path
+
+    def _set_file_as_executable(self, fname):
+        os.chmod(fname,  stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+                 | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
+                 | stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH)

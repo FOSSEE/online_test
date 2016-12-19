@@ -11,17 +11,29 @@ from .file_utils import copy_files, delete_files
 
 class CppStdioEvaluator(StdIOEvaluator):
     """Evaluates C StdIO based code"""
-
-    def setup(self):
-        super(CppStdioEvaluator, self).setup()
+    def __init__(self, metadata, test_case_data):
         self.files = []
-        self.submit_code_path = self.create_submit_code_file('main.c')
+        self.submit_code_path = self.create_submit_code_file('submit.c')
+
+        # Set metadata values
+        self.user_answer = metadata.get('user_answer')
+        self.file_paths = metadata.get('file_paths')
+        self.partial_grading = metadata.get('partial_grading')
+
+        # Set test case data values
+        self.expected_input = test_case_data.get('expected_input')
+        self.expected_output = test_case_data.get('expected_output')
+        self.weight = test_case_data.get('weight') 
+
+    # def setup(self):
+    #     super(CppStdioEvaluator, self).setup()
+    #     self.files = []
+    #     self.submit_code_path = self.create_submit_code_file('main.c')
 
     def teardown(self):
         os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
-        super(CppStdioEvaluator, self).teardown()
 
     def set_file_paths(self):
         user_output_path = os.getcwd() + '/output_file'
@@ -35,13 +47,13 @@ class CppStdioEvaluator(StdIOEvaluator):
                                                ref_output_path)
         return compile_command, compile_main
 
-    def compile_code(self, user_answer, file_paths, expected_input, expected_output, weight):
-        if file_paths:
+    def compile_code(self):
+        if self.file_paths:
             self.files = copy_files(file_paths)
         if not isfile(self.submit_code_path):
             msg = "No file at %s or Incorrect path" % self.submit_code_path
             return False, msg
-        self.write_to_submit_code_file(self.submit_code_path, user_answer)
+        self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
         self.user_output_path, self.ref_output_path = self.set_file_paths()
         self.compile_command, self.compile_main = self.get_commands(
             self.user_output_path,
@@ -61,8 +73,7 @@ class CppStdioEvaluator(StdIOEvaluator):
                                                     )
         return self.compiled_user_answer, self.compiled_test_code
 
-    def check_code(self, user_answer, file_paths, partial_grading,
-        expected_input, expected_output, weight):
+    def check_code(self):
         success = False
         test_case_weight = 0.0
 
@@ -78,9 +89,9 @@ class CppStdioEvaluator(StdIOEvaluator):
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE
                                         )
-                success, err = self.evaluate_stdio(user_answer, proc,
-                                                   expected_input,
-                                                   expected_output
+                success, err = self.evaluate_stdio(self.user_answer, proc,
+                                                   self.expected_input,
+                                                   self.expected_output
                                                    )
                 os.remove(self.ref_output_path)
             else:
@@ -106,5 +117,5 @@ class CppStdioEvaluator(StdIOEvaluator):
                         err = err + "\n" + e
             except:
                 err = err + "\n" + stdnt_stderr
-        test_case_weight = float(weight) if partial_grading and success else 0.0
+        test_case_weight = float(self.weight) if self.partial_grading and success else 0.0
         return success, err, test_case_weight

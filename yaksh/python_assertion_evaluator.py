@@ -39,19 +39,10 @@ class PythonAssertionEvaluator(BaseEvaluator):
     #     self.files = []
 
 
-    # def teardown(self):
-    #     # Delete the created file.
-    #     if self.files:
-    #         delete_files(self.files)
-    #     super(PythonAssertionEvaluator, self).teardown()
-
-    # def teardown(self):
-    #     # Delete the created file.
-    #     if self.files:
-    #         delete_files(self.files)
-    #     # Cancel the signal
-    #     delete_signal_handler()
-    #     self._change_dir(dirname(MY_DIR))
+    def teardown(self):
+        # Delete the created file.
+        if self.files:
+            delete_files(self.files)
 
     def compile_code(self):
         if self.file_paths:
