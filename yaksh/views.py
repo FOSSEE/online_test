@@ -165,17 +165,17 @@ def add_question(request, question_id=None):
             files = FileUpload.objects.filter(id__in=hide_files_id)
             for file in files:
                 file.toggle_hide_status()
+        formsets = []
+        for testcase in TestCase.__subclasses__():
+            formset = inlineformset_factory(Question, testcase, extra=0,
+                                            fields='__all__')
+            formsets.append(formset(request.POST, request.FILES, instance=question))
+        files = request.FILES.getlist('file_field')
+        uploaded_files = FileUpload.objects.filter(question_id=question.id)
         if qform.is_valid():
             question = qform.save(commit=False)
             question.user = user
             question.save()
-            files = request.FILES.getlist('file_field')
-            uploaded_files = FileUpload.objects.filter(question_id=question.id)
-            formsets = []
-            for testcase in TestCase.__subclasses__():
-                formset = inlineformset_factory(Question, testcase, extra=0,
-                                                fields='__all__')
-                formsets.append(formset(request.POST, request.FILES, instance=question))
             for formset in formsets:
                 if formset.is_valid():
                     formset.save()
