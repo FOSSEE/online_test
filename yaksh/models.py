@@ -1126,8 +1126,8 @@ class TestCase(models.Model):
     type = models.CharField(max_length=24, choices=test_case_types, null=True)
 
 class StandardTestCase(TestCase):
-    test_case = models.CharField(blank=True, max_length=100)
-    weight = models.FloatField(default=0.0)
+    test_case = models.TextField()
+    weight = models.FloatField(default=1.0)
 
     def get_field_value(self):
         return {"test_case": self.test_case,
@@ -1142,7 +1142,7 @@ class StandardTestCase(TestCase):
 class StdioBasedTestCase(TestCase):
     expected_input = models.CharField(max_length=100, blank=True)
     expected_output = models.CharField(max_length=100)
-    weight = models.IntegerField(default=0.0)
+    weight = models.IntegerField(default=1.0)
 
     def get_field_value(self):
         return {"expected_output": self.expected_output,
@@ -1170,4 +1170,4 @@ class McqTestCase(TestCase):
 
 class HookTestCase(TestCase):
     code = models.TextField()
-    weight = models.FloatField(default=0.0)
+    weight = models.FloatField(default=1.0)

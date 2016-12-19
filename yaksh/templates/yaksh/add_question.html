@@ -13,20 +13,20 @@
 {% block onload %} onload='javascript:textareaformat();' {% endblock %}
 
 {% block content %}
-<form action="" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
+<form action="{{ URL_ROOT }}/exam/manage/addquestion/{{ question.id }}/" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
   {% csrf_token %}
   <center><table class="table">
-  <tr><td>Summary: <td>{{ form.summary }}{{ form.summary.errors }}
-  <tr><td> Language: <td> {{form.language}}{{form.language.errors}}
-  <tr><td> Type: <td> {{ form.type }}{{form.type.errors}}
-  <tr><td>Points:<td><button class="btn-mini" type="button" onClick="increase(frm);">+</button>{{form.points }}<button class="btn-mini" type="button" onClick="decrease(frm);">-</button>{{ form.points.errors }} 
+  <tr><td>Summary: <td>{{ qform.summary }}{{ qform.summary.errors }}
+  <tr><td> Language: <td> {{qform.language}}{{qform.language.errors}}
+  <tr><td> Type: <td> {{ qform.type }}{{qform.type.errors}}
+  <tr><td>Points:<td><button class="btn-mini" type="button" onClick="increase(frm);">+</button>{{qform.points }}<button class="btn-mini" type="button" onClick="decrease(frm);">-</button>{{ qform.points.errors }} 
     <tr><td><strong>Rendered: </strong><td><p id='my'></p>
-  <tr><td>Description: <td>{{ form.description}}  {{form.description.errors}}
-  <tr><td>Tags: <td>{{ form.tags }}
-  <tr><td>Snippet: <td>{{ form.snippet }}
-  <tr><td>Partial Grading: <td>{{ form.partial_grading }}
-  <tr><td> Test Case Type: <td> {{ form.test_case_type }}{{ form.test_case_type.errors }}
-  <tr><td> File: <td> {{ upload_form.file_field }}{{ upload_form.file_field.errors }}
+  <tr><td>Description: <td>{{ qform.description}}  {{qform.description.errors}}
+  <tr><td>Tags: <td>{{ qform.tags }}
+  <tr><td>Snippet: <td>{{ qform.snippet }}
+  <tr><td>Partial Grading: <td>{{ qform.partial_grading }}
+  <tr><td> Test Case Type: <td> {{ qform.test_case_type }}{{ qform.test_case_type.errors }}
+  <tr><td> File: <td> {{ fileform.file_field }}{{ fileform.file_field.errors }}
   {% if uploaded_files %}<br><b>Uploaded files:</b><br>Check on delete to delete files,
   extract to extract files and hide to hide files from student(if required)<br>
   {% for file in uploaded_files %}
@@ -36,22 +36,55 @@
   <input type="checkbox" name="hide" value="{{file.id}}" >{% if file.hide %} show{% else %}
   hide{% endif %}</input><br>
   <a href="{{file.file.url}}">{{ file.file.name }}</a>
-  <br>
   {% endfor %}{% endif %}
+  </table></center>
   <div class="form-group">
-      {{ test_case_formset.management_form }}
+      {{ standardformset.management_form }}
 
-      {% for form in test_case_formset %}
-        <div class="link-formset">
-            {{ form }}
+      {% for stdform in standardformset %}
+        <div class="link-formset well">
+            {{ stdform.as_p }}
         </div>
       {% endfor %}
 
   </div>
+      <br \>
+  <div class="form-group">
+      {{ stdioformset.management_form }}
+      {% for ioform in stdioformset %}
+        <div class="link-formset well">
+            {{ ioform.as_p }}
+        </div>
+      {% endfor %}
 
-  </table></center>
+  </div>
+  <div class="form-group">
+      {{ mcqformset.management_form }}
+
+      {% for mcqform in mcqformset %}
+        <div class="link-formset well">
+            {{ mcqform.as_p }}
+        </div>
+      {% endfor %}
+  </div>
+  <div class="form-group">
+      {{ hookformset.management_form }}
+
+      {% for hookform in hookformset %}
+        <div class="link-formset well">
+            {{ hookform.as_p }}
+        </div>
+      {% endfor %}
+  </div>
+  <p><label for="case_type">Add Test Case:</label> <select id="case_type" name="case_type" onchange="frm.submit()">
+      <option value="" selected="selected">---------</option>
+      <option value="standardtestcase">Standard </option>
+      <option value="stdiobasedtestcase">StdIO </option>
+      <option value="mcqtestcase">MCQ/MCC </option>
+      <option value="hooktestcase">Hook </option>
+  </select></p>
   <center>
-    <button class="btn" type="submit" name="save_question">Save & Add Testcase</button>
+    <button class="btn" type="submit" name="save_question">Save</button>
     <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Back to Questions</button>
     <button class="btn" type="submit" name="delete_files">Delete Selected Files</button>
   </center>
