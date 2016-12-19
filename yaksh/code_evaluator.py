@@ -144,9 +144,9 @@ class CodeEvaluator(object):
             for idx, test_case_instance in enumerate(test_case_instances):
                 test_case_success = False
                 test_case_instance.compile_code()
-                test_case_success, err, test_case_weight = test_case_instance.check_code()
+                test_case_success, err, mark_fraction = test_case_instance.check_code()
                 if test_case_success:
-                    weight += test_case_weight
+                    weight += mark_fraction
 
                 error += err + "\n"
                 test_case_success_status[idx] = test_case_success

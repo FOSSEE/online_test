@@ -60,7 +60,7 @@ class BashCodeEvaluator(BaseEvaluator):
         """
         ref_code_path = self.test_case
         success = False
-        test_case_weight = 0.0
+        mark_fraction = 0.0
 
         self.submit_code_path = self.create_submit_code_file('submit.sh')
         self._set_file_as_executable(self.submit_code_path)
@@ -103,8 +103,8 @@ class BashCodeEvaluator(BaseEvaluator):
             )
             proc, stdnt_stdout, stdnt_stderr = ret
             if inst_stdout == stdnt_stdout:
-                test_case_weight = float(self.weight) if self.partial_grading else 0.0
-                return True, "Correct answer", test_case_weight
+                mark_fraction = float(self.weight) if self.partial_grading else 0.0
+                return True, "Correct answer", mark_fraction
             else:
                 err = "Error: expected %s, got %s" % (inst_stderr,
                     stdnt_stderr
@@ -146,8 +146,8 @@ class BashCodeEvaluator(BaseEvaluator):
                     proc, stdnt_stdout, stdnt_stderr = ret
                     valid_answer = inst_stdout == stdnt_stdout
             if valid_answer and (num_lines == loop_count):
-                test_case_weight = float(self.weight) if self.partial_grading else 0.0
-                return True, "Correct answer", test_case_weight
+                mark_fraction = float(self.weight) if self.partial_grading else 0.0
+                return True, "Correct answer", mark_fraction
             else:
                 err = ("Error:expected"
                     " {0}, got {1}").format(inst_stdout+inst_stderr,

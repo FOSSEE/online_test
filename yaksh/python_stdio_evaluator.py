@@ -65,13 +65,13 @@ class PythonStdioEvaluator(BaseEvaluator):
 
     def check_code(self):
         success = False
-        test_case_weight = 0.0
+        mark_fraction = 0.0
 
         tb = None
         if self.output_value == self.expected_output:
             success = True
             err = "Correct answer"
-            test_case_weight = self.weight
+            mark_fraction = self.weight
         else:
             success = False
             err = dedent("""
@@ -85,4 +85,4 @@ class PythonStdioEvaluator(BaseEvaluator):
                     )
                 )
         del tb
-        return success, err, test_case_weight
+        return success, err, mark_fraction

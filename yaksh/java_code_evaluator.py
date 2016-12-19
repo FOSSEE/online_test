@@ -124,7 +124,7 @@ class JavaCodeEvaluator(BaseEvaluator):
 
         """
         success = False
-        test_case_weight = 0.0
+        mark_fraction = 0.0
 
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
@@ -143,7 +143,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
                     success, err = True, "Correct answer"
-                    test_case_weight = float(seelf.weight) if self.partial_grading else 0.0
+                    mark_fraction = float(seelf.weight) if self.partial_grading else 0.0
                 else:
                     err = stdout + "\n" + stderr
             else:
@@ -169,4 +169,4 @@ class JavaCodeEvaluator(BaseEvaluator):
             except:
                 err = err + "\n" + stdnt_stderr
 
-        return success, err, test_case_weight
+        return success, err, mark_fraction

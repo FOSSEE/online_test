@@ -114,7 +114,7 @@ class CppCodeEvaluator(BaseEvaluator):
         if the required permissions are not given to the file(s).
         """
         success = False
-        test_case_weight = 0.0
+        mark_fraction = 0.0
 
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
@@ -134,7 +134,7 @@ class CppCodeEvaluator(BaseEvaluator):
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
                     success, err = True, "Correct answer"
-                    test_case_weight = float(self.weight) if self.partial_grading else 0.0
+                    mark_fraction = float(self.weight) if self.partial_grading else 0.0
                 else:
                     err = "{0} \n {1}".format(stdout, stderr)
             else:
@@ -160,4 +160,4 @@ class CppCodeEvaluator(BaseEvaluator):
             except:
                 err = "{0} \n {1}".format(err, stdnt_stderr)
 
-        return success, err, test_case_weight
+        return success, err, mark_fraction

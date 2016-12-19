@@ -70,7 +70,7 @@ class CppStdioEvaluator(StdIOEvaluator):
 
     def check_code(self):
         success = False
-        test_case_weight = 0.0
+        mark_fraction = 0.0
 
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
@@ -112,5 +112,5 @@ class CppStdioEvaluator(StdIOEvaluator):
                         err = err + "\n" + e
             except:
                 err = err + "\n" + stdnt_stderr
-        test_case_weight = float(self.weight) if self.partial_grading and success else 0.0
-        return success, err, test_case_weight
+        mark_fraction = float(self.weight) if self.partial_grading and success else 0.0
+        return success, err, mark_fraction

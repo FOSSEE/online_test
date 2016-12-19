@@ -42,7 +42,7 @@ class BashStdioEvaluator(StdIOEvaluator):
 
     def check_code(self):
         success = False
-        test_case_weight = 0.0
+        mark_fraction = 0.0
 
         self.expected_input = str(self.expected_input).replace('\r', '')
         proc = subprocess.Popen("bash ./Test.sh",
@@ -55,5 +55,5 @@ class BashStdioEvaluator(StdIOEvaluator):
                                            self.expected_input,
                                            self.expected_output
                                            )
-        test_case_weight = float(self.weight) if self.partial_grading and success else 0.0
-        return success, err, test_case_weight
+        mark_fraction = float(self.weight) if self.partial_grading and success else 0.0
+        return success, err, mark_fraction

@@ -66,7 +66,7 @@ class PythonAssertionEvaluator(BaseEvaluator):
         the required permissions are not given to the file(s).
         """
         success = False
-        test_case_weight = 0.0
+        mark_fraction = 0.0
         try:
             tb = None
             _tests = compile(self.test_case, '<string>', mode='exec')
@@ -86,6 +86,6 @@ class PythonAssertionEvaluator(BaseEvaluator):
         else:
             success = True
             err = '-----\nCorrect answer\nTest Case: {0}\n-----'.format(self.test_case)
-            test_case_weight = float(self.weight) if self.partial_grading else 0.0
+            mark_fraction = float(self.weight) if self.partial_grading else 0.0
         del tb
-        return success, err, test_case_weight
+        return success, err, mark_fraction
