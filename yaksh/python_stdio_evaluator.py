@@ -30,11 +30,6 @@ def redirect_stdout():
 
 class PythonStdioEvaluator(BaseEvaluator):
     """Tests the Python code obtained from Code Server"""
-
-    # def setup(self):
-    #     super(PythonStdioEvaluator, self).setup()
-    #     self.files = []
-
     def __init__(self, metadata, test_case_data):
         self.files = []
 
@@ -53,7 +48,7 @@ class PythonStdioEvaluator(BaseEvaluator):
         if self.files:
             delete_files(self.files)
 
-    def compile_code(self): # user_answer, file_paths, expected_input, expected_output, weight):
+    def compile_code(self):
         if self.file_paths:
             self.files = copy_files(self.file_paths)
         submitted = compile(self.user_answer, '<string>', mode='exec')
@@ -68,7 +63,7 @@ class PythonStdioEvaluator(BaseEvaluator):
         self.output_value = output_buffer.getvalue().rstrip("\n")
         return self.output_value
 
-    def check_code(self): # user_answer, file_paths, partial_grading, expected_input, expected_output, weight):
+    def check_code(self):
         success = False
         test_case_weight = 0.0
 

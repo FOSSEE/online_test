@@ -33,11 +33,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
     def test_correct_answer(self):
         # Given
         user_answer = "def add(a,b):\n\treturn a + b"
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'file_paths': self.file_paths,
-        #           'partial_grading': False,
-        #           }
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -70,7 +65,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                   }
 
         # When
-        # evaluator = PythonAssertionEvaluator()
         evaluator = CodeEvaluator(self.in_dir)
         result = evaluator.evaluate(kwargs)
 
@@ -93,11 +87,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             {"test_case_type": "standardtestcase", "test_case":  'assert(add(-1,-2)==-3)', 'weight': 1.0},
                             {"test_case_type": "standardtestcase", "test_case": 'assert(add(1,2)==3)', 'weight': 2.0}
                                ]
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': test_case_data,
-        #           'file_paths': self.file_paths,
-        #           'partial_grading': True
-        #           }
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -125,12 +114,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
     def test_infinite_loop(self):
         # Given
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'file_paths': self.file_paths,
-        #           'partial_grading': False
-        #           }
-
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -163,11 +146,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             "SyntaxError",
                             "invalid syntax"
                             ]
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'file_paths': self.file_paths,
-        #           'partial_grading': False
-        #           }
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -202,12 +180,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             "IndentationError",
                             "indented block"
                             ]
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'file_paths': self.file_paths,
-        #           'partial_grading': False
-
-        #           }
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -239,11 +211,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                           "defined"
                           ]
 
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'file_paths': self.file_paths,
-        #           'partial_grading': False
-        #           }
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -276,11 +243,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                                "maximum recursion depth exceeded"
                                ]
 
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'file_paths': self.file_paths,
-        #           'partial_grading': False
-        #           }
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -313,11 +275,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                           "argument"
                           ]
 
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'file_paths': self.file_paths,
-        #           'partial_grading': False
-        #           }
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -353,11 +310,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                            "base"
                            ]
 
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'file_paths': self.file_paths,
-        #           'partial_grading': False
-        #           }
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -389,11 +341,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                     return f.read()[0]
             """)
 
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'file_paths': self.file_paths,
-        #           'partial_grading': False
-        #           }
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -431,11 +378,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             "invalid syntax"
                             ]
 
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': test_case_data,
-        #           'file_paths': self.file_paths,
-        #           'partial_grading': False
-        #           }
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -477,11 +419,6 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                           "NameError",
                           "name 'S' is not defined"
                           ]
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': test_case_data,
-        #           'file_paths': self.file_paths,
-        #           'partial_grading': False
-        #           }
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -524,10 +461,6 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                                 print(a+b)
                              """
                              )
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'partial_grading': False
-        #           }
         kwargs = {'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
@@ -562,10 +495,6 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                              """
                              )
 
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'partial_grading': False
-        #           }
         kwargs = {'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
@@ -598,10 +527,6 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                              """
                              )
 
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'partial_grading': False
-        #           }
         kwargs = {'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
@@ -632,10 +557,6 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                                 print(a-b)
                              """
                              )
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'partial_grading': False
-        #           }
         kwargs = {'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
@@ -668,11 +589,6 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                                 print(a[0])
                              """
                              )
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': self.test_case_data,
-        #           'file_paths': self.file_paths,
-        #           'partial_grading': False
-        #           }
         kwargs = {'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
@@ -701,10 +617,6 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                             "You probably have an infinite loop in"
                             " your code.").format(SERVER_TIMEOUT)
         user_answer = "while True:\n\tpass"
-        # kwargs = {'user_answer': user_answer,
-        #           'test_case_data': test_case_data,
-        #           'partial_grading': False
-        #           }
 
         kwargs = {'metadata': {
                     'user_answer': user_answer,

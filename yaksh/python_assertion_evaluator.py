@@ -28,17 +28,6 @@ class PythonAssertionEvaluator(BaseEvaluator):
         self.test_case = test_case_data.get('test_case')
         self.weight = test_case_data.get('weight')
 
-    # def __del__(self):
-    #     # Delete the created file.
-    #     if self.files:
-    #         delete_files(self.files)
-
-    # def setup(self):
-    #     super(PythonAssertionEvaluator, self).setup()
-    #     self.exec_scope = None
-    #     self.files = []
-
-
     def teardown(self):
         # Delete the created file.
         if self.files:

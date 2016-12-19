@@ -34,13 +34,6 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
         user_answer = ("#!/bin/bash\n[[ $# -eq 2 ]]"
             " && echo $(( $1 + $2 )) && exit $(( $1 + $2 ))"
         )
-        # get_class = BashCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -60,13 +53,6 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
     def test_error(self):
         user_answer = ("#!/bin/bash\n[[ $# -eq 2 ]] "
             "&& echo $(( $1 - $2 )) && exit $(( $1 - $2 ))")
-        # get_class = BashCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -86,13 +72,6 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
     def test_infinite_loop(self):
         user_answer = ("#!/bin/bash\nwhile [ 1 ] ;"
             " do echo "" > /dev/null ; done")
-        # get_class = BashCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -118,13 +97,6 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
             }
         ]
         user_answer = ("#!/bin/bash\ncat $1")
-        # get_class = BashCodeEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -162,12 +134,6 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
             'test_case_type': 'stdiobasedtestcase',
             'weight': 0.0
             }]
-        # get_class = BashStdioEvaluator()
-        # kwargs = {"user_answer": user_answer,
-        #             "partial_grading": True,
-        #             "test_case_data": test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -198,12 +164,6 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                             'test_case_type': 'stdiobasedtestcase',
                             'weight': 0.0
                            }]
-        # get_class = BashStdioEvaluator()
-        # kwargs = {"user_answer": user_answer,
-        #             "partial_grading": True,
-        #             "test_case_data": test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -232,12 +192,6 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
             'test_case_type': 'stdiobasedtestcase',
             'weight': 0.0
             }]
-        # get_class = BashStdioEvaluator()
-        # kwargs = {"user_answer": user_answer,
-        #             "partial_grading": True,
-        #             "test_case_data": test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -265,12 +219,6 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                            'test_case_type': 'stdiobasedtestcase',
                            'weight': 0.0
                            }]
-        # get_class = BashStdioEvaluator()
-        # kwargs = {"user_answer": user_answer,
-        #             "partial_grading": True,
-        #             "test_case_data": test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,

@@ -25,11 +25,6 @@ class CppStdioEvaluator(StdIOEvaluator):
         self.expected_output = test_case_data.get('expected_output')
         self.weight = test_case_data.get('weight') 
 
-    # def setup(self):
-    #     super(CppStdioEvaluator, self).setup()
-    #     self.files = []
-    #     self.submit_code_path = self.create_submit_code_file('main.c')
-
     def teardown(self):
         os.remove(self.submit_code_path)
         if self.files:

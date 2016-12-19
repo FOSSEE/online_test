@@ -16,7 +16,6 @@ class JavaCodeEvaluator(BaseEvaluator):
     """Tests the Java code obtained from Code Server"""
     def __init__(self, metadata, test_case_data):
         self.files = []
-        # self.submit_code_path = self.create_submit_code_file('Test.java')
         self.compiled_user_answer = None
         self.compiled_test_code = None
         self.user_output_path = ""
@@ -30,15 +29,6 @@ class JavaCodeEvaluator(BaseEvaluator):
         # Set test case data values
         self.test_case = test_case_data.get('test_case')
         self.weight = test_case_data.get('weight')
-
-    # def setup(self):
-    #     super(JavaCodeEvaluator, self).setup()
-    #     self.files = []
-    #     self.submit_code_path = self.create_submit_code_file('Test.java')
-    #     self.compiled_user_answer = None
-    #     self.compiled_test_code = None
-    #     self.user_output_path = ""
-    #     self.ref_output_path = ""
 
     def teardown(self):
         # Delete the created file.
@@ -62,7 +52,7 @@ class JavaCodeEvaluator(BaseEvaluator):
         output_path = "{0}{1}.class".format(directory, file_name)
         return output_path
 
-    def compile_code(self): # , user_answer, file_paths, test_case, weight
+    def compile_code(self):
         if self.compiled_user_answer and self.compiled_test_code:
             return None
         else:
@@ -113,7 +103,7 @@ class JavaCodeEvaluator(BaseEvaluator):
 
             return self.compiled_user_answer, self.compiled_test_code
 
-    def check_code(self): #  user_answer, file_paths, partial_grading, test_case, weight
+    def check_code(self):
         """ Function validates student code using instructor code as
         reference.The first argument ref_code_path, is the path to
         instructor code, it is assumed to have executable permission.

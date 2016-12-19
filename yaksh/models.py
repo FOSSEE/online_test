@@ -309,7 +309,6 @@ class Question(models.Model):
             for test_case in test_cases:
                 test_case_type = test_case.pop('test_case_type')
                 model_class = get_model_class(test_case_type)
-                # TestCase.objects.get_or_create(question=que, type=)
                 new_test_case, obj_create_status = model_class.objects.get_or_create(question=que, **test_case)
                 new_test_case.type = test_case_type
                 new_test_case.save()
@@ -317,21 +316,6 @@ class Question(models.Model):
             delete_files(files_list, file_path)
 
     def get_test_cases(self, **kwargs):
-        # test_case_ctype = ContentType.objects.get(app_label="yaksh",
-        #      model=self.test_case_type
-        # )
-        # test_cases = test_case_ctype.get_all_objects_for_this_type(
-        #     question=self,
-        #     **kwargs
-        # )
-        # tc_list = []
-        # for tc in self.testcase_set.filter(**kwargs):
-        #     tc_type = str(tc.type)
-        #     obj = getattr(tc, tc_type)
-        #     tc_list.append(obj)
-
-        # return tc_list
-
         tc_list = []
         for tc in self.testcase_set.all():
             test_case_type = tc.type
@@ -347,18 +331,6 @@ class Question(models.Model):
         return tc_list
 
     def get_test_case(self, **kwargs):
-        # test_case_ctype = ContentType.objects.get(app_label="yaksh",
-        #     model=self.test_case_type
-        # )
-        # test_case = test_case_ctype.get_object_for_this_type(
-        #     question=self,
-        #     **kwargs
-        # )
-        # tc = self.testcase_set.get(**kwargs)
-        # tc_type = str(tc.type)
-        # test_case = getattr(tc, tc_type)
-
-        # return test_case
         for tc in self.testcase_set.all():
             test_case_type = tc.type
             test_case_ctype = ContentType.objects.get(app_label="yaksh",

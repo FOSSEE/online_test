@@ -27,12 +27,6 @@ class BashCodeEvaluator(BaseEvaluator):
         self.test_case = test_case_data.get('test_case')
         self.weight = test_case_data.get('weight')
 
-    # def setup(self):
-    #     super(BashCodeEvaluator, self).setup()
-    #     self.files = []
-    #     self.submit_code_path = self.create_submit_code_file('submit.sh')
-    #     self._set_file_as_executable(self.submit_code_path)
-
     def teardown(self):
         # Delete the created file.
         os.remove(self.submit_code_path)

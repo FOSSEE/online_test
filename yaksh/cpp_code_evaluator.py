@@ -30,15 +30,6 @@ class CppCodeEvaluator(BaseEvaluator):
         self.test_case = test_case_data.get('test_case')
         self.weight = test_case_data.get('weight')
 
-    # def setup(self):
-    #     super(CppCodeEvaluator, self).setup()
-    #     self.files = []
-    #     self.submit_code_path = self.create_submit_code_file('submit.c')
-    #     self.compiled_user_answer = None
-    #     self.compiled_test_code = None
-    #     self.user_output_path = ""
-    #     self.ref_output_path = ""
-
     def teardown(self):
         # Delete the created file.
         os.remove(self.submit_code_path)

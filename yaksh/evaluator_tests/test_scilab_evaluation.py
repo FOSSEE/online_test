@@ -30,13 +30,6 @@ class ScilabEvaluationTestCases(unittest.TestCase):
     def test_correct_answer(self):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a+b;\nendfunction")
-        # get_class = ScilabCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -56,13 +49,6 @@ class ScilabEvaluationTestCases(unittest.TestCase):
     def test_error(self):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a+b;\ndis(\tendfunction")
-        # get_class = ScilabCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True, 
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -83,13 +69,6 @@ class ScilabEvaluationTestCases(unittest.TestCase):
     def test_incorrect_answer(self):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a-b;\nendfunction")
-        # get_class = ScilabCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -112,13 +91,6 @@ class ScilabEvaluationTestCases(unittest.TestCase):
         code_evaluator.SERVER_TIMEOUT = 4
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a;\nwhile(1==1)\nend\nendfunction")
-        # get_class = ScilabCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,

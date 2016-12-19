@@ -36,14 +36,6 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
 
     def test_correct_answer(self):
         user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a;\n\t}\n}"
-
-        # get_class = JavaCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -62,13 +54,6 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
 
     def test_incorrect_answer(self):
         user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a;\n\t}\n}"
-        # get_class = JavaCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -90,14 +75,6 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
 
     def test_error(self):
         user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a"
-        # get_class = JavaCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
-
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -116,13 +93,6 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
 
     def test_infinite_loop(self):
         user_answer = "class Test {\n\tint square_num(int a) {\n\t\twhile(0==0){\n\t\t}\n\t}\n}"
-        # get_class = JavaCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -165,13 +135,6 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                 br.close();
             }}}
             """)
-        # get_class = JavaCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -220,12 +183,6 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          int b = s.nextInt();
          System.out.print(a+b);
         }}""")
-        # get_class = JavaStdioEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -258,12 +215,6 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          a[i] = s.nextInt();
          System.out.print(a[i]);}
         }}""")
-        # get_class = JavaStdioEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -290,12 +241,6 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          int b = s.nextInt();
          System.out.print(a);
         }}""")
-        # get_class = JavaStdioEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -320,12 +265,6 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
         {
          System.out.print("a");
         }""")
-        # get_class = JavaStdioEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -351,12 +290,6 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          {
          System.out.print("a");}
         }}""")
-        # get_class = JavaStdioEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -386,12 +319,6 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          int b = 6;
          System.out.print(a+b);
         }}""")
-        # get_class = JavaStdioEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -423,12 +350,6 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
          String b = s.nextLine();
          System.out.print(a+b);
         }}""")
-        # get_class = JavaStdioEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -470,13 +391,6 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                 br.close();
             }}}
             """)
-        # get_class = JavaStdioEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': True,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,

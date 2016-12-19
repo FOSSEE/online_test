@@ -34,12 +34,6 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
 
     def test_correct_answer(self):
         user_answer = "int add(int a, int b)\n{return a+b;}"
-        # kwargs = {'user_answer': user_answer, 
-        #     'partial_grading': False,
-        #     'test_case_data': self.test_case_data,
-        #     'file_paths': self.file_paths
-        # }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -58,12 +52,6 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
 
     def test_incorrect_answer(self):
         user_answer = "int add(int a, int b)\n{return a-b;}"
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -84,12 +72,6 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
 
     def test_compilation_error(self):
         user_answer = "int add(int a, int b)\n{return a+b}"
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -108,13 +90,6 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
 
     def test_infinite_loop(self):
         user_answer = "int add(int a, int b)\n{while(1>0){}}"
-        # get_class = CppCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -149,13 +124,6 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
             return buff[0];
             }
             """)
-        # get_class = CppCodeEvaluator(self.in_dir)
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data,
-        #             'file_paths': self.file_paths
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -193,12 +161,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         scanf("%d%d",&a,&b);
         printf("%d",a+b);
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -230,12 +192,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         for(i=0;i<3;i++){
         printf("%d",a[i]);}
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -265,12 +221,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         scanf("%s",a);
         printf("%s",a);
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -294,12 +244,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         int a=10;
         printf("%d",a);
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -325,12 +269,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         int a=10;
         printf("%d",a)
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -354,12 +292,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         while(0==0){
         printf("abc");}
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -388,12 +320,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         int a=5,b=6;
         printf("%d",a+b);
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -419,12 +345,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         cin>>a>>b;
         cout<<a+b;
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -457,12 +377,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         for(i=0;i<3;i++){
         cout<<a[i];}
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -493,12 +407,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         cin>>a;
         cout<<a;
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -523,12 +431,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         int a=10;
         cout<<a;
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -555,12 +457,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         int a=10;
         cout<<a
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -585,12 +481,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         while(0==0){
         cout<<"abc";}
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -620,12 +510,6 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         int a=5,b=6;
         cout<<a+b;
         }""")
-        # get_class = CppStdioEvaluator()
-        # kwargs = {'user_answer': user_answer,
-        #             'partial_grading': False,
-        #             'test_case_data': self.test_case_data
-        #         }
-        # result = get_class.evaluate(**kwargs)
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
