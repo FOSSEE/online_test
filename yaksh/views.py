@@ -25,7 +25,7 @@ import six
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
-                        has_profile
+                        has_profile, StandardTestCase, McqTestCase, StdioBasedTestCase, HookTestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm,\
                 QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
@@ -130,62 +130,33 @@ def results_user(request):
 
 
 @login_required
-def add_question(request):
-    """To add a new question in the database.
-    Create a new question and store it."""
+def add_question(request, question_id=None):
     user = request.user
     ci = RequestContext(request)
+    test_case_type = None
 
-    if request.method == "POST" and 'save_question' in request.POST:
-        question_form = QuestionForm(request.POST)
-        form = FileForm(request.POST, request.FILES)
-        if question_form.is_valid():
-            new_question = question_form.save(commit=False)
-            new_question.user = user
-            new_question.save()
-            files = request.FILES.getlist('file_field')
-            if files:
-                for file in files:
-                    FileUpload.objects.get_or_create(question=new_question, file=file)
-            return my_redirect("/exam/manage/addquestion/{0}".format(new_question.id))
-        else:
-            return my_render_to_response('yaksh/add_question.html',
-                                         {'form': question_form,
-                                          'upload_form': form},
-                                         context_instance=ci)
+    if question_id is None:
+        question = Question(user=user)
+        question.save()
     else:
-        question_form = QuestionForm()
-        form = FileForm()
-        return my_render_to_response('yaksh/add_question.html',
-                                     {'form': question_form,
-                                      'upload_form': form},
-                                     context_instance=ci)
+        question = Question.objects.get(id=question_id)
 
-@login_required
-def edit_question(request, question_id=None):
-    """To add a new question in the database.
-    Create a new question and store it."""
-    user = request.user
-    ci = RequestContext(request)
-    if not question_id:
-        raise Http404('No Question Found')
-
-    question_instance = Question.objects.get(id=question_id)
     if request.method == "POST" and 'delete_files' in request.POST:
         remove_files_id = request.POST.getlist('clear')
         if remove_files_id:
             files = FileUpload.objects.filter(id__in=remove_files_id)
             for file in files:
                 file.remove()
-    if request.method == "POST" and 'save_question' in request.POST:
-        question_form = QuestionForm(request.POST, instance=question_instance)
-        form = FileForm(request.POST, request.FILES)
+
+    if request.method == 'POST':
+        qform = QuestionForm(request.POST, instance=question)
+        fileform = FileForm(request.POST, request.FILES)
         files = request.FILES.getlist('file_field')
         extract_files_id = request.POST.getlist('extract')
         hide_files_id = request.POST.getlist('hide')
         if files:
             for file in files:
-                FileUpload.objects.get_or_create(question=question_instance, file=file)
+                FileUpload.objects.get_or_create(question=question, file=file)
         if extract_files_id:
             files = FileUpload.objects.filter(id__in=extract_files_id)
             for file in files:
@@ -194,47 +165,43 @@ def edit_question(request, question_id=None):
             files = FileUpload.objects.filter(id__in=hide_files_id)
             for file in files:
                 file.toggle_hide_status()
-        if question_form.is_valid():
-            new_question = question_form.save(commit=False)
-            test_case_type = question_form.cleaned_data.get('test_case_type')
-            test_case_form_class = get_object_form(model=test_case_type, exclude_fields=['question'])
-            test_case_model_class = get_model_class(test_case_type)
-            TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class, extra=1)
-            test_case_formset = TestCaseInlineFormSet(request.POST, request.FILES, instance=new_question)
-            if test_case_formset.is_valid():
-                new_question.save()
-                test_case_formset.save()
-            return my_redirect("/exam/manage/addquestion/{0}".format(new_question.id))
+        formsets = []
+        for testcase in TestCase.__subclasses__():
+            formset = inlineformset_factory(Question, testcase, extra=0,
+                                            fields='__all__')
+            formsets.append(formset(request.POST, request.FILES, instance=question))
+        files = request.FILES.getlist('file_field')
+        uploaded_files = FileUpload.objects.filter(question_id=question.id)
+        if qform.is_valid():
+            question = qform.save(commit=False)
+            question.user = user
+            question.save()
+            for formset in formsets:
+                if formset.is_valid():
+                    formset.save()
+            test_case_type = request.POST.get('case_type', None)
         else:
-            test_case_type = question_form.cleaned_data.get('test_case_type')
-            test_case_form_class = get_object_form(model=test_case_type, exclude_fields=['question'])
-            test_case_model_class = get_model_class(test_case_type)
-            TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class, extra=1)
-            test_case_formset = TestCaseInlineFormSet(request.POST, request.FILES, instance=question_instance)
-            uploaded_files = FileUpload.objects.filter(question_id=question_instance.id)
-            return my_render_to_response('yaksh/add_question.html',
-                                         {'form': question_form,
-                                         'test_case_formset': test_case_formset,
-                                         'question_id': question_id,
-                                         'upload_form': form,
-                                         'uploaded_files': uploaded_files},
+            context = {'qform': qform, 'fileform': fileform, 'question': question,
+                       'formsets': formsets, 'uploaded_files': uploaded_files}
+            return my_render_to_response("yaksh/add_question.html", context,
                                          context_instance=ci)
-    else:
-        question_form = QuestionForm(instance=question_instance)
-        form = FileForm()
-        test_case_type = question_instance.test_case_type
-        test_case_form_class = get_object_form(model=test_case_type, exclude_fields=['question'])
-        test_case_model_class = get_model_class(test_case_type)
-        TestCaseInlineFormSet = inlineformset_factory(Question, test_case_model_class, form=test_case_form_class, extra=1)
-        test_case_formset = TestCaseInlineFormSet(instance=question_instance)
-        uploaded_files = FileUpload.objects.filter(question_id=question_instance.id)
-        return my_render_to_response('yaksh/add_question.html',
-                                     {'form': question_form,
-                                     'test_case_formset': test_case_formset,
-                                     'question_id': question_id,
-                                     'upload_form': form,
-                                     'uploaded_files': uploaded_files},
-                                     context_instance=ci)
+
+    qform = QuestionForm(instance=question)
+    fileform = FileForm()
+    uploaded_files = FileUpload.objects.filter(question_id=question.id)
+    formsets = []
+    for testcase in TestCase.__subclasses__():
+        if test_case_type ==  testcase.__name__.lower():
+            formset = inlineformset_factory(Question, testcase, extra=1,
+                                            fields='__all__')
+        else:
+            formset = inlineformset_factory(Question, testcase, extra=0,
+                                            fields='__all__')
+        formsets.append(formset(instance=question))
+    context = {'qform': qform, 'fileform': fileform, 'question': question,
+               'formsets': formsets, 'uploaded_files': uploaded_files}
+    return my_render_to_response("yaksh/add_question.html", context, context_instance=ci)
+
 
 @login_required
 def add_quiz(request, course_id, quiz_id=None):
