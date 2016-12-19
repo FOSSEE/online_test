@@ -171,72 +171,35 @@ def add_question(request, question_id=None):
             question.save()
             files = request.FILES.getlist('file_field')
             uploaded_files = FileUpload.objects.filter(question_id=question.id)
-            StandardFormSet = inlineformset_factory(Question, StandardTestCase,
-                                                    extra=0, fields='__all__')
-            standardformset = StandardFormSet(request.POST, request.FILES,
-                                              instance=question)
-            StdioFormSet = inlineformset_factory(Question, StdioBasedTestCase,
-                                                 extra=0, fields='__all__')
-            stdioformset = StdioFormSet(request.POST, request.FILES,
-                                        instance=question)
-            McqFormSet = inlineformset_factory(Question, McqTestCase, extra=0,
-                                               fields='__all__')
-            mcqformset = McqFormSet(request.POST, request.FILES, instance=question)
-            HookFormSet = inlineformset_factory(Question, HookTestCase, extra=0,
+            formsets = []
+            for testcase in TestCase.__subclasses__():
+                formset = inlineformset_factory(Question, testcase, extra=0,
                                                 fields='__all__')
-            hookformset = HookFormSet(request.POST, request.FILES, instance=question)
-            if standardformset.is_valid():
-                standardformset.save()
-            if mcqformset.is_valid():
-                mcqformset.save()
-            if stdioformset.is_valid():
-                stdioformset.save()
-            if hookformset.is_valid():
-                hookformset.save()
+                formsets.append(formset(request.POST, request.FILES, instance=question))
+            for formset in formsets:
+                if formset.is_valid():
+                    formset.save()
             test_case_type = request.POST.get('case_type', None)
         else:
             context = {'qform': qform, 'fileform': fileform, 'question': question,
-                       'mcqformset': mcqformset, 'stdioformset': stdioformset,
-                       'standardformset': standardformset, 'hookformset': hookformset,
-                       'uploaded_files': uploaded_files}
+                       'formsets': formsets, 'uploaded_files': uploaded_files}
             return my_render_to_response("yaksh/add_question.html", context,
                                          context_instance=ci)
 
     qform = QuestionForm(instance=question)
     fileform = FileForm()
     uploaded_files = FileUpload.objects.filter(question_id=question.id)
-    StandardFormSet = inlineformset_factory(Question, StandardTestCase, extra=0,
+    formsets = []
+    for testcase in TestCase.__subclasses__():
+        if test_case_type ==  testcase.__name__.lower():
+            formset = inlineformset_factory(Question, testcase, extra=1,
                                             fields='__all__')
-    standardformset = StandardFormSet(instance=question)
-    StdioFormSet = inlineformset_factory(Question, StdioBasedTestCase, extra=0,
-                                         fields='__all__')
-    stdioformset = StdioFormSet(instance=question)
-    McqFormSet = inlineformset_factory(Question, McqTestCase, extra=0,
-                                       fields='__all__')
-    mcqformset = McqFormSet(instance=question)
-    HookFormSet = inlineformset_factory(Question, HookTestCase, extra=0,
-                                        fields='__all__')
-    hookformset = HookFormSet(instance=question)
-    if test_case_type ==  'standardtestcase':
-        StandardFormSet = inlineformset_factory(Question, StandardTestCase,
-                                                extra=1, fields='__all__')
-        standardformset = StandardFormSet(instance=question)
-    elif test_case_type ==  'stdiobasedtestcase':
-        StdioFormSet = inlineformset_factory(Question, StdioBasedTestCase,
-                                             extra=1, fields='__all__')
-        stdioformset = StdioFormSet(instance=question)
-    elif test_case_type ==  'mcqtestcase':
-        McqFormSet = inlineformset_factory(Question, McqTestCase, extra=1,
-                                           fields='__all__')
-        mcqformset = McqFormSet(instance=question)
-    elif test_case_type ==  'hooktestcase':
-        HookFormSet = inlineformset_factory(Question, HookTestCase, extra=1,
+        else:
+            formset = inlineformset_factory(Question, testcase, extra=0,
                                             fields='__all__')
-        hookformset = HookFormSet(instance=question)
+        formsets.append(formset(instance=question))
     context = {'qform': qform, 'fileform': fileform, 'question': question,
-               'mcqformset': mcqformset, 'stdioformset': stdioformset,
-               'standardformset': standardformset, 'hookformset': hookformset,
-               'uploaded_files': uploaded_files}
+               'formsets': formsets, 'uploaded_files': uploaded_files}
     return my_render_to_response("yaksh/add_question.html", context, context_instance=ci)
 
 

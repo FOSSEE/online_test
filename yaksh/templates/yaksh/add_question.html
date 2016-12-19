@@ -38,44 +38,18 @@
   <a href="{{file.file.url}}">{{ file.file.name }}</a>
   {% endfor %}{% endif %}
   </table></center>
+  {% for formset in formsets %}
   <div class="form-group">
-      {{ standardformset.management_form }}
+      {{ formset.management_form }}
 
-      {% for stdform in standardformset %}
+      {% for form in formset %}
         <div class="link-formset well">
-            {{ stdform.as_p }}
+            {{ form.as_p }}
         </div>
       {% endfor %}
 
   </div>
-      <br \>
-  <div class="form-group">
-      {{ stdioformset.management_form }}
-      {% for ioform in stdioformset %}
-        <div class="link-formset well">
-            {{ ioform.as_p }}
-        </div>
-      {% endfor %}
-
-  </div>
-  <div class="form-group">
-      {{ mcqformset.management_form }}
-
-      {% for mcqform in mcqformset %}
-        <div class="link-formset well">
-            {{ mcqform.as_p }}
-        </div>
-      {% endfor %}
-  </div>
-  <div class="form-group">
-      {{ hookformset.management_form }}
-
-      {% for hookform in hookformset %}
-        <div class="link-formset well">
-            {{ hookform.as_p }}
-        </div>
-      {% endfor %}
-  </div>
+  {% endfor %}
   <p><label for="case_type">Add Test Case:</label> <select id="case_type" name="case_type" onchange="frm.submit()">
       <option value="" selected="selected">---------</option>
       <option value="standardtestcase">Standard </option>
