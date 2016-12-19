@@ -37,12 +37,15 @@ class TestCodeServer(unittest.TestCase):
 
     def test_infinite_loop(self):
         # Given
-        testdata = {'user_answer': 'while True: pass',
-                    'partial_grading': False,
+        testdata = {'metadata': {'user_answer': 'while True: pass',
+                        'language': 'python',
+                        'partial_grading': False
+                        },
                     'test_case_data': [{'test_case':'assert 1==2', 
+                        'test_case_type': 'standardtestcase',
                         'weight': 0.0
-                        }
-                    ]}
+                        }]
+                    }
 
         # When
         result = self.code_server.run_code(
@@ -56,12 +59,15 @@ class TestCodeServer(unittest.TestCase):
 
     def test_correct_answer(self):
         # Given
-        testdata = {'user_answer': 'def f(): return 1',
-                    'partial_grading': False,
+        testdata = {'metadata': { 'user_answer': 'def f(): return 1',
+                        'language': 'python',
+                        'partial_grading': False
+                        },
                     'test_case_data': [{'test_case':'assert f() == 1',
+                        'test_case_type': 'standardtestcase',
                         'weight': 0.0
-                        }
-                    ]}
+                        }]
+                    }
 
         # When
         result = self.code_server.run_code(
@@ -75,12 +81,15 @@ class TestCodeServer(unittest.TestCase):
 
     def test_wrong_answer(self):
         # Given
-        testdata = {'user_answer': 'def f(): return 1',
-                    'partial_grading': False,
+        testdata = {'metadata': { 'user_answer': 'def f(): return 1',
+                        'language': 'python',
+                        'partial_grading': False
+                        },
                     'test_case_data': [{'test_case':'assert f() == 2',
+                        'test_case_type': 'standardtestcase',
                         'weight': 0.0
-                        }
-                    ]}
+                        }]
+                    }
 
         # When
         result = self.code_server.run_code(
@@ -98,12 +107,15 @@ class TestCodeServer(unittest.TestCase):
 
         def run_code():
             """Run an infinite loop."""
-            testdata = {'user_answer': 'while True: pass',
-                        'partial_grading': False,
-                        'test_case_data': [{'test_case':'assert 1==2',
-                            'weight': 0.0
-                            }
-                        ]}
+            testdata = {'metadata': { 'user_answer': 'while True: pass',
+                            'language': 'python',
+                            'partial_grading': False
+                        },
+                    'test_case_data': [{'test_case':'assert 1==2',
+                        'test_case_type': 'standardtestcase',
+                        'weight': 0.0
+                        }]
+                    }
             result = self.code_server.run_code(
                 'python', 'standardtestcase', json.dumps(testdata), ''
             )

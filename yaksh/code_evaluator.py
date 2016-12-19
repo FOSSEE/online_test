@@ -74,7 +74,7 @@ class CodeEvaluator(object):
         msg = 'Code took more than %s seconds to run. You probably '\
               'have an infinite loop in your code.' % SERVER_TIMEOUT
         self.timeout_msg = msg
-        self.in_dir = in_dir
+        self.in_dir = in_dir if in_dir else MY_DIR
 
 
     def evaluate(self, kwargs): #language, test_case_type, 

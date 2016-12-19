@@ -306,9 +306,13 @@ class Question(models.Model):
             que, result = Question.objects.get_or_create(**question)
             if file_names:
                 que._add_files_to_db(file_names, file_path)
-            model_class = get_model_class(que.test_case_type)
             for test_case in test_cases:
-                model_class.objects.get_or_create(question=que, **test_case)
+                test_case_type = test_case.pop('test_case_type')
+                model_class = get_model_class(test_case_type)
+                # TestCase.objects.get_or_create(question=que, type=)
+                new_test_case, obj_create_status = model_class.objects.get_or_create(question=que, **test_case)
+                new_test_case.type = test_case_type
+                new_test_case.save()
         if files_list:
             delete_files(files_list, file_path)
 
@@ -320,22 +324,50 @@ class Question(models.Model):
         #     question=self,
         #     **kwargs
         # )
+        # tc_list = []
+        # for tc in self.testcase_set.filter(**kwargs):
+        #     tc_type = str(tc.type)
+        #     obj = getattr(tc, tc_type)
+        #     tc_list.append(obj)
+
+        # return tc_list
+
         tc_list = []
         for tc in self.testcase_set.all():
-            tc_type = tc.type
-            obj = getattr(tc, tc_type)
-            tc_list.append(obj)
+            test_case_type = tc.type
+            test_case_ctype = ContentType.objects.get(app_label="yaksh",
+                model=test_case_type
+            )
+            test_case = test_case_ctype.get_object_for_this_type(
+                question=self,
+                **kwargs
+            )
+            tc_list.append(test_case)
 
         return tc_list
 
     def get_test_case(self, **kwargs):
-        test_case_ctype = ContentType.objects.get(app_label="yaksh",
-            model=self.test_case_type
-        )
-        test_case = test_case_ctype.get_object_for_this_type(
-            question=self,
-            **kwargs
-        )
+        # test_case_ctype = ContentType.objects.get(app_label="yaksh",
+        #     model=self.test_case_type
+        # )
+        # test_case = test_case_ctype.get_object_for_this_type(
+        #     question=self,
+        #     **kwargs
+        # )
+        # tc = self.testcase_set.get(**kwargs)
+        # tc_type = str(tc.type)
+        # test_case = getattr(tc, tc_type)
+
+        # return test_case
+        for tc in self.testcase_set.all():
+            test_case_type = tc.type
+            test_case_ctype = ContentType.objects.get(app_label="yaksh",
+                model=self.test_case_type
+            )
+            test_case = test_case_ctype.get_object_for_this_type(
+                question=self,
+                **kwargs
+            )
 
         return test_case
 

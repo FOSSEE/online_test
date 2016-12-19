@@ -134,21 +134,23 @@ class QuestionTestCases(unittest.TestCase):
 
         self.question1.tags.add('python', 'function')
         self.assertion_testcase = StandardTestCase(question=self.question1,
-            test_case='assert myfunc(12, 13) == 15'
+            test_case='assert myfunc(12, 13) == 15',
+            type='standardtestcase'
         )
         self.upload_test_case = StandardTestCase(question=self.question2,
-            test_case='assert fact(3) == 6'
+            test_case='assert fact(3) == 6',
+            type='standardtestcase'
         )
         self.upload_test_case.save()
         self.user_answer = "demo_answer"
         self.test_case_upload_data = [{"test_case": "assert fact(3)==6",
+                                        "test_case_type": "standardtestcase",
                                         "weight": 1.0
                                         }]
         questions_data = [{"snippet": "def fact()", "active": True,
                            "points": 1.0,
                            "description": "factorial of a no",
                            "language": "Python", "type": "Code",
-                           "test_case_type": "standardtestcase",
                            "testcase": self.test_case_upload_data,
                            "files": [[file1, 0]],
                            "summary": "Json Demo"}]
@@ -213,7 +215,6 @@ class QuestionTestCases(unittest.TestCase):
         self.assertEqual(question_data.points, 1.0)
         self.assertTrue(question_data.active)
         self.assertEqual(question_data.snippet, 'def fact()')
-        self.assertEqual(question_data.test_case_type, 'standardtestcase')
         self.assertEqual(os.path.basename(file.file.path), "test.txt")
         self.assertEqual([case.get_field_value() for case in test_case], self.test_case_upload_data)
 
@@ -511,19 +512,24 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.question3.save()
         self.assertion_testcase = StandardTestCase(
             question=self.question1,
-            test_case='assert add(1, 3) == 4'
+            test_case='assert add(1, 3) == 4',
+            type = 'standardtestcase'
+
         )
         self.assertion_testcase.save()
         self.mcq_based_testcase = McqTestCase(
             options = 'a',
             question=self.question2,
-            correct = True
+            correct = True,
+            type = 'mcqtestcase'
+
         )
         self.mcq_based_testcase.save()
         self.mcc_based_testcase = McqTestCase(
             question=self.question3,
             options = 'a',
-            correct = True
+            correct = True,
+            type = 'mcqtestcase'
         )
         self.mcc_based_testcase.save()
 
@@ -870,21 +876,26 @@ class TestCaseTestCases(unittest.TestCase):
         self.question2.save()
         self.assertion_testcase = StandardTestCase(
             question=self.question1,
-            test_case='assert myfunc(12, 13) == 15'
+            test_case='assert myfunc(12, 13) == 15',
+            type='standardtestcase'
         )
         self.stdout_based_testcase = StdioBasedTestCase(
             question=self.question2,
-            expected_output='Hello World'
+            expected_output='Hello World',
+            type='standardtestcase'
+
         )
         self.assertion_testcase.save()
         self.stdout_based_testcase.save()
-        answer_data = {"user_answer": "demo_answer",
-            "test_case_data": [
-                {"test_case": "assert myfunc(12, 13) == 15",
-                "weight": 1.0
-                }
-            ]
-        }
+        answer_data = {'metadata': { 'user_answer': 'demo_answer',
+                        'language': 'python',
+                        'partial_grading': False
+                        },
+                    'test_case_data': [{'test_case': 'assert myfunc(12, 13) == 15',
+                        'test_case_type': 'standardtestcase',
+                        'weight': 1.0
+                        }]
+                    }
         self.answer_data_json = json.dumps(answer_data)
 
     def test_assertion_testcase(self):
@@ -907,5 +918,5 @@ class TestCaseTestCases(unittest.TestCase):
         )
         actual_data = json.loads(result)
         exp_data = json.loads(self.answer_data_json)
-        self.assertEqual(actual_data['user_answer'], exp_data['user_answer'])
+        self.assertEqual(actual_data['metadata']['user_answer'], exp_data['metadata']['user_answer'])
         self.assertEqual(actual_data['test_case_data'], exp_data['test_case_data'])
