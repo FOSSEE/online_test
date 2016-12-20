@@ -6,9 +6,9 @@ import tempfile
 from textwrap import dedent
 
 # Local import
-from yaksh.code_evaluator import CodeEvaluator
+from yaksh.grader import Grader
 from yaksh.cpp_code_evaluator import CppCodeEvaluator
-from yaksh.cpp_stdio_evaluator import CppStdioEvaluator
+from yaksh.cpp_stdio_evaluator import CppStdIOEvaluator
 from yaksh.settings import SERVER_TIMEOUT
 
 
@@ -44,8 +44,8 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertTrue(result.get('success'))
         self.assertEqual(result.get('error'), "Correct answer\n")
@@ -62,8 +62,8 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
@@ -82,8 +82,8 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertTrue("Compilation Error" in result.get("error"))
@@ -100,8 +100,8 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
@@ -134,13 +134,13 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertTrue(result.get('success'))
         self.assertEqual(result.get('error'), "Correct answer\n")
 
-class CppStdioEvaluationTestCases(unittest.TestCase):
+class CppStdIOEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.test_case_data = [{'expected_output': '11',
                                 'expected_input': '5\n6',
@@ -171,8 +171,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -202,8 +202,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -231,8 +231,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -254,8 +254,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
@@ -279,8 +279,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertTrue("Compilation Error" in result.get("error"))
@@ -302,8 +302,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
@@ -330,8 +330,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -355,8 +355,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -387,8 +387,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -417,8 +417,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -441,8 +441,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
@@ -467,8 +467,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertTrue("Compilation Error" in result.get("error"))
@@ -491,8 +491,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
@@ -520,8 +520,8 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))

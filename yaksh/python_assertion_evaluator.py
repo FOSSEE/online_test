@@ -9,7 +9,7 @@ import importlib
 # Local imports
 from .file_utils import copy_files, delete_files
 from .base_evaluator import BaseEvaluator
-from .code_evaluator import TimeoutException
+from .grader import TimeoutException
 
 
 class PythonAssertionEvaluator(BaseEvaluator):

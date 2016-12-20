@@ -4,10 +4,9 @@ import os
 import shutil
 import tempfile
 
-from yaksh import code_evaluator
-from yaksh.code_evaluator import CodeEvaluator
+from yaksh import grader as gd
+from yaksh.grader import Grader
 from yaksh.scilab_code_evaluator import ScilabCodeEvaluator
-from yaksh.settings import SERVER_TIMEOUT
 
 class ScilabEvaluationTestCases(unittest.TestCase):
     def setUp(self):
@@ -17,14 +16,14 @@ class ScilabEvaluationTestCases(unittest.TestCase):
                                 "weight": 0.0
                                 }]
         self.in_dir = tmp_in_dir_path
+        self.file_paths = None
+        gd.SERVER_TIMEOUT = 9
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop" 
-                            " in your code.").format(SERVER_TIMEOUT)
-        code_evaluator.SERVER_TIMEOUT = 9
-        self.file_paths = None
+                            " in your code.").format(gd.SERVER_TIMEOUT)
 
     def tearDown(self):
-        code_evaluator.SERVER_TIMEOUT = 4
+        gd.SERVER_TIMEOUT = 4
         shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
@@ -40,8 +39,8 @@ class ScilabEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -59,8 +58,8 @@ class ScilabEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertTrue('error' in result.get("error"))
@@ -79,8 +78,8 @@ class ScilabEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
@@ -88,7 +87,6 @@ class ScilabEvaluationTestCases(unittest.TestCase):
         self.assertTrue(lines_of_error > 1)
 
     def test_infinite_loop(self):
-        code_evaluator.SERVER_TIMEOUT = 4
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a;\nwhile(1==1)\nend\nendfunction")
         kwargs = {
@@ -101,8 +99,8 @@ class ScilabEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)

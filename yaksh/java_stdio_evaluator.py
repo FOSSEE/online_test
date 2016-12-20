@@ -9,7 +9,7 @@ from .stdio_evaluator import StdIOEvaluator
 from .file_utils import copy_files, delete_files
 
 
-class JavaStdioEvaluator(StdIOEvaluator):
+class JavaStdIOEvaluator(StdIOEvaluator):
     """Evaluates Java StdIO based code"""
     def __init__(self, metadata, test_case_data):
         self.files = []

@@ -14,15 +14,10 @@ def get_registry():
         registry = _LanguageRegistry()
     return registry
 
-# def unpack_json_to_python_obj(json_data):
-#     data = json.loads(json_data)
-#     return data
-
-def create_evaluator_instance(metadata, test_case): #create_evaluator_instance
+def create_evaluator_instance(metadata, test_case):
     """Create instance of relevant EvaluateCode class based on language"""
     registry = get_registry()
     cls = registry.get_class(metadata.get('language'), test_case.get('test_case_type'))
-    # instance = cls(in_dir)
     instance = cls(metadata, test_case)
     return instance
 

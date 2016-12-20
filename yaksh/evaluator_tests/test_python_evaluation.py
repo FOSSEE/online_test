@@ -6,9 +6,9 @@ import shutil
 from textwrap import dedent
 
 # Local import
-from yaksh.code_evaluator import CodeEvaluator
+from yaksh.grader import Grader
 from yaksh.python_assertion_evaluator import PythonAssertionEvaluator
-from yaksh.python_stdio_evaluator import PythonStdioEvaluator
+from yaksh.python_stdio_evaluator import PythonStdIOEvaluator
 from yaksh.settings import SERVER_TIMEOUT
 
 class PythonAssertionEvaluationTestCases(unittest.TestCase):
@@ -44,8 +44,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                   }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         # Then
         self.assertTrue(result.get('success'))
@@ -65,8 +65,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                   }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         # Then
         self.assertFalse(result.get('success'))
@@ -98,8 +98,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                   }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         # Then
         self.assertFalse(result.get('success'))
@@ -125,8 +125,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                   }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         # Then
         self.assertFalse(result.get('success'))
@@ -157,8 +157,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                   }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
         err = result.get("error").splitlines()
 
         # Then
@@ -191,8 +191,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                   }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
         err = result.get("error").splitlines()
 
         # Then
@@ -222,8 +222,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                 }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
         err = result.get("error").splitlines()
 
         # Then
@@ -254,8 +254,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                 }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
         err = result.get("error").splitlines()
 
         # Then
@@ -286,8 +286,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                 }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
         err = result.get("error").splitlines()
 
         # Then
@@ -321,8 +321,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                 }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
         err = result.get("error").splitlines()
 
         # Then
@@ -352,8 +352,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                 }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         # Then
         self.assertIn("Correct answer", result.get('error'))
@@ -389,8 +389,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                 }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
         err = result.get("error").splitlines()
 
         # Then
@@ -430,8 +430,8 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                 }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
         err = result.get("error").splitlines()
 
         # Then
@@ -471,8 +471,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                 }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         # Then
         self.assertTrue(result.get('success'))
@@ -505,8 +505,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                 }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         # Then
         self.assertTrue(result.get('success'))
@@ -537,8 +537,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                 }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         # Then
         self.assertTrue(result.get('success'))
@@ -567,8 +567,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                 }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         # Then
         self.assertFalse(result.get('success'))
@@ -599,8 +599,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                 }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         # Then
         self.assertEqual(result.get('error'), "Correct answer\n")
@@ -628,8 +628,8 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
                 }
 
         # When
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         # Then
         self.assertEqual(result.get('error'), timeout_msg)

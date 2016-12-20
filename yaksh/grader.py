@@ -68,7 +68,7 @@ def delete_signal_handler():
     return
 
 
-class CodeEvaluator(object):
+class Grader(object):
     """Tests the code obtained from Code Server"""
     def __init__(self, in_dir=None):
         msg = 'Code took more than %s seconds to run. You probably '\
@@ -102,10 +102,10 @@ class CodeEvaluator(object):
         self.setup()
         test_case_instances = self.get_evaluator_objects(kwargs)
         with change_dir(self.in_dir):
-            success, error, weight = self.safe_evaluate(test_case_instances)
+            success, error, mark = self.safe_evaluate(test_case_instances)
         self.teardown()
 
-        result = {'success': success, 'error': error, 'weight': weight}
+        result = {'success': success, 'error': error, 'weight': mark}
         return result
 
     # Private Protocol ##########

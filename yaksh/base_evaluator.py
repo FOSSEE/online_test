@@ -10,7 +10,7 @@ import stat
 
 
 # Local imports
-from .code_evaluator import MY_DIR, TimeoutException
+from .grader import MY_DIR, TimeoutException
 
 class BaseEvaluator(object):
     """Base Evaluator class containing generic attributes and callable methods"""

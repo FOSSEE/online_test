@@ -1160,7 +1160,7 @@ class StandardTestCase(TestCase):
         )
 
 
-class StdioBasedTestCase(TestCase):
+class StdIOBasedTestCase(TestCase):
     expected_input = models.CharField(max_length=100, blank=True)
     expected_output = models.CharField(max_length=100)
     weight = models.IntegerField(default=1.0)

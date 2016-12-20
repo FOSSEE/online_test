@@ -1,7 +1,7 @@
 import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdioBasedTestCase, FileUpload, McqTestCase
+    StdIOBasedTestCase, FileUpload, McqTestCase
 import json
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -879,7 +879,7 @@ class TestCaseTestCases(unittest.TestCase):
             test_case='assert myfunc(12, 13) == 15',
             type='standardtestcase'
         )
-        self.stdout_based_testcase = StdioBasedTestCase(
+        self.stdout_based_testcase = StdIOBasedTestCase(
             question=self.question2,
             expected_output='Hello World',
             type='standardtestcase'

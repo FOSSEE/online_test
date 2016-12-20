@@ -3,9 +3,9 @@ import unittest
 import os
 import shutil
 import tempfile
-from yaksh.code_evaluator import CodeEvaluator
+from yaksh.grader import Grader
 from yaksh.bash_code_evaluator import BashCodeEvaluator
-from yaksh.bash_stdio_evaluator import BashStdioEvaluator
+from yaksh.bash_stdio_evaluator import BashStdIOEvaluator
 from yaksh.settings import SERVER_TIMEOUT
 from textwrap import dedent
 
@@ -44,8 +44,8 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertTrue(result.get('success'))
         self.assertEqual(result.get('error'), "Correct answer\n")
@@ -63,8 +63,8 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertTrue("Error" in result.get("error"))
@@ -82,8 +82,8 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
@@ -107,13 +107,13 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertTrue(result.get("success"))
         self.assertEqual(result.get("error"), "Correct answer\n")
 
-class BashStdioEvaluationTestCases(unittest.TestCase):
+class BashStdIOEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.in_dir = tempfile.mkdtemp()
         self.timeout_msg = ("Code took more than {0} seconds to run. "
@@ -144,8 +144,8 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -174,8 +174,8 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -202,8 +202,8 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
         self.assertIn("Incorrect", result.get('error'))
         self.assertFalse(result.get('success'))
 
@@ -229,8 +229,8 @@ class BashStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 

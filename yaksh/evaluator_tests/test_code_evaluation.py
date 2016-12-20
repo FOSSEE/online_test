@@ -14,7 +14,7 @@ class RegistryTestCase(unittest.TestCase):
             ".PythonAssertionEvaluator"
         )
         stdio_evaluator_path = ("yaksh.python_stdio_evaluator."
-            "PythonStdioEvaluator"
+            "PythonStdIOEvaluator"
         )
         code_evaluators['python'] = \
         {"standardtestcase": assertion_evaluator_path,
@@ -29,7 +29,7 @@ class RegistryTestCase(unittest.TestCase):
             ".PythonAssertionEvaluator"
         )
         stdio_evaluator_path = ("yaksh.python_stdio_evaluator."
-            "PythonStdioEvaluator"
+            "PythonStdIOEvaluator"
         )
         class_name = getattr(python_assertion_evaluator, 
             'PythonAssertionEvaluator'

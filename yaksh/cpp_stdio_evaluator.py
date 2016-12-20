@@ -9,7 +9,7 @@ from .stdio_evaluator import StdIOEvaluator
 from .file_utils import copy_files, delete_files
 
 
-class CppStdioEvaluator(StdIOEvaluator):
+class CppStdIOEvaluator(StdIOEvaluator):
     """Evaluates C StdIO based code"""
     def __init__(self, metadata, test_case_data):
         self.files = []

@@ -54,7 +54,7 @@ from tornado.web import Application, RequestHandler
 # Local imports
 from .settings import SERVER_PORTS, SERVER_POOL_PORT
 from .language_registry import create_evaluator_instance
-from .code_evaluator import CodeEvaluator
+from .grader import Grader
 
 
 MY_DIR = abspath(dirname(__file__))
@@ -85,18 +85,14 @@ class CodeServer(object):
         """Calls relevant EvaluateCode class based on language to check the
          answer code
         """
-        data = self.unpack_json_to_python_obj(json_data)
-        code_eval_instance = CodeEvaluator(in_dir)
-        result = code_eval_instance.evaluate(data) #language, test_case_type, 
+        data = json.loads(json_data)
+        grader = Grader(in_dir)
+        result = grader.evaluate(data) 
 
         # Put us back into the server pool queue since we are free now.
         self.queue.put(self.port)
 
         return json.dumps(result)
-
-    def unpack_json_to_python_obj(self, json_data):
-        data = json.loads(json_data)
-        return data
 
     def run(self):
         """Run XMLRPC server, serving our methods."""

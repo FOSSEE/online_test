@@ -26,12 +26,6 @@ class ScilabCodeEvaluator(BaseEvaluator):
         self.test_case = test_case_data.get('test_case')
         self.weight = test_case_data.get('weight')
 
-    # def setup(self):
-    #     super(ScilabCodeEvaluator, self).setup()
-    #     self.files = []
-    #     self.submit_code_path = \
-    #         self.create_submit_code_file('function.sci')
-
     def teardown(self):
         # Delete the created file.
         os.remove(self.submit_code_path)
@@ -61,7 +55,7 @@ class ScilabCodeEvaluator(BaseEvaluator):
         cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(
             clean_ref_path
         )
-        cmd += ' | timeout 8 scilab-cli -nb'
+        cmd += ' | scilab-cli -nb'
         ret = self._run_command(cmd,
             shell=True,
             stdout=subprocess.PIPE,

@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdioBasedTestCase, has_profile
+    StdIOBasedTestCase, has_profile
 
 
 class TestProfile(TestCase):

@@ -19,40 +19,20 @@ SERVER_TIMEOUT = 4
 # host.org/foo/exam set URL_ROOT='/foo'
 URL_ROOT = ''
 
-# code_evaluators = {
-#     "python": {"standardtestcase": "yaksh.python_assertion_evaluator.PythonAssertionEvaluator",
-#                "stdiobasedtestcase": "yaksh.python_stdio_evaluator.PythonStdioEvaluator"
-#                },
-#     "c": {"standardtestcase": "yaksh.cpp_code_evaluator.CppCodeEvaluator",
-#           "stdiobasedtestcase": "yaksh.cpp_stdio_evaluator.CppStdioEvaluator"
-#           },
-#     "cpp": {"standardtestcase": "yaksh.cpp_code_evaluator.CppCodeEvaluator",
-#             "stdiobasedtestcase": "yaksh.cpp_stdio_evaluator.CppStdioEvaluator"
-#             },
-#     "java": {"standardtestcase": "yaksh.java_code_evaluator.JavaCodeEvaluator",
-#              "stdiobasedtestcase": "yaksh.java_stdio_evaluator.JavaStdioEvaluator"},
-
-#     "bash": {"standardtestcase": "yaksh.bash_code_evaluator.BashCodeEvaluator",
-#             "stdiobasedtestcase": "yaksh.bash_stdio_evaluator.BashStdioEvaluator"
-#              },
-
-#     "scilab": {"standardtestcase": "yaksh.scilab_code_evaluator.ScilabCodeEvaluator"},
-# }
-
 code_evaluators = {
     "python": {"standardtestcase": "yaksh.python_assertion_evaluator.PythonAssertionEvaluator",
-               "stdiobasedtestcase": "yaksh.python_stdio_evaluator.PythonStdioEvaluator"
+               "stdiobasedtestcase": "yaksh.python_stdio_evaluator.PythonStdIOEvaluator"
                },
     "c": {"standardtestcase": "yaksh.cpp_code_evaluator.CppCodeEvaluator",
-          "stdiobasedtestcase": "yaksh.cpp_stdio_evaluator.CppStdioEvaluator"
+          "stdiobasedtestcase": "yaksh.cpp_stdio_evaluator.CppStdIOEvaluator"
           },
     "cpp": {"standardtestcase": "yaksh.cpp_code_evaluator.CppCodeEvaluator",
-            "stdiobasedtestcase": "yaksh.cpp_stdio_evaluator.CppStdioEvaluator"
+            "stdiobasedtestcase": "yaksh.cpp_stdio_evaluator.CppStdIOEvaluator"
             },
     "java": {"standardtestcase": "yaksh.java_code_evaluator.JavaCodeEvaluator",
-             "stdiobasedtestcase": "yaksh.java_stdio_evaluator.JavaStdioEvaluator"},
+             "stdiobasedtestcase": "yaksh.java_stdio_evaluator.JavaStdIOEvaluator"},
     "bash": {"standardtestcase": "yaksh.bash_code_evaluator.BashCodeEvaluator",
-            "stdiobasedtestcase": "yaksh.bash_stdio_evaluator.BashStdioEvaluator"
+            "stdiobasedtestcase": "yaksh.bash_stdio_evaluator.BashStdIOEvaluator"
              },
     "scilab": {"standardtestcase": "yaksh.scilab_code_evaluator.ScilabCodeEvaluator"},
 }

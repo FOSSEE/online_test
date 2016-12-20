@@ -3,12 +3,13 @@ import unittest
 import os
 import shutil
 import tempfile
-from yaksh import code_evaluator
-from yaksh.code_evaluator import CodeEvaluator
-from yaksh.java_code_evaluator import JavaCodeEvaluator
-from yaksh.java_stdio_evaluator import JavaStdioEvaluator
-from yaksh.settings import SERVER_TIMEOUT
 from textwrap import dedent
+
+# Local Import
+from yaksh import grader as gd
+from yaksh.grader import Grader
+from yaksh.java_code_evaluator import JavaCodeEvaluator
+from yaksh.java_stdio_evaluator import JavaStdIOEvaluator
 
 
 class JavaAssertionEvaluationTestCases(unittest.TestCase):
@@ -23,14 +24,15 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
             }
         ]
         self.in_dir = tmp_in_dir_path
-        code_evaluator.SERVER_TIMEOUT = 9
+        self.file_paths = None
+        gd.SERVER_TIMEOUT = 9
         self.timeout_msg = ("Code took more than {0} seconds to run. "
             "You probably have an infinite loop in"
-            " your code.").format(code_evaluator.SERVER_TIMEOUT)
-        self.file_paths = None
+            " your code.").format(gd.SERVER_TIMEOUT)
+
 
     def tearDown(self):
-        code_evaluator.SERVER_TIMEOUT = 4
+        gd.SERVER_TIMEOUT = 4
         os.remove('/tmp/test.txt')
         shutil.rmtree(self.in_dir)
 
@@ -46,8 +48,8 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -64,8 +66,8 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get('success'))
         lines_of_error = len(result.get('error').splitlines())
@@ -85,8 +87,8 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertTrue("Error" in result.get("error"))
@@ -103,8 +105,8 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
@@ -145,13 +147,13 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertTrue(result.get("success"))
         self.assertEqual(result.get("error"), "Correct answer\n")
 
-class JavaStdioEvaluationTestCases(unittest.TestCase):
+class JavaStdIOEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         with open('/tmp/test.txt', 'wb') as f:
             f.write('2'.encode('ascii'))
@@ -162,14 +164,14 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                                 'test_case_type': 'stdiobasedtestcase',
                                 'weight': 0.0
                             }]
-        code_evaluator.SERVER_TIMEOUT = 4
+        self.file_paths = None
+        gd.SERVER_TIMEOUT = 9
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in"
-                            " your code.").format(code_evaluator.SERVER_TIMEOUT)
-        self.file_paths = None
+                            " your code.").format(gd.SERVER_TIMEOUT)
 
     def tearDown(self):
-        code_evaluator.SERVER_TIMEOUT = 4
+        gd.SERVER_TIMEOUT = 4
         os.remove('/tmp/test.txt')
         shutil.rmtree(self.in_dir)
 
@@ -193,8 +195,8 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -225,8 +227,8 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -251,8 +253,8 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
@@ -275,14 +277,13 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertTrue("Compilation Error" in result.get("error"))
 
     def test_infinite_loop(self):
-
         user_answer = dedent("""
         class Test
         {public static void main(String[] args){
@@ -300,8 +301,8 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
@@ -329,8 +330,8 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -360,8 +361,8 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
@@ -401,8 +402,8 @@ class JavaStdioEvaluationTestCases(unittest.TestCase):
                     'test_case_data': self.test_case_data,
                   }
 
-        evaluator = CodeEvaluator(self.in_dir)
-        result = evaluator.evaluate(kwargs)
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
 
         self.assertTrue(result.get("success"))
         self.assertEqual(result.get("error"), "Correct answer\n")
