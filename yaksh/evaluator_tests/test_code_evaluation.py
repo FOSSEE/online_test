@@ -13,12 +13,12 @@ class RegistryTestCase(unittest.TestCase):
         assertion_evaluator_path = ("yaksh.python_assertion_evaluator"
             ".PythonAssertionEvaluator"
         )
-        stdout_evaluator_path = ("yaksh.python_stdout_evaluator."
-            "PythonStdoutEvaluator"
+        stdio_evaluator_path = ("yaksh.python_stdio_evaluator."
+            "PythonStdIOEvaluator"
         )
         code_evaluators['python'] = \
         {"standardtestcase": assertion_evaluator_path,
-        "stdiobasedtestcase": stdout_evaluator_path
+        "stdiobasedtestcase": stdio_evaluator_path
         }
 
     def test_set_register(self):
@@ -28,15 +28,15 @@ class RegistryTestCase(unittest.TestCase):
         assertion_evaluator_path = ("yaksh.python_assertion_evaluator"
             ".PythonAssertionEvaluator"
         )
-        stdout_evaluator_path = ("yaksh.python_stdout_evaluator."
-            "PythonStdoutEvaluator"
+        stdio_evaluator_path = ("yaksh.python_stdio_evaluator."
+            "PythonStdIOEvaluator"
         )
         class_name = getattr(python_assertion_evaluator, 
             'PythonAssertionEvaluator'
         )
         self.registry_object.register("python", 
             {"standardtestcase": assertion_evaluator_path,
-                "stdiobasedtestcase": stdout_evaluator_path
+                "stdiobasedtestcase": stdio_evaluator_path
             }
         )
         self.assertEqual(evaluator_class, class_name)

@@ -8,38 +8,43 @@ import re
 import importlib
 
 # Local imports
-from .code_evaluator import CodeEvaluator
+from .base_evaluator import BaseEvaluator
 from .file_utils import copy_files, delete_files
 
 
-class ScilabCodeEvaluator(CodeEvaluator):
+class ScilabCodeEvaluator(BaseEvaluator):
     """Tests the Scilab code obtained from Code Server"""
-    def setup(self):
-        super(ScilabCodeEvaluator, self).setup()
+    def __init__(self, metadata, test_case_data):
         self.files = []
-        self.submit_code_path = \
-            self.create_submit_code_file('function.sci')
+
+        # Set metadata values
+        self.user_answer = metadata.get('user_answer')
+        self.file_paths = metadata.get('file_paths')
+        self.partial_grading = metadata.get('partial_grading')
+
+        # Set test case data values
+        self.test_case = test_case_data.get('test_case')
+        self.weight = test_case_data.get('weight')
 
     def teardown(self):
         # Delete the created file.
         os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
-        super(ScilabCodeEvaluator, self).teardown()
 
-    def check_code(self, user_answer, file_paths, partial_grading, test_case, weight):
-        if file_paths:
-            self.files = copy_files(file_paths)
-        ref_code_path = test_case
+    def check_code(self):
+        self.submit_code_path = self.create_submit_code_file('function.sci')
+        if self.file_paths:
+            self.files = copy_files(self.file_paths)
+        ref_code_path = self.test_case
         clean_ref_path, clean_test_case_path = \
             self._set_test_code_file_path(ref_code_path)
-        user_answer, terminate_commands = \
-            self._remove_scilab_exit(user_answer.lstrip())
+        self.user_answer, terminate_commands = \
+            self._remove_scilab_exit(self.user_answer.lstrip())
 
         success = False
         test_case_weight = 0.0
-
-        self.write_to_submit_code_file(self.submit_code_path, user_answer)
+        self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
         # Throw message if there are commmands that terminates scilab
         add_err = ""
         if terminate_commands:
@@ -50,7 +55,7 @@ class ScilabCodeEvaluator(CodeEvaluator):
         cmd = 'printf "lines(0)\nexec(\'{0}\',2);\nquit();"'.format(
             clean_ref_path
         )
-        cmd += ' | timeout 8 scilab-cli -nb'
+        cmd += ' | scilab-cli -nb'
         ret = self._run_command(cmd,
             shell=True,
             stdout=subprocess.PIPE,
@@ -65,11 +70,12 @@ class ScilabCodeEvaluator(CodeEvaluator):
             stdout = self._strip_output(stdout)
             if proc.returncode == 5:
                 success, err = True, "Correct answer"
-                test_case_weight = float(weight) if partial_grading else 0.0
+                test_case_weight = float(self.weight) if self.partial_grading else 0.0
             else:
                 err = add_err + stdout
         else:
             err = add_err + stderr
+
         return success, err, test_case_weight
 
     def _remove_scilab_exit(self, string):

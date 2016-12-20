@@ -53,7 +53,8 @@ from tornado.web import Application, RequestHandler
 
 # Local imports
 from .settings import SERVER_PORTS, SERVER_POOL_PORT
-from .language_registry import create_evaluator_instance, unpack_json
+from .language_registry import create_evaluator_instance
+from .grader import Grader
 
 
 MY_DIR = abspath(dirname(__file__))
@@ -84,13 +85,9 @@ class CodeServer(object):
         """Calls relevant EvaluateCode class based on language to check the
          answer code
         """
-        code_evaluator = create_evaluator_instance(language,
-            test_case_type,
-            json_data,
-            in_dir
-        )
-        data = unpack_json(json_data)
-        result = code_evaluator.evaluate(**data)
+        data = json.loads(json_data)
+        grader = Grader(in_dir)
+        result = grader.evaluate(data) 
 
         # Put us back into the server pool queue since we are free now.
         self.queue.put(self.port)

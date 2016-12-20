@@ -4,48 +4,63 @@ import os
 import shutil
 import tempfile
 
-from yaksh import code_evaluator as evaluator
+from yaksh import grader as gd
+from yaksh.grader import Grader
 from yaksh.scilab_code_evaluator import ScilabCodeEvaluator
-from yaksh.settings import SERVER_TIMEOUT
 
 class ScilabEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         tmp_in_dir_path = tempfile.mkdtemp()
         self.test_case_data = [{"test_case": "scilab_files/test_add.sce",
+                                "test_case_type": "standardtestcase",
                                 "weight": 0.0
                                 }]
         self.in_dir = tmp_in_dir_path
+        self.file_paths = None
+        gd.SERVER_TIMEOUT = 9
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop" 
-                            " in your code.").format(SERVER_TIMEOUT)
-        self.file_paths = None
+                            " in your code.").format(gd.SERVER_TIMEOUT)
 
     def tearDown(self):
+        gd.SERVER_TIMEOUT = 4
         shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a+b;\nendfunction")
-        get_class = ScilabCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer,
-                    'partial_grading': True,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'scilab'
+                    },
                     'test_case_data': self.test_case_data,
-                    'file_paths': self.file_paths
-                }
-        result = get_class.evaluate(**kwargs)
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_error(self):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a+b;\ndis(\tendfunction")
-        get_class = ScilabCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer,
-                    'partial_grading': True, 
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'scilab'
+                    },
                     'test_case_data': self.test_case_data,
-                    'file_paths': self.file_paths
-                }
-        result = get_class.evaluate(**kwargs) 
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertFalse(result.get("success"))
         self.assertTrue('error' in result.get("error"))
 
@@ -53,13 +68,19 @@ class ScilabEvaluationTestCases(unittest.TestCase):
     def test_incorrect_answer(self):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a-b;\nendfunction")
-        get_class = ScilabCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer,
-                    'partial_grading': True,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'scilab'
+                    },
                     'test_case_data': self.test_case_data,
-                    'file_paths': self.file_paths
-                }
-        result = get_class.evaluate(**kwargs)
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
         self.assertIn("Message", result.get('error'))
@@ -68,13 +89,19 @@ class ScilabEvaluationTestCases(unittest.TestCase):
     def test_infinite_loop(self):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
                         "\n\tc=a;\nwhile(1==1)\nend\nendfunction")
-        get_class = ScilabCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer,
-                    'partial_grading': True,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'scilab'
+                    },
                     'test_case_data': self.test_case_data,
-                    'file_paths': self.file_paths
-                }
-        result = get_class.evaluate(**kwargs) 
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
 

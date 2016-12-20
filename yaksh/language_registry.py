@@ -14,15 +14,11 @@ def get_registry():
         registry = _LanguageRegistry()
     return registry
 
-def unpack_json(json_data):
-    data = json.loads(json_data)
-    return data
-
-def create_evaluator_instance(language, test_case_type, json_data, in_dir):
+def create_evaluator_instance(metadata, test_case):
     """Create instance of relevant EvaluateCode class based on language"""
     registry = get_registry()
-    cls = registry.get_class(language, test_case_type)
-    instance = cls(in_dir)
+    cls = registry.get_class(metadata.get('language'), test_case.get('test_case_type'))
+    instance = cls(metadata, test_case)
     return instance
 
 class _LanguageRegistry(object):
@@ -36,8 +32,8 @@ class _LanguageRegistry(object):
         """ Get the code evaluator class for the given language """
         if not self._register.get(language):
             self._register[language] = code_evaluators.get(language)
-
         test_case_register = self._register[language]
+        
         cls = test_case_register.get(test_case_type)
         module_name, class_name = cls.rsplit(".", 1)
         # load the module, will raise ImportError if module cannot be loaded

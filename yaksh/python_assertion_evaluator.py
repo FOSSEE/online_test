@@ -7,36 +7,44 @@ from os.path import join
 import importlib
 
 # Local imports
-from .code_evaluator import CodeEvaluator, TimeoutException
 from .file_utils import copy_files, delete_files
+from .base_evaluator import BaseEvaluator
+from .grader import TimeoutException
 
 
-class PythonAssertionEvaluator(CodeEvaluator):
+class PythonAssertionEvaluator(BaseEvaluator):
     """Tests the Python code obtained from Code Server"""
 
-    def setup(self):
-        super(PythonAssertionEvaluator, self).setup()
+    def __init__(self, metadata, test_case_data):
         self.exec_scope = None
         self.files = []
+
+        # Set metadata values
+        self.user_answer = metadata.get('user_answer')
+        self.file_paths = metadata.get('file_paths')
+        self.partial_grading = metadata.get('partial_grading')
+
+        # Set test case data values
+        self.test_case = test_case_data.get('test_case')
+        self.weight = test_case_data.get('weight')
 
     def teardown(self):
         # Delete the created file.
         if self.files:
             delete_files(self.files)
-        super(PythonAssertionEvaluator, self).teardown()
 
-    def compile_code(self, user_answer, file_paths, test_case, weight):
-        if file_paths:
-            self.files = copy_files(file_paths)
+    def compile_code(self):
+        if self.file_paths:
+            self.files = copy_files(self.file_paths)
         if self.exec_scope:
             return None
         else:
-            submitted = compile(user_answer, '<string>', mode='exec')
+            submitted = compile(self.user_answer, '<string>', mode='exec')
             self.exec_scope = {}
             exec(submitted, self.exec_scope)
             return self.exec_scope
 
-    def check_code(self, user_answer, file_paths, partial_grading, test_case, weight):
+    def check_code(self):
         """ Function validates user answer by running an assertion based test case
         against it
 
@@ -58,29 +66,26 @@ class PythonAssertionEvaluator(CodeEvaluator):
         the required permissions are not given to the file(s).
         """
         success = False
-        test_case_weight = 0.0
+        mark_fraction = 0.0
         try:
             tb = None
-            _tests = compile(test_case, '<string>', mode='exec')
+            _tests = compile(self.test_case, '<string>', mode='exec')
             exec(_tests, self.exec_scope)
         except AssertionError:
             type, value, tb = sys.exc_info()
             info = traceback.extract_tb(tb)
             fname, lineno, func, text = info[-1]
-            text = str(test_case).splitlines()[lineno-1]
+            text = str(self.test_case).splitlines()[lineno-1]
             err = ("-----\nExpected Test Case:\n{0}\n"
-                    "Error - {1} {2} in: {3}\n-----").format(test_case,
-                                                             type.__name__,
-                                                             str(value), text
-                                                             )
+                    "Error - {1} {2} in: {3}\n-----").format(self.test_case, type.__name__, str(value), text)
         except TimeoutException:
             raise
         except Exception:
-             msg = traceback.format_exc(limit=0)
-             err = "Error in Test case: {0}".format(msg)
+            msg = traceback.format_exc(limit=0)
+            err = "Error in Test case: {0}".format(msg)
         else:
             success = True
-            err = '-----\nCorrect answer\nTest Case: {0}\n-----'.format(test_case)
-            test_case_weight = float(weight) if partial_grading else 0.0
+            err = '-----\nCorrect answer\nTest Case: {0}\n-----'.format(self.test_case)
+            mark_fraction = float(self.weight) if self.partial_grading else 0.0
         del tb
-        return success, err, test_case_weight
+        return success, err, mark_fraction

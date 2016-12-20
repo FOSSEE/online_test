@@ -1,18 +1,10 @@
 from __future__ import unicode_literals
 
 # Local imports
-from .code_evaluator import CodeEvaluator
+from .base_evaluator import BaseEvaluator
 
 
-class StdIOEvaluator(CodeEvaluator):
-    def setup(self):
-        super(StdIOEvaluator, self).setup()
-        pass
-
-    def teardown(self):
-        super(StdIOEvaluator, self).teardown()
-        pass
-
+class StdIOEvaluator(BaseEvaluator):
     def evaluate_stdio(self, user_answer, proc, expected_input, expected_output):
         success = False
         ip = expected_input.replace(",", " ")

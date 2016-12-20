@@ -3,10 +3,14 @@ import unittest
 import os
 import shutil
 import tempfile
-from yaksh.cpp_code_evaluator import CppCodeEvaluator
-from yaksh.cpp_stdio_evaluator import CppStdioEvaluator
-from yaksh.settings import SERVER_TIMEOUT
 from textwrap import dedent
+
+# Local import
+from yaksh.grader import Grader
+from yaksh.cpp_code_evaluator import CppCodeEvaluator
+from yaksh.cpp_stdio_evaluator import CppStdIOEvaluator
+from yaksh.settings import SERVER_TIMEOUT
+
 
 
 class CAssertionEvaluationTestCases(unittest.TestCase):
@@ -15,6 +19,7 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
         self.test_case_data = [{"test_case": "c_cpp_files/main.cpp",
+                                "test_case_type": "standardtestcase",
                                 "weight": 0.0
                                 }]
         self.in_dir = tmp_in_dir_path
@@ -29,25 +34,37 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
 
     def test_correct_answer(self):
         user_answer = "int add(int a, int b)\n{return a+b;}"
-        get_class = CppCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer, 
-            'partial_grading': False,
-            'test_case_data': self.test_case_data,
-            'file_paths': self.file_paths
-        }
-        result = get_class.evaluate(**kwargs)
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertTrue(result.get('success'))
         self.assertEqual(result.get('error'), "Correct answer\n")
 
     def test_incorrect_answer(self):
         user_answer = "int add(int a, int b)\n{return a-b;}"
-        get_class = CppCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
+                    'language': 'cpp'
+                    },
                     'test_case_data': self.test_case_data,
-                    'file_paths': self.file_paths
-                }
-        result = get_class.evaluate(**kwargs)
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
         self.assertIn("Incorrect:", result.get('error'))
@@ -55,31 +72,44 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
 
     def test_compilation_error(self):
         user_answer = "int add(int a, int b)\n{return a+b}"
-        get_class = CppCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
+                    'language': 'cpp'
+                    },
                     'test_case_data': self.test_case_data,
-                    'file_paths': self.file_paths
-                }
-        result = get_class.evaluate(**kwargs)
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertFalse(result.get("success"))
         self.assertTrue("Compilation Error" in result.get("error"))
 
     def test_infinite_loop(self):
         user_answer = "int add(int a, int b)\n{while(1>0){}}"
-        get_class = CppCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
+                    'language': 'cpp'
+                    },
                     'test_case_data': self.test_case_data,
-                    'file_paths': self.file_paths
-                }
-        result = get_class.evaluate(**kwargs)
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_file_based_assert(self):
         self.file_paths = [('/tmp/test.txt', False)]
         self.test_case_data = [{"test_case": "c_cpp_files/file_data.c",
+                                "test_case_type": "standardtestcase",
                                 "weight": 0.0
                                 }]
         user_answer = dedent("""
@@ -94,26 +124,34 @@ class CAssertionEvaluationTestCases(unittest.TestCase):
             return buff[0];
             }
             """)
-        get_class = CppCodeEvaluator(self.in_dir)
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
+                    'language': 'cpp'
+                    },
                     'test_case_data': self.test_case_data,
-                    'file_paths': self.file_paths
-                }
-        result = get_class.evaluate(**kwargs)
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertTrue(result.get('success'))
         self.assertEqual(result.get('error'), "Correct answer\n")
 
-class CppStdioEvaluationTestCases(unittest.TestCase):
+class CppStdIOEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         self.test_case_data = [{'expected_output': '11',
                                 'expected_input': '5\n6',
-                                'weight': 0.0
+                                'weight': 0.0,
+                                'test_case_type': 'stdiobasedtestcase',
                                 }]
         self.in_dir = tempfile.mkdtemp()
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in"
                             " your code.").format(SERVER_TIMEOUT)
+        self.file_paths = None
 
     def test_correct_answer(self):
         user_answer = dedent("""
@@ -123,19 +161,27 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         scanf("%d%d",&a,&b);
         printf("%d",a+b);
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
         self.test_case_data = [{'expected_output': '561',
                                 'expected_input': '5\n6\n1',
-                                'weight': 0.0
+                                'weight': 0.0,
+                                'test_case_type': 'stdiobasedtestcase',
                                 }]
         user_answer = dedent("""
         #include<stdio.h>
@@ -146,19 +192,27 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         for(i=0;i<3;i++){
         printf("%d",a[i]);}
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_string_input(self):
         self.test_case_data = [{'expected_output': 'abc',
                                 'expected_input': 'abc',
-                                'weight': 0.0
+                                'weight': 0.0,
+                                'test_case_type': 'stdiobasedtestcase',
                                 }]
         user_answer = dedent("""
         #include<stdio.h>
@@ -167,12 +221,19 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         scanf("%s",a);
         printf("%s",a);
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
@@ -183,12 +244,19 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         int a=10;
         printf("%d",a);
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
         self.assertIn("Incorrect", result.get('error'))
@@ -201,12 +269,19 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         int a=10;
         printf("%d",a)
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertFalse(result.get("success"))
         self.assertTrue("Compilation Error" in result.get("error"))
 
@@ -217,19 +292,27 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         while(0==0){
         printf("abc");}
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
                                'expected_input': '',
-                                'weight': 0.0
+                                'weight': 0.0,
+                                'test_case_type': 'stdiobasedtestcase',
                                 }]
         user_answer = dedent("""
         #include<stdio.h>
@@ -237,12 +320,19 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         int a=5,b=6;
         printf("%d",a+b);
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
@@ -255,19 +345,27 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         cin>>a>>b;
         cout<<a+b;
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_cpp_array_input(self):
         self.test_case_data = [{'expected_output': '561',
                                 'expected_input': '5\n6\n1',
-                                'weight': 0.0
+                                'weight': 0.0,
+                                'test_case_type': 'stdiobasedtestcase',
                                 }]
         user_answer = dedent("""
         #include<iostream>
@@ -279,19 +377,27 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         for(i=0;i<3;i++){
         cout<<a[i];}
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_cpp_string_input(self):
         self.test_case_data = [{'expected_output': 'abc',
                                 'expected_input': 'abc',
-                                'weight': 0.0
+                                'weight': 0.0,
+                                'test_case_type': 'stdiobasedtestcase',
                                 }]
         user_answer = dedent("""
         #include<iostream>
@@ -301,12 +407,19 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         cin>>a;
         cout<<a;
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
@@ -318,12 +431,19 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         int a=10;
         cout<<a;
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         lines_of_error = len(result.get('error').splitlines())
         self.assertFalse(result.get('success'))
         self.assertIn("Incorrect", result.get('error'))
@@ -337,12 +457,19 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         int a=10;
         cout<<a
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertFalse(result.get("success"))
         self.assertTrue("Compilation Error" in result.get("error"))
 
@@ -354,19 +481,27 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         while(0==0){
         cout<<"abc";}
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertFalse(result.get("success"))
         self.assertEqual(result.get("error"), self.timeout_msg)
 
     def test_cpp_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
                                'expected_input': '',
-                                'weight': 0.0
+                                'weight': 0.0,
+                                'test_case_type': 'stdiobasedtestcase',
                                 }]
         user_answer = dedent("""
         #include<iostream>
@@ -375,12 +510,19 @@ class CppStdioEvaluationTestCases(unittest.TestCase):
         int a=5,b=6;
         cout<<a+b;
         }""")
-        get_class = CppStdioEvaluator()
-        kwargs = {'user_answer': user_answer,
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
                     'partial_grading': False,
-                    'test_case_data': self.test_case_data
-                }
-        result = get_class.evaluate(**kwargs)
+                    'language': 'cpp'
+                    },
+                    'test_case_data': self.test_case_data,
+                  }
+
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
         self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 

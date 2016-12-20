@@ -1,6 +1,6 @@
 from django import forms
 from yaksh.models import get_model_class, Profile, Quiz, Question, TestCase, Course,\
-                         QuestionPaper, StandardTestCase, StdioBasedTestCase
+                         QuestionPaper, StandardTestCase, StdIOBasedTestCase
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -37,7 +37,7 @@ question_types = (
 
 test_case_types = (
         ("standardtestcase", "Standard Testcase"),
-        ("stdiobasedtestcase", "Stdio Based Testcase"),
+        ("stdiobasedtestcase", "StdIO Based Testcase"),
         ("mcqtestcase", "MCQ Testcase"),
     )
 

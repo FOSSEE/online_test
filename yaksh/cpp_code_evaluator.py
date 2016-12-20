@@ -5,23 +5,30 @@ import pwd
 import os
 from os.path import join, isfile
 import subprocess
-import importlib
 
 # Local imports
-from .code_evaluator import CodeEvaluator
 from .file_utils import copy_files, delete_files
+from .base_evaluator import BaseEvaluator
 
 
-class CppCodeEvaluator(CodeEvaluator):
+class CppCodeEvaluator(BaseEvaluator):
     """Tests the C code obtained from Code Server"""
-    def setup(self):
-        super(CppCodeEvaluator, self).setup()
+    def __init__(self, metadata, test_case_data):
         self.files = []
         self.submit_code_path = self.create_submit_code_file('submit.c')
         self.compiled_user_answer = None
         self.compiled_test_code = None
         self.user_output_path = ""
         self.ref_output_path = ""
+
+        # Set metadata values
+        self.user_answer = metadata.get('user_answer')
+        self.file_paths = metadata.get('file_paths')
+        self.partial_grading = metadata.get('partial_grading')
+
+        # Set test case data values
+        self.test_case = test_case_data.get('test_case')
+        self.weight = test_case_data.get('weight')
 
     def teardown(self):
         # Delete the created file.
@@ -32,8 +39,6 @@ class CppCodeEvaluator(CodeEvaluator):
             os.remove(self.user_output_path)
         if self.files:
             delete_files(self.files)
-        super(CppCodeEvaluator, self).teardown()
-
 
     def set_file_paths(self):
         user_output_path = os.getcwd() + '/output_file'
@@ -50,15 +55,15 @@ class CppCodeEvaluator(CodeEvaluator):
                                                 ref_output_path)
         return compile_command, compile_main
 
-    def compile_code(self, user_answer, file_paths, test_case, weight):
+    def compile_code(self):
         if self.compiled_user_answer and self.compiled_test_code:
             return None
         else:
-            ref_code_path = test_case
+            ref_code_path = self.test_case
             clean_ref_code_path, clean_test_case_path = \
                 self._set_test_code_file_path(ref_code_path)
-            if file_paths:
-                self.files = copy_files(file_paths)
+            if self.file_paths:
+                self.files = copy_files(self.file_paths)
             if not isfile(clean_ref_code_path):
                 msg = "No file at %s or Incorrect path" % clean_ref_code_path
                 return False, msg
@@ -66,7 +71,7 @@ class CppCodeEvaluator(CodeEvaluator):
                 msg = "No file at %s or Incorrect path" % self.submit_code_path
                 return False, msg
 
-            self.write_to_submit_code_file(self.submit_code_path, user_answer)
+            self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
             self.user_output_path, self.ref_output_path = self.set_file_paths()
             self.compile_command, self.compile_main = self.get_commands(
                 clean_ref_code_path,
@@ -89,7 +94,7 @@ class CppCodeEvaluator(CodeEvaluator):
 
             return self.compiled_user_answer, self.compiled_test_code
 
-    def check_code(self, user_answer, file_paths, partial_grading, test_case, weight):
+    def check_code(self):
         """ Function validates student code using instructor code as
         reference.The first argument ref_code_path, is the path to
         instructor code, it is assumed to have executable permission.
@@ -109,7 +114,7 @@ class CppCodeEvaluator(CodeEvaluator):
         if the required permissions are not given to the file(s).
         """
         success = False
-        test_case_weight = 0.0
+        mark_fraction = 0.0
 
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
@@ -129,7 +134,7 @@ class CppCodeEvaluator(CodeEvaluator):
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
                     success, err = True, "Correct answer"
-                    test_case_weight = float(weight) if partial_grading else 0.0
+                    mark_fraction = float(self.weight) if self.partial_grading else 0.0
                 else:
                     err = "{0} \n {1}".format(stdout, stderr)
             else:
@@ -155,4 +160,4 @@ class CppCodeEvaluator(CodeEvaluator):
             except:
                 err = "{0} \n {1}".format(err, stdnt_stderr)
 
-        return success, err, test_case_weight
+        return success, err, mark_fraction

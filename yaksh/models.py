@@ -255,6 +255,7 @@ class Question(models.Model):
 
     def consolidate_answer_data(self, user_answer):
         question_data = {}
+        metadata = {}
         test_case_data = []
 
         test_cases = self.get_test_cases()
@@ -264,12 +265,15 @@ class Question(models.Model):
             test_case_data.append(test_case_as_dict)
 
         question_data['test_case_data'] = test_case_data
-        question_data['user_answer'] = user_answer
-        question_data['partial_grading'] = self.partial_grading
+        metadata['user_answer'] = user_answer
+        metadata['language'] = self.language
+        metadata['partial_grading'] = self.partial_grading
         files = FileUpload.objects.filter(question=self)
         if files:
-            question_data['file_paths'] = [(file.file.path, file.extract)
+            metadata['file_paths'] = [(file.file.path, file.extract)
                                            for file in files]
+        question_data['metadata'] = metadata
+
 
         return json.dumps(question_data)
 
@@ -302,31 +306,40 @@ class Question(models.Model):
             que, result = Question.objects.get_or_create(**question)
             if file_names:
                 que._add_files_to_db(file_names, file_path)
-            model_class = get_model_class(que.test_case_type)
             for test_case in test_cases:
-                model_class.objects.get_or_create(question=que, **test_case)
+                test_case_type = test_case.pop('test_case_type')
+                model_class = get_model_class(test_case_type)
+                new_test_case, obj_create_status = model_class.objects.get_or_create(question=que, **test_case)
+                new_test_case.type = test_case_type
+                new_test_case.save()
         if files_list:
             delete_files(files_list, file_path)
 
     def get_test_cases(self, **kwargs):
-        test_case_ctype = ContentType.objects.get(app_label="yaksh",
-             model=self.test_case_type
-        )
-        test_cases = test_case_ctype.get_all_objects_for_this_type(
-            question=self,
-            **kwargs
-        )
+        tc_list = []
+        for tc in self.testcase_set.all():
+            test_case_type = tc.type
+            test_case_ctype = ContentType.objects.get(app_label="yaksh",
+                model=test_case_type
+            )
+            test_case = test_case_ctype.get_object_for_this_type(
+                question=self,
+                **kwargs
+            )
+            tc_list.append(test_case)
 
-        return test_cases
+        return tc_list
 
     def get_test_case(self, **kwargs):
-        test_case_ctype = ContentType.objects.get(app_label="yaksh",
-            model=self.test_case_type
-        )
-        test_case = test_case_ctype.get_object_for_this_type(
-            question=self,
-            **kwargs
-        )
+        for tc in self.testcase_set.all():
+            test_case_type = tc.type
+            test_case_ctype = ContentType.objects.get(app_label="yaksh",
+                model=self.test_case_type
+            )
+            test_case = test_case_ctype.get_object_for_this_type(
+                question=self,
+                **kwargs
+            )
 
         return test_case
 
@@ -1137,7 +1150,8 @@ class StandardTestCase(TestCase):
     weight = models.FloatField(default=1.0)
 
     def get_field_value(self):
-        return {"test_case": self.test_case,
+        return {"test_case_type": "standardtestcase",
+                "test_case": self.test_case,
                 "weight": self.weight}
 
     def __str__(self):
@@ -1146,13 +1160,14 @@ class StandardTestCase(TestCase):
         )
 
 
-class StdioBasedTestCase(TestCase):
+class StdIOBasedTestCase(TestCase):
     expected_input = models.CharField(max_length=100, blank=True)
     expected_output = models.CharField(max_length=100)
     weight = models.IntegerField(default=1.0)
 
     def get_field_value(self):
-        return {"expected_output": self.expected_output,
+        return {"test_case_type": "stdiobasedtestcase",
+               "expected_output": self.expected_output,
                "expected_input": self.expected_input,
                "weight": self.weight}
 
@@ -1167,7 +1182,7 @@ class McqTestCase(TestCase):
     correct = models.BooleanField(default=False)
 
     def get_field_value(self):
-        return {"options": self.options, "correct": self.correct}
+        return {"test_case_type": "mcqtestcase", "options": self.options, "correct": self.correct}
 
     def __str__(self):
         return u'Question: {0} | Correct: {1}'.format(self.question,

@@ -25,7 +25,7 @@ import six
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
-                        has_profile, StandardTestCase, McqTestCase, StdioBasedTestCase, HookTestCase
+                        has_profile, StandardTestCase, McqTestCase, StdIOBasedTestCase, HookTestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm,\
                 QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
