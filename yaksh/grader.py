@@ -147,8 +147,8 @@ class Grader(object):
                 test_case_success, err, mark_fraction = test_case_instance.check_code()
                 if test_case_success:
                     weight += mark_fraction
-
-                error.append(err)
+                else:
+                    error.append(err)
                 test_case_success_status[idx] = test_case_success
 
             success = all(test_case_success_status)
