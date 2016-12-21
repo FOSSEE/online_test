@@ -11,7 +11,14 @@ from yaksh.python_assertion_evaluator import PythonAssertionEvaluator
 from yaksh.python_stdio_evaluator import PythonStdIOEvaluator
 from yaksh.settings import SERVER_TIMEOUT
 
-class PythonAssertionEvaluationTestCases(unittest.TestCase):
+
+class EvaluatorBaseTest(unittest.TestCase):
+    def assert_correct_output(self, expected_output, actual_output):
+        actual_output_as_string = ''.join(actual_output)
+        self.assertIn(expected_output, actual_output_as_string)
+
+
+class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
         with open('/tmp/test.txt', 'wb') as f:
             f.write('2'.encode('ascii'))
@@ -49,7 +56,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(result.get('success'))
-        self.assertIn("Correct answer", result.get('error'))
+        self.assert_correct_output("Correct answer", result.get('error'))
 
     def test_incorrect_answer(self):
         # Given
@@ -70,13 +77,13 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assertIn('AssertionError  in: assert(add(1,2)==3)',
+        self.assert_correct_output('AssertionError  in: assert(add(1,2)==3)',
                         result.get('error')
                       )
-        self.assertIn('AssertionError  in: assert(add(-1,2)==1)',
+        self.assert_correct_output('AssertionError  in: assert(add(-1,2)==1)',
                         result.get('error')
                       )
-        self.assertIn('AssertionError  in: assert(add(-1,-2)==-3)',
+        self.assert_correct_output('AssertionError  in: assert(add(-1,-2)==-3)',
                         result.get('error')
                       )
 
@@ -104,10 +111,10 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         # Then
         self.assertFalse(result.get('success'))
         self.assertEqual(result.get('weight'), 2.0)
-        self.assertIn('AssertionError  in: assert(add(-1,2)==1)',
+        self.assert_correct_output('AssertionError  in: assert(add(-1,2)==1)',
                         result.get('error')
                       )
-        self.assertIn('AssertionError  in: assert(add(-1,-2)==-3)',
+        self.assert_correct_output('AssertionError  in: assert(add(-1,-2)==-3)',
                         result.get('error')
                       )
 
@@ -130,7 +137,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assertEqual(result.get('error'), self.timeout_msg)
+        self.assert_correct_output(self.timeout_msg, result.get('error'))
 
     def test_syntax_error(self):
         # Given
@@ -159,13 +166,14 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        err = result.get("error").splitlines()
+        error_as_str = ''.join(result.get("error"))
+        err = error_as_str.splitlines()
 
         # Then
         self.assertFalse(result.get("success"))
         self.assertEqual(5, len(err))
         for msg in syntax_error_msg:
-            self.assertIn(msg, result.get("error"))
+            self.assert_correct_output(msg, result.get("error"))
 
     def test_indent_error(self):
         # Given
@@ -193,13 +201,13 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        err = result.get("error").splitlines()
+        err = result.get("error")[0].splitlines()
 
         # Then
         self.assertFalse(result.get("success"))
         self.assertEqual(5, len(err))
         for msg in indent_error_msg:
-            self.assertIn(msg, result.get("error"))
+            self.assert_correct_output(msg, result.get("error"))
 
     def test_name_error(self):
         # Given
@@ -224,13 +232,14 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        err = result.get("error").splitlines()
+        error_as_str = ''.join(result.get("error"))
+        err = error_as_str.splitlines()
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(9, len(err))
+        self.assertEqual(6, len(err))
         for msg in name_error_msg:
-            self.assertIn(msg, result.get("error"))
+            self.assert_correct_output(msg, result.get("error"))
 
     def test_recursion_error(self):
         # Given
@@ -256,12 +265,13 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        err = result.get("error").splitlines()
+        error_as_str = ''.join(result.get("error"))
+        err = error_as_str.splitlines()
 
         # Then
         self.assertFalse(result.get("success"))
         for msg in recursion_error_msg:
-            self.assertIn(msg, result.get("error"))
+            self.assert_correct_output(msg, result.get("error"))
 
     def test_type_error(self):
         # Given
@@ -288,13 +298,14 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        err = result.get("error").splitlines()
+        error_as_str = ''.join(result.get("error"))
+        err = error_as_str.splitlines()
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(9, len(err))
+        self.assertEqual(6, len(err))
         for msg in type_error_msg:
-            self.assertIn(msg, result.get("error"))
+            self.assert_correct_output(msg, result.get("error"))
 
     def test_value_error(self):
         # Given
@@ -323,13 +334,14 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        err = result.get("error").splitlines()
+        error_as_str = ''.join(result.get("error"))
+        err = error_as_str.splitlines()
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(9, len(err))
+        self.assertEqual(6, len(err))
         for msg in value_error_msg:
-            self.assertIn(msg, result.get("error"))
+            self.assert_correct_output(msg, result.get("error"))
 
     def test_file_based_assert(self):
         # Given
@@ -356,7 +368,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         # Then
-        self.assertIn("Correct answer", result.get('error'))
+        self.assert_correct_output("Correct answer", result.get('error'))
         self.assertTrue(result.get('success'))
 
     def test_single_testcase_error(self):
@@ -378,8 +390,7 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
                             "invalid syntax"
                             ]
 
-        kwargs = {
-                  'metadata': {
+        kwargs = {'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
@@ -391,13 +402,14 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        err = result.get("error").splitlines()
-
+        error_as_str = ''.join(result.get("error"))
+        err = error_as_str.splitlines()
+        
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(6, len(err))
+        self.assertEqual(5, len(err))
         for msg in syntax_error_msg:
-            self.assertIn(msg, result.get("error"))
+            self.assert_correct_output(msg, result.get("error"))
 
 
     def test_multiple_testcase_error(self):
@@ -432,15 +444,16 @@ class PythonAssertionEvaluationTestCases(unittest.TestCase):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        err = result.get("error").splitlines()
+        error_as_str = ''.join(result.get("error"))
+        err = error_as_str.splitlines()
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(7, len(err))
+        self.assertEqual(5, len(err))
         for msg in name_error_msg:
-            self.assertIn(msg, result.get("error"))
+            self.assert_correct_output(msg, result.get("error"))
 
-class PythonStdIOEvaluationTestCases(unittest.TestCase):
+class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
         with open('/tmp/test.txt', 'wb') as f:
             f.write('2'.encode('ascii'))
@@ -476,7 +489,6 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(result.get('success'))
-        self.assertIn("Correct answer", result.get('error'))
 
     def test_correct_answer_list(self):
         # Given
@@ -510,7 +522,6 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(result.get('success'))
-        self.assertIn("Correct answer", result.get('error'))
 
     def test_correct_answer_string(self):
         # Given
@@ -542,7 +553,6 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(result.get('success'))
-        self.assertIn("Correct answer", result.get('error'))
 
     def test_incorrect_answer_integer(self):
         # Given
@@ -572,7 +582,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assertIn("Incorrect answer", result.get('error'))
+        self.assert_correct_output("Incorrect answer", result.get('error'))
 
     def test_file_based_answer(self):
         # Given
@@ -603,7 +613,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         # Then
-        self.assertEqual(result.get('error'), "Correct answer\n")
+        self.assert_correct_output("Correct answer", result.get('error'))
         self.assertTrue(result.get('success'))
 
     def test_infinite_loop(self):
@@ -632,7 +642,7 @@ class PythonStdIOEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         # Then
-        self.assertEqual(result.get('error'), timeout_msg)
+        self.assert_correct_output(timeout_msg, result.get('error'))
         self.assertFalse(result.get('success'))
 
 

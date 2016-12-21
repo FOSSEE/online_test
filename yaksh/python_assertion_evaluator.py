@@ -75,7 +75,7 @@ class PythonAssertionEvaluator(BaseEvaluator):
             type, value, tb = sys.exc_info()
             info = traceback.extract_tb(tb)
             fname, lineno, func, text = info[-1]
-            text = str(self.test_case).splitlines()[lineno-1]
+            text = str(self.test_case)
             err = ("-----\nExpected Test Case:\n{0}\n"
                     "Error - {1} {2} in: {3}\n-----").format(self.test_case, type.__name__, str(value), text)
         except TimeoutException:
