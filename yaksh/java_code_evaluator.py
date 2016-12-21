@@ -142,7 +142,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                                          stderr=subprocess.PIPE)
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
-                    success, err = True, "Correct answer"
+                    success, err = True, None
                     mark_fraction = float(seelf.weight) if self.partial_grading else 0.0
                 else:
                     err = stdout + "\n" + stderr

@@ -69,7 +69,7 @@ class ScilabCodeEvaluator(BaseEvaluator):
             # Clean output
             stdout = self._strip_output(stdout)
             if proc.returncode == 5:
-                success, err = True, "Correct answer"
+                success, err = True, None
                 test_case_weight = float(self.weight) if self.partial_grading else 0.0
             else:
                 err = add_err + stdout

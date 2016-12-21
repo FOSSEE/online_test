@@ -52,7 +52,6 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        self.assert_correct_output("Correct answer", result.get('error'))
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -152,7 +151,6 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         self.assertTrue(result.get("success"))
-        self.assert_correct_output("Correct answer", result.get("error"))
 
 class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
@@ -199,7 +197,6 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        self.assert_correct_output("Correct answer", result.get('error'))
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
@@ -333,7 +330,6 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        self.assert_correct_output("Correct answer", result.get('error'))
         self.assertTrue(result.get('success'))
 
     def test_string_input(self):
@@ -364,7 +360,6 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        self.assert_correct_output("Correct answer", result.get('error'))
         self.assertTrue(result.get('success'))
 
     def test_file_based_stdout(self):
@@ -406,7 +401,6 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         self.assertTrue(result.get("success"))
-        self.assert_correct_output("Correct answer", result.get("error"))
 
 
 if __name__ == '__main__':

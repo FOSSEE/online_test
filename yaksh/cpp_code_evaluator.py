@@ -133,7 +133,7 @@ class CppCodeEvaluator(BaseEvaluator):
                 )
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
-                    success, err = True, "Correct answer"
+                    success, err = True, None
                     mark_fraction = float(self.weight) if self.partial_grading else 0.0
                 else:
                     err = "{0} \n {1}".format(stdout, stderr)

@@ -488,7 +488,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         json_data = question.consolidate_answer_data(user_answer) \
                         if question.type == 'code' else None
         correct, result = paper.validate_answer(user_answer, question, json_data)
-        if correct:
+        if correct or result.get('success'):
             new_answer.marks = (question.points * result['weight'] / 
                 question.get_maximum_test_case_weight()) \
                 if question.partial_grading and question.type == 'code' else question.points
@@ -502,9 +502,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         new_answer.save()
         paper.update_marks('inprogress')
         paper.set_end_time(timezone.now())
-        if not result.get('success'):  # Should only happen for non-mcq questions.
-            new_answer.answer = user_code
-            new_answer.save()
+        if question.type == 'code': # Should only happen for non-mcq questions.
             return show_question(request, question, paper, result.get('error'))
         else:
             next_q = paper.completed_question(question.id)

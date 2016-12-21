@@ -56,7 +56,6 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertTrue(result.get('success'))
-        self.assert_correct_output("Correct answer", result.get('error'))
 
     def test_incorrect_answer(self):
         # Given
@@ -368,7 +367,6 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         # Then
-        self.assert_correct_output("Correct answer", result.get('error'))
         self.assertTrue(result.get('success'))
 
     def test_single_testcase_error(self):
@@ -449,7 +447,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(5, len(err))
+        self.assertEqual(2, len(err))
         for msg in name_error_msg:
             self.assert_correct_output(msg, result.get("error"))
 
@@ -613,7 +611,6 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         # Then
-        self.assert_correct_output("Correct answer", result.get('error'))
         self.assertTrue(result.get('success'))
 
     def test_infinite_loop(self):

@@ -55,7 +55,7 @@ class TestCodeServer(unittest.TestCase):
         # Then
         data = json.loads(result)
         self.assertFalse(data['success'])
-        self.assertTrue('infinite loop' in data['error'])
+        self.assertTrue('infinite loop' in data['error'][0])
 
     def test_correct_answer(self):
         # Given
@@ -77,7 +77,6 @@ class TestCodeServer(unittest.TestCase):
         # Then
         data = json.loads(result)
         self.assertTrue(data['success'])
-        self.assertIn('Correct answer', data['error'])
 
     def test_wrong_answer(self):
         # Given
@@ -99,7 +98,7 @@ class TestCodeServer(unittest.TestCase):
         # Then
         data = json.loads(result)
         self.assertFalse(data['success'])
-        self.assertTrue('AssertionError' in data['error'])
+        self.assertTrue('AssertionError' in data['error'][0])
 
     def test_multiple_simultaneous_hits(self):
         # Given
@@ -139,7 +138,7 @@ class TestCodeServer(unittest.TestCase):
         for i in range(N):
             data = results.get()
             self.assertFalse(data['success'])
-            self.assertTrue('infinite loop' in data['error'])
+            self.assertTrue('infinite loop' in data['error'][0])
 
     def test_server_pool_status(self):
         # Given

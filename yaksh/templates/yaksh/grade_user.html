@@ -134,7 +134,7 @@ Status : <b style="color: green;"> Passed </b><br/>
             {% else %}
                 <h5> <u>Test cases: </u></h5>
                     {% for testcase in question.get_test_cases %}
-                        <br/><strong>{{ forloop.counter }}. {{ testcase.test_case }}</strong>
+                        <br/><strong>{{ forloop.counter }}. {{ testcase }}</strong>
                     {% endfor %}
             {%endif%}
         </div>
@@ -156,14 +156,19 @@ Status : <b style="color: green;"> Passed </b><br/>
     {% else %}
     <h5>Student answer: </h5>
     {% for answer in answers %}
-    {% if not answer.skipped %}
-    {% if answer.correct %}
+    {% if not answer.0.skipped %}
+    {% if answer.0.correct %}
             <div class="panel panel-success">
+                <div class="panel-heading">Correct:
         {% else %}
             <div class="panel panel-danger">
+                <div class="panel-heading">Error:
         {% endif %}
-    <div class="panel-heading">Autocheck: {{ answer.error }}</div>
-    <div class="panel-body"><pre><code>{{ answer.answer.strip }}</code></pre></div>
+        {% for err in answer.1 %}
+            <div><pre>{{ err }}</pre></div>
+        {% endfor %}
+    </div>
+    <div class="panel-body"><pre><code>{{ answer.0.answer.strip }}</code></pre></div>
     </div>
     {% endif %}
     {% endfor %}
@@ -171,7 +176,7 @@ Status : <b style="color: green;"> Passed </b><br/>
     {% with answers|last as answer %}
     Marks: <input id="q{{ question.id }}" type="text" 
         name="q{{ question.id }}_marks" size="4"
-        value="{{ answer.marks }}"><br><br>
+        value="{{ answer.0.marks }}"><br><br>
     {% endwith %}
     <hr/>
     {% endfor %} {# for question, answers ... #}

@@ -1155,9 +1155,7 @@ class StandardTestCase(TestCase):
                 "weight": self.weight}
 
     def __str__(self):
-        return u'Question: {0} | Test Case: {1}'.format(self.question,
-            self.test_case
-        )
+        return u'Standard TestCase | Test Case: {0}'.format(self.test_case)
 
 
 class StdIOBasedTestCase(TestCase):
@@ -1172,7 +1170,7 @@ class StdIOBasedTestCase(TestCase):
                "weight": self.weight}
 
     def __str__(self):
-        return u'Question: {0} | Exp. Output: {1} | Exp. Input: {2}'.format(self.question,
+        return u'StdIO Based Testcase | Exp. Output: {0} | Exp. Input: {1}'.format(
             self.expected_output, self.expected_input
         )
 
@@ -1185,9 +1183,7 @@ class McqTestCase(TestCase):
         return {"test_case_type": "mcqtestcase", "options": self.options, "correct": self.correct}
 
     def __str__(self):
-        return u'Question: {0} | Correct: {1}'.format(self.question,
-            self.correct
-        )
+        return u'MCQ Testcase | Correct: {0}'.format(self.correct)
 
 
 class HookTestCase(TestCase):
