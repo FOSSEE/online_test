@@ -1064,20 +1064,20 @@ class AnswerPaper(models.Model):
             For code questions success is True only if the answer is correct.
         """
 
-        result = {'success': True, 'error': 'Incorrect answer', 'weight': 0.0}
+        result = {'success': True, 'error': ['Incorrect answer'], 'weight': 0.0}
         correct = False
         if user_answer is not None:
             if question.type == 'mcq':
                 expected_answer = question.get_test_case(correct=True).options
                 if user_answer.strip() == expected_answer.strip():
                     correct = True
-                    result['error'] = 'Correct answer'
+                    result['error'] = ['Correct answer']
             elif question.type == 'mcc':
                 expected_answers = []
                 for opt in question.get_test_cases(correct=True):
                     expected_answers.append(opt.options)
                 if set(user_answer) == set(expected_answers):
-                    result['error'] = 'Correct answer'
+                    result['error'] = ['Correct answer']
                     correct = True
             elif question.type == 'code':
                 user_dir = self.user.profile.get_user_dir()

@@ -18,6 +18,7 @@ class JavaCodeEvaluator(BaseEvaluator):
         self.files = []
         self.compiled_user_answer = None
         self.compiled_test_code = None
+        self.submit_code_path = ""
         self.user_output_path = ""
         self.ref_output_path = ""
 

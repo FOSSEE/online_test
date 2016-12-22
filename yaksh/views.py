@@ -448,67 +448,68 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     user = request.user
     paper = get_object_or_404(AnswerPaper, user=request.user, attempt_number=attempt_num,
             question_paper=questionpaper_id)
-    question = get_object_or_404(Question, pk=q_id)
-    if question in paper.questions_answered.all():
+    current_question = get_object_or_404(Question, pk=q_id)
+    if current_question in paper.questions_answered.all():
         next_q = paper.next_question(q_id)
         return show_question(request, next_q, paper)
 
     if request.method == 'POST':
         snippet_code = request.POST.get('snippet')
         # Add the answer submitted, regardless of it being correct or not.
-        if question.type == 'mcq':
+        if current_question.type == 'mcq':
             user_answer = request.POST.get('answer')
-        elif question.type == 'mcc':
+        elif current_question.type == 'mcc':
             user_answer = request.POST.getlist('answer')
-        elif question.type == 'upload':
+        elif current_question.type == 'upload':
             assign = AssignmentUpload()
             assign.user = user.profile
-            assign.assignmentQuestion = question
+            assign.assignmentQuestion = current_question
             # if time-up at upload question then the form is submitted without
             # validation
             if 'assignment' in request.FILES:
                 assign.assignmentFile = request.FILES['assignment']
             assign.save()
             user_answer = 'ASSIGNMENT UPLOADED'
-            next_q = paper.completed_question(question.id)
+            next_q = paper.completed_question(current_question.id)
             return show_question(request, next_q, paper)
         else:
             user_code = request.POST.get('answer')
             user_answer = snippet_code + "\n" + user_code if snippet_code else user_code
-        new_answer = Answer(question=question, answer=user_answer,
+        if not user_answer:
+            msg = ["Please submit a valid option or code"]
+            return show_question(request, current_question, paper, msg)
+        new_answer = Answer(question=current_question, answer=user_answer,
                             correct=False)
         new_answer.save()
         paper.answers.add(new_answer)
-        if not user_answer:
-            msg = "Please submit a valid option or code"
-            return show_question(request, question, paper, msg)
         # If we were not skipped, we were asked to check.  For any non-mcq
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
-        json_data = question.consolidate_answer_data(user_answer) \
-                        if question.type == 'code' else None
-        correct, result = paper.validate_answer(user_answer, question, json_data)
+        json_data = current_question.consolidate_answer_data(user_answer) \
+                        if current_question.type == 'code' else None
+        correct, result = paper.validate_answer(user_answer, current_question, json_data)
         if correct or result.get('success'):
-            new_answer.marks = (question.points * result['weight'] / 
-                question.get_maximum_test_case_weight()) \
-                if question.partial_grading and question.type == 'code' else question.points
+            new_answer.marks = (current_question.points * result['weight'] / 
+                current_question.get_maximum_test_case_weight()) \
+                if current_question.partial_grading and current_question.type == 'code' else current_question.points
             new_answer.correct = correct
+            error_message = None
             new_answer.error = json.dumps(result.get('error'))
+            next_question = paper.completed_question(current_question.id)
         else:
+            new_answer.marks = (current_question.points * result['weight'] /
+                current_question.get_maximum_test_case_weight()) \
+                if current_question.partial_grading and current_question.type == 'code' else 0
+            error_message = result.get('error')
             new_answer.error = json.dumps(result.get('error'))
-            new_answer.marks = (question.points * result['weight'] /
-                question.get_maximum_test_case_weight()) \
-                if question.partial_grading and question.type == 'code' else 0
+            next_question = current_question if current_question.type == 'code' \
+                else paper.completed_question(current_question.id)
         new_answer.save()
         paper.update_marks('inprogress')
         paper.set_end_time(timezone.now())
-        if question.type == 'code': # Should only happen for non-mcq questions.
-            return show_question(request, question, paper, result.get('error'))
-        else:
-            next_q = paper.completed_question(question.id)
-            return show_question(request, next_q, paper)
+        return show_question(request, next_question, paper, error_message)
     else:
-        return show_question(request, question, paper)
+        return show_question(request, current_question, paper)
 
 
 

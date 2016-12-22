@@ -552,7 +552,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Then
         self.assertTrue(correct)
         self.assertTrue(result['success'])
-        self.assertEqual(result['error'], 'Correct answer')
+        self.assertEqual(result['error'], ['Correct answer'])
         self.answer.correct = True
         self.answer.marks = 1
 

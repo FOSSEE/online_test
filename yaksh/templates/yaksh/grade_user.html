@@ -156,7 +156,6 @@ Status : <b style="color: green;"> Passed </b><br/>
     {% else %}
     <h5>Student answer: </h5>
     {% for answer in answers %}
-    {% if not answer.0.skipped %}
     {% if answer.0.correct %}
             <div class="panel panel-success">
                 <div class="panel-heading">Correct:

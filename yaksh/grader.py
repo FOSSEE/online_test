@@ -24,7 +24,6 @@ from .language_registry import create_evaluator_instance
 
 
 MY_DIR = abspath(dirname(__file__))
-
 registry = None
 
 # Raised when the code times-out.
@@ -34,7 +33,7 @@ class TimeoutException(Exception):
 
 @contextlib.contextmanager
 def change_dir(path):
-    cur_dir = os.getcwd()
+    cur_dir = abspath(dirname(MY_DIR))
     os.chdir(path)
     try:
         yield
@@ -77,7 +76,7 @@ class Grader(object):
         self.in_dir = in_dir if in_dir else MY_DIR
 
 
-    def evaluate(self, kwargs): #language, test_case_type, 
+    def evaluate(self, kwargs):
         """Evaluates given code with the test cases based on
         given arguments in test_case_data.
 
@@ -98,7 +97,6 @@ class Grader(object):
 
         A tuple: (success, error, weight).
         """
-
         self.setup()
         test_case_instances = self.get_evaluator_objects(kwargs)
         with change_dir(self.in_dir):

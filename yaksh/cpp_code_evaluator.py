@@ -15,7 +15,7 @@ class CppCodeEvaluator(BaseEvaluator):
     """Tests the C code obtained from Code Server"""
     def __init__(self, metadata, test_case_data):
         self.files = []
-        self.submit_code_path = self.create_submit_code_file('submit.c')
+        self.submit_code_path = ''
         self.compiled_user_answer = None
         self.compiled_test_code = None
         self.user_output_path = ""
@@ -62,6 +62,7 @@ class CppCodeEvaluator(BaseEvaluator):
             ref_code_path = self.test_case
             clean_ref_code_path, clean_test_case_path = \
                 self._set_test_code_file_path(ref_code_path)
+            self.submit_code_path = self.create_submit_code_file('submit.c')
             if self.file_paths:
                 self.files = copy_files(self.file_paths)
             if not isfile(clean_ref_code_path):
