@@ -1027,9 +1027,15 @@ class AnswerPaper(models.Model):
         for answer in self.answers.all():
             question = answer.question
             if question in q_a:
-                q_a[question].append((answer, [e for e in json.loads(answer.error)]))
+                q_a[question].append({'answer': answer,
+                        'error_list': [e for e in json.loads(answer.error)]
+                    }
+                )
             else:
-                q_a[question] = [(answer, [e for e in json.loads(answer.error)])]
+                q_a[question] = [{'answer': answer,
+                        'error_list': [e for e in json.loads(answer.error)]
+                    }
+                ]
         return q_a
 
     def get_questions(self):

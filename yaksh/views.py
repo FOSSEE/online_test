@@ -430,7 +430,8 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
     if request.method == 'POST' and question.type == 'code':
         user_code = request.POST.get('answer')
         new_answer = Answer(question=question, answer=user_code,
-                            correct=False, skipped=True)
+                            correct=False, skipped=True,
+                            error=json.dumps([]))
         new_answer.save()
         paper.answers.add(new_answer)
     if next_q is not None:
@@ -479,7 +480,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             msg = ["Please submit a valid option or code"]
             return show_question(request, current_question, paper, msg)
         new_answer = Answer(question=current_question, answer=user_answer,
-                            correct=False)
+                            correct=False, error=json.dumps([]))
         new_answer.save()
         paper.answers.add(new_answer)
         # If we were not skipped, we were asked to check.  For any non-mcq

@@ -118,6 +118,7 @@ Status : <b style="color: green;"> Passed </b><br/>
     method="post">
 {% csrf_token %}
 {% for question, answers in paper.get_question_answers.items %}
+
 <div class="panel panel-info">
         <div class="panel-heading">
             <strong> Details: {{forloop.counter}}. {{ question.summary }} 
@@ -139,39 +140,22 @@ Status : <b style="color: green;"> Passed </b><br/>
             {%endif%}
         </div>
     </div>
-    {% if question.type == "mcq" or question.type == "mcc" %}
-        {% if "Correct answer" in answers.0.error %}
-            <div class="panel panel-success">
-        {% else %}
-            <div class="panel panel-danger">
-        {% endif %}
-            <div class="panel-heading">
-                Autocheck: {{ answers.0.error }}
-            </div>
-            <div class="panel-body">
-                <h5><u>Student answer:</u></h5>
-                 <pre><code>{{forloop.counter}}. {{ answers.0 }}</code></pre>
-            </div>
-            </div>
-    {% else %}
     <h5>Student answer: </h5>
-    {% for answer in answers %}
-    {% if answer.0.correct %}
+    {% for ans in answers %}
+    {% if ans.answer.correct %}
             <div class="panel panel-success">
                 <div class="panel-heading">Correct:
         {% else %}
             <div class="panel panel-danger">
                 <div class="panel-heading">Error:
         {% endif %}
-        {% for err in answer.1 %}
+        {% for err in ans.error_list %}
             <div><pre>{{ err }}</pre></div>
         {% endfor %}
     </div>
-    <div class="panel-body"><pre><code>{{ answer.0.answer.strip }}</code></pre></div>
+    <div class="panel-body"><pre><code>{{ ans.answer.answer.strip }}</code></pre></div>
     </div>
-    {% endif %}
     {% endfor %}
-    {% endif %}
     {% with answers|last as answer %}
     Marks: <input id="q{{ question.id }}" type="text" 
         name="q{{ question.id }}_marks" size="4"

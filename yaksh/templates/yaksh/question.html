@@ -162,16 +162,32 @@ function call_skip(url)
                  <div class="panel-body">
                      {% if question.type == "mcq" %}
                     {% if error_message %}
-                        <p>{{ error_message }}</p>
-                    {% endif %}
+                        <p>
+                        <div class="panel panel-danger">
+                        <div class="panel-heading">
+                        {% for err in error_message %}
+                            {{ err }}
+                        {% endfor %}
+                        </div>
+                        </div>
+                        </p>
+                     {% endif %}
                      {% for test_case in test_cases %}
                      <input name="answer" type="radio" value="{{ test_case.options }}" />{{ test_case.options }} <br/>
                      {% endfor %}
                      {% endif %}
                      {% if question.type == "mcc" %}
                     {% if error_message %}
-                        <p>{{ error_message }}</p>
-                    {% endif %}
+                        <p>
+                        <div class="panel panel-danger">
+                        <div class="panel-heading">
+                        {% for err in error_message %}
+                            {{ err }}
+                        {% endfor %}
+                        </div>
+                        </div>
+                        </p>
+                     {% endif %}
                      {% for test_case in test_cases %}
                      <input name="answer" type="checkbox" value="{{ test_case.options }}"> {{ test_case.options }}
                      <br>

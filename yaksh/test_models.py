@@ -730,8 +730,9 @@ class AnswerPaperTestCases(unittest.TestCase):
         """ Test get_question_answer() method of Answer Paper"""
         answered = self.answerpaper.get_question_answers()
         first_answer = list(answered.values())[0][0]
-        self.assertEqual(first_answer[0].answer, 'Demo answer')
-        self.assertTrue(first_answer[0].correct)
+        first_answer_obj = first_answer['answer']
+        self.assertEqual(first_answer_obj.answer, 'Demo answer')
+        self.assertTrue(first_answer_obj.correct)
         self.assertEqual(len(answered), 2)
 
     def test_is_answer_correct(self):
