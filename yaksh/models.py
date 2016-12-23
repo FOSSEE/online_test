@@ -1148,11 +1148,14 @@ class TestCase(models.Model):
 class StandardTestCase(TestCase):
     test_case = models.TextField()
     weight = models.FloatField(default=1.0)
+    test_case_args = models.TextField(help_text="<b>Command Line arguments for bash only</b>",
+                                      blank=True)
 
     def get_field_value(self):
         return {"test_case_type": "standardtestcase",
                 "test_case": self.test_case,
-                "weight": self.weight}
+                "weight": self.weight,
+                "test_case_args": self.test_case_args}
 
     def __str__(self):
         return u'Question: {0} | Test Case: {1}'.format(self.question,
