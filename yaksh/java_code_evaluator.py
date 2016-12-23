@@ -18,6 +18,7 @@ class JavaCodeEvaluator(BaseEvaluator):
         self.files = []
         self.compiled_user_answer = None
         self.compiled_test_code = None
+        self.submit_code_path = ""
         self.user_output_path = ""
         self.ref_output_path = ""
 
@@ -142,7 +143,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                                          stderr=subprocess.PIPE)
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
-                    success, err = True, "Correct answer"
+                    success, err = True, None
                     mark_fraction = float(seelf.weight) if self.partial_grading else 0.0
                 else:
                     err = stdout + "\n" + stderr

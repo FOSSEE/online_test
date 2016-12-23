@@ -13,7 +13,7 @@ void check(T expect,T result)
     else 
     {
 	printf("\nIncorrect:\n Expected %d got %d \n",expect,result);
-	exit (0);
+	exit (1);
    }
 }
 

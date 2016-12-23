@@ -1027,9 +1027,15 @@ class AnswerPaper(models.Model):
         for answer in self.answers.all():
             question = answer.question
             if question in q_a:
-                q_a[question].append(answer)
+                q_a[question].append({'answer': answer,
+                        'error_list': [e for e in json.loads(answer.error)]
+                    }
+                )
             else:
-                q_a[question] = [answer]
+                q_a[question] = [{'answer': answer,
+                        'error_list': [e for e in json.loads(answer.error)]
+                    }
+                ]
         return q_a
 
     def get_questions(self):
@@ -1064,20 +1070,20 @@ class AnswerPaper(models.Model):
             For code questions success is True only if the answer is correct.
         """
 
-        result = {'success': True, 'error': 'Incorrect answer', 'weight': 0.0}
+        result = {'success': True, 'error': ['Incorrect answer'], 'weight': 0.0}
         correct = False
         if user_answer is not None:
             if question.type == 'mcq':
                 expected_answer = question.get_test_case(correct=True).options
                 if user_answer.strip() == expected_answer.strip():
                     correct = True
-                    result['error'] = 'Correct answer'
+                    result['error'] = ['Correct answer']
             elif question.type == 'mcc':
                 expected_answers = []
                 for opt in question.get_test_cases(correct=True):
                     expected_answers.append(opt.options)
                 if set(user_answer) == set(expected_answers):
-                    result['error'] = 'Correct answer'
+                    result['error'] = ['Correct answer']
                     correct = True
             elif question.type == 'code':
                 user_dir = self.user.profile.get_user_dir()
@@ -1155,9 +1161,7 @@ class StandardTestCase(TestCase):
                 "weight": self.weight}
 
     def __str__(self):
-        return u'Question: {0} | Test Case: {1}'.format(self.question,
-            self.test_case
-        )
+        return u'Standard TestCase | Test Case: {0}'.format(self.test_case)
 
 
 class StdIOBasedTestCase(TestCase):
@@ -1172,7 +1176,7 @@ class StdIOBasedTestCase(TestCase):
                "weight": self.weight}
 
     def __str__(self):
-        return u'Question: {0} | Exp. Output: {1} | Exp. Input: {2}'.format(self.question,
+        return u'StdIO Based Testcase | Exp. Output: {0} | Exp. Input: {1}'.format(
             self.expected_output, self.expected_input
         )
 
@@ -1185,9 +1189,7 @@ class McqTestCase(TestCase):
         return {"test_case_type": "mcqtestcase", "options": self.options, "correct": self.correct}
 
     def __str__(self):
-        return u'Question: {0} | Correct: {1}'.format(self.question,
-            self.correct
-        )
+        return u'MCQ Testcase | Correct: {0}'.format(self.correct)
 
 
 class HookTestCase(TestCase):

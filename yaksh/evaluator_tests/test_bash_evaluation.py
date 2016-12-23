@@ -6,11 +6,12 @@ import tempfile
 from yaksh.grader import Grader
 from yaksh.bash_code_evaluator import BashCodeEvaluator
 from yaksh.bash_stdio_evaluator import BashStdIOEvaluator
+from yaksh.evaluator_tests.test_python_evaluation import EvaluatorBaseTest
 from yaksh.settings import SERVER_TIMEOUT
 from textwrap import dedent
 
 
-class BashAssertionEvaluationTestCases(unittest.TestCase):
+class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
         with open('/tmp/test.txt', 'wb') as f:
             f.write('2'.encode('ascii'))
@@ -48,7 +49,6 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         self.assertTrue(result.get('success'))
-        self.assertEqual(result.get('error'), "Correct answer\n")
 
     def test_error(self):
         user_answer = ("#!/bin/bash\n[[ $# -eq 2 ]] "
@@ -67,7 +67,7 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
-        self.assertTrue("Error" in result.get("error"))
+        self.assert_correct_output("Error", result.get("error"))
 
     def test_infinite_loop(self):
         user_answer = ("#!/bin/bash\nwhile [ 1 ] ;"
@@ -86,7 +86,7 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
-        self.assertEqual(result.get("error"), self.timeout_msg)
+        self.assert_correct_output(self.timeout_msg, result.get("error"))
 
     def test_file_based_assert(self):
         self.file_paths = [('/tmp/test.txt', False)]
@@ -111,9 +111,8 @@ class BashAssertionEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         self.assertTrue(result.get("success"))
-        self.assertEqual(result.get("error"), "Correct answer\n")
 
-class BashStdIOEvaluationTestCases(unittest.TestCase):
+class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
         self.in_dir = tempfile.mkdtemp()
         self.timeout_msg = ("Code took more than {0} seconds to run. "
@@ -147,7 +146,6 @@ class BashStdIOEvaluationTestCases(unittest.TestCase):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
@@ -177,7 +175,6 @@ class BashStdIOEvaluationTestCases(unittest.TestCase):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -204,7 +201,7 @@ class BashStdIOEvaluationTestCases(unittest.TestCase):
 
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        self.assertIn("Incorrect", result.get('error'))
+        self.assert_correct_output("Incorrect", result.get('error'))
         self.assertFalse(result.get('success'))
 
     def test_stdout_only(self):
@@ -231,7 +228,6 @@ class BashStdIOEvaluationTestCases(unittest.TestCase):
 
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':

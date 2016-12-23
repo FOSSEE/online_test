@@ -7,8 +7,10 @@ import tempfile
 from yaksh import grader as gd
 from yaksh.grader import Grader
 from yaksh.scilab_code_evaluator import ScilabCodeEvaluator
+from yaksh.evaluator_tests.test_python_evaluation import EvaluatorBaseTest
 
-class ScilabEvaluationTestCases(unittest.TestCase):
+
+class ScilabEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
         tmp_in_dir_path = tempfile.mkdtemp()
         self.test_case_data = [{"test_case": "scilab_files/test_add.sce",
@@ -42,7 +44,6 @@ class ScilabEvaluationTestCases(unittest.TestCase):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_error(self):
@@ -62,7 +63,7 @@ class ScilabEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
-        self.assertTrue('error' in result.get("error"))
+        self.assert_correct_output('error', result.get("error"))
 
 
     def test_incorrect_answer(self):
@@ -81,9 +82,9 @@ class ScilabEvaluationTestCases(unittest.TestCase):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        lines_of_error = len(result.get('error').splitlines())
+        lines_of_error = len(result.get('error')[0].splitlines())
         self.assertFalse(result.get('success'))
-        self.assertIn("Message", result.get('error'))
+        self.assert_correct_output("Message", result.get('error'))
         self.assertTrue(lines_of_error > 1)
 
     def test_infinite_loop(self):
@@ -103,7 +104,7 @@ class ScilabEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
-        self.assertEqual(result.get("error"), self.timeout_msg)
+        self.assert_correct_output(self.timeout_msg, result.get("error"))
 
 if __name__ == '__main__':
     unittest.main()

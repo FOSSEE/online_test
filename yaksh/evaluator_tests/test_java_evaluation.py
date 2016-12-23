@@ -10,9 +10,10 @@ from yaksh import grader as gd
 from yaksh.grader import Grader
 from yaksh.java_code_evaluator import JavaCodeEvaluator
 from yaksh.java_stdio_evaluator import JavaStdIOEvaluator
+from yaksh.evaluator_tests.test_python_evaluation import EvaluatorBaseTest
 
 
-class JavaAssertionEvaluationTestCases(unittest.TestCase):
+class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
         with open('/tmp/test.txt', 'wb') as f:
             f.write('2'.encode('ascii'))
@@ -51,7 +52,6 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -70,9 +70,9 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get('success'))
-        lines_of_error = len(result.get('error').splitlines())
+        lines_of_error = len(result.get('error')[0].splitlines())
         self.assertFalse(result.get('success'))
-        self.assertIn("Incorrect", result.get('error'))
+        self.assert_correct_output("Incorrect", result.get('error'))
         self.assertTrue(lines_of_error > 1)
 
     def test_error(self):
@@ -91,7 +91,7 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
-        self.assertTrue("Error" in result.get("error"))
+        self.assert_correct_output("Error", result.get("error"))
 
     def test_infinite_loop(self):
         user_answer = "class Test {\n\tint square_num(int a) {\n\t\twhile(0==0){\n\t\t}\n\t}\n}"
@@ -109,7 +109,7 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
-        self.assertEqual(result.get("error"), self.timeout_msg)
+        self.assert_correct_output(self.timeout_msg, result.get("error"))
 
     def test_file_based_assert(self):
         self.file_paths = [("/tmp/test.txt", False)]
@@ -151,9 +151,8 @@ class JavaAssertionEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         self.assertTrue(result.get("success"))
-        self.assertEqual(result.get("error"), "Correct answer\n")
 
-class JavaStdIOEvaluationTestCases(unittest.TestCase):
+class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
         with open('/tmp/test.txt', 'wb') as f:
             f.write('2'.encode('ascii'))
@@ -198,7 +197,6 @@ class JavaStdIOEvaluationTestCases(unittest.TestCase):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
@@ -230,7 +228,6 @@ class JavaStdIOEvaluationTestCases(unittest.TestCase):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
@@ -256,9 +253,9 @@ class JavaStdIOEvaluationTestCases(unittest.TestCase):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        lines_of_error = len(result.get('error').splitlines())
+        lines_of_error = len(result.get('error')[0].splitlines())
         self.assertFalse(result.get('success'))
-        self.assertIn("Incorrect", result.get('error'))
+        self.assert_correct_output("Incorrect", result.get('error'))
         self.assertTrue(lines_of_error > 1)
 
     def test_error(self):
@@ -281,7 +278,7 @@ class JavaStdIOEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
-        self.assertTrue("Compilation Error" in result.get("error"))
+        self.assertTrue("Compilation Error" in '\n'.join(result.get("error")))
 
     def test_infinite_loop(self):
         user_answer = dedent("""
@@ -305,7 +302,7 @@ class JavaStdIOEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get("success"))
-        self.assertEqual(result.get("error"), self.timeout_msg)
+        self.assert_correct_output(self.timeout_msg, result.get("error"))
 
     def test_only_stdout(self):
         self.test_case_data = [{'expected_output': '11',
@@ -333,7 +330,6 @@ class JavaStdIOEvaluationTestCases(unittest.TestCase):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_string_input(self):
@@ -364,7 +360,6 @@ class JavaStdIOEvaluationTestCases(unittest.TestCase):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
-        self.assertEqual(result.get('error'), "Correct answer\n")
         self.assertTrue(result.get('success'))
 
     def test_file_based_stdout(self):
@@ -406,7 +401,6 @@ class JavaStdIOEvaluationTestCases(unittest.TestCase):
         result = grader.evaluate(kwargs)
 
         self.assertTrue(result.get("success"))
-        self.assertEqual(result.get("error"), "Correct answer\n")
 
 
 if __name__ == '__main__':

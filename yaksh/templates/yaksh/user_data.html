@@ -99,7 +99,13 @@ User IP address: {{ paper.user_ip }}
         {% else %}
             <div class="panel panel-danger">
         {% endif %}
-    <div class="panel-heading">Autocheck: {{ answer.error }}</div>
+    <div class="panel-heading">
+        {% for error in error %}
+        <div class="panel-body">
+            <pre><code>{{ error }}</code></pre>
+        </div>
+        {% endfor %}
+    </div>
     <div class="panel-body"><pre><code>{{ answer.answer.strip }}</code></pre></div>
     </div>
     {% endif %}

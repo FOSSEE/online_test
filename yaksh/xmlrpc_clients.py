@@ -69,7 +69,8 @@ class CodeServerProxy(object):
         except ConnectionError:
             result = json.dumps({'success': False,
                 'weight': 0.0,
-                'error': 'Unable to connect to any code servers!'})
+                'error': ['Unable to connect to any code servers!']
+                })
         return result
 
     def _get_server(self):
