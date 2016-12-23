@@ -24,7 +24,6 @@ from .language_registry import create_evaluator_instance
 
 
 MY_DIR = abspath(dirname(__file__))
-
 registry = None
 
 # Raised when the code times-out.
@@ -34,7 +33,7 @@ class TimeoutException(Exception):
 
 @contextlib.contextmanager
 def change_dir(path):
-    cur_dir = os.getcwd()
+    cur_dir = abspath(dirname(MY_DIR))
     os.chdir(path)
     try:
         yield
@@ -77,7 +76,7 @@ class Grader(object):
         self.in_dir = in_dir if in_dir else MY_DIR
 
 
-    def evaluate(self, kwargs): #language, test_case_type, 
+    def evaluate(self, kwargs):
         """Evaluates given code with the test cases based on
         given arguments in test_case_data.
 
@@ -96,9 +95,8 @@ class Grader(object):
         Returns
         -------
 
-        A tuple: (success, error message, weight).
+        A tuple: (success, error, weight).
         """
-
         self.setup()
         test_case_instances = self.get_evaluator_objects(kwargs)
         with change_dir(self.in_dir):
@@ -135,7 +133,7 @@ class Grader(object):
         prev_handler = create_signal_handler()
         success = False
         test_case_success_status = [False] * len(test_case_instances)
-        error = ""
+        error = []
         weight = 0.0
 
         # Do whatever testing needed.
@@ -147,8 +145,8 @@ class Grader(object):
                 test_case_success, err, mark_fraction = test_case_instance.check_code()
                 if test_case_success:
                     weight += mark_fraction
-
-                error += err + "\n"
+                else:
+                    error.append(err)
                 test_case_success_status[idx] = test_case_success
 
             success = all(test_case_success_status)
@@ -157,16 +155,16 @@ class Grader(object):
                 test_case_instance.teardown()
 
         except TimeoutException:
-            error = self.timeout_msg
+            error.append(self.timeout_msg)
         except OSError:
             msg = traceback.format_exc(limit=0)
-            error = "Error: {0}".format(msg)
-        except Exception as e:
+            error.append("Error: {0}".format(msg))
+        except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
             if len(tb_list) > 2:
                 del tb_list[1:3]
-            error = "Error: {0}".format("".join(tb_list))
+            error.append("Error: {0}".format("".join(tb_list)))
         finally:
             # Set back any original signal handler.
             set_original_signal_handler(prev_handler)

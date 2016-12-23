@@ -21,7 +21,7 @@ class StdIOEvaluator(BaseEvaluator):
                         format(expected_input, repr(expected_output))
         if output_err == '':
             if user_output == expected_output:
-                success, err = True, "Correct answer"
+                success, err = True, None
             else:
                 err = " Incorrect answer\n" + error_msg +\
                       "\n Your output is {0}".format(repr(user_output))

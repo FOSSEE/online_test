@@ -75,9 +75,14 @@ class PythonAssertionEvaluator(BaseEvaluator):
             type, value, tb = sys.exc_info()
             info = traceback.extract_tb(tb)
             fname, lineno, func, text = info[-1]
-            text = str(self.test_case).splitlines()[lineno-1]
-            err = ("-----\nExpected Test Case:\n{0}\n"
-                    "Error - {1} {2} in: {3}\n-----").format(self.test_case, type.__name__, str(value), text)
+            text = str(self.test_case)
+            err = "Expected Test Case:\n{0}\n" \
+                "Error - {1} {2} in: {3}\n".format(
+                    self.test_case,
+                    type.__name__,
+                    str(value),
+                    text
+                    )
         except TimeoutException:
             raise
         except Exception:
@@ -85,7 +90,7 @@ class PythonAssertionEvaluator(BaseEvaluator):
             err = "Error in Test case: {0}".format(msg)
         else:
             success = True
-            err = '-----\nCorrect answer\nTest Case: {0}\n-----'.format(self.test_case)
+            err = None
             mark_fraction = float(self.weight) if self.partial_grading else 0.0
         del tb
         return success, err, mark_fraction
