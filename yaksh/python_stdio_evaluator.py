@@ -70,7 +70,7 @@ class PythonStdIOEvaluator(BaseEvaluator):
         tb = None
         if self.output_value == self.expected_output:
             success = True
-            err = "Correct answer"
+            err = None
             mark_fraction = self.weight
         else:
             success = False

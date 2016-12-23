@@ -113,7 +113,7 @@ class BashCodeEvaluator(BaseEvaluator):
             proc, stdnt_stdout, stdnt_stderr = ret
             if inst_stdout == stdnt_stdout:
                 mark_fraction = float(self.weight) if self.partial_grading else 0.0
-                return True, "Correct answer", mark_fraction
+                return True, None, mark_fraction
             else:
                 err = "Error: expected %s, got %s" % (inst_stdout + inst_stderr,
                     stdnt_stdout + stdnt_stderr
@@ -156,7 +156,7 @@ class BashCodeEvaluator(BaseEvaluator):
                     valid_answer = inst_stdout == stdnt_stdout
             if valid_answer and (num_lines == loop_count):
                 mark_fraction = float(self.weight) if self.partial_grading else 0.0
-                return True, "Correct answer", mark_fraction
+                return True, None, mark_fraction
             else:
                 err = ("Error:expected"
                     " {0}, got {1}").format(inst_stdout+inst_stderr,

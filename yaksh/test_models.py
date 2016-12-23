@@ -488,12 +488,14 @@ class AnswerPaperTestCases(unittest.TestCase):
         # answers for the Answer Paper
         self.answer_right = Answer(question=Question.objects.get(id=1),
             answer="Demo answer",
-            correct=True, marks=1
+            correct=True, marks=1,
+            error=json.dumps([])
         )
         self.answer_wrong = Answer(question=Question.objects.get(id=2),
             answer="My answer",
             correct=False,
-            marks=0
+            marks=0,
+            error=json.dumps(['error1', 'error2'])
         )
         self.answer_right.save()
         self.answer_wrong.save()
@@ -551,7 +553,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Then
         self.assertTrue(correct)
         self.assertTrue(result['success'])
-        self.assertEqual(result['error'], 'Correct answer')
+        self.assertEqual(result['error'], ['Correct answer'])
         self.answer.correct = True
         self.answer.marks = 1
 
@@ -588,7 +590,6 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Then
         self.assertTrue(correct)
         self.assertTrue(result['success'])
-        self.assertEqual(result['error'], 'Correct answer')
         self.answer.correct = True
         self.answer.marks = 1
 
@@ -730,8 +731,9 @@ class AnswerPaperTestCases(unittest.TestCase):
         """ Test get_question_answer() method of Answer Paper"""
         answered = self.answerpaper.get_question_answers()
         first_answer = list(answered.values())[0][0]
-        self.assertEqual(first_answer.answer, 'Demo answer')
-        self.assertTrue(first_answer.correct)
+        first_answer_obj = first_answer['answer']
+        self.assertEqual(first_answer_obj.answer, 'Demo answer')
+        self.assertTrue(first_answer_obj.correct)
         self.assertEqual(len(answered), 2)
 
     def test_is_answer_correct(self):
