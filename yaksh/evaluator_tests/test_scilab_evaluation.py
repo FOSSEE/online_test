@@ -3,7 +3,7 @@ import unittest
 import os
 import shutil
 import tempfile
-
+from textwrap import dedent
 from yaksh import grader as gd
 from yaksh.grader import Grader
 from yaksh.scilab_code_evaluator import ScilabCodeEvaluator
@@ -11,7 +11,38 @@ from yaksh.scilab_code_evaluator import ScilabCodeEvaluator
 class ScilabEvaluationTestCases(unittest.TestCase):
     def setUp(self):
         tmp_in_dir_path = tempfile.mkdtemp()
-        self.test_case_data = [{"test_case": "scilab_files/test_add.sce",
+        self.tc_data = dedent("""
+            mode(-1)
+            exec("function.sci",-1);
+            i = 0
+            p = add(3,5);
+            correct = (p == 8);
+            if correct then
+             i=i+1
+            end
+            disp("Input submitted 3 and 5")
+            disp("Expected output 8 got " + string(p))
+            p = add(22,-20);
+            correct = (p==2);
+            if correct then
+             i=i+1
+            end
+            disp("Input submitted 22 and -20")
+            disp("Expected output 2 got " + string(p))
+            p =add(91,0);
+            correct = (p==91);
+            if correct then
+             i=i+1
+            end
+            disp("Input submitted 91 and 0")
+            disp("Expected output 91 got " + string(p))
+            if i==3 then
+             exit(5);
+            else
+             exit(3);
+            end
+            """)
+        self.test_case_data = [{"test_case": self.tc_data,
                                 "test_case_type": "standardtestcase",
                                 "weight": 0.0
                                 }]
