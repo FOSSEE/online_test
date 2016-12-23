@@ -77,7 +77,7 @@ class Grader(object):
         self.in_dir = in_dir if in_dir else MY_DIR
 
 
-    def evaluate(self, kwargs): #language, test_case_type, 
+    def evaluate(self, kwargs):
         """Evaluates given code with the test cases based on
         given arguments in test_case_data.
 
