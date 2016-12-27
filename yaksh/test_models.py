@@ -145,6 +145,7 @@ class QuestionTestCases(unittest.TestCase):
         self.user_answer = "demo_answer"
         self.test_case_upload_data = [{"test_case": "assert fact(3)==6",
                                         "test_case_type": "standardtestcase",
+                                        "test_case_args": "",
                                         "weight": 1.0
                                         }]
         questions_data = [{"snippet": "def fact()", "active": True,
@@ -895,6 +896,7 @@ class TestCaseTestCases(unittest.TestCase):
                         },
                     'test_case_data': [{'test_case': 'assert myfunc(12, 13) == 15',
                         'test_case_type': 'standardtestcase',
+                        'test_case_args': "",
                         'weight': 1.0
                         }]
                     }

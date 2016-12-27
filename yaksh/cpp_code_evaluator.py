@@ -15,11 +15,12 @@ class CppCodeEvaluator(BaseEvaluator):
     """Tests the C code obtained from Code Server"""
     def __init__(self, metadata, test_case_data):
         self.files = []
-        self.submit_code_path = ''
         self.compiled_user_answer = None
         self.compiled_test_code = None
         self.user_output_path = ""
         self.ref_output_path = ""
+        self.submit_code_path = ""
+        self.test_code_path = ""
 
         # Set metadata values
         self.user_answer = metadata.get('user_answer')
@@ -32,11 +33,14 @@ class CppCodeEvaluator(BaseEvaluator):
 
     def teardown(self):
         # Delete the created file.
-        os.remove(self.submit_code_path)
+        if os.path.exists(self.submit_code_path):
+            os.remove(self.submit_code_path)
         if os.path.exists(self.ref_output_path):
             os.remove(self.ref_output_path)
         if os.path.exists(self.user_output_path):
             os.remove(self.user_output_path)
+        if os.path.exists(self.test_code_path):
+            os.remove(self.test_code_path)
         if self.files:
             delete_files(self.files)
 
@@ -59,10 +63,11 @@ class CppCodeEvaluator(BaseEvaluator):
         if self.compiled_user_answer and self.compiled_test_code:
             return None
         else:
-            ref_code_path = self.test_case
-            clean_ref_code_path, clean_test_case_path = \
-                self._set_test_code_file_path(ref_code_path)
             self.submit_code_path = self.create_submit_code_file('submit.c')
+            self.test_code_path = self.create_submit_code_file('main.c')
+            self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
+            self.write_to_submit_code_file(self.test_code_path, self.test_case)
+            clean_ref_code_path = self.test_code_path
             if self.file_paths:
                 self.files = copy_files(self.file_paths)
             if not isfile(clean_ref_code_path):
@@ -72,7 +77,6 @@ class CppCodeEvaluator(BaseEvaluator):
                 msg = "No file at %s or Incorrect path" % self.submit_code_path
                 return False, msg
 
-            self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
             self.user_output_path, self.ref_output_path = self.set_file_paths()
             self.compile_command, self.compile_main = self.get_commands(
                 clean_ref_code_path,

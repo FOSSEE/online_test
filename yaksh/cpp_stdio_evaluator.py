@@ -13,7 +13,6 @@ class CppStdIOEvaluator(StdIOEvaluator):
     """Evaluates C StdIO based code"""
     def __init__(self, metadata, test_case_data):
         self.files = []
-        self.submit_code_path = self.create_submit_code_file('submit.c')
 
         # Set metadata values
         self.user_answer = metadata.get('user_answer')
@@ -43,6 +42,7 @@ class CppStdIOEvaluator(StdIOEvaluator):
         return compile_command, compile_main
 
     def compile_code(self):
+        self.submit_code_path = self.create_submit_code_file('submit.c')
         if self.file_paths:
             self.files = copy_files(file_paths)
         if not isfile(self.submit_code_path):
