@@ -317,17 +317,14 @@ class Question(models.Model):
 
     def get_test_cases(self, **kwargs):
         tc_list = []
-        for tc in self.testcase_set.all():
-            test_case_type = tc.type
+        for tc in self.testcase_set.values_list("type", flat=True).distinct():
             test_case_ctype = ContentType.objects.get(app_label="yaksh",
-                model=test_case_type
-            )
-            test_case = test_case_ctype.get_object_for_this_type(
+                                                      model=tc)
+            test_case = test_case_ctype.get_all_objects_for_this_type(
                 question=self,
                 **kwargs
             )
-            tc_list.append(test_case)
-
+            tc_list.extend(test_case)
         return tc_list
 
     def get_test_case(self, **kwargs):
@@ -1168,8 +1165,8 @@ class StandardTestCase(TestCase):
 
 
 class StdIOBasedTestCase(TestCase):
-    expected_input = models.CharField(max_length=100, blank=True)
-    expected_output = models.CharField(max_length=100)
+    expected_input = models.TextField(max_length=100, blank=True)
+    expected_output = models.TextField(max_length=100)
     weight = models.IntegerField(default=1.0)
 
     def get_field_value(self):
