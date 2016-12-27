@@ -43,7 +43,7 @@ class ScilabCodeEvaluator(BaseEvaluator):
             self._remove_scilab_exit(self.user_answer.lstrip())
 
         success = False
-        test_case_weight = 0.0
+        mark_fraction = 0.0
         self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
         # Throw message if there are commmands that terminates scilab
         add_err = ""
@@ -70,13 +70,13 @@ class ScilabCodeEvaluator(BaseEvaluator):
             stdout = self._strip_output(stdout)
             if proc.returncode == 5:
                 success, err = True, None
-                test_case_weight = float(self.weight) if self.partial_grading else 0.0
+                mark_fraction = 1.0 if self.partial_grading else 0.0
             else:
                 err = add_err + stdout
         else:
             err = add_err + stderr
 
-        return success, err, test_case_weight
+        return success, err, mark_fraction
 
     def _remove_scilab_exit(self, string):
         """

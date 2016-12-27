@@ -112,5 +112,5 @@ class CppStdIOEvaluator(StdIOEvaluator):
                         err = err + "\n" + e
             except:
                 err = err + "\n" + stdnt_stderr
-        mark_fraction = float(self.weight) if self.partial_grading and success else 0.0
+        mark_fraction = 1.0 if self.partial_grading and success else 0.0
         return success, err, mark_fraction

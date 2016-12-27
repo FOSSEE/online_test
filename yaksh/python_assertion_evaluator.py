@@ -91,6 +91,6 @@ class PythonAssertionEvaluator(BaseEvaluator):
         else:
             success = True
             err = None
-            mark_fraction = float(self.weight) if self.partial_grading else 0.0
+            mark_fraction = 1.0 if self.partial_grading else 0.0
         del tb
         return success, err, mark_fraction
