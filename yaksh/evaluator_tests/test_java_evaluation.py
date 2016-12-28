@@ -15,11 +15,47 @@ from yaksh.evaluator_tests.test_python_evaluation import EvaluatorBaseTest
 
 class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
-        with open('/tmp/test.txt', 'wb') as f:
+        self.f_path = os.path.join(tempfile.gettempdir(), "test.txt")
+        with open(self.f_path, 'wb') as f:
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
+        self.tc_data = dedent("""
+            class main
+            {
+                public static <E> void check(E expect, E result)
+                {
+                    if(result.equals(expect))
+                    {
+                        System.out.println("Correct:Output expected "+expect+" and got "+result);
+                    }
+                else
+                {
+                    System.out.println("Incorrect:Output expected "+expect+" but got "+result);
+                    System.exit(1);
+                }
+                }
+                public static void main(String arg[])
+                {
+                   Test t = new Test();
+                   int result, input, output;
+                   input = 0; output = 0;
+                   result = t.square_num(input);
+                   System.out.println("Input submitted to the function: "+input);
+                   check(output, result);
+                   input = 5; output = 25;
+                   result = t.square_num(input);
+                   System.out.println("Input submitted to the function: "+input);
+                   check(output, result);
+                   input = 6; output = 36;
+                   result = t.square_num(input);
+                   System.out.println("Input submitted to the function: "+input);
+                   check(output, result);
+                }
+            }
+            """)
+
         self.test_case_data = [
-            {"test_case": "java_files/main_square.java",
+            {"test_case": self.tc_data,
             "test_case_type": "standardtestcase",
             "weight": 0.0
             }
@@ -34,10 +70,11 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
 
     def tearDown(self):
         gd.SERVER_TIMEOUT = 4
-        os.remove('/tmp/test.txt')
+        os.remove(self.f_path)
         shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
+        # Given
         user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a;\n\t}\n}"
         kwargs = {
                   'metadata': {
@@ -49,12 +86,15 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
+        # Given
         user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a;\n\t}\n}"
         kwargs = {
                   'metadata': {
@@ -66,9 +106,11 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertFalse(result.get('success'))
         lines_of_error = len(result.get('error')[0].splitlines())
         self.assertFalse(result.get('success'))
@@ -76,6 +118,7 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.assertTrue(lines_of_error > 1)
 
     def test_error(self):
+        # Given
         user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a"
         kwargs = {
                   'metadata': {
@@ -87,13 +130,16 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertFalse(result.get("success"))
         self.assert_correct_output("Error", result.get("error"))
 
     def test_infinite_loop(self):
+        # Given
         user_answer = "class Test {\n\tint square_num(int a) {\n\t\twhile(0==0){\n\t\t}\n\t}\n}"
         kwargs = {
                   'metadata': {
@@ -105,16 +151,47 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertFalse(result.get("success"))
         self.assert_correct_output(self.timeout_msg, result.get("error"))
 
     def test_file_based_assert(self):
-        self.file_paths = [("/tmp/test.txt", False)]
+        # Given
+        self.file_paths = [(self.f_path, False)]
+        self.tc_data = dedent("""
+            class main
+            {
+                public static <E> void check(E expect, E result)
+                {
+                    if(result.equals(expect))
+                    {
+                        System.out.println("Correct:Output expected "+expect+" and got "+result);
+                    }
+                else
+                {
+                    System.out.println("Incorrect:Output expected "+expect+" but got "+result);
+                    System.exit(1);
+                }
+                }
+                public static void main(String arg[])
+                {
+                   String result = "";
+                   Test t = new Test();
+                   try{
+                   result = t.readFile();}
+                   catch(Exception e){
+                System.out.print(e);
+                }
+                   check("2", result);
+                }
+            }
+            """)
         self.test_case_data = [
-            {"test_case": "java_files/read_file.java",
+            {"test_case": self.tc_data,
             "test_case_type": "standardtestcase",
             "weight": 0.0
             }
@@ -147,14 +224,17 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get("success"))
 
 class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
-        with open('/tmp/test.txt', 'wb') as f:
+        self.f_path = os.path.join(tempfile.gettempdir(), "test.txt")
+        with open(self.f_path, 'wb') as f:
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
         self.in_dir = tmp_in_dir_path
@@ -171,10 +251,11 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
 
     def tearDown(self):
         gd.SERVER_TIMEOUT = 4
-        os.remove('/tmp/test.txt')
+        os.remove(self.f_path)
         shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
+        # Given
         user_answer = dedent("""
         import java.util.Scanner;
         class Test
@@ -194,12 +275,15 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
+        # Given
         self.test_case_data = [{'expected_output': '561',
                                 'expected_input': '5\n6\n1',
                                 'test_case_type': 'stdiobasedtestcase',
@@ -225,12 +309,15 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
+        # Given
         user_answer = dedent("""
         import java.util.Scanner;
         class Test
@@ -250,15 +337,18 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         lines_of_error = len(result.get('error')[0].splitlines())
         self.assertFalse(result.get('success'))
         self.assert_correct_output("Incorrect", result.get('error'))
         self.assertTrue(lines_of_error > 1)
 
     def test_error(self):
+        # Given
         user_answer = dedent("""
         class Test
         {
@@ -274,13 +364,16 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertFalse(result.get("success"))
         self.assertTrue("Compilation Error" in '\n'.join(result.get("error")))
 
     def test_infinite_loop(self):
+        # Given
         user_answer = dedent("""
         class Test
         {public static void main(String[] args){
@@ -298,13 +391,16 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertFalse(result.get("success"))
         self.assert_correct_output(self.timeout_msg, result.get("error"))
 
     def test_only_stdout(self):
+        # Given
         self.test_case_data = [{'expected_output': '11',
                                 'expected_input': '',
                                 'test_case_type': 'stdiobasedtestcase',
@@ -327,12 +423,15 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_string_input(self):
+        # Given
         self.test_case_data = [{'expected_output': 'HelloWorld',
                                 'expected_input': 'Hello\nWorld',
                                 'test_case_type': 'stdiobasedtestcase',
@@ -357,13 +456,16 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_file_based_stdout(self):
-        self.file_paths = [("/tmp/test.txt", False)]
+        # Given
+        self.file_paths = [(self.f_path, False)]
         self.test_case_data = [{'expected_output': '2',
                                 'expected_input': '',
                                 'test_case_type': 'stdiobasedtestcase',
@@ -397,9 +499,11 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get("success"))
 
 
