@@ -1185,3 +1185,10 @@ class McqTestCase(TestCase):
 class HookTestCase(TestCase):
     code = models.TextField()
     weight = models.FloatField(default=1.0)
+
+    def get_field_value(self):
+        return {"test_case_type": "hooktestcase", "code": self.code}
+
+    def __str__(self):
+        return u'Hook Testcase | Correct: {0}'.format(self.code)
+

@@ -120,7 +120,6 @@ class Grader(object):
         for test_case in test_case_data:
             test_case_instance = create_evaluator_instance(metadata, test_case)
             test_case_instances.append(test_case_instance)
-
         return test_case_instances
 
 
@@ -157,7 +156,7 @@ class Grader(object):
         except TimeoutException:
             error.append(self.timeout_msg)
         except OSError:
-            msg = traceback.format_exc(limit=0)
+            msg = traceback.format_exc()
             error.append("Error: {0}".format(msg))
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
