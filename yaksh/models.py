@@ -327,7 +327,7 @@ class Question(models.Model):
         for tc in self.testcase_set.all():
             test_case_type = tc.type
             test_case_ctype = ContentType.objects.get(app_label="yaksh",
-                model=self.test_case_type
+                model=test_case_type
             )
             test_case = test_case_ctype.get_object_for_this_type(
                 question=self,
