@@ -18,9 +18,11 @@ Setting up a new course
 Features in Courses
 -------------------
 
-	 Click on the Courses link located at the navigation bar, to view all the courses created by the moderator.
+	 Click on the Courses link located at the navigation bar.
 
 	 .. image:: ../images/course_features.jpg
+
+	 This page shows all the courses created by a moderator and all the courses allotted to a moderator.
 
 	 The following features are available for courses
 
@@ -28,8 +30,12 @@ Features in Courses
 	 		Clicking on course name link will display all the enrolled, rejected and requested students list. Moderator can accept or reject the student.	 	
 	 	* Quiz Name
 	 		Clicking on the quiz name will let you edit the quiz.
+	 	* Question Paper
+	 		Click on the **Add** link to create a Question Paper for associated Quiz.
+	 		If a question paper is already created, click on the Question Paper link to 
+	 		edit question paper.
 	 	* Add Teacher
 	 		Clicking on Add teacher can let you add teachers for the course. The teachers can edit and modify only the specific course that are allotted to them.
-	 	* View Allotted Course
-	 		Clicking on view allotted courses will display the courses the moderator is added to by other course creators.
+	 	* Teachers added to the course
+	 		This shows all the teachers added to a particular course.
 
