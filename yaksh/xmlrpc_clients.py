@@ -32,7 +32,7 @@ class CodeServerProxy(object):
         pool_url = 'http://localhost:%d' % (SERVER_POOL_PORT)
         self.pool_url = pool_url
 
-    def run_code(self, language, test_case_type, json_data, user_dir):
+    def run_code(self, language, json_data, user_dir):
         """Tests given code (`answer`) with the `test_code` supplied.  If the
         optional `in_dir` keyword argument is supplied it changes the directory
         to that directory (it does not change it back to the original when
@@ -65,7 +65,7 @@ class CodeServerProxy(object):
 
         try:
             server = self._get_server()
-            result = server.check_code(language, test_case_type, json_data, user_dir)
+            result = server.check_code(language, json_data, user_dir)
         except ConnectionError:
             result = json.dumps({'success': False,
                 'weight': 0.0,
