@@ -147,7 +147,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
                     success, err = True, None
-                    mark_fraction = float(seelf.weight) if self.partial_grading else 0.0
+                    mark_fraction = 1.0 if self.partial_grading else 0.0
                 else:
                     err = stdout + "\n" + stderr
             else:
