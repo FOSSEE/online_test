@@ -1,4 +1,5 @@
 {% extends "manage.html" %}
+{% load custom_filters %}
 
 {% block pagetitle %} Quiz results {% endblock pagetitle %}
 
@@ -49,6 +50,14 @@ $(document).ready(function()
 
 {% if papers %}
 <p>Number of papers: {{ papers|length }} </p>
+{% completed papers as completed_papers %}
+ {# template tag used to get the count of completed papers #}
+ <p>Papers completed: <b> {{ completed_papers }} </b></p>
+
+{% inprogress papers as inprogress_papers %}
+ {# template tag used to get the count of inprogress papers #}
+ <p>Papers in progress:<b>  {{ inprogress_papers }} </b></p>
+
 <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{papers.0.question_paper.id}}">Question Statisitics</a></p>
 <p><a href="{{URL_ROOT}}/exam/manage/monitor/download_csv/{{papers.0.question_paper.id}}">Download CSV</a></p>
 <table id="result-table" class="tablesorter table">
