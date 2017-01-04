@@ -105,18 +105,16 @@ def user_register(request):
 
 
 @login_required
-def quizlist_user(request):
+def quizlist_user(request, enrolled=None):
     """Show All Quizzes that is available to logged-in user."""
     user = request.user
-    avail_quizzes = Quiz.objects.get_active_quizzes()
-    user_answerpapers = AnswerPaper.objects.filter(user=user)
-    courses = Course.objects.filter(active=True, is_trial=False)
-
-    context = { 'quizzes': avail_quizzes,
-                'user': user,
-                'courses': courses,
-                'quizzes_taken': user_answerpapers,
-            }
+    if enrolled is not None:
+        courses = user.students.all()
+        title = 'Enrolled Courses'
+    else:
+        courses = Course.objects.filter(active=True, is_trial=False)
+        title = 'All Courses'
+    context = {'user': user, 'courses': courses, 'title': title}
     return my_render_to_response("yaksh/quizzes_user.html", context)
 
 
@@ -1065,10 +1063,14 @@ def view_profile(request):
     """ view moderators and users profile """
     user = request.user
     ci = RequestContext(request)
-
-    context = {}
+    if is_moderator(user):
+        template = 'manage.html'
+    else:
+        template = 'user.html'
+    context = {'template': template}
     if has_profile(user):
-        return my_render_to_response('yaksh/view_profile.html', {'user':user})
+        context['user'] = user
+        return my_render_to_response('yaksh/view_profile.html', context)
     else:
         form = ProfileForm(user=user)
         msg = True
@@ -1082,10 +1084,13 @@ def view_profile(request):
 def edit_profile(request):
     """ edit profile details facility for moderator and students """
 
-    context = {}
     user = request.user
     ci = RequestContext(request)
-
+    if is_moderator(user):
+        template = 'manage.html'
+    else:
+        template = 'user.html'
+    context = {'template': template}
     if has_profile(user):
         profile = Profile.objects.get(user_id=user.id)
     else:

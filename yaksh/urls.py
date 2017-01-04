@@ -31,6 +31,7 @@ urlpatterns += [
     url(r'^$', views.index),
     url(r'^login/$', views.user_login, name='login'),
     url(r'^quizzes/$', views.quizlist_user, name='quizlist_user'),
+    url(r'^quizzes/(?P<enrolled>\w+)/$', views.quizlist_user, name='quizlist_user'),
     url(r'^results/$', views.results_user),
     url(r'^start/$', views.start),
     url(r'^start/(?P<questionpaper_id>\d+)/$', views.start),

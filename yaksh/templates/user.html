@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block css%}
+    <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
+{% endblock %}
 {% block nav %}
     <nav class="navbar navbar-fixed-top navbar-inverse">
       <div class="container">
@@ -11,14 +14,29 @@
           <a class="navbar-brand" href="{{ URL_ROOT }}/exam/manage/"> Online Test </a>
         </div>
         <div class= "collapse navbar-collapse" id="navbar">
-          <ul class="nav navbar-nav">
-	        <li><a href="{{ URL_ROOT }}/exam/quizzes">Quizzes</a></li>
-            <li><a href="{{ URL_ROOT }}/exam/results">Results</a></li>
-            <li><a href="{{ URL_ROOT }}/exam/viewprofile">My Profile</a></li>
-            <li><a href="{{ URL_ROOT }}/exam/changepassword">Change Password</a></li>
-            <li><a style='cursor:pointer' onClick='location.replace("{{URL_ROOT}}/exam/complete/");'>Log out</a></li>
+          <ul class="nav navbar-nav navbar-right">
+              <li><a href="{{ URL_ROOT }}/exam/viewprofile"> {{ user.get_full_name.title }} </a></li>
+              <li><a style='cursor:pointer' onClick='location.replace("{{URL_ROOT}}/exam/complete/");'> <span class="glyphicon glyphicon-log-out">Logout </span></a></li>
           </ul>
         </div><!-- /.navbar -->
       </div><!-- /.container -->
     </nav><!-- /.navbar -->
+{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-sm-3 col-md-2 sidebar">
+      <ul class="nav nav-sidebar">
+        <li><a href="{{ URL_ROOT }}/exam/quizzes"> Home </a></li>
+        <li><a href="{{ URL_ROOT }}/exam/quizzes/enrolled/"> Enrolled Courses </a></li>
+        <li><a href="{{ URL_ROOT }}/exam/viewprofile"> Profile </a></li>
+        <li><a href="{{ URL_ROOT }}/exam/changepassword"> Change Password </a></li>
+      </ul>
+    </div>
+    <div class="col-sm-8 col-sm-offset-3 col-md-9 col-md-offset-2 main">
+    <div class="row">
+        {% block main %}
+        {% endblock %}
+    </div>
+    </div>
+</div>
 {% endblock %}
