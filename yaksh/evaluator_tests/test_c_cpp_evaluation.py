@@ -15,10 +15,45 @@ from yaksh.settings import SERVER_TIMEOUT
 
 class CAssertionEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
-        with open('/tmp/test.txt', 'wb') as f:
+        self.f_path = os.path.join(tempfile.gettempdir(), "test.txt")
+        with open(self.f_path, 'wb') as f:
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
-        self.test_case_data = [{"test_case": "c_cpp_files/main.cpp",
+        self.tc_data = dedent("""
+            #include <stdio.h>
+            #include <stdlib.h>
+
+            extern int add(int, int);
+
+            template <class T>
+
+            void check(T expect, T result)
+            {
+                if (expect == result)
+                {
+                printf("Correct: Expected %d got %d ",expect,result);
+                }
+                else
+                {
+                printf("Incorrect: Expected %d got %d ",expect,result);
+                exit (1);
+               }
+            }
+
+            int main(void)
+            {
+                int result;
+                result = add(0,0);
+                    printf("Input submitted to the function: 0, 0");
+                check(0, result);
+                result = add(2,3);
+                    printf("Input submitted to the function: 2 3");
+                check(5,result);
+                printf("All Correct");
+                return 0;
+            }
+            """)
+        self.test_case_data = [{"test_case": self.tc_data,
                                 "test_case_type": "standardtestcase",
                                 "weight": 0.0
                                 }]
@@ -29,10 +64,11 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.file_paths = None
 
     def tearDown(self):
-        os.remove('/tmp/test.txt')
+        os.remove(self.f_path)
         shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
+        # Given
         user_answer = "int add(int a, int b)\n{return a+b;}"
         kwargs = {
                   'metadata': {
@@ -44,12 +80,15 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
+        # Given
         user_answer = "int add(int a, int b)\n{return a-b;}"
         kwargs = {
                   'metadata': {
@@ -61,15 +100,18 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         lines_of_error = len(result.get('error')[0].splitlines())
         self.assertFalse(result.get('success'))
         self.assert_correct_output("Incorrect:", result.get('error'))
         self.assertTrue(lines_of_error > 1)
 
     def test_compilation_error(self):
+        # Given
         user_answer = "int add(int a, int b)\n{return a+b}"
         kwargs = {
                   'metadata': {
@@ -81,13 +123,16 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertFalse(result.get("success"))
         self.assert_correct_output("Compilation Error", result.get("error"))
 
     def test_infinite_loop(self):
+        # Given
         user_answer = "int add(int a, int b)\n{while(1>0){}}"
         kwargs = {
                   'metadata': {
@@ -99,15 +144,45 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertFalse(result.get("success"))
         self.assert_correct_output(self.timeout_msg, result.get("error"))
 
     def test_file_based_assert(self):
-        self.file_paths = [('/tmp/test.txt', False)]
-        self.test_case_data = [{"test_case": "c_cpp_files/file_data.c",
+        # Given
+        self.file_paths = [(self.f_path, False)]
+        self.tc_data = dedent("""
+            #include <stdio.h>
+            #include <stdlib.h>
+
+            extern int ans();
+
+            template <class T>
+            void check(T expect,T result)
+            {
+                if (expect == result)
+                {
+                printf("Correct: Expected %d got %d ",expect,result);
+                }
+                else
+                {
+                printf("Incorrect: Expected %d got %d ",expect,result);
+                exit (0);
+               }
+            }
+
+            int main(void)
+            {
+                int result;
+                result = ans();
+                check(50, result);
+            }
+            """)
+        self.test_case_data = [{"test_case": self.tc_data,
                                 "test_case_type": "standardtestcase",
                                 "weight": 0.0
                                 }]
@@ -133,10 +208,13 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
+
 
 class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
@@ -151,7 +229,11 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                             " your code.").format(SERVER_TIMEOUT)
         self.file_paths = None
 
+    def tearDown(self):
+        shutil.rmtree(self.in_dir)
+
     def test_correct_answer(self):
+        # Given
         user_answer = dedent("""
         #include<stdio.h>
         int main(void){
@@ -169,12 +251,15 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
+        # Given
         self.test_case_data = [{'expected_output': '561',
                                 'expected_input': '5\n6\n1',
                                 'weight': 0.0,
@@ -199,12 +284,15 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_string_input(self):
+        # Given
         self.test_case_data = [{'expected_output': 'abc',
                                 'expected_input': 'abc',
                                 'weight': 0.0,
@@ -227,12 +315,15 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
+        # Given
         user_answer = dedent("""
         #include<stdio.h>
         int main(void){
@@ -249,15 +340,18 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         lines_of_error = len(result.get('error')[0].splitlines())
         self.assertFalse(result.get('success'))
         self.assert_correct_output("Incorrect", result.get('error'))
         self.assertTrue(lines_of_error > 1)
 
     def test_error(self):
+        # Given
         user_answer = dedent("""
         #include<stdio.h>
         int main(void){
@@ -274,13 +368,16 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertFalse(result.get("success"))
         self.assert_correct_output("Compilation Error", result.get("error"))
 
     def test_infinite_loop(self):
+        # Given
         user_answer = dedent("""
         #include<stdio.h>
         int main(void){
@@ -297,13 +394,16 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertFalse(result.get("success"))
         self.assert_correct_output(self.timeout_msg, result.get("error"))
 
     def test_only_stdout(self):
+        # Given
         self.test_case_data = [{'expected_output': '11',
                                'expected_input': '',
                                 'weight': 0.0,
@@ -325,12 +425,15 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_cpp_correct_answer(self):
+        # Given
         user_answer = dedent("""
         #include<iostream>
         using namespace std;
@@ -349,12 +452,15 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_cpp_array_input(self):
+        # Given
         self.test_case_data = [{'expected_output': '561',
                                 'expected_input': '5\n6\n1',
                                 'weight': 0.0,
@@ -380,12 +486,15 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_cpp_string_input(self):
+        # Given
         self.test_case_data = [{'expected_output': 'abc',
                                 'expected_input': 'abc',
                                 'weight': 0.0,
@@ -409,12 +518,15 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_cpp_incorrect_answer(self):
+        # Given
         user_answer = dedent("""
         #include<iostream>
         using namespace std;
@@ -432,15 +544,18 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         lines_of_error = len(result.get('error')[0].splitlines())
         self.assertFalse(result.get('success'))
         self.assert_correct_output("Incorrect", result.get('error'))
         self.assertTrue(lines_of_error > 1)
 
     def test_cpp_error(self):
+        # Given
         user_answer = dedent("""
         #include<iostream>
         using namespace std;
@@ -458,13 +573,16 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertFalse(result.get("success"))
         self.assert_correct_output("Compilation Error", result.get("error"))
 
     def test_cpp_infinite_loop(self):
+        # Given
         user_answer = dedent("""
         #include<iostream>
         using namespace std;
@@ -482,13 +600,16 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertFalse(result.get("success"))
         self.assert_correct_output(self.timeout_msg, result.get("error"))
 
     def test_cpp_only_stdout(self):
+        # Given
         self.test_case_data = [{'expected_output': '11',
                                'expected_input': '',
                                 'weight': 0.0,
@@ -511,9 +632,11 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':

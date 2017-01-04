@@ -16,7 +16,8 @@ class ScilabCodeEvaluator(BaseEvaluator):
     """Tests the Scilab code obtained from Code Server"""
     def __init__(self, metadata, test_case_data):
         self.files = []
-
+        self.submit_code_path = ""
+        self.test_code_path = ""
         # Set metadata values
         self.user_answer = metadata.get('user_answer')
         self.file_paths = metadata.get('file_paths')
@@ -28,23 +29,27 @@ class ScilabCodeEvaluator(BaseEvaluator):
 
     def teardown(self):
         # Delete the created file.
-        os.remove(self.submit_code_path)
+        if os.path.exists(self.submit_code_path):
+            os.remove(self.submit_code_path)
+        if os.path.exists(self.test_code_path):
+            os.remove(self.test_code_path)
         if self.files:
             delete_files(self.files)
 
     def check_code(self):
         self.submit_code_path = self.create_submit_code_file('function.sci')
+        self.test_code_path = self.create_submit_code_file('main.sci')
         if self.file_paths:
             self.files = copy_files(self.file_paths)
         ref_code_path = self.test_case
-        clean_ref_path, clean_test_case_path = \
-            self._set_test_code_file_path(ref_code_path)
+        clean_ref_path, clean_test_case_path = self.test_code_path, None
         self.user_answer, terminate_commands = \
             self._remove_scilab_exit(self.user_answer.lstrip())
 
         success = False
-        test_case_weight = 0.0
+        mark_fraction = 0.0
         self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
+        self.write_to_submit_code_file(self.test_code_path, self.test_case)
         # Throw message if there are commmands that terminates scilab
         add_err = ""
         if terminate_commands:
@@ -70,13 +75,13 @@ class ScilabCodeEvaluator(BaseEvaluator):
             stdout = self._strip_output(stdout)
             if proc.returncode == 5:
                 success, err = True, None
-                test_case_weight = float(self.weight) if self.partial_grading else 0.0
+                mark_fraction = 1.0 if self.partial_grading else 0.0
             else:
                 err = add_err + stdout
         else:
             err = add_err + stderr
 
-        return success, err, test_case_weight
+        return success, err, mark_fraction
 
     def _remove_scilab_exit(self, string):
         """

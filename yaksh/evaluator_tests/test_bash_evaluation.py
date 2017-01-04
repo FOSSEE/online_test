@@ -13,10 +13,17 @@ from textwrap import dedent
 
 class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
-        with open('/tmp/test.txt', 'wb') as f:
+        self.f_path = os.path.join(tempfile.gettempdir(), "test.txt")
+        with open(self.f_path, 'wb') as f:
             f.write('2'.encode('ascii'))
+        self.tc_data = dedent("""
+            #!/bin/bash
+            [[ $# -eq 2 ]] && echo $(( $1 + $2 )) && exit $(( $1 + $2 ))
+            """)
+        self.tc_data_args = "1 2\n2 1"
         self.test_case_data = [
-            {"test_case": "bash_files/sample.sh,bash_files/sample.args",
+            {"test_case": self.tc_data,
+                "test_case_args": self.tc_data_args,
                 "test_case_type": "standardtestcase",
                 "weight": 0.0
             }
@@ -28,10 +35,11 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.file_paths = None
 
     def tearDown(self):
-        os.remove('/tmp/test.txt')
+        os.remove(self.f_path)
         shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
+        # Given
         user_answer = ("#!/bin/bash\n[[ $# -eq 2 ]]"
             " && echo $(( $1 + $2 )) && exit $(( $1 + $2 ))"
         )
@@ -45,12 +53,15 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_error(self):
+        # Given
         user_answer = ("#!/bin/bash\n[[ $# -eq 2 ]] "
             "&& echo $(( $1 - $2 )) && exit $(( $1 - $2 ))")
         kwargs = {
@@ -63,13 +74,16 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertFalse(result.get("success"))
         self.assert_correct_output("Error", result.get("error"))
 
     def test_infinite_loop(self):
+        # Given
         user_answer = ("#!/bin/bash\nwhile [ 1 ] ;"
             " do echo "" > /dev/null ; done")
         kwargs = {
@@ -82,16 +96,25 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertFalse(result.get("success"))
         self.assert_correct_output(self.timeout_msg, result.get("error"))
 
     def test_file_based_assert(self):
-        self.file_paths = [('/tmp/test.txt', False)]
+        # Given
+        self.file_paths = [(self.f_path, False)]
+        self.tc_data = dedent("""
+            #!/bin/bash
+            cat $1
+            """)
+        self.tc_data_args = "test.txt"
         self.test_case_data = [
-            {"test_case": "bash_files/sample1.sh,bash_files/sample1.args",
+            {"test_case": self.tc_data,
+                "test_case_args": self.tc_data_args,
                 "test_case_type": "standardtestcase",
                 "weight": 0.0
             }
@@ -107,9 +130,11 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': self.test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get("success"))
 
 class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
@@ -122,6 +147,7 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
 
 
     def test_correct_answer(self):
+        # Given
         user_answer = dedent(""" #!/bin/bash
                              read A
                              read B
@@ -143,12 +169,15 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_array_input(self):
+        # Given
         user_answer = dedent(""" readarray arr;
                                  COUNTER=0
                                  while [  $COUNTER -lt 3 ]; do
@@ -172,12 +201,15 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
+        # Then
         self.assertTrue(result.get('success'))
 
     def test_incorrect_answer(self):
+        # Given
         user_answer = dedent(""" #!/bin/bash
                              read A
                              read B
@@ -199,12 +231,16 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
+
+        # Then
         self.assert_correct_output("Incorrect", result.get('error'))
         self.assertFalse(result.get('success'))
 
     def test_stdout_only(self):
+        # Given
         user_answer = dedent(""" #!/bin/bash
                              A=6
                              B=4
@@ -226,8 +262,11 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'test_case_data': test_case_data,
                   }
 
+        # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
+
+        # Then
         self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':

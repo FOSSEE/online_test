@@ -34,8 +34,9 @@
   <input type="checkbox" name="extract" value="{{file.id}}" >{% if file.extract %} dont extract{% else %}
   extract{% endif %}</input>&nbsp;&nbsp;
   <input type="checkbox" name="hide" value="{{file.id}}" >{% if file.hide %} show{% else %}
-  hide{% endif %}</input><br>
+  hide{% endif %}</input>
   <a href="{{file.file.url}}">{{ file.file.name }}</a>
+  <br>
   {% endfor %}{% endif %}
   </table></center>
   {% for formset in formsets %}

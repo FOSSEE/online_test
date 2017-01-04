@@ -15,7 +15,7 @@ class Command(BaseCommand):
     help = 'Adds the moderator group'
 
     def handle(self, *args, **options):
-        app = 'yaksh'
+        app_label = 'yaksh'
         group = Group(name='moderator')
         try:
             group.save()
@@ -23,11 +23,10 @@ class Command(BaseCommand):
             raise CommandError("The group already exits")
         else:
             # Get the models for the given app
-            content_types = ContentType.objects.filter(app_label=app)
+            content_types = ContentType.objects.filter(app_label=app_label)
             # Get list of permissions for the models
-            permission_list = Permission.objects.filter(content_type=content_types)
-            for permission in permission_list:
-                group.permissions.add(permission)
-                group.save()
+            permission_list = Permission.objects.filter(content_type__in=content_types)
+            group.permissions.add(*permission_list)
+            group.save()
 
         self.stdout.write('Moderator group added successfully')

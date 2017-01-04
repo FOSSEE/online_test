@@ -26,18 +26,20 @@ class JavaCodeEvaluator(BaseEvaluator):
         self.user_answer = metadata.get('user_answer')
         self.file_paths = metadata.get('file_paths')
         self.partial_grading = metadata.get('partial_grading')
-
         # Set test case data values
         self.test_case = test_case_data.get('test_case')
         self.weight = test_case_data.get('weight')
 
     def teardown(self):
         # Delete the created file.
-        os.remove(self.submit_code_path)
+        if os.path.exists(self.submit_code_path):
+            os.remove(self.submit_code_path)
         if os.path.exists(self.user_output_path):
             os.remove(self.user_output_path)
         if os.path.exists(self.ref_output_path):
             os.remove(self.ref_output_path)
+        if os.path.exists(self.test_code_path):
+            os.remove(self.test_code_path)
         if self.files:
             delete_files(self.files)
 
@@ -57,10 +59,14 @@ class JavaCodeEvaluator(BaseEvaluator):
         if self.compiled_user_answer and self.compiled_test_code:
             return None
         else:
+            # create student code and moderator code file
             self.submit_code_path = self.create_submit_code_file('Test.java')
-            ref_code_path = self.test_case
-            clean_ref_code_path, clean_test_case_path = \
-                     self._set_test_code_file_path(ref_code_path)
+            self.test_code_path = self.create_submit_code_file('main.java')
+            self.write_to_submit_code_file(self.submit_code_path,
+                    self.user_answer
+                )
+            self.write_to_submit_code_file(self.test_code_path, self.test_case)
+            clean_ref_code_path = self.test_code_path
             if self.file_paths:
                 self.files = copy_files(self.file_paths)
             if not isfile(clean_ref_code_path):
@@ -71,9 +77,6 @@ class JavaCodeEvaluator(BaseEvaluator):
                 return False, msg
 
             user_code_directory = os.getcwd() + '/'
-            self.write_to_submit_code_file(self.submit_code_path, 
-                self.user_answer
-            )
             ref_file_name = (clean_ref_code_path.split('/')[-1]).split('.')[0]
             self.user_output_path = self.set_file_paths(user_code_directory, 
                 'Test'
@@ -144,7 +147,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
                     success, err = True, None
-                    mark_fraction = float(seelf.weight) if self.partial_grading else 0.0
+                    mark_fraction = 1.0 if self.partial_grading else 0.0
                 else:
                     err = stdout + "\n" + stderr
             else:

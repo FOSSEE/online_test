@@ -17,6 +17,9 @@ class BashCodeEvaluator(BaseEvaluator):
     # Private Protocol ##########
     def __init__(self, metadata, test_case_data):
         self.files = []
+        self.submit_code_path = ""
+        self.test_code_path = ""
+        self.tc_args_path= ""
 
         # Set metadata values
         self.user_answer = metadata.get('user_answer')
@@ -25,11 +28,18 @@ class BashCodeEvaluator(BaseEvaluator):
 
         # Set test case data values
         self.test_case = test_case_data.get('test_case')
+        self.test_case_args = test_case_data.get('test_case_args')
+
         self.weight = test_case_data.get('weight')
 
     def teardown(self):
         # Delete the created file.
-        os.remove(self.submit_code_path)
+        if os.path.exists(self.submit_code_path):
+            os.remove(self.submit_code_path)
+        if os.path.exists(self.test_code_path):
+            os.remove(self.test_code_path)
+        if os.path.exists(self.tc_args_path):
+            os.remove(self.tc_args_path)
         if self.files:
             delete_files(self.files)
 
@@ -58,18 +68,20 @@ class BashCodeEvaluator(BaseEvaluator):
         Returns (False, error_msg, 0.0): If mandatory arguments are not files or if
         the required permissions are not given to the file(s).
         """
-        ref_code_path = self.test_case
         success = False
         mark_fraction = 0.0
-
         self.submit_code_path = self.create_submit_code_file('submit.sh')
         self._set_file_as_executable(self.submit_code_path)
-
-        get_ref_path, get_test_case_path = ref_code_path.strip().split(',')
-        get_ref_path = get_ref_path.strip()
-        get_test_case_path = get_test_case_path.strip()
-        clean_ref_code_path, clean_test_case_path = \
-            self._set_test_code_file_path(get_ref_path, get_test_case_path)
+        self.test_code_path = self.create_submit_code_file('main.sh')
+        self._set_file_as_executable(self.test_code_path)
+        if self.test_case_args:
+            self.tc_args_path = self.create_submit_code_file('main.args')
+            self.write_to_submit_code_file(self.tc_args_path, self.test_case_args)
+        self.user_answer = self.user_answer.replace("\r", "")
+        self.test_case = self.test_case.replace("\r", "")
+        self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
+        self.write_to_submit_code_file(self.test_code_path, self.test_case)
+        clean_ref_code_path, clean_test_case_path = self.test_code_path, self.tc_args_path
 
         if self.file_paths:
             self.files = copy_files(self.file_paths)
@@ -86,10 +98,7 @@ class BashCodeEvaluator(BaseEvaluator):
             msg = "Script %s is not executable" % self.submit_code_path
             return False, msg, 0.0
 
-        self.user_answer = self.user_answer.replace("\r", "")
-        self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
-
-        if clean_test_case_path is None or "":
+        if not clean_test_case_path:
             ret = self._run_command(clean_ref_code_path,
                 stdin=None,
                 stdout=subprocess.PIPE,
@@ -103,11 +112,11 @@ class BashCodeEvaluator(BaseEvaluator):
             )
             proc, stdnt_stdout, stdnt_stderr = ret
             if inst_stdout == stdnt_stdout:
-                mark_fraction = float(self.weight) if self.partial_grading else 0.0
+                mark_fraction = 1.0 if self.partial_grading else 0.0
                 return True, None, mark_fraction
             else:
-                err = "Error: expected %s, got %s" % (inst_stderr,
-                    stdnt_stderr
+                err = "Error: expected %s, got %s" % (inst_stdout + inst_stderr,
+                    stdnt_stdout + stdnt_stderr
                 )
                 return False, err, 0.0
         else:
@@ -146,7 +155,7 @@ class BashCodeEvaluator(BaseEvaluator):
                     proc, stdnt_stdout, stdnt_stderr = ret
                     valid_answer = inst_stdout == stdnt_stdout
             if valid_answer and (num_lines == loop_count):
-                mark_fraction = float(self.weight) if self.partial_grading else 0.0
+                mark_fraction = 1.0 if self.partial_grading else 0.0
                 return True, None, mark_fraction
             else:
                 err = ("Error:expected"

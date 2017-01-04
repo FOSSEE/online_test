@@ -62,15 +62,6 @@ class BaseEvaluator(object):
         submit_f.write(user_answer.lstrip())
         submit_f.close()
 
-    def _set_test_code_file_path(self, ref_path=None, test_case_path=None):
-        if ref_path and not ref_path.startswith('/'):
-            ref_path = join(MY_DIR, ref_path)
-
-        if test_case_path and not test_case_path.startswith('/'):
-            test_case_path = join(MY_DIR, test_case_path)
-
-        return ref_path, test_case_path
-
     def _set_file_as_executable(self, fname):
         os.chmod(fname,  stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
                  | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
