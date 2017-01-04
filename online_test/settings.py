@@ -32,6 +32,8 @@ URL_ROOT = ''
 
 # Application definition
 
+FIXTURE_DIRS = os.path.join(BASE_DIR, "yaksh", "fixtures")
+
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
@@ -97,7 +99,7 @@ SOCIAL_AUTH_LOGIN_ERROR_URL = '/exam/login/'
 
 MEDIA_URL = "/data/"
 
-MEDIA_ROOT = os.path.join(BASE_DIR+"/yaksh/", "data")
+MEDIA_ROOT = os.path.join(BASE_DIR, "yaksh", "data")
 
 EMAIL_USE_TLS = False
 

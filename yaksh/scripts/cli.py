@@ -76,7 +76,7 @@ def create_demo(project_name='yaksh_demo', project_dir=CUR_DIR):
         management.call_command('startproject', project_name, project_dir)
         print("Demo Django project '{0}' created at '{1}'".format(project_name,
                                                                 project_dir))
-    except Exception, e:
+    except Exception as e:
         print("Error: {0}\nExiting yaksh Installer".format(e))
 
     if project_dir is None:

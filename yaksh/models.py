@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from datetime import datetime, timedelta
 import json
 from random import sample, shuffle
@@ -382,8 +383,7 @@ class Question(models.Model):
                 self.load_questions(questions_list, user, file_path, files)
 
     def create_demo_questions(self, user):
-        zip_file_path = os.path.join(os.getcwd(), 'yaksh',
-                                     'fixtures', 'demo_questions.zip')
+        zip_file_path = os.path.join(settings.FIXTURE_DIRS, 'demo_questions.zip')
         files, extract_path = extract_files(zip_file_path)
         self.read_json(extract_path, user, files)
 
