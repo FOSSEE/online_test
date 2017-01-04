@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import django
 import subprocess
 import contextlib
 import os
@@ -8,7 +9,7 @@ import argparse
 from importlib import import_module
 from django.conf import settings
 from django.core import management
-from django.template import Template, Context, loader
+from django.template import Template, Context
 
 from project_detail import NAME, PATH 
 
@@ -16,6 +17,9 @@ CUR_DIR = os.getcwd()
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 PARENT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
 TEMPLATE_DIR = path.join(PARENT_DIR, 'demo_templates')
+
+settings.configure()
+django.setup()
 
 def main():
     #Parse command-line to obtain the arguments and/or options
@@ -95,7 +99,7 @@ def create_demo(project_name='yaksh_demo', project_dir=CUR_DIR):
                                         'fixture_dir': fixture_dir})
         urls_template_path = path.join(TEMPLATE_DIR, 'demo_urls.py')
         urls_target_path = path.join(project_path, 'demo_urls.py')
-        command = ("python ../manage.py syncdb "
+        command = ("python ../manage.py migrate --run-syncdb "
                         "--noinput --settings={0}.demo_settings").format(project_name)
 
         loaddata_command = ("python ../manage.py loaddata "

@@ -9,5 +9,6 @@ urlpatterns = patterns('',
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^exam/', include('yaksh.urls')),
+    url(r'^exam/', include('yaksh.urls', namespace='yaksh', app_name='yaksh')),
+    url(r'^', include('social.apps.django_app.urls', namespace='social')),
 )
