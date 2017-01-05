@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core import management
 from django.template import Template, Context
 
-from project_detail import NAME, PATH 
+from .project_detail import NAME, PATH
 
 CUR_DIR = os.getcwd()
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -136,10 +136,8 @@ def _render_demo_files(template_path, output_path, context=None):
     with open(template_path, 'r') as template_file:
         content = template_file.read()
         if context:
-            content = content.decode('utf-8')
             template = Template(content)
             content = template.render(context)
-            content = content.encode('utf-8')
 
     with open(output_path, 'w') as new_file:
         new_file.write(content)

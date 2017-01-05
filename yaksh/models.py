@@ -232,7 +232,7 @@ class Question(models.Model):
     type = models.CharField(max_length=24, choices=question_types)
 
     # The type of evaluator
-    #test_case_type = models.CharField(max_length=24, choices=test_case_types)
+    test_case_type = models.CharField(max_length=24, choices=test_case_types)
 
     # Is this question active or not. If it is inactive it will not be used
     # when creating a QuestionPaper.
