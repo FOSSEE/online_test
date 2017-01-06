@@ -23,7 +23,7 @@ class HookEvaluator(BaseEvaluator):
         self.partial_grading = metadata.get('partial_grading')
 
         # Set test case data values
-        self.test_case = test_case_data.get('code')
+        self.hook_code = test_case_data.get('hook_code')
         self.weight = test_case_data.get('weight')
 
     def teardown(self):
@@ -31,21 +31,9 @@ class HookEvaluator(BaseEvaluator):
         if self.files:
             delete_files(self.files)
 
-    def compile_code(self):
-        if self.file_paths:
-            self.files = copy_files(self.file_paths)
-        if self.exec_scope:
-            return None
-        else:
-            submitted = compile(self.user_answer, '<string>', mode='exec')
-            self.exec_scope = {}
-            exec(submitted, self.exec_scope)
-            return self.exec_scope
-    
     def check_code(self):
-        """ Function validates user answer by running an assertion based test case
-        against it
-
+        """ Function evaluates user answer by running a python based hook code
+        against it.
         Returns
         --------
         Returns a tuple (success, error, test_case_weight)
@@ -67,21 +55,9 @@ class HookEvaluator(BaseEvaluator):
         mark_fraction = 0.0
         try:
             tb = None
-            _tests = compile(self.test_case, '<string>', mode='exec')
-            exec(_tests, globals())
+            _tests = compile(self.hook_code, '<string>', mode='exec')
+            exec(_tests, locals())
             success, err, mark_fraction = check_answer(self.user_answer)
-        except AssertionError:
-            type, value, tb = sys.exc_info()
-            info = traceback.extract_tb(tb)
-            fname, lineno, func, text = info[-1]
-            text = str(self.test_case)
-            err = "Expected Test Case:\n{0}\n" \
-                "Error - {1} {2} in: {3}\n".format(
-                    self.test_case,
-                    type.__name__,
-                    str(value),
-                    text
-                    )
         except TimeoutException:
             raise
         except Exception:
