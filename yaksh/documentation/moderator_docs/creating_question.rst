@@ -25,11 +25,11 @@ Setting up questions
 
 	* **Description** - The actual question description is to be written. 
 
-		.. note::  To add codes in questions please use html <code> and <br> tags.
+		.. note::  To add code snippets in questions please use html <code> and <br> tags.
 
 	* **Tags** - Type of label or metadata tag making it easier to find specific type of questions.
 
-	* **Snippet** - Snippet is used to give any default value or default code or command. This will be displayed in the answer form. This is used only for code questions.
+	* **Snippet** - Snippet is used to give any default value or default code or command. This will be displayed in the students answer form. This is used only for code questions.
 
 	* **Partial Grading** - Click this checkbox to enable partial grading feature.
 
@@ -68,7 +68,7 @@ How to write Test cases
 			for program of addition.
 
 		* For C, C++, Java and Bash:
-			In Test Case Field write the code as follows
+			Sample Moderator code
 
 			For C and C++:
 				.. image:: ../images/cpp_standard_testcase.jpg
@@ -123,7 +123,7 @@ How to write Test cases
 					:width: 80%
 
 				Consider a Program to find square of a number.
-				The code in the test should be as follows: ::
+				The code in the Test case Field should be as follows: ::
 					class main
 					{
 						public static <E> void check(E expect, E result)
@@ -170,7 +170,7 @@ How to write Test cases
 				.. Note::	1. For Java, class name should always be **main** in testcase.
 
 							2. In the above example, **Test** is the class of student's code.
-							3. Please make sure that the student's code class and   calling class in testcase is always **Test**. (square_num is the function inside Test class.)
+							3. Please make sure that the student's code class and calling class in testcase is always **Test**. (square_num is the function inside Test class.)
 
 			For Bash:
 				.. image:: ../images/bash_standard_testcase.jpg
@@ -240,7 +240,7 @@ Features in Question
 	
 	* **Download Questions**
 
-			Select questions from the list of question displayed on the Questions page. Click on the Download Selected button to download the questions. This will create a zip file of the Questions selected.
+			Select questions from the list of questions displayed on the Questions page. Click on the Download Selected button to download the questions. This will create a zip file of the Questions selected.
 
 	* **Upload Questions**
 			

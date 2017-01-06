@@ -18,7 +18,7 @@ Setting up a new course
 Features in Courses
 -------------------
 
-	 Click on the Courses link located at the navigation bar.
+	 Click on the Courses link on the navigation bar.
 
 	 .. image:: ../images/course_features.jpg
 
