@@ -1,6 +1,7 @@
 from django import forms
 from yaksh.models import get_model_class, Profile, Quiz, Question, TestCase, Course,\
-                         QuestionPaper, StandardTestCase, StdIOBasedTestCase
+                         QuestionPaper, StandardTestCase, StdIOBasedTestCase, \
+                         HookTestCase
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -40,7 +41,8 @@ test_case_types = (
         ("standardtestcase", "Standard Testcase"),
         ("stdiobasedtestcase", "StdIO Based Testcase"),
         ("mcqtestcase", "MCQ Testcase"),
-    )
+        ("hooktestcase", "Hook Testcase"),
+        )
 
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
@@ -296,3 +298,4 @@ class QuestionPaperForm(forms.ModelForm):
     class Meta:
         model = QuestionPaper
         fields = ['shuffle_questions']
+

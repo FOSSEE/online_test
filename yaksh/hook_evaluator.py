@@ -3,8 +3,6 @@ from __future__ import unicode_literals
 import sys
 import traceback
 import os
-from os.path import join
-import importlib
 
 # Local imports
 from .file_utils import copy_files, delete_files
@@ -14,7 +12,6 @@ from .grader import TimeoutException
 
 class HookEvaluator(BaseEvaluator):
     def __init__(self, metadata, test_case_data):
-        self.exec_scope = None
         self.files = []
 
         # Set metadata values
@@ -62,7 +59,7 @@ class HookEvaluator(BaseEvaluator):
             raise
         except Exception:
             msg = traceback.format_exc(limit=0)
-            err = "Error in Test case: {0}".format(msg)
+            err = "Error in Hook code: {0}".format(msg)
         del tb
         return success, err, mark_fraction
  
