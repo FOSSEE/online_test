@@ -356,7 +356,7 @@ class Question(models.Model):
         for file_name, extract in file_names:
             q_file = os.path.join(path, file_name)
             if os.path.exists(q_file):
-                que_file = open(q_file, 'r')
+                que_file = open(q_file, 'rb')
                 # Converting to Python file object with
                 # some Django-specific additions
                 django_file = File(que_file)
