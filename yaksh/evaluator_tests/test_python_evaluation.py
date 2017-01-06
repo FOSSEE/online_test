@@ -7,8 +7,6 @@ from textwrap import dedent
 
 # Local import
 from yaksh.grader import Grader
-from yaksh.python_assertion_evaluator import PythonAssertionEvaluator
-from yaksh.python_stdio_evaluator import PythonStdIOEvaluator
 from yaksh.settings import SERVER_TIMEOUT
 
 
@@ -641,6 +639,218 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assert_correct_output(timeout_msg, result.get('error'))
         self.assertFalse(result.get('success'))
+
+
+class PythonHookEvaluationTestCases(EvaluatorBaseTest):
+
+    def setUp(self):
+        with open('/tmp/test.txt', 'wb') as f:
+            f.write('2'.encode('ascii'))
+        tmp_in_dir_path = tempfile.mkdtemp()
+        self.in_dir = tmp_in_dir_path
+        self.timeout_msg = ("Code took more than {0} seconds to run. "
+                            "You probably have an infinite loop in"
+                            " your code.").format(SERVER_TIMEOUT)
+        self.file_paths = None
+
+    def tearDown(self):
+        os.remove('/tmp/test.txt')
+        shutil.rmtree(self.in_dir)
+
+    def test_correct_answer(self):
+        # Given
+        user_answer = "def add(a,b):\n\treturn a + b"
+        hook_code = dedent("""\
+                            def check_answer(user_answer):
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                exec(user_answer)
+                                if add(1,2) == 3:
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code,"weight": 1.0
+                            }]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': True,
+                    'language': 'python'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
+
+    def test_incorrect_answer(self):
+        # Given
+        user_answer = "def add(a,b):\n\treturn a - b"
+        hook_code = dedent("""\
+                            def check_answer(user_answer):
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                exec user_answer
+                                if add(1,2) == 3:
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code,"weight": 1.0
+                            }]
+
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'python'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertFalse(result.get('success'))
+        self.assert_correct_output('Incorrect Answer', result.get('error'))
+    
+    def test_assert_with_hook(self):
+        # Given
+        user_answer = "def add(a,b):\n\treturn a + b"
+        assert_test_case = "assert add(1,2) == 3"
+        hook_code = dedent("""\
+                            def check_answer(user_answer):
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                if "return a + b" in user_answer:
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+
+        test_case_data = [{"test_case_type": "standardtestcase",
+                           "test_case": assert_test_case, 'weight': 1.0},
+                          {"test_case_type": "hooktestcase",
+                           "hook_code": hook_code, 'weight': 1.0},
+                          ]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': True,
+                    'language': 'python'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
+        self.assertEqual(result.get("weight"), 2.0)
+
+    def test_multiple_hooks(self):
+        # Given
+        user_answer = "def add(a,b):\n\treturn a + b"
+        hook_code_1 = dedent("""\
+                            def check_answer(user_answer):
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                if "return a + b" in user_answer:
+                                    success, err, mark_fraction = True, "", 0.5
+                                return success, err, mark_fraction
+                            """
+                            )
+        hook_code_2 = dedent("""\
+                            def check_answer(user_answer):
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                exec(user_answer)
+                                if add(1,2) == 3:
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+
+
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code_1, 'weight': 1.0},
+                          {"test_case_type": "hooktestcase",
+                           "hook_code": hook_code_2, 'weight': 1.0},
+                          ]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': True,
+                    'language': 'python'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
+        self.assertEqual(result.get("weight"), 1.5)
+        
+    def test_infinite_loop(self):
+        # Given
+        user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
+        hook_code = dedent("""\
+                            def check_answer(user_answer):
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                exec(user_answer)
+                                if add(1,2) == 3:
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code,"weight": 1.0
+                            }]
+
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'python'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertFalse(result.get('success'))
+        self.assert_correct_output(self.timeout_msg, result.get('error'))
 
 
 if __name__ == '__main__':

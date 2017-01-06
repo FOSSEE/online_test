@@ -639,5 +639,335 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertTrue(result.get('success'))
 
+class CppHookEvaluationTestCases(EvaluatorBaseTest):
+
+    def setUp(self):
+        self.f_path = os.path.join(tempfile.gettempdir(), "test.txt")
+        with open(self.f_path, 'wb') as f:
+            f.write('2'.encode('ascii'))
+        tmp_in_dir_path = tempfile.mkdtemp()
+        self.in_dir = tmp_in_dir_path
+        self.timeout_msg = ("Code took more than {0} seconds to run. "
+            "You probably have an infinite loop in your"
+            " code.").format(SERVER_TIMEOUT)
+        self.file_paths = None
+
+    def tearDown(self):
+        os.remove(self.f_path)
+        shutil.rmtree(self.in_dir)
+
+    def test_correct_answer(self):
+        # Given
+        user_answer = dedent("""\
+                             #include<stdio.h>
+                             main()
+                             {
+                                printf("Hello, world!");
+                              }
+                              """)
+        hook_code = dedent("""\
+                            def check_answer(user_answer):
+                                with open("Test.c", "w+") as f:
+                                    f.write(user_answer)
+                                import subprocess
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                def _run_command(cmd):
+                                    proc = subprocess.Popen("{}".format(cmd),
+                                                            shell=True,
+                                                            stdout=subprocess.PIPE,
+                                                            stderr=subprocess.PIPE
+                                                            )
+                                    stdout,stderr = proc.communicate()
+                                    return stdout,stderr
+                                cmds = ["gcc Test.c", "./a.out"]
+                                for cmd in cmds:
+                                    stdout, stderr = _run_command(cmd)
+                                if stdout == "Hello, world!":
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code,"weight": 1.0
+                            }]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'cpp'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
+
+    def test_incorrect_answer(self):
+        # Given
+        user_answer = dedent("""\
+                             #include<stdio.h>
+                             main()
+                             {
+                                printf("Goodbye, world!");
+                              }
+                              """)
+        hook_code = dedent("""\
+                            def check_answer(user_answer):
+                                with open("Test.c", "w+") as f:
+                                    f.write(user_answer)
+                                import subprocess
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                def _run_command(cmd):
+                                    proc = subprocess.Popen("{}".format(cmd),
+                                                            shell=True,
+                                                            stdout=subprocess.PIPE,
+                                                            stderr=subprocess.PIPE
+                                                            )
+                                    stdout,stderr = proc.communicate()
+                                    return stdout,stderr
+                                cmds = ["gcc Test.c", "./a.out"]
+                                for cmd in cmds:
+                                    stdout, stderr = _run_command(cmd)
+                                if stdout == "Hello, world!":
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code,"weight": 1.0
+                            }]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'cpp'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertFalse(result.get('success'))
+        self.assert_correct_output('Incorrect Answer', result.get('error'))
+    
+    def test_assert_with_hook(self):
+        # Given
+        user_answer = "int add(int a, int b)\n{return a+b;}"
+
+
+        assert_test_case = dedent("""\
+                                  #include <stdio.h>
+                                  #include <stdlib.h>
+
+                                  extern int add(int, int);
+
+                                  template <class T>
+
+                                  void check(T expect, T result)
+                                  {
+                                      if (expect == result)
+                                      {
+                                      printf("Correct: Expected %d got %d ",expect,result);
+                                      }
+                                      else
+                                      {
+                                      printf("Incorrect: Expected %d got %d ",expect,result);
+                                      exit (1);
+                                     }
+                                  }
+
+                                  int main(void)
+                                  {
+                                      int result;
+                                      result = add(0,0);
+                                          printf("Input submitted to the function: 0, 0");
+                                      check(0, result);
+                                      result = add(2,3);
+                                          printf("Input submitted to the function: 2 3");
+                                      check(5,result);
+                                      printf("All Correct");
+                                      return 0;
+                                  }
+                                  """)
+
+        hook_code = dedent("""\
+                            def check_answer(user_answer):
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                if "return a+b;" in user_answer:
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+
+
+        test_case_data = [{"test_case_type": "standardtestcase",
+                           "test_case": assert_test_case,
+                           'weight': 1.0
+                           },
+                          {"test_case_type": "hooktestcase",
+                           "hook_code": hook_code, 'weight': 1.0},
+                          ]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': True,
+                    'language': 'cpp'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
+        self.assertEqual(result.get("weight"), 2.0)
+
+    def test_multiple_hooks(self):
+        # Given
+        user_answer = dedent("""\
+                             #include<stdio.h>
+                             main()
+                             {
+                                printf("Hello, world!");
+                              }
+                              """)
+        
+        hook_code_1 = dedent("""\
+                            def check_answer(user_answer):
+                                with open("Test.c", "w+") as f:
+                                    f.write(user_answer)
+                                import subprocess
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                def _run_command(cmd):
+                                    proc = subprocess.Popen("{}".format(cmd),
+                                                            shell=True,
+                                                            stdout=subprocess.PIPE,
+                                                            stderr=subprocess.PIPE
+                                                            )
+                                    stdout,stderr = proc.communicate()
+                                    return stdout,stderr
+                                cmds = ["gcc Test.c", "./a.out"]
+                                for cmd in cmds:
+                                    stdout, stderr = _run_command(cmd)
+                                if stdout == "Hello, world!":
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+        hook_code_2 = dedent("""\
+                            def check_answer(user_answer):
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                if 'printf("Hello, world!");' in user_answer:
+                                    success, err, mark_fraction = True, "", 0.5
+                                return success, err, mark_fraction
+                            """
+                            )
+
+
+
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code_1, 'weight': 1.0},
+                          {"test_case_type": "hooktestcase",
+                           "hook_code": hook_code_2, 'weight': 1.0},
+                          ]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': True,
+                    'language': 'cpp'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
+        self.assertEqual(result.get("weight"), 1.5)
+        
+    def test_infinite_loop(self):
+        # Given
+        user_answer = dedent("""\
+                             #include<stdio.h>
+                             int main(void){
+                             while(0==0){
+                             printf("abc");}
+                             }""")
+
+        hook_code= dedent("""\
+                            def check_answer(user_answer):
+                                with open("Test.c", "w+") as f:
+                                    f.write(user_answer)
+                                import subprocess
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                def _run_command(cmd):
+                                    proc = subprocess.Popen("{}".format(cmd),
+                                                            shell=True,
+                                                            stdout=subprocess.PIPE,
+                                                            stderr=subprocess.PIPE
+                                                            )
+                                    stdout,stderr = proc.communicate()
+                                    return stdout,stderr
+                                cmds = ["gcc Test.c", "./a.out"]
+                                for cmd in cmds:
+                                    stdout, stderr = _run_command(cmd)
+                                if stdout == "Hello, world!":
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+        
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code,"weight": 1.0
+                            }]
+
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'cpp'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertFalse(result.get('success'))
+        self.assert_correct_output(self.timeout_msg, result.get('error'))
+
+
 if __name__ == '__main__':
     unittest.main()
