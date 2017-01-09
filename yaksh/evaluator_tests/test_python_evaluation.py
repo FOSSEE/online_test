@@ -665,7 +665,7 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
                                 success = False
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
-                                exec(user_answer)
+                                exec(user_answer, globals())
                                 if add(1,2) == 3:
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
@@ -700,7 +700,7 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
                                 success = False
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
-                                exec user_answer
+                                exec(user_answer, globals())
                                 if add(1,2) == 3:
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
@@ -785,7 +785,7 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
                                 success = False
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
-                                exec(user_answer)
+                                exec(user_answer, globals())
                                 if add(1,2) == 3:
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
@@ -824,7 +824,7 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
                                 success = False
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
-                                exec(user_answer)
+                                exec(user_answer, globals())
                                 if add(1,2) == 3:
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction

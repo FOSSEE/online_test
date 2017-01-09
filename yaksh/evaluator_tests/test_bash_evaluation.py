@@ -303,7 +303,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                                                         stderr=subprocess.PIPE
                                                         )
                                 stdout,stderr = proc.communicate()
-                                if stdout == "Hello, world!":
+                                if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
                             """
@@ -346,7 +346,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                                                         stderr=subprocess.PIPE
                                                         )
                                 stdout,stderr = proc.communicate()
-                                if stdout == "Hello, world!":
+                                if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
                             """
@@ -444,6 +444,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
         hook_code_2 = dedent("""\
                     def check_answer(user_answer):
                         import subprocess
+                        import sys
                         success = False
                         err = "Incorrect Answer"
                         mark_fraction = 0.0
@@ -452,7 +453,8 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                                                 stderr=subprocess.PIPE
                                                 )
                         stdout,stderr = proc.communicate()
-                        if stdout == "Hello, world!":
+
+                        if stdout.decode('utf-8') == "Hello, world!":
                             success, err, mark_fraction = True, "", 1.0
                         return success, err, mark_fraction
                     """
@@ -498,7 +500,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                                                         stderr=subprocess.PIPE
                                                         )
                                 stdout,stderr = proc.communicate()
-                                if stdout == "Hello, world!":
+                                if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
                             """

@@ -684,7 +684,7 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 cmds = ["gcc Test.c", "./a.out"]
                                 for cmd in cmds:
                                     stdout, stderr = _run_command(cmd)
-                                if stdout == "Hello, world!":
+                                if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
                             """
@@ -738,7 +738,7 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 cmds = ["gcc Test.c", "./a.out"]
                                 for cmd in cmds:
                                     stdout, stderr = _run_command(cmd)
-                                if stdout == "Hello, world!":
+                                if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
                             """
@@ -871,7 +871,7 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 cmds = ["gcc Test.c", "./a.out"]
                                 for cmd in cmds:
                                     stdout, stderr = _run_command(cmd)
-                                if stdout == "Hello, world!":
+                                if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
                             """
@@ -940,7 +940,7 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 cmds = ["gcc Test.c", "./a.out"]
                                 for cmd in cmds:
                                     stdout, stderr = _run_command(cmd)
-                                if stdout == "Hello, world!":
+                                if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
                             """
