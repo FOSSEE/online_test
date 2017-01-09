@@ -36,7 +36,7 @@ class HookEvaluator(BaseEvaluator):
         Returns a tuple (success, error, test_case_weight)
 
         success - Boolean, indicating if code was executed successfully, correctly
-        weight - Float, indicating total weight of all successful test cases
+        mark_fraction - Float, indicating fraction of the weight to a test case
         error - String, error message if success is false
 
         returns (True, "Correct answer", 1.0) : If the student script passes all

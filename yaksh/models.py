@@ -3,6 +3,7 @@ import json
 from random import sample, shuffle
 from itertools import islice, cycle
 from collections import Counter
+from textwrap import dedent
 from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -1183,7 +1184,25 @@ class McqTestCase(TestCase):
 
 
 class HookTestCase(TestCase):
-    hook_code = models.TextField()
+    hook_code = models.TextField(default=dedent\
+                ("""\
+                 def check_answer(user_answer):
+                    ''' Evaluates user answer to return -
+                    success - Boolean, indicating if code was executed correctly
+                    mark_fraction - Float, indicating fraction of the
+                                   weight to a test case
+                    error - String, error message if success is false'''
+                    success = False
+                    err = "Incorrect Answer" # Please make the error message more specific
+                    mark_fraction = 0.0
+
+                    # write your code here
+
+                    return success, err, mark_fraction
+
+                """)
+
+                                )
     weight = models.FloatField(default=1.0)
 
     def get_field_value(self):
