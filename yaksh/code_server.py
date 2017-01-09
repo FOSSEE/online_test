@@ -81,7 +81,7 @@ class CodeServer(object):
         self.queue = queue
 
     # Public Protocol ##########
-    def check_code(self, language, test_case_type, json_data, in_dir=None):
+    def check_code(self, language, json_data, in_dir=None):
         """Calls relevant EvaluateCode class based on language to check the
          answer code
         """

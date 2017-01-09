@@ -230,9 +230,6 @@ class Question(models.Model):
     # The type of question.
     type = models.CharField(max_length=24, choices=question_types)
 
-    # The type of evaluator
-    test_case_type = models.CharField(max_length=24, choices=test_case_types)
-
     # Is this question active or not. If it is inactive it will not be used
     # when creating a QuestionPaper.
     active = models.BooleanField(default=True)
@@ -285,7 +282,6 @@ class Question(models.Model):
                       'description': question.description,
                       'points': question.points, 'language': question.language,
                       'type': question.type, 'active': question.active,
-                      'test_case_type': question.test_case_type,
                       'snippet': question.snippet,
                       'testcase': [case.get_field_value() for case in test_case],
                       'files': file_names}
@@ -327,7 +323,7 @@ class Question(models.Model):
         for tc in self.testcase_set.all():
             test_case_type = tc.type
             test_case_ctype = ContentType.objects.get(app_label="yaksh",
-                model=self.test_case_type
+                model=test_case_type
             )
             test_case = test_case_ctype.get_object_for_this_type(
                 question=self,
@@ -1080,8 +1076,7 @@ class AnswerPaper(models.Model):
                     correct = True
             elif question.type == 'code':
                 user_dir = self.user.profile.get_user_dir()
-                json_result = code_server.run_code(question.language,
-                        question.test_case_type, json_data, user_dir)
+                json_result = code_server.run_code(question.language, json_data, user_dir)
                 result = json.loads(json_result)
                 if result.get('success'):
                     correct = True
@@ -1147,8 +1142,7 @@ class TestCase(models.Model):
 class StandardTestCase(TestCase):
     test_case = models.TextField()
     weight = models.FloatField(default=1.0)
-    test_case_args = models.TextField(help_text="<b>Command Line arguments for bash only</b>",
-                                      blank=True)
+    test_case_args = models.TextField(blank=True)
 
     def get_field_value(self):
         return {"test_case_type": "standardtestcase",
