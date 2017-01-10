@@ -269,7 +269,7 @@ def show_all_questionpapers(request, questionpaper_id=None):
 
 
 @login_required
-def prof_manage(request):
+def prof_manage(request, msg=None):
     """Take credentials of the user with professor/moderator
     rights/permissions and log in."""
     user = request.user
@@ -303,7 +303,7 @@ def prof_manage(request):
             temp = paper, answer_papers, users_passed, users_failed
             users_per_paper.append(temp)
         context = {'user': user, 'users_per_paper': users_per_paper,
-                   'trial_paper': trial_paper
+                   'trial_paper': trial_paper, 'msg': msg
                    }
         return my_render_to_response('yaksh/moderator_dashboard.html', context, context_instance=ci)
     return my_redirect('/exam/login/')
@@ -1241,8 +1241,7 @@ def create_demo_course(request):
         msg = "Created Demo course successfully"
     else:
         msg = "Demo course already created"
-    context = {'msg': msg}
-    return my_render_to_response('manage.html', context, context_instance=ci)
+    return prof_manage(request, msg)
 
 
 @login_required
