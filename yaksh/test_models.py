@@ -98,7 +98,6 @@ class QuestionTestCases(unittest.TestCase):
             language='Python',
             type='Code',
             active=True,
-            test_case_type='standardtestcase',
             description='Write a function',
             points=1.0,
             snippet='def myfunc()',
@@ -111,7 +110,6 @@ class QuestionTestCases(unittest.TestCase):
             type='code',
             active=True,
             description='factorial of a no',
-            test_case_type='standardtestcase',
             points=2.0,
             snippet='def fact()',
             user=self.user2
@@ -196,7 +194,6 @@ class QuestionTestCases(unittest.TestCase):
                 self.assertEqual(self.question2.points, q['points'])
                 self.assertTrue(self.question2.active)
                 self.assertEqual(self.question2.snippet, q['snippet'])
-                self.assertEqual(self.question2.test_case_type, q['test_case_type'])
                 self.assertEqual(os.path.basename(que_file.file.path), q['files'][0][0])
                 self.assertEqual([case.get_field_value() for case in test_case], q['testcase'])
         for file in zip_file.namelist():
@@ -861,7 +858,6 @@ class TestCaseTestCases(unittest.TestCase):
             active=True,
             description='Write a function',
             points=1.0,
-            test_case_type="standardtestcase",
             user=self.user,
             snippet='def myfunc()'
         )
@@ -871,7 +867,6 @@ class TestCaseTestCases(unittest.TestCase):
              active=True,
              description='Write to standard output',
              points=1.0,
-             test_case_type="stdiobasedtestcase",
              user=self.user,
              snippet='def myfunc()'
         )

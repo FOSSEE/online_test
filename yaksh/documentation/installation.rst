@@ -73,7 +73,9 @@ Running The Code Server
 
 In a new terminal run the command::
 
-	sudo python /path/to/code_server.py
+	cd /path/to/online_test
+
+	sudo python -m yaksh.code_server
 
 Keep this instance running in the background
 
@@ -93,7 +95,7 @@ Keep this instance running in the background
 
 3. Start a Docker container::
 
-		docker run -d -p 8001:8001 -p 53579:53579 -v /path/to/online_test/yaksh/output:/src/yaksh/output yaksh_code_server:v1
+		docker run -d -p 8001:8001 -p 53579:53579 -v /path/to/online_test/yaksh/data:/src/yaksh/data yaksh_code_server:v1
 
 **Note**:
 	* The default ports on which the code server runs and the pool port on which the former ports are available is specified in online_test/yaksh/settings.py. The code server also supports multiple ports

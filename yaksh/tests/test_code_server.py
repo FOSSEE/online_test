@@ -49,7 +49,7 @@ class TestCodeServer(unittest.TestCase):
 
         # When
         result = self.code_server.run_code(
-            'python', 'standardtestcase', json.dumps(testdata), ''
+            'python', json.dumps(testdata), ''
         )
 
         # Then
@@ -71,7 +71,7 @@ class TestCodeServer(unittest.TestCase):
 
         # When
         result = self.code_server.run_code(
-            'python', 'standardtestcase', json.dumps(testdata), ''
+            'python', json.dumps(testdata), ''
         )
 
         # Then
@@ -92,7 +92,7 @@ class TestCodeServer(unittest.TestCase):
 
         # When
         result = self.code_server.run_code(
-            'python', 'standardtestcase', json.dumps(testdata), ''
+            'python', json.dumps(testdata), ''
         )
 
         # Then
@@ -116,7 +116,7 @@ class TestCodeServer(unittest.TestCase):
                         }]
                     }
             result = self.code_server.run_code(
-                'python', 'standardtestcase', json.dumps(testdata), ''
+                'python', json.dumps(testdata), ''
             )
             results.put(json.loads(result))
 
