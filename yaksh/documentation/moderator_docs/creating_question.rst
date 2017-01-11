@@ -234,6 +234,24 @@ How to write Test cases
 
 		For MCC based question, check the correct checkbox for multiple correct options.
 
+	* **Create Hook based Test Case**
+
+		Select Hook from Add Test Case field.
+
+		In Hook based test case type, moderator is provided with a evaluator function
+		called **check_answer** which is provided with a parameter called **user_answer**.
+
+		**user_answer** is the code of the student in string format.
+
+		A moderator can check the string for specific words in the user answer
+		and/or compile and execute the user answer (using standard python libraries) to 
+		evaluate and hence return the mark fraction.
+
+
+		.. image:: ../images/hook_testcase.jpg
+				:width: 80%
+
+
 
 Features in Question
 --------------------
