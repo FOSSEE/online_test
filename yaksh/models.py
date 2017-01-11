@@ -36,7 +36,7 @@ languages = (
     )
 
 question_types = (
-        ("mcq", "Multiple Choice"),
+        ("mcq", "Single Correct Choice"),
         ("mcc", "Multiple Correct Choices"),
         ("code", "Code"),
         ("upload", "Assignment Upload"),
