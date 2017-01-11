@@ -53,8 +53,10 @@ class HookEvaluator(BaseEvaluator):
         try:
             tb = None
             _tests = compile(self.hook_code, '<string>', mode='exec')
-            exec(_tests, globals())
-            success, err, mark_fraction = check_answer(self.user_answer)
+            hook_scope = {}
+            exec(_tests, hook_scope)
+            check = hook_scope["check_answer"]
+            success, err, mark_fraction = check(self.user_answer)
         except TimeoutException:
             raise
         except Exception:
