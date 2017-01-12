@@ -4,7 +4,7 @@
 
 /* Move down content because we have a fixed navbar that is 50px tall */
 body {
-  padding-top: 50px;
+  padding-top:30px;
 }
 
 
@@ -68,16 +68,20 @@ body {
  */
 
 .main {
-  padding: 20px;
+  padding: 0px;
 }
 @media (min-width: 768px) {
   .main {
-    padding-right: 40px;
-    padding-left: 40px;
+    padding-right: 0px;
+    padding-left: 0px;
   }
 }
-.main .page-header {
+.main {
   margin-top: 0;
+}
+.header {
+  margin: 30px 0 15px;
+  border-bottom: 1px solid #eee;
 }
 
 
@@ -98,4 +102,7 @@ body {
 .placeholder img {
   display: inline-block;
   border-radius: 50%;
+}
+.sidebar-right {
+    float: right;
 }
