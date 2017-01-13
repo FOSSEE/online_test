@@ -76,8 +76,9 @@ function textareaformat()
 	document.getElementById('id_type').setAttribute('class','select-type');
 	document.getElementById('id_points').setAttribute('class','mini-text');
     document.getElementById('id_tags').setAttribute('class','tag-text');
-    
-	
+    $("[id*="+'test_case_args'+"]").attr('placeholder',
+                                         'Command Line arguments for bash only');
+
 	$('#id_snippet').bind('keydown', function( event ){
          if(navigator.userAgent.match("Gecko"))
 		{

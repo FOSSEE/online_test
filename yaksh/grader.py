@@ -100,10 +100,10 @@ class Grader(object):
         self.setup()
         test_case_instances = self.get_evaluator_objects(kwargs)
         with change_dir(self.in_dir):
-            success, error, mark = self.safe_evaluate(test_case_instances)
+            success, error, weight = self.safe_evaluate(test_case_instances)
         self.teardown()
 
-        result = {'success': success, 'error': error, 'weight': mark}
+        result = {'success': success, 'error': error, 'weight': weight}
         return result
 
     # Private Protocol ##########
@@ -144,7 +144,7 @@ class Grader(object):
                 test_case_instance.compile_code()
                 test_case_success, err, mark_fraction = test_case_instance.check_code()
                 if test_case_success:
-                    weight += mark_fraction
+                    weight += mark_fraction * test_case_instance.weight
                 else:
                     error.append(err)
                 test_case_success_status[idx] = test_case_success

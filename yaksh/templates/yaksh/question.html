@@ -142,7 +142,7 @@ function call_skip(url)
                  <div class="panel-heading">
                      <h4><u> {{ question.summary }}
                              {% if question.type == "mcq" %}
-                             (Multiple Choice Questions)
+                             (Single Correct Choice Questions)
                              {% elif question.type == "mcc" %}
                              (Multiple Correct Choices)
                              {% elif question.type == "code" %}
@@ -163,35 +163,13 @@ function call_skip(url)
                  </div>
                  <div class="panel-body">
                      {% if question.type == "mcq" %}
-                    {% if error_message %}
-                        <p>
-                        <div class="panel panel-danger">
-                        <div class="panel-heading">
-                        {% for err in error_message %}
-                            {{ err }}
-                        {% endfor %}
-                        </div>
-                        </div>
-                        </p>
-                     {% endif %}
                      {% for test_case in test_cases %}
-                     <input name="answer" type="radio" value="{{ test_case.options }}" />{{ test_case.options }} <br/>
+                     <input name="answer" type="radio" value="{{ test_case.options }}" />{{ test_case.options|safe }} <br/>
                      {% endfor %}
                      {% endif %}
                      {% if question.type == "mcc" %}
-                    {% if error_message %}
-                        <p>
-                        <div class="panel panel-danger">
-                        <div class="panel-heading">
-                        {% for err in error_message %}
-                            {{ err }}
-                        {% endfor %}
-                        </div>
-                        </div>
-                        </p>
-                     {% endif %}
                      {% for test_case in test_cases %}
-                     <input name="answer" type="checkbox" value="{{ test_case.options }}"> {{ test_case.options }}
+                     <input name="answer" type="checkbox" value="{{ test_case.options }}"> {{ test_case.options|safe }}
                      <br>
                      {% endfor %}
                      {% endif %}

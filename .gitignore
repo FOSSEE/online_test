@@ -42,3 +42,4 @@ migrations
 wsgi.log
 *.sqlite3
 data/
+documentation/_build/

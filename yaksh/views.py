@@ -486,12 +486,12 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         # safely in a separate process (the code_server.py) running as nobody.
         json_data = current_question.consolidate_answer_data(user_answer) \
                         if current_question.type == 'code' else None
-        correct, result = paper.validate_answer(user_answer, current_question, json_data)
-        if correct or result.get('success'):
+        result = paper.validate_answer(user_answer, current_question, json_data)
+        if result.get('success'):
             new_answer.marks = (current_question.points * result['weight'] / 
                 current_question.get_maximum_test_case_weight()) \
                 if current_question.partial_grading and current_question.type == 'code' else current_question.points
-            new_answer.correct = correct
+            new_answer.correct = result.get('success')
             error_message = None
             new_answer.error = json.dumps(result.get('error'))
             next_question = paper.completed_question(current_question.id)

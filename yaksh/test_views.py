@@ -146,9 +146,6 @@ class TestAddQuiz(TestCase):
 
         self.mod_group = Group.objects.create(name='moderator')
         tzone = pytz.timezone('UTC')
-        file_path = os.path.join(os.getcwd(), "Quiz_instructions.txt")
-        with open(file_path, 'r') as file:
-            self.file_data = file.read()
         # Create Moderator with profile
         self.user_plaintext_pass = 'demo'
         self.user = User.objects.create_user(
@@ -187,7 +184,7 @@ class TestAddQuiz(TestCase):
         self.pre_req_quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0, tzone),
             end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
-            duration=30, active=True, instructions=self.file_data,
+            duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
             description='pre requisite quiz', pass_criteria=40,
             language='Python', prerequisite=None,
@@ -197,7 +194,7 @@ class TestAddQuiz(TestCase):
         self.quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
             end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
-            duration=30, active=True, instructions=self.file_data,
+            duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
             language='Python', prerequisite=self.pre_req_quiz,
@@ -274,7 +271,7 @@ class TestAddQuiz(TestCase):
                 'description': 'updated demo quiz',
                 'pass_criteria': 40,
                 'language': 'java',
-                'instructions': self.file_data,
+                'instructions': "Demo Instructions",
                 'prerequisite': self.pre_req_quiz.id,
                 'course': self.course.id
             }
@@ -321,7 +318,7 @@ class TestAddQuiz(TestCase):
                 'description': 'new demo quiz',
                 'pass_criteria': 50,
                 'language': 'python',
-                'instructions': self.file_data,
+                'instructions': "Demo Instructions",
                 'prerequisite': self.pre_req_quiz.id,
                 'course': self.course.id
             }

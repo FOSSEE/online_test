@@ -81,10 +81,6 @@ def has_profile(user):
 def get_upload_dir(instance, filename):
     return "question_%s/%s" % (instance.question.id, filename)
 
-def get_quiz_instructions_info():
-    file_path = os.path.join(os.getcwd(), "Quiz_instructions.txt")
-    with open(file_path, 'r') as file:
-        return file.read()
 
 ###############################################################################
 class CourseManager(models.Manager):
@@ -234,9 +230,6 @@ class Question(models.Model):
     # The type of question.
     type = models.CharField(max_length=24, choices=question_types)
 
-    # The type of evaluator
-    test_case_type = models.CharField(max_length=24, choices=test_case_types)
-
     # Is this question active or not. If it is inactive it will not be used
     # when creating a QuestionPaper.
     active = models.BooleanField(default=True)
@@ -289,7 +282,6 @@ class Question(models.Model):
                       'description': question.description,
                       'points': question.points, 'language': question.language,
                       'type': question.type, 'active': question.active,
-                      'test_case_type': question.test_case_type,
                       'snippet': question.snippet,
                       'testcase': [case.get_field_value() for case in test_case],
                       'files': file_names}
@@ -331,7 +323,7 @@ class Question(models.Model):
         for tc in self.testcase_set.all():
             test_case_type = tc.type
             test_case_ctype = ContentType.objects.get(app_label="yaksh",
-                model=self.test_case_type
+                model=test_case_type
             )
             test_case = test_case_ctype.get_object_for_this_type(
                 question=self,
@@ -550,7 +542,7 @@ class Quiz(models.Model):
     is_trial = models.BooleanField(default=False)
 
     instructions = models.TextField('Instructions for Students',
-                                    default=get_quiz_instructions_info)
+                                    default=None, blank=True, null=True)
 
     view_answerpaper = models.BooleanField('Allow student to view their answer\
                                             paper', default=False)
@@ -1067,29 +1059,25 @@ class AnswerPaper(models.Model):
             For code questions success is True only if the answer is correct.
         """
 
-        result = {'success': True, 'error': ['Incorrect answer'], 'weight': 0.0}
-        correct = False
+        result = {'success': False, 'error': ['Incorrect answer'], 'weight': 0.0}
         if user_answer is not None:
             if question.type == 'mcq':
                 expected_answer = question.get_test_case(correct=True).options
                 if user_answer.strip() == expected_answer.strip():
-                    correct = True
+                    result['success'] = True
                     result['error'] = ['Correct answer']
             elif question.type == 'mcc':
                 expected_answers = []
                 for opt in question.get_test_cases(correct=True):
                     expected_answers.append(opt.options)
                 if set(user_answer) == set(expected_answers):
+                    result['success'] = True
                     result['error'] = ['Correct answer']
-                    correct = True
             elif question.type == 'code':
                 user_dir = self.user.profile.get_user_dir()
-                json_result = code_server.run_code(question.language,
-                        question.test_case_type, json_data, user_dir)
+                json_result = code_server.run_code(question.language, json_data, user_dir)
                 result = json.loads(json_result)
-                if result.get('success'):
-                    correct = True
-        return correct, result
+        return result
 
     def regrade(self, question_id):
         try:
@@ -1114,10 +1102,10 @@ class AnswerPaper(models.Model):
             answer = user_answer.answer
         json_data = question.consolidate_answer_data(answer) \
                             if question.type == 'code' else None
-        correct, result = self.validate_answer(answer, question, json_data)
-        user_answer.correct = correct
+        result = self.validate_answer(answer, question, json_data)
+        user_answer.correct = result.get('success')
         user_answer.error = result.get('error')
-        if correct:
+        if result.get('success'):
             user_answer.marks = (question.points * result['weight'] / 
                 question.get_maximum_test_case_weight()) \
                 if question.partial_grading and question.type == 'code' else question.points
@@ -1151,8 +1139,7 @@ class TestCase(models.Model):
 class StandardTestCase(TestCase):
     test_case = models.TextField()
     weight = models.FloatField(default=1.0)
-    test_case_args = models.TextField(help_text="<b>Command Line arguments for bash only</b>",
-                                      blank=True)
+    test_case_args = models.TextField(blank=True)
 
     def get_field_value(self):
         return {"test_case_type": "standardtestcase",
