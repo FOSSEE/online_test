@@ -76,13 +76,13 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assert_correct_output('AssertionError  in: assert(add(1,2)==3)',
+        self.assert_correct_output('AssertionError  in:\n assert(add(1,2)==3)',
                         result.get('error')
                       )
-        self.assert_correct_output('AssertionError  in: assert(add(-1,2)==1)',
+        self.assert_correct_output('AssertionError  in:\n assert(add(-1,2)==1)',
                         result.get('error')
                       )
-        self.assert_correct_output('AssertionError  in: assert(add(-1,-2)==-3)',
+        self.assert_correct_output('AssertionError  in:\n assert(add(-1,-2)==-3)',
                         result.get('error')
                       )
 
@@ -110,10 +110,10 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertFalse(result.get('success'))
         self.assertEqual(result.get('weight'), 2.0)
-        self.assert_correct_output('AssertionError  in: assert(add(-1,2)==1)',
+        self.assert_correct_output('AssertionError  in:\n assert(add(-1,2)==1)',
                         result.get('error')
                       )
-        self.assert_correct_output('AssertionError  in: assert(add(-1,-2)==-3)',
+        self.assert_correct_output('AssertionError  in:\n assert(add(-1,-2)==-3)',
                         result.get('error')
                       )
 
