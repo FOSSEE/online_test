@@ -533,22 +533,22 @@ class AnswerPaperTestCases(unittest.TestCase):
         )
         self.mcc_based_testcase.save()
 
-    def test_validate_and_regrade_mcc_question(self):
+    def test_validate_and_regrade_mcc_correct_answer(self):
         # Given
         mcc_answer = ['a']
         self.answer = Answer(question=self.question3,
-            answer=mcc_answer,
-        )
+                             answer=mcc_answer,
+                             )
         self.answer.save()
         self.answerpaper.answers.add(self.answer)
 
         # When
         json_data = None
-        correct, result = self.answerpaper.validate_answer(mcc_answer,
-                self.question3, json_data)
+        result = self.answerpaper.validate_answer(mcc_answer,
+                                                  self.question3, json_data
+                                                  )
 
         # Then
-        self.assertTrue(correct)
         self.assertTrue(result['success'])
         self.assertEqual(result['error'], ['Correct answer'])
         self.answer.correct = True
@@ -570,7 +570,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(self.answer.marks, 0)
         self.assertFalse(self.answer.correct)
 
-    def test_validate_and_regrade_mcq_question(self):
+    def test_validate_and_regrade_mcq_correct_answer(self):
         # Given
         mcq_answer = 'a'
         self.answer = Answer(question=self.question2,
@@ -581,11 +581,11 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # When
         json_data = None
-        correct, result = self.answerpaper.validate_answer(mcq_answer,
-                self.question2, json_data)
+        result = self.answerpaper.validate_answer(mcq_answer,
+                                                  self.question2, json_data
+                                                  )
 
         # Then
-        self.assertTrue(correct)
         self.assertTrue(result['success'])
         self.answer.correct = True
         self.answer.marks = 1
@@ -606,6 +606,42 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(self.answer.marks, 0)
         self.assertFalse(self.answer.correct)
 
+
+    def test_mcq_incorrect_answer(self):
+        # Given
+        mcq_answer = 'a'
+        self.answer = Answer(question=self.question2,
+            answer=mcq_answer,
+        )
+        self.answer.save()
+        self.answerpaper.answers.add(self.answer)
+
+        # When
+        json_data = None
+        result = self.answerpaper.validate_answer(mcq_answer,
+                                                  self.question2, json_data
+                                                  )
+
+        # Then
+        self.assertTrue(result['success'])
+
+    def test_mcc_incorrect_answer(self):
+        # Given
+        mcc_answer = ['b']
+        self.answer = Answer(question=self.question3,
+                             answer=mcc_answer,
+                             )
+        self.answer.save()
+        self.answerpaper.answers.add(self.answer)
+
+        # When
+        json_data = None
+        result = self.answerpaper.validate_answer(mcc_answer,
+                                                  self.question3, json_data
+                                                  )
+
+        # Then
+        self.assertFalse(result['success'])
 
     def test_answerpaper(self):
         """ Test Answer Paper"""

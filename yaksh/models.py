@@ -1059,28 +1059,25 @@ class AnswerPaper(models.Model):
             For code questions success is True only if the answer is correct.
         """
 
-        result = {'success': True, 'error': ['Incorrect answer'], 'weight': 0.0}
-        correct = False
+        result = {'success': False, 'error': ['Incorrect answer'], 'weight': 0.0}
         if user_answer is not None:
             if question.type == 'mcq':
                 expected_answer = question.get_test_case(correct=True).options
                 if user_answer.strip() == expected_answer.strip():
-                    correct = True
+                    result['success'] = True
                     result['error'] = ['Correct answer']
             elif question.type == 'mcc':
                 expected_answers = []
                 for opt in question.get_test_cases(correct=True):
                     expected_answers.append(opt.options)
                 if set(user_answer) == set(expected_answers):
+                    result['success'] = True
                     result['error'] = ['Correct answer']
-                    correct = True
             elif question.type == 'code':
                 user_dir = self.user.profile.get_user_dir()
                 json_result = code_server.run_code(question.language, json_data, user_dir)
                 result = json.loads(json_result)
-                if result.get('success'):
-                    correct = True
-        return correct, result
+        return result
 
     def regrade(self, question_id):
         try:
@@ -1105,10 +1102,10 @@ class AnswerPaper(models.Model):
             answer = user_answer.answer
         json_data = question.consolidate_answer_data(answer) \
                             if question.type == 'code' else None
-        correct, result = self.validate_answer(answer, question, json_data)
-        user_answer.correct = correct
+        result = self.validate_answer(answer, question, json_data)
+        user_answer.correct = result.get('success')
         user_answer.error = result.get('error')
-        if correct:
+        if result.get('success'):
             user_answer.marks = (question.points * result['weight'] / 
                 question.get_maximum_test_case_weight()) \
                 if question.partial_grading and question.type == 'code' else question.points
