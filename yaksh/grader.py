@@ -120,7 +120,6 @@ class Grader(object):
         for test_case in test_case_data:
             test_case_instance = create_evaluator_instance(metadata, test_case)
             test_case_instances.append(test_case_instance)
-
         return test_case_instances
 
 

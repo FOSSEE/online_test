@@ -507,5 +507,334 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
         self.assertTrue(result.get("success"))
 
 
+class JavaHookEvaluationTestCases(EvaluatorBaseTest):
+
+    def setUp(self):
+        self.f_path = os.path.join(tempfile.gettempdir(), "test.txt")
+        with open(self.f_path, 'wb') as f:
+            f.write('2'.encode('ascii'))
+        tmp_in_dir_path = tempfile.mkdtemp()
+        self.in_dir = tmp_in_dir_path
+        self.file_paths = None
+        gd.SERVER_TIMEOUT = 9
+        self.timeout_msg = ("Code took more than {0} seconds to run. "
+            "You probably have an infinite loop in"
+            " your code.").format(gd.SERVER_TIMEOUT)
+
+    def tearDown(self):
+        gd.SERVER_TIMEOUT = 4
+        os.remove(self.f_path)
+        shutil.rmtree(self.in_dir)
+
+    def test_correct_answer(self):
+        # Given
+        user_answer = dedent("""\
+                             class Test
+                             {public static void main(String[] args){
+                             System.out.print("Hello, world!");
+                             }}
+                             """)
+        hook_code = dedent("""\
+                            def check_answer(user_answer):
+                                with open("Test.java", "w+") as f:
+                                    f.write(user_answer)
+                                import subprocess
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                def _run_command(cmd):
+                                    proc = subprocess.Popen("{}".format(cmd),
+                                                            shell=True,
+                                                            stdout=subprocess.PIPE,
+                                                            stderr=subprocess.PIPE
+                                                            )
+                                    stdout,stderr = proc.communicate()
+                                    return stdout,stderr
+                                cmds = ["javac Test.java", "java Test"]
+                                for cmd in cmds:
+                                    stdout, stderr = _run_command(cmd)
+                                if stdout.decode("utf-8") == "Hello, world!":
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code,"weight": 1.0
+                            }]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'java'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
+
+    def test_incorrect_answer(self):
+        # Given
+        user_answer = dedent("""\
+                             class Test
+                             {public static void main(String[] args){
+                             System.out.print("Goodbye, world!");
+                             }}
+                             """)
+        hook_code = dedent("""\
+                            def check_answer(user_answer):
+                                with open("Test.java", "w+") as f:
+                                    f.write(user_answer)
+                                import subprocess
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                def _run_command(cmd):
+                                    proc = subprocess.Popen("{}".format(cmd),
+                                                            shell=True,
+                                                            stdout=subprocess.PIPE,
+                                                            stderr=subprocess.PIPE
+                                                            )
+                                    stdout,stderr = proc.communicate()
+                                    return stdout,stderr
+                                cmds = ["javac Test.java", "java Test"]
+                                for cmd in cmds:
+                                    stdout, stderr = _run_command(cmd)
+                                if stdout.decode("utf-8") == "Hello, world!":
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code,"weight": 1.0
+                            }]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'java'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertFalse(result.get('success'))
+        self.assert_correct_output('Incorrect Answer', result.get('error'))
+    
+    def test_assert_with_hook(self):
+        # Given
+        user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a;\n\t}\n}"
+        assert_test_case = dedent("""
+            class main
+            {
+                public static <E> void check(E expect, E result)
+                {
+                    if(result.equals(expect))
+                    {
+                        System.out.println("Correct:Output expected "+expect+" and got "+result);
+                    }
+                else
+                {
+                    System.out.println("Incorrect:Output expected "+expect+" but got "+result);
+                    System.exit(1);
+                }
+                }
+                public static void main(String arg[])
+                {
+                   Test t = new Test();
+                   int result, input, output;
+                   input = 0; output = 0;
+                   result = t.square_num(input);
+                   System.out.println("Input submitted to the function: "+input);
+                   check(output, result);
+                   input = 5; output = 25;
+                   result = t.square_num(input);
+                   System.out.println("Input submitted to the function: "+input);
+                   check(output, result);
+                   input = 6; output = 36;
+                   result = t.square_num(input);
+                   System.out.println("Input submitted to the function: "+input);
+                   check(output, result);
+                }
+            }
+            """)
+        
+        hook_code = dedent("""\
+                            def check_answer(user_answer):
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                if "return a*a" in user_answer:
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+
+
+        test_case_data = [{"test_case_type": "standardtestcase",
+                           "test_case": assert_test_case,
+                           'weight': 1.0
+                           },
+                          {"test_case_type": "hooktestcase",
+                           "hook_code": hook_code, 'weight': 1.0},
+                          ]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': True,
+                    'language': 'java'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
+        self.assertEqual(result.get("weight"), 2.0)
+
+    def test_multiple_hooks(self):
+        # Given
+        user_answer = dedent("""\
+                             class Test
+                             {public static void main(String[] args){
+                             System.out.print("Hello, world!");
+                             }}
+                             """)
+        
+        hook_code_1 = dedent("""\
+                            def check_answer(user_answer):
+                                with open("Test.java", "w+") as f:
+                                    f.write(user_answer)
+                                import subprocess
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                def _run_command(cmd):
+                                    proc = subprocess.Popen("{}".format(cmd),
+                                                            shell=True,
+                                                            stdout=subprocess.PIPE,
+                                                            stderr=subprocess.PIPE
+                                                            )
+                                    stdout,stderr = proc.communicate()
+                                    return stdout,stderr
+                                cmds = ["javac Test.java", "java Test"]
+                                for cmd in cmds:
+                                    stdout, stderr = _run_command(cmd)
+                                if stdout.decode("utf-8") == "Hello, world!":
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+
+        hook_code_2 = dedent("""\
+                             def check_answer(user_answer):
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                if 'System.out.print("Hello, world!");' in user_answer:
+                                    success, err, mark_fraction = True, "", 0.5
+                                return success, err, mark_fraction
+                            """
+                            )
+
+
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code_1, 'weight': 1.0},
+                          {"test_case_type": "hooktestcase",
+                           "hook_code": hook_code_2, 'weight': 1.0},
+                          ]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': True,
+                    'language': 'java'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
+        self.assertEqual(result.get("weight"), 1.5)
+        
+    def test_infinite_loop(self):
+        # Given
+        user_answer = dedent("""\
+                             class Test
+                             {public static void main(String[] args){
+                             while(0==0)
+                            {
+                            System.out.print("a");}
+                            }}""")
+
+        hook_code = dedent("""\
+                            def check_answer(user_answer):
+                                with open("Test.java", "w+") as f:
+                                    f.write(user_answer)
+                                import subprocess
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                def _run_command(cmd):
+                                    proc = subprocess.Popen("{}".format(cmd),
+                                                            shell=True,
+                                                            stdout=subprocess.PIPE,
+                                                            stderr=subprocess.PIPE
+                                                            )
+                                    stdout,stderr = proc.communicate()
+                                    return stdout,stderr
+                                cmds = ["javac Test.java", "java Test"]
+                                for cmd in cmds:
+                                    stdout, stderr = _run_command(cmd)
+                                if stdout.decode("utf-8") == "Hello, world!":
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+
+        
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code,"weight": 1.0
+                            }]
+
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'java'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertFalse(result.get('success'))
+        self.assert_correct_output(self.timeout_msg, result.get('error'))
+
+
 if __name__ == '__main__':
     unittest.main()
