@@ -609,7 +609,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
     def test_mcq_incorrect_answer(self):
         # Given
-        mcq_answer = 'a'
+        mcq_answer = 'b'
         self.answer = Answer(question=self.question2,
             answer=mcq_answer,
         )
@@ -623,7 +623,7 @@ class AnswerPaperTestCases(unittest.TestCase):
                                                   )
 
         # Then
-        self.assertTrue(result['success'])
+        self.assertFalse(result['success'])
 
     def test_mcc_incorrect_answer(self):
         # Given

@@ -1,23 +1,16 @@
-{% extends "base.html" %}
+{% extends "exam.html" %}
 {% load custom_filters %}
 
-{% block nav %}
-<nav class="navbar navbar-fixed-top">
-      <div class="container">
-        <div class="navbar-header">
-      </div>
-
-        <div id="navbar">
-            <div class="time-div" id="time_left"></div>
-          </ul>
-        </div><!-- /.navbar -->
-      </div><!-- /.container -->
-    </nav><!-- /.navbar -->
-{% endblock %}
-{% block pagetitle %} Yaksh Online Test {% endblock pagetitle %}
+{% block pagetitle %} {{ paper.question_paper.quiz.description }} {% endblock pagetitle %}
 {% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question.css" type="text/css" />
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/codemirror/lib/codemirror.css" type="text/css" />
+<style>
+    .CodeMirror{
+        border-style: groove;
+    }
+</style>
 {% endblock %}
 
 {% block script %}
@@ -95,43 +88,52 @@ function call_skip(url)
     form.submit();
 }
 </script>
+<script>
+    $(document).ready(function(){
+  // Codemirror object, language modes and initial content
+  // Get the textarea node
+  var textarea_node = document.querySelector('#answer');
+
+  var lang = "{{ question.language }}"
+  var mode_dict = {
+    'python': 'python',
+    'c': 'text/x-csrc',
+    'cpp': 'text/x-c++src',
+    'java': 'text/x-java',
+    'bash': 'text/x-sh',
+    'scilab': 'text/x-csrc'
+  }
+
+  // Code mirror Options
+  var options = {
+      mode: mode_dict[lang],
+      gutter: true,
+      lineNumbers: true,
+      onChange: function (instance, changes) {
+          render();
+      }
+  };
+
+  // Initialize the codemirror editor
+  var editor = CodeMirror.fromTextArea(textarea_node, options);
+
+  // Setting code editors initial content
+  editor.setValue('{{ last_attempt|escape_quotes|safe }}')
+
+  function reset_editor() {
+      editor.setValue('{{ last_attempt|escape_quotes|safe }}');
+      editor.clearHistory();
+  }
+
+
+    });
+</script>
 
 {% endblock script %}
 
 {% block onload %} onload="updateTime();" {% endblock %}
 
-{% block content %}
-<div class="row">
-    <div class="col-md-6">
-        <ul class="pagination pagination-lg">
-            {% for qid in paper.questions.all %}
-                {% if qid in paper.questions_unanswered.all %}
-                {% if qid.id == question.id %}
-                <li class="active"><a href="#"data-toggle="tooltip"
-                title="{{ qid.description|striptags }}"
-                onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
-                    {% else %}
-                    <li><a href="#" data-toggle="tooltip" title="{{ qid.description|striptags }}"
-                    onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
-                    {% endif %}
-                {% endif %}
-                {% if qid in paper.questions_answered.all %}
-                    <li class="disabled"><a style="background-color:#B4B8BA" href="#" data-toggle="tooltip" title="{{ qid.description }}" >{{ forloop.counter }}</a></li>
-                {% endif %}
-            {% endfor %}
-        </ul>
-    </div>
-    <div class="col-md-5">
-        <h3>{{ paper.questions_left }} question(s) left in {{ paper.question_paper.quiz.description }}</h3>
-    </div>
-    <div class="col-md-1">
-<form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" class="pull-right">
-        {% csrf_token %}
-        <button class="btn btn-danger " type="submit" name="quit">Quit Exam <span class="glyphicon glyphicon-off"></span></button>
-</form>
-    </div>
-
-</div>
+{% block main %}
          <p id="status"></p>
          <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" enctype="multipart/form-data">
          {% csrf_token %}
@@ -178,13 +180,13 @@ function call_skip(url)
                      {% endif %}
                      {% if question.type == "code" %}
                      <div class="row">
-                         <div class="col-md-2">
-                             <h4>Program:</h4>
+                         <div class="col-md-9">
+                             <h4>Write your program below:</h4>
                          </div>
-                         <div class="col-md-10">
+                         <div class="col-md-3">
                              <a href="#" class="pull-right" onclick="reset_editor()" name="reset" id="reset">Reset Answer <span class="glyphicon glyphicon-refresh"></span></a>
                              </div>
-     </div>
+                    </div>
                      <textarea name="answer" id="answer"></textarea>
                      <br>
                      {% endif %}
@@ -201,28 +203,10 @@ function call_skip(url)
          <button class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')" name="skip" id="skip">Attempt Later <span class="glyphicon glyphicon-arrow-right"></span></button>
          {% endif %}
          </div>
-     {% if question.type == "code" %}
-                     <div class="panel-footer">
-
-     {% if error_message %}
-      {% for error in error_message %}
-      {% if error == "Correct answer" %}
-              <div class="panel panel-success">
-          {% else %}
-              <div class="panel panel-danger">
-          {% endif %}
-      <div class="panel-heading">Testcase No. {{ forloop.counter }}</div>
-      <div class="panel-body"><pre><code>{{ error }}</code></pre></div>
-      </div>
-      {% endfor %}
-
-      {% endif %}
-     </div>
-     {% endif %}
                  </div>
              </div>
 
-             </form>
+         </form>
     <!-- Modal -->
     <div class="modal fade " id="upload_alert" >
       <div class="modal-dialog">
@@ -239,44 +223,7 @@ function call_skip(url)
         </div>
       </div>
    </div>
+{% endblock main %}
 
-<script>
-  // Codemirror object, language modes and initial content
-  // Get the textarea node
-  var textarea_node = document.querySelector('#answer');
 
-  var lang = "{{ question.language }}"
-  var mode_dict = {
-    'python': 'python',
-    'c': 'text/x-csrc',
-    'cpp': 'text/x-c++src',
-    'java': 'text/x-java',
-    'bash': 'text/x-sh',
-    'scilab': 'text/x-csrc'
-  }
 
-  // Code mirror Options
-  var options = {
-      mode: mode_dict[lang],
-      gutter: true,
-      lineNumbers: true,
-   
-      onChange: function (instance, changes) {
-          render();
-      }
-  };
-
-  // Initialize the codemirror editor
-  var editor = CodeMirror.fromTextArea(textarea_node, options);
-
-  // Setting code editors initial content
-  editor.setValue('{{ last_attempt|escape_quotes|safe }}')
-
-  function reset_editor() {
-      editor.setValue('{{ last_attempt|escape_quotes|safe }}');
-      editor.clearHistory();
-  }
-
-</script>
-
-{% endblock content %}

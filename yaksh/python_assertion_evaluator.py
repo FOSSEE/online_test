@@ -77,7 +77,7 @@ class PythonAssertionEvaluator(BaseEvaluator):
             fname, lineno, func, text = info[-1]
             text = str(self.test_case)
             err = "Expected Test Case:\n{0}\n" \
-                "Error - {1} {2} in: {3}\n".format(
+                "Error - {1} {2} in:\n {3}\n".format(
                     self.test_case,
                     type.__name__,
                     str(value),

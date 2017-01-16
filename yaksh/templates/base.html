@@ -18,14 +18,9 @@
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/font-awesome.css" type="text/css" />
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/sticky-footer.css" type="text/css" />
+  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
 
 
-  <style>
-    body {
-        padding-top: 20px;
-        padding-bottom: 20px;
-    }
-    </style>
   {% block meta %}
   <meta charset="utf-8">
   <meta name="description" content="">
@@ -45,15 +40,11 @@
   {% endblock %}
   <div class="container">
      <div class="content">
-         <div class="page-header">
+         <div class="header">
              <h3><center>{% block pagetitle %}{% endblock pagetitle %}</center></h2>
          </div>
-         <div class=row>
-            <div class=col-md-12>
 	       {% block content %}
 	       {% endblock %}
-            </div>
-         </div>
      </div>
      <footer class="footer">
      <div class="container">

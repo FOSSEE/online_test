@@ -1,20 +1,13 @@
-{% extends "manage.html" %}
-
-{% block formtitle %} Please fill in the following details {% endblock %}
-
-{% block content %}
-{% if msg %}
-<center><h5>Your profile does not exist. Please fill in your details</h5></center>
-{% endif %}
+{% extends template  %}
+{% block pagetitle %} Please fill in the following details {% endblock %}
+{% block main %}
 <form action="{{URL_ROOT}}/exam/editprofile/" method="post" >
   {% csrf_token %}
   <center>
-  <table class="span1">
+  <table class="table table-bordered">
   {{ form.as_table }}
   </table>
   </center>
-  <center><button class="btn" type="submit">Save</button>
-  <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/");'>Cancel</button> </center>
+  <button class="btn btn-primary pull-right" type="submit">Save Profile</button>
 </form>
-
-{% endblock content %}
+{% endblock main %}

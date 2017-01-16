@@ -1,12 +1,8 @@
-{% extends "base.html" %}
+{% extends template %}
 
-{% block pagetitle %} My Profile {% endblock %}
-{% block content %}
-<ul>
-  <a class="btn btn-primary" href="{{ URL_ROOT }}/exam/editprofile/">Edit Profile</a>
-  <a class="btn btn-primary" href="{{ URL_ROOT }}/exam/">Back to Home</a>
-</ul>
-  <table class="table">
+{% block pagetitle %} Profile {% endblock %}
+{% block main %}
+  <table class="table table-bordered">
   <tr>
     <th><label for="id_first_name"><h5>First name:</h5></label></th>
     <th><label for="id_first_name"><h5>{{ user.first_name }}</h5></label></th>
@@ -36,4 +32,5 @@
     <th><label for="id_position"><h5>{{ user.profile.position }}</h5></label></th>
   </tr>
   </table>
+  <a class="btn btn-primary pull-right" href="{{ URL_ROOT }}/exam/editprofile/">Edit Profile</a>
 {% endblock %}
