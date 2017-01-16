@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import django
 import subprocess
 import contextlib
 import os
@@ -8,14 +9,17 @@ import argparse
 from importlib import import_module
 from django.conf import settings
 from django.core import management
-from django.template import Template, Context, loader
+from django.template import Template, Context
 
-from project_detail import NAME, PATH 
+from .project_detail import NAME, PATH
 
 CUR_DIR = os.getcwd()
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 PARENT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
 TEMPLATE_DIR = path.join(PARENT_DIR, 'demo_templates')
+
+settings.configure()
+django.setup()
 
 def main():
     #Parse command-line to obtain the arguments and/or options
@@ -72,7 +76,7 @@ def create_demo(project_name='yaksh_demo', project_dir=CUR_DIR):
         management.call_command('startproject', project_name, project_dir)
         print("Demo Django project '{0}' created at '{1}'".format(project_name,
                                                                 project_dir))
-    except Exception, e:
+    except Exception as e:
         print("Error: {0}\nExiting yaksh Installer".format(e))
 
     if project_dir is None:
@@ -95,7 +99,7 @@ def create_demo(project_name='yaksh_demo', project_dir=CUR_DIR):
                                         'fixture_dir': fixture_dir})
         urls_template_path = path.join(TEMPLATE_DIR, 'demo_urls.py')
         urls_target_path = path.join(project_path, 'demo_urls.py')
-        command = ("python ../manage.py syncdb "
+        command = ("python ../manage.py migrate --run-syncdb "
                         "--noinput --settings={0}.demo_settings").format(project_name)
 
         loaddata_command = ("python ../manage.py loaddata "
@@ -132,10 +136,8 @@ def _render_demo_files(template_path, output_path, context=None):
     with open(template_path, 'r') as template_file:
         content = template_file.read()
         if context:
-            content = content.decode('utf-8')
             template = Template(content)
             content = template.render(context)
-            content = content.encode('utf-8')
 
     with open(output_path, 'w') as new_file:
         new_file.write(content)
