@@ -130,7 +130,14 @@ Status : <b style="color: green;"> Passed </b><br/>
             {% if question.type == "mcq" or question.type == "mcc" %}
                 <h5> <u>Choices:</u></h5>
                 {% for testcase in question.get_test_cases %}
-                    <br/><strong>{{ forloop.counter }}. {{ testcase.options|safe }}</strong>
+                    {% if testcase.correct %}
+                    <br/><strong><mark style="background-color:#4cff00">
+                    {{ forloop.counter }}. {{ testcase.options|safe }}
+                    </mark></strong>
+                    {% else %}
+                    <br/><strong>
+                    {{ forloop.counter }}. {{ testcase.options|safe }}</strong>
+                    {% endif %}
                     {% endfor %}
             {% else %}
                 <h5> <u>Test cases: </u></h5>

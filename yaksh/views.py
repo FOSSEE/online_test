@@ -1291,21 +1291,27 @@ def download_course_csv(request, course_id):
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('The question paper does not belong to your course')
     students = course.get_only_students().values("id", "first_name", "last_name")
-    quizzes = Quiz.objects.filter(course=course)
+    quizzes = Quiz.objects.filter(course=course, is_trial=False)
+    
     for student in students:
         total_course_marks = 0.0
+        user_course_marks = 0.0
         for quiz in quizzes:
             quiz_best_marks = AnswerPaper.objects.get_user_best_of_attempts_marks\
                                (quiz, student["id"])
-            total_course_marks += quiz_best_marks
+            user_course_marks += quiz_best_marks
+            total_course_marks += quiz.questionpaper_set.values_list\
+                                    ("total_marks", flat=True)[0]
             student["{}".format(quiz.description)] = quiz_best_marks
-        student["total"] = total_course_marks
+        student["total_scored"] = user_course_marks
+        student["out_of"] = total_course_marks
+        
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(
                                       (course.name).lower().replace('.', ''))
     header = ['first_name', 'last_name']+[quiz.description for quiz in quizzes]\
-            + ['total']
+            + ['total_scored', 'out_of']
     writer = csv.DictWriter(response,fieldnames=header, extrasaction='ignore')
     writer.writeheader()
     for student in students:
