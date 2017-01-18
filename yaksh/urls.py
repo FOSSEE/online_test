@@ -113,4 +113,6 @@ urlpatterns += [
             views.regrade, name='regrade'),
     url(r'^manage/(?P<mode>[\w\-]+)/(?P<quiz_id>\d+)/$', views.test_quiz),
     url(r'^manage/create_demo_course/$', views.create_demo_course),
+    url(r'^manage/courses/download_course_csv/(?P<course_id>\d+)/$',
+        views.download_course_csv),
 ]

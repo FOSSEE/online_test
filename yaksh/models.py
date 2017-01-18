@@ -221,6 +221,12 @@ class Course(models.Model):
             success = False
         return success
 
+    def get_only_students(self):
+        teachers = list(self.teachers.all().values_list("id", flat=True))
+        teachers.append(self.creator.id)
+        students = self.students.exclude(id__in=teachers)
+        return students
+
     def __str__(self):
         return self.name
 
@@ -900,6 +906,13 @@ class AnswerPaperManager(models.Manager):
         data['questionpaperid'] = questionpaper_id
         return data
 
+    def get_user_best_of_attempts_marks(self, quiz, user_id):
+        best_attempt = 0.0
+        papers = self.filter(question_paper__quiz=quiz,
+                             user=user_id).values("marks_obtained")
+        if papers:
+            best_attempt = max([marks["marks_obtained"] for marks in papers])
+        return best_attempt
 
 ###############################################################################
 class AnswerPaper(models.Model):
