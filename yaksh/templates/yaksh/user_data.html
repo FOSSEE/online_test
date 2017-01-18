@@ -67,10 +67,9 @@ User IP address: {{ paper.user_ip }}
                 <h5> <u>Choices:</u></h5>
                 {% for testcase in question.get_test_cases %}
                     {% if testcase.correct %}
-                        <br/><strong><mark style="background-color:#4cff00">
-                        {{ forloop.counter }}. {{ testcase.options|safe }}
-                        </mark>
-                        </strong>
+                        <br/>
+                        <strong>{{ forloop.counter }}. {{ testcase.options|safe }}</strong>
+                        <span class="label label-success"> Correct </span>
                         {% else %}
                         <br/><strong>
                         {{ forloop.counter }}. {{ testcase.options|safe }}</strong>

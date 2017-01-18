@@ -227,7 +227,6 @@ class Course(models.Model):
         students = self.students.exclude(id__in=teachers)
         return students
 
-
     def __str__(self):
         return self.name
 
@@ -914,8 +913,6 @@ class AnswerPaperManager(models.Manager):
         if papers:
             best_attempt = max([marks["marks_obtained"] for marks in papers])
         return best_attempt
-
-
 
 ###############################################################################
 class AnswerPaper(models.Model):

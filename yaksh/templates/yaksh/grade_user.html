@@ -101,7 +101,7 @@ Status : <b style="color: green;"> Passed </b><br/>
     {% with answers|last as answer %}
         <tr>
         <td>{{ question.id }}</td>
-        <td>{{ answer.marks }}</td>
+        <td>{{ answer.answer.marks }}</td>
         </tr>
     {% endwith %}
     {% endfor %}
@@ -131,9 +131,9 @@ Status : <b style="color: green;"> Passed </b><br/>
                 <h5> <u>Choices:</u></h5>
                 {% for testcase in question.get_test_cases %}
                     {% if testcase.correct %}
-                    <br/><strong><mark style="background-color:#4cff00">
-                    {{ forloop.counter }}. {{ testcase.options|safe }}
-                    </mark></strong>
+                    <br/>
+                    <strong>{{ forloop.counter }}. {{ testcase.options|safe }}</strong>
+                    <span class="label label-success"> Correct </span>
                     {% else %}
                     <br/><strong>
                     {{ forloop.counter }}. {{ testcase.options|safe }}</strong>
@@ -166,7 +166,7 @@ Status : <b style="color: green;"> Passed </b><br/>
     {% with answers|last as answer %}
     Marks: <input id="q{{ question.id }}" type="text" 
         name="q{{ question.id }}_marks" size="4"
-        value="{{ answer.0.marks }}"><br><br>
+        value="{{ answer.answer.marks }}"><br><br>
     {% endwith %}
     <hr/>
     {% endfor %} {# for question, answers ... #}
