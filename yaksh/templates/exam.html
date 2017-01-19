@@ -26,7 +26,7 @@
     </nav><!-- /.navbar -->
 {% endblock %}
 {% block content %}
-<div class="row">
+<div class="container-fluid">
     <div class="col-sm-3 col-md-2 sidebar">
         <p> Question Navigator </p>
         <ul class="pagination pagination-sm">
@@ -50,13 +50,13 @@
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
             <div class="row">
-                <div class="col-md-8">
+                <div class="row">
                 {% block main %}
                 {% endblock %}
             </div>
             {% if question.type == 'code' %}
                 {% if error_message %}
-                    <div class="col-md-4">
+                    <div class="row">
       {% for error in error_message %}
       {% if error == "Correct answer" %}
               <div class="panel panel-success">
