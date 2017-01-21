@@ -1185,7 +1185,7 @@ class StdIOBasedTestCase(TestCase):
 
 
 class McqTestCase(TestCase):
-    options = models.CharField(max_length=100)
+    options = models.TextField(default=None)
     correct = models.BooleanField(default=False)
 
     def get_field_value(self):
