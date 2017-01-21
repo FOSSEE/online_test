@@ -10,7 +10,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.http import Http404
-from django.db.models import Sum, Max, Q
+from django.db.models import Sum, Max, Q, F
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
@@ -1290,7 +1290,13 @@ def download_course_csv(request, course_id):
     course = get_object_or_404(Course,pk=course_id)
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('The question paper does not belong to your course')
-    students = course.get_only_students().values("id", "first_name", "last_name")
+    students = course.get_only_students().annotate(roll_number=F('profile__roll_number'),
+                                                   institute=F('profile__institute')
+                                                    )\
+                                         .values("id", "first_name", "last_name",
+                                                 "email","institute",
+                                                 "roll_number"
+                                                 )
     quizzes = Quiz.objects.filter(course=course, is_trial=False)
     
     for student in students:
@@ -1310,8 +1316,8 @@ def download_course_csv(request, course_id):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(
                                       (course.name).lower().replace('.', ''))
-    header = ['first_name', 'last_name']+[quiz.description for quiz in quizzes]\
-            + ['total_scored', 'out_of']
+    header = ['first_name', 'last_name', "roll_number","email", "institute"]\
+            +[quiz.description for quiz in quizzes] + ['total_scored', 'out_of']
     writer = csv.DictWriter(response,fieldnames=header, extrasaction='ignore')
     writer.writeheader()
     for student in students:
