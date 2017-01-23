@@ -146,6 +146,7 @@ class Course(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     teachers = models.ManyToManyField(User, related_name='teachers')
     is_trial = models.BooleanField(default=False)
+    instructions = models.TextField(null=True, blank=True)
     objects = CourseManager()
 
     def request(self, *users):
@@ -232,9 +233,8 @@ class Course(models.Model):
 
 ###############################################################################
 class ConcurrentUser(models.Model):
-    concurrent_user = models.OneToOneField(User, null=False)
-    session_key = models.CharField(null=False, max_length=40)
-
+    concurrent_user = models.OneToOneField(User)
+    session_key = models.CharField(max_length=40)
 
 ###############################################################################
 class Profile(models.Model):

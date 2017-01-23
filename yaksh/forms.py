@@ -266,9 +266,11 @@ class QuestionFilterForm(forms.Form):
 
 
 class CourseForm(forms.ModelForm):
+    """ course form for moderators """
+
     class Meta:
         model = Course
-        fields = ['name', 'active', 'enrollment']
+        fields = ['name', 'active', 'enrollment', 'instructions']
 
 
 class ProfileForm(forms.ModelForm):
