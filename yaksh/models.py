@@ -146,7 +146,7 @@ class Course(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     teachers = models.ManyToManyField(User, related_name='teachers')
     is_trial = models.BooleanField(default=False)
-    instructions = models.TextField(null=True, blank=True)
+    instructions = models.TextField(default=None, null=True, blank=True)
     objects = CourseManager()
 
     def request(self, *users):

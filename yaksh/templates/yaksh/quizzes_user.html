@@ -61,6 +61,7 @@
         {% endif %}
         </div>
 
+        {% if course.instructions %}
         <div class="row">
         <div class="panel-group">
           <div class="panel panel-default">
@@ -70,11 +71,12 @@
               </h4>
             </div>
             <div id="collapse{{ forloop.counter }}" class="panel-collapse collapse">
-              <div class="panel-body"> {{ course.instructions }}</div>
+              <div class="panel-body"> {{ course.instructions|safe }}</div> 
             </div>
           </div>
         </div>
         </div>
+        {% endif %}
     </div>
 </div><!--/row-->
  </br>
