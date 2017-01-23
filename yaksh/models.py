@@ -572,7 +572,6 @@ class Quiz(models.Model):
                                         end_date_time=timezone.now() + timedelta(176590),
                                         duration=30, active=True,
                                         attempts_allowed=-1,
-                                        instructions=instructions_data,
                                         time_between_attempts=0,
                                         description='Yaksh Demo quiz', pass_criteria=0,
                                         language='Python', prerequisite=None,
