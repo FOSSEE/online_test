@@ -60,6 +60,23 @@
             </table>
         {% endif %}
         </div>
+
+        {% if course.instructions %}
+        <div class="row">
+        <div class="panel-group">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" href="#collapse{{ forloop.counter }}">Course Instructions</a>
+              </h4>
+            </div>
+            <div id="collapse{{ forloop.counter }}" class="panel-collapse collapse">
+              <div class="panel-body"> {{ course.instructions|safe }}</div> 
+            </div>
+          </div>
+        </div>
+        </div>
+        {% endif %}
     </div>
 </div><!--/row-->
  </br>
