@@ -84,36 +84,37 @@ User IP address: {{ paper.user_ip }}
         </div>
     </div>
     {% if question.type == "mcq" or question.type == "mcc" %}
-        {% if "Correct answer" in answers.0.error %}
+        {% if "Correct answer" in answers.0.error_list %}
             <div class="panel panel-success">
         {% else %}
             <div class="panel panel-danger">
         {% endif %}
             <div class="panel-heading">
-                Autocheck: {{ answers.0.error }}
+                Autocheck: {{ answers.0.error_list.0 }}
             </div>
             <div class="panel-body">
                 <h5><u>Student answer:</u></h5>
-                 <pre><code>{{forloop.counter}}. {{ answers.0 }}</code></pre>
+                 <pre><code>{{forloop.counter}}. {{ answers.0.answer }}</code></pre>
             </div>
             </div>
     {% else %}
     <h5>Student answer: </h5>
     {% for answer in answers %}
     {% if not answer.skipped %}
-    {% if answer.correct %}
+    {% if answer.answer.correct %}
             <div class="panel panel-success">
+            <div class="panel-heading">Correct answer
         {% else %}
             <div class="panel panel-danger">
-        {% endif %}
-    <div class="panel-heading">
-        {% for error in error %}
-        <div class="panel-body">
-            <pre><code>{{ error }}</code></pre>
-        </div>
+            <div class="panel-heading">Error
+        
+        {% for error in answer.error_list %}
+        <div><pre><code>{{ error }}</code></pre></div>
         {% endfor %}
+        {% endif %}    
+    
     </div>
-    <div class="panel-body"><pre><code>{{ answer.answer.strip }}</code></pre></div>
+    <div class="panel-body"><pre><code>{{ answer.answer.answer.strip }}</code></pre></div>
     </div>
     {% endif %}
     {% endfor %}

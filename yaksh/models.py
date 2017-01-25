@@ -68,43 +68,6 @@ test_status = (
                 ('completed', 'Completed'),
               )
 
-instructions_data = dedent("""\
-        <p>
-        This examination system has been developed with the intention of
-        making you learn programming and be assessed in an interactive and
-        fun manner. You will be presented with a series of programming questions
-        and problems that you will answer online and get immediate
-        feedback for.
-        </p>
-        <p>
-        Here are some important instructions and rules that you should
-        understand carefully.</p>
-        <ul>
-        <li>For any programming questions, you can submit solutions as many
-        times as you want without a penalty. You may skip questions
-        and solve them later.</li>
-        <li> You <strong>may</strong> use your computer's Python/IPython
-        shell or an editor to solve the problem and cut/paste the
-        solution to the web interface.
-        </li>
-        <li> <strong>You are not allowed to use any internet resources,
-        i.e. no google etc.</strong>
-        </li>
-        <li> Do not copy or share the questions or answers with anyone
-        until the exam is complete <strong>for everyone</strong>.
-        </li>
-        <li> <strong>All</strong> your attempts at the questions are logged.
-        Do not try to outsmart and break the testing system.
-        If you do, we know who you are and we will expel you from the
-        course. You have been warned.
-        </li>
-        </ul>
-        <p>
-        We hope you enjoy taking this
-        exam !!!
-        </p>
-        """)
-
 def get_assignment_dir(instance, filename):
     return '%s/%s/%s' % (instance.user.user, instance.assignmentQuestion.id, filename)
 
@@ -609,7 +572,6 @@ class Quiz(models.Model):
                                         end_date_time=timezone.now() + timedelta(176590),
                                         duration=30, active=True,
                                         attempts_allowed=-1,
-                                        instructions=instructions_data,
                                         time_between_attempts=0,
                                         description='Yaksh Demo quiz', pass_criteria=0,
                                         language='Python', prerequisite=None,
@@ -1222,7 +1184,7 @@ class StdIOBasedTestCase(TestCase):
 
 
 class McqTestCase(TestCase):
-    options = models.CharField(max_length=100)
+    options = models.TextField(default=None)
     correct = models.BooleanField(default=False)
 
     def get_field_value(self):

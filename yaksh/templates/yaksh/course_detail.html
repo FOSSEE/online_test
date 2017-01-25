@@ -8,6 +8,11 @@
 <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/course.js"></script>
 {% endblock %}
 {% block content %}
+<br/>
+<div class="pull-right">
+            <a class="btn btn-primary" href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">{% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}</a>
+</div>
+<br/>
 <div class="row">
     <div class="col-md-6">
         <center><b><u>Requests</u></b></center><br>
@@ -82,7 +87,5 @@
         </form>
     </div>
 </div>
-<div class="pull-right">
-            <a class="btn btn-primary" href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">{% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}</a>
-</div>
+
 {% endblock %}
