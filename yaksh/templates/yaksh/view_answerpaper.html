@@ -61,17 +61,17 @@
         </div>
     </div>
     {% if question.type == "mcq" or question.type == "mcc" %}
-        {% if "Correct answer" in answers.0.error %}
+        {% if "Correct answer" in answers.0.error_list %}
             <div class="panel panel-success">
         {% else %}
             <div class="panel panel-danger">
         {% endif %}
             <div class="panel-heading">
-                Autocheck: {{ answers.0.error }}
+                Autocheck: {{ answers.0.error_list.0 }}
             </div>
             <div class="panel-body">
                 <h5><u>Student answer:</u></h5>
-                 <pre><code>{{forloop.counter}}. {{ answers.0 }}</code></pre>
+                 <pre><code>{{forloop.counter}}. {{ answers.0.answer|safe }}</code></pre>
             </div>
             </div>
     {% else %}

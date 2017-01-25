@@ -160,7 +160,7 @@ Status : <b style="color: green;"> Passed </b><br/>
             <div><pre>{{ err }}</pre></div>
         {% endfor %}
     </div>
-    <div class="panel-body"><pre><code>{{ ans.answer.answer.strip }}</code></pre></div>
+    <div class="panel-body"><pre><code>{{ ans.answer.answer.strip|safe }}</code></pre></div>
     </div>
     {% endfor %}
     {% with answers|last as answer %}

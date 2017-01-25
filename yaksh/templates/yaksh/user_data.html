@@ -94,7 +94,7 @@ User IP address: {{ paper.user_ip }}
             </div>
             <div class="panel-body">
                 <h5><u>Student answer:</u></h5>
-                 <pre><code>{{forloop.counter}}. {{ answers.0.answer }}</code></pre>
+                 <pre><code>{{forloop.counter}}. {{ answers.0.answer|safe }}</code></pre>
             </div>
             </div>
     {% else %}
