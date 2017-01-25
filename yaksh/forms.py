@@ -1,7 +1,7 @@
 from django import forms
 from yaksh.models import get_model_class, Profile, Quiz, Question, TestCase, Course,\
                          QuestionPaper, StandardTestCase, StdIOBasedTestCase, \
-                         HookTestCase
+                         HookTestCase, IntegerTestCase
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -35,6 +35,7 @@ question_types = (
     ("mcc", "Multiple Correct Choices"),
     ("code", "Code"),
     ("upload", "Assignment Upload"),
+    ("integer", "Answer in Integer"),
     )
 
 test_case_types = (
@@ -42,6 +43,7 @@ test_case_types = (
         ("stdiobasedtestcase", "StdIO Based Testcase"),
         ("mcqtestcase", "MCQ Testcase"),
         ("hooktestcase", "Hook Testcase"),
+        ("integertestcase", "Integer Testcase"),
         )
 
 UNAME_CHARS = letters + "._" + digits

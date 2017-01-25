@@ -25,7 +25,8 @@ import six
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
-                        has_profile, StandardTestCase, McqTestCase, StdIOBasedTestCase, HookTestCase
+                          has_profile, StandardTestCase, McqTestCase,\
+                          StdIOBasedTestCase, HookTestCase, IntegerTestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm,\
                 QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
@@ -468,6 +469,14 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         # Add the answer submitted, regardless of it being correct or not.
         if current_question.type == 'mcq':
             user_answer = request.POST.get('answer')
+
+        elif current_question.type == 'integer':
+            try:
+                user_answer = int(request.POST.get('answer'))
+            except ValueError:
+                msg = ["Please enter an Integer Value"]
+                return show_question(request, current_question, paper, msg)
+
         elif current_question.type == 'mcc':
             user_answer = request.POST.getlist('answer')
         elif current_question.type == 'upload':

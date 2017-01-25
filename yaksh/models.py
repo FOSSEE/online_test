@@ -40,6 +40,7 @@ question_types = (
         ("mcc", "Multiple Correct Choices"),
         ("code", "Code"),
         ("upload", "Assignment Upload"),
+        ("integer", "Answer in Integer"),
     )
 
 enrollment_methods = (
@@ -52,6 +53,7 @@ test_case_types = (
         ("stdiobasedtestcase", "StdIO Based Testcase"),
         ("mcqtestcase", "MCQ Testcase"),
         ("hooktestcase", "Hook Testcase"),
+        ("integertestcase", "Integer Testcase"),
     )
 
 attempts = [(i, i) for i in range(1, 6)]
@@ -1133,6 +1135,11 @@ class AnswerPaper(models.Model):
                 if set(user_answer) == set(expected_answers):
                     result['success'] = True
                     result['error'] = ['Correct answer']
+            elif question.type == 'integer':
+                expected_answer = question.get_test_case().correct
+                if expected_answer == int(user_answer):
+                    result['success'] = True
+                    result['error'] = ['Correct answer']
             elif question.type == 'code':
                 user_dir = self.user.profile.get_user_dir()
                 json_result = code_server.run_code(
@@ -1280,3 +1287,12 @@ class HookTestCase(TestCase):
 
     def __str__(self):
         return u'Hook Testcase | Correct: {0}'.format(self.hook_code)
+
+class IntegerTestCase(TestCase):
+    correct = models.IntegerField(default=False)
+
+    def get_field_value(self):
+        return {"test_case_type": "integertestcase", "correct": self.correct}
+
+    def __str__(self):
+        return u'Integer Testcase | Correct: {0}'.format(self.correct)
