@@ -1,6 +1,10 @@
 {% extends "manage.html" %}
 {% block pagetitle %} Moderator's Dashboard {% endblock pagetitle %}
 
+{% block script %}
+<script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/moderator_dashboard.js"></script>
+{% endblock %}
+
 {% block content %}
 
 <center><h4>List of quizzes! Click on the given links to have a look at answer papers for a quiz.</h4></center>
@@ -49,18 +53,23 @@
     {% endif %}
 </center>
 {% if trial_paper %}
-  <h5/> You have trial papers.
+  <br/>
+  <p><center><strong> You have trial papers </strong><br/></center></p>
+  &nbsp;&nbsp;<input type="checkbox" class="selectall"/>&nbsp;&nbsp;Select all
+  <br/>
+  <div id="trial">
   <table class="table table-bordered">
   <form action="" method="post">
   {% csrf_token %}
    {% for paper in trial_paper %}
   <tr>
-  <td> <input type = "checkbox" name="delete_paper" value = {{paper.id}}></input></td>
+  <td> <input type = "checkbox" name="delete_paper" class="check" value = {{paper.id}}></input></td>
   <td> <a href="{{URL_ROOT}}/exam/manage/gradeuser/{{paper.question_paper.quiz.id}}">{{paper.question_paper.quiz.description}}</a></td>
   </tr>
   {% endfor %}
   </table>
   <center><button class="btn" type="submit">Delete Selected</button></center>
   </form>
+  </div>
   {% endif %}
 {% endblock %}
