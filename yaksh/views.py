@@ -639,7 +639,7 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
     if request.method == 'POST':
         enroll_ids = request.POST.getlist('check')
     else:
-        enroll_ids = user_id
+        enroll_ids = [user_id]
     if not enroll_ids:
         return my_render_to_response('yaksh/course_detail.html', {'course': course},
                                             context_instance=ci)
@@ -662,7 +662,7 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
     if request.method == 'POST':
         reject_ids = request.POST.getlist('check')
     else:
-        reject_ids = user_id
+        reject_ids = [user_id]
     if not reject_ids:
         return my_render_to_response('yaksh/course_detail.html', {'course': course},
                                             context_instance=ci)
