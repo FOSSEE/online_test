@@ -41,6 +41,7 @@ question_types = (
         ("code", "Code"),
         ("upload", "Assignment Upload"),
         ("integer", "Answer in Integer"),
+        ("string", "Answer in String"),
     )
 
 enrollment_methods = (
@@ -54,6 +55,12 @@ test_case_types = (
         ("mcqtestcase", "MCQ Testcase"),
         ("hooktestcase", "Hook Testcase"),
         ("integertestcase", "Integer Testcase"),
+        ("stringtestcase", "String Testcase"),
+    )
+
+string_check_type = (
+    ("lower", "Lower case Checking"),
+    ("exact", "Exact case String Checking"),
     )
 
 attempts = [(i, i) for i in range(1, 6)]
@@ -1135,11 +1142,24 @@ class AnswerPaper(models.Model):
                 if set(user_answer) == set(expected_answers):
                     result['success'] = True
                     result['error'] = ['Correct answer']
+
             elif question.type == 'integer':
                 expected_answer = question.get_test_case().correct
                 if expected_answer == int(user_answer):
                     result['success'] = True
                     result['error'] = ['Correct answer']
+
+            elif question.type == 'string':
+                testcase = question.get_test_case()
+                if testcase.string_check == "lower":
+                    if testcase.correct.lower() == user_answer.lower():
+                        result['success'] = True
+                        result['error'] = ['Correct answer']
+                else:
+                    if testcase.correct == user_answer:
+                        result['success'] = True
+                        result['error'] = ['Correct answer']
+
             elif question.type == 'code':
                 user_dir = self.user.profile.get_user_dir()
                 json_result = code_server.run_code(
@@ -1289,10 +1309,22 @@ class HookTestCase(TestCase):
         return u'Hook Testcase | Correct: {0}'.format(self.hook_code)
 
 class IntegerTestCase(TestCase):
-    correct = models.IntegerField(default=False)
+    correct = models.IntegerField(default=None)
 
     def get_field_value(self):
         return {"test_case_type": "integertestcase", "correct": self.correct}
 
     def __str__(self):
         return u'Integer Testcase | Correct: {0}'.format(self.correct)
+
+
+class StringTestCase(TestCase):
+    correct = models.TextField(default=None)
+    string_check = models.CharField(max_length=200,choices=string_check_type)
+
+    def get_field_value(self):
+        return {"test_case_type": "stringtestcase", "correct": self.correct,
+                "string_check":self.string_check}
+
+    def __str__(self):
+        return u'String Testcase | Correct: {0}'.format(self.correct)

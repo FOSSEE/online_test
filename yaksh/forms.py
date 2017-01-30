@@ -1,7 +1,7 @@
 from django import forms
 from yaksh.models import get_model_class, Profile, Quiz, Question, TestCase, Course,\
                          QuestionPaper, StandardTestCase, StdIOBasedTestCase, \
-                         HookTestCase, IntegerTestCase
+                         HookTestCase, IntegerTestCase, StringTestCase
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
