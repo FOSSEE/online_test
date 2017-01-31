@@ -954,10 +954,10 @@ class AnswerPaper(models.Model):
     comments = models.TextField()
 
     # Total marks earned by the student in this paper.
-    marks_obtained = models.FloatField(null=True, default=None)
+    marks_obtained = models.FloatField(null=True, default=0.0)
 
     # Marks percent scored by the user
-    percent = models.FloatField(null=True, default=None)
+    percent = models.FloatField(null=True, default=0.0)
 
     # Result of the quiz, True if student passes the exam.
     passed = models.NullBooleanField()
