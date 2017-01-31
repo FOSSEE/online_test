@@ -26,9 +26,48 @@
             <div class="row">
                 <div class="col-md-3" style="padding-top:10px">
                     <input type="checkbox" name="check" value="{{ request.id }}">&nbsp;
-                    <a href="#" data-toggle="tooltip" title=" Full Name: {{ request.get_full_name }}&#013;Institute: {{ request.profile.institute }}&#013;Department: {{ request.profile.department}}&#013;Roll Number: {{ request.profile.roll_number }}">&nbsp;{{ request.username }}</a>
+                    <a href="#" data-toggle="modal" data-target="#request_detail_{{forloop.counter}}">
+                {{ request.username }}</a>
+                    <div class="modal fade" id="request_detail_{{forloop.counter}}" role="dialog">
+                    <div class="modal-dialog">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Information for {{ request.username }} </h4>
+                    </div>
+                    <div class="modal-body">
+                        <table>
+                            <tr>
+                                <td><strong>Full Name :</strong></td>
+                                <td> {{request.get_full_name}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email ID :</strong></td>
+                                <td> {{request.email}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Roll Number :</strong></td>
+                                <td> {{request.profile.roll_number}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Institute :</strong></td>
+                                <td> {{request.profile.institute}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Department :</strong></td>
+                                <td> {{request.profile.department}}</td>
+                            </tr>
+                            <tr>
+                        </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
                 </div>
-                <a class="btn success" href="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/{{ request.id }}/"> Enroll </a>  <a class="btn danger" href="{{URL_ROOT}}/exam/manage/reject/{{ course.id }}/{{ request.id }}/"> Reject </a>
+                <a class="btn btn-success" href="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/{{ request.id }}/"> Enroll </a>  <a class="btn btn-danger" href="{{URL_ROOT}}/exam/manage/reject/{{ course.id }}/{{ request.id }}/"> Reject </a>
             </div>
         </div>
         {% endfor %}
@@ -49,7 +88,46 @@
             <div class="row">
                 <div class="col-md-4" style="padding-top:10px">
                 <input type="checkbox" name="check" value="{{ rejected.id }}">&nbsp;
-                <a href="#" data-toggle="tooltip" title=" Full Name: {{ rejected.get_full_name }}&#013;Institute: {{ rejected.profile.institute }}&#013;Department: {{ rejected.profile.department}}&#013;Roll Number: {{ rejected.profile.roll_number }}">&nbsp;{{ rejected.username }}</a>
+                <a href="#" data-toggle="modal" data-target="#reject_detail_{{forloop.counter}}">
+                {{ rejected.username }}</a>
+                    <div class="modal fade" id="reject_detail_{{forloop.counter}}" role="dialog">
+                    <div class="modal-dialog">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Information for {{ rejected.username }} </h4>
+                    </div>
+                    <div class="modal-body">
+                        <table>
+                            <tr>
+                                <td><strong>Full Name :</strong></td>
+                                <td> {{rejected.get_full_name}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email ID :</strong></td>
+                                <td> {{rejected.email}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Roll Number :</strong></td>
+                                <td> {{rejected.profile.roll_number}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Institute :</strong></td>
+                                <td> {{rejected.profile.institute}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Department :</strong></td>
+                                <td> {{rejected.profile.department}}</td>
+                            </tr>
+                            <tr>
+                        </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
                 </div>
                 <a class="btn btn-success" href="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/{{ rejected.id }}/"> Enroll </a>
             </div>
@@ -75,7 +153,46 @@
             <div class="row">
                 <div class="col-md-4" style="padding-top:10px">
                 <input type="checkbox" name="check" value="{{ enrolled.id }}">&nbsp;
-                <a href="#" data-toggle="tooltip" title=" Full Name: {{ enrolled.get_full_name }}&#013;Institute: {{ enrolled.profile.institute }}&#013;Department: {{ enrolled.profile.department}}&#013;Roll Number: {{ enrolled.profile.roll_number }}">&nbsp;{{ enrolled.username }}</a>
+                <a href="#" data-toggle="modal" data-target="#enroll_detail_{{forloop.counter}}">
+                {{ enrolled.username }}</a>
+                    <div class="modal fade" id="enroll_detail_{{forloop.counter}}" role="dialog">
+                    <div class="modal-dialog">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Information for {{ enrolled.username }} </h4>
+                    </div>
+                    <div class="modal-body">
+                        <table>
+                            <tr>
+                                <td><strong>Full Name :</strong></td>
+                                <td> {{enrolled.get_full_name}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email ID :</strong></td>
+                                <td> {{enrolled.email}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Roll Number :</strong></td>
+                                <td> {{enrolled.profile.roll_number}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Institute :</strong></td>
+                                <td> {{enrolled.profile.institute}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Department :</strong></td>
+                                <td> {{enrolled.profile.department}}</td>
+                            </tr>
+                            <tr>
+                        </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
                 </div>
                 <a class="btn btn-danger" href="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/{{ enrolled.id }}/"> Reject </a>
             </div>

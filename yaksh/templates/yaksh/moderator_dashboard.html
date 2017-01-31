@@ -1,6 +1,10 @@
 {% extends "manage.html" %}
 {% block pagetitle %} Moderator's Dashboard {% endblock pagetitle %}
 
+{% block script %}
+<script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/moderator_dashboard.js"></script>
+{% endblock %}
+
 {% block content %}
 
 <center><h4>List of quizzes! Click on the given links to have a look at answer papers for a quiz.</h4></center>
@@ -30,40 +34,42 @@
 <center>
     <h5>Click on the button given below to add a new course.</h5>
     <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/add_course");'>Add New Course</button>
-    <h5>Click on the button to Create a Demo course.
-    <a href="" onclick="$('#help').show(); return false;">Help </a></h5>
+    <h5>Click on the button to Create a Demo course.</h5>
     <button class="btn" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/create_demo_course");'>Create Demo Course</button>
-    <div style="display: none;" id="help">
-    <ol>
+     <a data-toggle="collapse" data-target="#help">
+    <span class="glyphicon glyphicon-info-sign">Help</span></a>
+    <div id="help" class="collapse">
     <ul>
     <li>A Demo Course and Demo Quiz will be created (Click Courses link on nav bar to view courses).</li>
     <li>Some Demo Questions are also created for you (Click Questions link on nav bar to view questions).</li>
     <li>In Courses you can view Demo Quiz.</li>
-    <li>Click on the Demo Quiz and Click on User Mode or God Mode to take the quiz.
-    </li>
-    <li>You can also edit the Demo quiz.
-    </li>
+    <li>Click on the Demo Quiz and Click on User Mode or God Mode to take the quiz.</li>
+    <li>You can also edit the Demo quiz.</li>
     </ul>
     </p>
-    <a href="" onclick="$('#help').hide(); return false"> Close </a>
     </div>
     {% if msg %}
     <h4>{{ msg }}</h4>
     {% endif %}
 </center>
 {% if trial_paper %}
-  <h5/> You have trial papers.
+  <br/>
+  <p><center><strong> You have trial papers </strong><br/></center></p>
+  &nbsp;&nbsp;<input type="checkbox" class="selectall"/>&nbsp;&nbsp;Select all
+  <br/>
+  <div id="trial">
   <table class="table table-bordered">
   <form action="" method="post">
   {% csrf_token %}
    {% for paper in trial_paper %}
   <tr>
-  <td> <input type = "checkbox" name="delete_paper" value = {{paper.id}}></input></td>
+  <td> <input type = "checkbox" name="delete_paper" class="check" value = {{paper.id}}></input></td>
   <td> <a href="{{URL_ROOT}}/exam/manage/gradeuser/{{paper.question_paper.quiz.id}}">{{paper.question_paper.quiz.description}}</a></td>
   </tr>
   {% endfor %}
   </table>
   <center><button class="btn" type="submit">Delete Selected</button></center>
   </form>
+  </div>
   {% endif %}
 {% endblock %}

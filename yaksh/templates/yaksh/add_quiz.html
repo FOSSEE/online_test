@@ -41,11 +41,11 @@
   	<button class="btn" type="button" name="button" onClick='usermode("{{URL_ROOT}}/exam/manage/usermode/{{quiz_id}}");'>User Mode</button>
     
   	<button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/godmode/{{quiz_id}}");'>God Mode</button> 
-    <a href="" onclick="$('#help').show(); return false;">Help </a>
-    </center>
-    <br/>
-   <div style="display: none;" id="help">
-   <ol>
+    <a data-toggle="collapse" data-target="#help">
+    <span class="glyphicon glyphicon-info-sign">Help</span></a>
+   <div id="help" class="collapse">
+   <br/>
+   <ul>
    <li><b>User Mode:</b> Attempt quiz the way normal users will attempt i.e. -
    <ul>
    <li><i>Quiz will have the same duration as that of the original quiz.</li>
@@ -54,7 +54,6 @@
    </ul>
    </p>
    <li> <b>God Mode:</b> Attempt quiz without any time or eligibilty constraints.</p>
-   <a href="" onclick="$('#help').hide(); return false"> Close </a>
    </div>
  {% endif %}
  <style type="text/css">

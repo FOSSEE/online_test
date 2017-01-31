@@ -6,7 +6,7 @@ from django.contrib import admin
 
 class AnswerPaperAdmin(admin.ModelAdmin):
 	search_fields = ['user__first_name', 'user__last_name','user__username',
-					 "question_paper__quiz__description" ]
+					 "question_paper__quiz__description","user_ip" ]
 
 
 admin.site.register(Question)
