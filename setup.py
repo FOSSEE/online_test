@@ -1,26 +1,17 @@
 import os
 from setuptools import setup, find_packages
-import sys
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
 
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
-install_requires=[
+install_requires = [
     'django==1.9.5',
     'django-taggit==0.18.1',
     'pytz==2016.4',
     'python-social-auth==0.2.19',
     'tornado',
-]
-if sys.version_info[:2] == (2, 7):
-    install_requires+=[
-        'mysql-python==1.2.5'
-]
-if sys.version_info[0] >= 3:
-    install_requires+=[
-        'mysqlclient==1.3.9'
 ]
 
 setup(
@@ -30,9 +21,9 @@ setup(
     version='0.1.3',
     packages=find_packages(),
     include_package_data=True,
-    url = 'https://pypi.python.org/pypi/yaksh/',
+    url='https://pypi.python.org/pypi/yaksh/',
     license='BSD License',
-    entry_points = {
+    entry_points={
             'console_scripts': [
                 'yaksh = yaksh.scripts.cli:main',
             ],
