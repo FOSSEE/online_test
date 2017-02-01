@@ -1,12 +1,7 @@
-#!/usr/bin/env python
 from __future__ import unicode_literals
 import sys
-import traceback
-import os
-from os.path import join
-import importlib
 from contextlib import contextmanager
-from textwrap import dedent
+
 
 try:
     from StringIO import StringIO
@@ -28,6 +23,36 @@ def redirect_stdout():
         sys.stdout = old_target  # restore to the previous value
 
 
+def _show_expected_given(expected, given):
+    return "Expected:\n{0}\nGiven:\n{1}\n".format(expected, given)
+
+
+def compare_outputs(given, expected):
+    given_lines = given.splitlines()
+    ng = len(given_lines)
+    exp_lines = expected.splitlines()
+    ne = len(exp_lines)
+    if ng != ne:
+        msg = "ERROR: Got {0} lines in output, we expected {1}.\n".format(
+            ng, ne
+        )
+        msg += _show_expected_given(expected, given)
+        return False, msg
+    else:
+        for i, (given_line, expected_line) in \
+           enumerate(zip(given_lines, exp_lines)):
+            if given_line.strip() != expected_line.strip():
+                msg = "ERROR:\n"
+                msg += _show_expected_given(expected, given)
+                msg += "\nError in line %d of output.\n" % (i+1)
+                msg += "Expected line {0}:\n{1}\nGiven line {0}:\n{2}\n"\
+                       .format(
+                           i+1, expected_line, given_line
+                       )
+                return False, msg
+    return True, "Correct answer."
+
+
 class PythonStdIOEvaluator(BaseEvaluator):
     """Tests the Python code obtained from Code Server"""
     def __init__(self, metadata, test_case_data):
@@ -41,7 +66,7 @@ class PythonStdIOEvaluator(BaseEvaluator):
         # Set test case data values
         self.expected_input = test_case_data.get('expected_input')
         self.expected_output = test_case_data.get('expected_output')
-        self.weight = test_case_data.get('weight')        
+        self.weight = test_case_data.get('weight')
 
     def teardown(self):
         # Delete the created file.
@@ -64,25 +89,6 @@ class PythonStdIOEvaluator(BaseEvaluator):
         return self.output_value
 
     def check_code(self):
-        success = False
-        mark_fraction = 0.0
-
-        tb = None
-        if self.output_value == self.expected_output:
-            success = True
-            err = None
-            mark_fraction = self.weight
-        else:
-            success = False
-            err = dedent("""
-                Incorrect answer:
-                Given input - {0}
-                Expected output - {1}
-                Your output - {2}
-                """.format(self.expected_input,
-                     self.expected_output,
-                     self.output_value
-                    )
-                )
-        del tb
+        mark_fraction = self.weight
+        success, err = compare_outputs(self.output_value, self.expected_output)
         return success, err, mark_fraction
