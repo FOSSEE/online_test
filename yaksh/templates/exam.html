@@ -31,6 +31,7 @@
         <p> Question Navigator </p>
         <ul class="pagination pagination-sm">
             {% for qid in paper.questions.all %}
+                {%if paper.question_paper.quiz.can_skip_questions%}
                 {% if qid in paper.questions_unanswered.all %}
                 {% if qid.id == question.id %}
                 <li class="active"><a style="width:25%" href="#"data-toggle="tooltip"
@@ -43,6 +44,9 @@
                 {% endif %}
                 {% if qid in paper.questions_answered.all %}
                 <li class="disabled"><a style="background-color:#B4B8BA; width:25%" href="#" data-toggle="tooltip" title="{{ qid.description }}" >{{ forloop.counter }}</a></li>
+                {% endif %}
+                {% else %}
+                <li><a style="width:25%" href="#" data-toggle="tooltip" title="{{ qid.description|striptags }}">{{ forloop.counter }}</a></li>
                 {% endif %}
                 {% endfor %}
             </ul>
