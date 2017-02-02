@@ -26,7 +26,6 @@ from yaksh.xmlrpc_clients import code_server
 from django.conf import settings
 
 
-
 languages = (
         ("python", "Python"),
         ("bash", "Bash"),
@@ -35,7 +34,6 @@ languages = (
         ("java", "Java Language"),
         ("scilab", "Scilab"),
     )
-
 
 question_types = (
         ("mcq", "Multiple Choice"),
@@ -65,8 +63,12 @@ test_status = (
                 ('completed', 'Completed'),
               )
 
+
 def get_assignment_dir(instance, filename):
-    return join(instance.user.user, instance.assignmentQuestion.id, filename)
+    return os.sep.join((
+        instance.user.user, instance.assignmentQuestion.id, filename
+    ))
+
 
 def get_model_class(model):
     ctype = ContentType.objects.get(app_label="yaksh", model=model)
@@ -74,12 +76,16 @@ def get_model_class(model):
 
     return model_class
 
+
 def has_profile(user):
     """ check if user has profile """
     return True if hasattr(user, 'profile') else False
 
+
 def get_upload_dir(instance, filename):
-    return join('question_%s' % (instance.question.id), filename)
+    return os.sep.join((
+        'question_%s' % (instance.question.id), filename
+    ))
 
 
 ###############################################################################
@@ -191,10 +197,12 @@ class Course(models.Model):
     def __str__(self):
         return self.name
 
+
 ###############################################################################
 class ConcurrentUser(models.Model):
     concurrent_user = models.OneToOneField(User)
     session_key = models.CharField(max_length=40)
+
 
 ###############################################################################
 class Profile(models.Model):
@@ -204,10 +212,11 @@ class Profile(models.Model):
     institute = models.CharField(max_length=128)
     department = models.CharField(max_length=64)
     position = models.CharField(max_length=64)
-    timezone = models.CharField(max_length=64,
-                                default=pytz.utc.zone,
-                                choices=[(tz, tz) for tz in pytz.common_timezones]
-                                )
+    timezone = models.CharField(
+        max_length=64,
+        default=pytz.utc.zone,
+        choices=[(tz, tz) for tz in pytz.common_timezones]
+    )
 
     def get_user_dir(self):
         """Return the output directory for the user."""
@@ -273,32 +282,36 @@ class Question(models.Model):
         files = FileUpload.objects.filter(question=self)
         if files:
             metadata['file_paths'] = [(file.file.path, file.extract)
-                                           for file in files]
+                                      for file in files]
         question_data['metadata'] = metadata
-
 
         return json.dumps(question_data)
 
     def dump_questions(self, question_ids, user):
-        questions = Question.objects.filter(id__in=question_ids, user_id=user.id, active=True)
+        questions = Question.objects.filter(
+            id__in=question_ids, user_id=user.id, active=True
+        )
         questions_dict = []
         zip_file_name = string_io()
         zip_file = zipfile.ZipFile(zip_file_name, "a")
         for question in questions:
             test_case = question.get_test_cases()
             file_names = question._add_and_get_files(zip_file)
-            q_dict = {'summary': question.summary,
-                      'description': question.description,
-                      'points': question.points, 'language': question.language,
-                      'type': question.type, 'active': question.active,
-                      'snippet': question.snippet,
-                      'testcase': [case.get_field_value() for case in test_case],
-                      'files': file_names}
+            q_dict = {
+                'summary': question.summary,
+                'description': question.description,
+                'points': question.points, 'language': question.language,
+                'type': question.type, 'active': question.active,
+                'snippet': question.snippet,
+                'testcase': [case.get_field_value() for case in test_case],
+                'files': file_names
+            }
             questions_dict.append(q_dict)
         question._add_json_to_zip(zip_file, questions_dict)
         return zip_file_name
 
-    def load_questions(self, questions_list, user, file_path=None, files_list=None):
+    def load_questions(self, questions_list, user, file_path=None,
+                       files_list=None):
         questions = json.loads(questions_list)
         for question in questions:
             question['user'] = user
@@ -310,7 +323,10 @@ class Question(models.Model):
             for test_case in test_cases:
                 test_case_type = test_case.pop('test_case_type')
                 model_class = get_model_class(test_case_type)
-                new_test_case, obj_create_status = model_class.objects.get_or_create(question=que, **test_case)
+                new_test_case, obj_create_status = \
+                    model_class.objects.get_or_create(
+                        question=que, **test_case
+                    )
                 new_test_case.type = test_case_type
                 new_test_case.save()
         if files_list:
@@ -331,7 +347,8 @@ class Question(models.Model):
     def get_test_case(self, **kwargs):
         for tc in self.testcase_set.all():
             test_case_type = tc.type
-            test_case_ctype = ContentType.objects.get(app_label="yaksh",
+            test_case_ctype = ContentType.objects.get(
+                app_label="yaksh",
                 model=test_case_type
             )
             test_case = test_case_ctype.get_object_for_this_type(
@@ -387,10 +404,11 @@ class Question(models.Model):
                 self.load_questions(questions_list, user, file_path, files)
 
     def create_demo_questions(self, user):
-        zip_file_path = os.path.join(settings.FIXTURE_DIRS, 'demo_questions.zip')
+        zip_file_path = os.path.join(
+            settings.FIXTURE_DIRS, 'demo_questions.zip'
+        )
         files, extract_path = extract_files(zip_file_path)
         self.read_json(extract_path, user, files)
-
 
     def __str__(self):
         return self.summary
@@ -423,6 +441,7 @@ class FileUpload(models.Model):
         else:
             self.hide = True
         self.save()
+
 
 ###############################################################################
 class Answer(models.Model):
@@ -474,9 +493,10 @@ class QuizManager(models.Manager):
 
     def create_trial_from_quiz(self, original_quiz_id, user, godmode):
         """Creates a trial quiz from existing quiz"""
-        trial_quiz_name = "Trial_orig_id_{0}_{1}".format(original_quiz_id,
-                                                        "godmode" if godmode else "usermode"
-                                                        )
+        trial_quiz_name = "Trial_orig_id_{0}_{1}".format(
+            original_quiz_id,
+            "godmode" if godmode else "usermode"
+        )
 
         if self.filter(description=trial_quiz_name).exists():
             trial_quiz = self.get(description=trial_quiz_name)
@@ -494,11 +514,12 @@ class QuizManager(models.Manager):
                 trial_quiz.attempts_allowed = -1
                 trial_quiz.active = True
                 trial_quiz.start_date_time = timezone.now()
-                trial_quiz.end_date_time = datetime(2199, 1, 1, 0, 0, 0, 0,
-						    tzinfo=pytz.utc
-						    )
+                trial_quiz.end_date_time = datetime(
+                    2199, 1, 1, 0, 0, 0, 0, tzinfo=pytz.utc
+                )
             trial_quiz.save()
         return trial_quiz
+
 
 ###############################################################################
 class Quiz(models.Model):
@@ -509,18 +530,21 @@ class Quiz(models.Model):
     course = models.ForeignKey(Course)
 
     # The start date of the quiz.
-    start_date_time = models.DateTimeField("Start Date and Time of the quiz",
-                                        default=timezone.now(),
-                                        null=True)
+    start_date_time = models.DateTimeField(
+        "Start Date and Time of the quiz",
+        default=timezone.now(),
+        null=True
+    )
 
     # The end date and time of the quiz
-    end_date_time = models.DateTimeField("End Date and Time of the quiz",
-                                         default=datetime(2199, 1, 1,
-                                                          tzinfo=pytz.timezone
-                                                         (timezone.
-                                                          get_current_timezone_name())
-                                                          ),
-                                         null=True)
+    end_date_time = models.DateTimeField(
+        "End Date and Time of the quiz",
+        default=datetime(
+            2199, 1, 1,
+            tzinfo=pytz.timezone(timezone.get_current_timezone_name())
+        ),
+        null=True
+    )
 
     # This is always in minutes.
     duration = models.IntegerField("Duration of quiz in minutes", default=20)
@@ -544,8 +568,9 @@ class Quiz(models.Model):
     # Number of attempts for the quiz
     attempts_allowed = models.IntegerField(default=1, choices=attempts)
 
-    time_between_attempts = models.IntegerField("Number of Days",\
-            choices=days_between_attempts)
+    time_between_attempts = models.IntegerField(
+        "Number of Days", choices=days_between_attempts
+    )
 
     is_trial = models.BooleanField(default=False)
 
@@ -560,7 +585,6 @@ class Quiz(models.Model):
     class Meta:
         verbose_name_plural = "Quizzes"
 
-
     def is_expired(self):
         return not self.start_date_time <= timezone.now() < self.end_date_time
 
@@ -568,14 +592,16 @@ class Quiz(models.Model):
         return True if self.prerequisite else False
 
     def create_demo_quiz(self, course):
-        demo_quiz = Quiz.objects.create(start_date_time=timezone.now(),
-                                        end_date_time=timezone.now() + timedelta(176590),
-                                        duration=30, active=True,
-                                        attempts_allowed=-1,
-                                        time_between_attempts=0,
-                                        description='Yaksh Demo quiz', pass_criteria=0,
-                                        language='Python', prerequisite=None,
-                                        course=course)
+        demo_quiz = Quiz.objects.create(
+            start_date_time=timezone.now(),
+            end_date_time=timezone.now() + timedelta(176590),
+            duration=30, active=True,
+            attempts_allowed=-1,
+            time_between_attempts=0,
+            description='Yaksh Demo quiz', pass_criteria=0,
+            language='Python', prerequisite=None,
+            course=course
+        )
         return demo_quiz
 
     def __str__(self):
@@ -614,8 +640,8 @@ class QuestionPaperManager(models.Manager):
         if self.filter(quiz=trial_quiz).exists():
             trial_questionpaper = self.get(quiz=trial_quiz)
         else:
-            trial_questionpaper, trial_questions = self._create_trial_from_questionpaper\
-                (original_quiz_id)
+            trial_questionpaper, trial_questions = \
+                self._create_trial_from_questionpaper(original_quiz_id)
             trial_questionpaper.quiz = trial_quiz
             trial_questionpaper.fixed_questions\
                 .add(*trial_questions["fixed_questions"])
@@ -665,7 +691,8 @@ class QuestionPaper(models.Model):
 
     def make_answerpaper(self, user, ip, attempt_num):
         """Creates an  answer paper for the user to attempt the quiz"""
-        ans_paper = AnswerPaper(user=user,
+        ans_paper = AnswerPaper(
+            user=user,
             user_ip=ip,
             attempt_number=attempt_num
         )
@@ -680,8 +707,8 @@ class QuestionPaper(models.Model):
         return ans_paper
 
     def _is_questionpaper_passed(self, user):
-        return  AnswerPaper.objects.filter(question_paper=self, user=user,
-                                           passed = True).exists()
+        return AnswerPaper.objects.filter(question_paper=self, user=user,
+                                          passed=True).exists()
 
     def _is_attempt_allowed(self, user):
         attempts = AnswerPaper.objects.get_total_attempt(questionpaper=self,
@@ -690,8 +717,9 @@ class QuestionPaper(models.Model):
 
     def can_attempt_now(self, user):
         if self._is_attempt_allowed(user):
-            last_attempt = AnswerPaper.objects.get_user_last_attempt(user=user,
-                           questionpaper=self)
+            last_attempt = AnswerPaper.objects.get_user_last_attempt(
+                user=user, questionpaper=self
+            )
             if last_attempt:
                 time_lag = (timezone.now() - last_attempt.start_time).days
                 return time_lag >= self.quiz.time_between_attempts
@@ -722,6 +750,7 @@ class QuestionPaper(models.Model):
 
     def __str__(self):
         return "Question Paper for " + self.quiz.description
+
 
 ###############################################################################
 class QuestionSet(models.Model):
@@ -777,16 +806,21 @@ class AnswerPaperManager(models.Manager):
         ).values_list('attempt_number', flat=True).distinct()
         return attempt_numbers
 
-    def has_attempt(self, questionpaper_id, attempt_number, status='completed'):
+    def has_attempt(self, questionpaper_id, attempt_number,
+                    status='completed'):
         ''' Whether question paper is attempted'''
-        return self.filter(question_paper_id=questionpaper_id,
-                           attempt_number=attempt_number, status=status).exists()
+        return self.filter(
+            question_paper_id=questionpaper_id,
+            attempt_number=attempt_number, status=status
+        ).exists()
 
     def get_count(self, questionpaper_id, attempt_number, status='completed'):
         ''' Return count of answerpapers for a specfic question paper
             and attempt number'''
-        return self.filter(question_paper_id=questionpaper_id,
-                           attempt_number=attempt_number, status=status).count()
+        return self.filter(
+            question_paper_id=questionpaper_id,
+            attempt_number=attempt_number, status=status
+        ).count()
 
     def get_question_statistics(self, questionpaper_id, attempt_number,
                                 status='completed'):
@@ -815,8 +849,7 @@ class AnswerPaperManager(models.Manager):
             return self.filter(question_paper_id=questionpaper_id)
         else:
             return self.filter(question_paper_id=questionpaper_id,
-                                status="completed")
-
+                               status="completed")
 
     def _get_answerpapers_users(self, answerpapers):
         return answerpapers.values_list('user', flat=True).distinct()
@@ -830,7 +863,9 @@ class AnswerPaperManager(models.Manager):
         return latest_attempts
 
     def _get_latest_attempt(self, answerpapers, user_id):
-        return answerpapers.filter(user_id=user_id).order_by('-attempt_number')[0]
+        return answerpapers.filter(
+            user_id=user_id
+        ).order_by('-attempt_number')[0]
 
     def get_user_last_attempt(self, questionpaper, user):
         attempts = self.filter(question_paper=questionpaper,
@@ -856,10 +891,11 @@ class AnswerPaperManager(models.Manager):
     def get_user_data(self, user, questionpaper_id, attempt_number=None):
         if attempt_number is not None:
             papers = self.filter(user=user, question_paper_id=questionpaper_id,
-                                     attempt_number=attempt_number)
+                                 attempt_number=attempt_number)
         else:
-            papers = self.filter(user=user, question_paper_id=questionpaper_id)\
-                                    .order_by("-attempt_number")
+            papers = self.filter(
+                user=user, question_paper_id=questionpaper_id
+            ).order_by("-attempt_number")
         data = {}
         profile = user.profile if hasattr(user, 'profile') else None
         data['user'] = user
@@ -875,6 +911,7 @@ class AnswerPaperManager(models.Manager):
         if papers:
             best_attempt = max([marks["marks_obtained"] for marks in papers])
         return best_attempt
+
 
 ###############################################################################
 class AnswerPaper(models.Model):
@@ -901,12 +938,14 @@ class AnswerPaper(models.Model):
     user_ip = models.CharField(max_length=15)
 
     # The questions unanswered
-    questions_unanswered = models.ManyToManyField(Question,
-                                            related_name='questions_unanswered')
+    questions_unanswered = models.ManyToManyField(
+        Question, related_name='questions_unanswered'
+    )
 
     # The questions answered
-    questions_answered = models.ManyToManyField(Question,
-                                            related_name='questions_answered')
+    questions_answered = models.ManyToManyField(
+        Question, related_name='questions_answered'
+    )
 
     # All the submitted answers.
     answers = models.ManyToManyField(Answer)
@@ -924,8 +963,10 @@ class AnswerPaper(models.Model):
     passed = models.NullBooleanField()
 
     # Status of the quiz attempt
-    status = models.CharField(max_length=20, choices=test_status,\
-            default='inprogress')
+    status = models.CharField(
+        max_length=20, choices=test_status,
+        default='inprogress'
+    )
 
     objects = AnswerPaperManager()
 
@@ -960,7 +1001,7 @@ class AnswerPaper(models.Model):
         if len(questions) == 0:
             return None
         try:
-            index =  questions.index(int(question_id))
+            index = questions.index(int(question_id))
             next_id = questions[index+1]
         except (ValueError, IndexError):
             next_id = questions[0]
@@ -982,17 +1023,17 @@ class AnswerPaper(models.Model):
         """Updates the total marks earned by student for this paper."""
         marks = 0
         for question in self.questions.all():
-            marks_list = [a.marks for a in self.answers.filter(question=question)]
+            marks_list = [a.marks
+                          for a in self.answers.filter(question=question)]
             max_marks = max(marks_list) if marks_list else 0.0
             marks += max_marks
         self.marks_obtained = marks
-
 
     def _update_percent(self):
         """Updates the percent gained by the student for this paper."""
         total_marks = self.question_paper.total_marks
         if self.marks_obtained is not None:
-            percent = self.marks_obtained/self.question_paper.total_marks*100
+            percent = self.marks_obtained/total_marks*100
             self.percent = round(percent, 2)
 
     def _update_passed(self):
@@ -1031,15 +1072,15 @@ class AnswerPaper(models.Model):
         for answer in self.answers.all():
             question = answer.question
             if question in q_a:
-                q_a[question].append({'answer': answer,
-                        'error_list': [e for e in json.loads(answer.error)]
-                    }
-                )
+                q_a[question].append({
+                    'answer': answer,
+                    'error_list': [e for e in json.loads(answer.error)]
+                })
             else:
-                q_a[question] = [{'answer': answer,
-                        'error_list': [e for e in json.loads(answer.error)]
-                    }
-                ]
+                q_a[question] = [{
+                    'answer': answer,
+                    'error_list': [e for e in json.loads(answer.error)]
+                }]
         return q_a
 
     def get_questions(self):
@@ -1058,7 +1099,7 @@ class AnswerPaper(models.Model):
 
     def is_attempt_inprogress(self):
         if self.status == 'inprogress':
-            return self.time_left()> 0
+            return self.time_left() > 0
 
     def get_previous_answers(self, question):
         if question.type == 'code':
@@ -1074,7 +1115,8 @@ class AnswerPaper(models.Model):
             For code questions success is True only if the answer is correct.
         """
 
-        result = {'success': False, 'error': ['Incorrect answer'], 'weight': 0.0}
+        result = {'success': False, 'error': ['Incorrect answer'],
+                  'weight': 0.0}
         if user_answer is not None:
             if question.type == 'mcq':
                 expected_answer = question.get_test_case(correct=True).options
@@ -1090,7 +1132,9 @@ class AnswerPaper(models.Model):
                     result['error'] = ['Correct answer']
             elif question.type == 'code':
                 user_dir = self.user.profile.get_user_dir()
-                json_result = code_server.run_code(question.language, json_data, user_dir)
+                json_result = code_server.run_code(
+                    question.language, json_data, user_dir
+                )
                 result = json.loads(json_result)
         return result
 
@@ -1101,7 +1145,9 @@ class AnswerPaper(models.Model):
                     self.user, self.question_paper.quiz.description, question)
         except Question.DoesNotExist:
             msg = 'User: {0}; Quiz: {1} Question id: {2}.\n'.format(
-                    self.user, self.question_paper.quiz.description, question_id)
+                self.user, self.question_paper.quiz.description,
+                question_id
+            )
             return False, msg + 'Question not in the answer paper.'
         user_answer = self.answers.filter(question=question).last()
         if not user_answer:
@@ -1111,23 +1157,29 @@ class AnswerPaper(models.Model):
                 answer = eval(user_answer.answer)
                 if type(answer) is not list:
                     return False, msg + 'MCC answer not a list.'
-            except Exception as e:
+            except Exception:
                 return False, msg + 'MCC answer submission error'
         else:
             answer = user_answer.answer
         json_data = question.consolidate_answer_data(answer) \
-                            if question.type == 'code' else None
+            if question.type == 'code' else None
         result = self.validate_answer(answer, question, json_data)
         user_answer.correct = result.get('success')
         user_answer.error = result.get('error')
         if result.get('success'):
-            user_answer.marks = (question.points * result['weight'] /
-                question.get_maximum_test_case_weight()) \
-                if question.partial_grading and question.type == 'code' else question.points
+            if question.partial_grading and question.type == 'code':
+                max_weight = question.get_maximum_test_case_weight()
+                factor = result['weight']/max_weight
+                user_answer.marks = question.points * factor
+            else:
+                user_answer.marks = question.points
         else:
-            user_answer.marks = (question.points * result['weight'] /
-                question.get_maximum_test_case_weight()) \
-                if question.partial_grading and question.type == 'code' else 0
+            if question.partial_grading and question.type == 'code':
+                max_weight = question.get_maximum_test_case_weight()
+                factor = result['weight']/max_weight
+                user_answer.marks = question.points * factor
+            else:
+                user_answer.marks = 0
         user_answer.save()
         self.update_marks('completed')
         return True, msg
@@ -1146,10 +1198,11 @@ class AssignmentUpload(models.Model):
     assignmentFile = models.FileField(upload_to=get_assignment_dir)
 
 
-################################################################################
+###############################################################################
 class TestCase(models.Model):
-    question = models.ForeignKey(Question, blank=True, null = True)
+    question = models.ForeignKey(Question, blank=True, null=True)
     type = models.CharField(max_length=24, choices=test_case_types, null=True)
+
 
 class StandardTestCase(TestCase):
     test_case = models.TextField()
@@ -1173,14 +1226,15 @@ class StdIOBasedTestCase(TestCase):
 
     def get_field_value(self):
         return {"test_case_type": "stdiobasedtestcase",
-               "expected_output": self.expected_output,
-               "expected_input": self.expected_input,
-               "weight": self.weight}
+                "expected_output": self.expected_output,
+                "expected_input": self.expected_input,
+                "weight": self.weight}
 
     def __str__(self):
-        return u'StdIO Based Testcase | Exp. Output: {0} | Exp. Input: {1}'.format(
-            self.expected_output, self.expected_input
-        )
+        return u'StdIO Based Testcase | Exp. Output: {0} | Exp. Input: {1}'.\
+            format(
+                self.expected_output, self.expected_input
+            )
 
 
 class McqTestCase(TestCase):
@@ -1188,32 +1242,33 @@ class McqTestCase(TestCase):
     correct = models.BooleanField(default=False)
 
     def get_field_value(self):
-        return {"test_case_type": "mcqtestcase", "options": self.options, "correct": self.correct}
+        return {"test_case_type": "mcqtestcase",
+                "options": self.options, "correct": self.correct}
 
     def __str__(self):
         return u'MCQ Testcase | Correct: {0}'.format(self.correct)
 
 
 class HookTestCase(TestCase):
-    hook_code = models.TextField(default=dedent\
-                ("""\
-                 def check_answer(user_answer):
-                    ''' Evaluates user answer to return -
-                    success - Boolean, indicating if code was executed correctly
-                    mark_fraction - Float, indicating fraction of the
-                                   weight to a test case
-                    error - String, error message if success is false'''
-                    success = False
-                    err = "Incorrect Answer" # Please make the error message more specific
-                    mark_fraction = 0.0
+    hook_code = models.TextField(default=dedent(
+        """\
+        def check_answer(user_answer):
+           ''' Evaluates user answer to return -
+           success - Boolean, indicating if code was executed correctly
+           mark_fraction - Float, indicating fraction of the
+                          weight to a test case
+           error - String, error message if success is false'''
+           success = False
+           err = "Incorrect Answer" # Please make this more specific
+           mark_fraction = 0.0
 
-                    # write your code here
+           # write your code here
 
-                    return success, err, mark_fraction
+           return success, err, mark_fraction
 
-                """)
+        """)
 
-                                )
+    )
     weight = models.FloatField(default=1.0)
 
     def get_field_value(self):
