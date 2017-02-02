@@ -400,7 +400,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
         error_as_str = ''.join(result.get("error"))
         err = error_as_str.splitlines()
-        
+
         # Then
         self.assertFalse(result.get("success"))
         self.assertEqual(5, len(err))
@@ -578,7 +578,10 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assert_correct_output("Incorrect answer", result.get('error'))
+        self.assert_correct_output(
+            "ERROR:\nExpected:\n3\nGiven:\n-1\n\nError in line 1 of output.",
+            result.get('error')
+        )
 
     def test_file_based_answer(self):
         # Given
@@ -728,7 +731,7 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertFalse(result.get('success'))
         self.assert_correct_output('Incorrect Answer', result.get('error'))
-    
+
     def test_assert_with_hook(self):
         # Given
         user_answer = "def add(a,b):\n\treturn a + b"
@@ -815,7 +818,7 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertTrue(result.get('success'))
         self.assertEqual(result.get("weight"), 1.5)
-        
+
     def test_infinite_loop(self):
         # Given
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
