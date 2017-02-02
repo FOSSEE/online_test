@@ -1,14 +1,10 @@
 from __future__ import unicode_literals
 from datetime import datetime, timedelta
 import json
-from random import sample, shuffle
-from itertools import islice, cycle
+from random import sample
 from collections import Counter
-from textwrap import dedent
 from django.db import models
-from django.db.models import Q
 from django.contrib.auth.models import User
-from django.forms.models import model_to_dict
 from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
 from django.utils import timezone
@@ -20,7 +16,7 @@ except ImportError:
 import pytz
 import os
 import stat
-from os.path import join, abspath, dirname, exists
+from os.path import join, exists
 import shutil
 import zipfile
 import tempfile
@@ -28,6 +24,7 @@ from textwrap import dedent
 from .file_utils import extract_files, delete_files
 from yaksh.xmlrpc_clients import code_server
 from django.conf import settings
+
 
 
 languages = (
@@ -69,7 +66,7 @@ test_status = (
               )
 
 def get_assignment_dir(instance, filename):
-    return '%s/%s/%s' % (instance.user.user, instance.assignmentQuestion.id, filename)
+    return join(instance.user.user, instance.assignmentQuestion.id, filename)
 
 def get_model_class(model):
     ctype = ContentType.objects.get(app_label="yaksh", model=model)
@@ -82,7 +79,7 @@ def has_profile(user):
     return True if hasattr(user, 'profile') else False
 
 def get_upload_dir(instance, filename):
-    return "question_%s/%s" % (instance.question.id, filename)
+    return join('question_%s' % (instance.question.id), filename)
 
 
 ###############################################################################
@@ -216,6 +213,9 @@ class Profile(models.Model):
         """Return the output directory for the user."""
 
         user_dir = join(settings.OUTPUT_DIR, str(self.user.username))
+        if not exists(user_dir):
+            os.makedirs(user_dir)
+            os.chmod(user_dir, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         return user_dir
 
 
@@ -477,10 +477,10 @@ class QuizManager(models.Manager):
         trial_quiz_name = "Trial_orig_id_{0}_{1}".format(original_quiz_id,
                                                         "godmode" if godmode else "usermode"
                                                         )
-        
+
         if self.filter(description=trial_quiz_name).exists():
             trial_quiz = self.get(description=trial_quiz_name)
-            
+
         else:
             trial_quiz = self.get(id=original_quiz_id)
             trial_quiz.course.enroll(False, user)
@@ -577,7 +577,7 @@ class Quiz(models.Model):
                                         language='Python', prerequisite=None,
                                         course=course)
         return demo_quiz
-    
+
     def __str__(self):
         desc = self.description or 'Quiz'
         return '%s: on %s for %d minutes' % (desc, self.start_date_time,
@@ -719,7 +719,7 @@ class QuestionPaper(models.Model):
         # add fixed set of questions to the question paper
         for question in questions:
             question_paper.fixed_questions.add(question)
-    
+
     def __str__(self):
         return "Question Paper for " + self.quiz.description
 
@@ -1121,11 +1121,11 @@ class AnswerPaper(models.Model):
         user_answer.correct = result.get('success')
         user_answer.error = result.get('error')
         if result.get('success'):
-            user_answer.marks = (question.points * result['weight'] / 
+            user_answer.marks = (question.points * result['weight'] /
                 question.get_maximum_test_case_weight()) \
                 if question.partial_grading and question.type == 'code' else question.points
         else:
-            user_answer.marks = (question.points * result['weight'] / 
+            user_answer.marks = (question.points * result['weight'] /
                 question.get_maximum_test_case_weight()) \
                 if question.partial_grading and question.type == 'code' else 0
         user_answer.save()
@@ -1222,4 +1222,3 @@ class HookTestCase(TestCase):
 
     def __str__(self):
         return u'Hook Testcase | Correct: {0}'.format(self.hook_code)
-
