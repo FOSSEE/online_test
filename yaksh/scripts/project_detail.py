@@ -1,2 +1,0 @@
-NAME = None
-PATH = None
