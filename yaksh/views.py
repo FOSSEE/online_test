@@ -476,6 +476,12 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             except ValueError:
                 msg = ["Please enter an Integer Value"]
                 return show_question(request, current_question, paper, msg)
+        elif current_question.type == 'float':
+            try:
+                user_answer = float(request.POST.get('answer'))
+            except ValueError:
+                msg = ["Please enter a Decimal Value"]
+                return show_question(request, current_question, paper, msg)
         elif current_question.type == 'string':
             user_answer = str(request.POST.get('answer'))
 

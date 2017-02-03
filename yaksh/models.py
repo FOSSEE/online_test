@@ -42,6 +42,7 @@ question_types = (
         ("upload", "Assignment Upload"),
         ("integer", "Answer in Integer"),
         ("string", "Answer in String"),
+        ("float", "Answer in Decimal"),
     )
 
 enrollment_methods = (
@@ -56,6 +57,7 @@ test_case_types = (
         ("hooktestcase", "Hook Testcase"),
         ("integertestcase", "Integer Testcase"),
         ("stringtestcase", "String Testcase"),
+        ("floattestcase", "Float Testcase"),
     )
 
 string_check_type = (
@@ -1160,6 +1162,14 @@ class AnswerPaper(models.Model):
                         result['success'] = True
                         result['error'] = ['Correct answer']
 
+            elif question.type == 'float':
+                testcase = question.get_test_case()
+                if testcase.correct-testcase.error_margin\
+                 <= float(user_answer)\
+                 <= testcase.correct+testcase.error_margin:
+                            result['success'] = True
+                            result['error'] = ['Correct answer']
+
             elif question.type == 'code':
                 user_dir = self.user.profile.get_user_dir()
                 json_result = code_server.run_code(
@@ -1328,3 +1338,18 @@ class StringTestCase(TestCase):
 
     def __str__(self):
         return u'String Testcase | Correct: {0}'.format(self.correct)
+
+
+class FloatTestCase(TestCase):
+    correct = models.FloatField(default=None)
+    error_margin = models.FloatField(default=0.0, null=True, blank=True,
+                                     help_text="Margin of error")
+
+    def get_field_value(self):
+        return {"test_case_type": "floattestcase", "correct": self.correct,
+                "error_margin":self.error_margin}
+
+    def __str__(self):
+        return u'Testcase | Correct: {0} | Error Margin: +or- {1}'.format(self.correct,
+                                                                          self.error_margin
+                                                                          )

@@ -36,6 +36,8 @@ question_types = (
     ("code", "Code"),
     ("upload", "Assignment Upload"),
     ("integer", "Answer in Integer"),
+    ("string", "Answer in String"),
+    ("float", "Answer in Decimal"),
     )
 
 test_case_types = (
@@ -44,6 +46,8 @@ test_case_types = (
         ("mcqtestcase", "MCQ Testcase"),
         ("hooktestcase", "Hook Testcase"),
         ("integertestcase", "Integer Testcase"),
+        ("stringtestcase", "String Testcase"),
+        ("floattestcase", "Float Testcase"),
         )
 
 UNAME_CHARS = letters + "._" + digits
