@@ -580,9 +580,8 @@ class Quiz(models.Model):
     view_answerpaper = models.BooleanField('Allow student to view their answer\
                                             paper', default=False)
 
-    can_skip_questions = models.BooleanField("Allow students to skip questions",
-                                             default=True
-                                             )
+    allow_skip = models.BooleanField("Allow students to skip questions",
+                                     default=True)
 
     objects = QuizManager()
 
