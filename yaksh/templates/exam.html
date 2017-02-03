@@ -31,7 +31,8 @@
         <p> Question Navigator </p>
         <ul class="pagination pagination-sm">
             {% for qid in paper.questions.all %}
-                {% if qid in paper.questions_unanswered.all %}
+                {%if paper.question_paper.quiz.allow_skip %}
+                {% if qid in paper.get_questions_unanswered %}
                 {% if qid.id == question.id %}
                 <li class="active"><a style="width:25%" href="#"data-toggle="tooltip"
                     title="{{ qid.description|striptags }}"
@@ -41,8 +42,15 @@
                     onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
                 {% endif %}
                 {% endif %}
-                {% if qid in paper.questions_answered.all %}
+                {% if qid in paper.get_questions_answered %}
                 <li class="disabled"><a style="background-color:#B4B8BA; width:25%" href="#" data-toggle="tooltip" title="{{ qid.description }}" >{{ forloop.counter }}</a></li>
+                {% endif %}
+                {% else %}
+                {% if qid.id == question.id %}
+                <li class="active"><a style="width:25%" data-toggle="tooltip" title="{{ qid.description|striptags }}">{{ forloop.counter }}</a></li>
+                {% else %}
+                <li  class="disabled"><a style="width:25%" data-toggle="tooltip" title="{{ qid.description|striptags }}">{{ forloop.counter }}</a></li>
+                {% endif %}
                 {% endif %}
                 {% endfor %}
             </ul>
