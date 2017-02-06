@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import unittest
 import os
+import sys
 import tempfile
 import shutil
 from textwrap import dedent
@@ -449,6 +450,34 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         for msg in name_error_msg:
             self.assert_correct_output(msg, result.get("error"))
 
+    def test_unicode_literal_bug(self):
+        # Given
+        user_answer = dedent("""\
+                             def strchar(s):
+                                a = "should be a string"
+                                return type(a)
+                            """)
+        test_case_data = [{"test_case_type": "standardtestcase",
+                             "test_case": 'assert(strchar("hello")==str)',
+                             "weight": 0.0
+                            },]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'python'
+                    },
+                    'test_case_data': test_case_data,
+                }
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertTrue(result.get("success"))
+
+
 class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
         with open('/tmp/test.txt', 'wb') as f:
@@ -642,6 +671,33 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assert_correct_output(timeout_msg, result.get('error'))
         self.assertFalse(result.get('success'))
+
+
+    def test_unicode_literal_bug(self):
+        # Given
+        user_answer = dedent("""\
+                             a = "this should be a string."
+                             print(type(a).__name__)
+                            """)
+        test_case_data = [{"test_case_type": "stdiobasedtestcase",
+                           "expected_input": "",
+                           "expected_output": "str",
+                           "weight": 0.0
+                           }]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'python'
+                    },
+                    'test_case_data': test_case_data,
+                }
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+        # Then
+        self.assertTrue(result.get("success"))
 
 
 class PythonHookEvaluationTestCases(EvaluatorBaseTest):
