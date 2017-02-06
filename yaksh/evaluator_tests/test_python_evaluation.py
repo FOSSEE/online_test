@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import unittest
 import os
+import sys
 import tempfile
 import shutil
 from textwrap import dedent
@@ -449,6 +450,38 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         for msg in name_error_msg:
             self.assert_correct_output(msg, result.get("error"))
 
+    def test_unicode_literal_bug(self):
+        # Given
+        user_answer = dedent("""\
+                                def isize(s):
+                                    import numpy as np
+                                    size = np.array(s).itemsize
+                                    return size
+                            """)
+        test_case_data = [{"test_case_type": "standardtestcase",
+                             "test_case": 'assert(isize("hello")==5)',
+                             "weight": 0.0
+                            },]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'python'
+                    },
+                    'test_case_data': test_case_data,
+                }
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        if sys.version[0] < 3:
+            self.assertTrue(result.get("success"))
+        else:
+            self.assertFalse(result.get("success"))
+
+
 class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
         with open('/tmp/test.txt', 'wb') as f:
@@ -642,6 +675,38 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assert_correct_output(timeout_msg, result.get('error'))
         self.assertFalse(result.get('success'))
+
+
+    def test_unicode_literal_bug(self):
+        # Given
+        user_answer = dedent("""\
+                                    import numpy as np
+                                    size = np.array(s).itemsize
+                                    print size
+                            """)
+        test_case_data = [{"test_case_type": "stdiobasedtestcase",
+                           "expected_input": "",
+                           "expected_output": "5",
+                           "weight": 0.0
+                           }]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'python'
+                    },
+                    'test_case_data': test_case_data,
+                }
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+        # Then
+        if sys.version[0] < 3:
+            self.assertTrue(result.get("success"))
+        else:
+            self.assertFalse(result.get("success"))
+
 
 
 class PythonHookEvaluationTestCases(EvaluatorBaseTest):
