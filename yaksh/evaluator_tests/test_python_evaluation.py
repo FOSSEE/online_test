@@ -453,13 +453,12 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
     def test_unicode_literal_bug(self):
         # Given
         user_answer = dedent("""\
-                                def isize(s):
-                                    import numpy as np
-                                    size = np.array(s).itemsize
-                                    return size
+                             def strchar(s):
+                                a = "should be a string"
+                                return type(a)
                             """)
         test_case_data = [{"test_case_type": "standardtestcase",
-                             "test_case": 'assert(isize("hello")==5)',
+                             "test_case": 'assert(strchar("hello")==str)',
                              "weight": 0.0
                             },]
         kwargs = {
@@ -476,10 +475,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         # Then
-        if sys.version[0] < 3:
-            self.assertTrue(result.get("success"))
-        else:
-            self.assertFalse(result.get("success"))
+        self.assertTrue(result.get("success"))
 
 
 class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
@@ -680,13 +676,12 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
     def test_unicode_literal_bug(self):
         # Given
         user_answer = dedent("""\
-                                    import numpy as np
-                                    size = np.array(s).itemsize
-                                    print size
+                             a = "this should be a string."
+                             print(type(a).__name__)
                             """)
         test_case_data = [{"test_case_type": "stdiobasedtestcase",
                            "expected_input": "",
-                           "expected_output": "5",
+                           "expected_output": "str",
                            "weight": 0.0
                            }]
         kwargs = {
@@ -702,11 +697,7 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
         # Then
-        if sys.version[0] < 3:
-            self.assertTrue(result.get("success"))
-        else:
-            self.assertFalse(result.get("success"))
-
+        self.assertTrue(result.get("success"))
 
 
 class PythonHookEvaluationTestCases(EvaluatorBaseTest):
