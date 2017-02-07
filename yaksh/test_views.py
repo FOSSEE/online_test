@@ -2,6 +2,7 @@ from datetime import datetime
 import pytz
 import os
 from django.contrib.auth.models import Group
+from django.contrib.auth import authenticate
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test import Client
@@ -47,6 +48,7 @@ class TestProfile(TestCase):
         self.client.logout()
         self.user1.delete()
         self.user2.delete()
+
 
     def test_has_profile_for_user_without_profile(self):
         """
@@ -1573,3 +1575,70 @@ class TestGrader(TestCase):
 
         # Then
         self.assertEqual(response.status_code, 404)
+
+class TestPasswordReset(TestCase):
+    def setUp(self):
+        # Create User with profile
+        self.user1_plaintext_pass = 'demo1'
+        self.user1 = User.objects.create_user(
+            username='demo_user1',
+            password=self.user1_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo1@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user1,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Student',
+            timezone='UTC'
+        )
+
+    def tearDown(self):
+        self.user1.delete()
+
+    def test_password_reset_post(self):
+        """
+        POST request to password_reset view should return a valid response
+        """
+        # When
+        response = self.client.post(reverse('password_reset'),
+            data={
+                'email': self.user1.email,
+            }
+        )
+
+        # Then
+        self.assertEqual(response.context['email'], self.user1.email)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/exam/reset/password_reset/mail_sent/')
+
+    def test_password_change_post(self):
+        """
+        POST request to password_change view should change the user password
+        """
+        # Given
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+
+        # When
+        response = self.client.post(reverse('password_change'),
+            data={
+                'old_password': self.user1_plaintext_pass,
+                'new_password1': 'new_demo1_pass',
+                'new_password2': 'new_demo1_pass'
+            }
+        )
+
+        # Then
+        self.assertIsNotNone(authenticate(username='demo_user1', password='new_demo1_pass'))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/exam/reset/password_change/done/')
+
+        # Finally
+        self.client.logout()
