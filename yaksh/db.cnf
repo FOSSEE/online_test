@@ -1,5 +1,0 @@
-# new.cnf
-[client]
-database = online_test
-user = root
-default-character-set = utf8

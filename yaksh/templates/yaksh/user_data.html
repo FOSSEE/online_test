@@ -76,10 +76,10 @@ User IP address: {{ paper.user_ip }}
                         {% endif %}
                     {% endfor %}
 
-            {% elif question.type == "integer" %}
+            {{% elif question.type == "integer" or "string" or "float" %}
                 <h5> <u>Correct Answer:</u></h5>
                     {% for testcase in question.get_test_cases %}
-                    <strong>{{ testcase.correct }}</strong>
+                    <strong>{{ testcase.correct|safe }}</strong>
                     {% endfor %}
 
 

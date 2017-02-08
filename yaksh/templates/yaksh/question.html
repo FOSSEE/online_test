@@ -153,6 +153,12 @@ function call_skip(url)
                              (ANSWER IN INTEGER)
                              {% elif question.type == "string" %}
                              (ANSWER IN STRING)
+                                {% if testcase.string_check == "lower" %}
+                                    <h5>(CASE INSENSITIVE)</h5>
+                                {% else %}
+                                    <h5>(CASE SENSITIVE)</h5>
+                                {% endif %}
+
                              {% elif question.type == "float" %}
                              (ANSWER IN FLOAT)
                              {% endif %}
@@ -217,7 +223,7 @@ function call_skip(url)
                      {% endif %}
         <div class="from-group">
 
-         {% if question.type == "mcq" or question.type == "mcc" or question.type == "integer" %}
+         {% if question.type == "mcq" or "mcc" or "integer" or "float" or "string" %}
          <br><button class="btn btn-primary" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
          {% elif question.type == "upload" %}
          <br><button class="btn btn-primary" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
