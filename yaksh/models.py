@@ -1223,8 +1223,8 @@ class StandardTestCase(TestCase):
 
 
 class StdIOBasedTestCase(TestCase):
-    expected_input = models.TextField(max_length=100, blank=True)
-    expected_output = models.TextField(max_length=100)
+    expected_input = models.TextField(default=None, blank=True, null=True)
+    expected_output = models.TextField(default=None)
     weight = models.IntegerField(default=1.0)
 
     def get_field_value(self):
