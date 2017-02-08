@@ -37,7 +37,7 @@ question_types = (
     ("upload", "Assignment Upload"),
     ("integer", "Answer in Integer"),
     ("string", "Answer in String"),
-    ("float", "Answer in Decimal"),
+    ("float", "Answer in Float"),
     )
 
 test_case_types = (

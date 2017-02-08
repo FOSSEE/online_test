@@ -42,7 +42,7 @@ question_types = (
         ("upload", "Assignment Upload"),
         ("integer", "Answer in Integer"),
         ("string", "Answer in String"),
-        ("float", "Answer in Decimal"),
+        ("float", "Answer in Float"),
     )
 
 enrollment_methods = (
@@ -61,8 +61,8 @@ test_case_types = (
     )
 
 string_check_type = (
-    ("lower", "Lower case Checking"),
-    ("exact", "Exact case String Checking"),
+    ("lower", "Case Insensitive"),
+    ("exact", "Case Sensitive"),
     )
 
 attempts = [(i, i) for i in range(1, 6)]
@@ -1154,19 +1154,17 @@ class AnswerPaper(models.Model):
             elif question.type == 'string':
                 testcase = question.get_test_case()
                 if testcase.string_check == "lower":
-                    if testcase.correct.lower() == user_answer.lower():
+                    if testcase.correct.lower().splitlines() == user_answer.lower().splitlines():
                         result['success'] = True
                         result['error'] = ['Correct answer']
                 else:
-                    if testcase.correct == user_answer:
+                    if testcase.correct.splitlines() == user_answer.splitlines():
                         result['success'] = True
                         result['error'] = ['Correct answer']
 
             elif question.type == 'float':
                 testcase = question.get_test_case()
-                if testcase.correct-testcase.error_margin\
-                 <= float(user_answer)\
-                 <= testcase.correct+testcase.error_margin:
+                if abs(testcase.correct-user_answer) <= testcase.error_margin:
                             result['success'] = True
                             result['error'] = ['Correct answer']
 
