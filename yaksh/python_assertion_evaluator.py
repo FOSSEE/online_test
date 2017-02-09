@@ -2,6 +2,7 @@
 import sys
 import traceback
 import os
+import re
 from os.path import join
 import importlib
 
@@ -84,9 +85,17 @@ class PythonAssertionEvaluator(BaseEvaluator):
                     )
         except TimeoutException:
             raise
-        except Exception:
+        except RecursionError:
             msg = traceback.format_exc(limit=0)
-            err = "Error in Test case: {0}".format(msg)
+            err = "Error Traceback: {0}".format(msg)
+        except Exception:
+            err_tb_lines = traceback.format_exc().splitlines()
+            stripped_tb_lines = []
+            for line in err_tb_lines:
+                if '.py' not in line:
+                    stripped_tb_lines.append(line)
+            stripped_tb = '\n'.join(stripped_tb_lines)
+            err = "Error Traceback:\n{0}".format(stripped_tb)
         else:
             success = True
             err = None
