@@ -26,6 +26,15 @@
     </nav><!-- /.navbar -->
 {% endblock %}
 {% block content %}
+  <script>
+    $(document).ready(function() {
+        var ele = document.getElementById('error_panel')
+        if (ele) {
+          ele.scrollIntoView(true);
+          window.scrollBy(0, -15);
+        }
+    });
+  </script>
 <div class="container-fluid">
     <div class="col-sm-3 col-md-2 sidebar">
         <p> Question Navigator </p>
@@ -64,7 +73,7 @@
             </div>
             {% if question.type == 'code' %}
                 {% if error_message %}
-                    <div class="row">
+                    <div class="row" id="error_panel">
       {% for error in error_message %}
       {% if error == "Correct answer" %}
               <div class="panel panel-success">
