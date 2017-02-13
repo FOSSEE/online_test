@@ -71,31 +71,30 @@ class PythonAssertionEvaluator(BaseEvaluator):
             tb = None
             _tests = compile(self.test_case, '<string>', mode='exec')
             exec(_tests, self.exec_scope)
-        except AssertionError:
+        except TimeoutException:
+            raise
+        except Exception:
             type, value, tb = sys.exc_info()
             info = traceback.extract_tb(tb)
             fname, lineno, func, text = info[-1]
             text = str(self.test_case)
-            err = "Expected Test Case:\n{0}\n" \
-                "Error - {1} {2} in:\n {3}\n".format(
-                    self.test_case,
-                    type.__name__,
-                    str(value),
-                    text
-                    )
-        except TimeoutException:
-            raise
-        except RecursionError:
-            msg = traceback.format_exc(limit=0)
-            err = "Error Traceback: {0}".format(msg)
-        except Exception:
+
+            # Get truncated traceback
             err_tb_lines = traceback.format_exc().splitlines()
             stripped_tb_lines = []
             for line in err_tb_lines:
                 if '.py' not in line:
                     stripped_tb_lines.append(line)
-            stripped_tb = '\n'.join(stripped_tb_lines)
-            err = "Error Traceback:\n{0}".format(stripped_tb)
+            stripped_tb = '\n'.join(stripped_tb_lines[-10::])
+
+            err = "Expected Test Case:\n{0}\n" \
+                "Error Traceback- {1} {2} in:\n {3}\n{4}".format(
+                    self.test_case,
+                    type.__name__,
+                    str(value),
+                    text,
+                    stripped_tb
+                    )
         else:
             success = True
             err = None
