@@ -7,11 +7,6 @@
 {% block script %}
 <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/course.js"></script>
 {% endblock %}
-{% block css %}
-<style>
-table, th, td { border: 1px solid black;}
-</style>
-{% endblock %}
 {% block content %}
 <br/>
 <br>
@@ -33,7 +28,7 @@ table, th, td { border: 1px solid black;}
 {% if course.get_requests %}
 <input type="checkbox" class="checkall"/>&nbsp;<font size="2">Select all</font>
 <div id="enroll-all">
-<table>
+<table class="table table-striped">
     <th></th>
     <th>Full Name</th>
     <th>Email</th>
@@ -67,7 +62,7 @@ table, th, td { border: 1px solid black;}
 {% if course.get_enrolled %}
 <input type="checkbox" class="reject"/>&nbsp;<font size="2">Select all</font>
 <div id="reject">
-<table>
+<table class="table table-striped">
     <th></th>
     <th>Full Name</th>
     <th>Email</th>
@@ -101,7 +96,7 @@ table, th, td { border: 1px solid black;}
 {% if course.get_rejected %}
 <input type="checkbox" class="enroll"/>&nbsp;<font size="2">Select all</font>
 <div id="enroll">
-<table>
+<table class="table table-striped">
     <th></th>
     <th>Full Name</th>
     <th>Email</th>

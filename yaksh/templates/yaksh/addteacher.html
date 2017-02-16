@@ -5,11 +5,6 @@
 
 {% block css %}
 <link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/course.css" />
-<style>
-table, th, td{
-	border: 1px solid black;
-}
-</style>
 {% endblock %}
 
 {% block content %}
@@ -32,7 +27,7 @@ table, th, td{
 	{% else %}
 		<center><b><u>Search Results</u></b></center><br>
 		<center><b>Search results does not include teachers already added</b></center><br>
-		<table>
+		<table class="table table-striped">
             <th></th>
             <th>Username</th>
 			<th>First Name</th>
