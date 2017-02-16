@@ -348,7 +348,11 @@ def start(request, questionpaper_id=None, attempt_num=None):
         quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
     except QuestionPaper.DoesNotExist:
         msg = 'Quiz not found, please contact your '\
-            'instructor/administrator. Please login again thereafter.'
+            'instructor/administrator.'
+        return complete(request, msg, attempt_num, questionpaper_id=None)
+    if not quest_paper.fixed_questions.all() and not quest_paper.random_questions.all():
+        msg = 'Quiz does not have Questions, please contact your '\
+            'instructor/administrator.'
         return complete(request, msg, attempt_num, questionpaper_id=None)
     if not quest_paper.quiz.course.is_enrolled(user):
         raise Http404('You are not allowed to view this page!')
@@ -527,8 +531,8 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
     """Show a page to inform user that the quiz has been compeleted."""
     user = request.user
     if questionpaper_id is None:
-        logout(request)
-        message = reason or "You are successfully logged out."
+        message = reason or "An Unexpected Error occurred. Please contact your '\
+            'instructor/administrator.'"
         context = {'message': message}
         return my_render_to_response('yaksh/complete.html', context)
     else:
@@ -537,12 +541,7 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
                 attempt_number=attempt_num)
         paper.update_marks()
         paper.set_end_time(timezone.now())
-        if paper.percent == 100:
-            message = "You answered all the questions correctly.\
-                       You have been logged out successfully,\
-                       Thank You !"
-        else:
-            message = reason or "You are successfully logged out"
+        message = reason or "Quiz has been submitted"
         context = {'message':  message, 'paper': paper}
         return my_render_to_response('yaksh/complete.html', context)
 

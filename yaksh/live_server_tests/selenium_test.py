@@ -111,7 +111,7 @@ class SeleniumTest():
 
     def close_quiz(self):
         quit_link_elem = WebDriverWait(self.driver, 5).until(
-            EC.presence_of_element_located((By.ID, "login_again"))
+            EC.presence_of_element_located((By.ID, "go_to_home"))
         )
         quit_link_elem.click()
 
