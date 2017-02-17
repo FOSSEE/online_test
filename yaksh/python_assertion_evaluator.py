@@ -83,12 +83,15 @@ class PythonAssertionEvaluator(BaseEvaluator):
             err_tb_lines = traceback.format_exc().splitlines()
             stripped_tb_lines = []
             for line in err_tb_lines:
-                if '.py' not in line:
-                    stripped_tb_lines.append(line)
+                line = re.sub(r'File\s+".*?",\s+line',
+                     'File <file>, line',
+                     line
+                    )
+                stripped_tb_lines.append(line)
             stripped_tb = '\n'.join(stripped_tb_lines[-10::])
 
             err = "Expected Test Case:\n{0}\n" \
-                "Error Traceback- {1} {2} in:\n {3}\n{4}".format(
+                "Error Traceback - {1} {2} in:\n {3}\n{4}".format(
                     self.test_case,
                     type.__name__,
                     str(value),
