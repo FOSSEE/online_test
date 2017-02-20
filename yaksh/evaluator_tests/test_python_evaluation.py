@@ -235,7 +235,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(22, len(err))
+        self.assertEqual(25, len(err))
         for msg in name_error_msg:
             self.assert_correct_output(msg, result.get("error"))
 
@@ -300,7 +300,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(22, len(err))
+        self.assertEqual(25, len(err))
         for msg in type_error_msg:
             self.assert_correct_output(msg, result.get("error"))
 
@@ -336,7 +336,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(25, len(err))
+        self.assertEqual(28, len(err))
         for msg in value_error_msg:
             self.assert_correct_output(msg, result.get("error"))
 
@@ -403,7 +403,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(12, len(err))
+        self.assertEqual(13, len(err))
         for msg in syntax_error_msg:
             self.assert_correct_output(msg, result.get("error"))
 
@@ -445,7 +445,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(10, len(err))
+        self.assertEqual(11, len(err))
         for msg in name_error_msg:
             self.assert_correct_output(msg, result.get("error"))
 
