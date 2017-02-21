@@ -104,6 +104,13 @@ def user_register(request):
                                       context_instance=ci)
 
 
+def user_logout(request):
+    """Show a page to inform user that the quiz has been compeleted."""
+    logout(request)
+    context = {'message': "You have been logged out successfully"}
+    return my_render_to_response('yaksh/complete.html', context)
+
+
 @login_required
 def quizlist_user(request, enrolled=None):
     """Show All Quizzes that is available to logged-in user."""
