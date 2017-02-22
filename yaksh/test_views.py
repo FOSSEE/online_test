@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdIOBasedTestCase, has_profile
+    StdIOBasedTestCase, has_profile, FixedQuestions
 
 
 class TestProfile(TestCase):
@@ -1161,8 +1161,8 @@ class TestViewAnswerPaper(TestCase):
 
         self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
             total_marks=1.0)
-
-        self.question_paper.fixed_questions.add(self.question)
+        fixed_ques = FixedQuestions()
+        fixed_ques.add_fixed_questions(self.question_paper, self.question)
         self.question_paper.save()
 
         AnswerPaper.objects.create(user_id=3,
@@ -1446,8 +1446,8 @@ class TestGrader(TestCase):
 
         self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
             total_marks=1.0)
-
-        self.question_paper.fixed_questions.add(self.question)
+        fixed_ques = FixedQuestions()
+        fixed_ques.add_fixed_questions(self.question_paper, self.question)
         self.question_paper.save()
 
         self.answerpaper = AnswerPaper.objects.create(user_id=3,
