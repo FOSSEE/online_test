@@ -235,7 +235,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(6, len(err))
+        self.assertEqual(25, len(err))
         for msg in name_error_msg:
             self.assert_correct_output(msg, result.get("error"))
 
@@ -245,8 +245,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         def add(a, b):
             return add(3, 3)
         """)
-        recursion_error_msg = ["Traceback",
-                               "call",
+        recursion_error_msg = ["Traceback", 
                                "maximum recursion depth exceeded"
                                ]
 
@@ -301,7 +300,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(6, len(err))
+        self.assertEqual(25, len(err))
         for msg in type_error_msg:
             self.assert_correct_output(msg, result.get("error"))
 
@@ -337,7 +336,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(6, len(err))
+        self.assertEqual(28, len(err))
         for msg in value_error_msg:
             self.assert_correct_output(msg, result.get("error"))
 
@@ -404,7 +403,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(5, len(err))
+        self.assertEqual(13, len(err))
         for msg in syntax_error_msg:
             self.assert_correct_output(msg, result.get("error"))
 
@@ -446,7 +445,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(2, len(err))
+        self.assertEqual(11, len(err))
         for msg in name_error_msg:
             self.assert_correct_output(msg, result.get("error"))
 

@@ -2,6 +2,7 @@
 import sys
 import traceback
 import os
+import re
 from os.path import join
 import importlib
 
@@ -70,23 +71,33 @@ class PythonAssertionEvaluator(BaseEvaluator):
             tb = None
             _tests = compile(self.test_case, '<string>', mode='exec')
             exec(_tests, self.exec_scope)
-        except AssertionError:
+        except TimeoutException:
+            raise
+        except Exception:
             type, value, tb = sys.exc_info()
             info = traceback.extract_tb(tb)
             fname, lineno, func, text = info[-1]
             text = str(self.test_case)
+
+            # Get truncated traceback
+            err_tb_lines = traceback.format_exc().splitlines()
+            stripped_tb_lines = []
+            for line in err_tb_lines:
+                line = re.sub(r'File\s+".*?",\s+line',
+                     'File <file>, line',
+                     line
+                    )
+                stripped_tb_lines.append(line)
+            stripped_tb = '\n'.join(stripped_tb_lines[-10::])
+
             err = "Expected Test Case:\n{0}\n" \
-                "Error - {1} {2} in:\n {3}\n".format(
+                "Error Traceback - {1} {2} in:\n {3}\n{4}".format(
                     self.test_case,
                     type.__name__,
                     str(value),
-                    text
+                    text,
+                    stripped_tb
                     )
-        except TimeoutException:
-            raise
-        except Exception:
-            msg = traceback.format_exc(limit=0)
-            err = "Error in Test case: {0}".format(msg)
         else:
             success = True
             err = None
