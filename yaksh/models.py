@@ -988,7 +988,8 @@ class AnswerPaper(models.Model):
             questions and returns the next question.
         """
         next_question = self.next_question(question_id)
-        self.questions_answered.add(question_id)
+        if question_id not in self.questions_answered.all(): 
+            self.questions_answered.add(question_id)
         self.questions_unanswered.remove(question_id)
         if next_question.id == int(question_id):
             return None

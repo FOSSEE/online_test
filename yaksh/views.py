@@ -432,9 +432,10 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
     paper = get_object_or_404(AnswerPaper, user=request.user, attempt_number=attempt_num,
             question_paper=questionpaper_id)
     question = get_object_or_404(Question, pk=q_id)
-    if question in paper.questions_answered.all():
-        next_q = paper.next_question(q_id)
-        return show_question(request, next_q, paper)
+    print ">>>>>>> Qt", q_id, next_q
+    # if question in paper.questions_answered.all(): #@@@
+    #     next_q = paper.next_question(q_id)
+    #     return show_question(request, next_q, paper)
 
     if request.method == 'POST' and question.type == 'code':
         user_code = request.POST.get('answer')
@@ -443,10 +444,10 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
                             error=json.dumps([]))
         new_answer.save()
         paper.answers.add(new_answer)
-    if next_q is not None:
+    if next_q is not None: #@@@
         next_q = get_object_or_404(Question, pk=next_q)
-        if next_q not in paper.questions_unanswered.all():
-            return show_question(request, question,  paper)
+        # if next_q not in paper.questions_unanswered.all():
+        #     return show_question(request, question,  paper)
     else:
         next_q = paper.next_question(q_id)
     return show_question(request, next_q, paper)
@@ -459,9 +460,9 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     paper = get_object_or_404(AnswerPaper, user=request.user, attempt_number=attempt_num,
             question_paper=questionpaper_id)
     current_question = get_object_or_404(Question, pk=q_id)
-    if current_question in paper.questions_answered.all():
-        next_q = paper.next_question(q_id)
-        return show_question(request, next_q, paper)
+    # if current_question in paper.questions_answered.all(): #@@@
+    #     next_q = paper.next_question(q_id)
+    #     return show_question(request, next_q, paper)
 
     if request.method == 'POST':
         snippet_code = request.POST.get('snippet')
@@ -513,7 +514,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             error_message = result.get('error')
             new_answer.error = json.dumps(result.get('error'))
             next_question = current_question if current_question.type == 'code' \
-                else paper.completed_question(current_question.id)
+                else paper.completed_question(current_question.id) ##@@
         new_answer.save()
         paper.update_marks('inprogress')
         paper.set_end_time(timezone.now())
