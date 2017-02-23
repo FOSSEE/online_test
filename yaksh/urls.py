@@ -4,6 +4,7 @@ from yaksh import views
 urlpatterns = [
     url(r'^$', views.index),
     url(r'^login/$', views.user_login, name='login'),
+    url(r'^logout/$', views.user_logout),
     url(r'^quizzes/$', views.quizlist_user, name='quizlist_user'),
     url(r'^quizzes/(?P<enrolled>\w+)/$', views.quizlist_user, name='quizlist_user'),
     url(r'^results/$', views.results_user),
