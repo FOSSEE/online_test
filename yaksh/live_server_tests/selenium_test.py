@@ -8,6 +8,9 @@ from selenium.common.exceptions import WebDriverException
 import multiprocessing
 import argparse
 
+class SeleniumTestError(Exception):
+    pass
+
 class SeleniumTest():
     def __init__(self, url, quiz_name):
         self.driver = webdriver.Firefox()
@@ -24,9 +27,12 @@ class SeleniumTest():
             self.logout()
             self.driver.close()
         except Exception as e:
-            with open("/tmp/yaksh_load_test_log.txt", "ab") as f:
-                f.write('Username: {0}\nError: {1}\n'.format(username, e))
             self.driver.close()
+            msg = ("An Error occurred while running the Selenium load"
+                " test on Yaksh!"
+                "Error:\n ".format(e))
+
+            raise SeleniumTestError()
 
     def login(self, username, password):
         # get the username, password and submit form elements
@@ -44,7 +50,7 @@ class SeleniumTest():
         for count in range(loop_count):
             self.driver.find_element_by_link_text(question_label).click()
             submit_answer_elem = self.driver.find_element_by_id("check")
-            self.driver.execute_script('editor.setValue({})'.format(answer))
+            self.driver.execute_script('global_editor.editor.setValue({});'.format(answer))
             submit_answer_elem.click()
 
     def test_c_question(self, question_label):
@@ -105,9 +111,9 @@ class SeleniumTest():
         )
         start_exam_elem.click()
 
-        self.test_c_question(question_label=1)
+        self.test_c_question(question_label=2)
         self.test_python_question(question_label=3)
-        self.test_bash_question(question_label=2)
+        self.test_bash_question(question_label=1)
 
     def close_quiz(self):
         quit_link_elem = WebDriverWait(self.driver, 5).until(

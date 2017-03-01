@@ -12,6 +12,7 @@ install_requires = [
     'pytz==2016.4',
     'python-social-auth==0.2.19',
     'tornado',
+    'selenium',
 ]
 
 setup(

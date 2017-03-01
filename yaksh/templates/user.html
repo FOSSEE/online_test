@@ -16,7 +16,7 @@
         <div class= "collapse navbar-collapse" id="navbar">
           <ul class="nav navbar-nav navbar-right">
               <li><a href="{{ URL_ROOT }}/exam/viewprofile"> {{ user.get_full_name.title }} </a></li>
-              <li><a style='cursor:pointer' onClick='location.replace("{{URL_ROOT}}/exam/logout/");'> <span class="glyphicon glyphicon-log-out">Logout </span></a></li>
+              <li><a style='cursor:pointer' id='logout' onClick='location.replace("{{URL_ROOT}}/exam/complete/");'> <span class="glyphicon glyphicon-log-out">Logout </span></a></li>
           </ul>
         </div><!-- /.navbar -->
       </div><!-- /.container -->

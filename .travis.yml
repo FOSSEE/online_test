@@ -22,4 +22,4 @@ before_install:
 # command to run tests
 script:
   - python manage.py test -v 2 yaksh
-  - python manage.py test -v 2 yaksh.live_server_tests
+  - python manage.py test -v 2 yaksh.live_server_tests.load_test
