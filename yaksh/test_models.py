@@ -662,7 +662,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         current_question = self.answerpaper.current_question()
         self.assertEqual(current_question.id, 1)
         # Test completed_question() method of Answer Paper
-        question = self.answerpaper.completed_question(1)
+        question = self.answerpaper.add_completed_question(1)
         self.assertEqual(self.answerpaper.questions_left(), 2)
 
         # Test next_question() method of Answer Paper
@@ -724,14 +724,14 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Test completed_question and next_question
         # When all questions are answered
-        current_question = self.answerpaper.completed_question(2)
+        current_question = self.answerpaper.add_completed_question(2)
 
         # Then
         self.assertEqual(self.answerpaper.questions_left(), 1)
         self.assertEqual(current_question.id, 3)
 
         # When
-        current_question = self.answerpaper.completed_question(3)
+        current_question = self.answerpaper.add_completed_question(3)
 
         # Then
         self.assertEqual(self.answerpaper.questions_left(), 0)

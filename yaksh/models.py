@@ -982,7 +982,7 @@ class AnswerPaper(models.Model):
         """Returns the number of questions left."""
         return self.questions_unanswered.count()
 
-    def completed_question(self, question_id):
+    def add_completed_question(self, question_id):
         """
             Adds the completed question to the list of answered
             questions and returns the next question.
