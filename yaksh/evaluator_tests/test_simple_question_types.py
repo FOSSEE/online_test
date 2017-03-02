@@ -9,20 +9,19 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
 
 def setUpModule():
     # create user profile
-    user = User.objects.create_user(pk=1,username='demo_user',
+    user = User.objects.create_user(username='demo_user_100',
                                     password='demo',
                                     email='demo@test.com')
     Profile.objects.create(user=user, roll_number=1,
                            institute='IIT', department='Aerospace',
                            position='Student')
-
     # create 2 questions
     for i in range(101, 103):
         Question.objects.create(summary='Q%d' % (i), points=1,
                                  type='code', user=user)
 
     # create a course
-    course = Course.objects.create(name="Python Course",
+    course = Course.objects.create(name="Python Course 100",
                                    enrollment="Enroll Request", creator=user)
 
     quiz = Quiz.objects.create(start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0,
@@ -30,12 +29,12 @@ def setUpModule():
                                end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0,
                                                       tzinfo=pytz.utc),
                                duration=30, active=True, attempts_allowed=1,
-                               time_between_attempts=0, description='demo quiz',
+                               time_between_attempts=0, description='demo quiz 100',
                                pass_criteria=0,language='Python',
                                prerequisite=None,course=course,
                                instructions="Demo Instructions"
                                )
-    question_paper = QuestionPaper.objects.create(pk=1, quiz=quiz,
+    question_paper = QuestionPaper.objects.create(quiz=quiz,
                                                   total_marks=1.0)
 
     answerpaper = AnswerPaper.objects.create(user=user, user_ip='101.0.0.1',
@@ -46,24 +45,20 @@ def setUpModule():
                                              attempt_number=1
                                              )
 
-    with open('/tmp/test.txt', 'wb') as f:
-        f.write('2'.encode('ascii'))
-
 def tearDownModule():
-    User.objects.all().delete()
-    Question.objects.all().delete()
-    Quiz.objects.all().delete()
+  User.objects.get(username="demo_user_100").delete()
 
 
 class IntegerQuestionTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         # Creating Quiz
+        self.quiz = Quiz.objects.get(description="demo quiz 100")
         # Creating Question paper
-        self.question_paper = QuestionPaper.objects.get(pk=1)
+        self.question_paper = QuestionPaper.objects.get(quiz=self.quiz)
 
         #Creating User
-        self.user = User.objects.get(pk=1)
+        self.user = User.objects.get(username='demo_user_100')
 
         #Creating Question
         self.question1 = Question.objects.get(summary='Q101')
@@ -125,12 +120,12 @@ class IntegerQuestionTestCases(unittest.TestCase):
 class StringQuestionTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(self):
+        # Creating Quiz
+        self.quiz = Quiz.objects.get(description="demo quiz 100")
         # Creating Question paper
-        self.question_paper = QuestionPaper.objects.get(pk=1)
-
+        self.question_paper = QuestionPaper.objects.get(quiz=self.quiz)
         #Creating User
-        self.user = User.objects.get(pk=1)
-
+        self.user = User.objects.get(username='demo_user_100')
         #Creating Question
         self.question1 = Question.objects.get(summary='Q101')
         self.question1.language = 'python'
@@ -233,12 +228,13 @@ class StringQuestionTestCases(unittest.TestCase):
 class FloatQuestionTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        #Creating User
-        self.user = User.objects.get(pk=1)
-
+        # Creating Quiz
+        self.quiz = Quiz.objects.get(description="demo quiz 100")
         # Creating Question paper
-        self.question_paper = QuestionPaper.objects.get(pk=1)
+        self.question_paper = QuestionPaper.objects.get(quiz=self.quiz)
 
+        #Creating User
+        self.user = User.objects.get(username='demo_user_100')
         #Creating Question
         self.question1 = Question.objects.get(summary='Q101')
         self.question1.language = 'python'

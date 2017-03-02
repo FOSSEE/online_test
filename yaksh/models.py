@@ -683,7 +683,6 @@ class QuestionPaper(models.Model):
 
     # Total marks for the question paper.
     total_marks = models.FloatField(default=0.0, blank=True)
-
     objects = QuestionPaperManager()
 
     def update_total_marks(self):
