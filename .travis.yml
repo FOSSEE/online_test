@@ -4,20 +4,17 @@ python:
   - "2.7"
   - "3.5"
 
-env:
-  - DJANGO=1.9.5
-
-# command to install dependencies
-install:
-  - pip install git+https://github.com/FOSSEE/online_test.git#egg=yaksh-0.1
-  - pip install -q Django==$DJANGO
-
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y scilab
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3 # give xvfb some time to start
+
+# command to install dependencies
+install:
+  - pip install -r requirements/requirements-common.txt
+  - python setup.py develop
 
 # command to run tests
 script:
