@@ -12,15 +12,16 @@
 $(document).ready(function() 
     { 
         $("#result-table").tablesorter({sortList: [[5,1]]});
-        var papers_length = "{{papers|length}}"
+        var papers_length = "{{papers|length}}";
         for (var i=0; i < papers_length; i++){
             var time_left = $("#time_left"+[i]);
-            var date = new Date(null);
-            date.setSeconds(time_left.text());
-            var result = date.toISOString().substr(11, 8);
-            time_left.text(result)
-        }
-    });
+            var time = time_left.text();
+            var hh   = Math.floor(time / 3600);
+            var mm = Math.floor((time - (hh * 3600)) / 60);
+            var ss = time - (hh * 3600) - (mm * 60);
+            time_left.text(hh + ":" + mm + ":" + ss)
+    }
+});
 </script>
 
 {% endblock %}
