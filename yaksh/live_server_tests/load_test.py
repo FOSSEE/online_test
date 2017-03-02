@@ -57,10 +57,6 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        # User.objects.all().delete()
-        # Question.objects.all().delete()
-        # Quiz.objects.all().delete()
-        # Course.objects.all().delete()
         cls.demo_student.delete()
         cls.demo_student_profile.delete()
         cls.demo_mod.delete()
