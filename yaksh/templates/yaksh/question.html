@@ -89,7 +89,10 @@ function call_skip(url)
 }
 </script>
 <script>
-    $(document).ready(function(){
+
+  var init_val = '{{ last_attempt|escape_quotes|safe }}';
+  var global_editor = {};
+  $(document).ready(function(){
   // Codemirror object, language modes and initial content
   // Get the textarea node
   var textarea_node = document.querySelector('#answer');
@@ -115,17 +118,15 @@ function call_skip(url)
   };
 
   // Initialize the codemirror editor
-  var editor = CodeMirror.fromTextArea(textarea_node, options);
+  global_editor.editor = CodeMirror.fromTextArea(textarea_node, options);
 
   // Setting code editors initial content
-  editor.setValue('{{ last_attempt|escape_quotes|safe }}')
+  global_editor.editor.setValue(init_val);
 
   function reset_editor() {
-      editor.setValue('{{ last_attempt|escape_quotes|safe }}');
-      editor.clearHistory();
+      global_editor.editor.setValue(init_val);
+      global_editor.editor.clearHistory();
   }
-
-
     });
 </script>
 
