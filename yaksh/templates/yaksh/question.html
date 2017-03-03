@@ -135,13 +135,19 @@ function call_skip(url)
 {% block onload %} onload="updateTime();" {% endblock %}
 
 {% block main %}
-         <p id="status"></p>
-         <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" enctype="multipart/form-data">
-         {% csrf_token %}
-         <input type=hidden name="question_id" id="question_id" value={{ question.id }}></input>
-             <div class="panel panel-default">
-                 <div class="panel-heading">
-                     <h4><u> {{ question.summary }}
+        <p id="status"></p>
+        {% if notification %}
+        <div class="alert alert-warning" role="alert">
+          <strong>Note:</strong> {{ notification }}
+        </div>
+        {% endif %}
+        <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type=hidden name="question_id" id="question_id" value={{ question.id }}></input>
+            <div class="panel panel-default">
+                  <div class="panel-heading">
+                      <h4>
+                        <u> {{ question.summary }}
                              {% if question.type == "mcq" %}
                              (Single Correct Choice Questions)
                              {% elif question.type == "mcc" %}
@@ -151,8 +157,8 @@ function call_skip(url)
                              {% elif question.type == "upload" %}
                              (ASSIGNMENT UPLOAD)
                              {% endif %}
-                         </u>
-                         <font class=pull-right>(Marks : {{ question.points }}) </font>
+                        </u>
+                        <font class=pull-right>(Marks : {{ question.points }}) </font>
                       </h4>
                       <font size=3 face=arial> {{ question.description|safe }} </font>
                       {% if files %}

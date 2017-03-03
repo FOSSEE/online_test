@@ -1000,8 +1000,8 @@ class AnswerPaper(models.Model):
             Skips the current question and returns the next sequentially
              available question.
         """
-        unanswered_questions = self.questions_unanswered.all()
-        questions = list(unanswered_questions.values_list('id', flat=True))
+        all_questions = self.questions.all()
+        questions = list(all_questions.values_list('id', flat=True))
         if len(questions) == 0:
             return None
         try:
@@ -1009,7 +1009,7 @@ class AnswerPaper(models.Model):
             next_id = questions[index+1]
         except (ValueError, IndexError):
             next_id = questions[0]
-        return unanswered_questions.get(id=next_id)
+        return all_questions.get(id=next_id)
 
     def time_left(self):
         """Return the time remaining for the user in seconds."""

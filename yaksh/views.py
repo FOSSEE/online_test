@@ -400,7 +400,7 @@ def start(request, questionpaper_id=None, attempt_num=None):
 
 
 @login_required
-def show_question(request, question, paper, error_message=None):
+def show_question(request, question, paper, error_message=None, notification=None):
     """Show a question if possible."""
     user = request.user
     if not question:
@@ -412,10 +412,12 @@ def show_question(request, question, paper, error_message=None):
     if paper.time_left() <= 0:
         reason='Your time is up!'
         return complete(request, reason, paper.attempt_number, paper.question_paper.id)
+    if question in paper.questions_answered.all():
+        notification = 'You have already attempted this question'
     test_cases = question.get_test_cases()
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
     context = {'question': question, 'paper': paper, 'error_message': error_message,
-                'test_cases': test_cases, 'files': files,
+                'test_cases': test_cases, 'files': files, 'notification': notification,
                 'last_attempt': question.snippet.encode('unicode-escape')}
     answers = paper.get_previous_answers(question)
     if answers:
@@ -472,14 +474,14 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                 assign.assignmentFile = request.FILES['assignment']
             assign.save()
             user_answer = 'ASSIGNMENT UPLOADED'
-            next_q = paper.completed_question(current_question.id)
+            next_q = paper.add_completed_question(current_question.id)
             return show_question(request, next_q, paper)
         else:
             user_code = request.POST.get('answer')
             user_answer = snippet_code + "\n" + user_code if snippet_code else user_code
         if not user_answer:
             msg = ["Please submit a valid option or code"]
-            return show_question(request, current_question, paper, msg)
+            return show_question(request, current_question, paper, notification=msg)
         new_answer = Answer(question=current_question, answer=user_answer,
                             correct=False, error=json.dumps([]))
         new_answer.save()
@@ -497,15 +499,16 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             new_answer.correct = result.get('success')
             error_message = None
             new_answer.error = json.dumps(result.get('error'))
-            next_question = paper.completed_question(current_question.id)
+            next_question = paper.add_completed_question(current_question.id)
         else:
             new_answer.marks = (current_question.points * result['weight'] /
                 current_question.get_maximum_test_case_weight()) \
                 if current_question.partial_grading and current_question.type == 'code' else 0
-            error_message = result.get('error')
+            error_message = result.get('error') if current_question.type == 'code' \
+                else None
             new_answer.error = json.dumps(result.get('error'))
             next_question = current_question if current_question.type == 'code' \
-                else paper.completed_question(current_question.id)
+                else paper.add_completed_question(current_question.id)
         new_answer.save()
         paper.update_marks('inprogress')
         paper.set_end_time(timezone.now())

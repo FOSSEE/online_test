@@ -694,7 +694,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(next_question_id is not None)
-        self.assertEqual(next_question_id.id, 2)
+        self.assertEqual(next_question_id.id, 1)
 
         # Given, last question in the list
         current_question_id = 3
@@ -704,7 +704,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(next_question_id is not None)
-        self.assertEqual(next_question_id.id, 2)
+        self.assertEqual(next_question_id.id, 1)
 
         # Test get_questions_answered() method
         # When
@@ -735,13 +735,13 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Then
         self.assertEqual(self.answerpaper.questions_left(), 0)
-        self.assertTrue(current_question is None)
+        self.assertTrue(current_question is not None)
 
         # When
         next_question_id = self.answerpaper.next_question(current_question_id)
 
         # Then
-        self.assertTrue(next_question_id is None)
+        self.assertTrue(next_question_id is not None)
 
     def test_update_marks(self):
         """ Test update_marks method of AnswerPaper"""
