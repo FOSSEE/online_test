@@ -32,7 +32,7 @@ class SeleniumTest():
                 " test on Yaksh!"
                 "Error:\n ".format(e))
 
-            raise SeleniumTestError()
+            raise SeleniumTestError(msg)
 
     def login(self, username, password):
         # get the username, password and submit form elements
