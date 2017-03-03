@@ -413,7 +413,9 @@ def show_question(request, question, paper, error_message=None, notification=Non
         reason='Your time is up!'
         return complete(request, reason, paper.attempt_number, paper.question_paper.id)
     if question in paper.questions_answered.all():
-        notification = 'You have already attempted this question'
+        notification = 'You have already attempted this question successfully' \
+            if question.type == "code" else \
+            'You have already attempted this question'
     test_cases = question.get_test_cases()
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
     context = {'question': question, 'paper': paper, 'error_message': error_message,
