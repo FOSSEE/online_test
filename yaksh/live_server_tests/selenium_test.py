@@ -29,8 +29,8 @@ class SeleniumTest():
         except Exception as e:
             self.driver.close()
             msg = ("An Error occurred while running the Selenium load"
-                " test on Yaksh!"
-                "Error:\n ".format(e))
+                " test on Yaksh!\n"
+                "Error:\n{0}".format(e))
 
             raise SeleniumTestError(msg)
 

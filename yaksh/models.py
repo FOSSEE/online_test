@@ -987,11 +987,12 @@ class AnswerPaper(models.Model):
             Adds the completed question to the list of answered
             questions and returns the next question.
         """
-        next_question = self.next_question(question_id)
         if question_id not in self.questions_answered.all(): 
             self.questions_answered.add(question_id)
         self.questions_unanswered.remove(question_id)
-        if next_question.id == int(question_id):
+
+        next_question = self.next_question(question_id)
+        if next_question and next_question.id == int(question_id):
             return None
         return next_question
 
@@ -1001,8 +1002,11 @@ class AnswerPaper(models.Model):
              available question.
         """
         all_questions = self.questions.all()
+        unanswered_questions = self.questions_unanswered.all()
         questions = list(all_questions.values_list('id', flat=True))
         if len(questions) == 0:
+            return None
+        if unanswered_questions.count() == 0:
             return None
         try:
             index = questions.index(int(question_id))

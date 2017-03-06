@@ -735,13 +735,13 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Then
         self.assertEqual(self.answerpaper.questions_left(), 0)
-        self.assertTrue(current_question is not None)
+        self.assertTrue(current_question is None)
 
         # When
         next_question_id = self.answerpaper.next_question(current_question_id)
 
         # Then
-        self.assertTrue(next_question_id is not None)
+        self.assertTrue(next_question_id is None)
 
     def test_update_marks(self):
         """ Test update_marks method of AnswerPaper"""
