@@ -771,7 +771,7 @@ def ajax_questions_filter(request):
     """Ajax call made when filtering displayed questions."""
 
     user = request.user
-    filter_dict = {"user_id": user.id}
+    filter_dict = {"user_id": user.id, "active": True}
     question_type = request.POST.get('question_type')
     marks = request.POST.get('marks')
     language = request.POST.get('language')
@@ -795,7 +795,10 @@ def _get_questions(user, question_type, marks):
     if question_type is None and marks is None:
         return None
     if question_type:
-        questions = Question.objects.filter(type=question_type, user=user)
+        questions = Question.objects.filter(type=question_type,
+             user=user,
+             active=True
+        )
         if marks:
             questions = questions.filter(points=marks)
     return questions
