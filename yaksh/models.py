@@ -1153,7 +1153,8 @@ class AnswerPaper(models.Model):
             elif question.type == 'string':
                 testcase = question.get_test_case()
                 if testcase.string_check == "lower":
-                    if testcase.correct.lower().splitlines() == user_answer.lower().splitlines():
+                    if testcase.correct.lower().splitlines()\
+                        == user_answer.lower().splitlines():
                         result['success'] = True
                         result['error'] = ['Correct answer']
                 else:
@@ -1164,8 +1165,8 @@ class AnswerPaper(models.Model):
             elif question.type == 'float':
                 testcase = question.get_test_case()
                 if abs(testcase.correct-user_answer) <= testcase.error_margin:
-                            result['success'] = True
-                            result['error'] = ['Correct answer']
+                        result['success'] = True
+                        result['error'] = ['Correct answer']
 
             elif question.type == 'code':
                 user_dir = self.user.profile.get_user_dir()
