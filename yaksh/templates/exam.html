@@ -52,7 +52,9 @@
                 {% endif %}
                 {% endif %}
                 {% if qid in paper.get_questions_answered %}
-                <li class="disabled"><a style="background-color:#B4B8BA; width:25%" href="#" data-toggle="tooltip" title="{{ qid.description }}" >{{ forloop.counter }}</a></li>
+                <li><a style="background-color:#B4B8BA; width:25%" href="#" data-toggle="tooltip"
+                onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')"
+                title="{{ qid.description }}">{{ forloop.counter }}</a></li>
                 {% endif %}
                 {% else %}
                 {% if qid.id == question.id %}

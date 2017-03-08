@@ -982,15 +982,17 @@ class AnswerPaper(models.Model):
         """Returns the number of questions left."""
         return self.questions_unanswered.count()
 
-    def completed_question(self, question_id):
+    def add_completed_question(self, question_id):
         """
             Adds the completed question to the list of answered
             questions and returns the next question.
         """
-        next_question = self.next_question(question_id)
-        self.questions_answered.add(question_id)
+        if question_id not in self.questions_answered.all(): 
+            self.questions_answered.add(question_id)
         self.questions_unanswered.remove(question_id)
-        if next_question.id == int(question_id):
+
+        next_question = self.next_question(question_id)
+        if next_question and next_question.id == int(question_id):
             return None
         return next_question
 
@@ -999,16 +1001,19 @@ class AnswerPaper(models.Model):
             Skips the current question and returns the next sequentially
              available question.
         """
+        all_questions = self.questions.all()
         unanswered_questions = self.questions_unanswered.all()
-        questions = list(unanswered_questions.values_list('id', flat=True))
+        questions = list(all_questions.values_list('id', flat=True))
         if len(questions) == 0:
+            return None
+        if unanswered_questions.count() == 0:
             return None
         try:
             index = questions.index(int(question_id))
             next_id = questions[index+1]
         except (ValueError, IndexError):
             next_id = questions[0]
-        return unanswered_questions.get(id=next_id)
+        return all_questions.get(id=next_id)
 
     def time_left(self):
         """Return the time remaining for the user in seconds."""
