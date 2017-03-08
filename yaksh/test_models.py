@@ -1,7 +1,7 @@
 import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdIOBasedTestCase, FileUpload, McqTestCase, FixedQuestions
+    StdIOBasedTestCase, FileUpload, McqTestCases
 import json
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -325,9 +325,9 @@ class QuestionPaperTestCases(unittest.TestCase):
         )
 
         # add fixed set of questions to the question paper
-        fixed_ques = FixedQuestions()
-        fixed_ques.add_fixed_questions(self.question_paper, self.questions[3])
-        fixed_ques.add_fixed_questions(self.question_paper, self.questions[5])
+        self.question_paper.fixed_questions.add(self.questions[3],
+                self.questions[5]
+                )
 
         # create two QuestionSet for random questions
         # QuestionSet 1
@@ -376,9 +376,9 @@ class QuestionPaperTestCases(unittest.TestCase):
     def test_questionpaper(self):
         """ Test question paper"""
         self.assertEqual(self.question_paper.quiz.description, 'demo quiz')
-        fixed_ques = FixedQuestions()
-        ques = fixed_ques.get_fixed_questions(self.question_paper)
-        self.assertSequenceEqual(ques, [self.questions[3], self.questions[5]])
+        self.assertSequenceEqual(self.question_paper.fixed_questions.all(),
+                [self.questions[3], self.questions[5]]
+                )
         self.assertTrue(self.question_paper.shuffle_questions)
 
     def test_update_total_marks(self):
@@ -417,9 +417,9 @@ class QuestionPaperTestCases(unittest.TestCase):
                                                              attempt_num)
         self.assertIsInstance(answerpaper, AnswerPaper)
         paper_questions = answerpaper.questions.all()
+        print (paper_questions)
         self.assertEqual(len(paper_questions), 7)
-        fixed_ques = FixedQuestions()
-        fixed_questions = set(fixed_ques.get_fixed_questions(self.question_paper))
+        fixed_questions = set(self.question_paper.fixed_questions.all())
         self.assertTrue(fixed_questions.issubset(set(paper_questions)))
         answerpaper.passed = True
         answerpaper.save()
@@ -433,8 +433,8 @@ class QuestionPaperTestCases(unittest.TestCase):
                                                  self.question_paper.id
                                                  )
             self.assertEqual(trial_paper.quiz, trial_quiz)
-            self.assertEqual(fixed_ques.get_fixed_questions(trial_paper),
-                             fixed_ques.get_fixed_questions(self.question_paper)
+            self.assertEqual(trial_paper.fixed_questions.all(),
+                             self.question_paper.fixed_questions.all()
                              )
             self.assertEqual(trial_paper.random_questions.all(),
                              self.question_paper.random_questions.all()
@@ -446,9 +446,8 @@ class QuestionPaperTestCases(unittest.TestCase):
                                     trial_quiz, self.questions_list
                                     )
             self.assertEqual(trial_paper.quiz, trial_quiz)
-            fixed_q = FixedQuestions.objects.filter(
-                questionpaper=self.question_paper).values_list(
-                'question_id', flat=True)
+            fixed_q = self.question_paper.fixed_questions.values_list(
+                'id', flat=True)
             self.assertEqual(self.questions_list, fixed_q)
 
 

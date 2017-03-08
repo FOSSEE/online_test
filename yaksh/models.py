@@ -616,11 +616,11 @@ class Quiz(models.Model):
 ###############################################################################
 class QuestionPaperManager(models.Manager):
 
-    def _create_trial_from_questionpaper(self, original_quiz_id, fixed_que):
+    def _create_trial_from_questionpaper(self, original_quiz_id):
         """Creates a copy of the original questionpaper"""
         trial_questionpaper = self.get(quiz_id=original_quiz_id)
-        trial_questions = {"fixed_questions": fixed_que.get_fixed_questions(
-                            trial_questionpaper),
+        fixed_ques = trial_questionpaper.get_ordered_questions()
+        trial_questions = {"fixed_questions": fixed_ques,
                            "random_questions": trial_questionpaper
                            .random_questions.all()
                            }
@@ -635,10 +635,10 @@ class QuestionPaperManager(models.Manager):
             trial_questionpaper = self.create(quiz=trial_quiz,
                                               total_marks=10,
                                               )
-            fixed_que = FixedQuestions()
             for q_id in questions_list:
                 que = Question.objects.get(id=q_id)
-                fixed_que.add_fixed_questions(trial_questionpaper, que)
+                FixedQuestions.objects.add_fixed_questions(
+                    trial_questionpaper, que)
             return trial_questionpaper
 
     def create_trial_paper_to_test_quiz(self, trial_quiz, original_quiz_id):
@@ -646,16 +646,12 @@ class QuestionPaperManager(models.Manager):
         if self.filter(quiz=trial_quiz).exists():
             trial_questionpaper = self.get(quiz=trial_quiz)
         else:
-            fixed_que = FixedQuestions()
             trial_questionpaper, trial_questions = \
                 self._create_trial_from_questionpaper(original_quiz_id,
-                fixed_que
                 )
             trial_questionpaper.quiz = trial_quiz
-            for question in trial_questions["fixed_questions"]:
-                fixed_que.add_fixed_questions(trial_questionpaper,
-                    question
-                    )
+            trial_questionpaper.fixed_questions\
+                .add(*trial_questions["fixed_questions"])
             trial_questionpaper.random_questions\
                 .add(*trial_questions["random_questions"])
             trial_questionpaper.save()
@@ -669,6 +665,9 @@ class QuestionPaper(models.Model):
     # Question paper belongs to a particular quiz.
     quiz = models.ForeignKey(Quiz)
 
+    # Questions that will be mandatory in the quiz.
+    fixed_questions = models.ManyToManyField(Question)
+
     # Questions that will be fetched randomly from the Question Set.
     random_questions = models.ManyToManyField("QuestionSet")
 
@@ -678,13 +677,15 @@ class QuestionPaper(models.Model):
     # Total marks for the question paper.
     total_marks = models.FloatField(default=0.0, blank=True)
 
+    # Sequence or Order of fixed questions
+    fixed_question_order = models.CharField(max_length=255, blank=True)
+
     objects = QuestionPaperManager()
 
     def update_total_marks(self):
         """ Updates the total marks for the Question Paper"""
         marks = 0.0
-        fixed_ques = FixedQuestions()
-        questions = fixed_ques.get_fixed_questions(self)
+        questions = self.fixed_questions.all()
         for question in questions:
             marks += question.points
         for question_set in self.random_questions.all():
@@ -693,8 +694,7 @@ class QuestionPaper(models.Model):
 
     def _get_questions_for_answerpaper(self):
         """ Returns fixed and random questions for the answer paper"""
-        fixed_ques = FixedQuestions()
-        questions = fixed_ques.get_fixed_questions(self)
+        questions = self.get_ordered_questions()
         for question_set in self.random_questions.all():
             questions += question_set.get_random_questions()
         return questions
@@ -757,30 +757,18 @@ class QuestionPaper(models.Model):
                                             summary="Yaksh Demo Question",
                                             user=user)
         # add fixed set of questions to the question paper
-        fixed_que = FixedQuestions()
-        for question in questions:
-            fixed_que.add_fixed_questions(questionpaper, question)
+        question_paper.fixed_questions.add(*questions)
+
+    def get_ordered_questions(self):
+        ques = []
+        if self.fixed_question_order:
+            que_order = self.fixed_question_order.split(',')
+            for que_id in que_order:
+                ques.append(self.fixed_questions.get(id=que_id))
+        return ques
 
     def __str__(self):
         return "Question Paper for " + self.quiz.description
-
-
-###############################################################################
-class FixedQuestions(models.Model):
-    questionpaper = models.ForeignKey(QuestionPaper)
-    question = models.ForeignKey(Question)
-
-    def get_fixed_questions(self, qp):
-        fixed_q = FixedQuestions.objects.filter(questionpaper=qp).order_by('pk')
-        questions = [que.question for que in fixed_q
-            if que.question.active == True]
-        return questions
-
-    def add_fixed_questions(self, qp, que):
-        FixedQuestions.objects.create(questionpaper=qp, question=que)
-
-    def remove_fixed_questions(self, que_ids):
-        FixedQuestions.objects.filter(question_id__in=que_ids).delete()
 
 
 ###############################################################################
