@@ -12,7 +12,16 @@
 $(document).ready(function() 
     { 
         $("#result-table").tablesorter({sortList: [[5,1]]});
-    });
+        var papers_length = "{{papers|length}}";
+        for (var i=0; i < papers_length; i++){
+            var time_left = $("#time_left"+[i]);
+            var time = time_left.text();
+            var hh   = Math.floor(time / 3600);
+            var mm = Math.floor((time - (hh * 3600)) / 60);
+            var ss = time - (hh * 3600) - (mm * 60);
+            time_left.text(hh + ":" + mm + ":" + ss)
+    }
+});
 </script>
 
 {% endblock %}
@@ -60,7 +69,7 @@ $(document).ready(function()
 
 <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{papers.0.question_paper.id}}">Question Statisitics</a></p>
 <p><a href="{{URL_ROOT}}/exam/manage/monitor/download_csv/{{papers.0.question_paper.id}}">Download CSV</a></p>
-<table id="result-table" class="tablesorter table">
+<table id="result-table" class="tablesorter table table table-striped">
     <thead>
     <tr>
     <th> Name </th>
@@ -70,7 +79,7 @@ $(document).ready(function()
     <th> Questions answered </th> 
     <th> Marks obtained </th>
     <th> Attempts </th>
-    <th> Status </th>
+    <th> Time Remaining </th>
     </tr>
     </thead>
     <tbody>
@@ -80,10 +89,11 @@ $(document).ready(function()
         <td> {{ paper.user.username }} </td>
         <td> {{ paper.user.profile.roll_number }} </td>
         <td> {{ paper.user.profile.institute }} </td>
-        <td> {{ paper.get_answered_str }} </td> 
+        <td> {{ paper.get_answered_str }} </td>
         <td> {{ paper.marks_obtained }} </td>
         <td> {{ paper.answers.count }} </td>
-        <td> {{ paper.status }} </td>
+        <td id="time_left{{forloop.counter0}}"> {{ paper.time_left }} </td>
+        </div>
     </tr>
     {% endfor %}
     </tbody>
