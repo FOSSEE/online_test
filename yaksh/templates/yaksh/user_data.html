@@ -108,7 +108,7 @@ User IP address: {{ paper.user_ip }}
     {% else %}
     <h5>Student answer: </h5>
     {% for answer in answers %}
-    {% if not answer.skipped %}
+ 
     {% if answer.answer.correct %}
             <div class="panel panel-success">
             <div class="panel-heading">Correct answer
@@ -124,7 +124,7 @@ User IP address: {{ paper.user_ip }}
     </div>
     <div class="panel-body"><pre><code>{{ answer.answer.answer.strip }}</code></pre></div>
     </div>
-    {% endif %}
+
     {% endfor %}
     {% endif %}
     <hr>

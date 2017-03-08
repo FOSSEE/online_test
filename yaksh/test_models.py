@@ -668,6 +668,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         current_question = self.answerpaper.current_question()
         self.assertEqual(current_question.summary, "Question1")
         # Test completed_question() method of Answer Paper
+
         question = self.answerpaper.completed_question(self.question1.id)
         self.assertEqual(self.answerpaper.questions_left(), 2)
 
@@ -700,6 +701,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(next_question_id is not None)
+
         self.assertEqual(next_question_id.summary, "Question2")
 
         # Given, last question in the list
@@ -710,6 +712,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(next_question_id is not None)
+
         self.assertEqual(next_question_id.summary, "Question2")
 
         # Test get_questions_answered() method
@@ -730,6 +733,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Test completed_question and next_question
         # When all questions are answered
+
         current_question = self.answerpaper.completed_question(self.question2.id)
 
         # Then

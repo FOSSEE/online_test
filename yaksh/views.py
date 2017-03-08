@@ -402,7 +402,7 @@ def start(request, questionpaper_id=None, attempt_num=None):
 
 
 @login_required
-def show_question(request, question, paper, error_message=None):
+def show_question(request, question, paper, error_message=None, notification=None):
     """Show a question if possible."""
     user = request.user
     if not question:
@@ -414,10 +414,14 @@ def show_question(request, question, paper, error_message=None):
     if paper.time_left() <= 0:
         reason='Your time is up!'
         return complete(request, reason, paper.attempt_number, paper.question_paper.id)
+    if question in paper.questions_answered.all():
+        notification = 'You have already attempted this question successfully' \
+            if question.type == "code" else \
+            'You have already attempted this question'
     test_cases = question.get_test_cases()
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
     context = {'question': question, 'paper': paper, 'error_message': error_message,
-                'test_cases': test_cases, 'files': files,
+                'test_cases': test_cases, 'files': files, 'notification': notification,
                 'last_attempt': question.snippet.encode('unicode-escape')}
     answers = paper.get_previous_answers(question)
     if answers:
@@ -434,9 +438,6 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
     paper = get_object_or_404(AnswerPaper, user=request.user, attempt_number=attempt_num,
             question_paper=questionpaper_id)
     question = get_object_or_404(Question, pk=q_id)
-    if question in paper.questions_answered.all():
-        next_q = paper.next_question(q_id)
-        return show_question(request, next_q, paper)
 
     if request.method == 'POST' and question.type == 'code':
         user_code = request.POST.get('answer')
@@ -447,8 +448,6 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
         paper.answers.add(new_answer)
     if next_q is not None:
         next_q = get_object_or_404(Question, pk=next_q)
-        if next_q not in paper.questions_unanswered.all():
-            return show_question(request, question,  paper)
     else:
         next_q = paper.next_question(q_id)
     return show_question(request, next_q, paper)
@@ -461,9 +460,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     paper = get_object_or_404(AnswerPaper, user=request.user, attempt_number=attempt_num,
             question_paper=questionpaper_id)
     current_question = get_object_or_404(Question, pk=q_id)
-    if current_question in paper.questions_answered.all():
-        next_q = paper.next_question(q_id)
-        return show_question(request, next_q, paper)
 
     if request.method == 'POST':
         snippet_code = request.POST.get('snippet')
@@ -497,14 +493,14 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                 assign.assignmentFile = request.FILES['assignment']
             assign.save()
             user_answer = 'ASSIGNMENT UPLOADED'
-            next_q = paper.completed_question(current_question.id)
+            next_q = paper.add_completed_question(current_question.id)
             return show_question(request, next_q, paper)
         else:
             user_code = request.POST.get('answer')
             user_answer = snippet_code + "\n" + user_code if snippet_code else user_code
         if not user_answer:
             msg = ["Please submit a valid option or code"]
-            return show_question(request, current_question, paper, msg)
+            return show_question(request, current_question, paper, notification=msg)
         new_answer = Answer(question=current_question, answer=user_answer,
                             correct=False, error=json.dumps([]))
         new_answer.save()
@@ -526,15 +522,16 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             new_answer.correct = result.get('success')
             error_message = None
             new_answer.error = json.dumps(result.get('error'))
-            next_question = paper.completed_question(current_question.id)
+            next_question = paper.add_completed_question(current_question.id)
         else:
             new_answer.marks = (current_question.points * result['weight'] /
                 current_question.get_maximum_test_case_weight()) \
                 if current_question.partial_grading and current_question.type == 'code' else 0
-            error_message = result.get('error')
+            error_message = result.get('error') if current_question.type == 'code' \
+                else None
             new_answer.error = json.dumps(result.get('error'))
             next_question = current_question if current_question.type == 'code' \
-                else paper.completed_question(current_question.id)
+                else paper.add_completed_question(current_question.id)
         new_answer.save()
         paper.update_marks('inprogress')
         paper.set_end_time(timezone.now())
@@ -792,7 +789,7 @@ def ajax_questions_filter(request):
     """Ajax call made when filtering displayed questions."""
 
     user = request.user
-    filter_dict = {"user_id": user.id}
+    filter_dict = {"user_id": user.id, "active": True}
     question_type = request.POST.get('question_type')
     marks = request.POST.get('marks')
     language = request.POST.get('language')
@@ -816,7 +813,10 @@ def _get_questions(user, question_type, marks):
     if question_type is None and marks is None:
         return None
     if question_type:
-        questions = Question.objects.filter(type=question_type, user=user)
+        questions = Question.objects.filter(type=question_type,
+             user=user,
+             active=True
+        )
         if marks:
             questions = questions.filter(points=marks)
     return questions
