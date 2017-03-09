@@ -1,7 +1,7 @@
 import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdIOBasedTestCase, FileUpload, McqTestCases
+    StdIOBasedTestCase, FileUpload, McqTestCase
 import json
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -324,6 +324,9 @@ class QuestionPaperTestCases(unittest.TestCase):
             shuffle_questions=True
         )
 
+        self.question_paper.fixed_question_order = "{0}, {1}".format(
+                self.questions[3].id, self.questions[5].id
+                )
         # add fixed set of questions to the question paper
         self.question_paper.fixed_questions.add(self.questions[3],
                 self.questions[5]
@@ -417,7 +420,6 @@ class QuestionPaperTestCases(unittest.TestCase):
                                                              attempt_num)
         self.assertIsInstance(answerpaper, AnswerPaper)
         paper_questions = answerpaper.questions.all()
-        print (paper_questions)
         self.assertEqual(len(paper_questions), 7)
         fixed_questions = set(self.question_paper.fixed_questions.all())
         self.assertTrue(fixed_questions.issubset(set(paper_questions)))
@@ -449,6 +451,11 @@ class QuestionPaperTestCases(unittest.TestCase):
             fixed_q = self.question_paper.fixed_questions.values_list(
                 'id', flat=True)
             self.assertEqual(self.questions_list, fixed_q)
+
+    def test_fixed_order_questions(self):
+        fixed_ques = self.question_paper.get_ordered_questions()
+        actual_ques = [self.questions[3], self.questions[5]]
+        self.assertSequenceEqual(fixed_ques, actual_ques)
 
 
 ###############################################################################
