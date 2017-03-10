@@ -402,6 +402,9 @@ class Question(models.Model):
             with open(json_file, 'r') as q_file:
                 questions_list = q_file.read()
                 self.load_questions(questions_list, user, file_path, files)
+            return "Questions Uploaded Successfully"
+        else:
+            return "Please upload zip file with questions_dump.json in it."
 
     def create_demo_questions(self, user):
         zip_file_path = os.path.join(

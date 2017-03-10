@@ -20,7 +20,6 @@ import pytz
 from taggit.models import Tag
 from itertools import chain
 import json
-import zipfile
 import six
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
@@ -31,6 +30,7 @@ from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
                 get_object_form, FileForm, QuestionPaperForm
 from .settings import URL_ROOT
+from django.conf import settings
 from yaksh.models import AssignmentUpload
 from .file_utils import extract_files
 
@@ -894,7 +894,8 @@ def show_all_questions(request):
         if request.POST.get('delete') == 'delete':
             data = request.POST.getlist('question')
             if data is not None:
-                questions = Question.objects.filter(id__in=data, user_id=user.id, active=True)
+                questions = Question.objects.filter(id__in=data, user_id=user.id,
+                                                    active=True)
                 for question in questions:
                     question.active = False
                     question.save()
@@ -907,7 +908,8 @@ def show_all_questions(request):
                 if file_name[-1] == "zip":
                     ques = Question()
                     files, extract_path = extract_files(questions_file)
-                    ques.read_json(extract_path, user, files)
+                    context['message'] = ques.read_json(extract_path, user,
+                                                        files)
                 else:
                     message = "Please Upload a ZIP file"
                     context['message'] = message
@@ -947,6 +949,17 @@ def show_all_questions(request):
     return my_render_to_response('yaksh/showquestions.html', context,
                                  context_instance=ci)
 
+@login_required
+def download_demo_questions(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404("You are not allowed to download!")
+    f_path = os.path.join(settings.FIXTURE_DIRS, "demo_questions.zip")
+    zip_file = open(f_path, "rb")
+    response = HttpResponse(zip_file, content_type='application/zip')
+    response['Content-Disposition'] = '''attachment;\
+                                          filename=demo_questions.zip'''
+    return response
 
 @login_required
 def user_data(request, user_id, questionpaper_id=None):
