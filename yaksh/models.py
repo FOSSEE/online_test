@@ -635,10 +635,8 @@ class QuestionPaperManager(models.Manager):
             trial_questionpaper = self.create(quiz=trial_quiz,
                                               total_marks=10,
                                               )
-            for q_id in questions_list:
-                que = Question.objects.get(id=q_id)
-                FixedQuestions.objects.add_fixed_questions(
-                    trial_questionpaper, que)
+            trial_questionpaper.fixed_question_order = ",".join(questions_list)
+            trial_questionpaper.fixed_questions.add(*questions_list)
             return trial_questionpaper
 
     def create_trial_paper_to_test_quiz(self, trial_quiz, original_quiz_id):
@@ -647,8 +645,7 @@ class QuestionPaperManager(models.Manager):
             trial_questionpaper = self.get(quiz=trial_quiz)
         else:
             trial_questionpaper, trial_questions = \
-                self._create_trial_from_questionpaper(original_quiz_id,
-                )
+                self._create_trial_from_questionpaper(original_quiz_id)
             trial_questionpaper.quiz = trial_quiz
             trial_questionpaper.fixed_questions\
                 .add(*trial_questions["fixed_questions"])
@@ -757,7 +754,7 @@ class QuestionPaper(models.Model):
                                             summary="Yaksh Demo Question",
                                             user=user)
         q_order = [str(que.id) for que in questions]
-        question_paper.fixed_questions_order = ",".join(q_order)
+        question_paper.fixed_question_order = ",".join(q_order)
         question_paper.save()
         # add fixed set of questions to the question paper
         question_paper.fixed_questions.add(*questions)
