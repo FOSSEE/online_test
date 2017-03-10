@@ -1163,13 +1163,14 @@ class AnswerPaper(models.Model):
                         result['success'] = True
                         result['error'] = ['Correct answer']
                 else:
-                    if testcase.correct.splitlines() == user_answer.splitlines():
+                    if testcase.correct.splitlines()\
+                        == user_answer.splitlines():
                         result['success'] = True
                         result['error'] = ['Correct answer']
 
             elif question.type == 'float':
                 testcase = question.get_test_case()
-                if abs(testcase.correct-user_answer) <= testcase.error_margin:
+                if abs(testcase.correct - user_answer) <= testcase.error_margin:
                         result['success'] = True
                         result['error'] = ['Correct answer']
 
@@ -1353,6 +1354,6 @@ class FloatTestCase(TestCase):
                 "error_margin":self.error_margin}
 
     def __str__(self):
-        return u'Testcase | Correct: {0} | Error Margin: +or- {1}'.format(self.correct,
-                                                                          self.error_margin
-                                                                          )
+        return u'Testcase | Correct: {0} | Error Margin: +or- {1}'.format(
+                self.correct, self.error_margin
+                )

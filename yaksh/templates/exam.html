@@ -86,13 +86,9 @@
       <div class="panel-body"><pre><code>{{ error }}</code></pre></div>
       </div>
       {% endfor %}
-                    {% if error != "Incorrect answer" %}
-                    <div class="panel-heading">Testcase No. {{ forloop.counter }}</div>
-                    <div class="panel-body"><pre><code>{{ error }}</code></pre></div>
-                    {% endif %}
+
                     </div>
-                {% endfor %}
-                </div>
+                {% endif %}
             {% endif %}
             </div>
         </div>

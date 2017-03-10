@@ -669,7 +669,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(current_question.summary, "Question1")
         # Test completed_question() method of Answer Paper
 
-        question = self.answerpaper.completed_question(self.question1.id)
+        question = self.answerpaper.add_completed_question(self.question1.id)
         self.assertEqual(self.answerpaper.questions_left(), 2)
 
         # Test next_question() method of Answer Paper
@@ -684,7 +684,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(next_question_id.summary, "Question3")
 
         # Given, here question is already answered
-        current_question_id = 1
+        current_question_id = self.question1.id
 
         # When
         next_question_id = self.answerpaper.next_question(current_question_id)
@@ -702,10 +702,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Then
         self.assertTrue(next_question_id is not None)
 
-        self.assertEqual(next_question_id.summary, "Question2")
+        self.assertEqual(next_question_id.summary, "Question1")
 
         # Given, last question in the list
-        current_question_id = 3
+        current_question_id = self.question3.id
 
         # When
         next_question_id = self.answerpaper.next_question(current_question_id)
@@ -713,7 +713,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Then
         self.assertTrue(next_question_id is not None)
 
-        self.assertEqual(next_question_id.summary, "Question2")
+        self.assertEqual(next_question_id.summary, "Question1")
 
         # Test get_questions_answered() method
         # When
@@ -734,14 +734,18 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Test completed_question and next_question
         # When all questions are answered
 
-        current_question = self.answerpaper.completed_question(self.question2.id)
+        current_question = self.answerpaper.add_completed_question(
+                                            self.question2.id
+                                            )
 
         # Then
         self.assertEqual(self.answerpaper.questions_left(), 1)
         self.assertEqual(current_question.summary, "Question3")
 
         # When
-        current_question = self.answerpaper.completed_question(self.question3.id)
+        current_question = self.answerpaper.add_completed_question(
+                                            self.question3.id
+                                            )
 
         # Then
         self.assertEqual(self.answerpaper.questions_left(), 0)
