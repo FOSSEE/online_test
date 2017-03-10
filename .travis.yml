@@ -16,7 +16,12 @@ install:
   - pip install -r requirements/requirements-common.txt
   - python setup.py develop
 
-# command to run tests
+# command to run tests and coverage
 script:
-  - python manage.py test -v 2 yaksh
-  - python manage.py test -v 2 yaksh.live_server_tests.load_test
+  - coverage erase
+  - coverage run -p manage.py test -v 2 yaksh
+  - coverage run -p manage.py test -v 2 yaksh.live_server_tests.load_test
+
+after_success:
+  - coverage combine
+  - coverage report
