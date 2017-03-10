@@ -331,7 +331,6 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.question_paper.fixed_questions.add(self.questions[3],
                 self.questions[5]
                 )
-
         # create two QuestionSet for random questions
         # QuestionSet 1
         self.question_set_1 = QuestionSet.objects.create(marks=2,
@@ -373,8 +372,8 @@ class QuestionPaperTestCases(unittest.TestCase):
 
         # For Trial case
         self.questions_list = [self.questions[3].id, self.questions[5].id]
-        trial_course = Course.objects.create_trial_course(self.user)
-        trial_quiz = Quiz.objects.create_trial_quiz(trial_course, self.user)
+        self.trial_course = Course.objects.create_trial_course(self.user)
+        self.trial_quiz = Quiz.objects.create_trial_quiz(self.trial_course, self.user)
 
     def test_questionpaper(self):
         """ Test question paper"""
@@ -429,28 +428,36 @@ class QuestionPaperTestCases(unittest.TestCase):
         # test can_attempt_now(self):
         self.assertFalse(self.question_paper.can_attempt_now(self.user))
 
-        def test_create_trial_paper_to_test_quiz(self):
-            trial_paper = QuestionPaper.objects.create_trial_paper_to_test_quiz\
-                                                (trial_quiz,
-                                                 self.question_paper.id
-                                                 )
-            self.assertEqual(trial_paper.quiz, trial_quiz)
-            self.assertEqual(trial_paper.fixed_questions.all(),
-                             self.question_paper.fixed_questions.all()
-                             )
-            self.assertEqual(trial_paper.random_questions.all(),
-                             self.question_paper.random_questions.all()
-                             )
+    def test_create_trial_paper_to_test_quiz(self):
+        qu_list = [str(self.questions_list[0]), str(self.questions_list[1])]
+        trial_paper = QuestionPaper.objects.create_trial_paper_to_test_quiz\
+                                            (self.trial_quiz,
+                                             self.quiz.id
+                                             )
+        trial_paper.random_questions.add(self.question_set_1)
+        trial_paper.random_questions.add(self.question_set_2)
+        trial_paper.fixed_question_order = ",".join(qu_list)
+        self.assertEqual(trial_paper.quiz, self.trial_quiz)
+        self.assertSequenceEqual(trial_paper.get_ordered_questions(),
+                         self.question_paper.get_ordered_questions()
+                         )
+        trial_paper_ran = [q_set.id for q_set in
+                           trial_paper.random_questions.all()]
+        qp_ran = [q_set.id for q_set in
+                  self.question_paper.random_questions.all()]
 
-        def test_create_trial_paper_to_test_questions(self):
-            trial_paper = QuestionPaper.objects.\
-                             create_trial_paper_to_test_questions(
-                                    trial_quiz, self.questions_list
-                                    )
-            self.assertEqual(trial_paper.quiz, trial_quiz)
-            fixed_q = self.question_paper.fixed_questions.values_list(
-                'id', flat=True)
-            self.assertEqual(self.questions_list, fixed_q)
+        self.assertSequenceEqual(trial_paper_ran, qp_ran)
+
+    def test_create_trial_paper_to_test_questions(self):
+        qu_list = [str(self.questions_list[0]), str(self.questions_list[1])]
+        trial_paper = QuestionPaper.objects.\
+                         create_trial_paper_to_test_questions(
+                                self.trial_quiz, qu_list
+                                )
+        self.assertEqual(trial_paper.quiz, self.trial_quiz)
+        fixed_q = self.question_paper.fixed_questions.values_list(
+            'id', flat=True)
+        self.assertSequenceEqual(self.questions_list, fixed_q)
 
     def test_fixed_order_questions(self):
         fixed_ques = self.question_paper.get_ordered_questions()
