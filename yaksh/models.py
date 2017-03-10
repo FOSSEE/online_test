@@ -756,6 +756,9 @@ class QuestionPaper(models.Model):
         questions = Question.objects.filter(active=True,
                                             summary="Yaksh Demo Question",
                                             user=user)
+        q_order = [str(que.id) for que in questions]
+        question_paper.fixed_questions_order = ",".join(q_order)
+        question_paper.save()
         # add fixed set of questions to the question paper
         question_paper.fixed_questions.add(*questions)
 
