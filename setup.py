@@ -6,6 +6,13 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
+def get_version():
+    import os
+    data = {}
+    fname = os.path.join('online_test', '__init__.py')
+    exec(compile(open(fname).read(), fname, 'exec'), data)
+    return data.get('__version__')
+
 install_requires = [
     'django==1.9.5',
     'django-taggit==0.18.1',
@@ -18,7 +25,7 @@ setup(
     name='yaksh',
     author='Python Team at FOSSEE, IIT Bombay',
     author_email='python@fossee.in',
-    version='0.1.3',
+    version=get_version(),
     packages=find_packages(),
     include_package_data=True,
     url='https://pypi.python.org/pypi/yaksh/',
