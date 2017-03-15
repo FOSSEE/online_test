@@ -66,7 +66,7 @@ test_status = (
 
 def get_assignment_dir(instance, filename):
     return os.sep.join((
-        str(instance.user.user), str(instance.assignmentQuestion.id), filename
+        instance.user.username, str(instance.assignmentQuestion.id), filename
     ))
 
 
@@ -1145,7 +1145,7 @@ class AnswerPaper(models.Model):
                 if set(user_answer) == set(expected_answers):
                     result['success'] = True
                     result['error'] = ['Correct answer']
-            elif question.type == 'code':
+            elif question.type == 'code' or question.type == "upload":
                 user_dir = self.user.profile.get_user_dir()
                 json_result = code_server.run_code(
                     question.language, json_data, user_dir

@@ -473,8 +473,10 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                 assignment_filename = request.FILES.getlist('assignment')
             for fname in assignment_filename:
                 if AssignmentUpload.objects.filter(
+                    assignmentQuestion=current_question,
                     assignmentFile__icontains=fname, user=user).exists():
                     assign_file = AssignmentUpload.objects.get(
+                    assignmentQuestion=current_question,
                     assignmentFile__icontains=fname, user=user)
                     os.remove(assign_file.assignmentFile.path)
                     assign_file.delete()
@@ -499,7 +501,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
         json_data = current_question.consolidate_answer_data(user_answer) \
-                        if current_question.type == 'code' else None
+                        if current_question.type == 'code' or \
+                        current_question.type == 'upload' else None
         result = paper.validate_answer(user_answer, current_question, json_data)
         if result.get('success'):
             new_answer.marks = (current_question.points * result['weight'] / 
