@@ -66,7 +66,7 @@ test_status = (
 
 def get_assignment_dir(instance, filename):
     return os.sep.join((
-        instance.user.user, instance.assignmentQuestion.id, filename
+        str(instance.user.user), str(instance.assignmentQuestion.id), filename
     ))
 
 
@@ -264,6 +264,9 @@ class Question(models.Model):
     # Does this question allow partial grading
     partial_grading = models.BooleanField(default=False)
 
+    # Check assignment upload based question
+    grade_assignment_upload = models.BooleanField(default=False)
+
     def consolidate_answer_data(self, user_answer):
         question_data = {}
         metadata = {}
@@ -280,9 +283,13 @@ class Question(models.Model):
         metadata['language'] = self.language
         metadata['partial_grading'] = self.partial_grading
         files = FileUpload.objects.filter(question=self)
+        assignment_files = AssignmentUpload.objects.filter()
         if files:
             metadata['file_paths'] = [(file.file.path, file.extract)
                                       for file in files]
+        if assignment_files:
+            metadata['assign_files'] = [(file.assignmentFile.path, False)
+                                         for file in assignment_files]
         question_data['metadata'] = metadata
 
         return json.dumps(question_data)
@@ -1201,7 +1208,7 @@ class AnswerPaper(models.Model):
 
 ###############################################################################
 class AssignmentUpload(models.Model):
-    user = models.ForeignKey(Profile)
+    user = models.ForeignKey(User)
     assignmentQuestion = models.ForeignKey(Question)
     assignmentFile = models.FileField(upload_to=get_assignment_dir)
 
