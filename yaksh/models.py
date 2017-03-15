@@ -66,7 +66,7 @@ test_status = (
 
 def get_assignment_dir(instance, filename):
     return os.sep.join((
-        instance.user.user, instance.assignmentQuestion.id, filename
+        instance.user.user.username, str(instance.assignmentQuestion.id), filename
     ))
 
 
