@@ -15,6 +15,8 @@ except ImportError:
     from io import BytesIO as string_io
 import pytz
 import os
+import sys
+import traceback
 import stat
 from os.path import join, exists
 import shutil
@@ -312,7 +314,13 @@ class Question(models.Model):
 
     def load_questions(self, questions_list, user, file_path=None,
                        files_list=None):
-        questions = json.loads(questions_list)
+        try:
+            questions = json.loads(questions_list)
+        except json.decoder.JSONDecodeError:
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
+            msg = "Error Parsing Json: {0}".format(tb_list[-1])
+            return msg
         for question in questions:
             question['user'] = user
             file_names = question.pop('files')
@@ -329,9 +337,7 @@ class Question(models.Model):
                     )
                 new_test_case.type = test_case_type
                 new_test_case.save()
-
-        if files_list:
-            delete_files(files_list, file_path)
+        return "Questions Uploaded Successfully"
 
     def get_test_cases(self, **kwargs):
         tc_list = []
@@ -399,17 +405,17 @@ class Question(models.Model):
 
     def read_json(self, file_path, user, files=None):
         json_file = os.path.join(file_path, "questions_dump.json")
+        msg = ""
         if os.path.exists(json_file):
             with open(json_file, 'r') as q_file:
                 questions_list = q_file.read()
-                try:
-                    self.load_questions(questions_list, user, file_path, files)
-                except ValueError:
-                    return "Syntax Error in Json. Please check your json file."
-
-            return "Questions Uploaded Successfully"
+                msg = self.load_questions(questions_list, user, file_path, files)
         else:
-            return "Please upload zip file with questions_dump.json in it."
+            msg = "Please upload zip file with questions_dump.json in it."
+
+        if files:
+            delete_files(files, file_path)
+        return msg
 
     def create_demo_questions(self, user):
         zip_file_path = os.path.join(
