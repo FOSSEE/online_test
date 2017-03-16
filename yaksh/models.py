@@ -765,6 +765,8 @@ class QuestionPaper(models.Model):
             que_order = self.fixed_question_order.split(',')
             for que_id in que_order:
                 ques.append(self.fixed_questions.get(id=que_id))
+        else:
+            ques = self.fixed_questions.all()
         return ques
 
     def __str__(self):
