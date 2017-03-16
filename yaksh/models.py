@@ -318,17 +318,19 @@ class Question(models.Model):
             file_names = question.pop('files')
             test_cases = question.pop('testcase')
             que, result = Question.objects.get_or_create(**question)
-            if file_names:
-                que._add_files_to_db(file_names, file_path)
-            for test_case in test_cases:
-                test_case_type = test_case.pop('test_case_type')
-                model_class = get_model_class(test_case_type)
-                new_test_case, obj_create_status = \
-                    model_class.objects.get_or_create(
-                        question=que, **test_case
-                    )
-                new_test_case.type = test_case_type
-                new_test_case.save()
+            if not result:
+                if file_names:
+                    que._add_files_to_db(file_names, file_path)
+                for test_case in test_cases:
+                    test_case_type = test_case.pop('test_case_type')
+                    model_class = get_model_class(test_case_type)
+                    new_test_case, obj_create_status = \
+                        model_class.objects.get_or_create(
+                            question=que, **test_case
+                        )
+                    new_test_case.type = test_case_type
+                    new_test_case.save()
+
         if files_list:
             delete_files(files_list, file_path)
 
@@ -401,7 +403,11 @@ class Question(models.Model):
         if os.path.exists(json_file):
             with open(json_file, 'r') as q_file:
                 questions_list = q_file.read()
-                self.load_questions(questions_list, user, file_path, files)
+                try:
+                    self.load_questions(questions_list, user, file_path, files)
+                except ValueError:
+                    return "Syntax Error in Json. Please check your json file."
+
             return "Questions Uploaded Successfully"
         else:
             return "Please upload zip file with questions_dump.json in it."

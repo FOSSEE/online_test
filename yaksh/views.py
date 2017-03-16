@@ -30,7 +30,6 @@ from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
                 get_object_form, FileForm, QuestionPaperForm
 from .settings import URL_ROOT
-from django.conf import settings
 from yaksh.models import AssignmentUpload
 from .file_utils import extract_files
 
@@ -948,18 +947,6 @@ def show_all_questions(request):
     context['upload_form'] = upload_form
     return my_render_to_response('yaksh/showquestions.html', context,
                                  context_instance=ci)
-
-@login_required
-def download_demo_questions(request):
-    user = request.user
-    if not is_moderator(user):
-        raise Http404("You are not allowed to download!")
-    f_path = os.path.join(settings.FIXTURE_DIRS, "demo_questions.zip")
-    zip_file = open(f_path, "rb")
-    response = HttpResponse(zip_file, content_type='application/zip')
-    response['Content-Disposition'] = '''attachment;\
-                                          filename=demo_questions.zip'''
-    return response
 
 @login_required
 def user_data(request, user_id, questionpaper_id=None):

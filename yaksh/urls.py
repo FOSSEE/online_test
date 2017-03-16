@@ -28,7 +28,6 @@ urlpatterns = [
     url(r'^view_answerpaper/(?P<questionpaper_id>\d+)/$', views.view_answerpaper, name='view_answerpaper'),
     url(r'^manage/$', views.prof_manage, name='manage'),
     url(r'^manage/addquestion/$', views.add_question),
-    url(r'^manage/download_demo_question/$', views.download_demo_questions),
     url(r'^manage/addquestion/(?P<question_id>\d+)/$', views.add_question),
     url(r'^manage/addquiz/(?P<course_id>\d+)/$', views.add_quiz, name='add_quiz'),
     url(r'^manage/addquiz/(?P<course_id>\d+)/(?P<quiz_id>\d+)/$', views.add_quiz, name='edit_quiz'),
