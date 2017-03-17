@@ -316,10 +316,8 @@ class Question(models.Model):
                        files_list=None):
         try:
             questions = json.loads(questions_list)
-        except json.decoder.JSONDecodeError:
-            exc_type, exc_value, exc_tb = sys.exc_info()
-            tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
-            msg = "Error Parsing Json: {0}".format(tb_list[-1])
+        except ValueError as exc_msg:
+            msg = "Error Parsing Json: {0}".format(exc_msg)
             return msg
         for question in questions:
             question['user'] = user
