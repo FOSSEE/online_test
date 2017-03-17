@@ -101,10 +101,6 @@ def create_demo(project_name='yaksh_demo', project_dir=CUR_DIR):
                                     'fixture_dir': fixture_dir})
         urls_template_path = path.join(TEMPLATE_DIR, 'demo_urls.py')
         urls_target_path = path.join(project_path, 'demo_urls.py')
-        command = ("python ../manage.py migrate --run-syncdb "
-                   "--noinput --settings={0}.demo_settings").format(
-                       project_name)
-
         loaddata_command = ("python ../manage.py loaddata "
                             "--settings={0}.demo_settings {1}").format(
                                 project_name, fixture_path)
@@ -115,14 +111,18 @@ def create_demo(project_name='yaksh_demo', project_dir=CUR_DIR):
         )
         # Create demo_urls file
         _render_demo_files(urls_template_path, urls_target_path)
-        # Run syncdb
-        subprocess.call(
-            "{0}; {1}".format(command, loaddata_command), shell=True
-        )
+        # Create database and load initial data
+        command_path = path.join(top_dir, 'manage.py')
+        _check_migrations(project_name, command_path)
+        _migrate(project_name, command_path)
+        subprocess.call(loaddata_command, shell=True)
 
 
 def run_demo(project_name, top_dir):
     with _chdir(top_dir):
+        command_path = path.join(top_dir, 'manage.py')
+        _check_migrations(project_name, command_path)
+        _migrate(project_name, command_path)
         command = ("python manage.py runserver "
                    "--settings={0}.demo_settings").format(project_name)
         subprocess.call(command, shell=True)
@@ -134,6 +134,18 @@ def run_server(args=None):
         code_server.main(args)
     except Exception as e:
         print("Error: {0}\nExiting yaksh code server".format(e))
+
+
+def _check_migrations(project_name, command_path):
+    migrations = ("python {0} makemigrations --settings={1}.demo_settings"
+        ).format(command_path, project_name)
+    subprocess.call(migrations, shell=True)
+
+
+def _migrate(project_name, command_path):
+    migrate = ("python {0} migrate --settings={1}.demo_settings"
+        ).format(command_path, project_name)
+    subprocess.call(migrate, shell=True)
 
 
 def _render_demo_files(template_path, output_path, context=None):
