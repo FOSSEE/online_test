@@ -14,7 +14,8 @@
 <form action="" method="post"  enctype="multipart/form-data">
 {% csrf_token %}
 {{ upload_form.as_p }}
-<button class="btn btn-primary" type="submit" name="upload" value="upload">Upload File <span class="glyphicon glyphicon-open"></span></button>
+<button class="btn btn-primary" type="submit" name="upload" value="upload">
+Upload File <span class="glyphicon glyphicon-open"></span></button>
 </form>
 {% if message %}
 <h4>{{ message }}</h4>
@@ -22,6 +23,7 @@
 {% if msg %}
 <h4>{{ msg }}</h4>
 {% endif %}
+<br><br>
 <form name=frm action="" method="post">
 {% csrf_token %}
 <div class="row" id="selectors">
