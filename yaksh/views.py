@@ -500,7 +500,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         # If we were not skipped, we were asked to check.  For any non-mcq
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
-        json_data = current_question.consolidate_answer_data(user_answer) \
+        json_data = current_question.consolidate_answer_data(user_answer, user) \
                         if current_question.type == 'code' or \
                         current_question.type == 'upload' else None
         result = paper.validate_answer(user_answer, current_question, json_data)

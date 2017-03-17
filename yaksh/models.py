@@ -267,7 +267,7 @@ class Question(models.Model):
     # Check assignment upload based question
     grade_assignment_upload = models.BooleanField(default=False)
 
-    def consolidate_answer_data(self, user_answer):
+    def consolidate_answer_data(self, user_answer, user=None):
         question_data = {}
         metadata = {}
         test_case_data = []
@@ -283,13 +283,16 @@ class Question(models.Model):
         metadata['language'] = self.language
         metadata['partial_grading'] = self.partial_grading
         files = FileUpload.objects.filter(question=self)
-        assignment_files = AssignmentUpload.objects.filter()
         if files:
             metadata['file_paths'] = [(file.file.path, file.extract)
                                       for file in files]
-        if assignment_files:
-            metadata['assign_files'] = [(file.assignmentFile.path, False)
-                                         for file in assignment_files]
+        if self.type == "upload":
+            assignment_files = AssignmentUpload.objects.filter(
+                assignmentQuestion=self, user=user
+                )
+            if assignment_files:
+                metadata['assign_files'] = [(file.assignmentFile.path, False)
+                                             for file in assignment_files]
         question_data['metadata'] = metadata
 
         return json.dumps(question_data)
@@ -1272,7 +1275,8 @@ class HookTestCase(TestCase):
            success - Boolean, indicating if code was executed correctly
            mark_fraction - Float, indicating fraction of the
                           weight to a test case
-           error - String, error message if success is false'''
+           error - String, error message if success is false
+           In case of assignment upload there will be no user answer '''
            success = False
            err = "Incorrect Answer" # Please make this more specific
            mark_fraction = 0.0
