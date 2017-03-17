@@ -532,7 +532,7 @@ class Quiz(models.Model):
     # The start date of the quiz.
     start_date_time = models.DateTimeField(
         "Start Date and Time of the quiz",
-        default=timezone.now(),
+        default=timezone.now,
         null=True
     )
 
