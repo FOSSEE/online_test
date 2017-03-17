@@ -2,6 +2,10 @@
 
 {% block pagetitle %} Answer Paper  for {{ quiz.description }}{% endblock pagetitle %}
 
+{% block script %}
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+{% endblock script %}
+
 {% block main %}
 
 {% if not data.papers %}
@@ -60,7 +64,7 @@
             
         </div>
     </div>
-    {% if question.type == "mcq" or question.type == "mcc" %}
+    {% if question.type != "code" %}
         {% if "Correct answer" in answers.0.error_list %}
             <div class="panel panel-success">
         {% else %}
@@ -71,7 +75,9 @@
             </div>
             <div class="panel-body">
                 <h5><u>Student answer:</u></h5>
-                 <pre><code>{{forloop.counter}}. {{ answers.0.answer|safe }}</code></pre>
+                <div class="well well-sm">
+                 {{ answers.0.answer|safe }}
+                 </div>
             </div>
             </div>
     {% else %}
@@ -84,7 +90,9 @@
             <div class="panel panel-danger">
         {% endif %}
     <div class="panel-heading">Autocheck: {{ answer.error }}</div>
-    <div class="panel-body"><pre><code>{{ answer.answer.strip }}</code></pre></div>
+    <div class="panel-body">
+    <pre><code>{{ answer.answer.answer.strip }}</code></pre>
+    </div>
     </div>
     {% endif %}
     {% endfor %}
