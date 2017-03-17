@@ -12,6 +12,7 @@ from .grader import TimeoutException
 class HookEvaluator(BaseEvaluator):
     def __init__(self, metadata, test_case_data):
         self.files = []
+        self.assign_files = []
 
         # Set metadata values
         self.user_answer = metadata.get('user_answer')
