@@ -19,7 +19,8 @@ class EvaluatorBaseTest(unittest.TestCase):
 
 class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
-        with open('/tmp/test.txt', 'wb') as f:
+        self.tmp_file = os.path.join(tempfile.gettempdir(), "test.txt")
+        with open(self.tmp_file, 'wb') as f:
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
         self.in_dir = tmp_in_dir_path
@@ -33,7 +34,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.file_paths = None
 
     def tearDown(self):
-        os.remove('/tmp/test.txt')
+        os.remove(self.tmp_file)
         shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
@@ -343,7 +344,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
     def test_file_based_assert(self):
         # Given
         self.test_case_data = [{"test_case_type": "standardtestcase", "test_case": "assert(ans()=='2')", "weight": 0.0}]
-        self.file_paths = [('/tmp/test.txt', False)]
+        self.file_paths = [(self.tmp_file, False)]
         user_answer = dedent("""
             def ans():
                 with open("test.txt") as f:
@@ -479,11 +480,16 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
 class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
-        with open('/tmp/test.txt', 'wb') as f:
+        self.tmp_file = os.path.join(tempfile.gettempdir(), "test.txt")
+        with open(self.tmp_file, 'wb') as f:
             f.write('2'.encode('ascii'))
         self.file_paths = None
         tmp_in_dir_path = tempfile.mkdtemp()
         self.in_dir = tmp_in_dir_path
+
+    def teardown(self):
+        os.remove(self.tmp_file)
+        shutil.rmtree(self.in_dir)
 
     def test_correct_answer_integer(self):
         # Given
@@ -618,7 +624,7 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                                 "expected_output": "2",
                                 "weight": 0.0
                                 }]
-        self.file_paths = [('/tmp/test.txt', False)]
+        self.file_paths = [(self.tmp_file, False)]
 
         user_answer = dedent("""
                             with open("test.txt") as f:
@@ -702,7 +708,8 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
 class PythonHookEvaluationTestCases(EvaluatorBaseTest):
 
     def setUp(self):
-        with open('/tmp/test.txt', 'wb') as f:
+        self.tmp_file = os.path.join(tempfile.gettempdir(), "test.txt")
+        with open(self.tmp_file, 'wb') as f:
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
         self.in_dir = tmp_in_dir_path
@@ -712,7 +719,7 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
         self.file_paths = None
 
     def tearDown(self):
-        os.remove('/tmp/test.txt')
+        os.remove(self.tmp_file)
         shutil.rmtree(self.in_dir)
 
     def test_correct_answer(self):
@@ -910,6 +917,41 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
         self.assertFalse(result.get('success'))
         self.assert_correct_output(self.timeout_msg, result.get('error'))
 
+    def test_assignment_upload(self):
+        # Given
+        user_answer = "Assignment Upload"
+        hook_code = dedent("""\
+                            def check_answer(user_answer):
+                                success = False
+                                err = "Incorrect Answer"
+                                mark_fraction = 0.0
+                                with open("test.txt") as f:
+                                    data = f.read()
+                                if data == '2':
+                                    success, err, mark_fraction = True, "", 1.0
+                                return success, err, mark_fraction
+                            """
+                            )
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code,"weight": 1.0
+                            }]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'assign_files': [(self.tmp_file, False)],
+                    'partial_grading': False,
+                    'language': 'python'
+                    },
+                    'test_case_data': test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
 
 if __name__ == '__main__':
     unittest.main()

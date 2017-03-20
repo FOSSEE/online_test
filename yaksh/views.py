@@ -468,17 +468,26 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         elif current_question.type == 'mcc':
             user_answer = request.POST.getlist('answer')
         elif current_question.type == 'upload':
-            assign = AssignmentUpload()
-            assign.user = user.profile
-            assign.assignmentQuestion = current_question
             # if time-up at upload question then the form is submitted without
             # validation
             if 'assignment' in request.FILES:
-                assign.assignmentFile = request.FILES['assignment']
-            assign.save()
+                assignment_filename = request.FILES.getlist('assignment')
+            for fname in assignment_filename:
+                if AssignmentUpload.objects.filter(
+                    assignmentQuestion=current_question,
+                    assignmentFile__icontains=fname, user=user).exists():
+                    assign_file = AssignmentUpload.objects.get(
+                    assignmentQuestion=current_question,
+                    assignmentFile__icontains=fname, user=user)
+                    os.remove(assign_file.assignmentFile.path)
+                    assign_file.delete()
+                AssignmentUpload.objects.create(user=user,
+                    assignmentQuestion=current_question, assignmentFile=fname
+                    )
             user_answer = 'ASSIGNMENT UPLOADED'
-            next_q = paper.add_completed_question(current_question.id)
-            return show_question(request, next_q, paper)
+            if not current_question.grade_assignment_upload:
+                next_q = paper.add_completed_question(current_question.id)
+                return show_question(request, next_q, paper)
         else:
             user_code = request.POST.get('answer')
             user_answer = snippet_code + "\n" + user_code if snippet_code else user_code
@@ -492,13 +501,16 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         # If we were not skipped, we were asked to check.  For any non-mcq
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
-        json_data = current_question.consolidate_answer_data(user_answer) \
-                        if current_question.type == 'code' else None
+        json_data = current_question.consolidate_answer_data(user_answer, user) \
+                        if current_question.type == 'code' or \
+                        current_question.type == 'upload' else None
         result = paper.validate_answer(user_answer, current_question, json_data)
         if result.get('success'):
             new_answer.marks = (current_question.points * result['weight'] / 
                 current_question.get_maximum_test_case_weight()) \
-                if current_question.partial_grading and current_question.type == 'code' else current_question.points
+                if current_question.partial_grading and \
+                current_question.type == 'code' or current_question.type == 'upload' \
+                else current_question.points
             new_answer.correct = result.get('success')
             error_message = None
             new_answer.error = json.dumps(result.get('error'))
@@ -506,11 +518,14 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         else:
             new_answer.marks = (current_question.points * result['weight'] /
                 current_question.get_maximum_test_case_weight()) \
-                if current_question.partial_grading and current_question.type == 'code' else 0
+                if current_question.partial_grading and \
+                current_question.type == 'code' or current_question.type == 'upload' \
+                else 0
             error_message = result.get('error') if current_question.type == 'code' \
-                else None
+                or current_question.type == 'upload' else None
             new_answer.error = json.dumps(result.get('error'))
             next_question = current_question if current_question.type == 'code' \
+                or current_question.type == 'upload' \
                 else paper.add_completed_question(current_question.id)
         new_answer.save()
         paper.update_marks('inprogress')

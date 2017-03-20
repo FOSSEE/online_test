@@ -111,16 +111,34 @@ function textareaformat()
 	});
 
 
-        $('#id_type').bind('focus', function(event){
-            var type = document.getElementById('id_type');
-            type.style.border = '1px solid #ccc';
-        });
+    $('#id_type').bind('focus', function(event){
+        var type = document.getElementById('id_type');
+        type.style.border = '1px solid #ccc';
+    });
 
-        $('#id_language').bind('focus', function(event){
-            var language = document.getElementById('id_language');
-            language.style.border = '1px solid #ccc';
-        });
-		document.getElementById('my').innerHTML = document.getElementById('id_description').value ;	
+    $('#id_language').bind('focus', function(event){
+        var language = document.getElementById('id_language');
+        language.style.border = '1px solid #ccc';
+    });
+	document.getElementById('my').innerHTML = document.getElementById('id_description').value ;
+
+
+    if (document.getElementById('id_grade_assignment_upload').checked ||
+        document.getElementById('id_type').val() == 'upload'){
+        $("#id_grade_assignment_upload").prop("disabled", false);
+    }
+    else{
+        $("#id_grade_assignment_upload").prop("disabled", true);
+    }
+
+    $('#id_type').change(function() {
+        if ($(this).val() == "upload"){
+            $("#id_grade_assignment_upload").prop("disabled", false);
+        }
+        else{
+            $("#id_grade_assignment_upload").prop("disabled", true);
+        }
+   });
 }
 
 function autosubmit()

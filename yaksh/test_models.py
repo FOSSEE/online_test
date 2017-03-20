@@ -57,20 +57,15 @@ def setUpModule():
                         description='demo quiz', pass_criteria=40,
                         language='Python', prerequisite=quiz,
                         course=course, instructions="Demo Instructions")
-
-    with open('/tmp/test.txt', 'wb') as f:
+    tmp_file1 = os.path.join(tempfile.gettempdir(), "test.txt")
+    with open(tmp_file1, 'wb') as f:
         f.write('2'.encode('ascii'))
+
 
 def tearDownModule():
     User.objects.all().delete()
     Question.objects.all().delete()
     Quiz.objects.all().delete()
-    
-    que_id_list = ["25", "22", "24", "27"]
-    for que_id in que_id_list:
-        dir_path = os.path.join(os.getcwd(), "yaksh", "data","question_{0}".format(que_id))
-        if os.path.exists(dir_path):
-            shutil.rmtree(dir_path)
 
 ###############################################################################
 class ProfileTestCases(unittest.TestCase):
@@ -117,7 +112,7 @@ class QuestionTestCases(unittest.TestCase):
         self.question2.save()
 
         # create a temp directory and add files for loading questions test
-        file_path = "/tmp/test.txt"
+        file_path = os.path.join(tempfile.gettempdir(), "test.txt")
         self.load_tmp_path = tempfile.mkdtemp()
         shutil.copy(file_path, self.load_tmp_path)
         file1 = os.path.join(self.load_tmp_path, "test.txt")
@@ -126,9 +121,11 @@ class QuestionTestCases(unittest.TestCase):
         self.dump_tmp_path = tempfile.mkdtemp()
         shutil.copy(file_path, self.dump_tmp_path)
         file2 = os.path.join(self.dump_tmp_path, "test.txt")
-        file = open(file2, "r")
-        django_file = File(file)
-        file = FileUpload.objects.create(file=django_file, question=self.question2)
+        upload_file = open(file2, "r")
+        django_file = File(upload_file)
+        file = FileUpload.objects.create(file=django_file,
+                                         question=self.question2
+                                         )
 
         self.question1.tags.add('python', 'function')
         self.assertion_testcase = StandardTestCase(question=self.question1,
@@ -158,6 +155,15 @@ class QuestionTestCases(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.load_tmp_path)
         shutil.rmtree(self.dump_tmp_path)
+        uploaded_files = FileUpload.objects.all()
+        que_id_list = [file.question.id for file in uploaded_files]
+        for que_id in que_id_list:
+            dir_path = os.path.join(os.getcwd(), "yaksh", "data",
+                                    "question_{0}".format(que_id)
+                                    )
+            if os.path.exists(dir_path):
+                shutil.rmtree(dir_path)
+        uploaded_files.delete()
 
     def test_question(self):
         """ Test question """
@@ -214,7 +220,9 @@ class QuestionTestCases(unittest.TestCase):
         self.assertTrue(question_data.active)
         self.assertEqual(question_data.snippet, 'def fact()')
         self.assertEqual(os.path.basename(file.file.path), "test.txt")
-        self.assertEqual([case.get_field_value() for case in test_case], self.test_case_upload_data)
+        self.assertEqual([case.get_field_value() for case in test_case],
+                         self.test_case_upload_data
+                         )
 
 
 ###############################################################################

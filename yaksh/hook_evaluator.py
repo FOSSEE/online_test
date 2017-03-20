@@ -12,11 +12,13 @@ from .grader import TimeoutException
 class HookEvaluator(BaseEvaluator):
     def __init__(self, metadata, test_case_data):
         self.files = []
+        self.assign_files = []
 
         # Set metadata values
         self.user_answer = metadata.get('user_answer')
         self.file_paths = metadata.get('file_paths')
         self.partial_grading = metadata.get('partial_grading')
+        self.assignment_files = metadata.get('assign_files')
 
         # Set test case data values
         self.hook_code = test_case_data.get('hook_code')
@@ -26,6 +28,8 @@ class HookEvaluator(BaseEvaluator):
         # Delete the created file.
         if self.files:
             delete_files(self.files)
+        if self.assign_files:
+            delete_files(self.assign_files)
 
     def check_code(self):
         """ Function evaluates user answer by running a python based hook code
@@ -47,6 +51,10 @@ class HookEvaluator(BaseEvaluator):
         Returns (False, error_msg, 0.0): If mandatory arguments are not files or if
         the required permissions are not given to the file(s).
         """
+        if self.file_paths:
+            self.files = copy_files(self.file_paths)
+        if self.assignment_files:
+            self.assign_files = copy_files(self.assignment_files)
         success = False
         mark_fraction = 0.0
         try:

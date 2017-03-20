@@ -68,7 +68,7 @@ test_status = (
 
 def get_assignment_dir(instance, filename):
     return os.sep.join((
-        instance.user.user.username, str(instance.assignmentQuestion.id), filename
+        instance.user.username, str(instance.assignmentQuestion.id), filename
     ))
 
 
@@ -266,7 +266,10 @@ class Question(models.Model):
     # Does this question allow partial grading
     partial_grading = models.BooleanField(default=False)
 
-    def consolidate_answer_data(self, user_answer):
+    # Check assignment upload based question
+    grade_assignment_upload = models.BooleanField(default=False)
+
+    def consolidate_answer_data(self, user_answer, user=None):
         question_data = {}
         metadata = {}
         test_case_data = []
@@ -285,6 +288,13 @@ class Question(models.Model):
         if files:
             metadata['file_paths'] = [(file.file.path, file.extract)
                                       for file in files]
+        if self.type == "upload":
+            assignment_files = AssignmentUpload.objects.filter(
+                assignmentQuestion=self, user=user
+                )
+            if assignment_files:
+                metadata['assign_files'] = [(file.assignmentFile.path, False)
+                                             for file in assignment_files]
         question_data['metadata'] = metadata
 
         return json.dumps(question_data)
@@ -1168,7 +1178,7 @@ class AnswerPaper(models.Model):
                 if set(user_answer) == set(expected_answers):
                     result['success'] = True
                     result['error'] = ['Correct answer']
-            elif question.type == 'code':
+            elif question.type == 'code' or question.type == "upload":
                 user_dir = self.user.profile.get_user_dir()
                 json_result = code_server.run_code(
                     question.language, json_data, user_dir
@@ -1231,7 +1241,7 @@ class AnswerPaper(models.Model):
 
 ###############################################################################
 class AssignmentUpload(models.Model):
-    user = models.ForeignKey(Profile)
+    user = models.ForeignKey(User)
     assignmentQuestion = models.ForeignKey(Question)
     assignmentFile = models.FileField(upload_to=get_assignment_dir)
 
@@ -1295,7 +1305,8 @@ class HookTestCase(TestCase):
            success - Boolean, indicating if code was executed correctly
            mark_fraction - Float, indicating fraction of the
                           weight to a test case
-           error - String, error message if success is false'''
+           error - String, error message if success is false
+           In case of assignment upload there will be no user answer '''
            success = False
            err = "Incorrect Answer" # Please make this more specific
            mark_fraction = 0.0
