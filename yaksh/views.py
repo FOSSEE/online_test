@@ -25,6 +25,7 @@ import six
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
                         has_profile, StandardTestCase, McqTestCase, StdIOBasedTestCase, HookTestCase
+
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm,\
                 QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
@@ -264,7 +265,7 @@ def show_all_questionpapers(request, questionpaper_id=None):
     else:
         qu_papers = QuestionPaper.objects.get(id=questionpaper_id)
         quiz = qu_papers.quiz
-        fixed_questions = qu_papers.fixed_questions.all()
+        fixed_questions = qu_papers.get_ordered_questions()
         random_questions = qu_papers.random_questions.all()
         context = {'quiz': quiz, 'fixed_questions': fixed_questions,
                    'random_questions': random_questions}
@@ -356,7 +357,8 @@ def start(request, questionpaper_id=None, attempt_num=None):
         msg = 'Quiz not found, please contact your '\
             'instructor/administrator.'
         return complete(request, msg, attempt_num, questionpaper_id=None)
-    if not quest_paper.fixed_questions.all() and not quest_paper.random_questions.all():
+    if not quest_paper.get_ordered_questions() and not \
+            quest_paper.random_questions.all():
         msg = 'Quiz does not have Questions, please contact your '\
             'instructor/administrator.'
         return complete(request, msg, attempt_num, questionpaper_id=None)
@@ -838,12 +840,28 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
         state = request.POST.get('is_active', None)
 
         if 'add-fixed' in request.POST:
-            question_ids = request.POST.getlist('questions', None)
-            for question in Question.objects.filter(id__in=question_ids):
-                question_paper.fixed_questions.add(question)
+            question_ids = request.POST.get('checked_ques', None)
+            if question_paper.fixed_question_order:
+                ques_order = question_paper.fixed_question_order.split(",") +\
+                            question_ids.split(",")
+                questions_order = ",".join(ques_order)
+            else:
+                questions_order = question_ids
+            questions = Question.objects.filter(id__in=question_ids.split(','))
+            question_paper.fixed_question_order = questions_order
+            question_paper.save()
+            question_paper.fixed_questions.add(*questions)
 
         if 'remove-fixed' in request.POST:
             question_ids = request.POST.getlist('added-questions', None)
+            que_order = question_paper.fixed_question_order.split(",")
+            for qid in question_ids:
+                que_order.remove(qid)
+            if que_order:
+                question_paper.fixed_question_order = ",".join(que_order)
+            else:
+                question_paper.fixed_question_order = ""
+            question_paper.save()
             question_paper.fixed_questions.remove(*question_ids)
 
         if 'add-random' in request.POST:
@@ -871,7 +889,7 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
         question_paper.update_total_marks()
         question_paper.save()
     random_sets = question_paper.random_questions.all()
-    fixed_questions = question_paper.fixed_questions.all()
+    fixed_questions = question_paper.get_ordered_questions()
     context = {'qpaper_form': qpaper_form, 'filter_form': filter_form, 'qpaper':
             question_paper, 'questions': questions, 'fixed_questions': fixed_questions,
             'state': state, 'random_sets': random_sets}

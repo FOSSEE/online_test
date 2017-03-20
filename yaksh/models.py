@@ -631,8 +631,8 @@ class QuestionPaperManager(models.Manager):
     def _create_trial_from_questionpaper(self, original_quiz_id):
         """Creates a copy of the original questionpaper"""
         trial_questionpaper = self.get(quiz_id=original_quiz_id)
-        trial_questions = {"fixed_questions": trial_questionpaper
-                           .fixed_questions.all(),
+        fixed_ques = trial_questionpaper.get_ordered_questions()
+        trial_questions = {"fixed_questions": fixed_ques,
                            "random_questions": trial_questionpaper
                            .random_questions.all()
                            }
@@ -647,6 +647,7 @@ class QuestionPaperManager(models.Manager):
             trial_questionpaper = self.create(quiz=trial_quiz,
                                               total_marks=10,
                                               )
+            trial_questionpaper.fixed_question_order = ",".join(questions_list)
             trial_questionpaper.fixed_questions.add(*questions_list)
             return trial_questionpaper
 
@@ -685,6 +686,9 @@ class QuestionPaper(models.Model):
     # Total marks for the question paper.
     total_marks = models.FloatField(default=0.0, blank=True)
 
+    # Sequence or Order of fixed questions
+    fixed_question_order = models.CharField(max_length=255, blank=True)
+
     objects = QuestionPaperManager()
 
     def update_total_marks(self):
@@ -699,7 +703,7 @@ class QuestionPaper(models.Model):
 
     def _get_questions_for_answerpaper(self):
         """ Returns fixed and random questions for the answer paper"""
-        questions = list(self.fixed_questions.filter(active=True))
+        questions = self.get_ordered_questions()
         for question_set in self.random_questions.all():
             questions += question_set.get_random_questions()
         return questions
@@ -717,8 +721,10 @@ class QuestionPaper(models.Model):
         ans_paper.question_paper = self
         ans_paper.save()
         questions = self._get_questions_for_answerpaper()
-        ans_paper.questions.add(*questions)
-        ans_paper.questions_unanswered.add(*questions)
+        for question in questions:
+            ans_paper.questions.add(question)
+        for question in questions:
+            ans_paper.questions_unanswered.add(question)
         return ans_paper
 
     def _is_questionpaper_passed(self, user):
@@ -759,9 +765,21 @@ class QuestionPaper(models.Model):
         questions = Question.objects.filter(active=True,
                                             summary="Yaksh Demo Question",
                                             user=user)
+        q_order = [str(que.id) for que in questions]
+        question_paper.fixed_question_order = ",".join(q_order)
+        question_paper.save()
         # add fixed set of questions to the question paper
-        for question in questions:
-            question_paper.fixed_questions.add(question)
+        question_paper.fixed_questions.add(*questions)
+
+    def get_ordered_questions(self):
+        ques = []
+        if self.fixed_question_order:
+            que_order = self.fixed_question_order.split(',')
+            for que_id in que_order:
+                ques.append(self.fixed_questions.get(id=que_id))
+        else:
+            ques = self.fixed_questions.all()
+        return ques
 
     def __str__(self):
         return "Question Paper for " + self.quiz.description
