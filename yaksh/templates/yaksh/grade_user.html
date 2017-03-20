@@ -4,6 +4,11 @@
 
 {% block content %}
 
+{% block script %}
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+{% endblock script %}
+
+
 {% if course_details %}
     <table id="course-details" class="table table-bordered">
     <tr>
@@ -167,7 +172,15 @@ Status : <b style="color: green;"> Passed </b><br/>
             <div><pre>{{ err }}</pre></div>
         {% endfor %}
     </div>
-    <div class="panel-body"><pre><code>{{ ans.answer.answer.strip|safe }}</code></pre></div>
+    <div class="panel-body">
+    {% if question.type != "code" %}
+    <div class="well well-sm">
+    {{ ans.answer.answer.strip|safe }}
+    </div>
+    {% else %}
+    <pre><code>{{ ans.answer.answer.strip|safe }}</code></pre>
+    {% endif %}
+    </div>
     </div>
     {% endfor %}
     {% with answers|last as answer %}

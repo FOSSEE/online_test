@@ -21,7 +21,6 @@ import pytz
 from taggit.models import Tag
 from itertools import chain
 import json
-import zipfile
 import six
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
@@ -915,7 +914,8 @@ def show_all_questions(request):
         if request.POST.get('delete') == 'delete':
             data = request.POST.getlist('question')
             if data is not None:
-                questions = Question.objects.filter(id__in=data, user_id=user.id, active=True)
+                questions = Question.objects.filter(id__in=data, user_id=user.id,
+                                                    active=True)
                 for question in questions:
                     question.active = False
                     question.save()
@@ -928,7 +928,8 @@ def show_all_questions(request):
                 if file_name[-1] == "zip":
                     ques = Question()
                     files, extract_path = extract_files(questions_file)
-                    ques.read_json(extract_path, user, files)
+                    context['message'] = ques.read_json(extract_path, user,
+                                                        files)
                 else:
                     message = "Please Upload a ZIP file"
                     context['message'] = message
@@ -967,7 +968,6 @@ def show_all_questions(request):
     context['upload_form'] = upload_form
     return my_render_to_response('yaksh/showquestions.html', context,
                                  context_instance=ci)
-
 
 @login_required
 def user_data(request, user_id, questionpaper_id=None):

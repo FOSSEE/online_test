@@ -5,7 +5,8 @@
 {% block content %}
 
 {% block script %}
-    <script src= "{{ URL_ROOT }}/static/yaksh/js/edit_question.js"></script>
+<script src= "{{ URL_ROOT }}/static/yaksh/js/edit_question.js"></script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 {% endblock %}
 
 <form action="" method="post">
@@ -91,7 +92,7 @@ User IP address: {{ paper.user_ip }}
             {%endif%}
         </div>
     </div>
-    {% if question.type == "mcq" or question.type == "mcc" %}
+    {% if question.type != "code" %}
         {% if "Correct answer" in answers.0.error_list %}
             <div class="panel panel-success">
         {% else %}
@@ -102,7 +103,9 @@ User IP address: {{ paper.user_ip }}
             </div>
             <div class="panel-body">
                 <h5><u>Student answer:</u></h5>
-                 <pre><code>{{forloop.counter}}. {{ answers.0.answer|safe }}</code></pre>
+                 <div class="well well-sm">
+                 {{ answers.0.answer|safe }}
+                 </div>
             </div>
             </div>
     {% else %}
@@ -122,7 +125,16 @@ User IP address: {{ paper.user_ip }}
         {% endif %}    
     
     </div>
-    <div class="panel-body"><pre><code>{{ answer.answer.answer.strip }}</code></pre></div>
+    <div class="panel-body">
+    {% if question.type != "code" %}
+    <div class="well well-sg">
+    {{question.type}}
+    {{ answer.answer.answer.strip|safe }}
+    </div>
+    {% else %}
+    <pre><code>{{ answer.answer.answer.strip|safe }}</code></pre>
+    {% endif %}
+    </div>
     </div>
 
     {% endfor %}
