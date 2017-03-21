@@ -251,6 +251,43 @@ How to write Test cases
 		.. image:: ../images/hook_testcase.jpg
 				:width: 80%
 
+	* **Create Integer Based Test Case**
+
+			Select **Answer in Integer** from Type field.
+
+			Select Integer from Add Test Case field.
+
+			In the Correct field, add the correct integer value for the question.
+
+			.. image:: ../images/integer_testcase.jpg
+				:width: 80%
+
+	* **Create String Based Test Case**
+
+			Select **Answer in String** from Type field.
+
+			Select **String** from Add Test Case field.
+
+			In the **Correct** field, add the exact string answer for the question.
+
+			In **String Check** field, select if the checking of the string answer
+			 should be case sensitive or not.
+
+			.. image:: ../images/string_testcase.jpg
+				:width: 80%
+
+	* **Create Float Based Test Case**
+
+			Select **Answer in Float** from Type field.
+
+			Select **Float** from Add Test Case field.
+
+			In the **Correct** field, add the correct float value for the question.
+
+			In the **Error Margin** field, add the margin of error that will be allowed.
+
+			.. image:: ../images/float_testcase.jpg
+				:width: 80%
 
 
 Features in Question
