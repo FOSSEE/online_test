@@ -79,7 +79,7 @@ test_status = (
 
 def get_assignment_dir(instance, filename):
     return os.sep.join((
-        instance.user.user.username, str(instance.assignmentQuestion.id), filename
+        instance.user.username, str(instance.assignmentQuestion.id), filename
     ))
 
 
@@ -277,7 +277,10 @@ class Question(models.Model):
     # Does this question allow partial grading
     partial_grading = models.BooleanField(default=False)
 
-    def consolidate_answer_data(self, user_answer):
+    # Check assignment upload based question
+    grade_assignment_upload = models.BooleanField(default=False)
+
+    def consolidate_answer_data(self, user_answer, user=None):
         question_data = {}
         metadata = {}
         test_case_data = []
@@ -296,6 +299,13 @@ class Question(models.Model):
         if files:
             metadata['file_paths'] = [(file.file.path, file.extract)
                                       for file in files]
+        if self.type == "upload":
+            assignment_files = AssignmentUpload.objects.filter(
+                assignmentQuestion=self, user=user
+                )
+            if assignment_files:
+                metadata['assign_files'] = [(file.assignmentFile.path, False)
+                                             for file in assignment_files]
         question_data['metadata'] = metadata
 
         return json.dumps(question_data)
@@ -642,8 +652,8 @@ class QuestionPaperManager(models.Manager):
     def _create_trial_from_questionpaper(self, original_quiz_id):
         """Creates a copy of the original questionpaper"""
         trial_questionpaper = self.get(quiz_id=original_quiz_id)
-        trial_questions = {"fixed_questions": trial_questionpaper
-                           .fixed_questions.all(),
+        fixed_ques = trial_questionpaper.get_ordered_questions()
+        trial_questions = {"fixed_questions": fixed_ques,
                            "random_questions": trial_questionpaper
                            .random_questions.all()
                            }
@@ -658,6 +668,7 @@ class QuestionPaperManager(models.Manager):
             trial_questionpaper = self.create(quiz=trial_quiz,
                                               total_marks=10,
                                               )
+            trial_questionpaper.fixed_question_order = ",".join(questions_list)
             trial_questionpaper.fixed_questions.add(*questions_list)
             return trial_questionpaper
 
@@ -695,6 +706,10 @@ class QuestionPaper(models.Model):
 
     # Total marks for the question paper.
     total_marks = models.FloatField(default=0.0, blank=True)
+
+    # Sequence or Order of fixed questions
+    fixed_question_order = models.CharField(max_length=255, blank=True)
+
     objects = QuestionPaperManager()
 
     def update_total_marks(self):
@@ -709,7 +724,7 @@ class QuestionPaper(models.Model):
 
     def _get_questions_for_answerpaper(self):
         """ Returns fixed and random questions for the answer paper"""
-        questions = list(self.fixed_questions.filter(active=True))
+        questions = self.get_ordered_questions()
         for question_set in self.random_questions.all():
             questions += question_set.get_random_questions()
         return questions
@@ -727,8 +742,10 @@ class QuestionPaper(models.Model):
         ans_paper.question_paper = self
         ans_paper.save()
         questions = self._get_questions_for_answerpaper()
-        ans_paper.questions.add(*questions)
-        ans_paper.questions_unanswered.add(*questions)
+        for question in questions:
+            ans_paper.questions.add(question)
+        for question in questions:
+            ans_paper.questions_unanswered.add(question)
         return ans_paper
 
     def _is_questionpaper_passed(self, user):
@@ -769,9 +786,21 @@ class QuestionPaper(models.Model):
         questions = Question.objects.filter(active=True,
                                             summary="Yaksh Demo Question",
                                             user=user)
+        q_order = [str(que.id) for que in questions]
+        question_paper.fixed_question_order = ",".join(q_order)
+        question_paper.save()
         # add fixed set of questions to the question paper
-        for question in questions:
-            question_paper.fixed_questions.add(question)
+        question_paper.fixed_questions.add(*questions)
+
+    def get_ordered_questions(self):
+        ques = []
+        if self.fixed_question_order:
+            que_order = self.fixed_question_order.split(',')
+            for que_id in que_order:
+                ques.append(self.fixed_questions.get(id=que_id))
+        else:
+            ques = self.fixed_questions.all()
+        return ques
 
     def __str__(self):
         return "Question Paper for " + self.quiz.description
@@ -1153,6 +1182,7 @@ class AnswerPaper(models.Model):
                 if user_answer.strip() == expected_answer.strip():
                     result['success'] = True
                     result['error'] = ['Correct answer']
+
             elif question.type == 'mcc':
                 expected_answers = []
                 for opt in question.get_test_cases(correct=True):
@@ -1162,31 +1192,38 @@ class AnswerPaper(models.Model):
                     result['error'] = ['Correct answer']
 
             elif question.type == 'integer':
-                expected_answer = question.get_test_case().correct
-                if expected_answer == int(user_answer):
+                expected_answers = []
+                for tc in question.get_test_cases():
+                    expected_answers.append(int(tc.correct))
+                if int(user_answer) in expected_answers:
                     result['success'] = True
                     result['error'] = ['Correct answer']
 
             elif question.type == 'string':
-                testcase = question.get_test_case()
-                if testcase.string_check == "lower":
-                    if testcase.correct.lower().splitlines()\
-                        == user_answer.lower().splitlines():
-                        result['success'] = True
-                        result['error'] = ['Correct answer']
-                else:
-                    if testcase.correct.splitlines()\
-                        == user_answer.splitlines():
-                        result['success'] = True
-                        result['error'] = ['Correct answer']
+                tc_status = []
+                for tc in question.get_test_cases():
+                    if tc.string_check == "lower":
+                        if tc.correct.lower().splitlines()\
+                            == user_answer.lower().splitlines():
+                            tc_status.append(True)
+                    else:
+                        if tc.correct.splitlines()\
+                            == user_answer.splitlines():
+                            tc_status.append(True)
+                if any(tc_status):
+                    result['success'] = True
+                    result['error'] = ['Correct answer']
 
             elif question.type == 'float':
-                testcase = question.get_test_case()
-                if abs(testcase.correct - user_answer) <= testcase.error_margin:
-                        result['success'] = True
-                        result['error'] = ['Correct answer']
+                tc_status = []
+                for tc in question.get_test_cases():
+                    if abs(tc.correct - user_answer) <= tc.error_margin:
+                        tc_status.append(True)
+                if any(tc_status):
+                    result['success'] = True
+                    result['error'] = ['Correct answer']
 
-            elif question.type == 'code':
+            elif question.type == 'code' or question.type == "upload":
                 user_dir = self.user.profile.get_user_dir()
                 json_result = code_server.run_code(
                     question.language, json_data, user_dir
@@ -1249,7 +1286,7 @@ class AnswerPaper(models.Model):
 
 ###############################################################################
 class AssignmentUpload(models.Model):
-    user = models.ForeignKey(Profile)
+    user = models.ForeignKey(User)
     assignmentQuestion = models.ForeignKey(Question)
     assignmentFile = models.FileField(upload_to=get_assignment_dir)
 
@@ -1313,7 +1350,8 @@ class HookTestCase(TestCase):
            success - Boolean, indicating if code was executed correctly
            mark_fraction - Float, indicating fraction of the
                           weight to a test case
-           error - String, error message if success is false'''
+           error - String, error message if success is false
+           In case of assignment upload there will be no user answer '''
            success = False
            err = "Incorrect Answer" # Please make this more specific
            mark_fraction = 0.0

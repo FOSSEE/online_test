@@ -25,8 +25,9 @@ import six
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
-                          has_profile, StandardTestCase, McqTestCase,\
-                          StdIOBasedTestCase, HookTestCase, IntegerTestCase
+                         has_profile, StandardTestCase, McqTestCase,\
+                         StdIOBasedTestCase, HookTestCase, IntegerTestCase,\
+                         FloatTestCase, StringTestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm,\
                 QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
@@ -266,7 +267,7 @@ def show_all_questionpapers(request, questionpaper_id=None):
     else:
         qu_papers = QuestionPaper.objects.get(id=questionpaper_id)
         quiz = qu_papers.quiz
-        fixed_questions = qu_papers.fixed_questions.all()
+        fixed_questions = qu_papers.get_ordered_questions()
         random_questions = qu_papers.random_questions.all()
         context = {'quiz': quiz, 'fixed_questions': fixed_questions,
                    'random_questions': random_questions}
@@ -358,7 +359,8 @@ def start(request, questionpaper_id=None, attempt_num=None):
         msg = 'Quiz not found, please contact your '\
             'instructor/administrator.'
         return complete(request, msg, attempt_num, questionpaper_id=None)
-    if not quest_paper.fixed_questions.all() and not quest_paper.random_questions.all():
+    if not quest_paper.get_ordered_questions() and not \
+            quest_paper.random_questions.all():
         msg = 'Quiz does not have Questions, please contact your '\
             'instructor/administrator.'
         return complete(request, msg, attempt_num, questionpaper_id=None)
@@ -469,31 +471,43 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             try:
                 user_answer = int(request.POST.get('answer'))
             except ValueError:
-                msg = ["Please enter an Integer Value"]
-                return show_question(request, current_question, paper, msg)
+                msg = "Please enter an Integer Value"
+                return show_question(request, current_question,
+                                     paper, notification=msg
+                                     )
         elif current_question.type == 'float':
             try:
                 user_answer = float(request.POST.get('answer'))
             except ValueError:
-                msg = ["Please enter a Decimal Value"]
-                return show_question(request, current_question, paper, msg)
+                msg = "Please enter a Float Value"
+                return show_question(request, current_question,
+                                     paper, notification=msg)
         elif current_question.type == 'string':
             user_answer = str(request.POST.get('answer'))
 
         elif current_question.type == 'mcc':
             user_answer = request.POST.getlist('answer')
         elif current_question.type == 'upload':
-            assign = AssignmentUpload()
-            assign.user = user.profile
-            assign.assignmentQuestion = current_question
             # if time-up at upload question then the form is submitted without
             # validation
             if 'assignment' in request.FILES:
-                assign.assignmentFile = request.FILES['assignment']
-            assign.save()
+                assignment_filename = request.FILES.getlist('assignment')
+            for fname in assignment_filename:
+                if AssignmentUpload.objects.filter(
+                    assignmentQuestion=current_question,
+                    assignmentFile__icontains=fname, user=user).exists():
+                    assign_file = AssignmentUpload.objects.get(
+                    assignmentQuestion=current_question,
+                    assignmentFile__icontains=fname, user=user)
+                    os.remove(assign_file.assignmentFile.path)
+                    assign_file.delete()
+                AssignmentUpload.objects.create(user=user,
+                    assignmentQuestion=current_question, assignmentFile=fname
+                    )
             user_answer = 'ASSIGNMENT UPLOADED'
-            next_q = paper.add_completed_question(current_question.id)
-            return show_question(request, next_q, paper)
+            if not current_question.grade_assignment_upload:
+                next_q = paper.add_completed_question(current_question.id)
+                return show_question(request, next_q, paper)
         else:
             user_code = request.POST.get('answer')
             user_answer = snippet_code + "\n" + user_code if snippet_code else user_code
@@ -507,17 +521,18 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         # If we were not skipped, we were asked to check.  For any non-mcq
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
-        try:
-            json_data = current_question.consolidate_answer_data(user_answer) \
-                            if current_question.type == 'code' else None
-            result = paper.validate_answer(user_answer, current_question, json_data)
-        except MultipleObjectsReturned:
-            msg = ["Multiple objects returned. Contact admin."]
-            return show_question(request, current_question, paper, msg)
+        json_data = current_question.consolidate_answer_data(user_answer, user) \
+                    if current_question.type == 'code' or \
+                    current_question.type == 'upload' else None
+        result = paper.validate_answer(user_answer, current_question,
+                                       json_data
+                                           )
         if result.get('success'):
             new_answer.marks = (current_question.points * result['weight'] / 
                 current_question.get_maximum_test_case_weight()) \
-                if current_question.partial_grading and current_question.type == 'code' else current_question.points
+                if current_question.partial_grading and \
+                current_question.type == 'code' or current_question.type == 'upload' \
+                else current_question.points
             new_answer.correct = result.get('success')
             error_message = None
             new_answer.error = json.dumps(result.get('error'))
@@ -525,11 +540,14 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         else:
             new_answer.marks = (current_question.points * result['weight'] /
                 current_question.get_maximum_test_case_weight()) \
-                if current_question.partial_grading and current_question.type == 'code' else 0
+                if current_question.partial_grading and \
+                current_question.type == 'code' or current_question.type == 'upload' \
+                else 0
             error_message = result.get('error') if current_question.type == 'code' \
-                else None
+                or current_question.type == 'upload' else None
             new_answer.error = json.dumps(result.get('error'))
             next_question = current_question if current_question.type == 'code' \
+                or current_question.type == 'upload' \
                 else paper.add_completed_question(current_question.id)
         new_answer.save()
         paper.update_marks('inprogress')
@@ -859,12 +877,28 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
         state = request.POST.get('is_active', None)
 
         if 'add-fixed' in request.POST:
-            question_ids = request.POST.getlist('questions', None)
-            for question in Question.objects.filter(id__in=question_ids):
-                question_paper.fixed_questions.add(question)
+            question_ids = request.POST.get('checked_ques', None)
+            if question_paper.fixed_question_order:
+                ques_order = question_paper.fixed_question_order.split(",") +\
+                            question_ids.split(",")
+                questions_order = ",".join(ques_order)
+            else:
+                questions_order = question_ids
+            questions = Question.objects.filter(id__in=question_ids.split(','))
+            question_paper.fixed_question_order = questions_order
+            question_paper.save()
+            question_paper.fixed_questions.add(*questions)
 
         if 'remove-fixed' in request.POST:
             question_ids = request.POST.getlist('added-questions', None)
+            que_order = question_paper.fixed_question_order.split(",")
+            for qid in question_ids:
+                que_order.remove(qid)
+            if que_order:
+                question_paper.fixed_question_order = ",".join(que_order)
+            else:
+                question_paper.fixed_question_order = ""
+            question_paper.save()
             question_paper.fixed_questions.remove(*question_ids)
 
         if 'add-random' in request.POST:
@@ -892,7 +926,7 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
         question_paper.update_total_marks()
         question_paper.save()
     random_sets = question_paper.random_questions.all()
-    fixed_questions = question_paper.fixed_questions.all()
+    fixed_questions = question_paper.get_ordered_questions()
     context = {'qpaper_form': qpaper_form, 'filter_form': filter_form, 'qpaper':
             question_paper, 'questions': questions, 'fixed_questions': fixed_questions,
             'state': state, 'random_sets': random_sets}

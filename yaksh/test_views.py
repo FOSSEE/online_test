@@ -1161,7 +1161,6 @@ class TestViewAnswerPaper(TestCase):
 
         self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
             total_marks=1.0)
-
         self.question_paper.fixed_questions.add(self.question)
         self.question_paper.save()
 
@@ -1446,7 +1445,6 @@ class TestGrader(TestCase):
 
         self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
             total_marks=1.0)
-
         self.question_paper.fixed_questions.add(self.question)
         self.question_paper.save()
 

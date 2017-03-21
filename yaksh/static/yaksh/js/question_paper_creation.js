@@ -46,4 +46,18 @@ $(document).ready(function(){
         $("#random").click();
     });
 
+    var checked_vals = [];
+    $('input:checkbox[name="questions"]').click(function() {
+        if($(this).prop("checked") == true){
+            checked_vals.push(parseInt($(this).val()));
+        }
+        else{
+            checked_vals.pop(parseInt($(this).val()));
+        }
+    });
+    $('#design_q').submit(function(eventObj) {
+        $(this).append('<input type="hidden" name="checked_ques" value='+checked_vals+'>');
+        return true;
+});
+
 });//document

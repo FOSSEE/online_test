@@ -73,7 +73,7 @@
                 {% block main %}
                 {% endblock %}
             </div>
-            {% if question.type == 'code' %}
+            {% if question.type == 'code' or question.type == 'upload' %}
                 {% if error_message %}
                     <div class="row" id="error_panel">
       {% for error in error_message %}

@@ -15,10 +15,6 @@ def setUpModule():
     Profile.objects.create(user=user, roll_number=1,
                            institute='IIT', department='Aerospace',
                            position='Student')
-    # create 2 questions
-    for i in range(101, 103):
-        Question.objects.create(summary='Q%d' % (i), points=1,
-                                 type='code', user=user)
 
     # create a course
     course = Course.objects.create(name="Python Course 100",
@@ -48,7 +44,6 @@ def setUpModule():
 def tearDownModule():
   User.objects.get(username="demo_user_100").delete()
 
-
 class IntegerQuestionTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -61,7 +56,8 @@ class IntegerQuestionTestCases(unittest.TestCase):
         self.user = User.objects.get(username='demo_user_100')
 
         #Creating Question
-        self.question1 = Question.objects.get(summary='Q101')
+        self.question1 = Question.objects.create(summary='int1', points=1,
+                                                 type='code', user=self.user)
         self.question1.language = 'python'
         self.question1.type = "integer"
         self.question1.test_case_type = 'integertestcase'
@@ -79,6 +75,10 @@ class IntegerQuestionTestCases(unittest.TestCase):
                                                       type = 'integertestcase',
                                                       )
         self.integer_based_testcase.save()
+
+    @classmethod
+    def tearDownClass(self):
+      self.question1.delete()
 
     def test_integer_correct_answer(self):
         # Given
@@ -127,14 +127,16 @@ class StringQuestionTestCases(unittest.TestCase):
         #Creating User
         self.user = User.objects.get(username='demo_user_100')
         #Creating Question
-        self.question1 = Question.objects.get(summary='Q101')
+        self.question1 = Question.objects.create(summary='str1', points=1,
+                                                 type='code', user=self.user)
         self.question1.language = 'python'
         self.question1.type = "string"
         self.question1.test_case_type = 'stringtestcase'
         self.question1.description = 'Write Hello, EARTH!'
         self.question1.save()
 
-        self.question2 = Question.objects.get(summary='Q102')
+        self.question2 = Question.objects.create(summary='str2', points=1,
+                                                 type='code', user=self.user)
         self.question2.language = 'python'
         self.question2.type = "string"
         self.question2.test_case_type = 'stringtestcase'
@@ -161,6 +163,11 @@ class StringQuestionTestCases(unittest.TestCase):
                                                     type = 'stringtestcase',
                                                     )
         self.exact_string_testcase.save()
+
+    @classmethod
+    def tearDownClass(self):
+      self.question1.delete()
+      self.question2.delete()
 
     def test_case_insensitive_string_correct_answer(self):
         # Given
@@ -236,7 +243,8 @@ class FloatQuestionTestCases(unittest.TestCase):
         #Creating User
         self.user = User.objects.get(username='demo_user_100')
         #Creating Question
-        self.question1 = Question.objects.get(summary='Q101')
+        self.question1 = Question.objects.create(summary='flt1', points=1,
+                                                 type='code', user=self.user)
         self.question1.language = 'python'
         self.question1.type = "float"
         self.question1.test_case_type = 'floattestcase'
@@ -254,6 +262,10 @@ class FloatQuestionTestCases(unittest.TestCase):
                                                   type = 'floattestcase',
                                                   )
         self.float_based_testcase.save()
+
+    @classmethod
+    def tearDownClass(self):
+      self.question1.delete()
 
     def test_float_correct_answer(self):
         # Given

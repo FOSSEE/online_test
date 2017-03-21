@@ -23,7 +23,7 @@ select
 
 {% block content %}
 <input type=hidden id="url_root" value={{ URL_ROOT }}>
-<form action="{{ URL_ROOT }}/exam/manage/designquestionpaper/{{ qpaper.quiz.id }}/{{ qpaper.id }}/" method="POST">
+<form action="{{ URL_ROOT }}/exam/manage/designquestionpaper/{{ qpaper.quiz.id }}/{{ qpaper.id }}/" method="POST" id="design_q">
 <input class ="btn primary small" type="submit" name="back" id="back" value="Cancel">
     {% csrf_token %}
     <input type=hidden name="is_active" id="is_active" value="{{ state }}">
@@ -95,8 +95,10 @@ select
                                {% for question in fixed_questions %}
                                     <li>
                                         <label>
-                                            <input type="checkbox" name="added-questions" data-qid="{{question.id}}" value={{question.id}}>
-                                            <span> {{ question.summary }} </span> <span> {{ question.points }} </span>
+                                            <input type="checkbox" name="added-questions"
+                                            data-qid="{{question.id}}" value={{question.id}}>
+                                            <span> {{ question.summary }} </span>
+                                            <span> {{ question.points }} </span>
                                         </label>
                                      </li>
                                 {% endfor %}

@@ -57,9 +57,10 @@ def setUpModule():
                         description='demo quiz 2', pass_criteria=40,
                         language='Python', prerequisite=quiz,
                         course=course, instructions="Demo Instructions")
-
-    with open('/tmp/test.txt', 'wb') as f:
+    tmp_file1 = os.path.join(tempfile.gettempdir(), "test.txt")
+    with open(tmp_file1, 'wb') as f:
         f.write('2'.encode('ascii'))
+
 
 def tearDownModule():
     User.objects.all().delete()
@@ -117,7 +118,7 @@ class QuestionTestCases(unittest.TestCase):
         )
 
         # create a temp directory and add files for loading questions test
-        file_path = "/tmp/test.txt"
+        file_path = os.path.join(tempfile.gettempdir(), "test.txt")
         self.load_tmp_path = tempfile.mkdtemp()
         shutil.copy(file_path, self.load_tmp_path)
         file1 = os.path.join(self.load_tmp_path, "test.txt")
@@ -126,9 +127,11 @@ class QuestionTestCases(unittest.TestCase):
         self.dump_tmp_path = tempfile.mkdtemp()
         shutil.copy(file_path, self.dump_tmp_path)
         file2 = os.path.join(self.dump_tmp_path, "test.txt")
-        file = open(file2, "r")
-        django_file = File(file)
-        file = FileUpload.objects.create(file=django_file, question=self.question2)
+        upload_file = open(file2, "r")
+        django_file = File(upload_file)
+        file = FileUpload.objects.create(file=django_file,
+                                         question=self.question2
+                                         )
 
         self.question1.tags.add('python', 'function')
         self.assertion_testcase = StandardTestCase(question=self.question1,
@@ -158,6 +161,15 @@ class QuestionTestCases(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.load_tmp_path)
         shutil.rmtree(self.dump_tmp_path)
+        uploaded_files = FileUpload.objects.all()
+        que_id_list = [file.question.id for file in uploaded_files]
+        for que_id in que_id_list:
+            dir_path = os.path.join(os.getcwd(), "yaksh", "data",
+                                    "question_{0}".format(que_id)
+                                    )
+            if os.path.exists(dir_path):
+                shutil.rmtree(dir_path)
+        uploaded_files.delete()
 
     def test_question(self):
         """ Test question """
@@ -214,7 +226,9 @@ class QuestionTestCases(unittest.TestCase):
         self.assertTrue(question_data.active)
         self.assertEqual(question_data.snippet, 'def fact()')
         self.assertEqual(os.path.basename(file.file.path), "test.txt")
-        self.assertEqual([case.get_field_value() for case in test_case], self.test_case_upload_data)
+        self.assertEqual([case.get_field_value() for case in test_case],
+                         self.test_case_upload_data
+                         )
 
 
 ###############################################################################
@@ -327,9 +341,13 @@ class QuestionPaperTestCases(unittest.TestCase):
             shuffle_questions=True
         )
 
+        self.question_paper.fixed_question_order = "{0}, {1}".format(
+                self.questions[3].id, self.questions[5].id
+                )
         # add fixed set of questions to the question paper
         self.question_paper.fixed_questions.add(self.questions[3],
-                                                self.questions[5])
+                self.questions[5]
+                )
         # create two QuestionSet for random questions
         # QuestionSet 1
         self.question_set_1 = QuestionSet.objects.create(marks=2,
@@ -371,14 +389,15 @@ class QuestionPaperTestCases(unittest.TestCase):
 
         # For Trial case
         self.questions_list = [self.questions[3].id, self.questions[5].id]
-        trial_course = Course.objects.create_trial_course(self.user)
-        trial_quiz = Quiz.objects.create_trial_quiz(trial_course, self.user)
+        self.trial_course = Course.objects.create_trial_course(self.user)
+        self.trial_quiz = Quiz.objects.create_trial_quiz(self.trial_course, self.user)
 
     def test_questionpaper(self):
         """ Test question paper"""
         self.assertEqual(self.question_paper.quiz.description, 'demo quiz 1')
         self.assertSequenceEqual(self.question_paper.fixed_questions.all(),
-                         [self.questions[3], self.questions[5]])
+                [self.questions[3], self.questions[5]]
+                )
         self.assertTrue(self.question_paper.shuffle_questions)
 
     def test_update_total_marks(self):
@@ -426,29 +445,41 @@ class QuestionPaperTestCases(unittest.TestCase):
         # test can_attempt_now(self):
         self.assertFalse(self.question_paper.can_attempt_now(self.user))
 
-        def test_create_trial_paper_to_test_quiz(self):
-            trial_paper = QuestionPaper.objects.create_trial_paper_to_test_quiz\
-                                                (trial_quiz,
-                                                 self.question_paper.id
-                                                 )
-            self.assertEqual(trial_paper.quiz, trial_quiz)
-            self.assertEqual(trial_paper.fixed_questions.all(),
-                             self.question_paper.fixed_questions.all()
-                             )
-            self.assertEqual(trial_paper.random_questions.all(),
-                             self.question_paper.random_questions.all()
-                             )
+    def test_create_trial_paper_to_test_quiz(self):
+        qu_list = [str(self.questions_list[0]), str(self.questions_list[1])]
+        trial_paper = QuestionPaper.objects.create_trial_paper_to_test_quiz\
+                                            (self.trial_quiz,
+                                             self.quiz.id
+                                             )
+        trial_paper.random_questions.add(self.question_set_1)
+        trial_paper.random_questions.add(self.question_set_2)
+        trial_paper.fixed_question_order = ",".join(qu_list)
+        self.assertEqual(trial_paper.quiz, self.trial_quiz)
+        self.assertSequenceEqual(trial_paper.get_ordered_questions(),
+                         self.question_paper.get_ordered_questions()
+                         )
+        trial_paper_ran = [q_set.id for q_set in
+                           trial_paper.random_questions.all()]
+        qp_ran = [q_set.id for q_set in
+                  self.question_paper.random_questions.all()]
 
-        def test_create_trial_paper_to_test_questions(self):
-            trial_paper = QuestionPaper.objects.\
-                             create_trial_paper_to_test_questions(
-                                    trial_quiz, self.questions_list
-                                    )
-            self.assertEqual(trial_paper.quiz, trial_quiz)
-            self.assertEqual(self.questions_list,
-                             self.question_paper.fixed_questions
-                             .values_list("id", flat=True)
-                             )
+        self.assertSequenceEqual(trial_paper_ran, qp_ran)
+
+    def test_create_trial_paper_to_test_questions(self):
+        qu_list = [str(self.questions_list[0]), str(self.questions_list[1])]
+        trial_paper = QuestionPaper.objects.\
+                         create_trial_paper_to_test_questions(
+                                self.trial_quiz, qu_list
+                                )
+        self.assertEqual(trial_paper.quiz, self.trial_quiz)
+        fixed_q = self.question_paper.fixed_questions.values_list(
+            'id', flat=True)
+        self.assertSequenceEqual(self.questions_list, fixed_q)
+
+    def test_fixed_order_questions(self):
+        fixed_ques = self.question_paper.get_ordered_questions()
+        actual_ques = [self.questions[3], self.questions[5]]
+        self.assertSequenceEqual(fixed_ques, actual_ques)
 
 
 ###############################################################################
