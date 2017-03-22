@@ -36,3 +36,8 @@
        .lineObj{
           color: grey;
        }
+
+#string{
+    width: 60em;
+    height: 10em;
+}

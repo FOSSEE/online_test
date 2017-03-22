@@ -16,6 +16,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.forms.models import inlineformset_factory
 from django.utils import timezone
+from django.core.exceptions import MultipleObjectsReturned
 import pytz
 from taggit.models import Tag
 from itertools import chain
@@ -24,8 +25,9 @@ import six
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
-                        has_profile, StandardTestCase, McqTestCase, StdIOBasedTestCase, HookTestCase
-
+                         has_profile, StandardTestCase, McqTestCase,\
+                         StdIOBasedTestCase, HookTestCase, IntegerTestCase,\
+                         FloatTestCase, StringTestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
                 QuestionForm, RandomQuestionForm,\
                 QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
@@ -465,6 +467,24 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         # Add the answer submitted, regardless of it being correct or not.
         if current_question.type == 'mcq':
             user_answer = request.POST.get('answer')
+        elif current_question.type == 'integer':
+            try:
+                user_answer = int(request.POST.get('answer'))
+            except ValueError:
+                msg = "Please enter an Integer Value"
+                return show_question(request, current_question,
+                                     paper, notification=msg
+                                     )
+        elif current_question.type == 'float':
+            try:
+                user_answer = float(request.POST.get('answer'))
+            except ValueError:
+                msg = "Please enter a Float Value"
+                return show_question(request, current_question,
+                                     paper, notification=msg)
+        elif current_question.type == 'string':
+            user_answer = str(request.POST.get('answer'))
+
         elif current_question.type == 'mcc':
             user_answer = request.POST.getlist('answer')
         elif current_question.type == 'upload':
@@ -502,9 +522,11 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
         json_data = current_question.consolidate_answer_data(user_answer, user) \
-                        if current_question.type == 'code' or \
-                        current_question.type == 'upload' else None
-        result = paper.validate_answer(user_answer, current_question, json_data)
+                    if current_question.type == 'code' or \
+                    current_question.type == 'upload' else None
+        result = paper.validate_answer(user_answer, current_question,
+                                       json_data
+                                           )
         if result.get('success'):
             new_answer.marks = (current_question.points * result['weight'] / 
                 current_question.get_maximum_test_case_weight()) \

@@ -156,13 +156,25 @@ function call_skip(url)
                       <h4>
                         <u> {{ question.summary }}
                              {% if question.type == "mcq" %}
-                             (Single Correct Choice Questions)
+                             (SINGLE CORRECT CHOICE)
                              {% elif question.type == "mcc" %}
-                             (Multiple Correct Choices)
+                             (MULTIPLE CORRECT CHOICES)
                              {% elif question.type == "code" %}
                              (PROGRAMMING)
                              {% elif question.type == "upload" %}
                              (ASSIGNMENT UPLOAD)
+                             {% elif question.type == "integer" %}
+                             (FILL IN THE BLANKS WITH INTEGER ANSWER)
+                             {% elif question.type == "string" %}
+                             (FILL IN THE BLANKS WITH STRING ANSWER)
+                                {% if testcase.string_check == "lower" %}
+                                    <h5>(CASE INSENSITIVE)</h5>
+                                {% else %}
+                                    <h5>(CASE SENSITIVE)</h5>
+                                {% endif %}
+
+                             {% elif question.type == "float" %}
+                             (FILL IN THE BLANKS WITH FLOAT ANSWER)
                              {% endif %}
                         </u>
                         <font class=pull-right>(Marks : {{ question.points }}) </font>
@@ -181,6 +193,25 @@ function call_skip(url)
                      <input name="answer" type="radio" value="{{ test_case.options }}" />{{ test_case.options|safe }} <br/>
                      {% endfor %}
                      {% endif %}
+
+                     {% if question.type == "integer" %}
+                     Enter Integer:<br/>
+                     <input name="answer" type="number" id="integer" />
+                     <br/><br/>
+                     {% endif %}
+
+                     {% if question.type == "string" %}
+                     Enter Text:<br/>
+                     <textarea name="answer" id="string"></textarea>
+                     <br/><br/>
+                     {% endif %}
+
+                     {% if question.type == "float" %}
+                     Enter Decimal Value :<br/>
+                     <input name="answer" type="number" step="any" id="float" />
+                     <br/><br/>
+                     {% endif %}
+
                      {% if question.type == "mcc" %}
                      {% for test_case in test_cases %}
                      <input name="answer" type="checkbox" value="{{ test_case.options }}"> {{ test_case.options|safe }}
@@ -206,10 +237,11 @@ function call_skip(url)
                      {% endif %}
         <div class="from-group">
 
-         {% if question.type == "mcq" or question.type == "mcc"%}
+         {% if question.type == "mcq" or "mcc" or "integer" or "float" or "string" %}
          <br><button class="btn btn-primary" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
          {% elif question.type == "upload" %}
          <br><button class="btn btn-primary" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
+
          {% else %}
            {% if question in paper.get_questions_unanswered %}
            <button class="btn btn-primary" type="submit" name="check" id="check" onClick="submitCode();">Check Answer <span class="glyphicon glyphicon-cog"></span></button>&nbsp;&nbsp;

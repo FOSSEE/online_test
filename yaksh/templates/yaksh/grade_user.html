@@ -144,6 +144,16 @@ Status : <b style="color: green;"> Passed </b><br/>
                     {{ forloop.counter }}. {{ testcase.options|safe }}</strong>
                     {% endif %}
                     {% endfor %}
+
+            {% elif question.type == "integer" or "string" or "float" %}
+                <h5> <u>Correct Answer:</u></h5>
+                    {% for testcase in question.get_test_cases %}
+                    <strong>{{ testcase.correct|safe }}</strong>
+                    {% if testcase.error_margin %}
+                    <strong>{{ testcase.error_margin|safe }}</strong>
+                    {% endif %}
+                    {% endfor %}
+
             {% else %}
                 <h5> <u>Test cases: </u></h5>
                     {% for testcase in question.get_test_cases %}

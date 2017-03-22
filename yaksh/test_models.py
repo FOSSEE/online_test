@@ -44,7 +44,7 @@ def setUpModule():
                                                tzinfo=pytz.utc),
                         duration=30, active=True,
                         attempts_allowed=1, time_between_attempts=0,
-                        description='demo quiz', pass_criteria=0,
+                        description='demo quiz 1', pass_criteria=0,
                         language='Python', prerequisite=None,
                         course=course, instructions="Demo Instructions")
 
@@ -54,7 +54,7 @@ def setUpModule():
                                                tzinfo=pytz.utc),
                         duration=30, active=False,
                         attempts_allowed=-1, time_between_attempts=0,
-                        description='demo quiz', pass_criteria=40,
+                        description='demo quiz 2', pass_criteria=40,
                         language='Python', prerequisite=quiz,
                         course=course, instructions="Demo Instructions")
     tmp_file1 = os.path.join(tempfile.gettempdir(), "test.txt")
@@ -66,13 +66,21 @@ def tearDownModule():
     User.objects.all().delete()
     Question.objects.all().delete()
     Quiz.objects.all().delete()
+    Course.objects.all().delete()
+    QuestionPaper.objects.all().delete()
+    
+    que_id_list = ["25", "22", "24", "27"]
+    for que_id in que_id_list:
+        dir_path = os.path.join(os.getcwd(), "yaksh", "data","question_{0}".format(que_id))
+        if os.path.exists(dir_path):
+            shutil.rmtree(dir_path)
 
 ###############################################################################
 class ProfileTestCases(unittest.TestCase):
     def setUp(self):
-        self.user1 = User.objects.get(pk=1)
-        self.profile = Profile.objects.get(pk=1)
-        self.user2 = User.objects.get(pk=3)
+        self.user1 = User.objects.get(username="demo_user")
+        self.profile = Profile.objects.get(user=self.user1)
+        self.user2 = User.objects.get(username='demo_user3')
 
     def test_user_profile(self):
         """ Test user profile"""
@@ -87,9 +95,9 @@ class ProfileTestCases(unittest.TestCase):
 class QuestionTestCases(unittest.TestCase):
     def setUp(self):
         # Single question details
-        self.user1 = User.objects.get(pk=1)
-        self.user2 = User.objects.get(pk=2)
-        self.question1 = Question(summary='Demo question',
+        self.user1 = User.objects.get(username="demo_user")
+        self.user2 = User.objects.get(username="demo_user2")
+        self.question1 = Question.objects.create(summary='Demo Python 1',
             language='Python',
             type='Code',
             active=True,
@@ -98,9 +106,8 @@ class QuestionTestCases(unittest.TestCase):
             snippet='def myfunc()',
             user=self.user1
         )
-        self.question1.save()
 
-        self.question2 = Question(summary='Demo Json',
+        self.question2 = Question.objects.create(summary='Demo Json',
             language='python',
             type='code',
             active=True,
@@ -109,7 +116,6 @@ class QuestionTestCases(unittest.TestCase):
             snippet='def fact()',
             user=self.user2
         )
-        self.question2.save()
 
         # create a temp directory and add files for loading questions test
         file_path = os.path.join(tempfile.gettempdir(), "test.txt")
@@ -167,7 +173,7 @@ class QuestionTestCases(unittest.TestCase):
 
     def test_question(self):
         """ Test question """
-        self.assertEqual(self.question1.summary, 'Demo question')
+        self.assertEqual(self.question1.summary, 'Demo Python 1')
         self.assertEqual(self.question1.language, 'Python')
         self.assertEqual(self.question1.type, 'Code')
         self.assertEqual(self.question1.description, 'Write a function')
@@ -209,8 +215,8 @@ class QuestionTestCases(unittest.TestCase):
         """ Test load questions into database from json """
         question = Question()
         result = question.load_questions(self.json_questions_data, self.user1)
-        question_data = Question.objects.get(pk=25)
-        file = FileUpload.objects.get(question=25)
+        question_data = Question.objects.get(summary="Json Demo")
+        file = FileUpload.objects.get(question=question_data)
         test_case = question_data.get_test_cases()
         self.assertEqual(question_data.summary, 'Json Demo')
         self.assertEqual(question_data.language, 'Python')
@@ -228,10 +234,10 @@ class QuestionTestCases(unittest.TestCase):
 ###############################################################################
 class QuizTestCases(unittest.TestCase):
     def setUp(self):
-        self.creator = User.objects.get(pk=1)
-        self.teacher = User.objects.get(pk=2)
-        self.quiz1 = Quiz.objects.get(pk=1)
-        self.quiz2 = Quiz.objects.get(pk=2)
+        self.creator = User.objects.get(username="demo_user")
+        self.teacher = User.objects.get(username="demo_user2")
+        self.quiz1 = Quiz.objects.get(description='demo quiz 1')
+        self.quiz2 = Quiz.objects.get(description='demo quiz 2')
         self.trial_course = Course.objects.create_trial_course(self.creator)
 
     def test_quiz(self):
@@ -242,7 +248,7 @@ class QuizTestCases(unittest.TestCase):
                          '10:08:15')
         self.assertEqual(self.quiz1.duration, 30)
         self.assertTrue(self.quiz1.active)
-        self.assertEqual(self.quiz1.description, 'demo quiz')
+        self.assertEqual(self.quiz1.description, 'demo quiz 1')
         self.assertEqual(self.quiz1.language, 'Python')
         self.assertEqual(self.quiz1.pass_criteria, 0)
         self.assertEqual(self.quiz1.prerequisite, None)
@@ -278,7 +284,9 @@ class QuizTestCases(unittest.TestCase):
                                                          self.creator,
                                                          True
                                                          )
-        self.assertEqual(trial_quiz.description, "Trial_orig_id_1_godmode")
+        self.assertEqual(trial_quiz.description,
+                         "Trial_orig_id_{}_godmode".format(self.quiz1.id)
+                         )
         self.assertTrue(trial_quiz.is_trial)
         self.assertEqual(trial_quiz.duration, 1000)
         self.assertTrue(trial_quiz.active)
@@ -293,7 +301,8 @@ class QuizTestCases(unittest.TestCase):
                                                          self.creator,
                                                          False
                                                          )
-        self.assertEqual(trial_quiz.description, "Trial_orig_id_2_usermode")
+        self.assertEqual(trial_quiz.description,
+                         "Trial_orig_id_{}_usermode".format(self.quiz2.id))
         self.assertTrue(trial_quiz.is_trial)
         self.assertEqual(trial_quiz.duration, self.quiz2.duration)
         self.assertEqual(trial_quiz.active, self.quiz2.active)
@@ -324,7 +333,7 @@ class QuestionPaperTestCases(unittest.TestCase):
     def setUpClass(self):
         # All active questions
         self.questions = Question.objects.filter(active=True)
-        self.quiz = Quiz.objects.get(id=1)
+        self.quiz = Quiz.objects.get(description="demo quiz 1")
 
         # create question paper
         self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
@@ -371,7 +380,7 @@ class QuestionPaperTestCases(unittest.TestCase):
         # ip address for AnswerPaper
         self.ip = '127.0.0.1'
 
-        self.user = User.objects.get(pk=1)
+        self.user = User.objects.get(username="demo_user")
 
         self.attempted_papers = AnswerPaper.objects.filter(
             question_paper=self.question_paper,
@@ -385,7 +394,7 @@ class QuestionPaperTestCases(unittest.TestCase):
 
     def test_questionpaper(self):
         """ Test question paper"""
-        self.assertEqual(self.question_paper.quiz.description, 'demo quiz')
+        self.assertEqual(self.question_paper.quiz.description, 'demo quiz 1')
         self.assertSequenceEqual(self.question_paper.fixed_questions.all(),
                 [self.questions[3], self.questions[5]]
                 )
@@ -478,17 +487,17 @@ class AnswerPaperTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.ip = '101.0.0.1'
-        self.user = User.objects.get(id=1)
+        self.user = User.objects.get(username='demo_user')
         self.profile = self.user.profile
-        self.quiz = Quiz.objects.get(pk=1)
+        self.quiz = Quiz.objects.get(description='demo quiz 1')
         self.question_paper = QuestionPaper(quiz=self.quiz, total_marks=3)
         self.question_paper.save()
-        self.questions = Question.objects.filter(id__in=[1,2,3])
+        self.questions = Question.objects.all()[0:3]
         self.start_time = timezone.now()
         self.end_time = self.start_time + timedelta(minutes=20)
-        self.question1 = self.questions.get(id=1)
-        self.question2 = self.questions.get(id=2)
-        self.question3 = self.questions.get(id=3)
+        self.question1 = self.questions[0]
+        self.question2 = self.questions[1]
+        self.question3 = self.questions[2]
 
         # create answerpaper
         self.answerpaper = AnswerPaper(user=self.user,
@@ -508,12 +517,12 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.answerpaper.questions_unanswered.add(*self.questions)
         self.answerpaper.save()
         # answers for the Answer Paper
-        self.answer_right = Answer(question=Question.objects.get(id=1),
+        self.answer_right = Answer(question=self.question1,
             answer="Demo answer",
             correct=True, marks=1,
             error=json.dumps([])
         )
-        self.answer_wrong = Answer(question=Question.objects.get(id=2),
+        self.answer_wrong = Answer(question=self.question2,
             answer="My answer",
             correct=False,
             marks=0,
@@ -526,14 +535,17 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         self.question1.language = 'python'
         self.question1.test_case_type = 'standardtestcase'
+        self.question1.summary = "Question1"
         self.question1.save()
         self.question2.language = 'python'
         self.question2.type = 'mcq'
         self.question2.test_case_type = 'mcqtestcase'
+        self.question2.summary = "Question2"
         self.question2.save()
         self.question3.language = 'python'
         self.question3.type = 'mcc'
         self.question3.test_case_type = 'mcqtestcase'
+        self.question3.summary = "Question3"
         self.question3.save()
         self.assertion_testcase = StandardTestCase(
             question=self.question1,
@@ -685,31 +697,32 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(self.answerpaper.questions_left(), 3)
         # Test current_question() method of Answer Paper
         current_question = self.answerpaper.current_question()
-        self.assertEqual(current_question.id, 1)
+        self.assertEqual(current_question.summary, "Question1")
         # Test completed_question() method of Answer Paper
-        question = self.answerpaper.add_completed_question(1)
+
+        question = self.answerpaper.add_completed_question(self.question1.id)
         self.assertEqual(self.answerpaper.questions_left(), 2)
 
         # Test next_question() method of Answer Paper
         current_question = self.answerpaper.current_question()
-        self.assertEqual(current_question.id, 2)
+        self.assertEqual(current_question.summary, "Question2")
 
         # When
         next_question_id = self.answerpaper.next_question(current_question.id)
 
         # Then
         self.assertTrue(next_question_id is not None)
-        self.assertEqual(next_question_id.id, 3)
+        self.assertEqual(next_question_id.summary, "Question3")
 
         # Given, here question is already answered
-        current_question_id = 1
+        current_question_id = self.question1.id
 
         # When
         next_question_id = self.answerpaper.next_question(current_question_id)
 
         # Then
         self.assertTrue(next_question_id is not None)
-        self.assertEqual(next_question_id.id, 2)
+        self.assertEqual(next_question_id.summary, "Question2")
 
         # Given, wrong question id
         current_question_id = 12
@@ -719,17 +732,19 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(next_question_id is not None)
-        self.assertEqual(next_question_id.id, 1)
+
+        self.assertEqual(next_question_id.summary, "Question1")
 
         # Given, last question in the list
-        current_question_id = 3
+        current_question_id = self.question3.id
 
         # When
         next_question_id = self.answerpaper.next_question(current_question_id)
 
         # Then
         self.assertTrue(next_question_id is not None)
-        self.assertEqual(next_question_id.id, 1)
+
+        self.assertEqual(next_question_id.summary, "Question1")
 
         # Test get_questions_answered() method
         # When
@@ -749,14 +764,19 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Test completed_question and next_question
         # When all questions are answered
-        current_question = self.answerpaper.add_completed_question(2)
+
+        current_question = self.answerpaper.add_completed_question(
+                                            self.question2.id
+                                            )
 
         # Then
         self.assertEqual(self.answerpaper.questions_left(), 1)
-        self.assertEqual(current_question.id, 3)
+        self.assertEqual(current_question.summary, "Question3")
 
         # When
-        current_question = self.answerpaper.add_completed_question(3)
+        current_question = self.answerpaper.add_completed_question(
+                                            self.question3.id
+                                            )
 
         # Then
         self.assertEqual(self.answerpaper.questions_left(), 0)
@@ -816,12 +836,12 @@ class AnswerPaperTestCases(unittest.TestCase):
 ###############################################################################
 class CourseTestCases(unittest.TestCase):
     def setUp(self):
-        self.course = Course.objects.get(pk=1)
-        self.creator = User.objects.get(pk=1)
-        self.student1 = User.objects.get(pk=2)
-        self.student2 = User.objects.get(pk=3)
-        self.quiz1 = Quiz.objects.get(pk=1)
-        self.quiz2 = Quiz.objects.get(pk=2)
+        self.course = Course.objects.get(name="Python Course")
+        self.creator = User.objects.get(username="demo_user")
+        self.student1 = User.objects.get(username="demo_user2")
+        self.student2 = User.objects.get(username="demo_user3")
+        self.quiz1 = Quiz.objects.get(description='demo quiz 1')
+        self.quiz2 = Quiz.objects.get(description='demo quiz 2')
 
 
     def test_is_creator(self):
@@ -898,21 +918,19 @@ class CourseTestCases(unittest.TestCase):
 
     def test_create_trial_course(self):
         """Test to check if trial course is created"""
-        # Test for manager method create_trial_course
         trial_course = Course.objects.create_trial_course(self.creator)
         self.assertEqual(trial_course.name, "trial_course")
         self.assertEqual(trial_course.enrollment, "open")
         self.assertTrue(trial_course.active)
-        self.assertEqual(trial_course.students.get(user=self.creator.id),
-                         self.creator
-                         )
+        self.assertEqual(self.creator, trial_course.creator)
+        self.assertIn(self.creator, trial_course.students.all())
         self.assertTrue(trial_course.is_trial)
 
 
 ###############################################################################
 class TestCaseTestCases(unittest.TestCase):
     def setUp(self):
-        self.user = User.objects.get(pk=1)
+        self.user = User.objects.get(username="demo_user")
         self.question1 = Question(summary='Demo question 1',
             language='Python',
             type='Code',

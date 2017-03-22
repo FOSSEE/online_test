@@ -38,10 +38,13 @@ languages = (
     )
 
 question_types = (
-        ("mcq", "Multiple Choice"),
+        ("mcq", "Single Correct Choice"),
         ("mcc", "Multiple Correct Choices"),
         ("code", "Code"),
         ("upload", "Assignment Upload"),
+        ("integer", "Answer in Integer"),
+        ("string", "Answer in String"),
+        ("float", "Answer in Float"),
     )
 
 enrollment_methods = (
@@ -54,6 +57,14 @@ test_case_types = (
         ("stdiobasedtestcase", "StdIO Based Testcase"),
         ("mcqtestcase", "MCQ Testcase"),
         ("hooktestcase", "Hook Testcase"),
+        ("integertestcase", "Integer Testcase"),
+        ("stringtestcase", "String Testcase"),
+        ("floattestcase", "Float Testcase"),
+    )
+
+string_check_type = (
+    ("lower", "Case Insensitive"),
+    ("exact", "Case Sensitive"),
     )
 
 attempts = [(i, i) for i in range(1, 6)]
@@ -1171,6 +1182,7 @@ class AnswerPaper(models.Model):
                 if user_answer.strip() == expected_answer.strip():
                     result['success'] = True
                     result['error'] = ['Correct answer']
+
             elif question.type == 'mcc':
                 expected_answers = []
                 for opt in question.get_test_cases(correct=True):
@@ -1178,6 +1190,39 @@ class AnswerPaper(models.Model):
                 if set(user_answer) == set(expected_answers):
                     result['success'] = True
                     result['error'] = ['Correct answer']
+
+            elif question.type == 'integer':
+                expected_answers = []
+                for tc in question.get_test_cases():
+                    expected_answers.append(int(tc.correct))
+                if int(user_answer) in expected_answers:
+                    result['success'] = True
+                    result['error'] = ['Correct answer']
+
+            elif question.type == 'string':
+                tc_status = []
+                for tc in question.get_test_cases():
+                    if tc.string_check == "lower":
+                        if tc.correct.lower().splitlines()\
+                            == user_answer.lower().splitlines():
+                            tc_status.append(True)
+                    else:
+                        if tc.correct.splitlines()\
+                            == user_answer.splitlines():
+                            tc_status.append(True)
+                if any(tc_status):
+                    result['success'] = True
+                    result['error'] = ['Correct answer']
+
+            elif question.type == 'float':
+                tc_status = []
+                for tc in question.get_test_cases():
+                    if abs(tc.correct - user_answer) <= tc.error_margin:
+                        tc_status.append(True)
+                if any(tc_status):
+                    result['success'] = True
+                    result['error'] = ['Correct answer']
+
             elif question.type == 'code' or question.type == "upload":
                 user_dir = self.user.profile.get_user_dir()
                 json_result = code_server.run_code(
@@ -1326,3 +1371,39 @@ class HookTestCase(TestCase):
 
     def __str__(self):
         return u'Hook Testcase | Correct: {0}'.format(self.hook_code)
+
+class IntegerTestCase(TestCase):
+    correct = models.IntegerField(default=None)
+
+    def get_field_value(self):
+        return {"test_case_type": "integertestcase", "correct": self.correct}
+
+    def __str__(self):
+        return u'Integer Testcase | Correct: {0}'.format(self.correct)
+
+
+class StringTestCase(TestCase):
+    correct = models.TextField(default=None)
+    string_check = models.CharField(max_length=200,choices=string_check_type)
+
+    def get_field_value(self):
+        return {"test_case_type": "stringtestcase", "correct": self.correct,
+                "string_check":self.string_check}
+
+    def __str__(self):
+        return u'String Testcase | Correct: {0}'.format(self.correct)
+
+
+class FloatTestCase(TestCase):
+    correct = models.FloatField(default=None)
+    error_margin = models.FloatField(default=0.0, null=True, blank=True,
+                                     help_text="Margin of error")
+
+    def get_field_value(self):
+        return {"test_case_type": "floattestcase", "correct": self.correct,
+                "error_margin":self.error_margin}
+
+    def __str__(self):
+        return u'Testcase | Correct: {0} | Error Margin: +or- {1}'.format(
+                self.correct, self.error_margin
+                )
