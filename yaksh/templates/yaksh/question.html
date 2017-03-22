@@ -196,7 +196,7 @@ function call_skip(url)
 
                      {% if question.type == "integer" %}
                      Enter Integer:<br/>
-                     <input name="answer" type="textbox" id="integer" />
+                     <input name="answer" type="number" id="integer" />
                      <br/><br/>
                      {% endif %}
 
@@ -208,7 +208,7 @@ function call_skip(url)
 
                      {% if question.type == "float" %}
                      Enter Decimal Value :<br/>
-                     <input name="answer" type="textbox" id="float" />
+                     <input name="answer" type="number" step="any" id="float" />
                      <br/><br/>
                      {% endif %}
 
