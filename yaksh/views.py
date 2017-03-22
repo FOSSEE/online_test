@@ -183,6 +183,8 @@ def add_question(request, question_id=None):
             question = qform.save(commit=False)
             question.user = user
             question.save()
+            # many-to-many field save function used to save the tags
+            qform.save_m2m()
             for formset in formsets:
                 if formset.is_valid():
                     formset.save()
