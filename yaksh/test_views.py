@@ -884,7 +884,9 @@ class TestAddCourse(TestCase):
         response = self.client.post(reverse('yaksh:add_course'),
             data={'name': 'new_demo_course_1',
                 'active': True,
-                'enrollment': 'open'
+                'enrollment': 'open',
+                'start_enroll_time': '2016-01-10 09:00:15',
+                'end_enroll_time': '2016-01-15 09:00:15',
             }
         )
         course_list = Course.objects.all().order_by('-id')
@@ -892,7 +894,6 @@ class TestAddCourse(TestCase):
         self.assertEqual(new_course.name, 'new_demo_course_1')
         self.assertEqual(new_course.enrollment, 'open')
         self.assertEqual(new_course.active, True)
-
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, '/exam/manage/')
 
