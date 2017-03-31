@@ -79,7 +79,8 @@ test_status = (
 
 def get_assignment_dir(instance, filename):
     return os.sep.join((
-        instance.user.username, str(instance.assignmentQuestion.id), filename
+        instance.question_paper.quiz.description, instance.user.username,
+        str(instance.assignmentQuestion.id), filename
     ))
 
 
@@ -1310,7 +1311,26 @@ class AssignmentUpload(models.Model):
     user = models.ForeignKey(User)
     assignmentQuestion = models.ForeignKey(Question)
     assignmentFile = models.FileField(upload_to=get_assignment_dir)
+    question_paper = models.ForeignKey(QuestionPaper, blank=True, null=True)
 
+    def get_assignments(self, qp_id, que_id=None, user_id=None):
+        if que_id and user_id:
+            assignment_files = AssignmentUpload.objects.filter(
+                        assignmentQuestion_id=que_id, user_id=user_id,
+                        question_paper_id=qp_id
+                        )
+            user_name = User.objects.get(id=user_id)
+            file_name = user_name.get_full_name().replace(" ", "_")
+        else:
+            assignment_files = AssignmentUpload.objects.filter(
+                        question_paper_id=qp_id
+                        )
+
+            file_name = "%s_Assignment_files" %(
+                            assignment_files[0].question_paper.quiz.description
+                            )
+
+        return assignment_files, file_name
 
 ###############################################################################
 class TestCase(models.Model):
@@ -1372,7 +1392,9 @@ class HookTestCase(TestCase):
            mark_fraction - Float, indicating fraction of the
                           weight to a test case
            error - String, error message if success is false
+
            In case of assignment upload there will be no user answer '''
+
            success = False
            err = "Incorrect Answer" # Please make this more specific
            mark_fraction = 0.0
