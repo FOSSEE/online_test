@@ -46,7 +46,11 @@
     </div>
 {% endif %}
 
+{% if quiz_file_status %}
 
+<a href="{{URL_ROOT}}/exam/manage/download/quiz_assignments/{{quiz_id}}/">
+    Download All Assignments</a>
+{% endif %}
 
 <div id = "paper" class="col-md-10">
 {% if data %}
@@ -69,7 +73,6 @@
 {{ paper.total_marks }}
 
 <h3> Quiz: {{ paper.question_paper.quiz.description }} </h3>
-
 <p>
 Attempt Number: <b>{{paper.attempt_number}} </b>
 <select id = "attempt" onchange="window.location.href=this.value">
@@ -80,7 +83,6 @@ Attempt Number: <b>{{paper.attempt_number}} </b>
 </option>
 {% endfor %}
 </select>
-
 <br/>Questions correctly answered: {{ paper.get_answered_str }} <br/>
 Total attempts at questions: {{ paper.answers.count }} <br/>
 Marks obtained: {{ paper.marks_obtained }} <br/>
@@ -95,7 +97,6 @@ Status : <b style="color: red;"> Failed </b><br/>
 Status : <b style="color: green;"> Passed </b><br/>
 {% endif %}
 </p>
-
 {% if paper.answers.count %}
 
 <h4> Report </h4><br>
@@ -122,8 +123,8 @@ Status : <b style="color: green;"> Passed </b><br/>
     {% endif %}
     method="post">
 {% csrf_token %}
-{% for question, answers in paper.get_question_answers.items %}
 
+{% for question, answers in paper.get_question_answers.items %}
 <div class="panel panel-info">
         <div class="panel-heading">
             <strong> Details: {{forloop.counter}}. {{ question.summary }} 
@@ -153,7 +154,6 @@ Status : <b style="color: green;"> Passed </b><br/>
                     <strong>{{ testcase.error_margin|safe }}</strong>
                     {% endif %}
                     {% endfor %}
-
             {% else %}
                 <h5> <u>Test cases: </u></h5>
                     {% for testcase in question.get_test_cases %}
@@ -163,29 +163,41 @@ Status : <b style="color: green;"> Passed </b><br/>
         </div>
     </div>
     <h5>Student answer: </h5>
-    {% for ans in answers %}
-    {% if ans.answer.correct %}
-            <div class="panel panel-success">
-                <div class="panel-heading">Correct answer:
-        {% else %}
-            <div class="panel panel-danger">
-                <div class="panel-heading">Error:
-        {% endif %}
-        {% for err in ans.error_list %}
-            <div><pre>{{ err }}</pre></div>
-        {% endfor %}
-    </div>
-    <div class="panel-body">
-    {% if question.type != "code" %}
-    <div class="well well-sm">
-    {{ ans.answer.answer.strip|safe }}
-    </div>
+    {% if question.type == "upload" %}
+    {% if user_file_status %}
+        <a href="{{URL_ROOT}}/exam/manage/download/user_assignment/{{question.id}}/{{data.user.id}}/{{paper.question_paper.id}}">
+        <div class="panel">
+        Assignment File for {{ data.user.get_full_name.title }}
+        </div>
+        </a>
     {% else %}
-    <pre><code>{{ ans.answer.answer.strip|safe }}</code></pre>
+        <h5>No Assignment submitted by {{ data.user.get_full_name.title }}</h5>
     {% endif %}
-    </div>
-    </div>
-    {% endfor %}
+    {% else %}
+        {% for ans in answers %}
+        {% if ans.answer.correct %}
+                <div class="panel panel-success">
+                    <div class="panel-heading">Correct answer:
+            {% else %}
+                <div class="panel panel-danger">
+                    <div class="panel-heading">Error:
+            {% endif %}
+            {% for err in ans.error_list %}
+                <div><pre>{{ err }}</pre></div>
+            {% endfor %}
+        </div>
+        <div class="panel-body">
+        {% if question.type != "code" %}
+        <div class="well well-sm">
+        {{ ans.answer.answer.strip|safe }}
+        </div>
+        {% else %}
+        <pre><code>{{ ans.answer.answer.strip|safe }}</code></pre>
+        {% endif %}
+        </div>
+        </div>
+        {% endfor %}
+    {% endif %}
     {% with answers|last as answer %}
     Marks: <input id="q{{ question.id }}" type="text" 
         name="q{{ question.id }}_marks" size="4"

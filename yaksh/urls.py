@@ -91,4 +91,8 @@ urlpatterns = [
     url(r'^manage/create_demo_course/$', views.create_demo_course),
     url(r'^manage/courses/download_course_csv/(?P<course_id>\d+)/$',
         views.download_course_csv),
+    url(r'^manage/download/user_assignment/(?P<question_id>\d+)/(?P<user_id>\d+)/(?P<questionpaper_id>\d+)/$',
+        views.download_assignment_file),
+    url(r'^manage/download/quiz_assignments/(?P<questionpaper_id>\d+)/$',
+        views.download_assignment_file)
 ]
