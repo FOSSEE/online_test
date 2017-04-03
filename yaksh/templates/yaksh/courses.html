@@ -130,18 +130,30 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div>
                     <p><b><a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher</a></b></p>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <p><b><u>Quiz(zes)</u></b></p>
                     {% if course.get_quizzes %}
                         {% for quiz in course.get_quizzes %}
                             <a href="{{URL_ROOT}}/exam/manage/addquiz/{{course.id}}/{{quiz.id}}/">{{ quiz.description }}</a><br>
-                    {% endfor %}
+                        {% endfor %}
                     {% else %}
                         <p><b>No quiz </b></p>
                     {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <p><b><u>Question Paper(s)</u></b></p>
+                    {% for quiz in course.get_quizzes %}
+                    {% if quiz.questionpaper_set.get %}
+                    <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/">Question Paper for {{ quiz.description }}</a><br>
+                    {% else %}
+                    <p>No Question Paper
+                    <a href="#" onClick='location.replace("{{URL_ROOT}}/exam/manage/quiz/designquestionpaper/{{ quiz.id }}/");'>Add</a>
+                    </p>
+                    {% endif %}
+                    {% endfor %}
                 </div>
             </div>
             <br/>
