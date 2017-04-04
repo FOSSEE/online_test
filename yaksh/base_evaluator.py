@@ -7,6 +7,7 @@ from os.path import join, isfile
 from os.path import isdir, dirname, abspath, join, isfile, exists
 import subprocess
 import stat
+import signal
 
 
 # Local imports
@@ -30,11 +31,11 @@ class BaseEvaluator(object):
         stdout and stderr.
         """
         try:
-            proc = subprocess.Popen(cmd_args, *args, **kw)
+            proc = subprocess.Popen(cmd_args,preexec_fn=os.setpgrp, *args, **kw)
             stdout, stderr = proc.communicate()
         except TimeoutException:
             # Runaway code, so kill it.
-            proc.kill()
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             # Re-raise exception.
             raise
         return proc, stdout.decode('utf-8'), stderr.decode('utf-8')

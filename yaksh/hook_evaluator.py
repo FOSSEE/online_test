@@ -7,7 +7,8 @@ import os
 from .file_utils import copy_files, delete_files
 from .base_evaluator import BaseEvaluator
 from .grader import TimeoutException
-
+import signal
+import psutil
 
 class HookEvaluator(BaseEvaluator):
     def __init__(self, metadata, test_case_data):
@@ -65,10 +66,12 @@ class HookEvaluator(BaseEvaluator):
             check = hook_scope["check_answer"]
             success, err, mark_fraction = check(self.user_answer)
         except TimeoutException:
+            processes = psutil.Process(os.getpid()).children(recursive=True)
+            for process in processes:
+                process.kill()
             raise
         except Exception:
             msg = traceback.format_exc(limit=0)
             err = "Error in Hook code: {0}".format(msg)
         del tb
         return success, err, mark_fraction
- 
