@@ -1,5 +1,7 @@
 {% extends "manage.html" %}
 
+{% block title %} Grade User {% endblock %}
+
 {% block pagetitle %} Grade User {% endblock pagetitle %}
 
 {% block content %}
@@ -8,11 +10,10 @@
 <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 {% endblock script %}
 
-
 {% if course_details %}
     <table id="course-details" class="table table-bordered">
     <tr>
-    <th>Courses</th> 
+    <th>Courses</th>
     <th> Quizzes </th>
     </tr>
 
@@ -37,23 +38,25 @@
 {% endif %}
 
 <div class="row">
-{%if users %}
+{% if not course_details %}
+{% if users %}
     <div id = "student" class="col-md-2">
     {% for user in users %}
     <p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}">
     {{user.user__first_name}} {{user.user__last_name}}</a></p>
     {% endfor %}
     </div>
+{% else %}
+<h4>No Users Found for {{ quiz.description }}</h4>
 {% endif %}
-
-
+{% endif %}
 
 <div id = "paper" class="col-md-10">
 {% if data %}
 
 
 <p> <h3> <center> Showing paper for {{data.user.get_full_name.title}} </center></h3>
-<p><b>Name:</b>{{ data.user.get_full_name.title }}
+<p><b>Name:</b> {{ data.user.get_full_name.title }}
 {% if data.profile %}
 
 <p><b> Roll number:</b> {{ data.profile.roll_number }}
@@ -68,7 +71,8 @@
 <hr>
 {{ paper.total_marks }}
 
-<h3> Quiz: {{ paper.question_paper.quiz.description }} </h3>
+<h4> Course: {{ paper.question_paper.quiz.course.name }}</h4>
+<h4> Quiz: {{ paper.question_paper.quiz.description }} </h4>
 
 <p>
 Attempt Number: <b>{{paper.attempt_number}} </b>

@@ -9,12 +9,16 @@
 
 <center><h4>List of quizzes! Click on the given links to have a look at answer papers for a quiz.</h4></center>
 <table class="table table-bordered">
+    <th>Course</th>
     <th>Quiz</th>
     <th>Taken By</th>
     <th>No. of users Passed</th>
     <th>No. of users Failed</th>
     {% for paper, answer_papers, users_passed, users_failed in users_per_paper %}
         <tr>
+            <td>
+                {{ paper.quiz.course.name }}
+            </td>
             <td>
                 <a href="{{URL_ROOT}}/exam/manage/monitor/{{paper.id}}/">{{ paper.quiz.description }}</a>
             </td>
