@@ -843,7 +843,7 @@ class CourseTestCases(unittest.TestCase):
         self.quiz1 = Quiz.objects.get(description='demo quiz 1')
         self.quiz2 = Quiz.objects.get(description='demo quiz 2')
 
-        # create courses with 
+        # create courses with disabled enrollment
         self.enroll_request_course = Course.objects.create(
             name="Enrollment Request Course With Enrollment Disabled",
             enrollment="Enroll Request",
@@ -948,6 +948,10 @@ class CourseTestCases(unittest.TestCase):
         self.assertEqual(self.creator, trial_course.creator)
         self.assertIn(self.creator, trial_course.students.all())
         self.assertTrue(trial_course.is_trial)
+
+    def test_enabled_enrollment_for_course(self):
+        """Test to check enrollment is closed for open course"""
+        self.assertTrue(self.course.is_active_enrollment())
 
     def test_disabled_enrollment_for_open_course(self):
         """Test to check enrollment is closed for open course"""

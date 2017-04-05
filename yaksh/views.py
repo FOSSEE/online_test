@@ -591,30 +591,7 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
 
 
 @login_required
-def add_course(request):
-    user = request.user
-    ci = RequestContext(request)
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page')
-    if request.method == 'POST':
-        form = CourseForm(request.POST)
-        if form.is_valid():
-            new_course = form.save(commit=False)
-            new_course.creator = user
-            new_course.save()
-            return my_redirect('/exam/manage/')
-        else:
-            return my_render_to_response('yaksh/add_course.html',
-                                         {'form': form},
-                                         context_instance=ci)
-    else:
-        form = CourseForm()
-        return my_render_to_response('yaksh/add_course.html', {'form': form},
-                                     context_instance=ci)
-
-
-@login_required
-def edit_course(request, course_id=None):
+def add_course(request, course_id=None):
     user = request.user
     ci = RequestContext(request)
     if course_id:
@@ -649,11 +626,11 @@ def enroll_request(request, course_id):
     if not course.is_active_enrollment:
         msg = 'Enrollment for this course has been closed, please contact your '\
             'instructor/administrator.'
-        return complete(request, msg, attempt_num, questionpaper_id=None)
+        return complete(request, msg, attempt_num=None, questionpaper_id=None)
 
     course.request(user)
     if is_moderator(user):
-        return my_redirect('/exam/manage/')
+        return my_redirect('/exam/manage/courses')
     else:
         return my_redirect('/exam/quizzes/')
 
@@ -712,7 +689,7 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
     if not course.is_active_enrollment:
         msg = 'Enrollment for this course has been closed, please contact your '\
             'instructor/administrator.'
-        return complete(request, msg, attempt_num, questionpaper_id=None)
+        return complete(request, msg, attempt_num=None, questionpaper_id=None)
 
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')

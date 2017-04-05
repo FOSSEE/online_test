@@ -276,8 +276,8 @@ class CourseForm(forms.ModelForm):
 
     class Meta:
         model = Course
-        fields = ['name', 'active', 'enrollment',
-            'start_enroll_time', 'end_enroll_time', 'instructions']
+        exclude = ['creator', 'requests', 'students', 'rejected',
+            'created_on', 'is_trial', 'teachers']
 
 
 class ProfileForm(forms.ModelForm):

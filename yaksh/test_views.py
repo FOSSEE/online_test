@@ -1131,7 +1131,7 @@ class TestEnrollRequest(TestCase):
             ),
             follow=True
         )
-        self.assertRedirects(response, '/exam/manage/')
+        self.assertRedirects(response, '/exam/manage/courses/')
 
 
 class TestViewAnswerPaper(TestCase):
