@@ -112,6 +112,8 @@ class CourseManager(models.Manager):
         trial_course.enroll(False, user)
         return trial_course
 
+    def get_hidden_courses(self, code):
+        return self.filter(code=code, hidden=True)
 
 ###############################################################################
 class Course(models.Model):
@@ -119,6 +121,8 @@ class Course(models.Model):
     name = models.CharField(max_length=128)
     enrollment = models.CharField(max_length=32, choices=enrollment_methods)
     active = models.BooleanField(default=True)
+    code = models.CharField(max_length=128, null=True, blank=True)
+    hidden = models.BooleanField(default=False)
     creator = models.ForeignKey(User, related_name='creator')
     students = models.ManyToManyField(User, related_name='students')
     requests = models.ManyToManyField(User, related_name='requests')

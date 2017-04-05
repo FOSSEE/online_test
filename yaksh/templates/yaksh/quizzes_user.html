@@ -1,6 +1,21 @@
 {% extends "user.html" %}
 {% block pagetitle %} {{ title }} {% endblock %}
 {% block main %}
+<div class="row well">
+    <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" class="form-search form-horizontal pull-right">
+        {% csrf_token %}
+        <div class="col-md-12">
+            <div class="input-group">
+                <span class="input-group-addon" id="basic-addon1">Search Course</span>
+                <input type="text" name="course_code" class="form-control" placeholder="Course Code">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="submit">Search</button>
+                    <button class="btn btn-default" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/quizzes/");'>Cancel</button>
+                </span>
+            </div>
+        </div>
+    </form>
+</div>
 {% for course in courses %}
 <div class="row well">
     <div class="col-md-12">
@@ -41,7 +56,7 @@
                             </td>
                         {% else %}
                             <td>
-                                {{ quiz.description }} <span class="label label-danger">INACTIVE</span><br>
+                                {{ quiz.description }} <span class="label label-danger">Inactive</span><br>
                             </td>
                         {% endif %}
                         <td>
@@ -83,7 +98,7 @@
         {% endif %}
     </div>
 </div><!--/row-->
- </br>
+</br>
 {% endfor %}
 
 {% endblock %}
