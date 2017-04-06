@@ -126,6 +126,24 @@ class Course(models.Model):
     teachers = models.ManyToManyField(User, related_name='teachers')
     is_trial = models.BooleanField(default=False)
     instructions = models.TextField(default=None, null=True, blank=True)
+
+    # The start date of the course enrollment.
+    start_enroll_time = models.DateTimeField(
+        "Start Date and Time for enrollment of course",
+        default=timezone.now,
+        null=True
+    )
+
+    # The end date and time of the course enrollment
+    end_enroll_time = models.DateTimeField(
+        "End Date and Time for enrollment of course",
+        default=datetime(
+            2199, 1, 1,
+            tzinfo=pytz.timezone(timezone.get_current_timezone_name())
+        ),
+        null=True
+    )
+
     objects = CourseManager()
 
     def request(self, *users):
@@ -133,6 +151,9 @@ class Course(models.Model):
 
     def get_requests(self):
         return self.requests.all()
+
+    def is_active_enrollment(self):
+        return self.start_enroll_time <= timezone.now() < self.end_enroll_time
 
     def enroll(self, was_rejected, *users):
         self.students.add(*users)
