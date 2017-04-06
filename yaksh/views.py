@@ -859,7 +859,9 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
 
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-
+    quiz = Quiz.objects.get(id=quiz_id)
+    if not quiz.course.is_creator(user) and not quiz.course.is_teacher(user):
+        raise Http404('This course does not belong to you')
     filter_form = QuestionFilterForm(user=user)
     questions = None
     marks = None
