@@ -56,6 +56,7 @@ urlpatterns = [
         views.download_csv),
     url(r'manage/courses/$', views.courses, name='courses'),
     url(r'manage/add_course/$', views.add_course, name='add_course'),
+    url(r'manage/edit_course/(?P<course_id>\d+)$', views.add_course, name='edit_course'),
     url(r'manage/course_detail/(?P<course_id>\d+)/$', views.course_detail, name='course_detail'),
     url(r'manage/enroll/(?P<course_id>\d+)/(?P<user_id>\d+)/$', views.enroll),
     url(r'manage/enroll/rejected/(?P<course_id>\d+)/(?P<user_id>\d+)/$',

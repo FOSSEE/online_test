@@ -591,13 +591,18 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
 
 
 @login_required
-def add_course(request):
+def add_course(request, course_id=None):
     user = request.user
     ci = RequestContext(request)
+    if course_id:
+        course = Course.objects.get(id=course_id)
+    else:
+        course = None
+
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     if request.method == 'POST':
-        form = CourseForm(request.POST)
+        form = CourseForm(request.POST, instance=course)
         if form.is_valid():
             new_course = form.save(commit=False)
             new_course.creator = user
@@ -608,7 +613,7 @@ def add_course(request):
                                          {'form': form},
                                          context_instance=ci)
     else:
-        form = CourseForm()
+        form = CourseForm(instance=course)
         return my_render_to_response('yaksh/add_course.html', {'form': form},
                                      context_instance=ci)
 
@@ -618,9 +623,14 @@ def enroll_request(request, course_id):
     user = request.user
     ci = RequestContext(request)
     course = get_object_or_404(Course, pk=course_id)
+    if not course.is_active_enrollment:
+        msg = 'Enrollment for this course has been closed, please contact your '\
+            'instructor/administrator.'
+        return complete(request, msg, attempt_num=None, questionpaper_id=None)
+
     course.request(user)
     if is_moderator(user):
-        return my_redirect('/exam/manage/')
+        return my_redirect('/exam/manage/courses')
     else:
         return my_redirect('/exam/quizzes/')
 
@@ -676,6 +686,11 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
         raise Http404('You are not allowed to view this page')
 
     course = get_object_or_404(Course, pk=course_id)
+    if not course.is_active_enrollment:
+        msg = 'Enrollment for this course has been closed, please contact your '\
+            'instructor/administrator.'
+        return complete(request, msg, attempt_num=None, questionpaper_id=None)
+
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
 
@@ -859,7 +874,9 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
 
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-
+    quiz = Quiz.objects.get(id=quiz_id)
+    if not quiz.course.is_creator(user) and not quiz.course.is_teacher(user):
+        raise Http404('This course does not belong to you')
     filter_form = QuestionFilterForm(user=user)
     questions = None
     marks = None

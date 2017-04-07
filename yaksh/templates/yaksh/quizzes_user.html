@@ -13,11 +13,15 @@
                 {% elif user in course.rejected.all %}<span class="label label-danger">Request Rejected</span>
                 {% elif user in course.students.all %}<span class="label label-info">Enrolled</span>
                 {% else %}
+                    {% if course.is_active_enrollment %}
                         {% if course.is_self_enroll %}
                             <a class="btn btn-success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.id }}">Enroll</a>
                         {% else %}
                             <a class="btn btn-success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.id }}">Enroll</a>
                         {% endif %}
+                    {% else %}
+                        <span class="label label-danger">Enrollment Closed</span>
+                    {% endif %}
                 {% endif %}
              </div>
          </div>

@@ -843,6 +843,29 @@ class CourseTestCases(unittest.TestCase):
         self.quiz1 = Quiz.objects.get(description='demo quiz 1')
         self.quiz2 = Quiz.objects.get(description='demo quiz 2')
 
+        # create courses with disabled enrollment
+        self.enroll_request_course = Course.objects.create(
+            name="Enrollment Request Course With Enrollment Disabled",
+            enrollment="Enroll Request",
+            creator=self.creator,
+            start_enroll_time=datetime(2015, 10, 9, 10, 8, 15, 0,
+                tzinfo=pytz.utc
+            ),
+            end_enroll_time=datetime(2015, 11, 9, 10, 8, 15, 0,
+               tzinfo=pytz.utc
+            ),
+        )
+        self.open_course = Course.objects.create(
+            name="Open Course With Enrollment Disabled",
+            enrollment="Open Course",
+            creator=self.creator,
+            start_enroll_time=datetime(2015, 10, 9, 10, 8, 15, 0,
+                tzinfo=pytz.utc
+            ),
+            end_enroll_time=datetime(2015, 11, 9, 10, 8, 15, 0,
+               tzinfo=pytz.utc
+            ),
+        )
 
     def test_is_creator(self):
         """ Test is_creator method of Course"""
@@ -925,6 +948,19 @@ class CourseTestCases(unittest.TestCase):
         self.assertEqual(self.creator, trial_course.creator)
         self.assertIn(self.creator, trial_course.students.all())
         self.assertTrue(trial_course.is_trial)
+
+    def test_enabled_enrollment_for_course(self):
+        """Test to check enrollment is closed for open course"""
+        self.assertTrue(self.course.is_active_enrollment())
+
+    def test_disabled_enrollment_for_open_course(self):
+        """Test to check enrollment is closed for open course"""
+        self.assertFalse(self.open_course.is_active_enrollment())
+
+    def test_disabled_enrollment_for_enroll_request_course(self):
+        """Test to check enrollment is closed for open course"""
+        self.assertFalse(self.enroll_request_course.is_active_enrollment())
+
 
 
 ###############################################################################
