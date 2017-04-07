@@ -1,7 +1,7 @@
 import random
 import string
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import collections
 import csv
 from django.http import HttpResponse
@@ -17,11 +17,13 @@ from django.contrib.auth.models import Group
 from django.forms.models import inlineformset_factory
 from django.utils import timezone
 from django.core.exceptions import MultipleObjectsReturned
+from django.conf import settings
 import pytz
 from taggit.models import Tag
 from itertools import chain
 import json
 import six
+from textwrap import dedent
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
@@ -35,6 +37,7 @@ from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
 from .settings import URL_ROOT
 from yaksh.models import AssignmentUpload
 from .file_utils import extract_files
+from .email_verification import send_user_mail, generate_activation_key
 
 
 
@@ -73,7 +76,7 @@ def index(request):
     """
     user = request.user
     if user.is_authenticated():
-        if user.groups.filter(name='moderator').count() > 0:
+        if is_moderator(user):
             return my_redirect('/exam/manage/')
         return my_redirect("/exam/quizzes/")
 
@@ -88,15 +91,20 @@ def user_register(request):
     ci = RequestContext(request)
     if user.is_authenticated():
         return my_redirect("/exam/quizzes/")
-
+    context = {}
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            u_name, pwd = form.save()
-            new_user = authenticate(username=u_name, password=pwd)
-            login(request, new_user)
-            return my_redirect("/exam/quizzes/")
+            if settings.IS_DEVELOPMENT:
+                u_name, pwd = form.save()
+                new_user = authenticate(username=u_name, password=pwd)
+                login(request, new_user)
+                return index(request)
+            user_email, key = form.save()
+            success, msg = send_user_mail(user_email, key)
+            context = {'activation_msg': msg}
+            return my_render_to_response('yaksh/activation_status.html', context)
         else:
             return my_render_to_response('yaksh/register.html', {'form': form},
                                          context_instance=ci)
@@ -323,19 +331,29 @@ def user_login(request):
 
     user = request.user
     ci = RequestContext(request)
+    context = {}
     if user.is_authenticated():
-        if user.groups.filter(name='moderator').count() > 0:
-            return my_redirect('/exam/manage/')
-        return my_redirect("/exam/quizzes/")
+        if not settings.IS_DEVELOPMENT:
+            if not user.profile.is_email_verified:
+                context['success'] = False
+                context['msg'] = "Your account is not verified"
+                return my_render_to_response('yaksh/activation_status.html',
+                                            context, context_instance=ci)
+            return index(request)
 
     if request.method == "POST":
         form = UserLoginForm(request.POST)
         if form.is_valid():
             user = form.cleaned_data
+            if not settings.IS_DEVELOPMENT:
+                if not user.profile.is_email_verified:
+                    context['success'] = False
+                    context['msg'] = "Your account is not verified. \
+                                    Please verify your account"
+                    return my_render_to_response('yaksh/activation_status.html',
+                                                 context, context_instance=ci)
             login(request, user)
-            if user.groups.filter(name='moderator').count() > 0:
-                return my_redirect('/exam/manage/')
-            return my_redirect('/exam/login/')
+            return index(request)
         else:
             context = {"form": form}
             return my_render_to_response('yaksh/login.html', context,
@@ -1403,3 +1421,45 @@ def download_course_csv(request, course_id):
     for student in students:
         writer.writerow(student)
     return response
+
+def activate_user(request, key):
+    ci = RequestContext(request)
+    profile = get_object_or_404(Profile, activation_key=key)
+    context = {}
+    context['success'] = False
+    if timezone.now() > profile.key_expiry_time:
+        context['msg'] = dedent("""
+                    Your activation time expired.
+                    Please try again.
+                    """)
+    else:
+        context['success'] = True
+        profile.is_email_verified = True
+        profile.save()
+        context['msg'] = "Your account is activated"
+    return my_render_to_response('yaksh/activation_status.html', context,
+                                context_instance=ci)
+
+def new_activation(request):
+    ci = RequestContext(request)
+    context = {}
+    if request.method == "POST":
+        email = request.POST.get('email')
+        user = get_object_or_404(User, email=email)
+        if not user.profile.is_email_verified:
+            user.profile.activation_key = generate_activation_key(user.username)
+            user.profile.key_expiry_time = datetime.strftime(
+                                    datetime.now() + \
+                                    timedelta(minutes=20), "%Y-%m-%d %H:%M:%S"
+                                    )
+            user.profile.save()
+            success, msg = send_user_mail(user.email, user.profile.activation_key)
+            if success:
+                context['new_activation_msg'] = msg
+            else:
+                context['msg'] = msg
+        else:
+            context['new_activation_msg'] = "Your account is already verified"
+
+    return my_render_to_response('yaksh/activation_status.html', context,
+                                context_instance=ci)

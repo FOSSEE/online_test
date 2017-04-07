@@ -5,7 +5,7 @@ from yaksh.models import get_model_class, Profile, Quiz, Question, TestCase, Cou
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-
+from django.conf import settings
 from taggit.managers import TaggableManager
 from taggit.forms import TagField
 from django.forms.models import inlineformset_factory
@@ -18,6 +18,7 @@ except ImportError:
 from string import punctuation, digits
 import datetime
 import pytz
+from .email_verification import generate_activation_key
 
 languages = (
     ("select", "Select Language"),
@@ -117,6 +118,12 @@ class UserRegisterForm(forms.Form):
 
         return c_pwd
 
+    def clean_email(self):
+        user_email = self.cleaned_data['email']
+        if User.objects.filter(email=user_email).exists():
+            raise forms.ValidationError("This email already exists")
+        return user_email
+
     def save(self):
         u_name = self.cleaned_data["username"]
         u_name = u_name.lower()
@@ -135,9 +142,19 @@ class UserRegisterForm(forms.Form):
         new_profile.department = cleaned_data["department"]
         new_profile.position = cleaned_data["position"]
         new_profile.timezone = cleaned_data["timezone"]
+        if settings.IS_DEVELOPMENT:
+            new_profile.is_email_verified = True
+            new_profile.save()
+            return u_name, pwd
+        else:
+            new_profile.activation_key = generate_activation_key(new_user.username)
+            new_profile.key_expiry_time = datetime.datetime.strftime(
+                                        datetime.datetime.now() + \
+                                        datetime.timedelta(minutes=20),
+                                        "%Y-%m-%d %H:%M:%S"
+                                        )
         new_profile.save()
-
-        return u_name, pwd
+        return new_user.email, new_profile.activation_key
 
 
 class UserLoginForm(forms.Form):
@@ -307,4 +324,3 @@ class QuestionPaperForm(forms.ModelForm):
     class Meta:
         model = QuestionPaper
         fields = ['shuffle_questions']
-
