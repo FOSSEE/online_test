@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block pagetitle %} Yaksh Account Activation {% endblock %}
+{% block title %} Yaksh Account Activation {% endblock %}
+{% block content %}
+{% if success %}
+    <center>
+    <div class="alert alert-success" role="alert">
+        <strong> {{ msg }} </strong>
+    </div>
+    <a href="{{URL_ROOT}}/exam/"> Click Here to Login </a>
+    </center>
+{% else %}
+    {% if msg %}
+        <center>
+        <div class="alert alert-warning" role="alert">
+            <strong> {{ msg }} </strong>
+        </div>
+        </center>
+        <form action="{{ URL_ROOT }}/exam/new_activation/" method="post">
+        {% csrf_token %}
+        <center>
+        Enter Email Address for verification: <input type="email" name="email" required><br><br>
+        <button class="btn" type="submit">Resend Email</button>
+        <button class="btn" type="button" name="button" 
+        onClick='location.replace("{{URL_ROOT}}/exam/");'>Cancel</button>
+        </center>
+        </form>
+    {% endif %}
+{% endif %}
+<br/>
+{% if new_activation_msg %}
+    <center>
+    <div class="alert alert-info" role="alert">
+        <strong> {{ new_activation_msg }} </strong>
+    </div>
+    <a href="{{URL_ROOT}}/exam/"> Click Here to Login </a></center>
+{% endif %}
+{% if activation_msg %}
+    <center>
+    <div class="alert alert-info" role="alert">
+        <strong> {{ activation_msg }} </strong>
+    </div>
+    <a href="{{URL_ROOT}}/exam/"> Click Here to Login </a></center>
+{% endif %}
+
+{% endblock content %}
