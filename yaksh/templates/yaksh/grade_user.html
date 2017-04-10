@@ -165,7 +165,7 @@ Status : <b style="color: green;"> Passed </b><br/>
     <h5>Student answer: </h5>
     {% if question.type == "upload" %}
     {% if user_file_status %}
-        <a href="{{URL_ROOT}}/exam/manage/download/user_assignment/{{question.id}}/{{data.user.id}}/{{paper.question_paper.id}}">
+        <a href="{{URL_ROOT}}/exam/manage/download/user_assignment/{{question.id}}/{{data.user.id}}/{{paper.question_paper.quiz.id}}">
         <div class="panel">
         Assignment File for {{ data.user.get_full_name.title }}
         </div>

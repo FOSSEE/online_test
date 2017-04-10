@@ -501,14 +501,15 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                 assignment_filename = request.FILES.getlist('assignment')
                 qp = QuestionPaper.objects.get(id=questionpaper_id)
             for fname in assignment_filename:
-                if AssignmentUpload.objects.filter(
-                    assignmentQuestion=current_question,
-                    assignmentFile__icontains=fname, user=user,
-                    question_paper=questionpaper_id).exists():
-                    assign_file = AssignmentUpload.objects.get(
-                    assignmentQuestion=current_question,
-                    assignmentFile__icontains=fname, user=user,
-                    question_paper=questionpaper_id)
+                assignment_files = AssignmentUpload.objects.filter(
+                            assignmentQuestion=current_question,
+                            assignmentFile__icontains=fname, user=user,
+                            question_paper=questionpaper_id)
+                if assignment_files.exists():
+                    assign_file = assignment_files.get(
+                            assignmentQuestion=current_question,
+                            assignmentFile__icontains=fname, user=user,
+                            question_paper=questionpaper_id)
                     os.remove(assign_file.assignmentFile.path)
                     assign_file.delete()
                 AssignmentUpload.objects.create(user=user,
@@ -1429,14 +1430,14 @@ def download_course_csv(request, course_id):
 
 
 @login_required
-def download_assignment_file(request, questionpaper_id, question_id=None,
-                             user_id=None):
+def download_assignment_file(request, quiz_id, question_id=None, user_id=None):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
+    qp = QuestionPaper.objects.get(quiz_id=quiz_id)
     assignment = AssignmentUpload()
-    assignment_files, file_name = assignment.get_assignments(questionpaper_id,
-                                    question_id, user_id
+    assignment_files, file_name = assignment.get_assignments(qp, question_id,
+                                    user_id
                                     )
     zipfile_name = string_io()
     zip_file = zipfile.ZipFile(zipfile_name, "w")

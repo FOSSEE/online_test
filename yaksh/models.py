@@ -1313,17 +1313,17 @@ class AssignmentUpload(models.Model):
     assignmentFile = models.FileField(upload_to=get_assignment_dir)
     question_paper = models.ForeignKey(QuestionPaper, blank=True, null=True)
 
-    def get_assignments(self, qp_id, que_id=None, user_id=None):
+    def get_assignments(self, qp, que_id=None, user_id=None):
         if que_id and user_id:
             assignment_files = AssignmentUpload.objects.filter(
                         assignmentQuestion_id=que_id, user_id=user_id,
-                        question_paper_id=qp_id
+                        question_paper=qp
                         )
             user_name = User.objects.get(id=user_id)
-            file_name = user_name.get_full_name().replace(" ", "_")
+            file_name = user_name.get_full_name()
         else:
             assignment_files = AssignmentUpload.objects.filter(
-                        question_paper_id=qp_id
+                        question_paper=qp
                         )
 
             file_name = "%s_Assignment_files" %(
