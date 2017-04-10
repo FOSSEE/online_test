@@ -1,7 +1,7 @@
 import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdIOBasedTestCase, FileUpload, McqTestCase
+    StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload
 import json
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -1034,3 +1034,66 @@ class TestCaseTestCases(unittest.TestCase):
         exp_data = json.loads(self.answer_data_json)
         self.assertEqual(actual_data['metadata']['user_answer'], exp_data['metadata']['user_answer'])
         self.assertEqual(actual_data['test_case_data'], exp_data['test_case_data'])
+
+
+class AssignmentUploadTestCases(unittest.TestCase):
+    def setUp(self):
+        self.user = User.objects.get(username="demo_user")
+        self.user.first_name = "demo"
+        self.user.last_name = "user"
+        self.user.save()
+        course = Course.objects.create(name="Assignment course",
+                                   enrollment="Enroll Request", creator=self.user)
+        self.quiz = Quiz.objects.create(start_date_time=datetime(
+                                   2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+                        end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0,
+                                               tzinfo=pytz.utc),
+                        duration=30, active=True,
+                        attempts_allowed=1, time_between_attempts=0,
+                        description='Assignment Quiz', pass_criteria=0,
+                        language='Python', prerequisite=None,
+                        course=course, instructions="Demo Instructions")
+
+        self.questionpaper = QuestionPaper.objects.create(quiz=self.quiz,
+            total_marks=0.0,
+            shuffle_questions=True
+        )
+        self.question = Question.objects.create(summary='Assignment',
+            language='Python',
+            type='upload',
+            active=True,
+            description='Upload a file',
+            points=1.0,
+            snippet='',
+            user=self.user
+        )
+        self.questionpaper.fixed_question_order = "{0}".format(self.question.id)
+        self.questionpaper.fixed_questions.add(self.question)
+        file_path = os.path.join(tempfile.gettempdir(), "upload.txt")
+        self.assignment = AssignmentUpload.objects.create(user=self.user,
+            assignmentQuestion=self.question, assignmentFile=file_path,
+            question_paper=self.questionpaper
+            )
+
+    def test_get_assignments_for_user_files(self):
+        assignment_upload_obj = AssignmentUpload()
+        assignment_files, file_name = assignment_upload_obj.get_assignments(
+                                    self.questionpaper, self.question.id,
+                                    self.user.id
+                                    )
+        self.assertIn("upload.txt", assignment_files[0].assignmentFile.name)
+        self.assertEqual(assignment_files[0].question_paper, self.questionpaper)
+        actual_file_name = self.user.get_full_name().replace(" ", "_")
+        file_name = file_name.replace(" ", "_")
+        self.assertEqual(file_name, actual_file_name)
+
+    def test_get_assignments_for_quiz_files(self):
+        assignment_upload_obj = AssignmentUpload()
+        assignment_files, file_name = assignment_upload_obj.get_assignments(
+                                    self.questionpaper
+                                    )
+        self.assertIn("upload.txt", assignment_files[0].assignmentFile.name)
+        self.assertEqual(assignment_files[0].question_paper, self.questionpaper)
+        actual_file_name = self.quiz.description.replace(" ", "_")
+        file_name = file_name.replace(" ", "_")
+        self.assertIn(actual_file_name, file_name)
