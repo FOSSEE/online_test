@@ -151,6 +151,41 @@ class Course(models.Model):
 
     objects = CourseManager()
 
+    def create_duplicate_course(self, user): ##@@
+        quizzes = self.quiz_set.all()
+        prerequisite_map = []
+        duplicate_quiz_map = {}
+        new_course = Course.objects.create(creator=user,
+            name="Copy Of {0}".format(self.name),
+            enrollment=self.enrollment,
+            active=self.active,
+            is_trial=self.is_trial,
+            instructions=self.instructions,
+            start_enroll_time=self.start_enroll_time,
+            end_enroll_time=self.end_enroll_time
+        )
+
+        new_course.teachers.add(*self.teachers.all())
+
+        for q in quizzes:
+            new_quiz = q._create_duplicate_quiz(new_course)
+            if q.id not in duplicate_quiz_map.keys():
+                duplicate_quiz_map[q.id] = new_quiz.id
+
+        for orig_qid, dupl_qid in duplicate_quiz_map.items():
+            original_quiz = Quiz.objects.get(id=orig_qid)
+            if original_quiz.prerequisite:
+                duplicate_quiz = Quiz.objects.get(id=dupl_qid)
+                prereq_id = original_quiz.prerequisite.id
+                duplicate_prereq_id = duplicate_quiz_map.get(prereq_id)
+                if duplicate_prereq_id:
+                    duplicate_prerequisite = Quiz.objects.get(
+                        id=duplicate_prereq_id
+                    )
+                    duplicate_quiz.prerequite.add(duplicate_prerequisite)
+
+        return new_course
+
     def request(self, *users):
         self.requests.add(*users)
 
@@ -656,6 +691,28 @@ class Quiz(models.Model):
     def has_prerequisite(self):
         return True if self.prerequisite else False
 
+    def _create_duplicate_quiz(self, course):
+        questionpaper = self.questionpaper_set.all()
+        new_quiz = Quiz.objects.create(course=course,
+            start_date_time=self.start_date_time,
+            end_date_time=self.end_date_time,
+            duration=self.duration,
+            active=self.active,
+            description="Copy Of {0}".format(self.description),
+            pass_criteria=self.pass_criteria,
+            language=self.language,
+            attempts_allowed=self.attempts_allowed,
+            time_between_attempts=self.time_between_attempts,
+            is_trial=self.is_trial,
+            instructions=self.instructions,
+            allow_skip=self.allow_skip
+        )
+
+        for qp in questionpaper:
+            qp._create_duplicate_questionpaper(new_quiz)
+
+        return new_quiz
+
     def create_demo_quiz(self, course):
         demo_quiz = Quiz.objects.create(
             start_date_time=timezone.now(),
@@ -740,6 +797,17 @@ class QuestionPaper(models.Model):
     fixed_question_order = models.CharField(max_length=255, blank=True)
 
     objects = QuestionPaperManager()
+
+    def _create_duplicate_questionpaper(self, quiz):
+        new_questionpaper = QuestionPaper.objects.create(quiz=quiz,
+            shuffle_questions=self.shuffle_questions,
+            total_marks=self.total_marks,
+            fixed_question_order=self.fixed_question_order
+        )
+        new_questionpaper.fixed_questions.add(*self.fixed_questions.all())
+        new_questionpaper.random_questions.add(*self.random_questions.all())
+
+        return new_questionpaper
 
     def update_total_marks(self):
         """ Updates the total marks for the Question Paper"""
