@@ -35,7 +35,7 @@ class BaseEvaluator(object):
             stdout, stderr = proc.communicate()
         except TimeoutException:
             # Runaway code, so kill it.
-            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
             # Re-raise exception.
             raise
         return proc, stdout.decode('utf-8'), stderr.decode('utf-8')
