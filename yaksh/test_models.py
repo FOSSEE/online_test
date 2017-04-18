@@ -29,6 +29,14 @@ def setUpModule():
     Profile.objects.create(user=student, roll_number=3, institute='IIT',
                            department='Chemical', position='Student')
 
+    user4 = User.objects.create_user(username='demo_user4',
+        password='demo',
+        email='demo4@test.com'
+    )
+    Profile.objects.create(user=user4, roll_number=4, institute='IIT',
+                           department='Chemical', position='Student')
+
+
     # create a course
     course = Course.objects.create(name="Python Course",
                                    enrollment="Enroll Request", creator=user)
@@ -833,10 +841,12 @@ class CourseTestCases(unittest.TestCase):
     def setUp(self):
         self.course = Course.objects.get(name="Python Course")
         self.creator = User.objects.get(username="demo_user")
+        self.template_course_user = User.objects.get(username="demo_user4")
         self.student1 = User.objects.get(username="demo_user2")
         self.student2 = User.objects.get(username="demo_user3")
         self.quiz1 = Quiz.objects.get(description='demo quiz 1')
         self.quiz2 = Quiz.objects.get(description='demo quiz 2')
+        self.questions = Question.objects.filter(active=True)
 
         # create courses with disabled enrollment
         self.enroll_request_course = Course.objects.create(
@@ -861,6 +871,121 @@ class CourseTestCases(unittest.TestCase):
                tzinfo=pytz.utc
             ),
         )
+
+        # create a course that will be cloned
+        self.template_course = Course.objects.create(
+            name="Template Course to clone",
+            enrollment="Open Course",
+            creator=self.creator,
+            start_enroll_time=datetime(2015, 10, 9, 10, 8, 15, 0,
+                tzinfo=pytz.utc
+            ),
+            end_enroll_time=datetime(2015, 11, 9, 10, 8, 15, 0,
+               tzinfo=pytz.utc
+            ),
+        )
+
+        self.template_quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0,
+                tzinfo=pytz.utc
+            ),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0,
+                tzinfo=pytz.utc
+            ),
+            duration=30,
+            active=False,
+            attempts_allowed=-1,
+            time_between_attempts=0,
+            description='template quiz 1',
+            pass_criteria=40,
+            language='Python',
+            course=self.template_course,
+            instructions="Demo Instructions"
+        )
+
+        self.template_question_paper = QuestionPaper.objects.create(
+            quiz=self.template_quiz,
+            total_marks=0.0,
+            shuffle_questions=True
+        )
+
+        self.template_question_paper.fixed_questions.add(self.questions[1],
+            self.questions[2],
+            self.questions[3]
+        )
+
+    def test_create_duplicate_course(self):
+        """ Test create_duplicate_course method of course """
+        # create a duplicate course
+        cloned_course = self.template_course.create_duplicate_course(
+            self.template_course_user
+        )
+        self.assertEqual(cloned_course.name,
+            'Copy Of Template Course to clone')
+        self.assertEqual(cloned_course.enrollment,
+            self.template_course.enrollment
+        )
+        self.assertEqual(cloned_course.creator,
+            self.template_course_user
+        )
+        self.assertEqual(cloned_course.start_enroll_time,
+            self.template_course.start_enroll_time
+        )
+        self.assertEqual(cloned_course.end_enroll_time,
+            self.template_course.end_enroll_time
+        )
+
+        # get duplicate quiz associated with duplicate course
+        cloned_quiz = cloned_course.quiz_set.all()[0]
+
+        self.assertEqual(cloned_quiz.start_date_time,
+            self.template_quiz.start_date_time
+        )
+        self.assertEqual(cloned_quiz.end_date_time,
+            self.template_quiz.end_date_time
+        )
+        self.assertEqual(cloned_quiz.duration,
+            self.template_quiz.duration
+        )
+        self.assertEqual(cloned_quiz.active,
+            self.template_quiz.active
+        )
+        self.assertEqual(cloned_quiz.attempts_allowed,
+            self.template_quiz.attempts_allowed
+        )
+        self.assertEqual(cloned_quiz.time_between_attempts,
+            self.template_quiz.time_between_attempts
+        )
+        self.assertEqual(cloned_quiz.description,
+            'Copy Of template quiz 1'
+        )
+        self.assertEqual(cloned_quiz.pass_criteria,
+            self.template_quiz.pass_criteria
+        )
+        self.assertEqual(cloned_quiz.language,
+            self.template_quiz.language
+        )
+        self.assertEqual(cloned_quiz.course,
+            cloned_course
+        )
+        self.assertEqual(cloned_quiz.instructions,
+            self.template_quiz.instructions
+        )
+
+        # Get duplicate questionpaper associated with duplicate quiz
+        cloned_qp = cloned_quiz.questionpaper_set.all()[0]
+
+        self.assertEqual(cloned_qp.quiz, cloned_quiz)
+        self.assertEqual(cloned_qp.total_marks,
+            self.template_question_paper.total_marks
+        )
+        self.assertEqual(cloned_qp.shuffle_questions,
+            self.template_question_paper.shuffle_questions
+        )
+
+        for q in cloned_qp.fixed_questions.all():
+            self.assertIn(q, self.template_question_paper.fixed_questions.all())
+
 
     def test_is_creator(self):
         """ Test is_creator method of Course"""
