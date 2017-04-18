@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block pagetitle %}YAKSH {% endblock %}
+{% block pagetitle %}YAKSH{% endblock %}
 
 {% block content %}
     <div class="row">
         <div class="col-md-6" style="border-right:1px solid gray;">
-        <form action="" method="post">
+        <form action="{{URL_ROOT}}/exam/login/" method="post">
         {% csrf_token %}
-          
+        <input type="hidden" name="next" value="{{ request.GET.next }}" />
         <center><table class="table">
         {{ form.as_table }}
         </table></center>
