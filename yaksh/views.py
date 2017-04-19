@@ -288,7 +288,7 @@ def prof_manage(request, msg=None):
                                                 Q(quiz__course__creator=user) |
                                                 Q(quiz__course__teachers=user),
                                                 quiz__is_trial=False
-                                                )
+                                                ).distinct()
         trial_paper = AnswerPaper.objects.filter(user=user,
                                                  question_paper__quiz__is_trial=True
                                                  )
@@ -308,9 +308,9 @@ def prof_manage(request, msg=None):
         for paper in question_papers:
             answer_papers = AnswerPaper.objects.filter(question_paper=paper)
             users_passed = AnswerPaper.objects.filter(question_paper=paper,
-                    passed=True).distinct().count()
+                    passed=True).count()
             users_failed = AnswerPaper.objects.filter(question_paper=paper,
-                    passed=False).distinct().count()
+                    passed=False).count()
             temp = paper, answer_papers, users_passed, users_failed
             users_per_paper.append(temp)
         context = {'user': user, 'users_per_paper': users_per_paper,
@@ -779,13 +779,13 @@ def monitor(request, quiz_id=None):
                                      context_instance=ci)
     # quiz_id is not None.
     try:
+        quiz = get_object_or_404(Quiz, id=quiz_id)
+        if not quiz.course.is_creator(user) and not quiz.course.is_teacher(user):
+            raise Http404('This course does not belong to you')
         q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user) |
                                                Q(quiz__course__teachers=user),
                                                quiz__is_trial=False,
                                                quiz_id=quiz_id).distinct()
-        quiz = get_object_or_404(Quiz, id=quiz_id)
-        if not quiz.course.is_creator(user) and not quiz.course.is_teacher(user):
-            raise Http404('This course does not belong to you')
     except QuestionPaper.DoesNotExist:
         papers = []
         q_paper = None
