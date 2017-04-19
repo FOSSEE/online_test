@@ -68,12 +68,7 @@ def tearDownModule():
     Quiz.objects.all().delete()
     Course.objects.all().delete()
     QuestionPaper.objects.all().delete()
-    
-    que_id_list = ["25", "22", "24", "27"]
-    for que_id in que_id_list:
-        dir_path = os.path.join(os.getcwd(), "yaksh", "data","question_{0}".format(que_id))
-        if os.path.exists(dir_path):
-            shutil.rmtree(dir_path)
+
 
 ###############################################################################
 class ProfileTestCases(unittest.TestCase):
@@ -1038,21 +1033,15 @@ class TestCaseTestCases(unittest.TestCase):
 
 class AssignmentUploadTestCases(unittest.TestCase):
     def setUp(self):
-        self.user = User.objects.get(username="demo_user")
-        self.user.first_name = "demo"
-        self.user.last_name = "user"
-        self.user.save()
-        course = Course.objects.create(name="Assignment course",
-                                   enrollment="Enroll Request", creator=self.user)
-        self.quiz = Quiz.objects.create(start_date_time=datetime(
-                                   2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
-                        end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0,
-                                               tzinfo=pytz.utc),
-                        duration=30, active=True,
-                        attempts_allowed=1, time_between_attempts=0,
-                        description='Assignment Quiz', pass_criteria=0,
-                        language='Python', prerequisite=None,
-                        course=course, instructions="Demo Instructions")
+        self.user1 = User.objects.get(username="demo_user")
+        self.user1.first_name = "demo"
+        self.user1.last_name = "user"
+        self.user1.save()
+        self.user2 = User.objects.get(username="demo_user3")
+        self.user2.first_name = "demo"
+        self.user2.last_name = "user3"
+        self.user2.save()
+        self.quiz = Quiz.objects.get(description="demo quiz 1")
 
         self.questionpaper = QuestionPaper.objects.create(quiz=self.quiz,
             total_marks=0.0,
@@ -1065,35 +1054,42 @@ class AssignmentUploadTestCases(unittest.TestCase):
             description='Upload a file',
             points=1.0,
             snippet='',
-            user=self.user
+            user=self.user1
         )
         self.questionpaper.fixed_question_order = "{0}".format(self.question.id)
         self.questionpaper.fixed_questions.add(self.question)
-        file_path = os.path.join(tempfile.gettempdir(), "upload.txt")
-        self.assignment = AssignmentUpload.objects.create(user=self.user,
-            assignmentQuestion=self.question, assignmentFile=file_path,
+        file_path1 = os.path.join(tempfile.gettempdir(), "upload1.txt")
+        file_path2 = os.path.join(tempfile.gettempdir(), "upload2.txt")
+        self.assignment1 = AssignmentUpload.objects.create(user=self.user1,
+            assignmentQuestion=self.question, assignmentFile=file_path1,
+            question_paper=self.questionpaper
+            )
+        self.assignment2 = AssignmentUpload.objects.create(user=self.user2,
+            assignmentQuestion=self.question, assignmentFile=file_path2,
             question_paper=self.questionpaper
             )
 
     def test_get_assignments_for_user_files(self):
-        assignment_upload_obj = AssignmentUpload()
-        assignment_files, file_name = assignment_upload_obj.get_assignments(
+        assignment_files, file_name = AssignmentUpload.objects.get_assignments(
                                     self.questionpaper, self.question.id,
-                                    self.user.id
+                                    self.user1.id
                                     )
-        self.assertIn("upload.txt", assignment_files[0].assignmentFile.name)
-        self.assertEqual(assignment_files[0].question_paper, self.questionpaper)
-        actual_file_name = self.user.get_full_name().replace(" ", "_")
+        self.assertIn("upload1.txt", assignment_files[0].assignmentFile.name)
+        self.assertEqual(assignment_files[0].user, self.user1)
+        actual_file_name = self.user1.get_full_name().replace(" ", "_")
         file_name = file_name.replace(" ", "_")
         self.assertEqual(file_name, actual_file_name)
 
     def test_get_assignments_for_quiz_files(self):
-        assignment_upload_obj = AssignmentUpload()
-        assignment_files, file_name = assignment_upload_obj.get_assignments(
+        assignment_files, file_name = AssignmentUpload.objects.get_assignments(
                                     self.questionpaper
                                     )
-        self.assertIn("upload.txt", assignment_files[0].assignmentFile.name)
-        self.assertEqual(assignment_files[0].question_paper, self.questionpaper)
+        files = [os.path.basename(file.assignmentFile.name)
+                 for file in assignment_files]
+        question_papers = [file.question_paper for file in assignment_files]
+        self.assertIn("upload1.txt", files)
+        self.assertIn("upload2.txt", files)
+        self.assertEqual(question_papers[0].quiz, self.questionpaper.quiz)
         actual_file_name = self.quiz.description.replace(" ", "_")
         file_name = file_name.replace(" ", "_")
         self.assertIn(actual_file_name, file_name)
