@@ -1306,12 +1306,8 @@ class AnswerPaper(models.Model):
                .format(u.first_name, u.last_name, q.description)
 
 
-###############################################################################
-class AssignmentUpload(models.Model):
-    user = models.ForeignKey(User)
-    assignmentQuestion = models.ForeignKey(Question)
-    assignmentFile = models.FileField(upload_to=get_assignment_dir)
-    question_paper = models.ForeignKey(QuestionPaper, blank=True, null=True)
+################################################################################
+class AssignmentUploadManager(models.Manager):
 
     def get_assignments(self, qp, que_id=None, user_id=None):
         if que_id and user_id:
@@ -1319,18 +1315,27 @@ class AssignmentUpload(models.Model):
                         assignmentQuestion_id=que_id, user_id=user_id,
                         question_paper=qp
                         )
-            user_name = User.objects.get(id=user_id)
-            file_name = user_name.get_full_name()
+            file_name = User.objects.get(id=user_id).get_full_name()
         else:
             assignment_files = AssignmentUpload.objects.filter(
                         question_paper=qp
                         )
 
-            file_name = "%s_Assignment_files" %(
+            file_name = "{0}_Assignment_files".format(
                             assignment_files[0].question_paper.quiz.description
                             )
 
         return assignment_files, file_name
+
+
+################################################################################
+class AssignmentUpload(models.Model):
+    user = models.ForeignKey(User)
+    assignmentQuestion = models.ForeignKey(Question)
+    assignmentFile = models.FileField(upload_to=get_assignment_dir)
+    question_paper = models.ForeignKey(QuestionPaper, blank=True, null=True)
+    objects = AssignmentUploadManager()
+
 
 ###############################################################################
 class TestCase(models.Model):
