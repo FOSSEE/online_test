@@ -288,7 +288,7 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         exclude = ['creator', 'requests', 'students', 'rejected',
-            'created_on', 'is_trial', 'teachers']
+            'created_on', 'is_trial', 'hidden', 'teachers']
 
 
 class ProfileForm(forms.ModelForm):
