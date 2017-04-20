@@ -29,6 +29,7 @@ try:
     from StringIO import StringIO as string_io
 except ImportError:
     from io import BytesIO as string_io
+import re
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
@@ -1044,6 +1045,15 @@ def show_all_questions(request):
                 return my_redirect("/exam/start/1/{0}".format(trial_paper.id))
             else:
                 context["msg"] = "Please select atleast one question to test"
+
+        if request.POST.get('question_tags'):
+            question_tags = request.POST.getlist("question_tags")
+            all_tags = []
+            for tags in question_tags:
+                all_tags.extend(re.split('[; |, |\*|\n]',tags))
+            search_result = Question.objects.filter(tags__name__in=all_tags)\
+                            .distinct()
+            context['search_result'] = search_result
 
     questions = Question.objects.filter(user_id=user.id, active=True)
     form = QuestionFilterForm(user=user)

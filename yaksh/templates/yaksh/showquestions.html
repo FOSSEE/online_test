@@ -26,9 +26,9 @@ Upload File <span class="glyphicon glyphicon-open"></span></button>
 {% endif %}
 <br><br>
 <form name=frm action="" method="post">
-{% csrf_token %}
+<!-- Filtering Questions  -->
 <div class="row" id="selectors">
-    <h5 style="padding-left: 20px;">Filters</h5>
+    <h4 style="padding-left: 20px;">Filters Questions: </h4>
     <div class="col-md-3">
         {{ form.question_type }}
     </div>
@@ -40,13 +40,34 @@ Upload File <span class="glyphicon glyphicon-open"></span></button>
     </div>
 </div>
 <br>
-    <button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>Clear Filters</button>
-<br>
+ <button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>
+ Clear Filters</button>
+<br><br>
+<!-- Searching Tags -->
+{% csrf_token %}
+    <div class="col-md-16">
+    <div class="input-group">
+    <span class="input-group-addon" id="basic-addon1">Search Questions </span>
+    <input type="text" name="question_tags" class="form-control"
+     placeholder="Search using comma separated Tags">
+    <span class="input-group-btn">
+    <button class="btn btn-default" type="submit">Search</button>
+    <button class="btn btn-default" onclick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>
+    Cancel</button>
+    </span>
+    </div>
+     </div>
 
 <div id="filtered-questions">
+{% if not search_result %}
 {% if questions %}
 <h5><input id="checkall" type="checkbox"> Select All </h5>
 {% for i in questions %}
+<input type="checkbox" name="question" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{ i }}</a><br>
+{% endfor %}
+{% endif %}
+{% else %}
+{% for i in search_result %}
 <input type="checkbox" name="question" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{ i }}</a><br>
 {% endfor %}
 {% endif %}
