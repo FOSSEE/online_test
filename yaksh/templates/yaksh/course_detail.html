@@ -1,8 +1,8 @@
 {% extends "manage.html" %}
 
-{% block title %} Course {% endblock title %}
+{% block title %} Course Details {% endblock title %}
 
-{% block subtitle %} {{ course.name }} {% endblock %}
+{% block pagetitle %} Course Details for {{ course.name|title }} {% endblock %}
 
 {% block script %}
 <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/course.js"></script>

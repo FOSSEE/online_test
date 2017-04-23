@@ -1,15 +1,16 @@
 {% extends "manage.html" %}
 {% load custom_filters %}
-
-{% block pagetitle %} Quiz results {% endblock pagetitle %}
+{% block title %} Monitor {% endblock %}
+{% block pagetitle %} {{ msg }} {% endblock pagetitle %}
 
 {% block meta %} <meta http-equiv="refresh" content="30"/> {% endblock meta %}
 
 
 {% block script %}
+{% if papers %}
 <script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
-$(document).ready(function() 
+$(document).ready(function()
     { 
         $("#result-table").tablesorter({sortList: [[5,1]]});
         var papers_length = "{{papers|length}}";
@@ -23,41 +24,48 @@ $(document).ready(function()
     }
 });
 </script>
-
+{% endif %}
 {% endblock %}
 
-
-{% block subtitle %}
-  {% if not quizzes and not quiz %}
-  Quiz Results
-  {% endif %}
-  {% if quizzes %}
-  Available Quizzes
-  {% endif %}
-  {% if quiz %}
-  {{ quiz.description }} Results
-  {% endif %}
-{% endblock %}
 {% block content %}
-  {% if not quizzes and not quiz %}
-    <center><h5> No quizzes available. </h5></center>
-  {% endif %}
 
 {# ############################################################### #}
 {# This is rendered when we are just viewing exam/monitor #}
-{% if quizzes %}
-<ul class="list-group">
-{% for q in quizzes %}
-<li class="list-group-item"><a href="{{URL_ROOT}}/exam/manage/monitor/{{q.id}}/">{{ q.quiz.description }}</a></li>
-{% endfor %}
-</ul>
+
+{% if course_details %}
+    <table id="course-details" class="table table-bordered">
+    <tr>
+    <th>Courses</th>
+    <th> Quizzes </th>
+    </tr>
+
+    {% for course in course_details %}
+    <tr>
+    <td><ul class="list-group">{{course.name}} </td>
+
+    {% if course.get_quizzes %}
+    <td>
+    {% for quiz in course.get_quizzes %}
+     <li class="list-group-item"><a href = "{{URL_ROOT}}/exam/manage/monitor/{{quiz.id}}">
+     {{quiz.description}}
+     </a></li>
+    {% endfor %}
+    </td>
+    {% else %}
+    <td> No quiz</td>
+    {% endif %}
+    </ul></tr>
+    {% endfor %}
+    </table>
 {% endif %}
 
 {# ############################################################### #}
 {# This is rendered when we are just viewing exam/monitor/quiz_num #}
+{% if msg != "Monitor" %}
 {% if quiz %}
-
 {% if papers %}
+<p>Course Name: {{ quiz.course.name }}</p>
+<p>Quiz Name: {{ quiz.description }}</p>
 <p>Number of papers: {{ papers|length }} </p>
 {% completed papers as completed_papers %}
  {# template tag used to get the count of completed papers #}
@@ -80,6 +88,7 @@ $(document).ready(function()
     <th> Marks obtained </th>
     <th> Attempts </th>
     <th> Time Remaining </th>
+    <th> Status </th>
     </tr>
     </thead>
     <tbody>
@@ -93,13 +102,17 @@ $(document).ready(function()
         <td> {{ paper.marks_obtained }} </td>
         <td> {{ paper.answers.count }} </td>
         <td id="time_left{{forloop.counter0}}"> {{ paper.time_left }} </td>
+        <td>{{ paper.status }}</td>
         </div>
     </tr>
     {% endfor %}
     </tbody>
 </table>
 {% else %}
-<p> No answer papers so far. </p>
+<p> No answer papers found for {{ quiz.description }}</p>
 {% endif %} {# if papers #}
+{% else %}
+<h4>No Quiz Found</h4>
+{% endif %}
 {% endif %}
 {% endblock %}

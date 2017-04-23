@@ -284,9 +284,11 @@ def prof_manage(request, msg=None):
     user = request.user
     ci = RequestContext(request)
     if user.is_authenticated() and is_moderator(user):
-        question_papers = QuestionPaper.objects.filter(quiz__course__creator=user,
-                                                       quiz__is_trial=False
-                                                       )
+        question_papers = QuestionPaper.objects.filter(
+                                                Q(quiz__course__creator=user) |
+                                                Q(quiz__course__teachers=user),
+                                                quiz__is_trial=False
+                                                ).distinct()
         trial_paper = AnswerPaper.objects.filter(user=user,
                                                  question_paper__quiz__is_trial=True
                                                  )
@@ -774,7 +776,7 @@ def show_statistics(request, questionpaper_id, attempt_number=None):
 
 
 @login_required
-def monitor(request, questionpaper_id=None):
+def monitor(request, quiz_id=None):
     """Monitor the progress of the papers taken so far."""
 
     user = request.user
@@ -782,22 +784,23 @@ def monitor(request, questionpaper_id=None):
     if not user.is_authenticated() or not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
-    if questionpaper_id is None:
-        q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user) |
-                                               Q(quiz__course__teachers=user),
-                                               quiz__is_trial=False
-                                               ).distinct()
-        context = {'papers': [],
-                   'quiz': None,
-                   'quizzes': q_paper}
+    if quiz_id is None:
+        course_details = Course.objects.filter(Q(creator=user) |
+                                           Q(teachers=user),
+                                           is_trial=False).distinct()
+        context = {'papers': [], "course_details": course_details,
+                   "msg": "Monitor"}
         return my_render_to_response('yaksh/monitor.html', context,
                                      context_instance=ci)
     # quiz_id is not None.
     try:
+        quiz = get_object_or_404(Quiz, id=quiz_id)
+        if not quiz.course.is_creator(user) and not quiz.course.is_teacher(user):
+            raise Http404('This course does not belong to you')
         q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user) |
                                                Q(quiz__course__teachers=user),
                                                quiz__is_trial=False,
-                                               id=questionpaper_id).distinct()
+                                               quiz_id=quiz_id).distinct()
     except QuestionPaper.DoesNotExist:
         papers = []
         q_paper = None
@@ -812,8 +815,8 @@ def monitor(request, questionpaper_id=None):
                     last_attempt_num=Max('attempt_number'))
             latest_attempts.append(papers.get(user__in=auser,
                 attempt_number=last_attempt['last_attempt_num']))
-    context = {'papers': papers, 'quiz': q_paper, 'quizzes': None,
-            'latest_attempts': latest_attempts,}
+    context = {'papers': papers, "quiz": quiz, "msg": "Quiz Results",
+            'latest_attempts': latest_attempts}
     return my_render_to_response('yaksh/monitor.html', context,
                                  context_instance=ci)
 
@@ -1099,7 +1102,11 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
                                                         .values("id")
         user_details = AnswerPaper.objects\
                                   .get_users_for_questionpaper(questionpaper_id)
-        context = {"users": user_details, "quiz_id": quiz_id}
+        quiz = get_object_or_404(Quiz, id=quiz_id)
+        if not quiz.course.is_creator(current_user) and not \
+                quiz.course.is_teacher(current_user):
+            raise Http404('This course does not belong to you')
+        context = {"users": user_details, "quiz_id": quiz_id, "quiz": quiz}
         if user_id is not None:
 
             attempts = AnswerPaper.objects.get_user_all_attempts\

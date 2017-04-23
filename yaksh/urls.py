@@ -40,7 +40,7 @@ urlpatterns = [
     url(r'^manage/showquestionpapers/$', views.show_all_questionpapers),
     url(r'^manage/showquestionpapers/(?P<questionpaper_id>\d+)/$',\
                                                     views.show_all_questionpapers),
-    url(r'^manage/monitor/(?P<questionpaper_id>\d+)/$', views.monitor),
+    url(r'^manage/monitor/(?P<quiz_id>\d+)/$', views.monitor),
     url(r'^manage/user_data/(?P<user_id>\d+)/(?P<questionpaper_id>\d+)/$',
         views.user_data),
     url(r'^manage/user_data/(?P<user_id>\d+)/$', views.user_data),
