@@ -122,9 +122,8 @@ function textareaformat()
     });
 	document.getElementById('my').innerHTML = document.getElementById('id_description').value ;
 
-
     if (document.getElementById('id_grade_assignment_upload').checked ||
-        document.getElementById('id_type').val() == 'upload'){
+        document.getElementById('id_type').value == 'upload'){
         $("#id_grade_assignment_upload").prop("disabled", false);
     }
     else{
