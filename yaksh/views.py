@@ -22,6 +22,11 @@ from taggit.models import Tag
 from itertools import chain
 import json
 import six
+import zipfile
+try:
+    from StringIO import StringIO as string_io
+except ImportError:
+    from io import BytesIO as string_io
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
@@ -494,22 +499,33 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         elif current_question.type == 'upload':
             # if time-up at upload question then the form is submitted without
             # validation
-            if 'assignment' in request.FILES:
-                assignment_filename = request.FILES.getlist('assignment')
+            assignment_filename = request.FILES.getlist('assignment')
+            if not assignment_filename:
+                msg = "Please upload assignment file"
+                return show_question(request, current_question, paper, notification=msg)
+
             for fname in assignment_filename:
-                if AssignmentUpload.objects.filter(
-                    assignmentQuestion=current_question,
-                    assignmentFile__icontains=fname, user=user).exists():
-                    assign_file = AssignmentUpload.objects.get(
-                    assignmentQuestion=current_question,
-                    assignmentFile__icontains=fname, user=user)
+                assignment_files = AssignmentUpload.objects.filter(
+                            assignmentQuestion=current_question,
+                            assignmentFile__icontains=fname, user=user,
+                            question_paper=questionpaper_id)
+                if assignment_files.exists():
+                    assign_file = assignment_files.get(
+                            assignmentQuestion=current_question,
+                            assignmentFile__icontains=fname, user=user,
+                            question_paper=questionpaper_id)
                     os.remove(assign_file.assignmentFile.path)
                     assign_file.delete()
                 AssignmentUpload.objects.create(user=user,
-                    assignmentQuestion=current_question, assignmentFile=fname
+                    assignmentQuestion=current_question, assignmentFile=fname,
+                    question_paper_id=questionpaper_id
                     )
             user_answer = 'ASSIGNMENT UPLOADED'
             if not current_question.grade_assignment_upload:
+                new_answer = Answer(question=current_question, answer=user_answer,
+                            correct=False, error=json.dumps([]))
+                new_answer.save()
+                paper.answers.add(new_answer)
                 next_q = paper.add_completed_question(current_question.id)
                 return show_question(request, next_q, paper)
         else:
@@ -913,14 +929,15 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
 
         if 'remove-fixed' in request.POST:
             question_ids = request.POST.getlist('added-questions', None)
-            que_order = question_paper.fixed_question_order.split(",")
-            for qid in question_ids:
-                que_order.remove(qid)
-            if que_order:
-                question_paper.fixed_question_order = ",".join(que_order)
-            else:
-                question_paper.fixed_question_order = ""
-            question_paper.save()
+            if question_paper.fixed_question_order:
+                que_order = question_paper.fixed_question_order.split(",")
+                for qid in question_ids:
+                    que_order.remove(qid)
+                if que_order:
+                    question_paper.fixed_question_order = ",".join(que_order)
+                else:
+                    question_paper.fixed_question_order = ""
+                question_paper.save()
             question_paper.fixed_questions.remove(*question_ids)
 
         if 'add-random' in request.POST:
@@ -1106,7 +1123,13 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
         if not quiz.course.is_creator(current_user) and not \
                 quiz.course.is_teacher(current_user):
             raise Http404('This course does not belong to you')
-        context = {"users": user_details, "quiz_id": quiz_id, "quiz": quiz}
+
+        has_quiz_assignments = AssignmentUpload.objects.filter(
+                                question_paper_id=questionpaper_id
+                                ).exists()
+        context = {"users": user_details, "quiz_id": quiz_id, "quiz":quiz,
+                    "has_quiz_assignments": has_quiz_assignments
+                    }
         if user_id is not None:
 
             attempts = AnswerPaper.objects.get_user_all_attempts\
@@ -1116,23 +1139,27 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
                     attempt_number = attempts[0].attempt_number
             except IndexError:
                 raise Http404('No attempts for paper')
-
+            has_user_assignments = AssignmentUpload.objects.filter(
+                                question_paper_id=questionpaper_id,
+                                user_id=user_id
+                                ).exists()
             user = User.objects.get(id=user_id)
             data = AnswerPaper.objects.get_user_data(user, questionpaper_id,
                                                      attempt_number
                                                     )
-
             context = {'data': data, "quiz_id": quiz_id, "users": user_details,
-                    "attempts": attempts, "user_id": user_id
+                    "attempts": attempts, "user_id": user_id,
+                    "has_user_assignments": has_user_assignments,
+                    "has_quiz_assignments": has_quiz_assignments
                     }
     if request.method == "POST":
         papers = data['papers']
         for paper in papers:
-            for question, answers, errors in six.iteritems(paper.get_question_answers()):
+            for question, answers in six.iteritems(paper.get_question_answers()):
                 marks = float(request.POST.get('q%d_marks' % question.id, 0))
-                answers = answers[-1]
-                answers.set_marks(marks)
-                answers.save()
+                answer = answers[-1]['answer']
+                answer.set_marks(marks)
+                answer.save()
             paper.update_marks()
             paper.comments = request.POST.get(
                 'comments_%d' % paper.question_paper.id, 'No comments')
@@ -1313,7 +1340,10 @@ def view_answerpaper(request, questionpaper_id):
     quiz = get_object_or_404(QuestionPaper, pk=questionpaper_id).quiz
     if quiz.view_answerpaper and user in quiz.course.students.all():
         data = AnswerPaper.objects.get_user_data(user, questionpaper_id)
-        context = {'data': data, 'quiz': quiz}
+        has_user_assignment = AssignmentUpload.objects.filter(user=user,
+                                    question_paper_id=questionpaper_id).exists()
+        context = {'data': data, 'quiz': quiz,
+                   "has_user_assignment":has_user_assignment}
         return my_render_to_response('yaksh/view_answerpaper.html', context)
     else:
         return my_redirect('/exam/quizzes/')
@@ -1409,4 +1439,33 @@ def download_course_csv(request, course_id):
     writer.writeheader()
     for student in students:
         writer.writerow(student)
+    return response
+
+
+@login_required
+def download_assignment_file(request, quiz_id, question_id=None, user_id=None):
+    user = request.user
+    qp = QuestionPaper.objects.get(quiz_id=quiz_id)
+    assignment_files, file_name = AssignmentUpload.objects.get_assignments(qp,
+                                    question_id,
+                                    user_id
+                                    )
+    zipfile_name = string_io()
+    zip_file = zipfile.ZipFile(zipfile_name, "w")
+    for f_name in assignment_files:
+        folder = f_name.user.get_full_name().replace(" ", "_")
+        sub_folder = f_name.assignmentQuestion.summary.replace(" ", "_")
+        folder_name = os.sep.join((folder, sub_folder, os.path.basename(
+                        f_name.assignmentFile.name))
+                        )
+        zip_file.write(f_name.assignmentFile.path, folder_name
+                    )
+    zip_file.close()
+    zipfile_name.seek(0)
+    response = HttpResponse(content_type='application/zip')
+    response['Content-Disposition'] = '''attachment;\
+                                          filename={0}.zip'''.format(
+                                            file_name.replace(" ", "_")
+                                            )
+    response.write(zipfile_name.read())
     return response
