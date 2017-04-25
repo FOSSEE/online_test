@@ -151,7 +151,7 @@ class Course(models.Model):
 
     objects = CourseManager()
 
-    def create_duplicate_course(self, user): ##@@
+    def create_duplicate_course(self, user):
         quizzes = self.quiz_set.all()
         prerequisite_map = []
         duplicate_quiz_map = {}
@@ -182,7 +182,7 @@ class Course(models.Model):
                     duplicate_prerequisite = Quiz.objects.get(
                         id=duplicate_prereq_id
                     )
-                    duplicate_quiz.prerequite.add(duplicate_prerequisite)
+                    duplicate_quiz.prerequisite.add(duplicate_prerequisite)
 
         return new_course
 
