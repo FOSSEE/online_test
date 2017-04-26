@@ -1607,5 +1607,8 @@ def duplicate_course(request, course_id):
 
     if course.is_teacher(user) or course.is_creator(user):
         course.create_duplicate_course(user)
-
+    else:
+        msg = 'You do not have permissions to clone this course, please contact your '\
+            'instructor/administrator.'
+        return complete(request, msg, attempt_num=None, questionpaper_id=None)
     return my_redirect('/exam/manage/courses/')
