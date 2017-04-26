@@ -1,7 +1,7 @@
 import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdIOBasedTestCase, FileUpload, McqTestCase
+    StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload
 import json
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -68,12 +68,7 @@ def tearDownModule():
     Quiz.objects.all().delete()
     Course.objects.all().delete()
     QuestionPaper.objects.all().delete()
-    
-    que_id_list = ["25", "22", "24", "27"]
-    for que_id in que_id_list:
-        dir_path = os.path.join(os.getcwd(), "yaksh", "data","question_{0}".format(que_id))
-        if os.path.exists(dir_path):
-            shutil.rmtree(dir_path)
+
 
 ###############################################################################
 class ProfileTestCases(unittest.TestCase):
@@ -1034,3 +1029,67 @@ class TestCaseTestCases(unittest.TestCase):
         exp_data = json.loads(self.answer_data_json)
         self.assertEqual(actual_data['metadata']['user_answer'], exp_data['metadata']['user_answer'])
         self.assertEqual(actual_data['test_case_data'], exp_data['test_case_data'])
+
+
+class AssignmentUploadTestCases(unittest.TestCase):
+    def setUp(self):
+        self.user1 = User.objects.get(username="demo_user")
+        self.user1.first_name = "demo"
+        self.user1.last_name = "user"
+        self.user1.save()
+        self.user2 = User.objects.get(username="demo_user3")
+        self.user2.first_name = "demo"
+        self.user2.last_name = "user3"
+        self.user2.save()
+        self.quiz = Quiz.objects.get(description="demo quiz 1")
+
+        self.questionpaper = QuestionPaper.objects.create(quiz=self.quiz,
+            total_marks=0.0,
+            shuffle_questions=True
+        )
+        self.question = Question.objects.create(summary='Assignment',
+            language='Python',
+            type='upload',
+            active=True,
+            description='Upload a file',
+            points=1.0,
+            snippet='',
+            user=self.user1
+        )
+        self.questionpaper.fixed_question_order = "{0}".format(self.question.id)
+        self.questionpaper.fixed_questions.add(self.question)
+        file_path1 = os.path.join(tempfile.gettempdir(), "upload1.txt")
+        file_path2 = os.path.join(tempfile.gettempdir(), "upload2.txt")
+        self.assignment1 = AssignmentUpload.objects.create(user=self.user1,
+            assignmentQuestion=self.question, assignmentFile=file_path1,
+            question_paper=self.questionpaper
+            )
+        self.assignment2 = AssignmentUpload.objects.create(user=self.user2,
+            assignmentQuestion=self.question, assignmentFile=file_path2,
+            question_paper=self.questionpaper
+            )
+
+    def test_get_assignments_for_user_files(self):
+        assignment_files, file_name = AssignmentUpload.objects.get_assignments(
+                                    self.questionpaper, self.question.id,
+                                    self.user1.id
+                                    )
+        self.assertIn("upload1.txt", assignment_files[0].assignmentFile.name)
+        self.assertEqual(assignment_files[0].user, self.user1)
+        actual_file_name = self.user1.get_full_name().replace(" ", "_")
+        file_name = file_name.replace(" ", "_")
+        self.assertEqual(file_name, actual_file_name)
+
+    def test_get_assignments_for_quiz_files(self):
+        assignment_files, file_name = AssignmentUpload.objects.get_assignments(
+                                    self.questionpaper
+                                    )
+        files = [os.path.basename(file.assignmentFile.name)
+                 for file in assignment_files]
+        question_papers = [file.question_paper for file in assignment_files]
+        self.assertIn("upload1.txt", files)
+        self.assertIn("upload2.txt", files)
+        self.assertEqual(question_papers[0].quiz, self.questionpaper.quiz)
+        actual_file_name = self.quiz.description.replace(" ", "_")
+        file_name = file_name.replace(" ", "_")
+        self.assertIn(actual_file_name, file_name)

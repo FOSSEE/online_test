@@ -28,6 +28,8 @@ urlpatterns = [
     url(r'^enroll_request/(?P<course_id>\d+)/$', views.enroll_request, name='enroll_request'),
     url(r'^self_enroll/(?P<course_id>\d+)/$', views.self_enroll, name='self_enroll'),
     url(r'^view_answerpaper/(?P<questionpaper_id>\d+)/$', views.view_answerpaper, name='view_answerpaper'),
+    url(r'^download/user_assignment/(?P<question_id>\d+)/(?P<user_id>\d+)/(?P<quiz_id>\d+)$',
+        views.download_assignment_file, name="download_user_assignment"),
     url(r'^manage/$', views.prof_manage, name='manage'),
     url(r'^manage/addquestion/$', views.add_question),
     url(r'^manage/addquestion/(?P<question_id>\d+)/$', views.add_question),
@@ -42,7 +44,7 @@ urlpatterns = [
     url(r'^manage/showquestionpapers/$', views.show_all_questionpapers),
     url(r'^manage/showquestionpapers/(?P<questionpaper_id>\d+)/$',\
                                                     views.show_all_questionpapers),
-    url(r'^manage/monitor/(?P<questionpaper_id>\d+)/$', views.monitor),
+    url(r'^manage/monitor/(?P<quiz_id>\d+)/$', views.monitor),
     url(r'^manage/user_data/(?P<user_id>\d+)/(?P<questionpaper_id>\d+)/$',
         views.user_data),
     url(r'^manage/user_data/(?P<user_id>\d+)/$', views.user_data),
@@ -93,4 +95,8 @@ urlpatterns = [
     url(r'^manage/create_demo_course/$', views.create_demo_course),
     url(r'^manage/courses/download_course_csv/(?P<course_id>\d+)/$',
         views.download_course_csv),
+    url(r'^manage/download/user_assignment/(?P<question_id>\d+)/(?P<user_id>\d+)/(?P<quiz_id>\d+)/$',
+        views.download_assignment_file),
+    url(r'^manage/download/quiz_assignments/(?P<quiz_id>\d+)/$',
+        views.download_assignment_file)
 ]
