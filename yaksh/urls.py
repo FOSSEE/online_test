@@ -5,6 +5,7 @@ urlpatterns = [
     url(r'^$', views.index),
     url(r'^login/$', views.user_login, name='login'),
     url(r'^logout/$', views.user_logout),
+    url(r'^update_email/$', views.update_email),
     url(r'^activate/(?P<key>.+)$', views.activate_user),
     url(r'^new_activation/$', views.new_activation),
     url(r'^quizzes/$', views.quizlist_user, name='quizlist_user'),
