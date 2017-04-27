@@ -1,6 +1,26 @@
 {% extends "user.html" %}
 {% block pagetitle %} {{ title }} {% endblock %}
 {% block main %}
+    {% if 'Enrolled Courses' not in title%}
+        <div class="row well">
+            <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" class="form-search form-horizontal pull-right">
+                {% csrf_token %}
+                <div class="col-md-12">
+                    <div class="input-group">
+                        <span class="input-group-addon" id="basic-addon1">Search Course</span>
+                        <input type="text" name="course_code" class="form-control" placeholder="Course Code">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="submit">Search</button>
+                            <button class="btn btn-default" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/quizzes/");'>Cancel</button>
+                        </span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+{% if not courses %}
+No Courses to display
+{% endif %}
 {% for course in courses %}
 <div class="row well">
     <div class="col-md-12">
@@ -9,6 +29,8 @@
                 <h4><b><u> {{ course.name }} by {{ course.creator.get_full_name }}</u></b></h4>
             </div>
              <div class="col-md-4">
+                {% if course.hidden %}<span class="label label-info">Open Course</span>
+                {% endif %}
                 {% if user in course.requests.all %} <span class="label label-warning">Request Pending </span>
                 {% elif user in course.rejected.all %}<span class="label label-danger">Request Rejected</span>
                 {% elif user in course.students.all %}<span class="label label-info">Enrolled</span>
@@ -41,7 +63,7 @@
                             </td>
                         {% else %}
                             <td>
-                                {{ quiz.description }} <span class="label label-danger">INACTIVE</span><br>
+                                {{ quiz.description }} <span class="label label-danger">Inactive</span><br>
                             </td>
                         {% endif %}
                         <td>
@@ -83,7 +105,7 @@
         {% endif %}
     </div>
 </div><!--/row-->
- </br>
+</br>
 {% endfor %}
 
 {% endblock %}
