@@ -2,13 +2,14 @@
 import sys
 import traceback
 import os
+import signal
+import psutil
 
 # Local imports
 from .file_utils import copy_files, delete_files
 from .base_evaluator import BaseEvaluator
 from .grader import TimeoutException
-import signal
-import psutil
+
 
 class HookEvaluator(BaseEvaluator):
     def __init__(self, metadata, test_case_data):
