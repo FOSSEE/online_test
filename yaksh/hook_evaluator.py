@@ -2,6 +2,8 @@
 import sys
 import traceback
 import os
+import signal
+import psutil
 
 # Local imports
 from .file_utils import copy_files, delete_files
@@ -65,10 +67,12 @@ class HookEvaluator(BaseEvaluator):
             check = hook_scope["check_answer"]
             success, err, mark_fraction = check(self.user_answer)
         except TimeoutException:
+            processes = psutil.Process(os.getpid()).children(recursive=True)
+            for process in processes:
+                process.kill()
             raise
         except Exception:
             msg = traceback.format_exc(limit=0)
             err = "Error in Hook code: {0}".format(msg)
         del tb
         return success, err, mark_fraction
- 

@@ -76,14 +76,14 @@ def add_to_group(users):
             user.groups.add(group)
 
 @email_verified
-def index(request):
+def index(request, next_url=None):
     """The start page.
     """
     user = request.user
     if user.is_authenticated():
         if is_moderator(user):
-            return my_redirect('/exam/manage/')
-        return my_redirect("/exam/quizzes/")
+            return my_redirect('/exam/manage/' if not next_url else next_url)
+        return my_redirect("/exam/quizzes/" if not next_url else next_url)
 
     return my_redirect("/exam/login/")
 
@@ -131,14 +131,25 @@ def user_logout(request):
 def quizlist_user(request, enrolled=None):
     """Show All Quizzes that is available to logged-in user."""
     user = request.user
-    if enrolled is not None:
+    ci = RequestContext(request)
+
+    if request.method == "POST":
+        course_code = request.POST.get('course_code')
+        hidden_courses = Course.objects.get_hidden_courses(code=course_code)
+        courses = hidden_courses if hidden_courses else None
+        title = 'Search'
+
+    elif enrolled is not None:
         courses = user.students.all()
         title = 'Enrolled Courses'
     else:
-        courses = Course.objects.filter(active=True, is_trial=False)
+        courses = Course.objects.filter(active=True, is_trial=False, hidden=False)
         title = 'All Courses'
+
     context = {'user': user, 'courses': courses, 'title': title}
-    return my_render_to_response("yaksh/quizzes_user.html", context)
+
+    return my_render_to_response("yaksh/quizzes_user.html", context,
+        context_instance=ci)
 
 
 @login_required
@@ -348,21 +359,23 @@ def user_login(request):
     if user.is_authenticated():
         return index(request)
 
+    next_url = request.GET.get('next')
+
     if request.method == "POST":
         form = UserLoginForm(request.POST)
         if form.is_valid():
             user = form.cleaned_data
             login(request, user)
-            return index(request)
+            return index(request, next_url)
         else:
             context = {"form": form}
-            return my_render_to_response('yaksh/login.html', context,
-                                         context_instance=ci)
+
     else:
         form = UserLoginForm()
         context = {"form": form}
-        return my_render_to_response('yaksh/login.html', context,
-                                     context_instance=ci)
+
+    return my_render_to_response('yaksh/login.html', context,
+                                 context_instance=ci)
 
 
 @login_required
@@ -658,8 +671,8 @@ def enroll_request(request, course_id):
     user = request.user
     ci = RequestContext(request)
     course = get_object_or_404(Course, pk=course_id)
-    if not course.is_active_enrollment:
-        msg = 'Enrollment for this course has been closed, please contact your '\
+    if not course.is_active_enrollment and course.hidden:
+        msg = 'Unable to add enrollments for this course, please contact your '\
             'instructor/administrator.'
         return complete(request, msg, attempt_num=None, questionpaper_id=None)
 
@@ -1273,7 +1286,7 @@ def search_teacher(request, course_id):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
-    context = {}
+    context = {'success': False}
     course = get_object_or_404(Course, pk=course_id)
     context['course'] = course
 

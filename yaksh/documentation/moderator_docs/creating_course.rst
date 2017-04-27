@@ -8,12 +8,23 @@ Setting up a new course
 -----------------------
 	To create a course, click on the Add New Course button on the moderator's dashboard. This will lead you to a create add course page, where you need to fill in the following fields.
 
+		.. image:: ../images/create_course.png
+
 		* Name 
 			Name of the Course
-		* Active 
-			If the course should be active for students to take the quiz. The status of the course can be edited later.
 		* Enrollment 
 			 Open enrollment is open to all students. Enroll Request requires students to send a request which the moderator can accept or reject.
+		* Active 
+			If the course should be active for students to take the quiz. The status of the course can be edited later.
+		* Code
+			If the course should be hidden and only accessible to students possessing the correct course code.
+		* Instructions
+			Instructions for the course
+		* Start Date and Time for enrollment of course
+			If the enrollment of the course should be available only after a set date and time
+		* End Date and Time for enrollment of course
+			If the enrollment of the course should be available only before a set date and time
+
 
 Features in Courses
 -------------------

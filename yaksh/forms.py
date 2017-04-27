@@ -289,10 +289,21 @@ class QuestionFilterForm(forms.Form):
 class CourseForm(forms.ModelForm):
     """ course form for moderators """
 
+    def save(self, commit=True, *args, **kwargs):
+        instance = super(CourseForm, self).save(commit=False)
+        if instance.code:
+            instance.hidden = True
+        else:
+            instance.hidden = False
+
+        if commit:
+            instance.save()
+        return instance
+
     class Meta:
         model = Course
         exclude = ['creator', 'requests', 'students', 'rejected',
-            'created_on', 'is_trial', 'teachers']
+            'created_on', 'is_trial', 'hidden', 'teachers']
 
 
 class ProfileForm(forms.ModelForm):
