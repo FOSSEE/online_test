@@ -29,7 +29,7 @@ No Courses to display
                 <h4><b><u> {{ course.name }} by {{ course.creator.get_full_name }}</u></b></h4>
             </div>
              <div class="col-md-4">
-                {% if course.hidden %}<span class="label label-info">Hidden</span>
+                {% if course.hidden %}<span class="label label-info">Open Course</span>
                 {% endif %}
                 {% if user in course.requests.all %} <span class="label label-warning">Request Pending </span>
                 {% elif user in course.rejected.all %}<span class="label label-danger">Request Rejected</span>

@@ -49,7 +49,7 @@ question_types = (
 
 enrollment_methods = (
     ("default", "Enroll Request"),
-    ("open", "Open Course"),
+    ("open", "Open Enrollment"),
     )
 
 test_case_types = (
