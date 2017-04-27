@@ -4,14 +4,13 @@ try:
 except ImportError:
     from string import ascii_letters as letters
 from string import digits, punctuation
-# Local imports
 import hashlib
 from random import randint
 from textwrap import dedent
+import smtplib
 
 # Django imports
 from django.utils.crypto import get_random_string
-from django.core.mail import send_mail
 from django.conf import settings
 
 def generate_activation_key(username):
@@ -27,8 +26,8 @@ def send_user_mail(user_mail, key):
     """
     try:
         to = user_mail
-        subject = "Yaksh Email Verification"
-        msg = dedent("""\
+        subject = 'Yaksh Email Verification'
+        message = dedent("""\
                 To activate your account and verify your email address,
                 please click the following link:
                 {0}/exam/activate/{1}
@@ -41,15 +40,29 @@ def send_user_mail(user_mail, key):
             """.format(settings.PRODUCTION_URL, key, settings.REPLY_EMAIL)
             )
 
-        send_mail(subject, msg, settings.SENDER_EMAIL, [to])
+        user = settings.EMAIL_HOST_USER
+        pwd = settings.EMAIL_HOST_PASSWORD
+        smtpserver = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        smtpserver.ehlo()
+        smtpserver.starttls()
+        smtpserver.ehlo()
+        smtpserver.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
+
+        smtpserver.login(user, pwd)
+        header = 'To:{0}\nFrom:{1}\nSubject:{2}\n'.format(to,
+                    settings.SENDER_EMAIL, subject)
+        message = '{0}\n{1}\n\n'.format(header, message)
+        smtpserver.sendmail(user, to, message)
+        smtpserver.close()
+
         msg = "An activation link is sent to your registered email.\
                         Please activate the link within 20 minutes."
         success = True
+
     except Exception as exc_msg:
         msg = """Error: {0}. Please check your email address.\
                 If email address is correct then
-                Please contact your \
-                instructor/administrator.""".format(exc_msg)
+                Please contact {1}.""".format(exc_msg, settings.REPLY_EMAIL)
         success = False
 
     return success, msg

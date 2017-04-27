@@ -144,8 +144,6 @@ class UserRegisterForm(forms.Form):
         new_profile.timezone = cleaned_data["timezone"]
         if settings.IS_DEVELOPMENT:
             new_profile.is_email_verified = True
-            new_profile.save()
-            return u_name, pwd
         else:
             new_profile.activation_key = generate_activation_key(new_user.username)
             new_profile.key_expiry_time = datetime.datetime.strftime(
@@ -154,7 +152,7 @@ class UserRegisterForm(forms.Form):
                                         "%Y-%m-%d %H:%M:%S"
                                         )
         new_profile.save()
-        return new_user.email, new_profile.activation_key
+        return u_name, pwd, new_user.email, new_profile.activation_key
 
 
 class UserLoginForm(forms.Form):
