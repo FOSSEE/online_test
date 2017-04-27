@@ -3,12 +3,14 @@ import unittest
 import os
 import shutil
 import tempfile
+from psutil import Process
 from textwrap import dedent
+
+#Local Import
 from yaksh import grader as gd
 from yaksh.grader import Grader
 from yaksh.scilab_code_evaluator import ScilabCodeEvaluator
 from yaksh.evaluator_tests.test_python_evaluation import EvaluatorBaseTest
-from psutil import Process
 
 class ScilabEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
@@ -138,8 +140,9 @@ class ScilabEvaluationTestCases(EvaluatorBaseTest):
         self.assert_correct_output(self.timeout_msg, result.get("error"))
         parent_proc = Process(os.getpid()).children()
         if parent_proc:
-            self.assertFalse(any(Process(parent_proc[0].pid)\
-                .children(recursive=True)))
+            children_procs = Process(parent_proc[0].pid)
+            self.assertFalse(any(children_procs.children(recursive=True)))
+
 
 if __name__ == '__main__':
     unittest.main()

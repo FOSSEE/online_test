@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
+import os
+import signal
 
 # Local imports
 from .base_evaluator import BaseEvaluator
 from .grader import TimeoutException
-import os
-import signal
 
 
 class StdIOEvaluator(BaseEvaluator):

@@ -154,9 +154,8 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.assert_correct_output(self.timeout_msg, result.get("error"))
         parent_proc = Process(os.getpid()).children()
         if parent_proc:
-            self.assertFalse(any(Process(parent_proc[0].pid)\
-                .children(recursive=True)))
-
+            children_procs = Process(parent_proc[0].pid)
+            self.assertFalse(any(children_procs.children(recursive=True)))
 
     def test_file_based_assert(self):
         # Given
@@ -409,8 +408,8 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
         self.assert_correct_output(self.timeout_msg, result.get("error"))
         parent_proc = Process(os.getpid()).children()
         if parent_proc:
-            self.assertFalse(any(Process(parent_proc[0].pid)\
-                .children(recursive=True)))
+            children_procs = Process(parent_proc[0].pid)
+            self.assertFalse(any(children_procs.children(recursive=True)))
 
     def test_only_stdout(self):
         # Given
@@ -979,8 +978,9 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
         self.assert_correct_output(self.timeout_msg, result.get('error'))
         parent_proc = Process(os.getpid()).children()
         if parent_proc:
-            self.assertFalse(any(Process(parent_proc[0].pid)\
-                .children(recursive=True)))
+            children_procs = Process(parent_proc[0].pid)
+            self.assertFalse(any(children_procs.children(recursive=True)))
+
 
 if __name__ == '__main__':
     unittest.main()
