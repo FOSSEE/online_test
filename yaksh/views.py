@@ -73,14 +73,14 @@ def add_to_group(users):
             user.groups.add(group)
 
 
-def index(request):
+def index(request, next_url=None):
     """The start page.
     """
     user = request.user
     if user.is_authenticated():
         if user.groups.filter(name='moderator').count() > 0:
-            return my_redirect('/exam/manage/')
-        return my_redirect("/exam/quizzes/")
+            return my_redirect('/exam/manage/' if not next_url else next_url)
+        return my_redirect("/exam/quizzes/" if not next_url else next_url)
 
     return my_redirect("/exam/login/")
 
@@ -331,27 +331,25 @@ def user_login(request):
     user = request.user
     ci = RequestContext(request)
     if user.is_authenticated():
-        if user.groups.filter(name='moderator').count() > 0:
-            return my_redirect('/exam/manage/')
-        return my_redirect("/exam/quizzes/")
+        return index(request)
+
+    next_url = request.GET.get('next')
 
     if request.method == "POST":
         form = UserLoginForm(request.POST)
         if form.is_valid():
             user = form.cleaned_data
             login(request, user)
-            if user.groups.filter(name='moderator').count() > 0:
-                return my_redirect('/exam/manage/')
-            return my_redirect('/exam/login/')
+            return index(request, next_url)
         else:
             context = {"form": form}
-            return my_render_to_response('yaksh/login.html', context,
-                                         context_instance=ci)
+
     else:
         form = UserLoginForm()
         context = {"form": form}
-        return my_render_to_response('yaksh/login.html', context,
-                                     context_instance=ci)
+
+    return my_render_to_response('yaksh/login.html', context,
+                                 context_instance=ci)
 
 
 
