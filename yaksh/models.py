@@ -151,21 +151,21 @@ class Course(models.Model):
 
     objects = CourseManager()
 
+    def _create_duplicate_instance(self, creator, course_name=None):
+        new_course = self
+        new_course.id = None
+        new_course.name = course_name if course_name else self.name
+        new_course.creator = creator
+        new_course.save()
+        return new_course
+
     def create_duplicate_course(self, user):
         quizzes = self.quiz_set.all()
         prerequisite_map = []
         duplicate_quiz_map = {}
-        new_course = Course.objects.create(creator=user,
-            name="Copy Of {0}".format(self.name),
-            enrollment=self.enrollment,
-            active=self.active,
-            is_trial=self.is_trial,
-            instructions=self.instructions,
-            start_enroll_time=self.start_enroll_time,
-            end_enroll_time=self.end_enroll_time
-        )
 
-        new_course.teachers.add(*self.teachers.all())
+        new_course_name = "Copy Of {0}".format(self.name)
+        new_course = self._create_duplicate_instance(user, new_course_name)
 
         for q in quizzes:
             new_quiz = q._create_duplicate_quiz(new_course)
