@@ -914,6 +914,32 @@ class CourseTestCases(unittest.TestCase):
             self.questions[3]
         )
 
+        self.template_quiz2 = Quiz.objects.create(
+            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            duration=30,
+            active=True,
+            attempts_allowed=1,
+            time_between_attempts=0,
+            description='template quiz 2',
+            pass_criteria=0,
+            language='Python',
+            prerequisite=self.template_quiz,
+            course=self.template_course,
+            instructions="Demo Instructions"
+        )
+
+        self.template_question_paper2 = QuestionPaper.objects.create(
+            quiz=self.template_quiz2,
+            total_marks=0.0,
+            shuffle_questions=True
+        )
+
+        self.template_question_paper2.fixed_questions.add(self.questions[1],
+            self.questions[2],
+            self.questions[3]
+        )
+
     def test_create_duplicate_course(self):
         """ Test create_duplicate_course method of course """
         # create a duplicate course
@@ -985,6 +1011,57 @@ class CourseTestCases(unittest.TestCase):
 
         for q in cloned_qp.fixed_questions.all():
             self.assertIn(q, self.template_question_paper.fixed_questions.all())
+
+        # get second duplicate quiz associated with duplicate course
+        cloned_quiz = cloned_course.quiz_set.all()[1]
+
+        self.assertEqual(cloned_quiz.start_date_time,
+            self.template_quiz2.start_date_time
+        )
+        self.assertEqual(cloned_quiz.end_date_time,
+            self.template_quiz2.end_date_time
+        )
+        self.assertEqual(cloned_quiz.duration,
+            self.template_quiz2.duration
+        )
+        self.assertEqual(cloned_quiz.active,
+            self.template_quiz2.active
+        )
+        self.assertEqual(cloned_quiz.attempts_allowed,
+            self.template_quiz2.attempts_allowed
+        )
+        self.assertEqual(cloned_quiz.time_between_attempts,
+            self.template_quiz2.time_between_attempts
+        )
+        self.assertEqual(cloned_quiz.description,
+            'Copy Of template quiz 2'
+        )
+        self.assertEqual(cloned_quiz.pass_criteria,
+            self.template_quiz2.pass_criteria
+        )
+        self.assertEqual(cloned_quiz.language,
+            self.template_quiz2.language
+        )
+        self.assertEqual(cloned_quiz.course,
+            cloned_course
+        )
+        self.assertEqual(cloned_quiz.instructions,
+            self.template_quiz2.instructions
+        )
+
+        # Get second duplicate questionpaper associated with duplicate quiz
+        cloned_qp = cloned_quiz.questionpaper_set.all()[0]
+
+        self.assertEqual(cloned_qp.quiz, cloned_quiz)
+        self.assertEqual(cloned_qp.total_marks,
+            self.template_question_paper2.total_marks
+        )
+        self.assertEqual(cloned_qp.shuffle_questions,
+            self.template_question_paper2.shuffle_questions
+        )
+
+        for q in cloned_qp.fixed_questions.all():
+            self.assertIn(q, self.template_question_paper2.fixed_questions.all())
 
 
     def test_is_creator(self):

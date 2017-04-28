@@ -182,7 +182,8 @@ class Course(models.Model):
                     duplicate_prerequisite = Quiz.objects.get(
                         id=duplicate_prereq_id
                     )
-                    duplicate_quiz.prerequisite.add(duplicate_prerequisite)
+                    duplicate_quiz.prerequisite = duplicate_prerequisite
+                    duplicate_quiz.save()
 
         return new_course
 
