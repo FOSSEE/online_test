@@ -1,7 +1,7 @@
 import random
 import string
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import collections
 import csv
 from django.http import HttpResponse
@@ -16,12 +16,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.forms.models import inlineformset_factory
 from django.utils import timezone
-from django.core.exceptions import MultipleObjectsReturned
+from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
+from django.conf import settings
 import pytz
 from taggit.models import Tag
 from itertools import chain
 import json
 import six
+from textwrap import dedent
 import zipfile
 try:
     from StringIO import StringIO as string_io
@@ -40,7 +42,8 @@ from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
 from .settings import URL_ROOT
 from yaksh.models import AssignmentUpload
 from .file_utils import extract_files
-
+from .email_verification import send_user_mail, generate_activation_key
+from .decorators import email_verified
 
 
 def my_redirect(url):
@@ -72,13 +75,13 @@ def add_to_group(users):
         if not is_moderator(user):
             user.groups.add(group)
 
-
+@email_verified
 def index(request, next_url=None):
     """The start page.
     """
     user = request.user
     if user.is_authenticated():
-        if user.groups.filter(name='moderator').count() > 0:
+        if is_moderator(user):
             return my_redirect('/exam/manage/' if not next_url else next_url)
         return my_redirect("/exam/quizzes/" if not next_url else next_url)
 
@@ -93,15 +96,20 @@ def user_register(request):
     ci = RequestContext(request)
     if user.is_authenticated():
         return my_redirect("/exam/quizzes/")
-
+    context = {}
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            u_name, pwd = form.save()
+            u_name, pwd, user_email, key = form.save()
             new_user = authenticate(username=u_name, password=pwd)
             login(request, new_user)
-            return my_redirect("/exam/quizzes/")
+            if user_email and key:
+                success, msg = send_user_mail(user_email, key)
+                context = {'activation_msg': msg}
+                return my_render_to_response('yaksh/activation_status.html',
+                                            context)
+            return index(request)
         else:
             return my_render_to_response('yaksh/register.html', {'form': form},
                                          context_instance=ci)
@@ -119,6 +127,7 @@ def user_logout(request):
 
 
 @login_required
+@email_verified
 def quizlist_user(request, enrolled=None):
     """Show All Quizzes that is available to logged-in user."""
     user = request.user
@@ -144,6 +153,7 @@ def quizlist_user(request, enrolled=None):
 
 
 @login_required
+@email_verified
 def results_user(request):
     """Show list of Results of Quizzes that is taken by logged-in user."""
     user = request.user
@@ -153,6 +163,7 @@ def results_user(request):
 
 
 @login_required
+@email_verified
 def add_question(request, question_id=None):
     user = request.user
     ci = RequestContext(request)
@@ -229,6 +240,7 @@ def add_question(request, question_id=None):
 
 
 @login_required
+@email_verified
 def add_quiz(request, course_id, quiz_id=None):
     """To add a new quiz in the database.
     Create a new quiz and store it."""
@@ -271,6 +283,7 @@ def add_quiz(request, course_id, quiz_id=None):
 
 
 @login_required
+@email_verified
 def show_all_questionpapers(request, questionpaper_id=None):
     user = request.user
     ci = RequestContext(request)
@@ -294,6 +307,7 @@ def show_all_questionpapers(request, questionpaper_id=None):
 
 
 @login_required
+@email_verified
 def prof_manage(request, msg=None):
     """Take credentials of the user with professor/moderator
     rights/permissions and log in."""
@@ -341,6 +355,7 @@ def user_login(request):
 
     user = request.user
     ci = RequestContext(request)
+    context = {}
     if user.is_authenticated():
         return index(request)
 
@@ -363,8 +378,8 @@ def user_login(request):
                                  context_instance=ci)
 
 
-
 @login_required
+@email_verified
 def start(request, questionpaper_id=None, attempt_num=None):
     """Check the user cedentials and if any quiz is available,
     start the exam."""
@@ -421,6 +436,7 @@ def start(request, questionpaper_id=None, attempt_num=None):
 
 
 @login_required
+@email_verified
 def show_question(request, question, paper, error_message=None, notification=None):
     """Show a question if possible."""
     user = request.user
@@ -452,6 +468,7 @@ def show_question(request, question, paper, error_message=None, notification=Non
 
 
 @login_required
+@email_verified
 def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
     user = request.user
     paper = get_object_or_404(AnswerPaper, user=request.user, attempt_number=attempt_num,
@@ -473,6 +490,7 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
 
 
 @login_required
+@email_verified
 def check(request, q_id, attempt_num=None, questionpaper_id=None):
     """Checks the answers of the user for particular question"""
     user = request.user
@@ -598,6 +616,7 @@ def quit(request, reason=None, attempt_num=None, questionpaper_id=None):
 
 
 @login_required
+@email_verified
 def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
     """Show a page to inform user that the quiz has been compeleted."""
     user = request.user
@@ -618,6 +637,7 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
 
 
 @login_required
+@email_verified
 def add_course(request, course_id=None):
     user = request.user
     ci = RequestContext(request)
@@ -646,6 +666,7 @@ def add_course(request, course_id=None):
 
 
 @login_required
+@email_verified
 def enroll_request(request, course_id):
     user = request.user
     ci = RequestContext(request)
@@ -663,6 +684,7 @@ def enroll_request(request, course_id):
 
 
 @login_required
+@email_verified
 def self_enroll(request, course_id):
     user = request.user
     ci = RequestContext(request)
@@ -677,6 +699,7 @@ def self_enroll(request, course_id):
 
 
 @login_required
+@email_verified
 def courses(request):
     user = request.user
     ci = RequestContext(request)
@@ -690,6 +713,7 @@ def courses(request):
 
 
 @login_required
+@email_verified
 def course_detail(request, course_id):
     user = request.user
     ci = RequestContext(request)
@@ -706,6 +730,7 @@ def course_detail(request, course_id):
 
 
 @login_required
+@email_verified
 def enroll(request, course_id, user_id=None, was_rejected=False):
     user = request.user
     ci = RequestContext(request)
@@ -734,6 +759,7 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
 
 
 @login_required
+@email_verified
 def reject(request, course_id, user_id=None, was_enrolled=False):
     user = request.user
     ci = RequestContext(request)
@@ -757,6 +783,7 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
 
 
 @login_required
+@email_verified
 def toggle_course_status(request, course_id):
     user = request.user
     if not is_moderator(user):
@@ -775,6 +802,7 @@ def toggle_course_status(request, course_id):
 
 
 @login_required
+@email_verified
 def show_statistics(request, questionpaper_id, attempt_number=None):
     user = request.user
     if not is_moderator(user):
@@ -801,6 +829,7 @@ def show_statistics(request, questionpaper_id, attempt_number=None):
 
 
 @login_required
+@email_verified
 def monitor(request, quiz_id=None):
     """Monitor the progress of the papers taken so far."""
 
@@ -897,6 +926,7 @@ def _remove_already_present(questionpaper_id, questions):
 
 
 @login_required
+@email_verified
 def design_questionpaper(request, quiz_id, questionpaper_id=None):
     user = request.user
 
@@ -983,6 +1013,7 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
 
 
 @login_required
+@email_verified
 def show_all_questions(request):
     """Show a list of all the questions currently in the database."""
 
@@ -1052,6 +1083,7 @@ def show_all_questions(request):
                                  context_instance=ci)
 
 @login_required
+@email_verified
 def user_data(request, user_id, questionpaper_id=None):
     """Render user data."""
     current_user = request.user
@@ -1066,6 +1098,7 @@ def user_data(request, user_id, questionpaper_id=None):
 
 
 @login_required
+@email_verified
 def download_csv(request, questionpaper_id):
     user = request.user
     if not is_moderator(user):
@@ -1111,6 +1144,7 @@ def download_csv(request, questionpaper_id):
     return response
 
 @login_required
+@email_verified
 def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
     """Present an interface with which we can easily grade a user's papers
     and update all their marks and also give comments for each paper.
@@ -1181,6 +1215,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
 
 
 @login_required
+@email_verified
 def view_profile(request):
     """ view moderators and users profile """
     user = request.user
@@ -1203,6 +1238,7 @@ def view_profile(request):
 
 
 @login_required
+@email_verified
 def edit_profile(request):
     """ edit profile details facility for moderator and students """
 
@@ -1241,6 +1277,7 @@ def edit_profile(request):
 
 
 @login_required
+@email_verified
 def search_teacher(request, course_id):
     """ search teachers for the course """
     user = request.user
@@ -1270,6 +1307,7 @@ def search_teacher(request, course_id):
 
 
 @login_required
+@email_verified
 def add_teacher(request, course_id):
     """ add teachers to the course """
 
@@ -1298,6 +1336,7 @@ def add_teacher(request, course_id):
 
 
 @login_required
+@email_verified
 def remove_teachers(request, course_id):
     """  remove user from a course """
 
@@ -1331,6 +1370,7 @@ def test_mode(user, godmode=False, questions_list=None, quiz_id=None):
 
 
 @login_required
+@email_verified
 def test_quiz(request, mode, quiz_id):
     """creates a trial quiz for the moderators"""
     godmode = True if mode == "godmode" else False
@@ -1344,6 +1384,7 @@ def test_quiz(request, mode, quiz_id):
 
 
 @login_required
+@email_verified
 def view_answerpaper(request, questionpaper_id):
     user = request.user
     quiz = get_object_or_404(QuestionPaper, pk=questionpaper_id).quiz
@@ -1359,6 +1400,7 @@ def view_answerpaper(request, questionpaper_id):
 
 
 @login_required
+@email_verified
 def create_demo_course(request):
     """ creates a demo course for user """
     user = request.user
@@ -1375,6 +1417,7 @@ def create_demo_course(request):
 
 
 @login_required
+@email_verified
 def grader(request, extra_context=None):
     user = request.user
     if not is_moderator(user):
@@ -1388,6 +1431,7 @@ def grader(request, extra_context=None):
 
 
 @login_required
+@email_verified
 def regrade(request, course_id, question_id=None, answerpaper_id=None, questionpaper_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
@@ -1409,6 +1453,7 @@ def regrade(request, course_id, question_id=None, answerpaper_id=None, questionp
     return grader(request, extra_context={'details': details})
 
 @login_required
+@email_verified
 def download_course_csv(request, course_id):
     user = request.user
     if not is_moderator(user):
@@ -1450,8 +1495,82 @@ def download_course_csv(request, course_id):
         writer.writerow(student)
     return response
 
+def activate_user(request, key):
+    ci = RequestContext(request)
+    profile = get_object_or_404(Profile, activation_key=key)
+    context = {}
+    context['success'] = False
+    if profile.is_email_verified:
+        context['activation_msg'] = "Your account is already verified"
+        return my_render_to_response('yaksh/activation_status.html', context,
+                                context_instance=ci)
+
+    if timezone.now() > profile.key_expiry_time:
+        context['msg'] = dedent("""
+                    Your activation time expired.
+                    Please try again.
+                    """)
+    else:
+        context['success'] = True
+        profile.is_email_verified = True
+        profile.save()
+        context['msg'] = "Your account is activated"
+    return my_render_to_response('yaksh/activation_status.html', context,
+                                context_instance=ci)
+
+def new_activation(request, email=None):
+    ci = RequestContext(request)
+    context = {}
+    if request.method == "POST":
+        email = request.POST.get('email')
+
+    try:
+        user = User.objects.get(email=email)
+    except MultipleObjectsReturned:
+        context['email_err_msg'] = "Multiple entries found for this email"\
+                                    "Please change your email"
+        return my_render_to_response('yaksh/activation_status.html', context,
+                                context_instance=ci)
+    except ObjectDoesNotExist:
+        context['success'] = False
+        context['msg'] = "Your account is not verified. \
+                            Please verify your account"
+        return render_to_response('yaksh/activation_status.html',
+                                    context, context_instance=ci)
+
+    if not user.profile.is_email_verified:
+        user.profile.activation_key = generate_activation_key(user.username)
+        user.profile.key_expiry_time = datetime.strftime(
+                                datetime.now() + \
+                                timedelta(minutes=20), "%Y-%m-%d %H:%M:%S"
+                                )
+        user.profile.save()
+        success, msg = send_user_mail(user.email, user.profile.activation_key)
+        if success:
+            context['activation_msg'] = msg
+        else:
+            context['msg'] = msg
+    else:
+        context['activation_msg'] = "Your account is already verified"
+
+    return my_render_to_response('yaksh/activation_status.html', context,
+                                context_instance=ci)
+
+def update_email(request):
+    if request.method == "POST":
+        email = request.POST.get('email')
+        username = request.POST.get('username')
+        user = get_object_or_404(User, username=username)
+        user.email = email
+        user.save()
+        return new_activation(request, email)
+    else:
+        context['email_err_msg'] = "Please Update your email"
+        return my_render_to_response('yaksh/activation_status.html', context,
+                                context_instance=ci)
 
 @login_required
+@email_verified
 def download_assignment_file(request, quiz_id, question_id=None, user_id=None):
     user = request.user
     qp = QuestionPaper.objects.get(quiz_id=quiz_id)

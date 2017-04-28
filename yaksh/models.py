@@ -256,6 +256,9 @@ class Profile(models.Model):
         default=pytz.utc.zone,
         choices=[(tz, tz) for tz in pytz.common_timezones]
     )
+    is_email_verified = models.BooleanField(default=False)
+    activation_key = models.CharField(max_length=40, blank=True, null=True)
+    key_expiry_time = models.DateTimeField(blank=True, null=True)
 
     def get_user_dir(self):
         """Return the output directory for the user."""
