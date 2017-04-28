@@ -20,6 +20,10 @@
         <a href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">
         {% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}</a>
         </li>
+        <li>
+        <a href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/">
+        Clone Course</a>
+        </li>
       </ul>
     </div>
 </div>

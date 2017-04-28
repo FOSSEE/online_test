@@ -59,6 +59,8 @@ urlpatterns = [
         views.show_statistics),
     url(r'^manage/monitor/download_csv/(?P<questionpaper_id>\d+)/$',
         views.download_csv),
+    url(r'^manage/duplicate_course/(?P<course_id>\d+)/$', views.duplicate_course,
+        name='duplicate_course'),
     url(r'manage/courses/$', views.courses, name='courses'),
     url(r'manage/add_course/$', views.add_course, name='add_course'),
     url(r'manage/edit_course/(?P<course_id>\d+)$', views.add_course, name='edit_course'),

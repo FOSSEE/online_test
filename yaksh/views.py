@@ -1597,3 +1597,18 @@ def download_assignment_file(request, quiz_id, question_id=None, user_id=None):
                                             )
     response.write(zipfile_name.read())
     return response
+
+@login_required
+def duplicate_course(request, course_id):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+
+    if course.is_teacher(user) or course.is_creator(user):
+        course.create_duplicate_course(user)
+    else:
+        msg = 'You do not have permissions to clone this course, please contact your '\
+            'instructor/administrator.'
+        return complete(request, msg, attempt_num=None, questionpaper_id=None)
+    return my_redirect('/exam/manage/courses/')
