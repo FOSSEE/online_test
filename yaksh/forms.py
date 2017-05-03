@@ -10,6 +10,7 @@ from taggit.managers import TaggableManager
 from taggit.forms import TagField
 from django.forms.models import inlineformset_factory
 from django.db.models import Q
+from django.utils import timezone
 from textwrap import dedent
 try:
     from string import letters
@@ -18,7 +19,7 @@ except ImportError:
 from string import punctuation, digits
 import datetime
 import pytz
-from .email_verification import generate_activation_key
+from .send_emails import generate_activation_key
 
 languages = (
     ("select", "Select Language"),
@@ -146,11 +147,8 @@ class UserRegisterForm(forms.Form):
             new_profile.is_email_verified = True
         else:
             new_profile.activation_key = generate_activation_key(new_user.username)
-            new_profile.key_expiry_time = datetime.datetime.strftime(
-                                        datetime.datetime.now() + \
-                                        datetime.timedelta(minutes=20),
-                                        "%Y-%m-%d %H:%M:%S"
-                                        )
+            new_profile.key_expiry_time = timezone.now() + \
+                                        timezone.timedelta(minutes=20)
         new_profile.save()
         return u_name, pwd, new_user.email, new_profile.activation_key
 
