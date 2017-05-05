@@ -42,7 +42,7 @@ from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
 from .settings import URL_ROOT
 from yaksh.models import AssignmentUpload
 from .file_utils import extract_files
-from .email_verification import send_user_mail, generate_activation_key
+from .send_emails import send_user_mail, generate_activation_key
 from .decorators import email_verified
 
 
@@ -1540,10 +1540,8 @@ def new_activation(request, email=None):
 
     if not user.profile.is_email_verified:
         user.profile.activation_key = generate_activation_key(user.username)
-        user.profile.key_expiry_time = datetime.strftime(
-                                datetime.now() + \
-                                timedelta(minutes=20), "%Y-%m-%d %H:%M:%S"
-                                )
+        user.profile.key_expiry_time = timezone.now() + \
+                                timezone.timedelta(minutes=20)
         user.profile.save()
         success, msg = send_user_mail(user.email, user.profile.activation_key)
         if success:
@@ -1599,6 +1597,7 @@ def download_assignment_file(request, quiz_id, question_id=None, user_id=None):
     return response
 
 @login_required
+@email_verified
 def duplicate_course(request, course_id):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)

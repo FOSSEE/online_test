@@ -12,12 +12,15 @@ import smtplib
 # Django imports
 from django.utils.crypto import get_random_string
 from django.conf import settings
+from django.core.mail import send_mass_mail, send_mail
+
 
 def generate_activation_key(username):
     """ Generate hashed secret key for email activation """
     chars = letters + digits + punctuation
     secret_key = get_random_string(randint(10, 40), chars)
     return hashlib.sha256((secret_key + username).encode('utf-8')).hexdigest()
+
 
 def send_user_mail(user_mail, key):
     """ Send mail to user whose email is to be verified
@@ -40,20 +43,7 @@ def send_user_mail(user_mail, key):
             """.format(settings.PRODUCTION_URL, key, settings.REPLY_EMAIL)
             )
 
-        user = settings.EMAIL_HOST_USER
-        pwd = settings.EMAIL_HOST_PASSWORD
-        smtpserver = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
-        smtpserver.ehlo()
-        smtpserver.starttls()
-        smtpserver.ehlo()
-        smtpserver.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
-
-        smtpserver.login(user, pwd)
-        header = 'To:{0}\nFrom:{1}\nSubject:{2}\n'.format(to,
-                    settings.SENDER_EMAIL, subject)
-        message = '{0}\n{1}\n\n'.format(header, message)
-        smtpserver.sendmail(user, to, message)
-        smtpserver.close()
+        send_mail(subject, message, settings.SENDER_EMAIL, [to])
 
         msg = "An activation link is sent to your registered email.\
                         Please activate the link within 20 minutes."

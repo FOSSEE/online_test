@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test import Client
 from django.utils import timezone
+from django.core import mail
 
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
@@ -97,6 +98,31 @@ class TestProfile(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/view_profile.html')
 
+    def test_email_verification_for_user_post(self):
+        """
+        POST request to verify email
+        """
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        post_response = self.client.post(reverse('yaksh:new_activation'),
+                data={'email':self.user2.email}
+            )
+        subject = mail.outbox[0].subject.replace(" ", "_")
+        activation_key = mail.outbox[0].body.split("\n")[2].split("/")[-1]
+        get_response = self.client.get(reverse('yaksh:activate',
+                                           kwargs={'key': activation_key}),
+                                   follow=True
+                                   )
+        updated_profile_user = User.objects.get(id=self.user2.id)
+        updated_profile = Profile.objects.get(user=updated_profile_user)
+        self.assertEqual(post_response.status_code, 200)
+        self.assertEqual(subject, "Yaksh_Email_Verification")
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(updated_profile.is_email_verified, True)
+        self.assertTemplateUsed(get_response, 'yaksh/activation_status.html')
+
     def test_edit_profile_post(self):
         """
         POST request to edit_profile view should update the user's profile
@@ -140,6 +166,25 @@ class TestProfile(TestCase):
         response = self.client.get(reverse('yaksh:edit_profile'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/editprofile.html')
+
+    def test_update_email_for_user_post(self):
+        """ POST request to update email if multiple users with same email are
+            found
+        """
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        response = self.client.post(reverse('yaksh:update_email'),
+            data={
+                'username': self.user2.username,
+                'email':"demo_user2@mail.com"
+            }
+        )
+        updated_user = User.objects.get(id=self.user2.id)
+        self.assertEqual(updated_user.email, "demo_user2@mail.com")
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/activation_status.html')
 
 
 class TestAddQuiz(TestCase):
