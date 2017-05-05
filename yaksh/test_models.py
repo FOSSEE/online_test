@@ -8,6 +8,7 @@ from django.utils import timezone
 import pytz
 from django.contrib.auth.models import Group
 from django.core.files import File
+from django.forms.models import model_to_dict
 import zipfile
 import os
 import shutil
@@ -960,6 +961,17 @@ class CourseTestCases(unittest.TestCase):
         self.assertEqual(cloned_course.end_enroll_time,
             self.template_course.end_enroll_time
         )
+
+        # check if attributes are same
+        cloned_course_dict = model_to_dict(cloned_course,
+            fields=[field.name for field in cloned_course._meta.fields \
+                if field.name != 'id']
+        )
+        template_course_dict = model_to_dict(self.template_course,
+            fields=[field.name for field in self.template_course._meta.fields \
+                if field.name != 'id']
+        )
+        self.assertEqual(cloned_course_dict, template_course_dict)
 
         # get duplicate quiz associated with duplicate course
         cloned_quiz = cloned_course.quiz_set.all()[0]
