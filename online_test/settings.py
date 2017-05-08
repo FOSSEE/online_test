@@ -113,7 +113,6 @@ EMAIL_HOST_USER = 'email_host_user'
 
 EMAIL_HOST_PASSWORD = 'email_host_password'
 
-
 # Set EMAIL_BACKEND to 'django.core.mail.backends.smtp.EmailBackend' in production
 EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
 
@@ -123,6 +122,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
 # This email id will be used as <from address> for sending emails.
 # For example no_reply@<your_organization>.in can be used.
 SENDER_EMAIL = 'your_email'
+
+# Organisation/Indivudual Name.
+SENDER_NAME = 'your_name'
 
 # This email id will be used by users to send their queries
 # For example queries@<your_organization>.in can be used.
