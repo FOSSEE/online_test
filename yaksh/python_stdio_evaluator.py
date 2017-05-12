@@ -6,14 +6,10 @@ try:
 except ImportError:
     from io import StringIO
 
-try:
-    from itertools import zip_longest
-except ImportError:
-    from itertools import izip_longest as zip_longest
-
 # Local imports
 from .file_utils import copy_files, delete_files
 from .base_evaluator import BaseEvaluator
+from .compare_stdio import CompareOutputs
 
 
 @contextmanager
@@ -24,44 +20,6 @@ def redirect_stdout():
         yield new_target  # run some code with the replaced stdout
     finally:
         sys.stdout = old_target  # restore to the previous value
-
-def _incorrect_user_lines(exp_lines, user_lines):
-    err_line_no = []
-    for i, (expected_line, user_line) in enumerate(zip_longest(exp_lines, user_lines)):
-        if not user_line or not expected_line:
-            err_line_no.append(i)
-        else:
-            if user_line.strip() != expected_line.strip():
-                err_line_no.append(i)
-    return err_line_no
-
-def compare_outputs(expected_output, user_output,given_input=None):
-    given_lines = user_output.splitlines()
-    exp_lines = expected_output.splitlines()
-    # if given_input:
-    #     given_input =  given_input.splitlines()
-    msg = {"given_input":given_input,
-           "expected_output": exp_lines,
-           "user_output":given_lines
-            }
-    ng = len(given_lines)
-    ne = len(exp_lines)
-    if ng != ne:
-        err_line_no = _incorrect_user_lines(exp_lines, given_lines)
-        msg["error_no"] = err_line_no
-        msg["error"] = "We had expected {0} number of lines. We got {1} number of lines.".format(ne, ng)
-        return False, msg
-    else:
-        err_line_no = _incorrect_user_lines(exp_lines, given_lines)
-        if err_line_no:
-            msg["error_no"] = err_line_no
-            msg["error"] = "Line number(s) {0} did not match."\
-                            .format(", ".join(map(str,[x+1 for x in err_line_no])))
-            return False, msg
-        else:
-            msg["error"] = "Correct answer"
-            return True, msg
-
 
 class PythonStdIOEvaluator(BaseEvaluator):
     """Tests the Python code obtained from Code Server"""
@@ -100,8 +58,9 @@ class PythonStdIOEvaluator(BaseEvaluator):
 
     def check_code(self):
         mark_fraction = self.weight
-        success, err = compare_outputs(self.expected_output,
-                                       self.output_value,
-                                       self.expected_input
-                                       )
+        compare = CompareOutputs()
+        success, err = compare.compare_outputs(self.expected_output,
+                                               self.output_value,
+                                               self.expected_input
+                                               )
         return success, err, mark_fraction
