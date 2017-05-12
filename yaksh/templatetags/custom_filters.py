@@ -1,5 +1,6 @@
 from django import template
 from django.template.defaultfilters import stringfilter
+from itertools import zip_longest
 
 register = template.Library()
 
@@ -19,3 +20,7 @@ def completed(answerpaper):
 @register.assignment_tag(name="inprogress")
 def inprogress(answerpaper):
 	return answerpaper.filter(status="inprogress").count()
+
+@register.filter(name='zip')
+def zip_longest_out(a, b):
+	return zip_longest(a, b)
