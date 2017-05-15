@@ -6,6 +6,14 @@
 
 {% block script %}
 <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/course.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/froala-editor/2.5.1/js/froala_editor.min.js"></script>
+<script src="https://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="//code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/froala-editor/2.5.1/css/froala_editor.min.css" rel="stylesheet" type="text/css" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/froala-editor/2.5.1/css/froala_style.min.css" rel="stylesheet" type="text/css" />
 {% endblock %}
 {% block content %}
 <br/>
@@ -29,11 +37,20 @@
 </div>
 <div class="col-md-9 col-md-offset-2 main">
     <div class="row">
+        {% if message %}
+        <div class="alert alert-warning" role="alert">
+        <center>
+        <strong> {{ message }} </strong>
+        </center>
+        </div>
+        {% endif %}
         <div id="student-requests">
             <center><b><u>Requests</u></b></center><br>
             {% if course.get_requests %}
             <input type="checkbox" class="checkall"/>&nbsp;<font size="2">Select all</font>
             <div id="enroll-all">
+            <form action="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/" method="post">
+                {% csrf_token %}
                 <table class="table table-striped">
                     <th></th>
                     <th></th>
@@ -43,9 +60,7 @@
                     <th>Institute</th>
                     <th>Department</th>
                     <th>Enroll/Reject</th>
-                <form action="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/" method="post">
-                {% csrf_token %}
-                {% for request in course.get_requests %}
+                    {% for request in course.get_requests %}
                     <tr>
                         <td><input type="checkbox" name="check" value="{{ request.id }}"></td>
                         <td>{{ forloop.counter }}.</td>
@@ -76,6 +91,8 @@
             {% if course.get_enrolled %}
             <input type="checkbox" class="reject"/>&nbsp;<font size="2">Select all</font>
             <div id="reject">
+            <form action="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/" method="post" enctype="multipart/form-data" id="reject-form">
+                {% csrf_token %}
                 <table class="table table-striped">
                     <th></th>
                     <th></th>
@@ -86,9 +103,7 @@
                     <th>Department</th>
                     <th>Reject</th>
                     {% for enrolled in course.get_enrolled %}
-                    <form action="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/" method="post">
-                    {% csrf_token %}
-                    <tr>
+                        <tr>
                         <td><input type="checkbox" name="check" value="{{ enrolled.id }}"></td>
                         <td>{{ forloop.counter }}.</td>
                         <td> {{ enrolled.get_full_name|title }} </td>
@@ -99,11 +114,27 @@
                         <td><a class="btn btn-danger"
                         href="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/{{ enrolled.id }}/">
                         Reject </a>
-                    </td>
-                    </tr>
+                        </td>
+                        </tr>
                     {% endfor %}
                 </table>
-                <button class="btn btn-danger" type="submit" name='reject' value='reject'>Reject Selected</button>
+                <a data-toggle="collapse" data-target="#mail">
+                  <span class="glyphicon glyphicon-chevron-down"></span>
+                  Click Here to send email to students
+                </a>
+                <div id="mail" class="collapse">
+                    <br>
+                    <input type="text" name="subject" id="subject" placeholder="Email Subject">
+                    <br><br>
+                    <textarea name="body" id="email_body"></textarea><br>
+                    Attachments: <input type="file" name="email_attach" multiple="">
+                    <br>
+                    <button class="btn btn-success" type="submit" name='send_mail' value='send_mail' id="send_mail">
+                    Send Mail to Selected Students</button>
+                </div>
+                <br><br>
+                <button class="btn btn-danger" type="submit" name='reject' value='reject'>
+                Reject Selected</button>
             </div>
             {% endif %}
             </form>
@@ -114,6 +145,8 @@
             {% if course.get_rejected %}
             <input type="checkbox" class="enroll"/>&nbsp;<font size="2">Select all</font>
             <div id="enroll">
+            <form action="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/" method="post">
+                {% csrf_token %}
                 <table class="table table-striped">
                     <th></th>
                     <th></th>
@@ -123,9 +156,7 @@
                     <th>Institute</th>
                     <th>Department</th>
                     <th>Enroll</th>
-                {% for rejected in course.get_rejected %}
-                <form action="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/" method="post">
-                {% csrf_token %}
+                    {% for rejected in course.get_rejected %}
                         <tr>
                             <td><input type="checkbox" name="check" value="{{ rejected.id }}"></td>
                             <td>{{ forloop.counter }}.</td>
@@ -150,5 +181,9 @@
             </form>
         </div>
     </div>
+</div>
+<!-- Dialog to display error message -->
+<div id="dialog" title="Alert">
+  <p id="error_msg"></p>
 </div>
 {% endblock %}
