@@ -41,9 +41,11 @@ def send_user_mail(user_mail, key):
                 copy and paste the URL in a new browser window instead.
                 For any issue, please write us on {2}
 
-                Regards
-                Yaksh Team
-            """.format(settings.PRODUCTION_URL, key, settings.REPLY_EMAIL)
+                Regards,
+                {3}
+            """.format(settings.PRODUCTION_URL, key, settings.REPLY_EMAIL,
+                       settings.SENDER_NAME
+                       )
             )
 
         send_mail(subject, message, settings.SENDER_EMAIL, [to])
