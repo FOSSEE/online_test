@@ -8,6 +8,7 @@ from django.test import TestCase
 from django.test import Client
 from django.utils import timezone
 from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
@@ -1070,6 +1071,57 @@ class TestCourseDetail(TestCase):
         self.assertEqual(self.user1_course, response.context['course'])
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/course_detail.html')
+
+
+    def test_send_mail_to_course_students(self):
+        """ Check if bulk mail is sent to multiple students enrolled in a course
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        self.student2 = User.objects.create_user(
+            username='demo_student2',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student2@test.com'
+        )
+        self.student3 = User.objects.create_user(
+            username='demo_student3',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student3@test.com'
+        )
+        self.student4 = User.objects.create_user(
+            username='demo_student4',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student4@test.com'
+        )
+        user_ids = [self.student.id, self.student2.id, self.student3.id,
+                    self.student4.id]
+        user_emails = [self.student.email, self.student2.email,
+                        self.student3.email, self.student4.email]
+
+        self.user1_course.students.add(*user_ids)
+        attachment = SimpleUploadedFile("file.txt", b"Test")
+        response = self.client.post(reverse('yaksh:reject_users',
+                        kwargs={'course_id': self.user1_course.id}),
+                        data={'send_mail': 'send_mail', 'email_attach': [attachment],
+                            'subject': 'test_bulk_mail', 'body': 'Test_Mail',
+                            'check': user_ids}
+                        )
+        attachment_file = mail.outbox[0].attachments[0][0]
+        subject = mail.outbox[0].subject
+        body = mail.outbox[0].alternatives[0][0]
+        recipients = mail.outbox[0].recipients()
+        self.assertEqual(attachment_file, "file.txt")
+        self.assertEqual(subject, "test_bulk_mail")
+        self.assertEqual(body, "Test_Mail")
+        self.assertSequenceEqual(recipients, user_emails)
 
 
 class TestEnrollRequest(TestCase):
