@@ -8,11 +8,14 @@ import hashlib
 from random import randint
 from textwrap import dedent
 import smtplib
+import os
 
 # Django imports
 from django.utils.crypto import get_random_string
 from django.conf import settings
-from django.core.mail import send_mass_mail, send_mail
+from django.core.mail import EmailMultiAlternatives, send_mail
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 
 def generate_activation_key(username):
@@ -56,3 +59,30 @@ def send_user_mail(user_mail, key):
         success = False
 
     return success, msg
+
+def send_bulk_mail(subject, email_body, recipients, attachments):
+    try:
+        text_msg = "Yaksh"
+        msg = EmailMultiAlternatives(subject, text_msg, settings.SENDER_EMAIL,
+                                    recipients
+                                    )
+        msg.attach_alternative(email_body, "text/html")
+        if attachments:
+            for file in attachments:
+                path = default_storage.save('attachments/'+file.name,
+                                            ContentFile(file.read())
+                                            )
+                msg.attach_file(os.sep.join((settings.MEDIA_ROOT, path)),
+                                mimetype="text/html"
+                                )
+                default_storage.delete(path)
+        msg.send()
+
+        message = "Email Sent Successfully"
+
+    except Exception as exc_msg:
+        message = """Error: {0}. Please check email address.\
+                If email address is correct then
+                Please contact {1}.""".format(exc_msg, settings.REPLY_EMAIL)
+
+    return message
