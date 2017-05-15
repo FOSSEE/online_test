@@ -42,7 +42,7 @@ from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
 from .settings import URL_ROOT
 from yaksh.models import AssignmentUpload
 from .file_utils import extract_files
-from .send_emails import send_user_mail, generate_activation_key
+from .send_emails import send_user_mail, generate_activation_key, send_bulk_mail
 from .decorators import email_verified
 
 
@@ -771,12 +771,35 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
         raise Http404('This course does not belong to you')
 
     if request.method == 'POST':
-        reject_ids = request.POST.getlist('check')
+        user_ids = request.POST.getlist('check')
+        if not user_ids:
+            message = "Please select atleast one User"
+            return my_render_to_response('yaksh/course_detail.html',
+                                        {'course': course, "message": message},
+                                        context_instance=ci)
+
+        if request.POST.get('send_mail') == 'send_mail':
+            users = User.objects.filter(id__in=user_ids)
+            recipients = [user.email for user in users]
+            email_body = request.POST.get('body')
+            subject = request.POST.get('subject')
+            attachments = request.FILES.getlist('email_attach')
+            message = send_bulk_mail(subject, email_body, recipients,
+                                        attachments)
+
+            return my_render_to_response('yaksh/course_detail.html',
+                                        {'course': course, "message": message},
+                                        context_instance=ci)
+
+        if request.POST.get('reject') == 'reject':
+            reject_ids = user_ids
     else:
         reject_ids = [user_id]
     if not reject_ids:
-        return my_render_to_response('yaksh/course_detail.html', {'course': course},
-                                            context_instance=ci)
+        message = "Please select atleast one User"
+        return my_render_to_response('yaksh/course_detail.html',
+                                    {'course': course, "message": message},
+                                    context_instance=ci)
     users = User.objects.filter(id__in=reject_ids)
     course.reject(was_enrolled, *users)
     return course_detail(request, course_id)

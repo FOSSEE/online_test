@@ -79,7 +79,7 @@ urlpatterns = [
     url(r'manage/enroll/rejected/(?P<course_id>\d+)/$',
         views.enroll, {'was_rejected': True}),
     url(r'manage/enrolled/reject/(?P<course_id>\d+)/$',
-        views.reject, {'was_enrolled': True}),
+        views.reject, {'was_enrolled': True}, name="reject_users"),
     url(r'^manage/searchteacher/(?P<course_id>\d+)/$', views.search_teacher),
     url(r'^manage/addteacher/(?P<course_id>\d+)/$', views.add_teacher, name='add_teacher'),
     url(r'^manage/remove_teachers/(?P<course_id>\d+)/$', views.remove_teachers, name='remove_teacher'),
