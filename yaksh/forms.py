@@ -150,7 +150,8 @@ class UserRegisterForm(forms.Form):
             new_profile.key_expiry_time = timezone.now() + \
                                         timezone.timedelta(minutes=20)
         new_profile.save()
-        return u_name, pwd, new_user.email, new_profile.activation_key
+        user_activation_key = Profile.objects.get(user=new_user).activation_key
+        return u_name, pwd, new_user.email, user_activation_key
 
 
 class UserLoginForm(forms.Form):

@@ -5,7 +5,6 @@ except ImportError:
     from string import ascii_letters as letters
 from string import digits, punctuation
 import hashlib
-from random import randint
 from textwrap import dedent
 import smtplib
 
@@ -18,7 +17,7 @@ from django.core.mail import send_mass_mail, send_mail
 def generate_activation_key(username):
     """ Generate hashed secret key for email activation """
     chars = letters + digits + punctuation
-    secret_key = get_random_string(randint(10, 40), chars)
+    secret_key = get_random_string(20, chars)
     return hashlib.sha256((secret_key + username).encode('utf-8')).hexdigest()
 
 
