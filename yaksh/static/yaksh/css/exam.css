@@ -1,1 +1,7 @@
-.table td { border: black solid 1px !important; }
+table td, table th { border: black solid 1px !important;
+			word-wrap: break-word !important;
+			white-space: pre-wrap !important;
+			}
+output{
+	table-layout: fixed
+}

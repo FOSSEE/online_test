@@ -86,32 +86,33 @@
       <pre><code> {{error|safe}} </code></pre>
       {% else %}
         {% if error.given_input %}
-       <table class="table table-bordered" width="100%">
+       <table class="table table-bordered">
         <col width="30%">
           <tr class = "active">
           <td> For given Input value(s):</td>
           <td>{{error.given_input}}</td>
+          </tr>
        </table>
        {% endif %}
-        <table class="table table-bordered" width="100%">
+        <table class="table table-bordered" width="100%" id="output">
           <col width="10%">
           <col width="40%">
           <col width="40%">
           <col width="10%">
           <tr class="info">
-          <td><b><center>Line No.</center></b></td>
-          <td><b><center>Expected Output</center></b></td>
-          <td><b><center>User output</center></b></td>
-          <td><b><center>Status</center></b></td>
+          <th><center>Line No.</center></th>
+          <th><center>Expected Output</center></th>
+          <th><center>User output</center></th>
+          <th><center>Status</center></th>
           </tr>
           {% for expected,user in error.expected_output|zip:error.user_output %}
           <td> {{forloop.counter}} </td>
           <td>{{expected|default:""}} </td>
           <td>{{user|default:""}}</td>
           {% if forloop.counter0 in error.error_no or not expected or not user %}
-          <td><span class ="glyphicon glyphicon-remove text-warning"></td>
+          <td><span class ="glyphicon glyphicon-remove text-warning"/></td>
           {% else %}
-          <td><span class ="glyphicon glyphicon-ok text-success"></td>
+          <td><span class ="glyphicon glyphicon-ok text-success"/></td>
           {% endif %}
           </tr>
           {% endfor %}
@@ -121,7 +122,7 @@
           <tr class = "danger">
           <td><b>Error:</b></td>
            <td>{{error.error}}</td>
-
+           </tr>
           </table>
         
         {% endif %}
