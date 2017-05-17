@@ -1,4 +1,5 @@
 {% extends "user.html" %}
+{% load custom_filters %}
 
 {% block pagetitle %} Answer Paper  for {{ quiz.description }}{% endblock pagetitle %}
 
@@ -102,7 +103,56 @@
         {% else %}
             <div class="panel panel-danger">
         {% endif %}
-    <div class="panel-heading">Autocheck: {{ answer.error }}</div>
+    <div class="panel-heading">Error:</div>
+        {% with answer.error_list as err %}
+            {% for error in err %}
+            {% if not error.expected_output %}
+      <pre><code> {{error|safe}} </code></pre>
+      {% else %}
+        <div class = "well well-sm">
+        {% if error.given_input %}
+       <table class="table table-bordered">
+        <col width="30%">
+          <tr class = "active">
+          <td> For given Input value(s):</td>
+          <td>{{error.given_input}}</td>
+          </tr>
+       </table>
+       {% endif %}
+        <table class="table table-bordered" width="100%" id="output">
+          <col width="10%">
+          <col width="40%">
+          <col width="40%">
+          <col width="10%">
+          <tr class="info">
+          <th><center>Line No.</center></th>
+          <th><center>Expected Output</center></th>
+          <th><center>User output</center></th>
+          <th><center>Status</center></th>
+          </tr>
+          {% for expected,user in error.expected_output|zip:error.user_output %}
+          <td> {{forloop.counter}} </td>
+          <td>{{expected|default:""}} </td>
+          <td>{{user|default:""}}</td>
+          {% if forloop.counter0 in error.error_no or not expected or not user %}
+          <td><span class ="glyphicon glyphicon-remove text-warning"/></td>
+          {% else %}
+          <td><span class ="glyphicon glyphicon-ok text-success"/></td>
+          {% endif %}
+          </tr>
+          {% endfor %}
+          </table>
+          <table width="100%" class='table table-bordered'>
+          <col width="10">
+          <tr class = "danger">
+          <td><b>Error:</b></td>
+           <td>{{error.error}}</td>
+           </tr>
+          </table>
+        </div>
+        {% endif %}
+        {% endfor %}
+        {% endwith %}
     <div class="panel-body">
     <pre><code>{{ answer.answer.answer.strip }}</code></pre>
     </div>

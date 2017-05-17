@@ -1,4 +1,5 @@
 {% extends "manage.html" %}
+{% load custom_filters %}
 
 {% block title %} Grade User {% endblock %}
 
@@ -132,6 +133,7 @@ Status : <b style="color: green;"> Passed </b><br/>
 {% csrf_token %}
 
 {% for question, answers in paper.get_question_answers.items %}
+<div class = "well well-sm">
 <div class="panel panel-info">
         <div class="panel-heading">
             <strong> Details: {{forloop.counter}}. {{ question.summary }} 
@@ -198,10 +200,57 @@ Status : <b style="color: green;"> Passed </b><br/>
                 <div class="panel panel-danger">
                     <div class="panel-heading">Error:
             {% endif %}
-            {% for err in ans.error_list %}
-                <div><pre>{{ err }}</pre></div>
-            {% endfor %}
+            {% with ans.error_list as err %}
+            {% for error in err %}
+            {% if not error.expected_output %}
+      <pre><code> {{error|safe}} </code></pre>
+      {% else %}
+        <div class = "well well-sm">
+        {% if error.given_input %}
+       <table class="table table-bordered">
+        <col width="30%">
+          <tr class = "active">
+          <td> For given Input value(s):</td>
+          <td>{{error.given_input}}</td>
+          </tr>
+       </table>
+       {% endif %}
+        <table class="table table-bordered" width="100%" id="output">
+          <col width="10%">
+          <col width="40%">
+          <col width="40%">
+          <col width="10%">
+          <tr class="info">
+          <th><center>Line No.</center></th>
+          <th><center>Expected Output</center></th>
+          <th><center>User output</center></th>
+          <th><center>Status</center></th>
+          </tr>
+          {% for expected,user in error.expected_output|zip:error.user_output %}
+          <td> {{forloop.counter}} </td>
+          <td>{{expected|default:""}} </td>
+          <td>{{user|default:""}}</td>
+          {% if forloop.counter0 in error.error_no or not expected or not user %}
+          <td><span class ="glyphicon glyphicon-remove text-warning"/></td>
+          {% else %}
+          <td><span class ="glyphicon glyphicon-ok text-success"/></td>
+          {% endif %}
+          </tr>
+          {% endfor %}
+          </table>
+          <table width="100%" class='table table-bordered'>
+          <col width="10">
+          <tr class = "danger">
+          <td><b>Error:</b></td>
+           <td>{{error.error}}</td>
+           </tr>
+          </table>
         </div>
+        {% endif %}
+        {% endfor %}
+        {% endwith %}
+        </div>
+        
         <div class="panel-body">
         {% if question.type != "code" %}
         <div class="well well-sm">
@@ -220,6 +269,7 @@ Status : <b style="color: green;"> Passed </b><br/>
         value="{{ answer.answer.marks }}"><br><br>
     {% endwith %}
     <hr/>
+    </div>
     {% endfor %} {# for question, answers ... #}
 <div class="form-group">
 <h3>Teacher comments: </h3>
@@ -232,6 +282,7 @@ Status : <b style="color: green;"> Passed </b><br/>
 </div>
 
 {% endif %} {# if paper.answers.count #}
+
 
 {% endfor %} {# for paper in data.papers #}
 
