@@ -242,7 +242,8 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         # Then
-        self.assert_correct_output("Incorrect", result.get('error'))
+        result_error = result.get('error')[0].get('error')
+        self.assert_correct_output("Incorrect", result_error)
         self.assertFalse(result.get('success'))
 
     def test_stdout_only(self):

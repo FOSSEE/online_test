@@ -350,10 +350,11 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         # Then
-        lines_of_error = len(result.get('error')[0].splitlines())
+        lines_of_error = len(result.get('error')[0].get('error_no'))
+        result_error = result.get('error')[0].get('error')
         self.assertFalse(result.get('success'))
-        self.assert_correct_output("Incorrect", result.get('error'))
-        self.assertTrue(lines_of_error > 1)
+        self.assert_correct_output("Incorrect", result_error)
+        self.assertTrue(lines_of_error > 0)
 
     def test_error(self):
         # Given
@@ -558,10 +559,11 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         # Then
-        lines_of_error = len(result.get('error')[0].splitlines())
+        lines_of_error = len(result.get('error')[0].get('error_no'))
+        result_error = result.get('error')[0].get('error')
         self.assertFalse(result.get('success'))
-        self.assert_correct_output("Incorrect", result.get('error'))
-        self.assertTrue(lines_of_error > 1)
+        self.assert_correct_output("Incorrect", result_error)
+        self.assertTrue(lines_of_error > 0)
 
     def test_cpp_error(self):
         # Given

@@ -29,13 +29,13 @@ class CompareOutputs(object):
 	    if ng != ne:
 	        err_line_no = self._incorrect_user_lines(exp_lines, given_lines)
 	        msg["error_no"] = err_line_no
-	        msg["error"] = "We had expected {0} number of lines. We got {1} number of lines.".format(ne, ng)
+	        msg["error"] = "Incorrect Answer: We had expected {0} number of lines. We got {1} number of lines.".format(ne, ng)
 	        return False, msg
 	    else:
 	        err_line_no = self._incorrect_user_lines(exp_lines, given_lines)
 	        if err_line_no:
 	            msg["error_no"] = err_line_no
-	            msg["error"] = "Line number(s) {0} did not match."\
+	            msg["error"] = "Incorrect Answer: Line number(s) {0} did not match."\
 	                            .format(", ".join(map(str,[x+1 for x in err_line_no])))
 	            return False, msg
 	        else:

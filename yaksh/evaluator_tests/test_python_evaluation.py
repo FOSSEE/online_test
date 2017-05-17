@@ -613,8 +613,8 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertFalse(result.get('success'))
         self.assert_correct_output(
-            "ERROR:\nExpected:\n3\nGiven:\n-1\n\nError in line 1 of output.",
-            result.get('error')
+            "Incorrect Answer: Line number(s) 1 did not match.",
+            result.get('error')[0].get('error')
         )
 
     def test_file_based_answer(self):
