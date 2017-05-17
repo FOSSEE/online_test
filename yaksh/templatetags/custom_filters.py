@@ -1,6 +1,9 @@
 from django import template
 from django.template.defaultfilters import stringfilter
-from itertools import zip_longest
+try:
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest as zip_longest
 
 register = template.Library()
 
