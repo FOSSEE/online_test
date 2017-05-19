@@ -1,6 +1,13 @@
 from datetime import datetime
 import pytz
 import os
+import json
+try:
+    from StringIO import StringIO as string_io
+except ImportError:
+    from io import BytesIO as string_io
+import zipfile
+import shutil
 from django.contrib.auth.models import Group
 from django.contrib.auth import authenticate
 from django.core.urlresolvers import reverse
@@ -8,10 +15,40 @@ from django.test import TestCase
 from django.test import Client
 from django.utils import timezone
 from django.core import mail
+from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
-    QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdIOBasedTestCase, has_profile
+    QuestionSet, AnswerPaper, Answer, Course, StandardTestCase, has_profile,\
+    AssignmentUpload, FileUpload
+
+
+class TestUserRegistration(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    def tearDown(self):
+        self.registered_user.delete()
+
+    def test_register_user_post(self):
+        response = self.client.post(reverse('yaksh:register'),
+                data={'username': 'register_user',
+                      'email':'register_user@mail.com', 'password': 'reg_user',
+                      'confirm_password': 'reg_user', 'first_name': 'user1_f_name',
+                      'last_name': 'user1_l_name', 'roll_number': '1',
+                      'institute': 'demo_institute', 'department': 'demo_dept',
+                      'position': 'student', 'timezone': pytz.utc.zone
+                      }
+            )
+        self.registered_user = User.objects.get(username='register_user')
+        self.assertEqual(self.registered_user.email, 'register_user@mail.com')
+        self.assertEqual(self.registered_user.first_name, 'user1_f_name')
+        self.assertEqual(self.registered_user.last_name, 'user1_l_name')
+        self.assertEqual(self.registered_user.profile.roll_number, '1')
+        self.assertEqual(self.registered_user.profile.institute, 'demo_institute')
+        self.assertEqual(self.registered_user.profile.department, 'demo_dept')
+        self.assertEqual(self.registered_user.profile.position, 'student')
+        self.assertEqual(self.registered_user.profile.timezone, 'UTC')
 
 
 class TestProfile(TestCase):
@@ -185,6 +222,593 @@ class TestProfile(TestCase):
         self.assertEqual(updated_user.email, "demo_user2@mail.com")
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/activation_status.html')
+
+
+class TestStudentDashboard(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        # student
+        self.student_plaintext_pass = 'student'
+        self.student = User.objects.create_user(
+            username='student',
+            password=self.student_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='student@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='student',
+            timezone='UTC'
+        )
+
+        # moderator
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        self.course = Course.objects.create(name="Python Course",
+            enrollment="Enroll Request", creator=self.user)
+
+        self.hidden_course = Course.objects.create(name="Hidden Course",
+            enrollment="Enroll Request", creator=self.user, code="hide",
+            hidden=True)
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.course.delete()
+
+    def test_student_dashboard_all_courses_get(self):
+        """
+            Check student dashboard for all non hidden courses 
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:quizlist_user'),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
+        self.assertEqual(response.context['title'], 'All Courses')
+        self.assertEqual(response.context['courses'][0], self.course)
+
+    def test_student_dashboard_enrolled_courses_get(self):
+        """
+            Check student dashboard for all courses in which student is 
+            enrolled
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.course.students.add(self.student)
+        response = self.client.get(reverse('yaksh:quizlist_user',
+                                    kwargs={'enrolled': "enrolled"}),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
+        self.assertEqual(response.context['title'], 'Enrolled Courses')
+        self.assertEqual(response.context['courses'][0], self.course)
+
+    def test_student_dashboard_hidden_courses_post(self):
+        """
+            Get courses for student based on the course code
+        """
+
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.post(reverse('yaksh:quizlist_user'),
+                                   data={'course_code': 'hide'}
+                                   )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
+        self.assertEqual(response.context['title'], 'Search')
+        self.assertEqual(response.context['courses'][0], self.hidden_course)
+
+
+class TestMonitor(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Create Student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+
+        self.course = Course.objects.create(name="Python Course",
+            enrollment="Open Enrollment", creator=self.user)
+
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz', pass_criteria=40,
+            language='Python', course=self.course
+        )
+
+        self.question = Question.objects.create(
+            summary="Test_question", description="Add two numbers",
+            points=1.0, language="python", type="code", user=self.user
+            )
+
+        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+            total_marks=1.0, fixed_question_order=str(self.question)
+            )
+        self.question_paper.fixed_questions.add(self.question)
+        user_answer = "def add(a, b)\n\treturn a+b"
+        self.new_answer = Answer(question=self.question, answer=user_answer,
+                            correct=True, error=json.dumps([]))
+        self.new_answer.save()
+        self.answerpaper = AnswerPaper.objects.create(
+            user=self.student, question_paper=self.question_paper,
+            attempt_number=1,
+            start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
+            user_ip="127.0.0.1", status="completed", passed=True,
+            percent=1, marks_obtained=1
+            )
+        self.answerpaper.answers.add(self.new_answer)
+        self.answerpaper.questions_answered.add(self.question)
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.student.delete()
+        self.quiz.delete()
+        self.course.delete()
+        self.answerpaper.delete()
+        self.question.delete()
+        self.question_paper.delete()
+        self.new_answer.delete()
+
+    def test_monitor_display_quizzes(self):
+        """
+            Check all the available quizzes in monitor
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:monitor'),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/monitor.html")
+        self.assertEqual(response.context['course_details'][0], self.course)
+        self.assertEqual(response.context['msg'], "Monitor")
+
+    def test_monitor_display_quiz_results(self):
+        """
+            Check all the quiz results in monitor
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:monitor', 
+                                            kwargs={'quiz_id': self.quiz.id}),
+                                   follow=True
+                                   )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/monitor.html")
+        self.assertEqual(response.context['msg'], "Quiz Results")
+        self.assertEqual(response.context['papers'][0], self.answerpaper)
+        self.assertEqual(response.context['latest_attempts'][0], self.answerpaper)
+
+    def test_get_quiz_user_data(self):
+        """
+            Check for getting user data for a quiz
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:user_data',
+                                kwargs={'user_id':self.student.id,
+                                    'questionpaper_id': self.question_paper.id}),
+                                follow=True
+                                )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/user_data.html')
+        self.assertEqual(response.context['data']['papers'][0], self.answerpaper)
+        self.assertEqual(response.context['data']['profile'], self.student.profile)
+        self.assertEqual(response.context['data']['user'], self.student)
+        self.assertEqual(response.context['data']['questionpaperid'],
+                            str(self.question_paper.id))
+
+class TestGradeUser(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Create Student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+
+        self.course = Course.objects.create(name="Python Course",
+            enrollment="Open Enrollment", creator=self.user)
+
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz', pass_criteria=40,
+            language='Python', course=self.course
+        )
+
+        self.question = Question.objects.create(
+            summary="Test_question", description="Add two numbers",
+            points=1.0, language="python", type="code", user=self.user
+            )
+
+        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+            total_marks=1.0, fixed_question_order=str(self.question.id)
+            )
+        self.question_paper.fixed_questions.add(self.question)
+        user_answer = "def add(a, b)\n\treturn a+b"
+        self.new_answer = Answer(question=self.question, answer=user_answer,
+                            correct=True, error=json.dumps([]), marks=0.5)
+        self.new_answer.save()
+        self.answerpaper = AnswerPaper.objects.create(
+            user=self.student, question_paper=self.question_paper,
+            attempt_number=1,
+            start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
+            user_ip="127.0.0.1", status="completed", passed=True,
+            marks_obtained=0.5
+            )
+        self.answerpaper.answers.add(self.new_answer)
+        self.answerpaper.questions_answered.add(self.question)
+        self.answerpaper.questions.add(self.question)
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.student.delete()
+        self.quiz.delete()
+        self.course.delete()
+        self.answerpaper.delete()
+        self.question.delete()
+        self.question_paper.delete()
+        self.new_answer.delete()
+
+    def test_grade_user_display_quizzes(self):
+        """
+            Check all the available quizzes in grade user
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:grade_user'),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/grade_user.html")
+        self.assertEqual(response.context['course_details'][0], self.course)
+
+    def test_grade_user_get_quiz_users(self):
+        """
+            Check all the available users in quiz in grade user
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:grade_user', 
+                                            kwargs={"quiz_id": self.quiz.id}),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/grade_user.html")
+        self.assertEqual(response.context['users'][0]['user__first_name'],
+                        self.student.first_name)
+        self.assertEqual(response.context['quiz'], self.quiz)
+        self.assertFalse(response.context['has_quiz_assignments'])
+
+    def test_grade_user_get_quiz_user_data(self):
+        """
+            Check student attempts and answers
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:grade_user', 
+                                            kwargs={"quiz_id": self.quiz.id,
+                                                    "user_id": self.student.id}),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/grade_user.html")
+        self.assertFalse(response.context['has_user_assignments'])
+        self.assertEqual(response.context['quiz_id'], str(self.quiz.id))
+        self.assertEqual(response.context['user_id'], str(self.student.id))
+        self.assertEqual(response.context['attempts'][0], self.answerpaper)
+
+    def test_grade_user_update_user_marks(self):
+        """
+            Check update marks of student
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        self.client.get(reverse('yaksh:grade_user', 
+                                kwargs={"quiz_id": self.quiz.id,
+                                        "user_id": self.student.id}),
+                                follow=True
+                                )
+        question_marks = "q{0}_marks".format(self.question.id)
+        response = self.client.post(reverse('yaksh:grade_user', 
+                                    kwargs={"quiz_id": self.quiz.id,
+                                        "user_id": self.student.id,
+                                        "attempt_number": self.answerpaper.attempt_number}),
+                                    data={question_marks: 1.0}
+                                    )
+
+        updated_ans_paper = AnswerPaper.objects.get(user=self.student,
+                                question_paper=self.question_paper,
+                                attempt_number=self.answerpaper.attempt_number
+                                )
+        updated_ans = Answer.objects.get(question=self.question)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/grade_user.html")
+        self.assertEqual(updated_ans.marks, 1.0)
+        self.assertEqual(updated_ans_paper.marks_obtained, 1.0)
+
+
+class TestDownloadAssignment(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Create Student 1
+        self.student1_plaintext_pass = 'demo_student1'
+        self.student1 = User.objects.create_user(
+            username='demo_student1',
+            password=self.student1_plaintext_pass,
+            first_name='student1_first_name',
+            last_name='student1_last_name',
+            email='demo_student1@test.com'
+        )
+
+        # Create Student 2
+        self.student2_plaintext_pass = 'demo_student2'
+        self.student2 = User.objects.create_user(
+            username='demo_student2',
+            password=self.student2_plaintext_pass,
+            first_name='student2_first_name',
+            last_name='student2_last_name',
+            email='demo_student2@test.com'
+        )
+
+        self.course = Course.objects.create(name="Python Course",
+            enrollment="Enroll Request", creator=self.user)
+
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo_quiz', pass_criteria=40,
+            language='Python', course=self.course
+        )
+
+        self.question = Question.objects.create(
+            summary="Test_question", description="Assignment Upload",
+            points=1.0, language="python", type="upload", user=self.user
+            )
+
+        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+            total_marks=1.0, fixed_question_order=str(self.question.id)
+            )
+        self.question_paper.fixed_questions.add(self.question)
+
+        # create assignment file
+        assignment_file1 = SimpleUploadedFile("file1.txt", b"Test")
+        assignment_file2 = SimpleUploadedFile("file2.txt", b"Test")
+        assignment_file3 = SimpleUploadedFile("file3.txt", b"Test")
+        self.assignment1 = AssignmentUpload.objects.create(user=self.student1,
+            assignmentQuestion=self.question,
+            assignmentFile=assignment_file1,
+            question_paper=self.question_paper
+            )
+        self.assignment2 = AssignmentUpload.objects.create(user=self.student2,
+            assignmentQuestion=self.question,
+            assignmentFile=assignment_file2,
+            question_paper=self.question_paper
+            )
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.student1.delete()
+        self.student2.delete()
+        self.assignment1.delete()
+        self.assignment2.delete()
+        self.quiz.delete()
+        self.course.delete()
+        dir_name = self.quiz.description.replace(" ", "_")
+        file_path = os.sep.join((settings.MEDIA_ROOT, dir_name))
+        if os.path.exists(file_path):
+            shutil.rmtree(file_path)
+
+    def test_download_assignment_per_quiz(self):
+        """
+            Check for download assignments per quiz
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:download_quiz_assignment',
+                                           kwargs={'quiz_id': self.quiz.id}),
+                                   follow=True
+                                   )
+        file_name = "{0}_Assignment_files.zip".format(self.quiz.description)
+        file_name = file_name.replace(" ", "_")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-Disposition'),
+                        "attachment; filename={0}".format(file_name))
+        zip_file = string_io(response.content)
+        zipped_file = zipfile.ZipFile(zip_file, 'r')
+        self.assertIsNone(zipped_file.testzip())
+        self.assertIn('file1.txt', zipped_file.namelist()[0])
+        self.assertIn('file2.txt', zipped_file.namelist()[1])
+        zip_file.close()
+        zipped_file.close()
+
+    def test_download_assignment_per_user(self):
+        """
+            Check for download assignments per quiz
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:download_user_assignment',
+                                        kwargs={'quiz_id': self.quiz.id,
+                                                'question_id': self.question.id,
+                                                'user_id': self.student2.id   
+                                                }),
+                                        follow=True
+                                   )
+        file_name = "{0}.zip".format(self.student2.get_full_name())
+        file_name = file_name.replace(" ", "_")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-Disposition'),
+                        "attachment; filename={0}".format(file_name))
+        zip_file = string_io(response.content)
+        zipped_file = zipfile.ZipFile(zip_file, 'r')
+        self.assertIsNone(zipped_file.testzip())
+        self.assertIn('file2.txt', zipped_file.namelist()[0])
+        zip_file.close()
+        zipped_file.close()
 
 
 class TestAddQuiz(TestCase):
@@ -995,6 +1619,14 @@ class TestCourseDetail(TestCase):
             last_name='student_last_name',
             email='demo_student@test.com'
         )
+        self.student1_plaintext_pass = 'demo_student1'
+        self.student1 = User.objects.create_user(
+            username='demo_student1',
+            password=self.student1_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student1@test.com'
+        )
 
         # Add to moderator group
         self.mod_group.user_set.add(self.user1)
@@ -1070,6 +1702,82 @@ class TestCourseDetail(TestCase):
         self.assertEqual(self.user1_course, response.context['course'])
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/course_detail.html')
+
+    def test_student_course_enroll_get(self):
+        """
+            Enroll student in a course using get request
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:enroll_user',
+                    kwargs={'course_id': self.user1_course.id,
+                            'user_id': self.student.id})
+                    )
+        enrolled_student = self.user1_course.students.all()
+        self.assertEqual(response.status_code, 200)
+        self.assertSequenceEqual([self.student], enrolled_student)
+
+    def test_student_course_enroll_post(self):
+        """
+            Enroll student in a course using post request
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.post(reverse('yaksh:enroll_users',
+                    kwargs={'course_id': self.user1_course.id}),
+                    data={'check': self.student1.id}
+                    )
+        enrolled_student = self.user1_course.students.all()
+        self.assertEqual(response.status_code, 200)
+        self.assertSequenceEqual([self.student1], enrolled_student)
+
+    def test_student_course_reject_get(self):
+        """
+            Reject student in a course using get request
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:reject_user',
+                    kwargs={'course_id': self.user1_course.id,
+                            'user_id': self.student.id})
+                    )
+        enrolled_student = self.user1_course.rejected.all()
+        self.assertEqual(response.status_code, 200)
+        self.assertSequenceEqual([self.student], enrolled_student)
+
+    def test_student_course_reject_post(self):
+        """
+            Reject student in a course using post request
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.post(reverse('yaksh:reject_users',
+                    kwargs={'course_id': self.user1_course.id}),
+                    data={'check': self.student1.id}
+                    )
+        enrolled_student = self.user1_course.rejected.all()
+        self.assertEqual(response.status_code, 200)
+        self.assertSequenceEqual([self.student1], enrolled_student)
+
+    def test_toggle_course_status_get(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.post(reverse('yaksh:toggle_course_status',
+                    kwargs={'course_id': self.user1_course.id})
+                        )
+        self.assertEqual(response.status_code, 200)
+        course = Course.objects.get(name="Python Course")
+        self.assertFalse(course.active)
 
 
 class TestEnrollRequest(TestCase):
@@ -1686,3 +2394,650 @@ class TestPasswordReset(TestCase):
 
         # Finally
         self.client.logout()
+
+
+class TestModeratorDashboard(TestCase):
+    def setUp(self):
+        self.client = Client()
+        tzone = pytz.timezone("utc")
+        self.mod_group = Group.objects.create(name='moderator')
+        # student
+        self.student_plaintext_pass = 'student'
+        self.student = User.objects.create_user(
+            username='student',
+            password=self.student_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='student@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='student',
+            timezone='UTC'
+        )
+
+        # moderator
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='user_first_name',
+            last_name='user_last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+        self.mod_group.user_set.add(self.user)
+        self.course = Course.objects.create(name="Python Course",
+            enrollment="Enroll Request", creator=self.user)
+
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz', pass_criteria=40,
+            language='Python', course=self.course
+        )
+
+        self.question = Question.objects.create(
+            summary="Test_question", description="Add two numbers",
+            points=1.0, language="python", type="code", user=self.user
+            )
+
+        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+            total_marks=1.0, fixed_question_order=str(self.question.id)
+            )
+        self.question_paper.fixed_questions.add(self.question)
+
+        # student answerpaper
+        user_answer = "def add(a, b)\n\treturn a+b"
+        self.new_answer = Answer(question=self.question, answer=user_answer,
+                            correct=True, error=json.dumps([]), marks=0.5)
+        self.new_answer.save()
+        self.answerpaper = AnswerPaper.objects.create(
+            user=self.student, question_paper=self.question_paper,
+            attempt_number=1,
+            start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
+            user_ip="127.0.0.1", status="completed", passed=True,
+            marks_obtained=0.5
+            )
+        self.answerpaper.answers.add(self.new_answer)
+        self.answerpaper.questions_answered.add(self.question)
+        self.answerpaper.questions.add(self.question)
+
+        # moderator trial answerpaper
+        self.trial_quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='trial quiz', pass_criteria=40,
+            language='Python', course=self.course, is_trial=True
+        )
+
+        self.trial_question_paper = QuestionPaper.objects.create(
+            quiz=self.trial_quiz,
+            total_marks=1.0, fixed_question_order=str(self.question.id)
+            )
+        self.trial_question_paper.fixed_questions.add(self.question)
+
+        self.new_answer1 = Answer(question=self.question, answer=user_answer,
+                            correct=True, error=json.dumps([]), marks=0.5)
+        self.new_answer1.save()
+        self.trial_answerpaper = AnswerPaper.objects.create(
+            user=self.user, question_paper=self.trial_question_paper,
+            attempt_number=1,
+            start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
+            user_ip="127.0.0.1", status="completed", passed=True,
+            marks_obtained=0.5
+            )
+        self.trial_answerpaper.answers.add(self.new_answer1)
+        self.trial_answerpaper.questions_answered.add(self.question)
+        self.trial_answerpaper.questions.add(self.question)
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.quiz.delete()
+        self.question_paper.delete()
+        self.answerpaper.delete()
+        self.new_answer.delete()
+
+    def test_moderator_dashboard_get_all_quizzes(self):
+        """
+            Check moderator dashboard to get all the moderator created quizzes
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        response = self.client.get(reverse('yaksh:manage'),
+                                    follow=True
+                                    )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/moderator_dashboard.html")
+        self.assertEqual(response.context['trial_paper'][0], self.trial_answerpaper)
+        paper, answer_papers, users_passed, users_failed =\
+                                response.context['users_per_paper'][0]
+        self.assertEqual(paper, self.question_paper)
+        self.assertEqual(answer_papers[0], self.answerpaper)
+        self.assertEqual(users_passed, 1)
+        self.assertEqual(users_failed, 0)
+
+    def test_moderator_dashboard_delete_trial_papers(self):
+        """
+            Check moderator dashboard to delete trial papers
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        self.course.is_trial=True
+        self.course.save()
+        response = self.client.post(reverse('yaksh:manage'),
+                                    data={'delete_paper': [self.trial_answerpaper.id]}
+                                    )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/moderator_dashboard.html")
+        updated_answerpaper = AnswerPaper.objects.filter(user=self.user)
+        updated_quiz =  Quiz.objects.filter(
+                        description=self.trial_question_paper.quiz.description
+                        )
+        updated_course = Course.objects.filter(
+                            name=self.trial_question_paper.quiz.course.name)
+        self.assertSequenceEqual(updated_answerpaper, [])
+        self.assertSequenceEqual(updated_quiz, [])
+        self.assertSequenceEqual(updated_course, [])
+
+class TestUserLogin(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        # Create Moderator with profile
+        self.user1_plaintext_pass = 'demo1'
+        self.user1 = User.objects.create_user(
+            username='demo_user1',
+            password=self.user1_plaintext_pass,
+            first_name='user1_first_name',
+            last_name='user1_last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user1,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+    def tearDown(self):
+        self.client.logout()
+        self.user1.delete()
+
+    def test_successful_user_login(self):
+        """
+            Check if user is successfully logged in
+        """
+        response = self.client.post(reverse('yaksh:login'),
+                                    data={'username': self.user1.username,
+                                          'password': self.user1_plaintext_pass}
+                                    )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/exam/quizzes/')
+
+    def test_unsuccessful_user_login(self):
+        """
+            Check for failed login attempt for incorrect username/password
+        """
+        response = self.client.post(reverse('yaksh:login'),
+                                    data={'username': self.user1.username,
+                                          'password': "demo"}
+                                    )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/login.html')
+
+
+class TestDownloadcsv(TestCase):
+    def setUp(self):
+        self.client = Client()
+        tzone = pytz.timezone("utc")
+        self.mod_group = Group.objects.create(name='moderator')
+        # student
+        self.student_plaintext_pass = 'student'
+        self.student = User.objects.create_user(
+            username='student',
+            password=self.student_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='student@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='student',
+            timezone='UTC'
+        )
+
+        # moderator
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='user_first_name',
+            last_name='user_last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+        self.mod_group.user_set.add(self.user)
+        self.course = Course.objects.create(name="Python Course",
+            enrollment="Enroll Request", creator=self.user)
+
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz', pass_criteria=40,
+            language='Python', course=self.course
+        )
+
+        self.question = Question.objects.create(
+            summary="Test_question", description="Add two numbers",
+            points=1.0, language="python", type="code", user=self.user
+            )
+
+        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+            total_marks=1.0, fixed_question_order=str(self.question.id)
+            )
+        self.question_paper.fixed_questions.add(self.question)
+
+        # student answerpaper
+        user_answer = "def add(a, b)\n\treturn a+b"
+        self.new_answer = Answer(question=self.question, answer=user_answer,
+                            correct=True, error=json.dumps([]), marks=0.5)
+        self.new_answer.save()
+        self.answerpaper = AnswerPaper.objects.create(
+            user=self.student, question_paper=self.question_paper,
+            attempt_number=1,
+            start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
+            user_ip="127.0.0.1", status="completed", passed=True,
+            marks_obtained=0.5
+            )
+        self.answerpaper.answers.add(self.new_answer)
+        self.answerpaper.questions_answered.add(self.question)
+        self.answerpaper.questions.add(self.question)
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.student.delete()
+        self.quiz.delete()
+        self.course.delete()
+
+    def test_download_course_csv(self):
+        """
+            Check for csv result of a course
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:download_course_csv',
+                                           kwargs={'course_id': self.course.id}),
+                                   follow=True
+                                   )
+        file_name = "{0}.csv".format(self.course.name.lower())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-Disposition'),
+                        'attachment; filename="{0}"'.format(file_name))
+
+    def test_download_quiz_csv(self):
+        """
+            Check for csv result of a quiz
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:download_csv',
+                            kwargs={'questionpaper_id': self.question_paper.id}),
+                            follow=True
+                            )
+        file_name = "{0}.csv".format(self.quiz.description)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-Disposition'),
+                        'attachment; filename="{0}"'.format(file_name))
+
+
+class TestShowQuestions(TestCase):
+    def setUp(self):
+        self.client = Client()
+        tzone = pytz.timezone("utc")
+        self.mod_group = Group.objects.create(name='moderator')
+        # student
+        self.student_plaintext_pass = 'student'
+        self.student = User.objects.create_user(
+            username='student',
+            password=self.student_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='student@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='student',
+            timezone='UTC'
+        )
+
+        # moderator
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='user_first_name',
+            last_name='user_last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+        self.mod_group.user_set.add(self.user)
+        self.question = Question.objects.create(
+            summary="Test_question1", description="Add two numbers",
+            points=2.0, language="python", type="code", user=self.user,
+            active=True
+            )
+        self.question1 = Question.objects.create(
+            summary="Test_question2", description="Add two numbers",
+            points=1.0, language="python", type="mcq", user=self.user,
+            active=True
+            )
+
+    def test_show_all_questions(self):
+        """
+            Check if all the user created questions are shown
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:show_questions'),
+                                follow=True
+                                )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/showquestions.html')
+        self.assertEqual(response.context['questions'][0], self.question)
+
+    def test_download_questions(self):
+        """
+            Check for downloading questions zip file
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.post(reverse('yaksh:show_questions'),
+                                data={'question': [self.question.id],
+                                      'download': 'download'}
+                                )
+        file_name = "{0}_questions.zip".format(self.user)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-Disposition'),
+                        "attachment; filename={0}".format(file_name))
+        zip_file = string_io(response.content)
+        zipped_file = zipfile.ZipFile(zip_file, 'r')
+        self.assertIsNone(zipped_file.testzip())
+        self.assertIn('questions_dump.json', zipped_file.namelist())
+        zip_file.close()
+        zipped_file.close()
+
+        response = self.client.post(reverse('yaksh:show_questions'),
+                                data={'question': [],
+                                      'download': 'download'}
+                                )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/showquestions.html')
+        self.assertIn("download", response.context['msg'])
+
+
+    def test_upload_questions(self):
+        """
+            Check for uploading questions zip file
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        ques_file = os.path.join(settings.FIXTURE_DIRS, "demo_questions.zip")
+        f = open(ques_file, 'rb')
+        questions_file = SimpleUploadedFile(ques_file, f.read(), 
+                                            content_type="application/zip")
+        response = self.client.post(reverse('yaksh:show_questions'),
+                                data={'file': questions_file,
+                                      'upload': 'upload'}
+                                )
+        uploaded_ques = Question.objects.filter(active=True,
+                                            summary="Yaksh Demo Question",
+                                            user=self.user).count()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/showquestions.html')
+        self.assertEqual(uploaded_ques, 3)
+        f.close()
+        dummy_file = SimpleUploadedFile("test.txt", b"test")
+        response = self.client.post(reverse('yaksh:show_questions'),
+                                data={'file': dummy_file,
+                                      'upload': 'upload'}
+                                )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/showquestions.html')
+        self.assertIn("ZIP file", response.context['message'])
+
+    def test_attempt_questions(self):
+        """
+            Check for testing questions
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.post(reverse('yaksh:show_questions'),
+                                data={'question': [self.question.id],
+                                      'test': 'test'}
+                                )
+        redirection_url = "/exam/start/1/1"
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, redirection_url, target_status_code=301)
+
+    def test_ajax_questions_filter(self):
+        """
+            Check for filter questions based type, marks and 
+            language of a question
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.post(reverse('yaksh:questions_filter'),
+                                data={'question_type': 'mcq',
+                                        'marks': '1.0', 'language': 'python' 
+                                        }
+                                )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/ajax_question_filter.html')
+        self.assertEqual(response.context['questions'][0], self.question1)
+
+
+class TestShowStatistics(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Create Student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+
+        self.course = Course.objects.create(name="Python Course",
+            enrollment="Open Enrollment", creator=self.user)
+
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz', pass_criteria=40,
+            language='Python', course=self.course
+        )
+
+        self.question = Question.objects.create(
+            summary="Test_question", description="Add two numbers",
+            points=1.0, language="python", type="code", user=self.user
+            )
+
+        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+            total_marks=1.0, fixed_question_order=str(self.question)
+            )
+        self.question_paper.fixed_questions.add(self.question)
+        user_answer = "def add(a, b)\n\treturn a+b"
+        self.new_answer = Answer(question=self.question, answer=user_answer,
+                            correct=True, error=json.dumps([]))
+        self.new_answer.save()
+        self.answerpaper = AnswerPaper.objects.create(
+            user=self.student, question_paper=self.question_paper,
+            attempt_number=1,
+            start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
+            user_ip="127.0.0.1", status="completed", passed=True,
+            percent=1, marks_obtained=1
+            )
+        self.answerpaper.answers.add(self.new_answer)
+        self.answerpaper.questions_answered.add(self.question)
+        self.answerpaper.questions.add(self.question)
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.student.delete()
+        self.quiz.delete()
+        self.course.delete()
+        self.answerpaper.delete()
+        self.question.delete()
+        self.question_paper.delete()
+        self.new_answer.delete()
+
+    def test_show_statistics_for_student(self):
+        """
+            Check for student statistics
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:show_statistics',
+                            kwargs={'questionpaper_id': self.question_paper.id}),
+                            follow=True
+                            )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/statistics_question.html')
+        self.assertEqual(response.context['quiz'], self.quiz)
+        self.assertEqual(response.context['attempts'][0],
+                        self.answerpaper.attempt_number)
+        self.assertEqual(response.context['questionpaper_id'],
+                        str(self.question_paper.id))
+
+    def test_show_statistics_for_student_per_attempt(self):
+        """
+            Check for student statistics per attempt
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:show_statistics',
+                    kwargs={'questionpaper_id': self.question_paper.id,
+                            'attempt_number': self.answerpaper.attempt_number}),
+                    follow=True
+                    )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/statistics_question.html')
+        self.assertSequenceEqual(response.context['question_stats'][self.question],
+                                [1, 1])
+        self.assertEqual(response.context['attempts'][0], 1)
+        self.assertEqual(response.context['total'], 1)
