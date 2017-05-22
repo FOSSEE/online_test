@@ -349,8 +349,8 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         # Then
-        lines_of_error = len(result.get('error')[0].get('error_no'))
-        result_error = result.get('error')[0].get('error')
+        lines_of_error = len(result.get('error')[0].get('error_line_numbers'))
+        result_error = result.get('error')[0].get('error_msg')
         self.assertFalse(result.get('success'))
         self.assert_correct_output("Incorrect", result_error)
         self.assertTrue(lines_of_error > 0)

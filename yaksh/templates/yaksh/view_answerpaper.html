@@ -134,7 +134,7 @@
           <td> {{forloop.counter}} </td>
           <td>{{expected|default:""}} </td>
           <td>{{user|default:""}}</td>
-          {% if forloop.counter0 in error.error_no or not expected or not user %}
+          {% if forloop.counter0 in error.error_line_numbers or not expected or not user %}
           <td><span class ="glyphicon glyphicon-remove text-warning"/></td>
           {% else %}
           <td><span class ="glyphicon glyphicon-ok text-success"/></td>
@@ -146,7 +146,7 @@
           <col width="10">
           <tr class = "danger">
           <td><b>Error:</b></td>
-           <td>{{error.error}}</td>
+           <td>{{error.error_msg}}</td>
            </tr>
           </table>
         </div>

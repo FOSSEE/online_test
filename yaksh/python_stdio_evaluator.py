@@ -9,7 +9,7 @@ except ImportError:
 # Local imports
 from .file_utils import copy_files, delete_files
 from .base_evaluator import BaseEvaluator
-from .compare_stdio import CompareOutputs
+from .compare_stdio import compare_outputs
 
 
 @contextmanager
@@ -46,6 +46,7 @@ class PythonStdIOEvaluator(BaseEvaluator):
             self.files = copy_files(self.file_paths)
         submitted = compile(self.user_answer, '<string>', mode='exec')
         if self.expected_input:
+            self.expected_input = self.expected_input.replace('\r', '')
             input_buffer = StringIO()
             input_buffer.write(self.expected_input)
             input_buffer.seek(0)
@@ -58,9 +59,8 @@ class PythonStdIOEvaluator(BaseEvaluator):
 
     def check_code(self):
         mark_fraction = self.weight
-        compare = CompareOutputs()
-        success, err = compare.compare_outputs(self.expected_output,
-                                               self.output_value,
-                                               self.expected_input
-                                               )
+        success, err = compare_outputs(self.expected_output,
+                                       self.output_value,
+                                       self.expected_input
+                                       )
         return success, err, mark_fraction

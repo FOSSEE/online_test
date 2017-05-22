@@ -5,7 +5,7 @@ import signal
 # Local imports
 from .base_evaluator import BaseEvaluator
 from .grader import TimeoutException
-from .compare_stdio import CompareOutputs
+from .compare_stdio import compare_outputs
 
 
 class StdIOEvaluator(BaseEvaluator):
@@ -21,9 +21,8 @@ class StdIOEvaluator(BaseEvaluator):
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             raise
         expected_output = expected_output.replace("\r", "")
-        compare = CompareOutputs()
-        success, err = compare.compare_outputs(expected_output,
-                                               user_output,
-                                               expected_input
-                                               )
+        success, err = compare_outputs(expected_output,
+                                       user_output,
+                                       expected_input
+                                       )
         return success, err

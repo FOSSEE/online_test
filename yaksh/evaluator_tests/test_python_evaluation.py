@@ -614,7 +614,7 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
         self.assertFalse(result.get('success'))
         self.assert_correct_output(
             "Incorrect Answer: Line number(s) 1 did not match.",
-            result.get('error')[0].get('error')
+            result.get('error')[0].get('error_msg')
         )
 
     def test_file_based_answer(self):
