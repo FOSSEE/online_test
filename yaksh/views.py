@@ -1070,7 +1070,6 @@ def user_data(request, user_id, questionpaper_id=None):
     return my_render_to_response('yaksh/user_data.html', context,
                                  context_instance=RequestContext(request))
 
-
 @login_required
 @email_verified
 def download_csv(request, questionpaper_id):
@@ -1545,6 +1544,8 @@ def update_email(request):
 @email_verified
 def download_assignment_file(request, quiz_id, question_id=None, user_id=None):
     user = request.user
+    if not is_moderator(user):
+        raise Http404("You are not allowed to view this page")
     qp = QuestionPaper.objects.get(quiz_id=quiz_id)
     assignment_files, file_name = AssignmentUpload.objects.get_assignments(qp,
                                     question_id,
