@@ -1,7 +1,6 @@
 import sys
 from contextlib import contextmanager
 
-
 try:
     from StringIO import StringIO
 except ImportError:
@@ -10,6 +9,7 @@ except ImportError:
 # Local imports
 from .file_utils import copy_files, delete_files
 from .base_evaluator import BaseEvaluator
+from .compare_stdio import compare_outputs
 
 
 @contextmanager
@@ -20,37 +20,6 @@ def redirect_stdout():
         yield new_target  # run some code with the replaced stdout
     finally:
         sys.stdout = old_target  # restore to the previous value
-
-
-def _show_expected_given(expected, given):
-    return "Expected:\n{0}\nGiven:\n{1}\n".format(expected, given)
-
-
-def compare_outputs(given, expected):
-    given_lines = given.splitlines()
-    ng = len(given_lines)
-    exp_lines = expected.splitlines()
-    ne = len(exp_lines)
-    if ng != ne:
-        msg = "ERROR: Got {0} lines in output, we expected {1}.\n".format(
-            ng, ne
-        )
-        msg += _show_expected_given(expected, given)
-        return False, msg
-    else:
-        for i, (given_line, expected_line) in \
-           enumerate(zip(given_lines, exp_lines)):
-            if given_line.strip() != expected_line.strip():
-                msg = "ERROR:\n"
-                msg += _show_expected_given(expected, given)
-                msg += "\nError in line %d of output.\n" % (i+1)
-                msg += "Expected line {0}:\n{1}\nGiven line {0}:\n{2}\n"\
-                       .format(
-                           i+1, expected_line, given_line
-                       )
-                return False, msg
-    return True, "Correct answer."
-
 
 class PythonStdIOEvaluator(BaseEvaluator):
     """Tests the Python code obtained from Code Server"""
@@ -77,6 +46,7 @@ class PythonStdIOEvaluator(BaseEvaluator):
             self.files = copy_files(self.file_paths)
         submitted = compile(self.user_answer, '<string>', mode='exec')
         if self.expected_input:
+            self.expected_input = self.expected_input.replace('\r', '')
             input_buffer = StringIO()
             input_buffer.write(self.expected_input)
             input_buffer.seek(0)
@@ -89,5 +59,8 @@ class PythonStdIOEvaluator(BaseEvaluator):
 
     def check_code(self):
         mark_fraction = self.weight
-        success, err = compare_outputs(self.output_value, self.expected_output)
+        success, err = compare_outputs(self.expected_output,
+                                       self.output_value,
+                                       self.expected_input
+                                       )
         return success, err, mark_fraction

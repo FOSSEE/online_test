@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question.css" type="text/css" />
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/codemirror/lib/codemirror.css" type="text/css" />
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/exam.css" type="text/css" />
 <style>
     .CodeMirror{
         border-style: groove;
@@ -238,7 +239,7 @@ function call_skip(url)
         <div class="from-group">
 
          {% if question.type == "mcq" or "mcc" or "integer" or "float" or "string" %}
-         <br><button class="btn btn-primary" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
+         <br><button class="btn btn-primary" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;<br/>
          {% elif question.type == "upload" %}
          <br><button class="btn btn-primary" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
 
