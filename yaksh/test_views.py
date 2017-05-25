@@ -8,6 +8,8 @@ except ImportError:
     from io import BytesIO as string_io
 import zipfile
 import shutil
+from textwrap import dedent
+
 from django.contrib.auth.models import Group
 from django.contrib.auth import authenticate
 from django.core.urlresolvers import reverse
@@ -978,7 +980,8 @@ class TestAddQuiz(TestCase):
         )
 
         tzone = pytz.timezone('UTC')
-        response = self.client.post(reverse('yaksh:add_quiz', kwargs={"course_id": self.course.id}),
+        response = self.client.post(reverse('yaksh:add_quiz',
+            kwargs={"course_id": self.course.id}),
             data={
                 'start_date_time': '2016-01-10 09:00:15',
                 'end_date_time': '2016-01-15 09:00:15',
@@ -1558,8 +1561,7 @@ class TestAddCourse(TestCase):
                 'end_enroll_time': '2016-01-15 09:00:15',
             }
         )
-        course_list = Course.objects.all().order_by('-id')
-        new_course = course_list[0]
+        new_course = Course.objects.latest('created_on')
         self.assertEqual(new_course.name, 'new_demo_course_1')
         self.assertEqual(new_course.enrollment, 'open')
         self.assertEqual(new_course.active, True)
@@ -1652,7 +1654,7 @@ class TestCourseDetail(TestCase):
             follow=True
         )
         redirect_destination = ('/exam/login/?next=/exam/'
-            'manage/course_detail/1/')
+            'manage/course_detail/{0}/'.format(self.user1_course.id))
         self.assertRedirects(response, redirect_destination)
 
     def test_course_detail_denies_non_moderator(self):
@@ -1901,7 +1903,7 @@ class TestViewAnswerPaper(TestCase):
                 email='demo@test.com'
             )
 
-        self.user1 = User.objects.get(pk=1)
+        self.user1 = User.objects.get(username="demo_user1")
 
         self.course = Course.objects.create(name="Python Course",
                                        enrollment="Enroll Request",
@@ -1918,7 +1920,7 @@ class TestViewAnswerPaper(TestCase):
         self.question_paper.fixed_questions.add(self.question)
         self.question_paper.save()
 
-        AnswerPaper.objects.create(user_id=3,
+        self.ans_paper = AnswerPaper.objects.create(user_id=3,
                 attempt_number=1, question_paper=self.question_paper,
                 start_time=timezone.now(), user_ip='101.0.0.1',
                 end_time=timezone.now()+timezone.timedelta(minutes=20))
@@ -1948,7 +1950,7 @@ class TestViewAnswerPaper(TestCase):
 
     def test_cannot_view(self):
         # Given, enrolled user tries to view when not permitted by moderator
-        user2 = User.objects.get(pk=2)
+        user2 = User.objects.get(username="demo_user2")
         self.course.students.add(user2)
         self.course.save()
         self.quiz.view_answerpaper = False
@@ -1968,12 +1970,12 @@ class TestViewAnswerPaper(TestCase):
         # Then
         self.assertRedirects(response, '/exam/quizzes/')
 
-    def test_can_view(self):
+    def test_can_view_answerpaper(self):
         # Given, user enrolled and can view
-        user3 = User.objects.get(pk=3)
+        user3 = User.objects.get(username="demo_user3")
         self.course.students.add(user3)
         self.course.save()
-        answerpaper = AnswerPaper.objects.get(pk=1)
+        answerpaper = AnswerPaper.objects.get(pk=self.ans_paper.id)
         self.quiz.view_answerpaper = True
         self.quiz.save()
         self.client.login(
@@ -2008,7 +2010,7 @@ class TestViewAnswerPaper(TestCase):
 
     def test_view_when_not_enrolled(self):
         # Given, user tries to view when not enrolled in the course
-        user2 = User.objects.get(pk=2)
+        user2 = User.objects.get(username="demo_user2")
         self.client.login(
             username=user2.username,
             password=self.plaintext_pass
@@ -2242,7 +2244,10 @@ class TestGrader(TestCase):
 
     def test_regrade_denies_anonymous(self):
         # Given
-        redirect_destination = ('/exam/login/?next=/exam/manage/regrade/answerpaper/1/1/1/')
+        redirect_destination = dedent('''\
+            /exam/login/?next=/exam/manage/regrade/answerpaper/{}/{}/{}/'''.format(
+                self.course.id, self.question.id, self.answerpaper.id)
+            )
 
         # When
         response = self.client.get(reverse('yaksh:regrade',
@@ -2884,7 +2889,10 @@ class TestShowQuestions(TestCase):
                                 data={'question': [self.question.id],
                                       'test': 'test'}
                                 )
-        redirection_url = "/exam/start/1/1"
+        trial_que_paper = QuestionPaper.objects.get(
+                                            quiz__description="trial_questions"
+                                            )
+        redirection_url = "/exam/start/1/{}".format(trial_que_paper.id)
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, redirection_url, target_status_code=301)
 
