@@ -280,6 +280,17 @@ class TestStudentDashboard(TestCase):
         self.user.delete()
         self.course.delete()
 
+    def test_student_dashboard_denies_anonymous_user(self):
+        """
+            Check student dashboard denies anonymous user
+        """
+        response = self.client.get(reverse('yaksh:quizlist_user'),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 200)
+        redirection_url = '/exam/login/?next=/exam/quizzes/'
+        self.assertRedirects(response, redirection_url)
+
     def test_student_dashboard_all_courses_get(self):
         """
             Check student dashboard for all non hidden courses 
@@ -426,6 +437,19 @@ class TestMonitor(TestCase):
         self.question.delete()
         self.question_paper.delete()
         self.new_answer.delete()
+
+    def test_monitor_denies_student(self):
+        """
+            Check Monitor denies student
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:monitor'),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 404)
 
     def test_monitor_display_quizzes(self):
         """
@@ -578,6 +602,19 @@ class TestGradeUser(TestCase):
         self.question_paper.delete()
         self.new_answer.delete()
 
+    def test_grade_user_denies_student(self):
+        """
+            Check Grade User denies student
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:grade_user'),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 404)
+
     def test_grade_user_display_quizzes(self):
         """
             Check all the available quizzes in grade user
@@ -689,6 +726,8 @@ class TestDownloadAssignment(TestCase):
             timezone='UTC'
         )
 
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
         # Create Student 1
         self.student1_plaintext_pass = 'demo_student1'
         self.student1 = User.objects.create_user(
@@ -759,6 +798,20 @@ class TestDownloadAssignment(TestCase):
         file_path = os.sep.join((settings.MEDIA_ROOT, dir_name))
         if os.path.exists(file_path):
             shutil.rmtree(file_path)
+
+    def test_download_assignment_denies_student(self):
+        """
+            Check download assignment denies student
+        """
+        self.client.login(
+            username=self.student1.username,
+            password=self.student1_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:download_quiz_assignment',
+                                            kwargs={'quiz_id': self.quiz.id}),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 404)
 
     def test_download_assignment_per_quiz(self):
         """
@@ -2522,6 +2575,20 @@ class TestModeratorDashboard(TestCase):
         self.answerpaper.delete()
         self.new_answer.delete()
 
+    def test_moderator_dashboard_denies_student(self):
+        """
+            Check moderator dashboard denies student
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:manage'),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, '/exam/quizzes/')
+
     def test_moderator_dashboard_get_all_quizzes(self):
         """
             Check moderator dashboard to get all the moderator created quizzes
@@ -2595,6 +2662,7 @@ class TestUserLogin(TestCase):
 
     def tearDown(self):
         self.client.logout()
+        settings.IS_DEVELOPMENT = True
         self.user1.delete()
 
     def test_successful_user_login(self):
@@ -2618,6 +2686,18 @@ class TestUserLogin(TestCase):
                                     )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/login.html')
+
+    def test_email_verified_decorator_for_user_login(self):
+        """
+            Check email verified decorator to check for user login
+        """
+        settings.IS_DEVELOPMENT = False
+        response = self.client.post(reverse('yaksh:login'),
+                                    data={'username': self.user1.username,
+                                          'password': self.user1_plaintext_pass}
+                                    )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/activation_status.html")
 
 
 class TestDownloadcsv(TestCase):
@@ -2709,6 +2789,64 @@ class TestDownloadcsv(TestCase):
         self.quiz.delete()
         self.course.delete()
 
+    def test_download_csv_denies_student(self):
+        """
+            Check download csv denies student
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:download_csv',
+                                   kwargs={"questionpaper_id": self.question_paper.id}),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 404)
+
+    def test_download_course_csv_denies_student(self):
+        """
+            Check download course csv denies student
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:download_course_csv',
+                                   kwargs={"course_id": self.course.id}),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 404)
+
+    def test_download_csv_denies_non_course_creator(self):
+        """
+            Check download csv denies non course creator
+        """
+        self.mod_group.user_set.add(self.student)
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:download_csv',
+                                   kwargs={"questionpaper_id": self.question_paper.id}),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 404)
+
+    def test_download_course_csv_denies_non_course_creator(self):
+        """
+            Check download course csv denies non course creator
+        """
+        self.mod_group.user_set.add(self.student)
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:download_course_csv',
+                                   kwargs={"course_id": self.course.id}),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 404)
+
     def test_download_course_csv(self):
         """
             Check for csv result of a course
@@ -2797,6 +2935,19 @@ class TestShowQuestions(TestCase):
             points=1.0, language="python", type="mcq", user=self.user,
             active=True
             )
+
+    def test_show_questions_denies_student(self):
+        """
+            Check show questions denies student
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:show_questions'),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 404)
 
     def test_show_all_questions(self):
         """
@@ -3009,6 +3160,20 @@ class TestShowStatistics(TestCase):
         self.question.delete()
         self.question_paper.delete()
         self.new_answer.delete()
+
+    def test_show_statistics_denies_student(self):
+        """
+            Check show statistics denies student
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:show_statistics',
+                                   kwargs={"questionpaper_id": self.question_paper.id}),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 404)
 
     def test_show_statistics_for_student(self):
         """
