@@ -181,9 +181,13 @@ class QuizForm(forms.ModelForm):
         user = kwargs.pop('user')
         course_id = kwargs.pop('course')
         super(QuizForm, self).__init__(*args, **kwargs)
-        self.fields['prerequisite'] = forms.ModelChoiceField(
-                queryset=Quiz.objects.filter(course__id=course_id,
-                                             is_trial=False))
+
+        prerequisite_list = Quiz.objects.filter(
+            course__id=course_id,
+            is_trial=False
+        ).exclude(id=self.instance.id)
+
+        self.fields['prerequisite'] = forms.ModelChoiceField(prerequisite_list)
         self.fields['prerequisite'].required = False
         self.fields['course'] = forms.ModelChoiceField(
                 queryset=Course.objects.filter(id=course_id), empty_label=None)
@@ -239,6 +243,12 @@ class QuizForm(forms.ModelForm):
                                                 exam !!!
                                                 </p>
                                                 """)
+
+    def clean_prerequisite(self):
+        prereq = self.cleaned_data['prerequisite']
+        if prereq and prereq.prerequisite.id == self.instance.id:
+            raise forms.ValidationError("Please set another prerequisite quiz")
+        return None
 
     class Meta:
         model = Quiz
