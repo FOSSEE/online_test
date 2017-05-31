@@ -246,9 +246,10 @@ class QuizForm(forms.ModelForm):
 
     def clean_prerequisite(self):
         prereq = self.cleaned_data['prerequisite']
-        if prereq and prereq.prerequisite.id == self.instance.id:
-            raise forms.ValidationError("Please set another prerequisite quiz")
-        return None
+        if prereq and prereq.prerequisite:
+            if prereq.prerequisite.id == self.instance.id:
+                raise forms.ValidationError("Please set another prerequisite quiz")
+        return prereq
 
     class Meta:
         model = Quiz
