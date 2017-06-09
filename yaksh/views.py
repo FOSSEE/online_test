@@ -1048,16 +1048,20 @@ def show_all_questions(request):
 
         if request.POST.get('question_tags'):
             question_tags = request.POST.getlist("question_tags")
-            all_tags = []
+            search_tags = []
             for tags in question_tags:
-                all_tags.extend(re.split('[; |, |\*|\n]',tags))
-            search_result = Question.objects.filter(tags__name__in=all_tags)\
-                            .distinct()
+                search_tags.extend(re.split('[; |, |\*|\n]',tags))
+            search_result = Question.objects.filter(tags__name__in=search_tags,
+                                                    user=user).distinct()
             context['search_result'] = search_result
 
     questions = Question.objects.filter(user_id=user.id, active=True)
     form = QuestionFilterForm(user=user)
+    user_tags = Question.objects.filter(user=user)\
+                 .values_list('tags', flat=True).distinct()
+    all_tags = Tag.objects.filter(id__in = user_tags)
     upload_form = UploadFileForm()
+    context['all_tags'] = all_tags
     context['papers'] = []
     context['question'] = None
     context['questions'] = questions

@@ -38,25 +38,40 @@ Upload File <span class="glyphicon glyphicon-open"></span></button>
     <div class="col-md-3">
         {{ form.marks }}
     </div>
-</div>
 <br>
- <button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>
- Clear Filters</button>
-<br><br>
+<h4 style="padding-left: 20px;">Or</h4>
+
+<h4 style="padding-left: 20px;">Search using Tags: </h4>
+</div>
 <!-- Searching Tags -->
 {% csrf_token %}
-    <div class="col-md-16">
+    <div class="col-md-14">
     <div class="input-group">
     <span class="input-group-addon" id="basic-addon1">Search Questions </span>
-    <input type="text" name="question_tags" class="form-control"
+    <input type="text" id="question_tags" name="question_tags" class="form-control"
      placeholder="Search using comma separated Tags">
     <span class="input-group-btn">
     <button class="btn btn-default" type="submit">Search</button>
-    <button class="btn btn-default" onclick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>
-    Cancel</button>
     </span>
+    <div class="col-md-6">
+    <select class="form-control" id="sel1" onchange="append_tag(this);">
+    {% if all_tags %}
+     <option value="" disabled selected>Available Tags</option>
+    {% for tag in all_tags %}
+    <option>
+        {{tag}}
+    </option>
+    {% endfor %}
+    {% else %}
+     <option value="" disabled selected>No Available Tags</option>
+    {% endif %}
+    </select>
+    </div>
     </div>
      </div>
+<br><br>
+<button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>
+ Clear Filters</button>
 
 <div id="filtered-questions">
 {% if not search_result %}
@@ -67,6 +82,7 @@ Upload File <span class="glyphicon glyphicon-open"></span></button>
 {% endfor %}
 {% endif %}
 {% else %}
+<h5><input id="checkall" type="checkbox"> Select All </h5>
 {% for i in search_result %}
 <input type="checkbox" name="question" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{ i }}</a><br>
 {% endfor %}
