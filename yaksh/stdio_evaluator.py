@@ -5,6 +5,7 @@ import signal
 # Local imports
 from .base_evaluator import BaseEvaluator
 from .grader import TimeoutException
+from .compare_stdio import compare_outputs
 
 
 class StdIOEvaluator(BaseEvaluator):
@@ -20,18 +21,8 @@ class StdIOEvaluator(BaseEvaluator):
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             raise
         expected_output = expected_output.replace("\r", "")
-        if not expected_input:
-            error_msg = "Expected Output is\n{0} ".\
-                        format(str(expected_output))
-        else:
-            error_msg = "Given Input is\n{0}\nExpected Output is\n{1}".\
-                        format(expected_input, str(expected_output))
-        if output_err == '':
-            if user_output == expected_output:
-                success, err = True, None
-            else:
-                err = "Incorrect answer:\n" + error_msg +\
-                      "\nYour output is\n{0}".format(str(user_output))
-        else:
-            err = "Error:\n{0}".format(output_err)
+        success, err = compare_outputs(expected_output,
+                                       user_output,
+                                       expected_input
+                                       )
         return success, err

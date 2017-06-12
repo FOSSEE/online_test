@@ -1579,7 +1579,10 @@ def new_activation(request, email=None):
         user.profile.key_expiry_time = timezone.now() + \
                                 timezone.timedelta(minutes=20)
         user.profile.save()
-        success, msg = send_user_mail(user.email, user.profile.activation_key)
+        new_user_data = User.objects.get(email=email)
+        success, msg = send_user_mail(new_user_data.email,
+                                      new_user_data.profile.activation_key
+                                      )
         if success:
             context['activation_msg'] = msg
         else:
@@ -1591,6 +1594,8 @@ def new_activation(request, email=None):
                                 context_instance=ci)
 
 def update_email(request):
+    context = {}
+    ci = RequestContext(request)
     if request.method == "POST":
         email = request.POST.get('email')
         username = request.POST.get('username')
