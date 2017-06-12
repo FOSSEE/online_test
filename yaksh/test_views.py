@@ -1108,7 +1108,7 @@ class TestCourseDetail(TestCase):
 
         self.user1_course.students.add(*user_ids)
         attachment = SimpleUploadedFile("file.txt", b"Test")
-        response = self.client.post(reverse('yaksh:reject_users',
+        response = self.client.post(reverse('yaksh:send_mail',
                         kwargs={'course_id': self.user1_course.id}),
                         data={'send_mail': 'send_mail', 'email_attach': [attachment],
                             'subject': 'test_bulk_mail', 'body': 'Test_Mail',
@@ -1122,6 +1122,20 @@ class TestCourseDetail(TestCase):
         self.assertEqual(subject, "test_bulk_mail")
         self.assertEqual(body, "Test_Mail")
         self.assertSequenceEqual(recipients, user_emails)
+
+        # Test for get request in send mail
+        get_response = self.client.get(reverse('yaksh:send_mail',
+                kwargs={'course_id': self.user1_course.id}
+            ))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['course'], self.user1_course)
+
+        # Test if no users are selected
+        post_response = self.client.post(reverse('yaksh:send_mail',
+                        kwargs={'course_id': self.user1_course.id}),
+                        data={'check': []}
+                        )
+        self.assertIn('select', post_response.context['message'])
 
 
 class TestEnrollRequest(TestCase):
