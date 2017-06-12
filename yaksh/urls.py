@@ -69,6 +69,7 @@ urlpatterns = [
     url(r'manage/enroll/rejected/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
         views.enroll, {'was_rejected': True}),
     url(r'manage/reject/(?P<course_id>\d+)/(?P<user_id>\d+)/$', views.reject),
+    url(r'manage/send_mail/(?P<course_id>\d+)/$', views.send_mail, name="send_mail"),
     url(r'manage/enrolled/reject/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
         views.reject, {'was_enrolled': True}),
     url(r'manage/toggle_status/(?P<course_id>\d+)/$', views.toggle_course_status),

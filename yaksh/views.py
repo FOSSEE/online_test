@@ -757,10 +757,9 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
     course.enroll(was_rejected, *users)
     return course_detail(request, course_id)
 
-
 @login_required
 @email_verified
-def reject(request, course_id, user_id=None, was_enrolled=False):
+def send_mail(request, course_id, user_id=None):
     user = request.user
     ci = RequestContext(request)
     if not is_moderator(user):
@@ -770,6 +769,7 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
 
+    message = None
     if request.method == 'POST':
         user_ids = request.POST.getlist('check')
         if not user_ids:
@@ -787,12 +787,25 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
             message = send_bulk_mail(subject, email_body, recipients,
                                         attachments)
 
-            return my_render_to_response('yaksh/course_detail.html',
-                                        {'course': course, "message": message},
-                                        context_instance=ci)
+    return my_render_to_response('yaksh/course_detail.html',
+                                {'course': course, "message": message,
+                                'msg': 'mail'},
+                                context_instance=ci)
 
-        if request.POST.get('reject') == 'reject':
-            reject_ids = user_ids
+@login_required
+@email_verified
+def reject(request, course_id, user_id=None, was_enrolled=False):
+    user = request.user
+    ci = RequestContext(request)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
+    if request.method == 'POST':
+        reject_ids = request.POST.getlist('check')
     else:
         reject_ids = [user_id]
     if not reject_ids:
