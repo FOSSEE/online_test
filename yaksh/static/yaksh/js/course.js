@@ -60,7 +60,7 @@ $("#send_mail").click(function(){
     }
 });
 
-$('#reject-form').submit(function(eventObj) {
+$('#send_mail_form').submit(function(eventObj) {
     if (btn_name == 'send_mail'){
         if(status == false){
             return false;

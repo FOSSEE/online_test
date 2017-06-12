@@ -21,9 +21,13 @@
 <div class="row">
     <div class="col-sm-3 col-md-2 sidebar">
       <ul class="nav nav-sidebar">
+        {% if msg == 'mail'%}
+        <li><a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">Go to Course Details</a></li>
+        {% else %}
         <li><a href="#student-requests" id="request"> Requested Students </a></li>
         <li><a href="#enrolled-students" id="enroll-students"> Enrolled Students </a></li>
         <li><a href="#rejected-students" id="reject-students"> Rejected Students </a></li>
+        {% endif %}
         <li>
         <a href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">
         {% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}</a>
@@ -31,6 +35,10 @@
         <li>
         <a href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/">
         Clone Course</a>
+        </li>
+        <li>
+        <a href="{{URL_ROOT}}/exam/manage/send_mail/{{ course.id }}/">
+        Send Mail</a>
         </li>
       </ul>
     </div>
@@ -44,6 +52,47 @@
         </center>
         </div>
         {% endif %}
+        {% if msg == 'mail' %}
+            <div id="enrolled-students">
+            <center><b><u>Send Mails to Students</u></b></center><br>
+            {% if course.get_enrolled %}
+            <input type="checkbox" class="reject"/>&nbsp;<font size="2">Select all</font>
+            <div id="reject">
+            <form action="{{URL_ROOT}}/exam/manage/send_mail/{{ course.id }}/" method="post" id="send_mail_form">
+                {% csrf_token %}
+                <table class="table table-striped">
+                    <th></th>
+                    <th></th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Roll Number</th>
+                    <th>Institute</th>
+                    <th>Department</th>
+                    {% for enrolled in course.get_enrolled %}
+                        <tr>
+                        <td><input type="checkbox" name="check" value="{{ enrolled.id }}"></td>
+                        <td>{{ forloop.counter }}.</td>
+                        <td> {{ enrolled.get_full_name|title }} </td>
+                        <td> {{enrolled.email}}</td>
+                        <td> {{enrolled.profile.roll_number}}</td>
+                        <td> {{enrolled.profile.institute}}</td>
+                        <td> {{enrolled.profile.department}}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                <br>
+                <input type="text" name="subject" id="subject" placeholder="Email Subject">
+                <br><br>
+                <textarea name="body" id="email_body"></textarea><br>
+                Attachments: <input type="file" name="email_attach" multiple="">
+                <br>
+                <button class="btn btn-success" type="submit" name='send_mail' value='send_mail' id="send_mail">
+                Send Mail to Selected Students</button>
+            </div>
+            {% endif %}
+            </form>
+        </div>
+        {% else %}
         <div id="student-requests">
             <center><b><u>Requests</u></b></center><br>
             {% if course.get_requests %}
@@ -91,7 +140,7 @@
             {% if course.get_enrolled %}
             <input type="checkbox" class="reject"/>&nbsp;<font size="2">Select all</font>
             <div id="reject">
-            <form action="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/" method="post" enctype="multipart/form-data" id="reject-form">
+            <form action="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/" method="post" id="reject-form">
                 {% csrf_token %}
                 <table class="table table-striped">
                     <th></th>
@@ -118,21 +167,6 @@
                         </tr>
                     {% endfor %}
                 </table>
-                <a data-toggle="collapse" data-target="#mail">
-                  <span class="glyphicon glyphicon-chevron-down"></span>
-                  Click Here to send email to students
-                </a>
-                <div id="mail" class="collapse">
-                    <br>
-                    <input type="text" name="subject" id="subject" placeholder="Email Subject">
-                    <br><br>
-                    <textarea name="body" id="email_body"></textarea><br>
-                    Attachments: <input type="file" name="email_attach" multiple="">
-                    <br>
-                    <button class="btn btn-success" type="submit" name='send_mail' value='send_mail' id="send_mail">
-                    Send Mail to Selected Students</button>
-                </div>
-                <br><br>
                 <button class="btn btn-danger" type="submit" name='reject' value='reject'>
                 Reject Selected</button>
             </div>
@@ -180,6 +214,7 @@
             {% endif %}
             </form>
         </div>
+        {% endif %}
     </div>
 </div>
 <!-- Dialog to display error message -->
