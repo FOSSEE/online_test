@@ -281,31 +281,6 @@ def add_quiz(request, course_id, quiz_id=None):
                                      context,
                                      context_instance=ci)
 
-
-@login_required
-@email_verified
-def show_all_questionpapers(request, questionpaper_id=None):
-    user = request.user
-    ci = RequestContext(request)
-    if not user.is_authenticated() or not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-
-    if questionpaper_id is None:
-        qu_papers = QuestionPaper.objects.filter(is_trial=False)
-        context = {'papers': qu_papers}
-        return my_render_to_response('yaksh/showquestionpapers.html', context,
-                                     context_instance=ci)
-    else:
-        qu_papers = QuestionPaper.objects.get(id=questionpaper_id)
-        quiz = qu_papers.quiz
-        fixed_questions = qu_papers.get_ordered_questions()
-        random_questions = qu_papers.random_questions.all()
-        context = {'quiz': quiz, 'fixed_questions': fixed_questions,
-                   'random_questions': random_questions}
-        return my_render_to_response('yaksh/editquestionpaper.html', context,
-                                     context_instance=ci)
-
-
 @login_required
 @email_verified
 def prof_manage(request, msg=None):
@@ -893,7 +868,6 @@ def ajax_questions_filter(request):
 
     if language != "select":
         filter_dict['language'] = str(language)
-
     questions = list(Question.objects.filter(**filter_dict))
 
     return my_render_to_response('yaksh/ajax_question_filter.html',
@@ -1053,8 +1027,8 @@ def show_all_questions(request):
                 question = Question()
                 zip_file = question.dump_questions(question_ids, user)
                 response = HttpResponse(content_type='application/zip')
-                response['Content-Disposition'] = '''attachment;\
-                                          filename={0}_questions.zip'''.format(user)
+                response['Content-Disposition'] = dedent(\
+                    '''attachment; filename={0}_questions.zip'''.format(user))
                 zip_file.seek(0)
                 response.write(zip_file.read())
                 return response
@@ -1095,7 +1069,6 @@ def user_data(request, user_id, questionpaper_id=None):
     context = {'data': data}
     return my_render_to_response('yaksh/user_data.html', context,
                                  context_instance=RequestContext(request))
-
 
 @login_required
 @email_verified
@@ -1576,6 +1549,8 @@ def update_email(request):
 @email_verified
 def download_assignment_file(request, quiz_id, question_id=None, user_id=None):
     user = request.user
+    if not is_moderator(user):
+        raise Http404("You are not allowed to view this page")
     qp = QuestionPaper.objects.get(quiz_id=quiz_id)
     assignment_files, file_name = AssignmentUpload.objects.get_assignments(qp,
                                     question_id,
@@ -1594,8 +1569,7 @@ def download_assignment_file(request, quiz_id, question_id=None, user_id=None):
     zip_file.close()
     zipfile_name.seek(0)
     response = HttpResponse(content_type='application/zip')
-    response['Content-Disposition'] = '''attachment;\
-                                          filename={0}.zip'''.format(
+    response['Content-Disposition'] = 'attachment; filename={0}.zip'.format(
                                             file_name.replace(" ", "_")
                                             )
     response.write(zipfile_name.read())

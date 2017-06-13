@@ -78,9 +78,10 @@ test_status = (
 
 
 def get_assignment_dir(instance, filename):
+    upload_dir = instance.question_paper.quiz.description.replace(" ", "_")
     return os.sep.join((
-        instance.question_paper.quiz.description, instance.user.username,
-        str(instance.assignmentQuestion.id), filename
+        upload_dir, instance.user.username, str(instance.assignmentQuestion.id),
+        filename
     ))
 
 
