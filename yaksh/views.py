@@ -1057,8 +1057,7 @@ def show_all_questions(request):
 
     questions = Question.objects.filter(user_id=user.id, active=True)
     form = QuestionFilterForm(user=user)
-    user_tags = Question.objects.filter(user=user)\
-                 .values_list('tags', flat=True).distinct()
+    user_tags = questions.values_list('tags', flat=True).distinct()
     all_tags = Tag.objects.filter(id__in = user_tags)
     upload_form = UploadFileForm()
     context['all_tags'] = all_tags
