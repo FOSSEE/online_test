@@ -63,7 +63,7 @@ def send_user_mail(user_mail, key):
 
 def send_bulk_mail(subject, email_body, recipients, attachments):
     try:
-        text_msg = "Yaksh"
+        text_msg = ""
         msg = EmailMultiAlternatives(subject, text_msg, settings.SENDER_EMAIL,
                                     recipients
                                     )

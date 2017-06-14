@@ -22,11 +22,15 @@
     <div class="col-sm-3 col-md-2 sidebar">
       <ul class="nav nav-sidebar">
         {% if msg == 'mail'%}
-        <li><a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">Go to Course Details</a></li>
+            <li><a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">
+            Go to Course Details</a></li>
         {% else %}
-        <li><a href="#student-requests" id="request"> Requested Students </a></li>
-        <li><a href="#enrolled-students" id="enroll-students"> Enrolled Students </a></li>
-        <li><a href="#rejected-students" id="reject-students"> Rejected Students </a></li>
+            <li><a href="#student-requests" id="request">
+            Requested Students </a></li>
+            <li><a href="#enrolled-students" id="enroll-students">
+            Enrolled Students </a></li>
+            <li><a href="#rejected-students" id="reject-students">
+            Rejected Students </a></li>
         {% endif %}
         <li>
         <a href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">
