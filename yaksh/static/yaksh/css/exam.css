@@ -2,6 +2,6 @@ table td, table th { border: black solid 1px !important;
 			word-wrap: break-word !important;
 			white-space: pre-wrap !important;
 			}
-output{
-	table-layout: fixed
+#output{
+	table-layout: fixed !important;
 }
