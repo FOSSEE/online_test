@@ -306,6 +306,9 @@ class Profile(models.Model):
             os.chmod(user_dir, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         return user_dir
 
+    def __str__(self):
+        return '%s' % (self.user.get_full_name())
+
 
 ###############################################################################
 class Question(models.Model):
