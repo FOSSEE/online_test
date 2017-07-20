@@ -77,9 +77,21 @@
             {% if question.type == 'code' or question.type == 'upload' %}
                 {% if error_message %}
                     <div class="row" id="error_panel">
+
+<br/>
+<ul class="nav nav-pills">
+{% for error in error_message %}
+      <li><a data-toggle="pill" href="#error_{{ forloop.counter }}">
+        Testcase no. {{forloop.counter}}
+      </a></li>
+{% endfor %}
+</ul>
+<br/>
+      <div class="tab-content">
       {% for error in error_message %}
-              <div class="panel panel-danger">
-      <div class="panel-heading">Testcase No. {{ forloop.counter }}</div>
+      <div id="error_{{ forloop.counter }}" class="tab-pane fade">
+      <div class = 'panel panel-danger'>
+      <div class="panel-heading">Error!</div>
       <div class="panel-body">
       <div class="well well-sm">
       {% if not error.expected_output %}
@@ -124,16 +136,16 @@
            <td>{{error.error_msg}}</td>
            </tr>
           </table>
-        
-        {% endif %}
-        </div>
+      {% endif %}
+      </div>
+      </div>
       </div>
       </div>
       {% endfor %}
-
-                    </div>
-                {% endif %}
-            {% endif %}
+      </div>
+</div>
+{% endif %}
+{% endif %}
             </div>
         </div>
     </div>
