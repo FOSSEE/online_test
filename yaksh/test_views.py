@@ -21,8 +21,9 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
-    QuestionSet, AnswerPaper, Answer, Course, StandardTestCase, has_profile,\
+    QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     AssignmentUpload, FileUpload
+from yaksh.decorators import user_has_profile
 
 
 class TestUserRegistration(TestCase):
@@ -90,18 +91,18 @@ class TestProfile(TestCase):
         self.user2.delete()
 
 
-    def test_has_profile_for_user_without_profile(self):
+    def test_user_has_profile_for_user_without_profile(self):
         """
         If no profile exists for user passed as argument return False
         """
-        has_profile_status = has_profile(self.user1)
+        has_profile_status = user_has_profile(self.user1)
         self.assertFalse(has_profile_status)
 
-    def test_has_profile_for_user_with_profile(self):
+    def test_user_has_profile_for_user_with_profile(self):
         """
         If profile exists for user passed as argument return True
         """
-        has_profile_status = has_profile(self.user2)
+        has_profile_status = user_has_profile(self.user2)
         self.assertTrue(has_profile_status)
 
 
@@ -197,6 +198,30 @@ class TestProfile(TestCase):
     def test_edit_profile_get(self):
         """
         GET request to edit profile should display profile form
+        """
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:edit_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/editprofile.html')
+
+    def test_edit_profile_get_for_user_without_profile(self):
+        """
+        If no profile exists a blank profile form will be displayed
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:edit_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/editprofile.html')
+
+    def test_edit_profile_get_for_user_with_profile(self):
+        """
+        If profile exists a editprofile.html template will be rendered
         """
         self.client.login(
             username=self.user2.username,

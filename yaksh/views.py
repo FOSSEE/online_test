@@ -32,7 +32,7 @@ except ImportError:
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
-                         has_profile, StandardTestCase, McqTestCase,\
+                         StandardTestCase, McqTestCase,\
                          StdIOBasedTestCase, HookTestCase, IntegerTestCase,\
                          FloatTestCase, StringTestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
@@ -43,7 +43,7 @@ from .settings import URL_ROOT
 from yaksh.models import AssignmentUpload
 from .file_utils import extract_files
 from .send_emails import send_user_mail, generate_activation_key, send_bulk_mail
-from .decorators import email_verified
+from .decorators import email_verified, has_profile
 
 
 def my_redirect(url):
@@ -127,6 +127,7 @@ def user_logout(request):
 
 
 @login_required
+@has_profile
 @email_verified
 def quizlist_user(request, enrolled=None):
     """Show All Quizzes that is available to logged-in user."""
@@ -280,6 +281,7 @@ def add_quiz(request, course_id, quiz_id=None):
                                  context_instance=ci)
 
 @login_required
+@has_profile
 @email_verified
 def prof_manage(request, msg=None):
     """Take credentials of the user with professor/moderator
@@ -1221,6 +1223,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
 
 
 @login_required
+@has_profile
 @email_verified
 def view_profile(request):
     """ view moderators and users profile """
@@ -1230,20 +1233,12 @@ def view_profile(request):
         template = 'manage.html'
     else:
         template = 'user.html'
-    context = {'template': template}
-    if has_profile(user):
-        context['user'] = user
-        return my_render_to_response('yaksh/view_profile.html', context)
-    else:
-        form = ProfileForm(user=user)
-        msg = True
-        context['form'] = form
-        context['msg'] = msg
-        return my_render_to_response('yaksh/editprofile.html', context,
-                                    context_instance=ci)
+    context = {'template': template, 'user': user}
+    return my_render_to_response('yaksh/view_profile.html', context)
 
 
 @login_required
+@has_profile
 @email_verified
 def edit_profile(request):
     """ edit profile details facility for moderator and students """
@@ -1255,10 +1250,7 @@ def edit_profile(request):
     else:
         template = 'user.html'
     context = {'template': template}
-    if has_profile(user):
-        profile = Profile.objects.get(user_id=user.id)
-    else:
-        profile = None
+    profile = Profile.objects.get(user_id=user.id)
 
     if request.method == 'POST':
         form = ProfileForm(request.POST, user=user, instance=profile)
