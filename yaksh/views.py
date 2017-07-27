@@ -375,7 +375,7 @@ def start(request, questionpaper_id=None, attempt_num=None):
     if not quest_paper.quiz.course.is_enrolled(user):
         raise Http404('You are not allowed to view this page!')
     # prerequisite check and passing criteria
-    if quest_paper.quiz.is_expired():
+    if quest_paper.quiz.is_expired() and not quest_paper.quiz.course.active:
         if is_moderator(user):
             return redirect("/exam/manage")
         return redirect("/exam/quizzes")
