@@ -2983,7 +2983,7 @@ class TestShowQuestions(TestCase):
         zip_file = string_io(response.content)
         zipped_file = zipfile.ZipFile(zip_file, 'r')
         self.assertIsNone(zipped_file.testzip())
-        self.assertIn('questions_dump.json', zipped_file.namelist())
+        self.assertIn('questions_dump.yaml', zipped_file.namelist())
         zip_file.close()
         zipped_file.close()
 

@@ -1015,7 +1015,7 @@ def show_all_questions(request):
                 if file_name[-1] == "zip":
                     ques = Question()
                     files, extract_path = extract_files(questions_file)
-                    context['message'] = ques.read_json(extract_path, user,
+                    context['message'] = ques.read_yaml(extract_path, user,
                                                         files)
                 else:
                     message = "Please Upload a ZIP file"

@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from datetime import datetime, timedelta
 import json
+import yaml
 from random import sample
 from collections import Counter
 from django.db import models
@@ -26,6 +27,7 @@ from textwrap import dedent
 from .file_utils import extract_files, delete_files
 from yaksh.xmlrpc_clients import code_server
 from django.conf import settings
+from django.forms.models import model_to_dict
 
 
 languages = (
@@ -386,43 +388,38 @@ class Question(models.Model):
         for question in questions:
             test_case = question.get_test_cases()
             file_names = question._add_and_get_files(zip_file)
-            q_dict = {
-                'summary': question.summary,
-                'description': question.description,
-                'points': question.points, 'language': question.language,
-                'type': question.type, 'active': question.active,
-                'snippet': question.snippet,
-                'testcase': [case.get_field_value() for case in test_case],
-                'files': file_names
-            }
+            q_dict = model_to_dict(question, exclude=['id', 'user','tags'])
+            q_dict['testcase']= [case.get_field_value() for case in test_case]
+            q_dict['files'] = file_names
+
             questions_dict.append(q_dict)
-        question._add_json_to_zip(zip_file, questions_dict)
+        question._add_yaml_to_zip(zip_file, questions_dict)
         return zip_file_name
 
     def load_questions(self, questions_list, user, file_path=None,
                        files_list=None):
         try:
-            questions = json.loads(questions_list)
-        except ValueError as exc_msg:
-            msg = "Error Parsing Json: {0}".format(exc_msg)
-            return msg
-        for question in questions:
-            question['user'] = user
-            file_names = question.pop('files')
-            test_cases = question.pop('testcase')
-            que, result = Question.objects.get_or_create(**question)
-            if file_names:
-                que._add_files_to_db(file_names, file_path)
-            for test_case in test_cases:
-                test_case_type = test_case.pop('test_case_type')
-                model_class = get_model_class(test_case_type)
-                new_test_case, obj_create_status = \
-                    model_class.objects.get_or_create(
-                        question=que, **test_case
-                    )
+            questions = yaml.safe_load_all(questions_list)
+            for question in questions:
+                question['user'] = user
+                file_names = question.pop('files')
+                test_cases = question.pop('testcase')
+                que, result = Question.objects.get_or_create(**question)
+                if file_names:
+                    que._add_files_to_db(file_names, file_path)
+                for test_case in test_cases:
+                    test_case_type = test_case.pop('test_case_type')
+                    model_class = get_model_class(test_case_type)
+                    new_test_case, obj_create_status = \
+                        model_class.objects.get_or_create(
+                            question=que, **test_case
+                        )
                 new_test_case.type = test_case_type
                 new_test_case.save()
-        return "Questions Uploaded Successfully"
+                msg = "Questions Uploaded Successfully"
+        except yaml.scanner.ScannerError as exc_msg:
+            msg = "Error Parsing Yaml: {0}".format(exc_msg)
+        return msg
 
     def get_test_cases(self, **kwargs):
         tc_list = []
@@ -478,25 +475,24 @@ class Question(models.Model):
                 file_upload.extract = extract
                 file_upload.file.save(file_name, django_file, save=True)
 
-    def _add_json_to_zip(self, zip_file, q_dict):
-        json_data = json.dumps(q_dict, indent=2)
+    def _add_yaml_to_zip(self, zip_file, q_dict):
         tmp_file_path = tempfile.mkdtemp()
-        json_path = os.path.join(tmp_file_path, "questions_dump.json")
-        with open(json_path, "w") as json_file:
-            json_file.write(json_data)
-        zip_file.write(json_path, os.path.basename(json_path))
+        yaml_path = os.path.join(tmp_file_path, "questions_dump.yaml")
+        with open(yaml_path, "w") as yaml_file:
+            yaml.safe_dump_all(q_dict, yaml_file, default_flow_style=False)
+        zip_file.write(yaml_path, os.path.basename(yaml_path))
         zip_file.close()
         shutil.rmtree(tmp_file_path)
 
-    def read_json(self, file_path, user, files=None):
-        json_file = os.path.join(file_path, "questions_dump.json")
+    def read_yaml(self, file_path, user, files=None):
+        yaml_file = os.path.join(file_path, "questions_dump.yaml")
         msg = ""
-        if os.path.exists(json_file):
-            with open(json_file, 'r') as q_file:
+        if os.path.exists(yaml_file):
+            with open(yaml_file, 'r') as q_file:
                 questions_list = q_file.read()
                 msg = self.load_questions(questions_list, user, file_path, files)
         else:
-            msg = "Please upload zip file with questions_dump.json in it."
+            msg = "Please upload zip file with questions_dump.yaml in it."
 
         if files:
             delete_files(files, file_path)
@@ -507,7 +503,7 @@ class Question(models.Model):
             settings.FIXTURE_DIRS, 'demo_questions.zip'
         )
         files, extract_path = extract_files(zip_file_path)
-        self.read_json(extract_path, user, files)
+        self.read_yaml(extract_path, user, files)
 
     def __str__(self):
         return self.summary
