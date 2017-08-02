@@ -1590,3 +1590,20 @@ def duplicate_course(request, course_id):
             'instructor/administrator.'
         return complete(request, msg, attempt_num=None, questionpaper_id=None)
     return my_redirect('/exam/manage/courses/')
+
+@login_required
+@email_verified
+def download_yaml_template(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    template_path = os.path.join(os.path.dirname(__file__), "demo_templates",
+                                 "yaml_question_template"
+                                 )
+    with open(template_path, 'r') as f:
+        yaml_str = f.read()
+    response = HttpResponse(yaml_str, content_type='text/yaml')
+    response['Content-Disposition'] = 'attachment; filename="questions_dump.yaml"'
+    
+    return response
+

@@ -1,0 +1,90 @@
+---
+# Yaml Template for writing questions 
+# Always keep the name of this file as questions_dump.yaml
+# Zip this file with necessary dependent files.
+
+active: true
+# question status = true or false
+
+description: "Write a function <code>product(a,b)</code> which will take
+              two integers and return the product of it.<br>
+             "
+# Entire question description. 
+
+files: []
+# [[file name, zip_extract_status=true or false]]
+
+language: python    
+# bash, scilab, python, c/c++, java
+
+points: 1.0
+# marks in float
+
+snippet: "def sum(a,b):"  
+# adds in the student's code area 
+
+summary: Product of two numbers
+# one line short Summary
+testcase:
+- test_case_type: standardtestcase
+  test_case: assert sum(3,5) == 15
+  test_case_args: ""
+  weight: 1.0
+#testcase 1
+
+- test_case_type: standardtestcase
+  test_case: assert sum(10,10) == 100
+  test_case_args: ""
+  weight: 1.0
+#testcase 2
+
+# for standard testcase:
+  # - test_case_type: standardtestcase
+  #   test_case: test case in the selected language
+  #   test_case_args: command line args (only for bash)
+  #   weight: weightage for each course
+
+# for stdIO testcase:
+  # - test_case_type: stdiobasedtestcase
+  #   expected_input: Standard input given to the students' code. (Optional)
+  #   expected_input: Standard output expected from the students' code.
+  #   weight: weightage for each course
+
+# for MCQ/MCC testcase:
+  # - test_case_type: mcqtestcase
+  #   options: MCQ/MCC option.
+  #   correct: true or false.
+
+# for Hook testcase:
+  # - test_case_type: hooktestcase
+  #   hook_code: Selected language code written by moderator (Optional)
+  #   weight: weightage for each course
+
+# for Integer testcase:
+  # - test_case_type: integertestcase
+  #   correct: Correct integer value
+
+# for Float testcase:
+  # - test_case_type: floattestcase
+  #   correct: Correct float value
+  #   error_margin: Margin of error allowed
+
+# for String testcase:
+  # - test_case_type: stringtestcase
+  #   correct: Exact string to be compared
+  #   string_check: lower or exact.(case insensitive or sensitive)
+
+type: code
+# mcq, Single Correct Choice,
+# mcc, Multiple Correct Choices,
+# code, Code Question,
+# upload, Assignment Upload,
+# integer, Answer in Integer,
+# string, Answer in String,
+# float, Answer in Float
+
+grade_assignment_upload: false
+# Grade uploaded assignment (works with hook)true or false
+
+partial_grading: false
+# partial grading with respect to each testcase.

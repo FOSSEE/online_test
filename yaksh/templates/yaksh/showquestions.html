@@ -2,31 +2,62 @@
 
 {% block title %} Questions {% endblock %}
 
-{% block pagetitle %} List of Questions {% endblock pagetitle %}
+{% block pagetitle %} Questions {% endblock pagetitle %}
 
 {% block script %}
 <script src="{{ URL_ROOT }}/static/yaksh/js/show_question.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/question_filter.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
 {% endblock %}
 
 {% block content %}
-
-<h4>Upload ZIP file for adding questions</h4>
+<div class="row">
+    <div class="col-sm-3 col-md-2 sidebar">
+      <ul class="nav nav-sidebar nav-stacked">
+      <li class="active"><a href="#show" data-toggle="pill" > Show all Questions</a></li>
+      <li><a href="#updown" data-toggle="pill" > Upload and Download Questions</a></li>
+      </ul>
+    </div>
+<div class="tab-content">
+<!-- Upload Questions -->
+<div id="updown" class="tab-pane fade">
+<a class="btn btn-primary" href="{{URL_ROOT}}/exam/manage/courses/download_yaml_template/"> Download Template</a>
+<br/>
+<h4> Or </h4>
 <form action="" method="post"  enctype="multipart/form-data">
 {% csrf_token %}
-{{ upload_form.as_p }}
-<button class="btn btn-primary" type="submit" name="upload" value="upload">
-Upload File <span class="glyphicon glyphicon-open"></span></button>
+    {{ upload_form.as_p }}
+<br/>
+<h4> And </h4>
+<button class="btn btn-success" type="submit" name="upload" value="upload">
+Upload File <span class="glyphicon glyphicon-open"/></button>
 </form>
-{% if message %}
-<h4>{{ message }}</h4>
-{% endif %}
-{% if msg %}
-<h4>{{ msg }}</h4>
-{% endif %}
-<br><br>
+</div>
+<!-- End of upload questions -->
+
+<!-- Show questions -->
+<div id="show" class= "tab-pane fade in active">
 <form name=frm action="" method="post">
 {% csrf_token %}
+{% if message %}
+{%if message == "Questions Uploaded Successfully"%}
+<div class="alert alert-success alert-dismissable">
+<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+  {{ message }}
+</div>
+{%else %}
+<div class="alert alert-danger alert-dismissable"> 
+  <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+  {{ message }}
+</div>
+{% endif %}
+{% endif %}
+{% if msg %}
+<div class="alert alert-danger alert-dismissable"> 
+  <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+  {{ msg }}
+</div>
+{% endif %}
 <div class="row" id="selectors">
     <h5 style="padding-left: 20px;">Filters</h5>
     <div class="col-md-3">
@@ -46,17 +77,46 @@ Upload File <span class="glyphicon glyphicon-open"></span></button>
 <div id="filtered-questions">
 {% if questions %}
 <h5><input id="checkall" type="checkbox"> Select All </h5>
+
+<table id="questions-table" class="tablesorter table table table-striped">
+    <thead>
+    <tr>
+    <th> Select </th>
+    <th> Summary </th>
+    <th> Language </th>
+    <th> Type </th>  
+    <th> Marks </th>
+    </tr>
+    </thead>
+    <tbody>
+    
 {% for i in questions %}
-<input type="checkbox" name="question" value="{{ i.id }}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{ i }}</a><br>
+<tr>
+<td>
+<input type="checkbox" name="question" value="{{ i.id }}">
+</td>
+<td><a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{i.summary|capfirst}}</a></td>
+<td>{{i.language|capfirst}}</td>
+<td>{{i.type|capfirst}}</td>
+<td>{{i.points}}</td>
+</tr>
 {% endfor %}
+</tbody>
+</table>
 {% endif %}
 </div>
 <br>
+<center>
 <button class="btn btn-primary" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question <span class="glyphicon glyphicon-plus"></span></button>&nbsp;&nbsp;
 {% if questions %}
 <button class="btn btn-primary" type="submit" name='download' value='download'>Download Selected <span class="glyphicon glyphicon-save"></span></button>&nbsp;&nbsp;
 <button class="btn btn-primary" type="submit" name="test" value="test">Test Selected</button>&nbsp;&nbsp;
 {% endif %}
 <button class="btn btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected <span class="glyphicon glyphicon-minus"></span></button>
+</center>
 </form>
+</div>
+</div>
+</div>
+<!-- End of Show questions -->
 {% endblock %}
