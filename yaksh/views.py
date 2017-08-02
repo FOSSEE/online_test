@@ -143,7 +143,11 @@ def quizlist_user(request, enrolled=None):
         courses = user.students.all()
         title = 'Enrolled Courses'
     else:
-        courses = Course.objects.filter(active=True, is_trial=False, hidden=False)
+        courses = Course.objects.filter(
+            active=True, is_trial=False
+        ).exclude(
+           ~Q(requests=user), ~Q(rejected=user), hidden=True
+        )
         title = 'All Courses'
 
     context = {'user': user, 'courses': courses, 'title': title}
