@@ -21,7 +21,10 @@ def has_profile(func):
         if user_has_profile(request.user):
             return func(request, *args, **kwargs)
         ci = RequestContext(request)
-        template = 'manage.html' if 'moderator' in request.user.groups.all() else 'user.html'
+        if request.user.groups.filter(name='moderator').exists():
+            template = 'manage.html'
+        else:
+            template = 'user.html'
         form = ProfileForm(user=request.user, instance=None)
         context = {'template': template, 'form': form}
         return render_to_response('yaksh/editprofile.html', context,
