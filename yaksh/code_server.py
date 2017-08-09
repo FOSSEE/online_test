@@ -232,10 +232,10 @@ def main(args=None):
 
     options = parser.parse_args(args)
 
-    server_pool = ServerPool(n=options.n, pool_port=options.port)
-    # This is done *after* the server pool is created because when the tornado
-    # app calls listen(), it cannot be nobody.
+    # Called before serverpool is created so that the multiprocessing
+    # can work properly.
     run_as_nobody()
+    server_pool = ServerPool(n=options.n, pool_port=options.port)
 
     server_pool.run()
 
