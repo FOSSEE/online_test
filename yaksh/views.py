@@ -4,10 +4,11 @@ import os
 from datetime import datetime, timedelta
 import collections
 import csv
+import uuid
 from django.http import HttpResponse
 from django.core.urlresolvers import reverse
 from django.contrib.auth import login, logout, authenticate
-from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.shortcuts import render_to_response, get_object_or_404, redirect, render
 from django.template import RequestContext
 from django.http import Http404
 from django.db.models import Sum, Max, Q, F
@@ -308,6 +309,7 @@ def prof_manage(request, msg=None):
     rights/permissions and log in."""
     user = request.user
     ci = RequestContext(request)
+    new_room = False
     if user.is_authenticated() and is_moderator(user):
         question_papers = QuestionPaper.objects.filter(
             Q(quiz__course__creator=user) |
@@ -1782,6 +1784,56 @@ def download_yaml_template(request):
     response = HttpResponse(template_yaml, content_type='text/yaml')
     response['Content-Disposition'] = 'attachment;\
                                       filename="questions_dump.yaml"'
-    
+
     return response
 
+
+@login_required
+@email_verified
+def chat_room(request, label, course_id):
+    # If the room with the given label doesn't exist, automatically create it
+    # upon first visit.
+    user = request.user
+    response_kwargs = {}
+    context = {}
+    response_kwargs['content_type'] = 'application/json'
+    room, created = Room.objects.get_or_create(
+        label=label, course_id=course_id
+    )
+    chat_msgs_dict = []
+    context['success'] = False
+    # We want to show the last 50 messages, ordered most-recent-last
+    messages = room.messages.order_by('-timestamp')
+    if messages:
+        messages = reversed(messages)
+        tz = pytz.timezone(user.profile.timezone) if has_profile(user)\
+            else pytz.timezone("UTC")
+        for message in messages:
+            msg_date = message.timestamp.astimezone(tz)
+            chat_dict = {
+                "sender": message.sender.id,
+                "sender_name": message.sender.get_full_name().title(),
+                "timestamp": datetime.strftime(msg_date, "%Y-%m-%d %H:%M:%S"),
+                "message": message.message
+            }
+            chat_msgs_dict.append(chat_dict)
+        context['success'] = True
+    context['messages'] = chat_msgs_dict
+    context['room_label'] = room.label
+    data = json.dumps(context)
+    return HttpResponse(data, **response_kwargs)
+
+
+@login_required
+@email_verified
+def new_room(request, course_id):
+    """
+    Randomly create a new room, and redirect to it.
+    """
+    label = uuid.uuid4().__str__()
+    room = Room.objects.filter(course_id=course_id)
+    if room.exists():
+        room_label = room[0].label
+    else:
+        room_label = label
+    return chat_room(request, room_label, course_id)
