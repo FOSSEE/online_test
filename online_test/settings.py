@@ -45,6 +45,7 @@ INSTALLED_APPS = (
     'yaksh',
     'taggit',
     'social.apps.django_app.default',
+    'channels',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -175,4 +176,16 @@ SOCIAL_AUTH_PIPELINE = AUTH_PIPELINE
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id, name, email'
+}
+
+# setting-up-a-channel-backend
+# This uses the Redis channel layer implementation asgi_redis
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "asgi_redis.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+        },
+        "ROUTING": "yaksh.routing.channel_routing",
+    },
 }
