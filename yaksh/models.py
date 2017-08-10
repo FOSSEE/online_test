@@ -318,9 +318,6 @@ class Profile(models.Model):
             os.chmod(user_dir, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         return user_dir
 
-    def __str__(self):
-        return '%s' % (self.user.get_full_name())
-
 
 ###############################################################################
 class Question(models.Model):
@@ -706,6 +703,8 @@ class Quiz(models.Model):
 
     allow_skip = models.BooleanField("Allow students to skip questions",
                                      default=True)
+
+    enable_chat = models.BooleanField("Enable/Disable Chat", default=False)
 
     objects = QuizManager()
 
@@ -1575,3 +1574,18 @@ class FloatTestCase(TestCase):
         return u'Testcase | Correct: {0} | Error Margin: +or- {1}'.format(
                 self.correct, self.error_margin
                 )
+
+
+############################################################################
+class Room(models.Model):
+    label = models.SlugField(unique=True)
+    course = models.ForeignKey(Course)
+
+
+class Message(models.Model):
+    room = models.ForeignKey(Room, related_name='messages')
+    sender = models.ForeignKey(User, related_name='sender')
+    receiver = models.ForeignKey(User, related_name='receiver',
+                                 blank=True, null=True)
+    message = models.TextField()
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
