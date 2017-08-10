@@ -15,6 +15,10 @@
 {% endblock %}
 
 {% block script %}
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/reconnecting-websocket.min.js" %}>
+</script>
+<script language="text/javascript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/chat.js">
+</script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/question.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/lib/codemirror.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/python/python.js"></script>
@@ -137,6 +141,8 @@ function call_skip(url)
 {% block onload %} onload="updateTime();" {% endblock %}
 
 {% block main %}
+<input type="hidden" id="course_id" value="{{paper.question_paper.quiz.course.id}}">
+<input type="hidden" id="course_name" value="{{paper.question_paper.quiz.course.name|title}}">
         <p id="status"></p>
         {% if notification %}
           {% if question.type == "code" %}
@@ -256,10 +262,9 @@ function call_skip(url)
          </div>
                  </div>
              </div>
-
-         </form>
          {% endif %}
-         
+       </form>
+
     <!-- Modal -->
     <div class="modal fade " id="upload_alert" >
       <div class="modal-dialog">
@@ -276,7 +281,22 @@ function call_skip(url)
         </div>
       </div>
    </div>
+   <input type="hidden" id="handle" value="{{user.id}}"/>
 {% endblock main %}
 
-
-
+<!-- Open chat container -->
+{% block postchat %}
+<form id="chatform">
+<div class="panel-footer">
+  <div class="input-group">
+    <div id="message" g_editable="true" role="textbox" contenteditable="true" placeholder="Write your message here...">
+    </div>
+    <span class="input-group-btn">
+    <button class="btn btn-primary btn-sm" id="btn-chat">
+    Send
+    </button>
+    </span>
+  </div>
+</div>
+</form>
+{% endblock %}

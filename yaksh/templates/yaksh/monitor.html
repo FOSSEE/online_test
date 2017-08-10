@@ -3,15 +3,15 @@
 {% block title %} Monitor {% endblock %}
 {% block pagetitle %} {{ msg }} {% endblock pagetitle %}
 
-{% block meta %} <meta http-equiv="refresh" content="30"/> {% endblock meta %}
-
 
 {% block script %}
 {% if papers %}
 <script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/reconnecting-websocket.min.js" %}></script>
+<script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/chat.js"></script>
 <script type="text/javascript">
 $(document).ready(function()
-    { 
+    {   $("#open_chat_icon").toggle();
         $("#result-table").tablesorter({sortList: [[5,1]]});
         var papers_length = "{{papers|length}}";
         for (var i=0; i < papers_length; i++){
@@ -64,6 +64,8 @@ $(document).ready(function()
 {% if msg != "Monitor" %}
 {% if quiz %}
 {% if papers %}
+<input type="hidden" id="course_id" value="{{quiz.course.id}}">
+<input type="hidden" id="course_name" value="{{quiz.course.name|title}}">
 <p>Course Name: {{ quiz.course.name }}</p>
 <p>Quiz Name: {{ quiz.description }}</p>
 <p>Number of papers: {{ papers|length }} </p>
@@ -115,4 +117,23 @@ $(document).ready(function()
 <h4>No Quiz Found</h4>
 {% endif %}
 {% endif %}
+<input type="hidden" id="handle" value="{{user.id}}"/>
+{% endblock %}
+
+<!-- Open chat container -->
+{% block postchat %}
+<form id="chatform">
+<!-- {% csrf_token %} -->
+<div class="panel-footer">
+  <div class="input-group">
+    <div id="message" g_editable="true" role="textbox" contenteditable="true" placeholder="Write your message here...">
+    </div>
+    <span class="input-group-btn">
+    <button class="btn btn-primary btn-sm" id="btn-chat">
+    Send
+    </button>
+    </span>
+  </div>
+</div>
+</form>
 {% endblock %}
