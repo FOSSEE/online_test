@@ -24,6 +24,7 @@ import shutil
 import zipfile
 import tempfile
 from textwrap import dedent
+from ast import literal_eval
 from .file_utils import extract_files, delete_files
 from yaksh.xmlrpc_clients import code_server
 from django.conf import settings
@@ -388,15 +389,20 @@ class Question(models.Model):
         questions_dict = []
         zip_file_name = string_io()
         zip_file = zipfile.ZipFile(zip_file_name, "a")
+        all_keys = []
         for question in questions:
             test_case = question.get_test_cases()
-            file_names = question._add_and_get_files(zip_file)
+            file_names = str(question._add_and_get_files(zip_file))
             q_dict = model_to_dict(question, exclude=['id', 'user','tags'])
-            q_dict['testcase']= [case.get_field_value() for case in test_case]
+            testcases = []
+            for case in test_case:
+                all_keys.extend(list(case.get_field_value().keys()))
+                testcases.append(case.get_field_value())
+            q_dict['testcase'] = testcases
             q_dict['files'] = file_names
-
+            all_keys.extend(list(q_dict.keys()))
             questions_dict.append(q_dict)
-        question._add_yaml_to_zip(zip_file, questions_dict)
+        question._add_yaml_to_zip(zip_file, questions_dict, all_keys)
         return zip_file_name
 
     def load_questions(self, questions_list, user, file_path=None,
@@ -405,7 +411,7 @@ class Question(models.Model):
             questions = yaml.safe_load_all(questions_list)
             for question in questions:
                 question['user'] = user
-                file_names = question.pop('files')
+                file_names = literal_eval(question.pop('files'))
                 test_cases = question.pop('testcase')
                 que, result = Question.objects.get_or_create(**question)
                 if file_names:
@@ -478,11 +484,22 @@ class Question(models.Model):
                 file_upload.extract = extract
                 file_upload.file.save(file_name, django_file, save=True)
 
-    def _add_yaml_to_zip(self, zip_file, q_dict):
+    def _add_yaml_to_zip(self, zip_file, q_dict, all_keys):
         tmp_file_path = tempfile.mkdtemp()
         yaml_path = os.path.join(tmp_file_path, "questions_dump.yaml")
+
+        def literal_representer(dumper, data):
+            data = data.replace("\r\n", "\n")
+            if not data in all_keys:
+                return dumper.represent_scalar('tag:yaml.org,2002:str',
+                                               data, style='|')
+            else:
+                return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+
+        yaml.add_representer(str,literal_representer)
         with open(yaml_path, "w") as yaml_file:
-            yaml.safe_dump_all(q_dict, yaml_file, default_flow_style=False)
+            yaml.dump_all(q_dict, yaml_file, default_flow_style=False,
+                          allow_unicode=True)
         zip_file.write(yaml_path, os.path.basename(yaml_path))
         zip_file.close()
         shutil.rmtree(tmp_file_path)
