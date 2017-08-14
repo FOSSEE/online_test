@@ -562,12 +562,13 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
 
 @csrf_exempt
 def get_results(request, uid):
+    result = {}
     url = 'http://localhost:%s' % SERVER_POOL_PORT
     result_state = get_result(url, uid)
-    result = json.loads(result_state.get('result'))
-    next_question, error_message, paper = _update_paper(request, uid, result)
     result['status'] = result_state.get('status')
-    if result['status']== 'done':
+    if result['status'] == 'done':
+        result = json.loads(result_state.get('result'))
+        next_question, error_message, paper = _update_paper(request, uid, result)
         return show_question(request, next_question, paper, error_message)
     return JsonResponse(result)
 

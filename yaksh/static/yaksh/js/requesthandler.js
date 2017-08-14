@@ -3,9 +3,15 @@ function submitRequest(){
     document.forms["code"].submit();
 }
 
-function check_state(state, uid, success) {
-    if (state == "running") {
+function check_state(state, uid) {
+    if (state == "running" || state == "not started") {
         setTimeout(get_result(uid), 2000);
+    } else if (state == "unknown") {
+        request_status = "initial";
+        var $notice = document.getElementById("notification");
+        $notice.classList.add("alert");
+        $notice.classList.add("alert-success");
+        $notice.innerHTML = "Your are requesting for a wrong data";
     }
 }
 
@@ -24,7 +30,7 @@ function get_result(uid){
             } else if(content_type.includes("application/json")) {
                 res = JSON.parse(data);
                 request_status = res.status;
-                check_state(request_status, uid, res.success);
+                check_state(request_status, uid);
             }
         }
     });
@@ -74,6 +80,7 @@ $(document).ready(function(){
             success: function(data, status, xhr) {
                 content_type = xhr.getResponseHeader("content-type");
                 if(content_type.includes("text/html")) {
+                    request_status = "initial"
                     document.open();
                     document.write(data);
                     document.close();
@@ -81,7 +88,7 @@ $(document).ready(function(){
                     res = JSON.parse(data);
                     var uid = res.uid;
                     request_status = res.state;
-                    check_state(request_status, uid, false);
+                    check_state(request_status, uid);
                 }
             }
           });

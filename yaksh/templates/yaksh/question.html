@@ -101,14 +101,17 @@ lang = "{{ question.language }}"
         <p id="status"></p>
         {% if notification %}
           {% if question.type == "code" %}
-          <div class="alert alert-success" role="alert">
+          <div id="notification" class="alert alert-success" role="alert">
             <strong>Note:</strong> {{ notification }}
           </div>
           {% else %}
-          <div class="alert alert-warning" role="alert">
+          <div id="notification" class="alert alert-warning" role="alert">
             <strong>Note:</strong> {{ notification }}
           </div>
           {% endif %}
+        {% else %}
+          <div id="notification" role="alert">
+          </div>
         {% endif %}
         <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" enctype="multipart/form-data">
         {% csrf_token %}
