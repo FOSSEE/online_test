@@ -8,11 +8,27 @@ function check_state(state, uid) {
         setTimeout(get_result(uid), 2000);
     } else if (state == "unknown") {
         request_status = "initial";
-        var $notice = document.getElementById("notification");
-        $notice.classList.add("alert");
-        $notice.classList.add("alert-success");
-        $notice.innerHTML = "Your are requesting for a wrong data";
+        notify("You are requesting for a wrong data");
+        unlock_screen();
+    } else {
+        request_status = "initial";
+        unlock_screen();
     }
+}
+
+function notify(text) {
+    var $notice = document.getElementById("notification");
+    $notice.classList.add("alert");
+    $notice.classList.add("alert-success");
+    $notice.innerHTML = text;
+}
+
+function lock_screen() {
+    document.getElementById("ontop").style.display = "block";
+}
+
+function unlock_screen() {
+    document.getElementById("ontop").style.display = "none";
 }
 
 function get_result(uid){
@@ -23,7 +39,7 @@ function get_result(uid){
         success: function(data, status, xhr) {
             content_type = xhr.getResponseHeader("content-type");
             if(content_type.includes("text/html")) {
-                request_status = "initial";
+                unlock_screen();
                 document.open();
                 document.write(data);
                 document.close();
@@ -31,7 +47,15 @@ function get_result(uid){
                 res = JSON.parse(data);
                 request_status = res.status;
                 check_state(request_status, uid);
+            } else {
+                request_status = "initial";
+                unlock_screen();
             }
+        },
+        error: function(xhr, text_status, error_thrown ) {
+            request_status = "initial";
+            unlock_screen();
+            notify("There is some problem. Try later.")
         }
     });
 }
@@ -72,6 +96,7 @@ $(document).ready(function(){
       global_editor.editor.clearHistory();
   }
     $('#code').submit(function(e) {
+      lock_screen();
       $.ajax({
             type: 'POST',
             url: $(this).attr("action"),
@@ -81,6 +106,7 @@ $(document).ready(function(){
                 content_type = xhr.getResponseHeader("content-type");
                 if(content_type.includes("text/html")) {
                     request_status = "initial"
+                    unlock_screen();
                     document.open();
                     document.write(data);
                     document.close();
@@ -89,7 +115,15 @@ $(document).ready(function(){
                     var uid = res.uid;
                     request_status = res.state;
                     check_state(request_status, uid);
+                } else {
+                    request_status = "initial";
+                    unlock_screen();
                 }
+            },
+            error: function(xhr, text_status, error_thrown ) {
+                request_status = "initial";
+                unlock_screen();
+                notify("There is some problem. Try later.")
             }
           });
           e.preventDefault(); // To stop the default form submission.

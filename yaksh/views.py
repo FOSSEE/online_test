@@ -475,7 +475,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     current_question = get_object_or_404(Question, pk=q_id)
 
     if request.method == 'POST':
-        snippet_code = request.POST.get('snippet')
         # Add the answer submitted, regardless of it being correct or not.
         if current_question.type == 'mcq':
             user_answer = request.POST.get('answer')
@@ -532,8 +531,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                 next_q = paper.add_completed_question(current_question.id)
                 return show_question(request, next_q, paper)
         else:
-            user_code = request.POST.get('answer')
-            user_answer = snippet_code + "\n" + user_code if snippet_code else user_code
+            user_answer = request.POST.get('answer')
         if not user_answer:
             msg = ["Please submit a valid option or code"]
             return show_question(request, current_question, paper, notification=msg)
@@ -552,7 +550,15 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                                        json_data, uid
                                            )
         if current_question.type in ['code', 'upload']:
-            return JsonResponse(result)
+            if paper.time_left() <= 0:
+                url = 'http://localhost:%s' % SERVER_POOL_PORT
+                result = get_result(url, uid, block=True)
+                result = json.loads(result.get('result'))
+                next_question, error_message, paper = _update_paper(request, uid,
+                        result)
+                return show_question(request, next_question, paper, error_message)
+            else:
+                return JsonResponse(result)
         else:
             next_question, error_message, paper = _update_paper(request, uid, result)
             return show_question(request, next_question, paper, error_message)
