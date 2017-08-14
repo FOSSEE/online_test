@@ -208,7 +208,7 @@ def get_result(url, uid, block=False):
     '''
     def _get_data():
         r = requests.get(urllib.parse.urljoin(url, str(uid)))
-        return json.loads(r.content)
+        return json.loads(r.content.decode('utf-8'))
     data = _get_data()
     if block:
         while data.get('status') != 'done':

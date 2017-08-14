@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta
 import collections
 import csv
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.core.urlresolvers import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
@@ -30,6 +30,7 @@ try:
 except ImportError:
     from io import BytesIO as string_io
 # Local imports.
+from yaksh.code_server import get_result, SERVER_POOL_PORT
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
                          has_profile, StandardTestCase, McqTestCase,\
@@ -539,6 +540,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         new_answer = Answer(question=current_question, answer=user_answer,
                             correct=False, error=json.dumps([]))
         new_answer.save()
+        uid = new_answer.id
         paper.answers.add(new_answer)
         # If we were not skipped, we were asked to check.  For any non-mcq
         # questions, we obtain the results via XML-RPC with the code executed
@@ -547,37 +549,60 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                     if current_question.type == 'code' or \
                     current_question.type == 'upload' else None
         result = paper.validate_answer(user_answer, current_question,
-                                       json_data
+                                       json_data, uid
                                            )
-        if result.get('success'):
-            new_answer.marks = (current_question.points * result['weight'] / 
-                current_question.get_maximum_test_case_weight()) \
-                if current_question.partial_grading and \
-                current_question.type == 'code' or current_question.type == 'upload' \
-                else current_question.points
-            new_answer.correct = result.get('success')
-            error_message = None
-            new_answer.error = json.dumps(result.get('error'))
-            next_question = paper.add_completed_question(current_question.id)
+        if current_question.type in ['code', 'upload']:
+            return JsonResponse(result)
         else:
-            new_answer.marks = (current_question.points * result['weight'] /
-                current_question.get_maximum_test_case_weight()) \
-                if current_question.partial_grading and \
-                current_question.type == 'code' or current_question.type == 'upload' \
-                else 0
-            error_message = result.get('error') if current_question.type == 'code' \
-                or current_question.type == 'upload' else None
-            new_answer.error = json.dumps(result.get('error'))
-            next_question = current_question if current_question.type == 'code' \
-                or current_question.type == 'upload' \
-                else paper.add_completed_question(current_question.id)
-        new_answer.save()
-        paper.update_marks('inprogress')
-        paper.set_end_time(timezone.now())
-        return show_question(request, next_question, paper, error_message)
+            next_question, error_message, paper = _update_paper(request, uid, result)
+            return show_question(request, next_question, paper, error_message)
     else:
         return show_question(request, current_question, paper)
 
+
+@csrf_exempt
+def get_results(request, uid):
+    url = 'http://localhost:%s' % SERVER_POOL_PORT
+    result_state = get_result(url, uid)
+    result = json.loads(result_state.get('result'))
+    next_question, error_message, paper = _update_paper(request, uid, result)
+    result['status'] = result_state.get('status')
+    if result['status']== 'done':
+        return show_question(request, next_question, paper, error_message)
+    return JsonResponse(result)
+
+
+def _update_paper(request, uid, result):
+    new_answer = Answer.objects.get(id=uid)
+    current_question = new_answer.question
+    paper = new_answer.answerpaper_set.first()
+
+    if result.get('success'):
+        new_answer.marks = (current_question.points * result['weight'] /
+            current_question.get_maximum_test_case_weight()) \
+            if current_question.partial_grading and \
+            current_question.type == 'code' or current_question.type == 'upload' \
+            else current_question.points
+        new_answer.correct = result.get('success')
+        error_message = None
+        new_answer.error = json.dumps(result.get('error'))
+        next_question = paper.add_completed_question(current_question.id)
+    else:
+        new_answer.marks = (current_question.points * result['weight'] /
+            current_question.get_maximum_test_case_weight()) \
+            if current_question.partial_grading and \
+            current_question.type == 'code' or current_question.type == 'upload' \
+            else 0
+        error_message = result.get('error') if current_question.type == 'code' \
+            or current_question.type == 'upload' else None
+        new_answer.error = json.dumps(result.get('error'))
+        next_question = current_question if current_question.type == 'code' \
+            or current_question.type == 'upload' \
+            else paper.add_completed_question(current_question.id)
+    new_answer.save()
+    paper.update_marks('inprogress')
+    paper.set_end_time(timezone.now())
+    return next_question, error_message, paper
 
 
 def quit(request, reason=None, attempt_num=None, questionpaper_id=None):

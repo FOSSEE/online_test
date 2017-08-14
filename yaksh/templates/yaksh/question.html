@@ -15,7 +15,7 @@
 {% endblock %}
 
 {% block script %}
-<script src="{{ URL_ROOT }}/static/yaksh/js/question.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/requesthandler.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/lib/codemirror.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/python/python.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/clike/clike.js"></script>
@@ -79,7 +79,7 @@ function validate(){
     }
     else
     {
-        return true;
+        send_request();
     }
 }
 
@@ -89,47 +89,8 @@ function call_skip(url)
     form.action = url
     form.submit();
 }
-</script>
-<script>
-
-  var init_val = '{{ last_attempt|escape_quotes|safe }}';
-  var global_editor = {};
-  $(document).ready(function(){
-  // Codemirror object, language modes and initial content
-  // Get the textarea node
-  var textarea_node = document.querySelector('#answer');
-
-  var lang = "{{ question.language }}"
-  var mode_dict = {
-    'python': 'python',
-    'c': 'text/x-csrc',
-    'cpp': 'text/x-c++src',
-    'java': 'text/x-java',
-    'bash': 'text/x-sh',
-    'scilab': 'text/x-csrc'
-  }
-
-  // Code mirror Options
-  var options = {
-      mode: mode_dict[lang],
-      gutter: true,
-      lineNumbers: true,
-      onChange: function (instance, changes) {
-          render();
-      }
-  };
-
-  // Initialize the codemirror editor
-  global_editor.editor = CodeMirror.fromTextArea(textarea_node, options);
-
-  // Setting code editors initial content
-  global_editor.editor.setValue(init_val);
-
-  function reset_editor() {
-      global_editor.editor.setValue(init_val);
-      global_editor.editor.clearHistory();
-  }
-    });
+init_val = '{{ last_attempt|escape_quotes|safe }}';
+lang = "{{ question.language }}"
 </script>
 
 {% endblock script %}
@@ -239,13 +200,13 @@ function call_skip(url)
         <div class="from-group">
 
          {% if question.type == "mcq" or "mcc" or "integer" or "float" or "string" %}
-         <br><button class="btn btn-primary" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;<br/>
+         <br><button class="btn btn-primary" type="submit" name="check" id="check" >Submit Answer</button>&nbsp;&nbsp;<br/>
          {% elif question.type == "upload" %}
          <br><button class="btn btn-primary" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
 
          {% else %}
            {% if question in paper.get_questions_unanswered %}
-           <button class="btn btn-primary" type="submit" name="check" id="check" onClick="submitCode();">Check Answer <span class="glyphicon glyphicon-cog"></span></button>&nbsp;&nbsp;
+           <button class="btn btn-primary" type="submit" name="check" id="check" >Check Answer <span class="glyphicon glyphicon-cog"></span></button>&nbsp;&nbsp;
            {% endif %}
          {% endif %}
 
