@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
 from datetime import datetime, timedelta
 import json
-import yaml
+import ruamel.yaml
+from ruamel.yaml.scalarstring import PreservedScalarString
 from random import sample
 from collections import Counter
 from django.db import models
@@ -383,39 +384,37 @@ class Question(models.Model):
         return json.dumps(question_data)
 
     def dump_questions(self, question_ids, user):
-        questions = Question.objects.filter(
-            id__in=question_ids, user_id=user.id, active=True
-        )
+        questions = Question.objects.filter(id__in=question_ids,
+                                            user_id=user.id, active=True
+                                            )
         questions_dict = []
         zip_file_name = string_io()
         zip_file = zipfile.ZipFile(zip_file_name, "a")
-        all_keys = []
         for question in questions:
             test_case = question.get_test_cases()
-            file_names = str(question._add_and_get_files(zip_file))
+            file_names = question._add_and_get_files(zip_file)
             q_dict = model_to_dict(question, exclude=['id', 'user','tags'])
             testcases = []
             for case in test_case:
-                all_keys.extend(list(case.get_field_value().keys()))
                 testcases.append(case.get_field_value())
             q_dict['testcase'] = testcases
             q_dict['files'] = file_names
-            all_keys.extend(list(q_dict.keys()))
             questions_dict.append(q_dict)
-        question._add_yaml_to_zip(zip_file, questions_dict, all_keys)
+        question._add_yaml_to_zip(zip_file, questions_dict)
         return zip_file_name
 
     def load_questions(self, questions_list, user, file_path=None,
                        files_list=None):
         try:
-            questions = yaml.safe_load_all(questions_list)
+            questions = ruamel.yaml.safe_load_all(questions_list)
             for question in questions:
                 question['user'] = user
-                file_names = literal_eval(question.pop('files'))
+                file_names = question.pop('files')
                 test_cases = question.pop('testcase')
                 que, result = Question.objects.get_or_create(**question)
-                if file_names:
+                if file_names!="[]":
                     que._add_files_to_db(file_names, file_path)
+
                 for test_case in test_cases:
                     test_case_type = test_case.pop('test_case_type')
                     model_class = get_model_class(test_case_type)
@@ -423,10 +422,10 @@ class Question(models.Model):
                         model_class.objects.get_or_create(
                             question=que, **test_case
                         )
-                new_test_case.type = test_case_type
-                new_test_case.save()
+                    new_test_case.type = test_case_type
+                    new_test_case.save()
                 msg = "Questions Uploaded Successfully"
-        except yaml.scanner.ScannerError as exc_msg:
+        except ruamel.yaml.scanner.ScannerError as exc_msg:
             msg = "Error Parsing Yaml: {0}".format(exc_msg)
         return msg
 
@@ -484,22 +483,26 @@ class Question(models.Model):
                 file_upload.extract = extract
                 file_upload.file.save(file_name, django_file, save=True)
 
-    def _add_yaml_to_zip(self, zip_file, q_dict, all_keys):
+    def _add_yaml_to_zip(self, zip_file, q_dict):
         tmp_file_path = tempfile.mkdtemp()
         yaml_path = os.path.join(tmp_file_path, "questions_dump.yaml")
 
-        def literal_representer(dumper, data):
-            data = data.replace("\r\n", "\n")
-            if not data in all_keys:
-                return dumper.represent_scalar('tag:yaml.org,2002:str',
-                                               data, style='|')
-            else:
-                return dumper.represent_scalar('tag:yaml.org,2002:str', data)
-
-        yaml.add_representer(str,literal_representer)
-        with open(yaml_path, "w") as yaml_file:
-            yaml.dump_all(q_dict, yaml_file, default_flow_style=False,
-                          allow_unicode=True)
+        def _dict_walk(question_dict):
+            for k,v in question_dict.items():
+                if isinstance(v, list):
+                    for  nested_v in v:
+                        if isinstance(nested_v, dict):
+                            _dict_walk(nested_v)
+                elif v and isinstance(v,str):
+                    question_dict[k] = PreservedScalarString(v)
+        for elem in q_dict:
+            _dict_walk(elem)
+            with open(yaml_path, "a") as yaml_file:
+                ruamel.yaml.round_trip_dump(elem, yaml_file,
+                                            default_flow_style=False,
+                                            explicit_start=True,
+                                            allow_unicode=True
+                                            )
         zip_file.write(yaml_path, os.path.basename(yaml_path))
         zip_file.close()
         shutil.rmtree(tmp_file_path)

@@ -39,5 +39,5 @@ function confirm_edit(frm)
 }
 $(document).ready(function()
     { 
-        $("#questions-table").tablesorter({sortList: [[]]});
+        $("#questions-table").tablesorter({sortList: [[0,0], [4,0]]});
     });

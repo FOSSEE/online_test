@@ -3,7 +3,7 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload
 import json
-import yaml
+import ruamel.yaml as yaml
 from datetime import datetime, timedelta
 from django.utils import timezone
 import pytz

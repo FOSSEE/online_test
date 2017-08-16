@@ -6,4 +6,4 @@ tornado
 selenium==2.53.6
 coverage
 psutil
-pyyaml
+ruamel.yaml==0.15.23
