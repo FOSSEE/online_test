@@ -1,7 +1,7 @@
 import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload
+    StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload 
 import json
 import ruamel.yaml as yaml
 from datetime import datetime, timedelta
@@ -160,7 +160,9 @@ class QuestionTestCases(unittest.TestCase):
                            "language": "Python", "type": "Code",
                            "testcase": self.test_case_upload_data,
                            "files": [[file1, 0]],
-                           "summary": "Yaml Demo"}]
+                           "summary": "Yaml Demo",
+                           "tags": ['yaml_demo']
+                           }]
         self.yaml_questions_data = yaml.safe_dump_all(questions_data)
 
     def tearDown(self):

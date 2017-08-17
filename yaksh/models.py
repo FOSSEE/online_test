@@ -909,8 +909,13 @@ class QuestionPaper(models.Model):
                                                       total_marks=6.0,
                                                       shuffle_questions=True
                                                       )
+        summaries = ['Roots of quadratic equation', 'Print Output',
+                     'Adding decimals', 'For Loop over String',
+                     'Hello World in File', 'Extract columns from files',
+                     'Check Palindrome', 'Add 3 numbers', 'Reverse a string'
+                     ]
         questions = Question.objects.filter(active=True,
-                                            summary="Yaksh Demo Question",
+                                            summary__in=summaries,
                                             user=user)
         q_order = [str(que.id) for que in questions]
         question_paper.fixed_question_order = ",".join(q_order)

@@ -111,9 +111,9 @@ class SeleniumTest():
         )
         start_exam_elem.click()
 
-        self.test_c_question(question_label=2)
-        self.test_python_question(question_label=3)
-        self.test_bash_question(question_label=1)
+        self.test_c_question(question_label=7)
+        self.test_python_question(question_label=5)
+        self.test_bash_question(question_label=4)
 
     def close_quiz(self):
         quit_link_elem = WebDriverWait(self.driver, 5).until(
