@@ -1,90 +1,357 @@
 ---
-# Yaml Template for writing questions 
-# Always keep the name of this file as questions_dump.yaml
-# Zip this file with necessary dependent files.
-
-active: true
-# question status = true or false
-
-description: "Write a function <code>product(a,b)</code> which will take
-              two integers and return the product of it.<br>
-             "
-# Entire question description. 
-
-files: []
-# [[file name, zip_extract_status=true or false]]
-
-language: python    
-# bash, scilab, python, c/c++, java
-
-points: 1.0
-# marks in float
-
-snippet: "def sum(a,b):"  
-# adds in the student's code area 
-
-summary: Product of two numbers
-# one line short Summary
-testcase:
-- test_case_type: standardtestcase
-  test_case: assert sum(3,5) == 15
-  test_case_args: ""
-  weight: 1.0
-#testcase 1
-
-- test_case_type: standardtestcase
-  test_case: assert sum(10,10) == 100
-  test_case_args: ""
-  weight: 1.0
-#testcase 2
-
-# for standard testcase:
-  # - test_case_type: standardtestcase
-  #   test_case: test case in the selected language
-  #   test_case_args: command line args (only for bash)
-  #   weight: weightage for each course
-
-# for stdIO testcase:
-  # - test_case_type: stdiobasedtestcase
-  #   expected_input: Standard input given to the students' code. (Optional)
-  #   expected_input: Standard output expected from the students' code.
-  #   weight: weightage for each course
-
-# for MCQ/MCC testcase:
-  # - test_case_type: mcqtestcase
-  #   options: MCQ/MCC option.
-  #   correct: true or false.
-
-# for Hook testcase:
-  # - test_case_type: hooktestcase
-  #   hook_code: Selected language code written by moderator (Optional)
-  #   weight: weightage for each course
-
-# for Integer testcase:
-  # - test_case_type: integertestcase
-  #   correct: Correct integer value
-
-# for Float testcase:
-  # - test_case_type: floattestcase
-  #   correct: Correct float value
-  #   error_margin: Margin of error allowed
-
-# for String testcase:
-  # - test_case_type: stringtestcase
-  #   correct: Exact string to be compared
-  #   string_check: lower or exact.(case insensitive or sensitive)
-
-type: code
-# mcq, Single Correct Choice,
-# mcc, Multiple Correct Choices,
-# code, Code Question,
-# upload, Assignment Upload,
-# integer, Answer in Integer,
-# string, Answer in String,
-# float, Answer in Float
-
-grade_assignment_upload: false
-# Grade uploaded assignment (works with hook)true or false
-
+active: true # question status = true or false
+language: |- # bash, scilab, python, c/c++, java
+  python 
 partial_grading: false
-# partial grading with respect to each testcase.
+snippet: ''
+summary: |-
+  Roots of quadratic equation
+type: |-
+  integer
+grade_assignment_upload: false
+description: |- # Entire question description. 
+  Type in the box below, one of the roots to the following quadratic equation?
+  <br/>
+  <math xmlns="http://www.w3.org/1998/Math/MathML">
+    <msup>
+      <mi>x</mi>
+      <mn>2</mn>
+    </msup>
+    <mo>+</mo>
+    <mi>x</mi>
+    <mo>-</mo>
+    <mi>6</mi>
+    <mo>=</mo>
+    <mn>0</mn>
+  </math>
+points: 1.0
+testcase:
+- test_case_type: |-
+    integertestcase
+  correct: 2
+- test_case_type: |-
+    integertestcase
+  correct: -3
+files: []
+---
+active: true
+language: |-
+  python
+partial_grading: false
+snippet: ''
+summary: |-
+  Print Output
+type: |-
+  string
+grade_assignment_upload: false
+description: |-
+  What is the output for the following code in <b>Python 2.x</b>:
+  <br>
+  <code>
+  print(2, "Hello"*2, ":" ,"Bye")
+  </code>
+points: 1.0
+testcase:
+- string_check: |- #exact or lower
+    exact 
+  test_case_type: |-
+    stringtestcase
+  correct: |-
+    (2, 'HelloHello', ':', 'Bye')
+files: []
+---
+active: true
+language: |-
+  python
+partial_grading: false
+snippet: ''
+summary: |-
+  Adding decimals
+type: |-
+  float
+grade_assignment_upload: false
+description: |-
+  Write down the resultant value of the following -
+  <pre>3.4566+2.122
+  </pre><br/>
+points: 1.0
+testcase:
+- test_case_type: |-
+    floattestcase
+  correct: 5.5786
+  error_margin: 0.0
+files: []
+---
+active: true
+language: |-
+  bash
+partial_grading: false
+snippet: |-
+  #!/bin/bash
+summary: |-
+  Extract columns from files
+type: |-
+  code
+grade_assignment_upload: false
+description: |-
+  Write a bash script that takes exactly three file arguments.
+  
+  The first argument <b>(file1.csv)</b> would have 3 columns, the second argument <b>(file2.csv)</b> would have 2 columns. The third argument <b>(file3.csv) </b>would have 2 columns.
+  <br><br>
+  All files have columns delimited by <b>: (colon)</b>.
+  <br><br>
+  We need the <b>2nd column</b> from <b>file1.csv</b> to be removed and concatenated <b>BEFORE file2.csv</b> and this concatenated file should come <b>BESIDE file3.csv</b>.
+  
+  Left is <b>file3.csv</b>, and the <b>LATER</b> columns come from <b>file1.csv and file2.csv.</b>
+  <br><br>
+  <b>The delimiter while putting the files BESIDE each other should again be : (colon)</b>
+  <br><br>
+  <pre>
+  <b>Note:</b> - <i>Do not hard-code the filenames. They will be passed in as arguments.
+  Assume no headers (to avoid header-non-repetition issues).</i>
+  </pre>
+points: 2.0
+testcase:
+- test_case: |-
+    #!/bin/bash
+    cat $1 | cut -d: -f2 | paste -d: $3 - $2
+  weight: 1.0
+  test_case_type: |-
+    standardtestcase
+  test_case_args: |-
+    file1.csv   file2.csv   file3.csv
+files:
+- - file1.csv
+  - false
+- - file2.csv
+  - false
+- - file3.csv
+  - false
+---
+active: true
+language: |-
+  python
+partial_grading: false
+snippet: |-
+  def is_palindrome(s):
+summary: |-
+  Check Palindrome
+type: |-
+  code
+grade_assignment_upload: false
+description: |-
+  Write a function <code>is_palindrome(arg)</code> which will take one string argument.
+  <br>
+  Return True if the argument is palindrome & False otherwise.
+   <br>
+  The function should be case sensitive.
+  <br><br>
+  For Example:<br><code>is_palindrome("Hello")</code> should return <code>False</code><br>
+points: 2.0
+testcase:
+- test_case: |-
+    assert is_palindrome("hello") == False
+  weight: 1.0
+  test_case_type: |-
+    standardtestcase
+  test_case_args: ''
+- test_case: |-
+    assert is_palindrome("nitin") == True
+  weight: 1.0
+  test_case_type: |-
+    standardtestcase
+  test_case_args: ''
+- test_case: |-
+    assert is_palindrome("madaM") == False
+  weight: 1.0
+  test_case_type: |-
+    standardtestcase
+  test_case_args: ''
+files: []
+---
+active: true
+language: |-
+  python
+partial_grading: true
+snippet: ''
+summary: |-
+  For Loop over String
+type: |-
+  code
+grade_assignment_upload: false
+description: |-
+  Write a python script that accepts a <b>string</b> as input
+  <br>
+  The script must print each character of the string using a for loop.
+  
+  For example;
+  <pre>
+  <b>Input:</b>
+  box
+  <b>Output</b>
+  b
+  o
+  x
+  </pre>
+points: 1.0
+testcase:
+- expected_output: |-
+    s
+    t
+    r
+    i
+    n
+    g
+  weight: 1
+  test_case_type: |-
+    stdiobasedtestcase
+  expected_input: |-
+    string
+- expected_output: |-
+    s
+     
+    t
+     
+    o
+     
+    p
+     
+    s
+     
+    i
+     
+    g
+     
+    n
+  weight: 1
+  test_case_type: |-
+    stdiobasedtestcase
+  expected_input: |-
+    s t o p s i g n
+- hook_code: |-
+    def check_answer(user_answer):
+        ''' Evaluates user answer to return -
+        success - Boolean, indicating if code was executed correctly
+        mark_fraction - Float, indicating fraction of the
+                      weight to a test case
+        error - String, error message if success is false
+    
+        In case of assignment upload there will be no user answer '''
+    
+        success = False
+        err = "You are using while in your code."
+        mark_fraction = 0.0
+    
+        if not 'while' in user_answer:
+            success=True
+            err = "Correct Answer"
+            mark_fraction = 1.0
+        return success, err, mark_fraction
+  test_case_type: |-
+    hooktestcase
+  weight: 1.0
+files: []
+---
+active: true
+language: |-
+  c
+partial_grading: false
+snippet: ''
+summary: |-
+  Add 3 numbers
+type: |-
+  code
+grade_assignment_upload: false
+description: |-
+  Write a program to add 3 numbers. 
+  <br>
+  Function Name is to be called <b>add</b>
+  <br>
+  <br><br>
+  <pre>
+  <b>Note:</b><i> You do not have to print anything, neither you have to make the function call. 
+  Just define the function to perform the required operation, return the output & click on check answer.
+  Also, note that the function name should exactly be as mentioned above.</i>
+  </pre>
+points: 2.0
+testcase:
+- test_case: |-
+    #include <stdio.h>
+    #include <stdlib.h>
+    
+    extern int add(int, int, int);
+    
+    template <class T>
+    void check(T expect,T result)
+    {
+        if (expect == result)
+        {
+      printf("\nCorrect:\n Expected %d got %d \n",expect,result);
+        }
+        else 
+        {
+      printf("\nIncorrect:\n Expected %d got %d \n",expect,result);
+      exit (1);
+       }
+    }
+    
+    int main(void)
+    {
+      int result;
+      result = add(0,0,0);
+            printf("Input submitted to the function: 0, 0, 0");
+      check(0, result);
+      result = add(2,3,3);
+            printf("Input submitted to the function: 2, 3, 3");
+      check(8,result);
+      printf("All Correct\n");
+    }
+  weight: 1.0
+  test_case_type: |-
+    standardtestcase
+  test_case_args: ''
+files: []
+---
+active: true
+language: |-
+  python
+partial_grading: false
+snippet: ''
+summary: |-
+  Hello World in File
+type: |-
+  upload
+grade_assignment_upload: true
+description: |-
+  Upload a file called <code>new.txt</code> which contains the string <code>Hello, World!</code>  in it.
+points: 1.0
+testcase:
+- hook_code: |-
+    def check_answer(user_answer):
+        ''' Evaluates user answer to return -
+        success - Boolean, indicating if code was executed correctly
+        mark_fraction - Float, indicating fraction of the
+                      weight to a test case
+        error - String, error message if success is false
+    
+        In case of assignment upload there will be no user answer '''
+    
+        success = False
+        err = "Incorrect Answer" # Please make this more specific
+        mark_fraction = 0.0
+    
+        try:
+            with open('new.txt', 'r') as f:
+                if "Hello, World!" in f.read():
+                    success = True
+                    err = "Correct Answer"
+                    mark_fraction = 1.0
+                else:
+                    err = "Did not found string Hello, World! in file."
+        except IOError:
+            err = "File new.txt not found."
+        return success, err, mark_fraction
+  test_case_type: |-
+    hooktestcase
+  weight: 1.0
+files: []

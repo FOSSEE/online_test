@@ -407,25 +407,28 @@ class Question(models.Model):
                        files_list=None):
         try:
             questions = ruamel.yaml.safe_load_all(questions_list)
+            msg = "Questions Uploaded Successfully"
             for question in questions:
                 question['user'] = user
                 file_names = question.pop('files')
                 test_cases = question.pop('testcase')
                 que, result = Question.objects.get_or_create(**question)
-                if file_names!="[]":
+                if file_names:
                     que._add_files_to_db(file_names, file_path)
 
                 for test_case in test_cases:
-                    test_case_type = test_case.pop('test_case_type')
-                    model_class = get_model_class(test_case_type)
-                    new_test_case, obj_create_status = \
-                        model_class.objects.get_or_create(
-                            question=que, **test_case
-                        )
-                    new_test_case.type = test_case_type
-                    new_test_case.save()
-                msg = "Questions Uploaded Successfully"
-        except ruamel.yaml.scanner.ScannerError as exc_msg:
+                    try:
+                        test_case_type = test_case.pop('test_case_type')
+                        model_class = get_model_class(test_case_type)
+                        new_test_case, obj_create_status = \
+                            model_class.objects.get_or_create(
+                                question=que, **test_case
+                            )
+                        new_test_case.type = test_case_type
+                        new_test_case.save()
+                    except:
+                        msg = "File not correct."
+        except Exception as exc_msg:
             msg = "Error Parsing Yaml: {0}".format(exc_msg)
         return msg
 
