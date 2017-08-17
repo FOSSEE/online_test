@@ -1,17 +1,22 @@
 request_status = "initial"
+count = 0;
 function submitRequest(){
     document.forms["code"].submit();
 }
 
 function check_state(state, uid) {
-    if (state == "running" || state == "not started") {
-        setTimeout(get_result(uid), 2000);
+    if ((state == "running" || state == "not started") && count < 15) {
+        count++;
+        setTimeout(function() {get_result(uid);}, 2000);
     } else if (state == "unknown") {
         request_status = "initial";
+        count = 0;
         notify("You are requesting for a wrong data");
         unlock_screen();
     } else {
         request_status = "initial";
+        count = 0;
+        notify("Please try after few minutes");
         unlock_screen();
     }
 }
@@ -49,11 +54,13 @@ function get_result(uid){
                 check_state(request_status, uid);
             } else {
                 request_status = "initial";
+                count = 0;
                 unlock_screen();
             }
         },
         error: function(xhr, text_status, error_thrown ) {
             request_status = "initial";
+            count = 0;
             unlock_screen();
             notify("There is some problem. Try later.")
         }
@@ -106,6 +113,7 @@ $(document).ready(function(){
                 content_type = xhr.getResponseHeader("content-type");
                 if(content_type.includes("text/html")) {
                     request_status = "initial"
+                    count = 0;
                     unlock_screen();
                     document.open();
                     document.write(data);
@@ -117,11 +125,13 @@ $(document).ready(function(){
                     check_state(request_status, uid);
                 } else {
                     request_status = "initial";
+                    count = 0;
                     unlock_screen();
                 }
             },
             error: function(xhr, text_status, error_thrown ) {
                 request_status = "initial";
+                count = 0;
                 unlock_screen();
                 notify("There is some problem. Try later.")
             }
