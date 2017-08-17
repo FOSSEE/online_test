@@ -1,15 +1,26 @@
 ---
-active: true # question status = true or false
+testcase:
+- test_case_type: |-
+    integertestcase
+  correct: 2
+- test_case_type: |-
+    integertestcase
+  correct: -3
+files: []
 language: |- # bash, scilab, python, c/c++, java
-  python 
+  python
 partial_grading: false
+tags:
+- python
+- quadratic
+- demo
+- integer
+points: 1.0
 snippet: ''
-summary: |-
-  Roots of quadratic equation
+active: true
 type: |-
   integer
-grade_assignment_upload: false
-description: |- # Entire question description. 
+description: |-
   Type in the box below, one of the roots to the following quadratic equation?
   <br/>
   <math xmlns="http://www.w3.org/1998/Math/MathML">
@@ -24,75 +35,106 @@ description: |- # Entire question description.
     <mo>=</mo>
     <mn>0</mn>
   </math>
-points: 1.0
+summary: |-
+  Roots of quadratic equation
+grade_assignment_upload: false
+---
 testcase:
 - test_case_type: |-
-    integertestcase
-  correct: 2
-- test_case_type: |-
-    integertestcase
-  correct: -3
+    stringtestcase
+  correct: |-
+    (2, 'HelloHello', ':', 'Bye')
+  string_check: |- # exact or lower
+    exact
 files: []
----
-active: true
 language: |-
   python
 partial_grading: false
+tags:
+- python
+- demo
+- print
+- string
+- '1'
+- case_sensitive
+- casesensitive
+- python2
+points: 1.0
 snippet: ''
-summary: |-
-  Print Output
+active: true
 type: |-
   string
-grade_assignment_upload: false
 description: |-
   What is the output for the following code in <b>Python 2.x</b>:
   <br>
   <code>
   print(2, "Hello"*2, ":" ,"Bye")
   </code>
-points: 1.0
-testcase:
-- string_check: |- #exact or lower
-    exact 
-  test_case_type: |-
-    stringtestcase
-  correct: |-
-    (2, 'HelloHello', ':', 'Bye')
-files: []
----
-active: true
-language: |-
-  python
-partial_grading: false
-snippet: ''
 summary: |-
-  Adding decimals
-type: |-
-  float
+  Print Output
 grade_assignment_upload: false
-description: |-
-  Write down the resultant value of the following -
-  <pre>3.4566+2.122
-  </pre><br/>
-points: 1.0
+---
 testcase:
 - test_case_type: |-
     floattestcase
   correct: 5.5786
   error_margin: 0.0
 files: []
----
+language: |-
+  python
+partial_grading: false
+tags:
+- float
+- '1'
+- python
+- decimal
+- demo
+points: 1.0
+snippet: ''
 active: true
+type: |-
+  float
+description: |-
+  Write down the resultant value of the following -
+  <pre>3.4566+2.122
+  </pre><br/>
+summary: |-
+  Adding decimals
+grade_assignment_upload: false
+---
+testcase:
+- test_case_type: |-
+    standardtestcase
+  test_case_args: |-
+    file1.csv   file2.csv   file3.csv
+  test_case: |-
+    #!/bin/bash
+    cat $1 | cut -d: -f2 | paste -d: $3 - $2
+  weight: 1.0
+files:
+- - file1.csv
+  - false
+- - file2.csv
+  - false
+- - file3.csv
+  - false
 language: |-
   bash
 partial_grading: false
+tags:
+- demo
+- code
+- files
+- concatenate
+- bash
+- delimiter
+- '2'
+points: 2.0
 snippet: |-
   #!/bin/bash
-summary: |-
-  Extract columns from files
+active: true
 type: |-
   code
-grade_assignment_upload: false
 description: |-
   Write a bash script that takes exactly three file arguments.
   
@@ -110,35 +152,47 @@ description: |-
   <b>Note:</b> - <i>Do not hard-code the filenames. They will be passed in as arguments.
   Assume no headers (to avoid header-non-repetition issues).</i>
   </pre>
-points: 2.0
-testcase:
-- test_case: |-
-    #!/bin/bash
-    cat $1 | cut -d: -f2 | paste -d: $3 - $2
-  weight: 1.0
-  test_case_type: |-
-    standardtestcase
-  test_case_args: |-
-    file1.csv   file2.csv   file3.csv
-files:
-- - file1.csv
-  - false
-- - file2.csv
-  - false
-- - file3.csv
-  - false
+summary: |-
+  Extract columns from files
+grade_assignment_upload: false
 ---
-active: true
+testcase:
+- test_case_type: |-
+    standardtestcase
+  test_case_args: ''
+  test_case: |-
+    assert is_palindrome("hello") == False
+  weight: 1.0
+- test_case_type: |-
+    standardtestcase
+  test_case_args: ''
+  test_case: |-
+    assert is_palindrome("nitin") == True
+  weight: 1.0
+- test_case_type: |-
+    standardtestcase
+  test_case_args: ''
+  test_case: |-
+    assert is_palindrome("madaM") == False
+  weight: 1.0
+files: []
 language: |-
   python
 partial_grading: false
+tags:
+- python
+- assertion
+- palindrome
+- reverse
+- code
+- '2'
+- demo
+points: 2.0
 snippet: |-
   def is_palindrome(s):
-summary: |-
-  Check Palindrome
+active: true
 type: |-
   code
-grade_assignment_upload: false
 description: |-
   Write a function <code>is_palindrome(arg)</code> which will take one string argument.
   <br>
@@ -147,67 +201,29 @@ description: |-
   The function should be case sensitive.
   <br><br>
   For Example:<br><code>is_palindrome("Hello")</code> should return <code>False</code><br>
-points: 2.0
-testcase:
-- test_case: |-
-    assert is_palindrome("hello") == False
-  weight: 1.0
-  test_case_type: |-
-    standardtestcase
-  test_case_args: ''
-- test_case: |-
-    assert is_palindrome("nitin") == True
-  weight: 1.0
-  test_case_type: |-
-    standardtestcase
-  test_case_args: ''
-- test_case: |-
-    assert is_palindrome("madaM") == False
-  weight: 1.0
-  test_case_type: |-
-    standardtestcase
-  test_case_args: ''
-files: []
----
-active: true
-language: |-
-  python
-partial_grading: true
-snippet: ''
 summary: |-
-  For Loop over String
-type: |-
-  code
+  Check Palindrome
 grade_assignment_upload: false
-description: |-
-  Write a python script that accepts a <b>string</b> as input
-  <br>
-  The script must print each character of the string using a for loop.
-  
-  For example;
-  <pre>
-  <b>Input:</b>
-  box
-  <b>Output</b>
-  b
-  o
-  x
-  </pre>
-points: 1.0
+---
 testcase:
-- expected_output: |-
+- test_case_type: |-
+    stdiobasedtestcase
+  weight: 1
+  expected_input: |-
+    string
+  expected_output: |-
     s
     t
     r
     i
     n
     g
-  weight: 1
-  test_case_type: |-
+- test_case_type: |-
     stdiobasedtestcase
+  weight: 1
   expected_input: |-
-    string
-- expected_output: |-
+    s t o p s i g n
+  expected_output: |-
     s
      
     t
@@ -223,12 +239,9 @@ testcase:
     g
      
     n
-  weight: 1
-  test_case_type: |-
-    stdiobasedtestcase
-  expected_input: |-
-    s t o p s i g n
-- hook_code: |-
+- test_case_type: |-
+    hooktestcase
+  hook_code: |-
     def check_answer(user_answer):
         ''' Evaluates user answer to return -
         success - Boolean, indicating if code was executed correctly
@@ -247,35 +260,46 @@ testcase:
             err = "Correct Answer"
             mark_fraction = 1.0
         return success, err, mark_fraction
-  test_case_type: |-
-    hooktestcase
   weight: 1.0
 files: []
----
-active: true
 language: |-
-  c
-partial_grading: false
+  python
+partial_grading: true
+tags:
+- python
+- stdio
+- demo
+- '1'
+- code
+- for
+points: 1.0
 snippet: ''
-summary: |-
-  Add 3 numbers
+active: true
 type: |-
   code
-grade_assignment_upload: false
 description: |-
-  Write a program to add 3 numbers. 
+  Write a python script that accepts a <b>string</b> as input
   <br>
-  Function Name is to be called <b>add</b>
-  <br>
-  <br><br>
+  The script must print each character of the string using a for loop.
+  
+  For example;
   <pre>
-  <b>Note:</b><i> You do not have to print anything, neither you have to make the function call. 
-  Just define the function to perform the required operation, return the output & click on check answer.
-  Also, note that the function name should exactly be as mentioned above.</i>
+  <b>Input:</b>
+  box
+  <b>Output</b>
+  b
+  o
+  x
   </pre>
-points: 2.0
+summary: |-
+  For Loop over String
+grade_assignment_upload: false
+---
 testcase:
-- test_case: |-
+- test_case_type: |-
+    standardtestcase
+  test_case_args: ''
+  test_case: |-
     #include <stdio.h>
     #include <stdlib.h>
     
@@ -307,26 +331,43 @@ testcase:
       printf("All Correct\n");
     }
   weight: 1.0
-  test_case_type: |-
-    standardtestcase
-  test_case_args: ''
 files: []
----
-active: true
 language: |-
-  python
+  c
 partial_grading: false
+tags:
+- c++
+- c
+- demo
+- code
+- '2'
+- addition
+- cpp
+- numbers
+points: 2.0
 snippet: ''
-summary: |-
-  Hello World in File
+active: true
 type: |-
-  upload
-grade_assignment_upload: true
+  code
 description: |-
-  Upload a file called <code>new.txt</code> which contains the string <code>Hello, World!</code>  in it.
-points: 1.0
+  Write a program to add 3 numbers. 
+  <br>
+  Function Name is to be called <b>add</b>
+  <br>
+  <br><br>
+  <pre>
+  <b>Note:</b><i> You do not have to print anything, neither you have to make the function call. 
+  Just define the function to perform the required operation, return the output & click on check answer.
+  Also, note that the function name should exactly be as mentioned above.</i>
+  </pre>
+summary: |-
+  Add 3 numbers
+grade_assignment_upload: false
+---
 testcase:
-- hook_code: |-
+- test_case_type: |-
+    hooktestcase
+  hook_code: |-
     def check_answer(user_answer):
         ''' Evaluates user answer to return -
         success - Boolean, indicating if code was executed correctly
@@ -351,7 +392,71 @@ testcase:
         except IOError:
             err = "File new.txt not found."
         return success, err, mark_fraction
-  test_case_type: |-
-    hooktestcase
   weight: 1.0
 files: []
+language: |-
+  python
+partial_grading: false
+tags:
+- python
+- '1'
+- file
+- hook
+- hello
+- world
+- grade
+- assignment
+- upload
+- demo
+points: 1.0
+snippet: ''
+active: true
+type: |-
+  upload
+description: |-
+  Upload a file called <code>new.txt</code> which contains the string <code>Hello, World!</code>  in it.
+summary: |-
+  Hello World in File
+grade_assignment_upload: true
+---
+testcase:
+- test_case_type: |-
+    mcqtestcase
+  correct: false
+  options: |-
+    s.reverse()
+- test_case_type: |-
+    mcqtestcase
+  correct: true
+  options: |-
+    s[::-1]
+- test_case_type: |-
+    mcqtestcase
+  correct: false
+  options: |-
+    reversed(s)
+- test_case_type: |-
+    mcqtestcase
+  correct: true
+  options: |-
+    "''.join(reversed(s))
+files: []
+language: |-
+  python
+partial_grading: false
+tags:
+- python
+- '2'
+- reverse
+- mcc
+- demo
+points: 2.0
+snippet: ''
+active: true
+type: |-
+  mcc
+description: |-
+  Which of the following options would reverse the string?
+summary: |-
+  Reverse a string
+grade_assignment_upload: false

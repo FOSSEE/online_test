@@ -409,12 +409,13 @@ class Question(models.Model):
         for question in questions:
             test_case = question.get_test_cases()
             file_names = question._add_and_get_files(zip_file)
-            q_dict = model_to_dict(question, exclude=['id', 'user','tags'])
+            q_dict = model_to_dict(question, exclude=['id', 'user'])
             testcases = []
             for case in test_case:
                 testcases.append(case.get_field_value())
             q_dict['testcase'] = testcases
             q_dict['files'] = file_names
+            q_dict['tags'] = [tags.tag.name for tags in q_dict['tags']]
             questions_dict.append(q_dict)
         question._add_yaml_to_zip(zip_file, questions_dict)
         return zip_file_name
@@ -428,10 +429,12 @@ class Question(models.Model):
                 question['user'] = user
                 file_names = question.pop('files')
                 test_cases = question.pop('testcase')
+                tags = question.pop('tags')
                 que, result = Question.objects.get_or_create(**question)
                 if file_names:
                     que._add_files_to_db(file_names, file_path)
-
+                if tags:
+                    que.tags.add(*tags)
                 for test_case in test_cases:
                     try:
                         test_case_type = test_case.pop('test_case_type')
@@ -442,6 +445,7 @@ class Question(models.Model):
                             )
                         new_test_case.type = test_case_type
                         new_test_case.save()
+
                     except:
                         msg = "File not correct."
         except Exception as exc_msg:
