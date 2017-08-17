@@ -106,6 +106,22 @@ def get_upload_dir(instance, filename):
         'question_%s' % (instance.question.id), filename
     ))
 
+def dict_to_yaml(dictionary, path_to_file=None):
+    for k,v in dictionary.items():
+        if isinstance(v, list):
+            for  nested_v in v:
+                if isinstance(nested_v, dict):
+                    dict_to_yaml(nested_v)
+        elif v and isinstance(v,str):
+            dictionary[k] = PreservedScalarString(v)
+    if path_to_file:
+        with open(path_to_file, "a") as yaml_file:
+            ruamel.yaml.round_trip_dump(dictionary, yaml_file,
+                                    default_flow_style=False,
+                                    explicit_start=True,
+                                    allow_unicode=True
+                                    )
+
 
 ###############################################################################
 class CourseManager(models.Manager):
@@ -489,23 +505,8 @@ class Question(models.Model):
     def _add_yaml_to_zip(self, zip_file, q_dict):
         tmp_file_path = tempfile.mkdtemp()
         yaml_path = os.path.join(tmp_file_path, "questions_dump.yaml")
-
-        def _dict_walk(question_dict):
-            for k,v in question_dict.items():
-                if isinstance(v, list):
-                    for  nested_v in v:
-                        if isinstance(nested_v, dict):
-                            _dict_walk(nested_v)
-                elif v and isinstance(v,str):
-                    question_dict[k] = PreservedScalarString(v)
         for elem in q_dict:
-            _dict_walk(elem)
-            with open(yaml_path, "a") as yaml_file:
-                ruamel.yaml.round_trip_dump(elem, yaml_file,
-                                            default_flow_style=False,
-                                            explicit_start=True,
-                                            allow_unicode=True
-                                            )
+            dict_to_yaml(elem, yaml_path)
         zip_file.write(yaml_path, os.path.basename(yaml_path))
         zip_file.close()
         shutil.rmtree(tmp_file_path)
