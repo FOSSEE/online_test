@@ -43,37 +43,30 @@ $(function() {
     })
   });
 
-var status;
-var btn_name;
-
 $("#send_mail").click(function(){
-    btn_name = "send_mail";
     var subject = $("#subject").val();
     var body = $('#email_body').val();
+    var status;
     if (subject == '' || body == ''){
         status = false;
-        $("#error_msg").html("Please enter email details");
+        $("#error_msg").html("Please enter mail details");
         $("#dialog").dialog();
     }
     else{
         status = true;
     }
+    return status;
 });
 
 $('#send_mail_form').submit(function(eventObj) {
-    if (btn_name == 'send_mail'){
-        if(status == false){
-            return false;
-        }
-    }
     var selected = [];
     $('#reject input:checked').each(function() {
         selected.push($(this).attr('value'));
     });
-    if(selected.length > 0){
+    if(selected.length > 0) {
         return true;
     }
-    else{
+    else {
         $("#error_msg").html("Please select atleast one user");
         $( "#dialog" ).dialog();
         return false;
