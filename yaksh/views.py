@@ -732,6 +732,7 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
     course.enroll(was_rejected, *users)
     return course_detail(request, course_id)
 
+
 @login_required
 @email_verified
 def send_mail(request, course_id, user_id=None):
@@ -747,25 +748,23 @@ def send_mail(request, course_id, user_id=None):
     message = None
     if request.method == 'POST':
         user_ids = request.POST.getlist('check')
-        if not user_ids:
-            message = "Please select atleast one User"
-            return my_render_to_response('yaksh/course_detail.html',
-                                        {'course': course, "message": message},
-                                        context_instance=ci)
-
         if request.POST.get('send_mail') == 'send_mail':
             users = User.objects.filter(id__in=user_ids)
-            recipients = [user.email for user in users]
+            recipients = [student.email for student in users]
             email_body = request.POST.get('body')
             subject = request.POST.get('subject')
             attachments = request.FILES.getlist('email_attach')
-            message = send_bulk_mail(subject, email_body, recipients,
-                                        attachments)
+            message = send_bulk_mail(
+                subject, email_body, recipients, attachments
+            )
+    context = {
+        'course': course, 'message': message,
+        'status': 'mail'
+    }
+    return my_render_to_response(
+        'yaksh/course_detail.html', context, context_instance=ci
+    )
 
-    return my_render_to_response('yaksh/course_detail.html',
-                                {'course': course, "message": message,
-                                'msg': 'mail'},
-                                context_instance=ci)
 
 @login_required
 @email_verified
