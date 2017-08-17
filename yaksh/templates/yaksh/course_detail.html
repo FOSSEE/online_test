@@ -10,8 +10,7 @@
 <script src="https://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
 {% endblock %}
 {% block css %}
-<link rel="stylesheet" href="//code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/froala-editor/2.5.1/css/froala_editor.min.css" rel="stylesheet" type="text/css" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/froala-editor/2.5.1/css/froala_style.min.css" rel="stylesheet" type="text/css" />
 {% endblock %}
@@ -21,7 +20,7 @@
 <div class="row">
     <div class="col-sm-3 col-md-2 sidebar">
       <ul class="nav nav-sidebar">
-        {% if msg == 'mail'%}
+        {% if status == 'mail'%}
             <li><a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">
             Go to Course Details</a></li>
         {% else %}
@@ -56,7 +55,7 @@
         </center>
         </div>
         {% endif %}
-        {% if msg == 'mail' %}
+        {% if status == 'mail' %}
             <div id="enrolled-students">
             <center><b><u>Send Mails to Students</u></b></center><br>
             {% if course.get_enrolled %}
@@ -85,7 +84,7 @@
                     {% endfor %}
                 </table>
                 <br>
-                <input type="text" name="subject" id="subject" placeholder="Email Subject">
+                <textarea name="subject" id="subject" placeholder="Email Subject" cols="50"></textarea>
                 <br><br>
                 <textarea name="body" id="email_body"></textarea><br>
                 Attachments: <input type="file" name="email_attach" multiple="">
