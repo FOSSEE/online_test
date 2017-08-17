@@ -1869,16 +1869,19 @@ class TestCourseDetail(TestCase):
         user_ids = [self.student.id, self.student2.id, self.student3.id,
                     self.student4.id]
         user_emails = [self.student.email, self.student2.email,
-                        self.student3.email, self.student4.email]
+                       self.student3.email, self.student4.email]
 
         self.user1_course.students.add(*user_ids)
         attachment = SimpleUploadedFile("file.txt", b"Test")
-        response = self.client.post(reverse('yaksh:send_mail',
-                        kwargs={'course_id': self.user1_course.id}),
-                        data={'send_mail': 'send_mail', 'email_attach': [attachment],
-                            'subject': 'test_bulk_mail', 'body': 'Test_Mail',
-                            'check': user_ids}
-                        )
+        email_data = {
+            'send_mail': 'send_mail', 'email_attach': [attachment],
+            'subject': 'test_bulk_mail', 'body': 'Test_Mail',
+            'check': user_ids
+        }
+        self.client.post(reverse(
+            'yaksh:send_mail', kwargs={'course_id': self.user1_course.id}),
+            data=email_data
+        )
         attachment_file = mail.outbox[0].attachments[0][0]
         subject = mail.outbox[0].subject
         body = mail.outbox[0].alternatives[0][0]
@@ -1889,18 +1892,12 @@ class TestCourseDetail(TestCase):
         self.assertSequenceEqual(recipients, user_emails)
 
         # Test for get request in send mail
-        get_response = self.client.get(reverse('yaksh:send_mail',
-                kwargs={'course_id': self.user1_course.id}
-            ))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['course'], self.user1_course)
-
-        # Test if no users are selected
-        post_response = self.client.post(reverse('yaksh:send_mail',
-                        kwargs={'course_id': self.user1_course.id}),
-                        data={'check': []}
-                        )
-        self.assertIn('select', post_response.context['message'])
+        get_response = self.client.get(reverse(
+            'yaksh:send_mail', kwargs={'course_id': self.user1_course.id})
+        )
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(get_response.context['course'], self.user1_course)
+        self.assertEqual(get_response.context['status'], 'mail')
 
 
 class TestEnrollRequest(TestCase):
