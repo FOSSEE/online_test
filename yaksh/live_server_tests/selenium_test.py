@@ -23,6 +23,7 @@ class SeleniumTest():
             self.driver.get(self.url)
             self.login(username, password)
             self.open_quiz()
+            self.quit_quiz()
             self.close_quiz()
             self.logout()
             self.driver.close()
@@ -114,6 +115,17 @@ class SeleniumTest():
         self.test_c_question(question_label=7)
         self.test_python_question(question_label=5)
         self.test_bash_question(question_label=4)
+
+    def quit_quiz(self):
+        quit_link_elem = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.NAME, "quit"))
+        )
+        quit_link_elem.click()
+
+        quit_link_elem = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.NAME, "yes"))
+        )
+        quit_link_elem.click()
 
     def close_quiz(self):
         quit_link_elem = WebDriverWait(self.driver, 5).until(
