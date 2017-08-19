@@ -7,6 +7,7 @@ from selenium.common.exceptions import WebDriverException
 
 import multiprocessing
 import argparse
+import time
 
 class SeleniumTestError(Exception):
     pass
@@ -48,6 +49,7 @@ class SeleniumTest():
     def submit_answer(self, question_label, answer, loop_count=1):
         self.driver.implicitly_wait(2)
         for count in range(loop_count):
+            time.sleep(15)
             self.driver.find_element_by_link_text(question_label).click()
             submit_answer_elem = self.driver.find_element_by_id("check")
             self.driver.execute_script('global_editor.editor.setValue({});'.format(answer))
