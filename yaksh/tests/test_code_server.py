@@ -157,6 +157,40 @@ class TestCodeServer(unittest.TestCase):
         expect = '5 processes, 0 running, 0 queued'
         self.assertTrue(expect in data)
 
+    def test_killing_process_revives_it(self):
+        # Given
+        testdata = {
+            'metadata': {
+                'user_answer': 'import sys; sys.exit()',
+                'language': 'python',
+                'partial_grading': False
+            },
+            'test_case_data': [{'test_case': '',
+                                'test_case_type': 'standardtestcase',
+                                'weight': 0.0}]
+        }
+
+        # When
+        submit(self.url, '0', json.dumps(testdata), '')
+        result = get_result(self.url, '0', block=True)
+
+        # Then
+        data = json.loads(result.get('result'))
+        self.assertFalse(data['success'])
+        self.assertTrue('Process ended with exit code' in data['error'][0])
+
+        # Now check the server status to see if the right number
+        # processes are running.
+        url = "http://localhost:%s/" % SERVER_POOL_PORT
+
+        # When
+        response = urllib.request.urlopen(url)
+        data = response.read().decode('utf-8')
+
+        # Then
+        expect = '5 processes, 0 running, 0 queued'
+        self.assertTrue(expect in data)
+
 
 if __name__ == '__main__':
     unittest.main()
