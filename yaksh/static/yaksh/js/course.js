@@ -38,7 +38,7 @@ $(".reject").change( function(){
 
 $(function() {
     $('textarea#email_body').froalaEditor({
-        heightMin: 100,
+        heightMin: 200,
         heightMax: 200
     })
   });
@@ -46,31 +46,24 @@ $(function() {
 $("#send_mail").click(function(){
     var subject = $("#subject").val();
     var body = $('#email_body').val();
-    var status;
-    if (subject == '' || body == ''){
-        status = false;
-        $("#error_msg").html("Please enter mail details");
-        $("#dialog").dialog();
-    }
-    else{
-        status = true;
-    }
-    return status;
-});
-
-$('#send_mail_form').submit(function(eventObj) {
+    var status = false;
     var selected = [];
     $('#reject input:checked').each(function() {
         selected.push($(this).attr('value'));
     });
-    if(selected.length > 0) {
-        return true;
+
+    if (subject == '' || body == ''){
+        $("#error_msg").html("Please enter mail details");
+        $("#dialog").dialog();
+    }
+    else if (selected.length == 0){
+        $("#error_msg").html("Please select atleast one user");
+        $("#dialog").dialog();
     }
     else {
-        $("#error_msg").html("Please select atleast one user");
-        $( "#dialog" ).dialog();
-        return false;
+        status = true;
     }
+    return status;
 });
 
 });

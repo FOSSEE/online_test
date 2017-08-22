@@ -759,7 +759,7 @@ def send_mail(request, course_id, user_id=None):
             )
     context = {
         'course': course, 'message': message,
-        'status': 'mail'
+        'state': 'mail'
     }
     return my_render_to_response(
         'yaksh/course_detail.html', context, context_instance=ci

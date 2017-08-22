@@ -20,7 +20,7 @@
 <div class="row">
     <div class="col-sm-3 col-md-2 sidebar">
       <ul class="nav nav-sidebar">
-        {% if status == 'mail'%}
+        {% if state == 'mail'%}
             <li><a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">
             Go to Course Details</a></li>
         {% else %}
@@ -55,7 +55,7 @@
         </center>
         </div>
         {% endif %}
-        {% if status == 'mail' %}
+        {% if state == 'mail' %}
             <div id="enrolled-students">
             <center><b><u>Send Mails to Students</u></b></center><br>
             {% if course.get_enrolled %}
