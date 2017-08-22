@@ -44,12 +44,12 @@ def run_as_nobody():
     os.seteuid(nobody.pw_uid)
 
 
-def check_code(job_queue, results):
+def check_code(pid, job_queue, results):
     """Check the code, this runs forever.
     """
     while True:
         uid, json_data, user_dir = job_queue.get(True)
-        results[uid] = dict(status='running', result=None)
+        results[uid] = dict(status='running', pid=pid, result=None)
         data = json.loads(json_data)
         grader = Grader(user_dir)
         result = grader.evaluate(data)
@@ -81,7 +81,7 @@ class ServerPool(object):
         self.job_queue = Queue()
         processes = []
         for i in range(n):
-            p = Process(target=check_code, args=(self.job_queue, self.results))
+            p = self._make_process(i)
             processes.append(p)
         self.processes = processes
         self.app = self._make_app()
@@ -93,10 +93,32 @@ class ServerPool(object):
         app.listen(self.my_port)
         return app
 
+    def _make_process(self, pid):
+        return Process(
+            target=check_code, args=(pid, self.job_queue, self.results)
+        )
+
     def _start_code_servers(self):
         for proc in self.processes:
             if proc.pid is None:
                 proc.start()
+
+    def _handle_dead_process(self, result):
+        if result.get('status') == 'running':
+            pid = result.get('pid')
+            proc = self.processes[pid]
+            if not proc.is_alive():
+                # If the processes is dead, something bad happened so
+                # restart that process.
+                new_proc = self._make_process(pid)
+                self.processes[pid] = new_proc
+                new_proc.start()
+                result['status'] = 'done'
+                result['result'] = json.dumps(dict(
+                    success=False, weight=0.0,
+                    error=['Process ended with exit code %s.'
+                           % proc.exitcode]
+                ))
 
     # Public Protocol ##########
 
@@ -117,6 +139,7 @@ class ServerPool(object):
 
     def get_result(self, uid):
         result = self.results.get(uid, dict(status='unknown'))
+        self._handle_dead_process(result)
         if result.get('status') == 'done':
             self.results.pop(uid)
         return json.dumps(result)
@@ -238,6 +261,7 @@ def main(args=None):
     server_pool = ServerPool(n=options.n, pool_port=options.port)
 
     server_pool.run()
+
 
 if __name__ == '__main__':
     args = sys.argv[1:]
