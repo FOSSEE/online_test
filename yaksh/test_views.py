@@ -1897,7 +1897,7 @@ class TestCourseDetail(TestCase):
         )
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.context['course'], self.user1_course)
-        self.assertEqual(get_response.context['status'], 'mail')
+        self.assertEqual(get_response.context['state'], 'mail')
 
 
 class TestEnrollRequest(TestCase):
