@@ -7,7 +7,23 @@ from selenium.common.exceptions import WebDriverException
 
 import multiprocessing
 import argparse
-import time
+
+
+class ElementDisplay(object):
+    '''Custom expected condition '''
+    def __init__(self, locator):
+        self.locator = locator
+
+    def __call__(self, driver):
+        try:
+            element = EC._find_element(driver, self.locator)
+            a = element.value_of_css_property("display") == "none"
+            print(a)
+            return a
+        except Exception as e:
+            print(e)
+            return False
+
 
 class SeleniumTestError(Exception):
     pass
@@ -49,11 +65,13 @@ class SeleniumTest():
     def submit_answer(self, question_label, answer, loop_count=1):
         self.driver.implicitly_wait(2)
         for count in range(loop_count):
-            time.sleep(15)
+            print("in")
             self.driver.find_element_by_link_text(question_label).click()
             submit_answer_elem = self.driver.find_element_by_id("check")
             self.driver.execute_script('global_editor.editor.setValue({});'.format(answer))
             submit_answer_elem.click()
+            WebDriverWait(self.driver, 90).until(ElementDisplay(
+                (By.XPATH, "//*[@id='ontop']")))
 
     def test_c_question(self, question_label):
         # Incorrect Answer

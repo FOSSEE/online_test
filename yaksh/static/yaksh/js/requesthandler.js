@@ -1,22 +1,25 @@
 request_status = "initial"
 count = 0;
+checker = null
 function submitRequest(){
     document.forms["code"].submit();
 }
 
 function check_state(state, uid) {
-    if ((state == "running" || state == "not started") && count < 15) {
+    if ((state == "running" || state == "not started") && count < 7) {
         count++;
         setTimeout(function() {get_result(uid);}, 2000);
     } else if (state == "unknown") {
         request_status = "initial";
         count = 0;
         notify("You are requesting for a wrong data");
+        clearInterval(checker);
         unlock_screen();
     } else {
         request_status = "initial";
         count = 0;
         notify("Please try after few minutes");
+        clearInterval(checker);
         unlock_screen();
     }
 }
@@ -36,6 +39,13 @@ function unlock_screen() {
     document.getElementById("ontop").style.display = "none";
 }
 
+function check_lock_screen() {
+    var $ontop_div = document.getElementById("ontop");
+    if ($ontop_div.style.display == "block") {
+        $ontop_div.style.display = "none";
+    }
+}
+
 function get_result(uid){
     $.ajax({
         method: "GET",
@@ -44,6 +54,7 @@ function get_result(uid){
         success: function(data, status, xhr) {
             content_type = xhr.getResponseHeader("content-type");
             if(content_type.includes("text/html")) {
+                clearInterval(checker);
                 unlock_screen();
                 document.open();
                 document.write(data);
@@ -55,12 +66,14 @@ function get_result(uid){
             } else {
                 request_status = "initial";
                 count = 0;
+                clearInterval(checker);
                 unlock_screen();
             }
         },
         error: function(xhr, text_status, error_thrown ) {
             request_status = "initial";
             count = 0;
+            clearInterval(checker);
             unlock_screen();
             notify("There is some problem. Try later.")
         }
@@ -103,6 +116,7 @@ $(document).ready(function(){
       global_editor.editor.clearHistory();
   }
     $('#code').submit(function(e) {
+      checker = setInterval(check_lock_screen, 30000);
       lock_screen();
       $.ajax({
             type: 'POST',
@@ -114,6 +128,7 @@ $(document).ready(function(){
                 if(content_type.includes("text/html")) {
                     request_status = "initial"
                     count = 0;
+                    clearInterval(checker);
                     unlock_screen();
                     document.open();
                     document.write(data);
@@ -126,12 +141,14 @@ $(document).ready(function(){
                 } else {
                     request_status = "initial";
                     count = 0;
+                    clearInterval(checker);
                     unlock_screen();
                 }
             },
             error: function(xhr, text_status, error_thrown ) {
                 request_status = "initial";
                 count = 0;
+                clearInterval(checker);
                 unlock_screen();
                 notify("There is some problem. Try later.")
             }
