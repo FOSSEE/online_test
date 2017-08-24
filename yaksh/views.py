@@ -42,7 +42,7 @@ from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
 from .settings import URL_ROOT
 from yaksh.models import AssignmentUpload
 from .file_utils import extract_files
-from .send_emails import send_user_mail, generate_activation_key
+from .send_emails import send_user_mail, generate_activation_key, send_bulk_mail
 from .decorators import email_verified
 
 
@@ -735,6 +735,39 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
 
 @login_required
 @email_verified
+def send_mail(request, course_id, user_id=None):
+    user = request.user
+    ci = RequestContext(request)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
+    message = None
+    if request.method == 'POST':
+        user_ids = request.POST.getlist('check')
+        if request.POST.get('send_mail') == 'send_mail':
+            users = User.objects.filter(id__in=user_ids)
+            recipients = [student.email for student in users]
+            email_body = request.POST.get('body')
+            subject = request.POST.get('subject')
+            attachments = request.FILES.getlist('email_attach')
+            message = send_bulk_mail(
+                subject, email_body, recipients, attachments
+            )
+    context = {
+        'course': course, 'message': message,
+        'state': 'mail'
+    }
+    return my_render_to_response(
+        'yaksh/course_detail.html', context, context_instance=ci
+    )
+
+
+@login_required
+@email_verified
 def reject(request, course_id, user_id=None, was_enrolled=False):
     user = request.user
     ci = RequestContext(request)
@@ -750,8 +783,10 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
     else:
         reject_ids = [user_id]
     if not reject_ids:
-        return my_render_to_response('yaksh/course_detail.html', {'course': course},
-                                            context_instance=ci)
+        message = "Please select atleast one User"
+        return my_render_to_response('yaksh/course_detail.html',
+                                    {'course': course, "message": message},
+                                    context_instance=ci)
     users = User.objects.filter(id__in=reject_ids)
     course.reject(was_enrolled, *users)
     return course_detail(request, course_id)
