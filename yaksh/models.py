@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import json
 import ruamel.yaml
 from ruamel.yaml.scalarstring import PreservedScalarString
+from ruamel.yaml.comments import CommentedMap
 from random import sample
 from collections import Counter
 from django.db import models
@@ -119,8 +120,8 @@ def dict_to_yaml(dictionary, path_to_file=None):
             ruamel.yaml.round_trip_dump(dictionary, yaml_file,
                                     default_flow_style=False,
                                     explicit_start=True,
-                                    allow_unicode=True
-                                    )
+                                    allow_unicode=True,
+                                   )
 
 
 ###############################################################################
@@ -510,7 +511,8 @@ class Question(models.Model):
         tmp_file_path = tempfile.mkdtemp()
         yaml_path = os.path.join(tmp_file_path, "questions_dump.yaml")
         for elem in q_dict:
-            dict_to_yaml(elem, yaml_path)
+            commented_map = CommentedMap(sorted(elem.items(), key=lambda x:x[0]))
+            dict_to_yaml(commented_map, yaml_path)
         zip_file.write(yaml_path, os.path.basename(yaml_path))
         zip_file.close()
         shutil.rmtree(tmp_file_path)
