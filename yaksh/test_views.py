@@ -21,8 +21,9 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
-    QuestionSet, AnswerPaper, Answer, Course, StandardTestCase, has_profile,\
+    QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     AssignmentUpload, FileUpload
+from yaksh.decorators import user_has_profile
 
 
 class TestUserRegistration(TestCase):
@@ -90,18 +91,18 @@ class TestProfile(TestCase):
         self.user2.delete()
 
 
-    def test_has_profile_for_user_without_profile(self):
+    def test_user_has_profile_for_user_without_profile(self):
         """
         If no profile exists for user passed as argument return False
         """
-        has_profile_status = has_profile(self.user1)
+        has_profile_status = user_has_profile(self.user1)
         self.assertFalse(has_profile_status)
 
-    def test_has_profile_for_user_with_profile(self):
+    def test_user_has_profile_for_user_with_profile(self):
         """
         If profile exists for user passed as argument return True
         """
-        has_profile_status = has_profile(self.user2)
+        has_profile_status = user_has_profile(self.user2)
         self.assertTrue(has_profile_status)
 
 
@@ -206,6 +207,30 @@ class TestProfile(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/editprofile.html')
 
+    def test_edit_profile_get_for_user_without_profile(self):
+        """
+        If no profile exists a blank profile form will be displayed
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:edit_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/editprofile.html')
+
+    def test_edit_profile_get_for_user_with_profile(self):
+        """
+        If profile exists a editprofile.html template will be rendered
+        """
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:edit_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/editprofile.html')
+
     def test_update_email_for_user_post(self):
         """ POST request to update email if multiple users with same email are
             found
@@ -249,6 +274,16 @@ class TestStudentDashboard(TestCase):
             timezone='UTC'
         )
 
+        # student without profile
+        self.student_no_profile_plaintext_pass = 'student2'
+        self.student_no_profile = User.objects.create_user(
+            username='student_no_profile',
+            password=self.student_no_profile_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='student_no_profile@test.com'
+        )
+
         # moderator
         self.user_plaintext_pass = 'demo'
         self.user = User.objects.create_user(
@@ -290,6 +325,30 @@ class TestStudentDashboard(TestCase):
         self.assertEqual(response.status_code, 200)
         redirection_url = '/exam/login/?next=/exam/quizzes/'
         self.assertRedirects(response, redirection_url)
+
+    def test_student_dashboard_get_for_user_without_profile(self):
+        """
+        If no profile exists a blank profile form will be displayed
+        """
+        self.client.login(
+            username=self.student_no_profile.username,
+            password=self.student_no_profile_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:quizlist_user'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/editprofile.html')
+
+    def test_student_dashboard_get_for_user_with_profile(self):
+        """
+        If profile exists a editprofile.html template will be rendered
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:quizlist_user'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/quizzes_user.html')
 
     def test_student_dashboard_all_courses_get(self):
         """
@@ -2561,6 +2620,16 @@ class TestModeratorDashboard(TestCase):
             position='Moderator',
             timezone='UTC'
         )
+
+        self.mod_no_profile_plaintext_pass = 'demo2'
+        self.mod_no_profile = User.objects.create_user(
+            username='demo_user2',
+            password=self.mod_no_profile_plaintext_pass,
+            first_name='user_first_name22',
+            last_name='user_last_name',
+            email='demo2@test.com'
+        )
+
         self.mod_group.user_set.add(self.user)
         self.course = Course.objects.create(name="Python Course",
             enrollment="Enroll Request", creator=self.user)
@@ -2653,6 +2722,30 @@ class TestModeratorDashboard(TestCase):
                                    )
         self.assertEqual(response.status_code, 200)
         self.assertRedirects(response, '/exam/quizzes/')
+
+    def test_moderator_dashboard_get_for_user_without_profile(self):
+        """
+        If no profile exists a blank profile form will be displayed
+        """
+        self.client.login(
+            username=self.mod_no_profile.username,
+            password=self.mod_no_profile_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:quizlist_user'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/editprofile.html')
+
+    def test_moderator_dashboard_get_for_user_with_profile(self):
+        """
+        If profile exists a editprofile.html template will be rendered
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:quizlist_user'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/quizzes_user.html')
 
     def test_moderator_dashboard_get_all_quizzes(self):
         """

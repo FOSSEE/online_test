@@ -92,11 +92,6 @@ def get_model_class(model):
     return model_class
 
 
-def has_profile(user):
-    """ check if user has profile """
-    return True if hasattr(user, 'profile') else False
-
-
 def get_upload_dir(instance, filename):
     return os.sep.join((
         'question_%s' % (instance.question.id), filename
