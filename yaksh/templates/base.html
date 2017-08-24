@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/sticky-footer.css" type="text/css" />
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
+  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/ontop.css" type="text/css" />
 
 
   {% block meta %}
@@ -36,6 +37,11 @@
 </head>
 
 <body {% block onload %} {% endblock %}>
+  <div id="ontop">
+    <div id="state">
+        Checking...
+    </div>
+  </div>
   {% block nav %}
   {% endblock %}
   <div class="container">
