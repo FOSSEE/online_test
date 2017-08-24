@@ -102,7 +102,7 @@ def get_upload_dir(instance, filename):
         'question_%s' % (instance.question.id), filename
     ))
 
-def dict_to_yaml(dictionary, path_to_file=None):
+def dict_to_yaml(dictionary):
     for k,v in dictionary.items():
         if isinstance(v, list):
             for  nested_v in v:
@@ -110,14 +110,10 @@ def dict_to_yaml(dictionary, path_to_file=None):
                     dict_to_yaml(nested_v)
         elif v and isinstance(v,str):
             dictionary[k] = PreservedScalarString(v)
-    if path_to_file:
-        with open(path_to_file, "a") as yaml_file:
-            ruamel.yaml.round_trip_dump(dictionary, yaml_file,
-                                    default_flow_style=False,
-                                    explicit_start=True,
-                                    allow_unicode=True,
-                                   )
-
+    return ruamel.yaml.round_trip_dump(dictionary, explicit_start=True,
+                                       default_flow_style=False,
+                                       allow_unicode=True,
+                                       )
 
 ###############################################################################
 class CourseManager(models.Manager):
@@ -502,12 +498,15 @@ class Question(models.Model):
                 file_upload.extract = extract
                 file_upload.file.save(file_name, django_file, save=True)
 
-    def _add_yaml_to_zip(self, zip_file, q_dict):
+    def _add_yaml_to_zip(self, zip_file, q_dict,path_to_file=None):
+        
         tmp_file_path = tempfile.mkdtemp()
         yaml_path = os.path.join(tmp_file_path, "questions_dump.yaml")
         for elem in q_dict:
-            commented_map = CommentedMap(sorted(elem.items(), key=lambda x:x[0]))
-            dict_to_yaml(commented_map, yaml_path)
+            sorted_dict = CommentedMap(sorted(elem.items(), key=lambda x:x[0]))
+            yaml_block = dict_to_yaml(sorted_dict)
+            with open(yaml_path, "a") as yaml_file:
+                yaml_file.write(yaml_block)
         zip_file.write(yaml_path, os.path.basename(yaml_path))
         zip_file.close()
         shutil.rmtree(tmp_file_path)
@@ -518,7 +517,9 @@ class Question(models.Model):
         if os.path.exists(yaml_file):
             with open(yaml_file, 'r') as q_file:
                 questions_list = q_file.read()
-                msg = self.load_questions(questions_list, user, file_path, files)
+                msg = self.load_questions(questions_list, user, 
+                                          file_path, files
+                                          )
         else:
             msg = "Please upload zip file with questions_dump.yaml in it."
 

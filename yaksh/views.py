@@ -1622,13 +1622,14 @@ def download_yaml_template(request):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    template_path = os.path.join(os.path.dirname(__file__), "demo_templates",
-                                 "yaml_question_template"
+    template_path = os.path.join(os.path.dirname(__file__), "fixtures",
+                                 "demo_questions.zip"
                                  )
-    with open(template_path, 'r') as f:
-        yaml_str = f.read()
-    response = HttpResponse(yaml_str, content_type='text/yaml')
-    response['Content-Disposition'] = 'attachment; filename="questions_dump.yaml"'
+    yaml_file = zipfile.ZipFile(template_path, 'r')
+    template_yaml = yaml_file.open('questions_dump.yaml', 'r')
+    response = HttpResponse(template_yaml, content_type='text/yaml')
+    response['Content-Disposition'] = 'attachment;\
+                                      filename="questions_dump.yaml"'
     
     return response
 
