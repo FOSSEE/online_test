@@ -35,4 +35,35 @@ $(".reject").change( function(){
                 });
         }
     });
+
+$(function() {
+    $('textarea#email_body').froalaEditor({
+        heightMin: 200,
+        heightMax: 200
+    })
+  });
+
+$("#send_mail").click(function(){
+    var subject = $("#subject").val();
+    var body = $('#email_body').val();
+    var status = false;
+    var selected = [];
+    $('#reject input:checked').each(function() {
+        selected.push($(this).attr('value'));
+    });
+
+    if (subject == '' || body == ''){
+        $("#error_msg").html("Please enter mail details");
+        $("#dialog").dialog();
+    }
+    else if (selected.length == 0){
+        $("#error_msg").html("Please select atleast one user");
+        $("#dialog").dialog();
+    }
+    else {
+        status = true;
+    }
+    return status;
+});
+
 });

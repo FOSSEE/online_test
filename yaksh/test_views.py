@@ -21,8 +21,9 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
-    QuestionSet, AnswerPaper, Answer, Course, StandardTestCase, has_profile,\
+    QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     AssignmentUpload, FileUpload
+from yaksh.decorators import user_has_profile
 
 
 class TestUserRegistration(TestCase):
@@ -90,18 +91,18 @@ class TestProfile(TestCase):
         self.user2.delete()
 
 
-    def test_has_profile_for_user_without_profile(self):
+    def test_user_has_profile_for_user_without_profile(self):
         """
         If no profile exists for user passed as argument return False
         """
-        has_profile_status = has_profile(self.user1)
+        has_profile_status = user_has_profile(self.user1)
         self.assertFalse(has_profile_status)
 
-    def test_has_profile_for_user_with_profile(self):
+    def test_user_has_profile_for_user_with_profile(self):
         """
         If profile exists for user passed as argument return True
         """
-        has_profile_status = has_profile(self.user2)
+        has_profile_status = user_has_profile(self.user2)
         self.assertTrue(has_profile_status)
 
 
@@ -206,6 +207,30 @@ class TestProfile(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/editprofile.html')
 
+    def test_edit_profile_get_for_user_without_profile(self):
+        """
+        If no profile exists a blank profile form will be displayed
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:edit_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/editprofile.html')
+
+    def test_edit_profile_get_for_user_with_profile(self):
+        """
+        If profile exists a editprofile.html template will be rendered
+        """
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:edit_profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/editprofile.html')
+
     def test_update_email_for_user_post(self):
         """ POST request to update email if multiple users with same email are
             found
@@ -249,6 +274,16 @@ class TestStudentDashboard(TestCase):
             timezone='UTC'
         )
 
+        # student without profile
+        self.student_no_profile_plaintext_pass = 'student2'
+        self.student_no_profile = User.objects.create_user(
+            username='student_no_profile',
+            password=self.student_no_profile_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='student_no_profile@test.com'
+        )
+
         # moderator
         self.user_plaintext_pass = 'demo'
         self.user = User.objects.create_user(
@@ -290,6 +325,30 @@ class TestStudentDashboard(TestCase):
         self.assertEqual(response.status_code, 200)
         redirection_url = '/exam/login/?next=/exam/quizzes/'
         self.assertRedirects(response, redirection_url)
+
+    def test_student_dashboard_get_for_user_without_profile(self):
+        """
+        If no profile exists a blank profile form will be displayed
+        """
+        self.client.login(
+            username=self.student_no_profile.username,
+            password=self.student_no_profile_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:quizlist_user'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/editprofile.html')
+
+    def test_student_dashboard_get_for_user_with_profile(self):
+        """
+        If profile exists a editprofile.html template will be rendered
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:quizlist_user'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/quizzes_user.html')
 
     def test_student_dashboard_all_courses_get(self):
         """
@@ -1195,6 +1254,7 @@ class TestAddTeacher(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
+
         teacher_id_list = []
 
         for i in range(5):
@@ -1833,6 +1893,70 @@ class TestCourseDetail(TestCase):
         self.assertEqual(response.status_code, 200)
         course = Course.objects.get(name="Python Course")
         self.assertFalse(course.active)
+        self.assertEqual(self.user1_course, response.context['course'])
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/course_detail.html')
+
+    def test_send_mail_to_course_students(self):
+        """ Check if bulk mail is sent to multiple students enrolled in a course
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        self.student2 = User.objects.create_user(
+            username='demo_student2',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student2@test.com'
+        )
+        self.student3 = User.objects.create_user(
+            username='demo_student3',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student3@test.com'
+        )
+        self.student4 = User.objects.create_user(
+            username='demo_student4',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student4@test.com'
+        )
+        user_ids = [self.student.id, self.student2.id, self.student3.id,
+                    self.student4.id]
+        user_emails = [self.student.email, self.student2.email,
+                       self.student3.email, self.student4.email]
+
+        self.user1_course.students.add(*user_ids)
+        attachment = SimpleUploadedFile("file.txt", b"Test")
+        email_data = {
+            'send_mail': 'send_mail', 'email_attach': [attachment],
+            'subject': 'test_bulk_mail', 'body': 'Test_Mail',
+            'check': user_ids
+        }
+        self.client.post(reverse(
+            'yaksh:send_mail', kwargs={'course_id': self.user1_course.id}),
+            data=email_data
+        )
+        attachment_file = mail.outbox[0].attachments[0][0]
+        subject = mail.outbox[0].subject
+        body = mail.outbox[0].alternatives[0][0]
+        recipients = mail.outbox[0].recipients()
+        self.assertEqual(attachment_file, "file.txt")
+        self.assertEqual(subject, "test_bulk_mail")
+        self.assertEqual(body, "Test_Mail")
+        self.assertSequenceEqual(recipients, user_emails)
+
+        # Test for get request in send mail
+        get_response = self.client.get(reverse(
+            'yaksh:send_mail', kwargs={'course_id': self.user1_course.id})
+        )
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(get_response.context['course'], self.user1_course)
+        self.assertEqual(get_response.context['state'], 'mail')
 
 
 class TestEnrollRequest(TestCase):
@@ -2496,6 +2620,16 @@ class TestModeratorDashboard(TestCase):
             position='Moderator',
             timezone='UTC'
         )
+
+        self.mod_no_profile_plaintext_pass = 'demo2'
+        self.mod_no_profile = User.objects.create_user(
+            username='demo_user2',
+            password=self.mod_no_profile_plaintext_pass,
+            first_name='user_first_name22',
+            last_name='user_last_name',
+            email='demo2@test.com'
+        )
+
         self.mod_group.user_set.add(self.user)
         self.course = Course.objects.create(name="Python Course",
             enrollment="Enroll Request", creator=self.user)
@@ -2588,6 +2722,30 @@ class TestModeratorDashboard(TestCase):
                                    )
         self.assertEqual(response.status_code, 200)
         self.assertRedirects(response, '/exam/quizzes/')
+
+    def test_moderator_dashboard_get_for_user_without_profile(self):
+        """
+        If no profile exists a blank profile form will be displayed
+        """
+        self.client.login(
+            username=self.mod_no_profile.username,
+            password=self.mod_no_profile_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:quizlist_user'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/editprofile.html')
+
+    def test_moderator_dashboard_get_for_user_with_profile(self):
+        """
+        If profile exists a editprofile.html template will be rendered
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:quizlist_user'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/quizzes_user.html')
 
     def test_moderator_dashboard_get_all_quizzes(self):
         """
