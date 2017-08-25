@@ -3141,7 +3141,7 @@ class TestShowQuestions(TestCase):
         zip_file = string_io(response.content)
         zipped_file = zipfile.ZipFile(zip_file, 'r')
         self.assertIsNone(zipped_file.testzip())
-        self.assertIn('questions_dump.json', zipped_file.namelist())
+        self.assertIn('questions_dump.yaml', zipped_file.namelist())
         zip_file.close()
         zipped_file.close()
 
@@ -3170,12 +3170,18 @@ class TestShowQuestions(TestCase):
                                 data={'file': questions_file,
                                       'upload': 'upload'}
                                 )
+        summaries = ['Roots of quadratic equation', 'Print Output',
+                     'Adding decimals', 'For Loop over String',
+                     'Hello World in File', 'Extract columns from files',
+                     'Check Palindrome', 'Add 3 numbers', 'Reverse a string'
+                     ]
+
         uploaded_ques = Question.objects.filter(active=True,
-                                            summary="Yaksh Demo Question",
+                                            summary__in=summaries,
                                             user=self.user).count()
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
-        self.assertEqual(uploaded_ques, 3)
+        self.assertEqual(uploaded_ques, 9)
         f.close()
         dummy_file = SimpleUploadedFile("test.txt", b"test")
         response = self.client.post(reverse('yaksh:show_questions'),

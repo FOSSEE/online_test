@@ -1,6 +1,9 @@
 from __future__ import unicode_literals
 from datetime import datetime, timedelta
 import json
+import ruamel.yaml
+from ruamel.yaml.scalarstring import PreservedScalarString
+from ruamel.yaml.comments import CommentedMap
 from random import sample
 from collections import Counter
 from django.db import models
@@ -23,9 +26,11 @@ import shutil
 import zipfile
 import tempfile
 from textwrap import dedent
+from ast import literal_eval
 from .file_utils import extract_files, delete_files
 from yaksh.xmlrpc_clients import code_server
 from django.conf import settings
+from django.forms.models import model_to_dict
 
 
 languages = (
@@ -97,6 +102,18 @@ def get_upload_dir(instance, filename):
         'question_%s' % (instance.question.id), filename
     ))
 
+def dict_to_yaml(dictionary):
+    for k,v in dictionary.items():
+        if isinstance(v, list):
+            for  nested_v in v:
+                if isinstance(nested_v, dict):
+                    dict_to_yaml(nested_v)
+        elif v and isinstance(v,str):
+            dictionary[k] = PreservedScalarString(v)
+    return ruamel.yaml.round_trip_dump(dictionary, explicit_start=True,
+                                       default_flow_style=False,
+                                       allow_unicode=True,
+                                       )
 
 ###############################################################################
 class CourseManager(models.Manager):
@@ -375,52 +392,57 @@ class Question(models.Model):
         return json.dumps(question_data)
 
     def dump_questions(self, question_ids, user):
-        questions = Question.objects.filter(
-            id__in=question_ids, user_id=user.id, active=True
-        )
+        questions = Question.objects.filter(id__in=question_ids,
+                                            user_id=user.id, active=True
+                                            )
         questions_dict = []
         zip_file_name = string_io()
         zip_file = zipfile.ZipFile(zip_file_name, "a")
         for question in questions:
             test_case = question.get_test_cases()
             file_names = question._add_and_get_files(zip_file)
-            q_dict = {
-                'summary': question.summary,
-                'description': question.description,
-                'points': question.points, 'language': question.language,
-                'type': question.type, 'active': question.active,
-                'snippet': question.snippet,
-                'testcase': [case.get_field_value() for case in test_case],
-                'files': file_names
-            }
+            q_dict = model_to_dict(question, exclude=['id', 'user'])
+            testcases = []
+            for case in test_case:
+                testcases.append(case.get_field_value())
+            q_dict['testcase'] = testcases
+            q_dict['files'] = file_names
+            q_dict['tags'] = [tags.tag.name for tags in q_dict['tags']]
             questions_dict.append(q_dict)
-        question._add_json_to_zip(zip_file, questions_dict)
+        question._add_yaml_to_zip(zip_file, questions_dict)
         return zip_file_name
 
     def load_questions(self, questions_list, user, file_path=None,
                        files_list=None):
         try:
-            questions = json.loads(questions_list)
-        except ValueError as exc_msg:
-            msg = "Error Parsing Json: {0}".format(exc_msg)
-            return msg
-        for question in questions:
-            question['user'] = user
-            file_names = question.pop('files')
-            test_cases = question.pop('testcase')
-            que, result = Question.objects.get_or_create(**question)
-            if file_names:
-                que._add_files_to_db(file_names, file_path)
-            for test_case in test_cases:
-                test_case_type = test_case.pop('test_case_type')
-                model_class = get_model_class(test_case_type)
-                new_test_case, obj_create_status = \
-                    model_class.objects.get_or_create(
-                        question=que, **test_case
-                    )
-                new_test_case.type = test_case_type
-                new_test_case.save()
-        return "Questions Uploaded Successfully"
+            questions = ruamel.yaml.safe_load_all(questions_list)
+            msg = "Questions Uploaded Successfully"
+            for question in questions:
+                question['user'] = user
+                file_names = question.pop('files')
+                test_cases = question.pop('testcase')
+                tags = question.pop('tags')
+                que, result = Question.objects.get_or_create(**question)
+                if file_names:
+                    que._add_files_to_db(file_names, file_path)
+                if tags:
+                    que.tags.add(*tags)
+                for test_case in test_cases:
+                    try:
+                        test_case_type = test_case.pop('test_case_type')
+                        model_class = get_model_class(test_case_type)
+                        new_test_case, obj_create_status = \
+                            model_class.objects.get_or_create(
+                                question=que, **test_case
+                            )
+                        new_test_case.type = test_case_type
+                        new_test_case.save()
+
+                    except:
+                        msg = "File not correct."
+        except Exception as exc_msg:
+            msg = "Error Parsing Yaml: {0}".format(exc_msg)
+        return msg
 
     def get_test_cases(self, **kwargs):
         tc_list = []
@@ -476,25 +498,30 @@ class Question(models.Model):
                 file_upload.extract = extract
                 file_upload.file.save(file_name, django_file, save=True)
 
-    def _add_json_to_zip(self, zip_file, q_dict):
-        json_data = json.dumps(q_dict, indent=2)
+    def _add_yaml_to_zip(self, zip_file, q_dict,path_to_file=None):
+        
         tmp_file_path = tempfile.mkdtemp()
-        json_path = os.path.join(tmp_file_path, "questions_dump.json")
-        with open(json_path, "w") as json_file:
-            json_file.write(json_data)
-        zip_file.write(json_path, os.path.basename(json_path))
+        yaml_path = os.path.join(tmp_file_path, "questions_dump.yaml")
+        for elem in q_dict:
+            sorted_dict = CommentedMap(sorted(elem.items(), key=lambda x:x[0]))
+            yaml_block = dict_to_yaml(sorted_dict)
+            with open(yaml_path, "a") as yaml_file:
+                yaml_file.write(yaml_block)
+        zip_file.write(yaml_path, os.path.basename(yaml_path))
         zip_file.close()
         shutil.rmtree(tmp_file_path)
 
-    def read_json(self, file_path, user, files=None):
-        json_file = os.path.join(file_path, "questions_dump.json")
+    def read_yaml(self, file_path, user, files=None):
+        yaml_file = os.path.join(file_path, "questions_dump.yaml")
         msg = ""
-        if os.path.exists(json_file):
-            with open(json_file, 'r') as q_file:
+        if os.path.exists(yaml_file):
+            with open(yaml_file, 'r') as q_file:
                 questions_list = q_file.read()
-                msg = self.load_questions(questions_list, user, file_path, files)
+                msg = self.load_questions(questions_list, user, 
+                                          file_path, files
+                                          )
         else:
-            msg = "Please upload zip file with questions_dump.json in it."
+            msg = "Please upload zip file with questions_dump.yaml in it."
 
         if files:
             delete_files(files, file_path)
@@ -505,7 +532,7 @@ class Question(models.Model):
             settings.FIXTURE_DIRS, 'demo_questions.zip'
         )
         files, extract_path = extract_files(zip_file_path)
-        self.read_json(extract_path, user, files)
+        self.read_yaml(extract_path, user, files)
 
     def __str__(self):
         return self.summary
@@ -880,8 +907,13 @@ class QuestionPaper(models.Model):
                                                       total_marks=6.0,
                                                       shuffle_questions=True
                                                       )
+        summaries = ['Roots of quadratic equation', 'Print Output',
+                     'Adding decimals', 'For Loop over String',
+                     'Hello World in File', 'Extract columns from files',
+                     'Check Palindrome', 'Add 3 numbers', 'Reverse a string'
+                     ]
         questions = Question.objects.filter(active=True,
-                                            summary="Yaksh Demo Question",
+                                            summary__in=summaries,
                                             user=user)
         q_order = [str(que.id) for que in questions]
         question_paper.fixed_question_order = ",".join(q_order)

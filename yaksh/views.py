@@ -1050,7 +1050,7 @@ def show_all_questions(request):
                 if file_name[-1] == "zip":
                     ques = Question()
                     files, extract_path = extract_files(questions_file)
-                    context['message'] = ques.read_json(extract_path, user,
+                    context['message'] = ques.read_yaml(extract_path, user,
                                                         files)
                 else:
                     message = "Please Upload a ZIP file"
@@ -1615,3 +1615,21 @@ def duplicate_course(request, course_id):
             'instructor/administrator.'
         return complete(request, msg, attempt_num=None, questionpaper_id=None)
     return my_redirect('/exam/manage/courses/')
+
+@login_required
+@email_verified
+def download_yaml_template(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    template_path = os.path.join(os.path.dirname(__file__), "fixtures",
+                                 "demo_questions.zip"
+                                 )
+    yaml_file = zipfile.ZipFile(template_path, 'r')
+    template_yaml = yaml_file.open('questions_dump.yaml', 'r')
+    response = HttpResponse(template_yaml, content_type='text/yaml')
+    response['Content-Disposition'] = 'attachment;\
+                                      filename="questions_dump.yaml"'
+    
+    return response
+

@@ -106,5 +106,7 @@ urlpatterns = [
     url(r'^manage/download/user_assignment/(?P<question_id>\d+)/(?P<user_id>\d+)/(?P<quiz_id>\d+)/$',
         views.download_assignment_file, name="download_user_assignment"),
     url(r'^manage/download/quiz_assignments/(?P<quiz_id>\d+)/$',
-        views.download_assignment_file, name="download_quiz_assignment")
+        views.download_assignment_file, name="download_quiz_assignment"),
+    url(r'^manage/courses/download_yaml_template/',
+        views.download_yaml_template, name="download_yaml_template"),
 ]

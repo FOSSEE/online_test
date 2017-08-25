@@ -1,8 +1,9 @@
 import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload
+    StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload 
 import json
+import ruamel.yaml as yaml
 from datetime import datetime, timedelta
 from django.utils import timezone
 import pytz
@@ -111,7 +112,7 @@ class QuestionTestCases(unittest.TestCase):
             user=self.user1
         )
 
-        self.question2 = Question.objects.create(summary='Demo Json',
+        self.question2 = Question.objects.create(summary='Yaml Json',
             language='python',
             type='code',
             active=True,
@@ -159,8 +160,10 @@ class QuestionTestCases(unittest.TestCase):
                            "language": "Python", "type": "Code",
                            "testcase": self.test_case_upload_data,
                            "files": [[file1, 0]],
-                           "summary": "Json Demo"}]
-        self.json_questions_data = json.dumps(questions_data)
+                           "summary": "Yaml Demo",
+                           "tags": ['yaml_demo']
+                           }]
+        self.yaml_questions_data = yaml.safe_dump_all(questions_data)
 
     def tearDown(self):
         shutil.rmtree(self.load_tmp_path)
@@ -191,7 +194,7 @@ class QuestionTestCases(unittest.TestCase):
             self.assertIn(tag, ['python', 'function'])
 
     def test_dump_questions(self):
-        """ Test dump questions into json """
+        """ Test dump questions into Yaml """
         question = Question()
         question_id = [self.question2.id]
         questions_zip = question.dump_questions(question_id, self.user2)
@@ -200,8 +203,8 @@ class QuestionTestCases(unittest.TestCase):
         tmp_path = tempfile.mkdtemp()
         zip_file.extractall(tmp_path)
         test_case = self.question2.get_test_cases()
-        with open("{0}/questions_dump.json".format(tmp_path), "r") as f:
-            questions = json.loads(f.read())
+        with open("{0}/questions_dump.yaml".format(tmp_path), "r") as f:
+            questions = yaml.safe_load_all(f.read())
             for q in questions:
                 self.assertEqual(self.question2.summary, q['summary'])
                 self.assertEqual(self.question2.language, q['language'])
@@ -216,13 +219,13 @@ class QuestionTestCases(unittest.TestCase):
             os.remove(os.path.join(tmp_path, file))
 
     def test_load_questions(self):
-        """ Test load questions into database from json """
+        """ Test load questions into database from Yaml """
         question = Question()
-        result = question.load_questions(self.json_questions_data, self.user1)
-        question_data = Question.objects.get(summary="Json Demo")
+        result = question.load_questions(self.yaml_questions_data, self.user1)
+        question_data = Question.objects.get(summary="Yaml Demo")
         file = FileUpload.objects.get(question=question_data)
         test_case = question_data.get_test_cases()
-        self.assertEqual(question_data.summary, 'Json Demo')
+        self.assertEqual(question_data.summary, 'Yaml Demo')
         self.assertEqual(question_data.language, 'Python')
         self.assertEqual(question_data.type, 'Code')
         self.assertEqual(question_data.description, 'factorial of a no')
