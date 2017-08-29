@@ -579,7 +579,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         return show_question(request, current_question, paper)
 
 
-
+@login_required
+@email_verified
 def quit(request, reason=None, attempt_num=None, questionpaper_id=None):
     """Show the quit page when the user logs out."""
     paper = AnswerPaper.objects.get(user=request.user,
