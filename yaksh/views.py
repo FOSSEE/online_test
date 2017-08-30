@@ -402,12 +402,23 @@ def start(request, questionpaper_id=None, attempt_num=None):
         return my_render_to_response('yaksh/intro.html', context,
                                      context_instance=ci)
     else:
-        ip = request.META['REMOTE_ADDR']
-        if not hasattr(user, 'profile'):
-            msg = 'You do not have a profile and cannot take the quiz!'
-            raise Http404(msg)
-        new_paper = quest_paper.make_answerpaper(user, ip, attempt_num)
-        return show_question(request, new_paper.current_question(), new_paper)
+        attempted_paper = AnswerPaper.objects.filter(user=user,
+                                                     question_paper=quest_paper,
+                                                     attempt_number=attempt_num
+                                                     )
+        if not attempted_paper:
+            ip = request.META['REMOTE_ADDR']
+            if not hasattr(user, 'profile'):
+                msg = 'You do not have a profile and cannot take the quiz!'
+                raise Http404(msg)
+            new_paper = quest_paper.make_answerpaper(user, ip, attempt_num)
+            return show_question(request, new_paper.current_question(),
+                                 new_paper
+                                 )
+        else:
+                msg = 'You have already finished the quiz!'
+                raise Http404(msg)
+        
 
 
 @login_required
