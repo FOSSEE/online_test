@@ -75,7 +75,7 @@ class SeleniumTest():
 
     def test_c_question(self, question_label):
         # Incorrect Answer
-        loop_count = 10
+        loop_count = 3
         answer = '\"int add(int a, int b, int c)\\n{return;}\"'
         self.submit_answer(question_label, answer, loop_count)
 
@@ -91,7 +91,7 @@ class SeleniumTest():
 
     def test_python_question(self, question_label):
         # Incorrect Answer
-        loop_count = 10
+        loop_count = 3
         answer = '\"def is_palindrome(s):\\n    return s\"'
         self.submit_answer(question_label, answer, loop_count)
 
@@ -107,7 +107,7 @@ class SeleniumTest():
 
     def test_bash_question(self, question_label):
         # Incorrect Answer
-        loop_count = 10
+        loop_count = 3
         answer = '\"#!/bin/bash\\nls\"'
         self.submit_answer(question_label, answer, loop_count)
 

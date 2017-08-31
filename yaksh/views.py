@@ -475,6 +475,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     current_question = get_object_or_404(Question, pk=q_id)
 
     if request.method == 'POST':
+        print("check post")
         # Add the answer submitted, regardless of it being correct or not.
         if current_question.type == 'mcq':
             user_answer = request.POST.get('answer')
@@ -558,6 +559,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                         result)
                 return show_question(request, next_question, paper, error_message)
             else:
+                print("post response")
+                print(result)
                 return JsonResponse(result)
         else:
             next_question, error_message, paper = _update_paper(request, uid, result)
@@ -576,6 +579,7 @@ def get_results(request, uid):
         result = json.loads(result_state.get('result'))
         next_question, error_message, paper = _update_paper(request, uid, result)
         return show_question(request, next_question, paper, error_message)
+    print("get result")
     return JsonResponse(result)
 
 

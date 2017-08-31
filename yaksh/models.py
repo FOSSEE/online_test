@@ -1329,7 +1329,7 @@ class AnswerPaper(models.Model):
                 user_dir = self.user.profile.get_user_dir()
                 url = 'http://localhost:%s' % SERVER_POOL_PORT
                 submit(url, uid, json_data, user_dir)
-                result = {'uid': uid, 'state': 'running'}
+                result = {"uid": uid, "state": "running"}
         return result
 
     def regrade(self, question_id):

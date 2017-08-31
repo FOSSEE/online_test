@@ -53,13 +53,13 @@ function get_result(uid){
         dataType: "html", // Your server can response html, json, xml format.
         success: function(data, status, xhr) {
             content_type = xhr.getResponseHeader("content-type");
-            if(content_type.includes("text/html")) {
+            if(content_type.indexOf("text/html") !== -1) {
                 clearInterval(checker);
                 unlock_screen();
                 document.open();
                 document.write(data);
                 document.close();
-            } else if(content_type.includes("application/json")) {
+            } else if(content_type.indexOf("application/json") !== -1) {
                 res = JSON.parse(data);
                 request_status = res.status;
                 check_state(request_status, uid);
@@ -116,7 +116,7 @@ $(document).ready(function(){
       global_editor.editor.clearHistory();
   }
     $('#code').submit(function(e) {
-      checker = setInterval(check_lock_screen, 30000);
+      checker = setInterval(check_lock_screen, 20000);
       lock_screen();
       $.ajax({
             type: 'POST',
@@ -125,7 +125,7 @@ $(document).ready(function(){
             dataType: "html", // Your server can response html, json, xml format.
             success: function(data, status, xhr) {
                 content_type = xhr.getResponseHeader("content-type");
-                if(content_type.includes("text/html")) {
+                if(content_type.indexOf("text/html") !== -1) {
                     request_status = "initial"
                     count = 0;
                     clearInterval(checker);
@@ -133,7 +133,7 @@ $(document).ready(function(){
                     document.open();
                     document.write(data);
                     document.close();
-                } else if(content_type.includes("application/json")) {
+                } else if(content_type.indexOf("application/json") !== -1) {
                     res = JSON.parse(data);
                     var uid = res.uid;
                     request_status = res.state;

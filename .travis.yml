@@ -25,3 +25,5 @@ script:
 after_success:
   - coverage combine
   - coverage report
+
+dist: precise
