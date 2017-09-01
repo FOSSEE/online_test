@@ -29,6 +29,7 @@ try:
     from StringIO import StringIO as string_io
 except ImportError:
     from io import BytesIO as string_io
+import re
 # Local imports.
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
@@ -1032,6 +1033,18 @@ def show_all_questions(request):
     if not is_moderator(user):
         raise Http404("You are not allowed to view this page !")
 
+    questions = Question.objects.filter(user_id=user.id, active=True)
+    form = QuestionFilterForm(user=user)
+    user_tags = questions.values_list('tags', flat=True).distinct()
+    all_tags = Tag.objects.filter(id__in = user_tags)
+    upload_form = UploadFileForm()
+    context['questions'] = questions
+    context['all_tags'] = all_tags
+    context['papers'] = []
+    context['question'] = None
+    context['form'] = form
+    context['upload_form'] = upload_form
+
     if request.method == 'POST':
         if request.POST.get('delete') == 'delete':
             data = request.POST.getlist('question')
@@ -1080,14 +1093,15 @@ def show_all_questions(request):
             else:
                 context["msg"] = "Please select atleast one question to test"
 
-    questions = Question.objects.filter(user_id=user.id, active=True)
-    form = QuestionFilterForm(user=user)
-    upload_form = UploadFileForm()
-    context['papers'] = []
-    context['question'] = None
-    context['questions'] = questions
-    context['form'] = form
-    context['upload_form'] = upload_form
+        if request.POST.get('question_tags'):
+            question_tags = request.POST.getlist("question_tags")
+            search_tags = []
+            for tags in question_tags:
+                search_tags.extend(re.split('[; |, |\*|\n]',tags))
+            search_result = Question.objects.filter(tags__name__in=search_tags,
+                                                    user=user).distinct()
+            context['questions'] = search_result
+
     return my_render_to_response('yaksh/showquestions.html', context,
                                  context_instance=ci)
 
