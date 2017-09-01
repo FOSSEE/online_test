@@ -31,18 +31,7 @@ except ImportError:
     from io import BytesIO as string_io
 import re
 # Local imports.
-<<<<<<< HEAD
 from yaksh.code_server import get_result, SERVER_POOL_PORT
-from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
-from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
-                         StandardTestCase, McqTestCase,\
-                         StdIOBasedTestCase, HookTestCase, IntegerTestCase,\
-                         FloatTestCase, StringTestCase
-from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
-                QuestionForm, RandomQuestionForm,\
-                QuestionFilterForm, CourseForm, ProfileForm, UploadFileForm,\
-                get_object_form, FileForm, QuestionPaperForm
-=======
 from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, FloatTestCase,
     HookTestCase, IntegerTestCase, McqTestCase, Profile,
@@ -55,9 +44,7 @@ from yaksh.forms import (
     RandomQuestionForm, QuestionFilterForm, CourseForm, ProfileForm,
     UploadFileForm, get_object_form, FileForm, QuestionPaperForm
 )
->>>>>>> 97a96d1678cb55b95ed14eb9a2b2790415d30abc
 from .settings import URL_ROOT
-from yaksh.models import AssignmentUpload
 from .file_utils import extract_files
 from .send_emails import send_user_mail, generate_activation_key, send_bulk_mail
 from .decorators import email_verified, has_profile
@@ -616,12 +603,11 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
         json_data = current_question.consolidate_answer_data(user_answer, user) \
-<<<<<<< HEAD
-                    if current_question.type == 'code' or \
-                    current_question.type == 'upload' else None
-        result = paper.validate_answer(user_answer, current_question,
-                                       json_data, uid
-                                           )
+            if current_question.type == 'code' or \
+            current_question.type == 'upload' else None
+        result = paper.validate_answer(
+            user_answer, current_question, json_data, uid
+        )
         if current_question.type in ['code', 'upload']:
             if paper.time_left() <= 0:
                 url = 'http://localhost:%s' % SERVER_POOL_PORT
@@ -632,23 +618,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                 return show_question(request, next_question, paper, error_message)
             else:
                 return JsonResponse(result)
-=======
-            if current_question.type == 'code' or \
-            current_question.type == 'upload' else None
-        result = paper.validate_answer(
-            user_answer, current_question, json_data
-        )
-        if result.get('success'):
-            new_answer.marks = (current_question.points * result['weight'] /
-                current_question.get_maximum_test_case_weight()) \
-                if current_question.partial_grading and \
-                current_question.type == 'code' or current_question.type == 'upload' \
-                else current_question.points
-            new_answer.correct = result.get('success')
-            error_message = None
-            new_answer.error = json.dumps(result.get('error'))
-            next_question = paper.add_completed_question(current_question.id)
->>>>>>> 97a96d1678cb55b95ed14eb9a2b2790415d30abc
         else:
             next_question, error_message, paper = _update_paper(request, uid, result)
             return show_question(request, next_question, paper, error_message)
@@ -656,7 +625,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         return show_question(request, current_question, paper)
 
 
-<<<<<<< HEAD
 @csrf_exempt
 def get_results(request, uid):
     result = {}
@@ -703,8 +671,6 @@ def _update_paper(request, uid, result):
     return next_question, error_message, paper
 
 
-=======
->>>>>>> 97a96d1678cb55b95ed14eb9a2b2790415d30abc
 def quit(request, reason=None, attempt_num=None, questionpaper_id=None):
     """Show the quit page when the user logs out."""
     paper = AnswerPaper.objects.get(user=request.user,
