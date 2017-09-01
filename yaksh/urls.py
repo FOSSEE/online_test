@@ -67,6 +67,7 @@ urlpatterns = [
             name="enroll_user"),
     url(r'manage/enroll/rejected/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
         views.enroll, {'was_rejected': True}),
+    url(r'manage/send_mail/(?P<course_id>\d+)/$', views.send_mail, name="send_mail"),
     url(r'manage/reject/(?P<course_id>\d+)/(?P<user_id>\d+)/$', views.reject,
             name="reject_user"),
     url(r'manage/enrolled/reject/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
@@ -105,5 +106,7 @@ urlpatterns = [
     url(r'^manage/download/user_assignment/(?P<question_id>\d+)/(?P<user_id>\d+)/(?P<quiz_id>\d+)/$',
         views.download_assignment_file, name="download_user_assignment"),
     url(r'^manage/download/quiz_assignments/(?P<quiz_id>\d+)/$',
-        views.download_assignment_file, name="download_quiz_assignment")
+        views.download_assignment_file, name="download_quiz_assignment"),
+    url(r'^manage/courses/download_yaml_template/',
+        views.download_yaml_template, name="download_yaml_template"),
 ]

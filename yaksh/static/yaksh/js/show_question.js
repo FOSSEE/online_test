@@ -47,3 +47,7 @@ function append_tag(tag){
         tag_name.value = tag.value;
     }
 }
+$(document).ready(function()
+    { 
+        $("#questions-table").tablesorter({sortList: [[0,0], [4,0]]});
+    });
