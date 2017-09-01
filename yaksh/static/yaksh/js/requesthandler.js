@@ -116,7 +116,7 @@ $(document).ready(function(){
       global_editor.editor.clearHistory();
   }
     $('#code').submit(function(e) {
-      checker = setInterval(check_lock_screen, 20000);
+      checker = setInterval(check_lock_screen, 30000);
       lock_screen();
       $.ajax({
             type: 'POST',

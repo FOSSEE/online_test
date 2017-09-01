@@ -17,11 +17,8 @@ class ElementDisplay(object):
     def __call__(self, driver):
         try:
             element = EC._find_element(driver, self.locator)
-            a = element.value_of_css_property("display") == "none"
-            print(a)
-            return a
+            return element.value_of_css_property("display") == "none"
         except Exception as e:
-            print(e)
             return False
 
 
@@ -65,7 +62,6 @@ class SeleniumTest():
     def submit_answer(self, question_label, answer, loop_count=1):
         self.driver.implicitly_wait(2)
         for count in range(loop_count):
-            print("in")
             self.driver.find_element_by_link_text(question_label).click()
             submit_answer_elem = self.driver.find_element_by_id("check")
             self.driver.execute_script('global_editor.editor.setValue({});'.format(answer))
@@ -75,7 +71,7 @@ class SeleniumTest():
 
     def test_c_question(self, question_label):
         # Incorrect Answer
-        loop_count = 3
+        loop_count = 10
         answer = '\"int add(int a, int b, int c)\\n{return;}\"'
         self.submit_answer(question_label, answer, loop_count)
 
@@ -91,7 +87,7 @@ class SeleniumTest():
 
     def test_python_question(self, question_label):
         # Incorrect Answer
-        loop_count = 3
+        loop_count = 10
         answer = '\"def is_palindrome(s):\\n    return s\"'
         self.submit_answer(question_label, answer, loop_count)
 
@@ -107,7 +103,7 @@ class SeleniumTest():
 
     def test_bash_question(self, question_label):
         # Incorrect Answer
-        loop_count = 3
+        loop_count = 10
         answer = '\"#!/bin/bash\\nls\"'
         self.submit_answer(question_label, answer, loop_count)
 

@@ -203,7 +203,6 @@ def submit(url, uid, json_data, user_dir):
     user_dir : str
         User directory.
     '''
-    print("submitted")
     requests.post(
         url, data=dict(uid=uid, json_data=json_data, user_dir=user_dir)
     )
@@ -230,7 +229,6 @@ def get_result(url, uid, block=False):
         Set to True if you wish to block till result is done.
 
     '''
-    print("get triggered")
     def _get_data():
         r = requests.get(urllib.parse.urljoin(url, str(uid)))
         return json.loads(r.content.decode('utf-8'))
