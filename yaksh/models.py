@@ -858,7 +858,7 @@ class QuestionPaper(models.Model):
         ans_paper = AnswerPaper.objects.filter(user=user,
                                                attempt_number=attempt_num,
                                                question_paper=self
-                                               ).order_by['-id']
+                                               ).order_by('-id')
         if ans_paper:
             ans_paper = ans_paper[0]
         else:
