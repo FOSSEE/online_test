@@ -33,7 +33,7 @@ except ImportError:
 from yaksh.code_server import get_result, SERVER_POOL_PORT
 from yaksh.models import get_model_class, Quiz, Question, QuestionPaper, QuestionSet, Course
 from yaksh.models import Profile, Answer, AnswerPaper, User, TestCase, FileUpload,\
-                         has_profile, StandardTestCase, McqTestCase,\
+                         StandardTestCase, McqTestCase,\
                          StdIOBasedTestCase, HookTestCase, IntegerTestCase,\
                          FloatTestCase, StringTestCase
 from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
@@ -43,8 +43,8 @@ from yaksh.forms import UserRegisterForm, UserLoginForm, QuizForm,\
 from .settings import URL_ROOT
 from yaksh.models import AssignmentUpload
 from .file_utils import extract_files
-from .send_emails import send_user_mail, generate_activation_key
-from .decorators import email_verified
+from .send_emails import send_user_mail, generate_activation_key, send_bulk_mail
+from .decorators import email_verified, has_profile
 
 
 def my_redirect(url):
@@ -128,6 +128,7 @@ def user_logout(request):
 
 
 @login_required
+@has_profile
 @email_verified
 def quizlist_user(request, enrolled=None):
     """Show All Quizzes that is available to logged-in user."""
@@ -144,7 +145,11 @@ def quizlist_user(request, enrolled=None):
         courses = user.students.all()
         title = 'Enrolled Courses'
     else:
-        courses = Course.objects.filter(active=True, is_trial=False, hidden=False)
+        courses = Course.objects.filter(
+            active=True, is_trial=False
+        ).exclude(
+           ~Q(requests=user), ~Q(rejected=user), hidden=True
+        )
         title = 'All Courses'
 
     context = {'user': user, 'courses': courses, 'title': title}
@@ -257,32 +262,27 @@ def add_quiz(request, course_id, quiz_id=None):
             if form.is_valid():
                 form.save()
                 return my_redirect("/exam/manage/courses/")
-            else:
-                context["form"] = form
-                return my_render_to_response('yaksh/add_quiz.html',
-                                             context,
-                                             context_instance=ci)
+
         else:
             quiz = Quiz.objects.get(id=quiz_id)
             form = QuizForm(request.POST, user=user, course=course_id,
-                            instance=quiz)
+                instance=quiz
+            )
             if form.is_valid():
                 form.save()
-                context["quiz_id"] = quiz_id
                 return my_redirect("/exam/manage/courses/")
+
     else:
-        if quiz_id is None:
-            form = QuizForm(course=course_id, user=user)
-        else:
-            quiz = Quiz.objects.get(id=quiz_id)
-            form = QuizForm(user=user,course=course_id, instance=quiz)
-            context["quiz_id"] = quiz_id
-        context["form"] = form
-        return my_render_to_response('yaksh/add_quiz.html',
-                                     context,
-                                     context_instance=ci)
+        quiz = Quiz.objects.get(id=quiz_id) if quiz_id else None
+        form = QuizForm(user=user,course=course_id, instance=quiz)
+        context["quiz_id"] = quiz_id
+    context["form"] = form
+    return my_render_to_response('yaksh/add_quiz.html',
+                                 context,
+                                 context_instance=ci)
 
 @login_required
+@has_profile
 @email_verified
 def prof_manage(request, msg=None):
     """Take credentials of the user with professor/moderator
@@ -767,6 +767,39 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
 
 @login_required
 @email_verified
+def send_mail(request, course_id, user_id=None):
+    user = request.user
+    ci = RequestContext(request)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
+    message = None
+    if request.method == 'POST':
+        user_ids = request.POST.getlist('check')
+        if request.POST.get('send_mail') == 'send_mail':
+            users = User.objects.filter(id__in=user_ids)
+            recipients = [student.email for student in users]
+            email_body = request.POST.get('body')
+            subject = request.POST.get('subject')
+            attachments = request.FILES.getlist('email_attach')
+            message = send_bulk_mail(
+                subject, email_body, recipients, attachments
+            )
+    context = {
+        'course': course, 'message': message,
+        'state': 'mail'
+    }
+    return my_render_to_response(
+        'yaksh/course_detail.html', context, context_instance=ci
+    )
+
+
+@login_required
+@email_verified
 def reject(request, course_id, user_id=None, was_enrolled=False):
     user = request.user
     ci = RequestContext(request)
@@ -782,8 +815,10 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
     else:
         reject_ids = [user_id]
     if not reject_ids:
-        return my_render_to_response('yaksh/course_detail.html', {'course': course},
-                                            context_instance=ci)
+        message = "Please select atleast one User"
+        return my_render_to_response('yaksh/course_detail.html',
+                                    {'course': course, "message": message},
+                                    context_instance=ci)
     users = User.objects.filter(id__in=reject_ids)
     course.reject(was_enrolled, *users)
     return course_detail(request, course_id)
@@ -1047,7 +1082,7 @@ def show_all_questions(request):
                 if file_name[-1] == "zip":
                     ques = Question()
                     files, extract_path = extract_files(questions_file)
-                    context['message'] = ques.read_json(extract_path, user,
+                    context['message'] = ques.read_yaml(extract_path, user,
                                                         files)
                 else:
                     message = "Please Upload a ZIP file"
@@ -1220,6 +1255,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
 
 
 @login_required
+@has_profile
 @email_verified
 def view_profile(request):
     """ view moderators and users profile """
@@ -1229,20 +1265,12 @@ def view_profile(request):
         template = 'manage.html'
     else:
         template = 'user.html'
-    context = {'template': template}
-    if has_profile(user):
-        context['user'] = user
-        return my_render_to_response('yaksh/view_profile.html', context)
-    else:
-        form = ProfileForm(user=user)
-        msg = True
-        context['form'] = form
-        context['msg'] = msg
-        return my_render_to_response('yaksh/editprofile.html', context,
-                                    context_instance=ci)
+    context = {'template': template, 'user': user}
+    return my_render_to_response('yaksh/view_profile.html', context)
 
 
 @login_required
+@has_profile
 @email_verified
 def edit_profile(request):
     """ edit profile details facility for moderator and students """
@@ -1254,10 +1282,7 @@ def edit_profile(request):
     else:
         template = 'user.html'
     context = {'template': template}
-    if has_profile(user):
-        profile = Profile.objects.get(user_id=user.id)
-    else:
-        profile = None
+    profile = Profile.objects.get(user_id=user.id)
 
     if request.method == 'POST':
         form = ProfileForm(request.POST, user=user, instance=profile)
@@ -1622,3 +1647,21 @@ def duplicate_course(request, course_id):
             'instructor/administrator.'
         return complete(request, msg, attempt_num=None, questionpaper_id=None)
     return my_redirect('/exam/manage/courses/')
+
+@login_required
+@email_verified
+def download_yaml_template(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    template_path = os.path.join(os.path.dirname(__file__), "fixtures",
+                                 "demo_questions.zip"
+                                 )
+    yaml_file = zipfile.ZipFile(template_path, 'r')
+    template_yaml = yaml_file.open('questions_dump.yaml', 'r')
+    response = HttpResponse(template_yaml, content_type='text/yaml')
+    response['Content-Disposition'] = 'attachment;\
+                                      filename="questions_dump.yaml"'
+    
+    return response
+

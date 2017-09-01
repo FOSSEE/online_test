@@ -37,3 +37,7 @@ function confirm_edit(frm)
     else
         return true;
 }
+$(document).ready(function()
+    { 
+        $("#questions-table").tablesorter({sortList: [[0,0], [4,0]]});
+    });

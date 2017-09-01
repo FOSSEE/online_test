@@ -202,8 +202,8 @@ lang = "{{ question.language }}"
                      {% endif %}
         <div class="from-group">
 
-         {% if question.type == "mcq" or "mcc" or "integer" or "float" or "string" %}
-         <br><button class="btn btn-primary" type="submit" name="check" id="check" >Submit Answer</button>&nbsp;&nbsp;<br/>
+         {% if question.type == "mcq" or  question.type == "mcc" or question.type == "integer" or question.type == "float" or question.type ==  "string" %}
+         <br><button class="btn btn-primary" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
          {% elif question.type == "upload" %}
          <br><button class="btn btn-primary" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
 
