@@ -58,8 +58,11 @@ Upload File <span class="glyphicon glyphicon-open"/></button>
   {{ msg }}
 </div>
 {% endif %}
+<br><br>
+<form name=frm action="" method="post">
+<!-- Filtering Questions  -->
 <div class="row" id="selectors">
-    <h5 style="padding-left: 20px;">Filters</h5>
+    <h4 style="padding-left: 20px;">Filters Questions: </h4>
     <div class="col-md-3">
         {{ form.question_type }}
     </div>
@@ -69,10 +72,40 @@ Upload File <span class="glyphicon glyphicon-open"/></button>
     <div class="col-md-3">
         {{ form.marks }}
     </div>
+<br>
+<h4 style="padding-left: 20px;">Or</h4>
+
+<h4 style="padding-left: 20px;">Search using Tags: </h4>
 </div>
-<br>
-    <button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>Clear Filters</button>
-<br>
+<!-- Searching Tags -->
+{% csrf_token %}
+    <div class="col-md-14">
+    <div class="input-group">
+    <span class="input-group-addon" id="basic-addon1">Search Questions </span>
+    <input type="text" id="question_tags" name="question_tags" class="form-control"
+     placeholder="Search using comma separated Tags">
+    <span class="input-group-btn">
+    <button class="btn btn-default" type="submit">Search</button>
+    </span>
+    <div class="col-md-6">
+    <select class="form-control" id="sel1" onchange="append_tag(this);">
+    {% if all_tags %}
+     <option value="" disabled selected>Available Tags</option>
+    {% for tag in all_tags %}
+    <option>
+        {{tag}}
+    </option>
+    {% endfor %}
+    {% else %}
+     <option value="" disabled selected>No Available Tags</option>
+    {% endif %}
+    </select>
+    </div>
+    </div>
+     </div>
+<br><br>
+<button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>
+ Clear Filters</button>
 
 <div id="filtered-questions">
 {% if questions %}
@@ -90,15 +123,15 @@ Upload File <span class="glyphicon glyphicon-open"/></button>
     </thead>
     <tbody>
     
-{% for i in questions %}
+{% for question in questions %}
 <tr>
 <td>
-<input type="checkbox" name="question" value="{{ i.id }}">
+<input type="checkbox" name="question" value="{{ question.id }}">
 </td>
-<td><a href="{{URL_ROOT}}/exam/manage/addquestion/{{ i.id }}">{{i.summary|capfirst}}</a></td>
-<td>{{i.language|capfirst}}</td>
-<td>{{i.type|capfirst}}</td>
-<td>{{i.points}}</td>
+<td><a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{question.summary|capfirst}}</a></td>
+<td>{{question.language|capfirst}}</td>
+<td>{{question.type|capfirst}}</td>
+<td>{{question.points}}</td>
 </tr>
 {% endfor %}
 </tbody>

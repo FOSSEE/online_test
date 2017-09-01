@@ -855,13 +855,12 @@ class QuestionPaper(models.Model):
 
     def make_answerpaper(self, user, ip, attempt_num):
         """Creates an  answer paper for the user to attempt the quiz"""
-        ans_paper = AnswerPaper.objects.filter(user=user,
-                                               attempt_number=attempt_num,
-                                               question_paper=self
-                                               ).order_by('-id')
-        if ans_paper:
-            ans_paper = ans_paper[0]
-        else:
+        try:
+            ans_paper = AnswerPaper.objects.get(user=user,
+                                                attempt_number=attempt_num,
+                                                question_paper=self
+                                                )
+        except AnswerPaper.DoesNotExist:
             ans_paper = AnswerPaper(
                 user=user,
                 user_ip=ip,
@@ -877,6 +876,13 @@ class QuestionPaper(models.Model):
                 ans_paper.questions.add(question)
             for question in questions:
                 ans_paper.questions_unanswered.add(question)
+        except AnswerPaper.MultipleObjectsReturned:
+            ans_paper = AnswerPaper.objects.get(user=user,
+                                                attempt_number=attempt_num,
+                                                question_paper=self
+                                                ).order_by('-id')
+            ans_paper = ans_paper[0]
+
         return ans_paper
 
     def _is_questionpaper_passed(self, user):
