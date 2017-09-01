@@ -28,8 +28,9 @@ No Courses to display
             <div class="col-md-4">
                 <h4><b><u> {{ course.name }} by {{ course.creator.get_full_name }}</u></b></h4>
             </div>
-             <div class="col-md-4">
-                {% if course.hidden %}<span class="label label-info">Open Course</span>
+            <div class="col-md-4">
+                {% if not course.active %}
+                    <span class="label label-danger">Closed</span>
                 {% endif %}
                 {% if user in course.requests.all %} <span class="label label-warning">Request Pending </span>
                 {% elif user in course.rejected.all %}<span class="label label-danger">Request Rejected</span>
@@ -45,8 +46,8 @@ No Courses to display
                         <span class="label label-danger">Enrollment Closed</span>
                     {% endif %}
                 {% endif %}
-             </div>
-         </div>
+            </div>
+        </div>
 
         <div class="row">
         {% if user in course.students.all %}
@@ -57,7 +58,7 @@ No Courses to display
                 {% for quiz in course.get_quizzes %}
                     {% if quiz.active and quiz.course_id == course.id %}
                     <tr>
-                        {% if not quiz.is_expired %}
+                        {% if not quiz.is_expired and course.active %}
                             <td>
                                 <a href="{{ URL_ROOT }}/exam/start/{{quiz.questionpaper_set.get.id}}">{{ quiz.description }}</a><br>
                             </td>
