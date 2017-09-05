@@ -451,6 +451,13 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.assertFalse(self.question_paper.is_prerequisite_passed(self.user))
         # test can_attempt_now(self):
         self.assertFalse(self.question_paper.can_attempt_now(self.user))
+        # trying to create an answerpaper with same parameters passed.
+        answerpaper2 = self.question_paper.make_answerpaper(self.user, self.ip,
+                                                             attempt_num)
+        # check if make_answerpaper returned an object instead of creating one.
+        self.assertEqual(answerpaper, answerpaper2)
+
+
 
     def test_create_trial_paper_to_test_quiz(self):
         qu_list = [str(self.questions_list[0]), str(self.questions_list[1])]

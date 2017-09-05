@@ -855,21 +855,34 @@ class QuestionPaper(models.Model):
 
     def make_answerpaper(self, user, ip, attempt_num):
         """Creates an  answer paper for the user to attempt the quiz"""
-        ans_paper = AnswerPaper(
-            user=user,
-            user_ip=ip,
-            attempt_number=attempt_num
-        )
-        ans_paper.start_time = timezone.now()
-        ans_paper.end_time = ans_paper.start_time + \
-            timedelta(minutes=self.quiz.duration)
-        ans_paper.question_paper = self
-        ans_paper.save()
-        questions = self._get_questions_for_answerpaper()
-        for question in questions:
-            ans_paper.questions.add(question)
-        for question in questions:
-            ans_paper.questions_unanswered.add(question)
+        try:
+            ans_paper = AnswerPaper.objects.get(user=user,
+                                                attempt_number=attempt_num,
+                                                question_paper=self
+                                                )
+        except AnswerPaper.DoesNotExist:
+            ans_paper = AnswerPaper(
+                user=user,
+                user_ip=ip,
+                attempt_number=attempt_num
+            )
+            ans_paper.start_time = timezone.now()
+            ans_paper.end_time = ans_paper.start_time + \
+                timedelta(minutes=self.quiz.duration)
+            ans_paper.question_paper = self
+            ans_paper.save()
+            questions = self._get_questions_for_answerpaper()
+            for question in questions:
+                ans_paper.questions.add(question)
+            for question in questions:
+                ans_paper.questions_unanswered.add(question)
+        except AnswerPaper.MultipleObjectsReturned:
+            ans_paper = AnswerPaper.objects.get(user=user,
+                                                attempt_number=attempt_num,
+                                                question_paper=self
+                                                ).order_by('-id')
+            ans_paper = ans_paper[0]
+
         return ans_paper
 
     def _is_questionpaper_passed(self, user):
