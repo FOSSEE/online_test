@@ -26,7 +26,9 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
             "yaksh.cpp_code_evaluator.CppCodeEvaluator"
         settings.code_evaluators['bash']['standardtestcase'] = \
             "yaksh.bash_code_evaluator.BashCodeEvaluator"
-        code_server_pool = ServerPool(n=settings.N_CODE_SERVERS, pool_port=settings.SERVER_POOL_PORT)
+        code_server_pool = ServerPool(
+            n=settings.N_CODE_SERVERS, pool_port=settings.SERVER_POOL_PORT
+        )
         cls.code_server_pool = code_server_pool
         cls.code_server_thread = t = Thread(target=code_server_pool.run)
         t.start()

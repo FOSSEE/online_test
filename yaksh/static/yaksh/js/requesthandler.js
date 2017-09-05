@@ -12,7 +12,7 @@ function check_state(state, uid) {
     } else if (state == "unknown") {
         request_status = "initial";
         count = 0;
-        notify("You are requesting for a wrong data");
+        notify("Request timeout. Try again later");
         clearInterval(checker);
         unlock_screen();
     } else {
@@ -47,13 +47,23 @@ function check_lock_screen() {
 }
 
 function get_result(uid){
+    var url = "/exam/get_results/"+uid+"/";
+    ajax_call(url, "GET", "html", null, uid)
+}
+
+function ajax_call(url, method_type, data_type, data, uid) {
     $.ajax({
-        method: "GET",
-        url: "/exam/get_results/"+uid+"/",
-        dataType: "html", // Your server can response html, json, xml format.
+        method: method_type,
+        url: url,
+        data: data,
+        dataType: data_type, // Your server can response html, json, xml format.
         success: function(data, status, xhr) {
             content_type = xhr.getResponseHeader("content-type");
             if(content_type.indexOf("text/html") !== -1) {
+                if( method_type === "POST") {
+                    request_status = "initial";
+                    count = 0;
+                }
                 clearInterval(checker);
                 unlock_screen();
                 document.open();
@@ -62,6 +72,9 @@ function get_result(uid){
             } else if(content_type.indexOf("application/json") !== -1) {
                 res = JSON.parse(data);
                 request_status = res.status;
+                if(method_type === "POST") {
+                    uid = res.uid;
+                }
                 check_state(request_status, uid);
             } else {
                 request_status = "initial";
@@ -78,6 +91,7 @@ function get_result(uid){
             notify("There is some problem. Try later.")
         }
     });
+
 }
 
 var global_editor = {};
@@ -118,41 +132,8 @@ $(document).ready(function(){
     $('#code').submit(function(e) {
       checker = setInterval(check_lock_screen, 30000);
       lock_screen();
-      $.ajax({
-            type: 'POST',
-            url: $(this).attr("action"),
-            data: $(this).serializeArray(),
-            dataType: "html", // Your server can response html, json, xml format.
-            success: function(data, status, xhr) {
-                content_type = xhr.getResponseHeader("content-type");
-                if(content_type.indexOf("text/html") !== -1) {
-                    request_status = "initial"
-                    count = 0;
-                    clearInterval(checker);
-                    unlock_screen();
-                    document.open();
-                    document.write(data);
-                    document.close();
-                } else if(content_type.indexOf("application/json") !== -1) {
-                    res = JSON.parse(data);
-                    var uid = res.uid;
-                    request_status = res.state;
-                    check_state(request_status, uid);
-                } else {
-                    request_status = "initial";
-                    count = 0;
-                    clearInterval(checker);
-                    unlock_screen();
-                }
-            },
-            error: function(xhr, text_status, error_thrown ) {
-                request_status = "initial";
-                count = 0;
-                clearInterval(checker);
-                unlock_screen();
-                notify("There is some problem. Try later.")
-            }
-          });
+      var data = $(this).serializeArray();
+      ajax_call($(this).attr("action"), "POST", "html", data, null)
           e.preventDefault(); // To stop the default form submission.
     });
 });
