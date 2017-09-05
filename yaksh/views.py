@@ -420,11 +420,11 @@ def start(request, questionpaper_id=None, attempt_num=None):
         if is_moderator(user):
             return redirect("/exam/manage")
         return redirect("/exam/quizzes")
+    if not last_attempt:
+        attempt_number = 1
+    else:
+        attempt_number = last_attempt.attempt_number + 1
     if attempt_num is None:
-        if not last_attempt:
-            attempt_number = 1
-        else:
-            last_attempt.attempt_number + 1
         context = {
             'user': user,
             'questionpaper': quest_paper,
@@ -439,9 +439,14 @@ def start(request, questionpaper_id=None, attempt_num=None):
         if not hasattr(user, 'profile'):
             msg = 'You do not have a profile and cannot take the quiz!'
             raise Http404(msg)
-        new_paper = quest_paper.make_answerpaper(user, ip, attempt_num)
-        return show_question(request, new_paper.current_question(), new_paper)
-
+        new_paper = quest_paper.make_answerpaper(user, ip, attempt_number)
+        if new_paper.status ==  'inprogress':
+            return show_question(request, new_paper.current_question(),
+                                 new_paper
+                                 )
+        else:
+            msg = 'You have already finished the quiz!'
+            raise Http404(msg)
 
 @login_required
 @email_verified
@@ -638,7 +643,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     else:
         return show_question(request, current_question, paper)
 
-
+@login_required
+@email_verified
 def quit(request, reason=None, attempt_num=None, questionpaper_id=None):
     """Show the quit page when the user logs out."""
     paper = AnswerPaper.objects.get(user=request.user,
