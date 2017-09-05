@@ -423,7 +423,7 @@ def start(request, questionpaper_id=None, attempt_num=None):
     if not last_attempt:
         attempt_number = 1
     else:
-        last_attempt.attempt_number + 1
+        attempt_number = last_attempt.attempt_number + 1
     if attempt_num is None:
         context = {
             'user': user,
