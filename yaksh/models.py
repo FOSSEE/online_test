@@ -24,7 +24,6 @@ import shutil
 import zipfile
 import tempfile
 from textwrap import dedent
-from ast import literal_eval
 from .file_utils import extract_files, delete_files
 from yaksh.xmlrpc_clients import code_server
 from django.conf import settings
@@ -100,18 +99,20 @@ def get_upload_dir(instance, filename):
         'question_%s' % (instance.question.id), filename
     ))
 
+
 def dict_to_yaml(dictionary):
-    for k,v in dictionary.items():
+    for k, v in dictionary.items():
         if isinstance(v, list):
-            for  nested_v in v:
+            for nested_v in v:
                 if isinstance(nested_v, dict):
                     dict_to_yaml(nested_v)
-        elif v and isinstance(v,str):
+        elif v and isinstance(v, str):
             dictionary[k] = PreservedScalarString(v)
     return ruamel.yaml.round_trip_dump(dictionary, explicit_start=True,
                                        default_flow_style=False,
                                        allow_unicode=True,
                                        )
+
 
 ###############################################################################
 class CourseManager(models.Manager):
@@ -496,12 +497,12 @@ class Question(models.Model):
                 file_upload.extract = extract
                 file_upload.file.save(file_name, django_file, save=True)
 
-    def _add_yaml_to_zip(self, zip_file, q_dict,path_to_file=None):
-        
+    def _add_yaml_to_zip(self, zip_file, q_dict, path_to_file=None):
         tmp_file_path = tempfile.mkdtemp()
         yaml_path = os.path.join(tmp_file_path, "questions_dump.yaml")
         for elem in q_dict:
-            sorted_dict = CommentedMap(sorted(elem.items(), key=lambda x:x[0]))
+            sorted_dict = CommentedMap(sorted(elem.items(),
+                                              key=lambda x: x[0]))
             yaml_block = dict_to_yaml(sorted_dict)
             with open(yaml_path, "a") as yaml_file:
                 yaml_file.write(yaml_block)
