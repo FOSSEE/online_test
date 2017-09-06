@@ -1,6 +1,7 @@
 import json
 from channels import Group
 from channels.sessions import channel_session
+from channels.auth import channel_session_user_from_http
 from datetime import datetime
 import pytz
 
@@ -8,79 +9,62 @@ import pytz
 from yaksh.models import Room, User
 
 
-@channel_session
+@channel_session_user_from_http
 def ws_connect(message):
     try:
         path = message['path'].split('/')[1:]
-        prefix, label, course_id = path[0], path[1], path[2]
-        msg_data = {}
+        user = message.user
+        prefix, label, course_id = path
         if prefix != 'chat':
-            msg_data['error'] = 'invalid ws path={0}'.format(message['path'])
-            Group('chat-'+label, channel_layer=message.channel_layer).send(
-                {'text': json.dumps(msg_data)}
-            )
             message.reply_channel.send({'close': True})
             return
+
         room = Room.objects.get(
             label=label, course_id=course_id
         )
+        result = [room.course.is_creator(user), room.course.is_teacher(user),
+                  room.course.is_student(user)]
+        if not any(result):
+            message.reply_channel.send({'close': True})
+            return
     except ValueError:
-        msg_data['error'] = 'invalid ws path=%s', message['path']
-        Group('chat-'+label, channel_layer=message.channel_layer).send(
-            {'text': json.dumps(msg_data)}
-        )
         message.reply_channel.send({'close': True})
         return
     except Room.DoesNotExist:
-        msg_data['error'] = 'ws room does not exist label=%s', label
-        Group('chat-'+label, channel_layer=message.channel_layer).send(
-            {'text': json.dumps(msg_data)}
-        )
         message.reply_channel.send({'close': True})
         return
 
-    print(
-        'chat connect room={0} client={1}:{2}'.format(
-        room.label, message['client'][0], message['client'][1]
-        )
-    )
-
     Group('chat-'+label).add(message.reply_channel)
+    message.channel_session['course'] = room.course_id
     message.channel_session['room'] = room.label
     message.reply_channel.send({'accept': True})
 
 
 @channel_session
 def ws_receive(message):
-    # Look up the room from the channel session, bailing if it doesn't exist
+    # Try to find the room, disconnect if not found
     try:
+        course = message.channel_session['course']
+        room = Room.objects.get(course_id=course)
         label = message.channel_session['room']
-        room = Room.objects.get(label=label)
-    except KeyError:
-        print('no room in channel_session')
-        return
-    except Room.DoesNotExist:
-        print('received message, buy room does not exist label=%s', label)
+    except (KeyError, Room.DoesNotExist):
+        message.reply_channel.send({'close': True})
         return
 
-    # Parse out a chat message from the content text, bailing if it doesn't
-    # conform to the expected message format.
+    # Check for valid json message format
     try:
-        print(message['text'])
         data = json.loads(message['text'])
     except ValueError:
-        print("ws message isn't json text=%s", message['text'])
+        message.reply_channel.send({'close': True})
         return
 
     if set(data.keys()) != set(('sender_id', 'message')):
-        print("ws message unexpected format data=%s", data)
+        message.reply_channel.send({'close': True})
         return
 
     if data:
         context = {}
         chat_dict = {}
-        print('chat message room={0} handle={1} message={1}'.format(
-            room.label, data['sender_id'], data['message']))
         message = room.messages.create(**data)
         sender_tz = User.objects.get(id=data['sender_id']).profile.timezone
         msg_date = message.timestamp.astimezone(pytz.timezone(sender_tz))
