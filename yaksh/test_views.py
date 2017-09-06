@@ -3628,7 +3628,8 @@ class TestConsumers(ChannelTestCase):
             password=self.user_plaintext_pass
         )
         ws_correct_path = '/chat/test_room/{0}'.format(self.room.course_id)
-        self.client.send_and_consume('websocket.connect', path=ws_correct_path)
+        self.client.send_and_consume(u'websocket.connect',
+                                     path=ws_correct_path)
         # check that there is nothing to receive
         self.assertIsNone(self.client.receive())
 
@@ -3640,7 +3641,7 @@ class TestConsumers(ChannelTestCase):
         )
         ws_wrong_path = '/chatting/test_room/{0}'.format(self.room.course_id)
         self.client.send_and_consume(
-            'websocket.connect', path=ws_wrong_path,
+            u'websocket.connect', path=ws_wrong_path,
             check_accept=False
         )
         self.assertEqual(self.client.receive(), {"close": True})
@@ -3653,7 +3654,7 @@ class TestConsumers(ChannelTestCase):
         )
         ws_path = '/chat/test_room/'
         self.client.send_and_consume(
-            'websocket.connect', path=ws_path,
+            u'websocket.connect', path=ws_path,
             check_accept=False
         )
         self.assertEqual(self.client.receive(), {"close": True})
@@ -3666,7 +3667,7 @@ class TestConsumers(ChannelTestCase):
         )
         ws_path = '/chat/test/1'
         self.client.send_and_consume(
-            'websocket.connect', path=ws_path,
+            u'websocket.connect', path=ws_path,
             check_accept=False
         )
         self.assertEqual(self.client.receive(), {"close": True})
@@ -3679,7 +3680,7 @@ class TestConsumers(ChannelTestCase):
         )
         ws_correct_path = '/chat/test_room/{0}'.format(self.room.course_id)
         self.client.send_and_consume(
-            'websocket.connect', path=ws_correct_path,
+            u'websocket.connect', path=ws_correct_path,
             check_accept=False
         )
         self.assertEqual(self.client.receive(), {"close": True})
@@ -3691,9 +3692,10 @@ class TestConsumers(ChannelTestCase):
             password=self.user_plaintext_pass
         )
         ws_correct_path = '/chat/test_room/{0}'.format(self.room.course_id)
-        self.client.send_and_consume('websocket.connect', path=ws_correct_path)
+        self.client.send_and_consume(u'websocket.connect',
+                                     path=ws_correct_path)
         self.client.send_and_consume(
-            'websocket.receive', path=ws_correct_path,
+            u'websocket.receive', path=ws_correct_path,
             text={"message": "Test", "sender_id": self.user.id}
         )
         message = self.client.receive()
@@ -3710,9 +3712,9 @@ class TestConsumers(ChannelTestCase):
             password=self.user_plaintext_pass
         )
         ws_path = '/chat/test_room/{0}'.format(self.room.course_id)
-        self.client.send_and_consume('websocket.connect', path=ws_path)
+        self.client.send_and_consume(u'websocket.connect', path=ws_path)
         self.client.send_and_consume(
-            'websocket.receive', path=ws_path,
+            u'websocket.receive', path=ws_path,
             check_accept=False, text={"message": "Test"}
         )
         self.assertEqual(self.client.receive(), {"close": True})
@@ -3725,7 +3727,7 @@ class TestConsumers(ChannelTestCase):
         )
         ws_path = '/chat/test_room/{0}'.format(self.room.course_id)
         self.client.send_and_consume(
-            'websocket.receive', path=ws_path,
+            u'websocket.receive', path=ws_path,
             check_accept=False
         )
         self.assertEqual(self.client.receive(), {"close": True})
@@ -3737,9 +3739,9 @@ class TestConsumers(ChannelTestCase):
             password=self.user_plaintext_pass
         )
         ws_path = '/chat/test_room/{0}'.format(self.room.course_id)
-        self.client.send_and_consume('websocket.connect', path=ws_path)
+        self.client.send_and_consume(u'websocket.connect', path=ws_path)
         self.client.send_and_consume(
-            'websocket.disconnect', path=ws_path,
+            u'websocket.disconnect', path=ws_path,
             check_accept=False
         )
         self.assertEqual(self.client.receive(), {"close": True})
