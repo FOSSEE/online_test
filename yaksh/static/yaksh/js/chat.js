@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    if ($("#chat_status").val() == "True"){
+    if ($("#chat_status").val() == "True" && $("#quiz_status").val() == "False"){
         $("#open_chat_icon").toggle();
     }
     var sender = $('#handle').val();
@@ -14,7 +14,6 @@ $(document).ready(function() {
         var room_url = window.location.protocol + "//" +
                     window.location.host + "/exam/new/chat/" + course_id;
         ajax_request(room_url);
-
     });
 
     function ajax_request(chat_url) {

@@ -149,7 +149,11 @@ function call_skip(url)
     </h4>
 </div>
 {% endif %}
+<div class="alert alert-danger" id="chat_err" style="display: none;">
+    <h4>Unable to establish connection. Please try again later.</h4>
+</div>
 <input type="hidden" id="chat_status" value="{{paper.question_paper.quiz.enable_chat}}">
+<input type="hidden" id="quiz_status" value="{{paper.question_paper.quiz.is_trial}}">
         <p id="status"></p>
         {% if notification %}
           {% if question.type == "code" %}
