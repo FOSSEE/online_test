@@ -8,22 +8,8 @@
 {% if papers %}
 <script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/reconnecting-websocket.min.js" %}></script>
-<script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/chat.js"></script>
-<script type="text/javascript">
-$(document).ready(function()
-    {   $("#open_chat_icon").toggle();
-        $("#result-table").tablesorter({sortList: [[5,1]]});
-        var papers_length = "{{papers|length}}";
-        for (var i=0; i < papers_length; i++){
-            var time_left = $("#time_left"+[i]);
-            var time = time_left.text();
-            var hh   = Math.floor(time / 3600);
-            var mm = Math.floor((time - (hh * 3600)) / 60);
-            var ss = time - (hh * 3600) - (mm * 60);
-            time_left.text(hh + ":" + mm + ":" + ss)
-    }
-});
-</script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/chat.js"></script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/monitor.js"></script>
 {% endif %}
 {% endblock %}
 
@@ -66,6 +52,25 @@ $(document).ready(function()
 {% if papers %}
 <input type="hidden" id="course_id" value="{{quiz.course.id}}">
 <input type="hidden" id="course_name" value="{{quiz.course.name|title}}">
+<input type="hidden" id="papers" value="{{papers|length}}">
+{% if not quiz.enable_chat %}
+<div class="alert alert-warning">
+    <h4>Chat functionality is disabled. To enable chat
+    <a href="{{URL_ROOT}}/exam/manage/toggle/chat/{{quiz.id}}">Click Here</a>
+    </h4>
+</div>
+{% else %}
+<div class="alert alert-success">
+    <h4>Chat functionality is Enabled. To disable chat
+    <a href="{{URL_ROOT}}/exam/manage/toggle/chat/{{quiz.id}}">Click Here</a>
+    </h4>
+</div>
+{% endif %}
+<div class="alert alert-danger" id="chat_err" style="display: none;">
+    <h4>Unable to establish connection. Please try again later.</h4>
+</div>
+<input type="hidden" id="chat_status" value="{{quiz.enable_chat}}">
+
 <p>Course Name: {{ quiz.course.name }}</p>
 <p>Quiz Name: {{ quiz.description }}</p>
 <p>Number of papers: {{ papers|length }} </p>
@@ -84,9 +89,9 @@ $(document).ready(function()
     <tr>
     <th> Name </th>
     <th> Username </th>
-    <th> Roll number </th>  
+    <th> Roll number </th>
     <th> Institute </th>
-    <th> Questions answered </th> 
+    <th> Questions answered </th>
     <th> Marks obtained </th>
     <th> Attempts </th>
     <th> Time Remaining </th>
@@ -104,7 +109,7 @@ $(document).ready(function()
         <td> {{ paper.marks_obtained }} </td>
         <td> {{ paper.answers.count }} </td>
         <td id="time_left{{forloop.counter0}}"> {{ paper.time_left }} </td>
-        <td>{{ paper.status }}</td>
+        <td id="status{{forloop.counter0}}">{{ paper.status }}</td>
         </div>
     </tr>
     {% endfor %}

@@ -143,6 +143,13 @@ function call_skip(url)
 {% block main %}
 <input type="hidden" id="course_id" value="{{paper.question_paper.quiz.course.id}}">
 <input type="hidden" id="course_name" value="{{paper.question_paper.quiz.course.name|title}}">
+{% if not paper.question_paper.quiz.enable_chat %}
+<div class="alert alert-warning">
+    <h4>Chat functionality is disabled for this quiz
+    </h4>
+</div>
+{% endif %}
+<input type="hidden" id="chat_status" value="{{paper.question_paper.quiz.enable_chat}}">
         <p id="status"></p>
         {% if notification %}
           {% if question.type == "code" %}
