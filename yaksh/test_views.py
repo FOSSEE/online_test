@@ -23,7 +23,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from yaksh.decorators import user_has_profile
 from yaksh.models import (
     User, Profile, Question, Quiz, QuestionPaper, AnswerPaper, Answer, Course,
-    has_profile, AssignmentUpload, Room, Message
+    AssignmentUpload, Room, Message
 )
 
 # Channels imports
@@ -1993,7 +1993,8 @@ class TestCourseDetail(TestCase):
         self.assertTemplateUsed(response, 'yaksh/course_detail.html')
 
     def test_send_mail_to_course_students(self):
-        """ Check if bulk mail is sent to multiple students enrolled in a course
+        """ Check if bulk mail is sent to multiple students
+            enrolled in a course
         """
         self.client.login(
             username=self.user1.username,
