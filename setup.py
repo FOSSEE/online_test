@@ -6,6 +6,7 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
+
 def get_version():
     import os
     data = {}
@@ -19,6 +20,10 @@ install_requires = [
     'pytz==2016.4',
     'python-social-auth==0.2.19',
     'tornado',
+    'psutil',
+    'ruamel.yaml',
+    'channels',
+    'asgi-redis'
 ]
 
 setup(
