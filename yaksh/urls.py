@@ -5,8 +5,6 @@ urlpatterns = [
     url(r'^$', views.index),
     url(r'^login/$', views.user_login, name='login'),
     url(r'^logout/$', views.user_logout),
-    url(r'^chat/(?P<label>[\w-]{,50})/(?P<course_id>\d+)/$', views.chat_room,
-        name='chat_room'),
     url(r'^new/chat/(?P<course_id>\d+)/$', views.new_room, name='new_room'),
     url(r'^update_email/$', views.update_email, name="update_email"),
     url(r'^activate/(?P<key>.+)$', views.activate_user, name="activate"),
@@ -127,4 +125,6 @@ urlpatterns = [
         views.download_assignment_file, name="download_quiz_assignment"),
     url(r'^manage/courses/download_yaml_template/',
         views.download_yaml_template, name="download_yaml_template"),
+    url(r'^manage/toggle/chat/(?P<quiz_id>\d+)/$',
+        views.toggle_quiz_chat, name="toggle_quiz_chat")
 ]

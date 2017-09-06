@@ -290,7 +290,6 @@ def add_quiz(request, course_id, quiz_id=None):
             if form.is_valid():
                 form.save()
                 return my_redirect("/exam/manage/courses/")
-
     else:
         quiz = Quiz.objects.get(id=quiz_id) if quiz_id else None
         form = QuizForm(user=user,course=course_id, instance=quiz)
@@ -1788,21 +1787,27 @@ def download_yaml_template(request):
     return response
 
 
-@login_required
-@email_verified
 def chat_room(request, label, course_id):
-    # If the room with the given label doesn't exist, automatically create it
-    # upon first visit.
+    """
+    Create a new chat room or get mesasges for already created chat room
+    """
     user = request.user
-    response_kwargs = {}
     context = {}
+    response_kwargs = {}
+    context['success'] = False
     response_kwargs['content_type'] = 'application/json'
+    course = Course.objects.get(id=course_id)
+    result = [course.is_creator(user), course.is_teacher(user),
+              course.is_student(user)]
+    if not any(result):
+        context['messages'] = [{"message": "You do not belong to this course"}]
+        data = json.dumps(context)
+        return HttpResponse(data, **response_kwargs)
+
     room, created = Room.objects.get_or_create(
         label=label, course_id=course_id
     )
     chat_msgs_dict = []
-    context['success'] = False
-    # We want to show the last 50 messages, ordered most-recent-last
     messages = room.messages.order_by('-timestamp')
     if messages:
         messages = reversed(messages)
@@ -1830,10 +1835,26 @@ def new_room(request, course_id):
     """
     Randomly create a new room, and redirect to it.
     """
-    label = uuid.uuid4().__str__()
     room = Room.objects.filter(course_id=course_id)
     if room.exists():
-        room_label = room[0].label
+        room_label = room.get(course_id=course_id).label
     else:
-        room_label = label
+        room_label = uuid.uuid4().__str__()
     return chat_room(request, room_label, course_id)
+
+
+@login_required
+@email_verified
+def toggle_quiz_chat(request, quiz_id):
+    """
+    Enable/Disable chat per quiz
+    """
+    user = request.user
+    quiz = Quiz.objects.get(id=quiz_id)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+
+    if not quiz.course.is_creator(user) and not quiz.course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    quiz.toggle_chat_status()
+    return my_redirect('/exam/manage/monitor/'+quiz_id)
