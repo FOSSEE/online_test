@@ -20,7 +20,7 @@ urlpatterns = [
             views.complete),
     url(r'^register/$', views.user_register, name="register"),
     url(r'^(?P<q_id>\d+)/check/$', views.check),
-    url(r'^get_results/(?P<uid>\d+)/$', views.get_results),
+    url(r'^get_result/(?P<uid>\d+)/$', views.get_result),
     url(r'^(?P<q_id>\d+)/check/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$',\
             views.check),
     url(r'^(?P<q_id>\d+)/skip/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$',

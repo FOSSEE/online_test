@@ -31,7 +31,7 @@ except ImportError:
     from io import BytesIO as string_io
 import re
 # Local imports.
-from yaksh.code_server import get_result, SERVER_POOL_PORT
+from yaksh.code_server import get_result as get_result_from_code_server, SERVER_POOL_PORT
 from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, FloatTestCase,
     HookTestCase, IntegerTestCase, McqTestCase, Profile,
@@ -616,7 +616,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         if current_question.type in ['code', 'upload']:
             if paper.time_left() <= 0:
                 url = 'http://localhost:%s' % SERVER_POOL_PORT
-                result = get_result(url, uid, block=True)
+                result = get_result_from_code_server(url, uid, block=True)
                 result = json.loads(result.get('result'))
                 next_question, error_message, paper = _update_paper(request, uid,
                         result)
@@ -631,10 +631,10 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
 
 
 @csrf_exempt
-def get_results(request, uid):
+def get_result(request, uid):
     result = {}
     url = 'http://localhost:%s' % SERVER_POOL_PORT
-    result_state = get_result(url, uid)
+    result_state = get_result_from_code_server(url, uid)
     result['status'] = result_state.get('status')
     if result['status'] == 'done':
         result = json.loads(result_state.get('result'))
