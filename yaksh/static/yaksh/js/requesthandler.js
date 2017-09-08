@@ -1,25 +1,22 @@
 request_status = "initial";
 count = 0;
-
-function submitRequest(){
-    document.forms["code"].submit();
-}
+MAX_COUNT = 14
 
 function reset_values() {
     request_status = "initial";
     count = 0;
 }
 function check_state(state, uid) {
-    if ((state == "running" || state == "not started") && count < 7) {
+    if ((state == "running" || state == "not started") && count < MAX_COUNT) {
         count++;
         setTimeout(function() {get_result(uid);}, 2000);
     } else if (state == "unknown") {
         reset_values();
-        notify("Request timeout. Try again later");
+        notify("Request timeout. Try again later.");
         unlock_screen();
     } else {
         reset_values()
-        notify("Please try again");
+        notify("Please try again.");
         unlock_screen();
     }
 }
@@ -40,7 +37,7 @@ function unlock_screen() {
 }
 
 function get_result(uid){
-    var url = "/exam/get_result/"+uid+"/";
+    var url = "/exam/get_result/" + uid + "/";
     ajax_check_code(url, "GET", "html", null, uid)
 }
 
