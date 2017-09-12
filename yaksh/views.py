@@ -616,8 +616,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         if current_question.type in ['code', 'upload']:
             if paper.time_left() <= 0:
                 url = 'http://localhost:%s' % SERVER_POOL_PORT
-                result = get_result_from_code_server(url, uid, block=True)
-                result = json.loads(result.get('result'))
+                result_details = get_result_from_code_server(url, uid, block=True)
+                result = json.loads(result_details.get('result'))
                 next_question, error_message, paper = _update_paper(request, uid,
                         result)
                 return show_question(request, next_question, paper, error_message)
