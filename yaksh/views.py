@@ -1648,7 +1648,6 @@ def download_course_csv(request, course_id):
         + [quiz.description for quiz in quizzes] + ['total_scored', 'out_of']
     writer = csv.DictWriter(response, fieldnames=header, extrasaction='ignore')
     writer.writeheader()
-    print(students)
     for student in students:
         writer.writerow(student)
     return response
