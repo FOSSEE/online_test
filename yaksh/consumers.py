@@ -5,7 +5,7 @@ from channels.auth import channel_session_user_from_http
 from datetime import datetime
 import pytz
 
-#Local Imports
+# Local Imports
 from yaksh.models import Room, User
 
 
@@ -76,7 +76,6 @@ def ws_receive(message):
         }
         context['messages'] = chat_dict
         context['success'] = True
-        # See above for the note about Group
         Group('chat-'+label).send({'text': json.dumps(context)})
 
 
