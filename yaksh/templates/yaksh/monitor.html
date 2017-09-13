@@ -53,6 +53,7 @@
 <input type="hidden" id="course_id" value="{{quiz.course.id}}">
 <input type="hidden" id="course_name" value="{{quiz.course.name|title}}">
 <input type="hidden" id="papers" value="{{papers|length}}">
+<input type="hidden" id="quiz_status" value="{{quiz.is_trial}}">
 {% if not quiz.enable_chat %}
 <div class="alert alert-warning">
     <h4>Chat functionality is disabled. To enable chat
@@ -128,7 +129,6 @@
 <!-- Open chat container -->
 {% block postchat %}
 <form id="chatform">
-<!-- {% csrf_token %} -->
 <div class="panel-footer">
   <div class="input-group">
     <div id="message" g_editable="true" role="textbox" contenteditable="true" placeholder="Write your message here...">
