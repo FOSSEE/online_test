@@ -8,11 +8,19 @@ $(document).ready(function() {
     var timer;
     var page_title = document.title;
     var course_id = $("#course_id").val();
+    var room_url = window.location.protocol + "//" +
+                    window.location.host + "/exam/new/chat/" + course_id;
+
+    $("#open_chat").click(function() {
+        $('#message').html("@" + $("#user").html());
+        ajax_request(room_url);
+        if(!$("#chat_container").is(':visible')) {
+            $("#chat_container").toggle();
+        }
+    });
 
     $("#main").on("click", function(){
         // Open chat window
-        var room_url = window.location.protocol + "//" +
-                    window.location.host + "/exam/new/chat/" + course_id;
         ajax_request(room_url);
     });
 

@@ -242,3 +242,11 @@ img {
     padding-bottom: 100px;
     color: white;
 }
+
+#header1{
+  padding: 16px;
+}
+
+#header2{
+  padding: 6px;
+}
