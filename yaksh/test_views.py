@@ -438,6 +438,25 @@ class TestMonitor(TestCase):
             timezone='UTC'
         )
 
+        # Create a different moderator
+        self.user1_plaintext_pass = 'demo'
+        self.user1 = User.objects.create_user(
+            username='demo_user1',
+            password=self.user1_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user1,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
         # Create Student
         self.student_plaintext_pass = 'demo_student'
         self.student = User.objects.create_user(
@@ -459,7 +478,7 @@ class TestMonitor(TestCase):
 
         # Add to moderator group
         self.mod_group.user_set.add(self.user)
-
+        self.mod_group.user_set.add(self.user1)
         self.course = Course.objects.create(
             name="Python Course", enrollment="Open Enrollment",
             creator=self.user
@@ -592,6 +611,52 @@ class TestMonitor(TestCase):
             response.context['data']['questionpaperid'],
             str(self.question_paper.id)
         )
+
+    def test_get_question_answer_for_answerpaper(self):
+        """
+            Check to get latest answer for questions in monitor
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:get_question_answer',
+                    kwargs={'user_id': self.student.id,
+                            'answerpaper_id': self.answerpaper.id,
+                            'question_id': self.question.id}),
+            follow=True
+        )
+        data = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['question'], self.question.description)
+        self.assertEqual(data['user'], self.student.get_full_name().title())
+
+    def test_get_question_answer_invalid_user(self):
+        """
+            Check to raise Http404 message for invalid user
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:get_question_answer',
+                    kwargs={'user_id': self.student.id,
+                            'answerpaper_id': self.answerpaper.id,
+                            'question_id': self.question.id}),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 404)
+
+        get_response = self.client.get(
+            reverse('yaksh:get_question_answer',
+                    kwargs={'user_id': self.student.id,
+                            'answerpaper_id': self.answerpaper.id,
+                            'question_id': self.question.id}),
+            follow=True
+        )
+        self.assertEqual(get_response.status_code, 404)
 
 
 class TestGradeUser(TestCase):
@@ -2182,7 +2247,7 @@ class TestViewAnswerPaper(TestCase):
             )
 
         self.user1 = User.objects.get(username="demo_user1")
-
+        self.user2 = User.objects.get(username="demo_user3")
         self.course = Course.objects.create(
             name="Python Course", enrollment="Enroll Request",
             creator=self.user1
@@ -2204,7 +2269,7 @@ class TestViewAnswerPaper(TestCase):
         self.question_paper.save()
 
         self.ans_paper = AnswerPaper.objects.create(
-            user_id=3,
+            user_id=self.user2.id,
             attempt_number=1, question_paper=self.question_paper,
             start_time=timezone.now(), user_ip='101.0.0.1',
             end_time=timezone.now()+timezone.timedelta(minutes=20)
