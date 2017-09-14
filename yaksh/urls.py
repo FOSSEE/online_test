@@ -127,5 +127,7 @@ urlpatterns = [
     url(r'^manage/courses/download_yaml_template/',
         views.download_yaml_template, name="download_yaml_template"),
     url(r'^manage/toggle/chat/(?P<quiz_id>\d+)/$',
-        views.toggle_quiz_chat, name="toggle_quiz_chat")
+        views.toggle_quiz_chat, name="toggle_quiz_chat"),
+    url(r'^manage/get_question_answer/(?P<answerpaper_id>\d+)/(?P<user_id>\d+)/(?P<question_id>\d+)',
+        views.get_question_answer, name="get_question_answer")
 ]

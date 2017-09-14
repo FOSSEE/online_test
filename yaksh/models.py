@@ -1291,6 +1291,21 @@ class AnswerPaper(models.Model):
                 }]
         return q_a
 
+    def get_attempted_questions(self):
+        """
+            Return attempted questions for a AnswerPaper
+        """
+        answers = self.answers.all()
+        questions = list(set([answer.question for answer in answers]))
+        return questions
+
+    def get_latest_answer(self, que_id):
+        """
+            Return latest answer submitted to a question by the user
+        """
+        answer = self.answers.filter(question_id=que_id).order_by("id").last()
+        return answer
+
     def get_questions(self):
         return self.questions.filter(active=True)
 

@@ -1910,3 +1910,32 @@ def toggle_quiz_chat(request, quiz_id):
         raise Http404('This course does not belong to you')
     quiz.toggle_chat_status()
     return my_redirect('/exam/manage/monitor/'+quiz_id)
+
+
+@login_required
+@email_verified
+def get_question_answer(request, answerpaper_id, user_id, question_id):
+    """
+    Get latest answer for question
+    """
+    user = request.user
+    context = {}
+    response_kwargs = {}
+    response_kwargs['content_type'] = 'application/json'
+    answer_paper = get_object_or_404(AnswerPaper, pk=answerpaper_id,
+                                     user_id=user_id)
+    result = [answer_paper.question_paper.quiz.course.is_creator(user),
+              answer_paper.question_paper.quiz.course.is_teacher(user)]
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+    if not any(result):
+        raise Http404('This course does not belong to you')
+
+    latest_answer = answer_paper.get_latest_answer(question_id)
+    formatted_ans = latest_answer.answer.replace(
+        '\r\n', '<br>').replace(' ', '&nbsp;')
+    context['answer'] = formatted_ans
+    context['question'] = latest_answer.question.description
+    context['user'] = answer_paper.user.get_full_name().title()
+    data = json.dumps(context)
+    return HttpResponse(data, **response_kwargs)
