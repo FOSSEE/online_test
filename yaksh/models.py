@@ -28,7 +28,7 @@ import tempfile
 from textwrap import dedent
 from ast import literal_eval
 from .file_utils import extract_files, delete_files
-from yaksh.xmlrpc_clients import code_server
+from yaksh.code_server import submit, SERVER_POOL_PORT
 from django.conf import settings
 from django.forms.models import model_to_dict
 
@@ -1306,7 +1306,7 @@ class AnswerPaper(models.Model):
         if question.type == 'code':
             return self.answers.filter(question=question).order_by('-id')
 
-    def validate_answer(self, user_answer, question, json_data=None):
+    def validate_answer(self, user_answer, question, json_data=None, uid=None):
         """
             Checks whether the answer submitted by the user is right or wrong.
             If right then returns correct = True, success and
@@ -1367,10 +1367,9 @@ class AnswerPaper(models.Model):
 
             elif question.type == 'code' or question.type == "upload":
                 user_dir = self.user.profile.get_user_dir()
-                json_result = code_server.run_code(
-                    question.language, json_data, user_dir
-                )
-                result = json.loads(json_result)
+                url = 'http://localhost:%s' % SERVER_POOL_PORT
+                submit(url, uid, json_data, user_dir)
+                result = {'uid': uid, 'status': 'running'}
         return result
 
     def regrade(self, question_id):
