@@ -28,7 +28,7 @@ after_success:
   - coverage report
 
 dist:
-  precise
+    precise
 
 addons:
   firefox: "46.0"
