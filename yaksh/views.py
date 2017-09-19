@@ -488,7 +488,8 @@ def show_question(request, question, paper, error_message=None, notification=Non
     answers = paper.get_previous_answers(question)
     if answers:
         last_attempt = answers[0].answer
-        context['last_attempt'] = last_attempt.encode('unicode-escape')
+        if last_attempt:
+            context['last_attempt'] = last_attempt.encode('unicode-escape')
     ci = RequestContext(request)
     return my_render_to_response('yaksh/question.html', context,
                                  context_instance=ci)
