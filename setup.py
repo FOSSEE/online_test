@@ -14,6 +14,7 @@ def get_version():
     exec(compile(open(fname).read(), fname, 'exec'), data)
     return data.get('__version__')
 
+
 install_requires = [
     'django==1.9.5',
     'django-taggit==0.18.1',
