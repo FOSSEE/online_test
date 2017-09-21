@@ -3,7 +3,6 @@ from datetime import datetime
 import csv
 import uuid
 from django.http import HttpResponse, JsonResponse
-from django.core.urlresolvers import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
@@ -104,7 +103,7 @@ def user_register(request):
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            data = form.cleaned_data
+            form.cleaned_data
             u_name, pwd, user_email, key = form.save()
             new_user = authenticate(username=u_name, password=pwd)
             login(request, new_user)
@@ -307,7 +306,6 @@ def prof_manage(request, msg=None):
     rights/permissions and log in."""
     user = request.user
     ci = RequestContext(request)
-    new_room = False
     if user.is_authenticated() and is_moderator(user):
         question_papers = QuestionPaper.objects.filter(
             Q(quiz__course__creator=user) |
@@ -645,7 +643,8 @@ def get_result(request, uid):
     result['status'] = result_state.get('status')
     if result['status'] == 'done':
         result = json.loads(result_state.get('result'))
-        next_question, error_message, paper = _update_paper(request, uid, result)
+        next_question, error_message, paper = _update_paper(
+            request, uid, result)
         return show_question(request, next_question, paper, error_message)
     return JsonResponse(result)
 
@@ -656,22 +655,27 @@ def _update_paper(request, uid, result):
     paper = new_answer.answerpaper_set.first()
 
     if result.get('success'):
-        new_answer.marks = (current_question.points * result['weight'] /
+        new_answer.marks = (
+            current_question.points * result['weight'] /
             current_question.get_maximum_test_case_weight()) \
             if current_question.partial_grading and \
-            current_question.type == 'code' or current_question.type == 'upload' \
+            current_question.type == 'code' or \
+            current_question.type == 'upload' \
             else current_question.points
         new_answer.correct = result.get('success')
         error_message = None
         new_answer.error = json.dumps(result.get('error'))
         next_question = paper.add_completed_question(current_question.id)
     else:
-        new_answer.marks = (current_question.points * result['weight'] /
+        new_answer.marks = (
+            current_question.points * result['weight'] /
             current_question.get_maximum_test_case_weight()) \
             if current_question.partial_grading and \
-            current_question.type == 'code' or current_question.type == 'upload' \
+            current_question.type == 'code' or \
+            current_question.type == 'upload' \
             else 0
-        error_message = result.get('error') if current_question.type == 'code' \
+        error_message = result.get('error') \
+            if current_question.type == 'code' \
             or current_question.type == 'upload' else None
         new_answer.error = json.dumps(result.get('error'))
         next_question = current_question if current_question.type == 'code' \
@@ -1861,14 +1865,12 @@ def chat_room(request, label, course_id):
     messages = room.messages.order_by('-timestamp')
     if messages:
         messages = reversed(messages)
-        tz = pytz.timezone(user.profile.timezone) if has_profile(user)\
-            else pytz.timezone("UTC")
         for message in messages:
-            msg_date = message.timestamp.astimezone(tz)
             chat_dict = {
                 "sender": message.sender.id,
                 "sender_name": message.sender.get_full_name().title(),
-                "timestamp": datetime.strftime(msg_date, "%Y-%m-%d %H:%M:%S"),
+                "timestamp": datetime.strftime(message.timestamp,
+                                               "%Y-%m-%dT%H:%M:%S"),
                 "message": message.message
             }
             chat_msgs_dict.append(chat_dict)
