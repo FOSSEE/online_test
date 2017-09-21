@@ -26,6 +26,9 @@
 <script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/clike/clike.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/shell/shell.js"></script>
 <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/moment.js"></script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/moment-timezone-with-data.js">
+</script>
 
 <script>
 var time_left = {{ paper.time_left }}
@@ -116,6 +119,7 @@ lang = "{{ question.language }}"
 </div>
 <input type="hidden" id="chat_status" value="{{paper.question_paper.quiz.enable_chat}}">
 <input type="hidden" id="quiz_status" value="{{paper.question_paper.quiz.is_trial}}">
+<input type="hidden" id="user_tz" value="{{user.profile.timezone}}">
         <p id="status"></p>
         {% if notification %}
           {% if question.type == "code" %}

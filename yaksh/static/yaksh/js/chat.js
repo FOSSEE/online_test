@@ -20,7 +20,7 @@ $(document).ready(function() {
         // Get messages from ajax request
         $.ajax({
             url: chat_url,
-            timeout:30000,
+            timeout:15000,
             type: "GET",
             dataType: 'json',
             contentType: 'application/json; charset=utf-8',
@@ -81,18 +81,107 @@ $(document).ready(function() {
     });
 
     // Create divs for showing sent and received messages
-    var div_sent = "<div class='row msg_container base_sent'>\n"+
-                    "<div class='col-xs-10 col-md-10'>\n" +
-                    "<div class='messages msg_sent'>\n"
+    function get_sent_message_div(user_name, message, time) {
 
-    var end_div_sent = "</div>\n</div>\n</div>"
+        // Create div for showing sent messages
+        var div_sent = document.createElement("div");
+        div_sent.setAttribute("class", "row msg_container base_sent");
 
-    var div_receive = "<div class='row msg_container base_receive'>\n"+
-                        "<div class='col-xs-10 col-md-10'>\n"+
-                        "<div class='messages msg_receive'>"
+        var sent_col_div = document.createElement("div");
+        sent_col_div.setAttribute("class", "col-xs-10 col-md-10");
 
-    var end_div_receive = "</div>\n</div>\n</div>\n"
+        var sent_msg_div = document.createElement("div");
+        sent_msg_div.setAttribute("class", "messages msg_sent");
 
+        var par_user = document.createElement("p");
+        par_user.setAttribute("id", "sender_name");
+        var user_text = document.createTextNode(user_name);
+        par_user.appendChild(user_text);
+
+        var par_time = document.createElement("p");
+        par_time.setAttribute("id", "msg_time");
+        var time_text = document.createTextNode(convert_date_time(time));
+        par_time.appendChild(time_text);
+
+        var par_msg = document.createElement("p");
+        par_msg.setAttribute("id", "chat_msg");
+        var msg_text = document.createTextNode(message);
+        par_msg.appendChild(msg_text);
+
+        sent_msg_div.appendChild(par_user);
+        sent_msg_div.appendChild(par_msg);
+        sent_msg_div.appendChild(par_time);
+        sent_col_div.appendChild(sent_msg_div);
+        div_sent.appendChild(sent_col_div);
+
+        return div_sent;
+    }
+
+    function get_receive_message_div(user_name, message, time) {
+
+        // Create div for showing received messages
+        var div_receive = document.createElement("div");
+        div_receive.setAttribute("class", "row msg_container base_receive");
+
+        var receive_col_div = document.createElement("div");
+        receive_col_div.setAttribute("class", "col-xs-10 col-md-10");
+
+        var receive_msg_div = document.createElement("div");
+        receive_msg_div.setAttribute("class", "messages msg_receive");
+
+        var par_user = document.createElement("p");
+        par_user.setAttribute("id", "receiver_name");
+        var user_text = document.createTextNode(user_name);
+        par_user.appendChild(user_text);
+
+        var par_time = document.createElement("p");
+        par_time.setAttribute("id", "msg_time");
+        var time_text = document.createTextNode(convert_date_time(time));
+        par_time.appendChild(time_text);
+
+        var par_msg = document.createElement("p");
+        par_msg.setAttribute("id", "chat_msg");
+        var msg_text = document.createTextNode(message);
+        par_msg.appendChild(msg_text);
+
+        receive_msg_div.appendChild(par_user);
+        receive_msg_div.appendChild(par_msg);
+        receive_msg_div.appendChild(par_time);
+        receive_col_div.appendChild(receive_msg_div);
+        div_receive.appendChild(receive_col_div);
+
+        return div_receive;
+    }
+
+    function get_no_message_div(){
+
+        // Create a div for no message
+        var msg_div = document.createElement("div");
+        msg_div.setAttribute("class", "text-center col-md-4");
+        msg_div.setAttribute("id", "no_msg_div");
+
+        var msg_span = document.createElement("span");
+        msg_span.setAttribute("id", "no_msg");
+        var msg_text = document.createTextNode("No Messages");
+        msg_span.appendChild(msg_text);
+        msg_div.appendChild(msg_span);
+
+        return msg_div;
+    }
+
+    function convert_date_time(utc_time){
+        // Convert utc time to local timezone
+        var local_time;
+        var user_tz = $("#user_tz").val();
+        var local_tz = moment.tz.zone(user_tz);
+        if (local_tz != null){
+            local_time = moment.utc(utc_time).tz(user_tz).format("YYYY-MM-DD HH:mm A");
+        }
+        else {
+            local_time = moment.utc(utc_time).format("YYYY-MM-DD HH:mm A");
+        }
+        return local_time;
+    }
 
     function fill_data(success, msg, mode) {
         // Fill data in chat container
@@ -101,10 +190,7 @@ $(document).ready(function() {
             var id = msg['sender'];
             if (id == sender){
                 // Set as sent message
-                var mess = div_receive+"<p id='sender_name'>"+msg['sender_name']+"</p>"+
-                            "<p>"+msg['message']+"</p>"+
-                            "<p id='msg_time'>"+ msg['timestamp']+"</p>"+
-                            end_div_receive;
+                var mess = get_sent_message_div(msg.sender_name, msg.message, msg.timestamp);
             }
             else{
                 if(mode=="new"){
@@ -112,19 +198,14 @@ $(document).ready(function() {
                     timer = setInterval(function() {toggle_title(msg['sender_name']);}, 1500);
                 }
                 // Set as received message
-                var mess = div_sent+"<p id='receiver_name'>"+msg['sender_name']+"</p>"+
-                            "<p>"+msg['message']+"</p>"+
-                            "<p id='msg_time'>"+ msg['timestamp']+"</p>"+
-                            end_div_sent;
+                var mess = get_receive_message_div(msg.sender_name, msg.message, msg.timestamp);
             }
             $("#msg_base").append(mess);
             $("#msg_base").stop().animate({
                 scrollTop: $("#msg_base")[0].scrollHeight}, 10);
             }
         else {
-            var no_msg_div = "<div class='text-center col-md-4' id='no_msg_div'>"+
-                            "<span id='no_msg'>"+"No Messages"+"</span>"+
-                            "</div>";
+            var no_msg_div = get_no_message_div();
             $("#msg_base").scrollTop();
             $("#msg_base").append(no_msg_div);
             }

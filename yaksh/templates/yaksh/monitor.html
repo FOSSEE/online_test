@@ -10,6 +10,9 @@
 <script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/reconnecting-websocket.min.js" %}></script>
 <script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/chat.js"></script>
 <script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/monitor.js"></script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/moment.js"></script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/moment-timezone-with-data.js"></script>
+</script>
 {% endif %}
 {% endblock %}
 
@@ -54,6 +57,7 @@
 <input type="hidden" id="course_name" value="{{quiz.course.name|title}}">
 <input type="hidden" id="papers" value="{{papers|length}}">
 <input type="hidden" id="quiz_status" value="{{quiz.is_trial}}">
+<input type="hidden" id="user_tz" value="{{user.profile.timezone}}">
 {% if not quiz.enable_chat %}
 <div class="alert alert-warning">
     <h4>Chat functionality is disabled. To enable chat
