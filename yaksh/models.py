@@ -1299,11 +1299,11 @@ class AnswerPaper(models.Model):
         questions = list(set([answer.question for answer in answers]))
         return questions
 
-    def get_latest_answer(self, que_id):
+    def get_all_answers(self, que_id):
         """
             Return latest answer submitted to a question by the user
         """
-        answer = self.answers.filter(question_id=que_id).order_by("id").last()
+        answer = self.answers.filter(question_id=que_id).order_by("id")
         return answer
 
     def get_questions(self):

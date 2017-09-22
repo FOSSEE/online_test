@@ -1931,11 +1931,11 @@ def get_question_answer(request, answerpaper_id, user_id, question_id):
     if not any(result):
         raise Http404('This course does not belong to you')
 
-    latest_answer = answer_paper.get_latest_answer(question_id)
-    formatted_ans = latest_answer.answer.replace(
-        '\r\n', '<br>').replace(' ', '&nbsp;')
-    context['answer'] = formatted_ans
-    context['question'] = latest_answer.question.description
+    answers = answer_paper.get_all_answers(question_id)
+    formatted_answers = [answer.answer.replace(
+        '\r\n', '<br>').replace(' ', '&nbsp;') for answer in answers]
+    context['answer'] = formatted_answers
+    context['question'] = answers.last().question.description
     context['user'] = answer_paper.user.get_full_name().title()
     data = json.dumps(context)
     return HttpResponse(data, **response_kwargs)
