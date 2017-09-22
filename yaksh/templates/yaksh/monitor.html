@@ -4,7 +4,7 @@
 {% block pagetitle %} {{ msg }} {% endblock pagetitle %}
 
 {% block css %}
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css">
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/jquery-ui.css">
 <link type="stylesheet" src="{{ URL_ROOT }}/static/yaksh/css/monitor.css">
 {% endblock %}
 
@@ -17,7 +17,7 @@
 <script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/moment.js"></script>
 <script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/moment-timezone-with-data.js"></script>
 </script>
-<script src="https://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-ui.js"></script>
 {% endif %}
 {% endblock %}
 
@@ -140,16 +140,17 @@
 <input type="hidden" id="handle" value="{{user.id}}"/>
 
 <!-- Dialog to show students latest submitted answer -->
-<div id="dialog" title="Attempt Information" style="display: none;">
+<div id="dialog" title="Attempt Information">
     <h3 id="header1" class="bg-primary">Latest Answer submitted by
         <span id="user"></span>
     </h3>
-    <h4 id="header2" class="bg-primary">Question:-</h4>
+    <h4 id="header2"><span class="label label-info">Question:-</span></h4>
     <p id="question"></p><br>
-    <h4 id="header2" class="bg-primary">Answer:-</h4>
+    <h4 id="header2"><span class="label label-info">Answer:-</span></h4>
     <p id="latest_ans"></p>
     <br>
     <button id="open_chat" class="btn btn-primary btn-sm"> Send Message </button>
+    <button id="view_all_answers" class="btn btn-primary btn-sm"> View All Answers </button>
 </div>
 {% endblock %}
 
