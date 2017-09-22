@@ -36,7 +36,7 @@ $(document).ready(function() {
                 request_success(msg);
             },
             error: function(jqXHR, textStatus) {
-                alert("Unable to send messages");
+                alert("Unable to get messages");
             }
         });
         $("#chat_container").toggle();
