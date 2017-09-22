@@ -18,15 +18,12 @@ except ImportError:
     from io import BytesIO as string_io
 import pytz
 import os
-import sys
-import traceback
 import stat
 from os.path import join, exists
 import shutil
 import zipfile
 import tempfile
 from textwrap import dedent
-from ast import literal_eval
 from .file_utils import extract_files, delete_files
 from yaksh.code_server import submit, SERVER_POOL_PORT
 from django.conf import settings
@@ -34,59 +31,59 @@ from django.forms.models import model_to_dict
 
 
 languages = (
-        ("python", "Python"),
-        ("bash", "Bash"),
-        ("c", "C Language"),
-        ("cpp", "C++ Language"),
-        ("java", "Java Language"),
-        ("scilab", "Scilab"),
-    )
+    ("python", "Python"),
+    ("bash", "Bash"),
+    ("c", "C Language"),
+    ("cpp", "C++ Language"),
+    ("java", "Java Language"),
+    ("scilab", "Scilab"),
+)
 
 question_types = (
-        ("mcq", "Single Correct Choice"),
-        ("mcc", "Multiple Correct Choices"),
-        ("code", "Code"),
-        ("upload", "Assignment Upload"),
-        ("integer", "Answer in Integer"),
-        ("string", "Answer in String"),
-        ("float", "Answer in Float"),
-    )
+    ("mcq", "Single Correct Choice"),
+    ("mcc", "Multiple Correct Choices"),
+    ("code", "Code"),
+    ("upload", "Assignment Upload"),
+    ("integer", "Answer in Integer"),
+    ("string", "Answer in String"),
+    ("float", "Answer in Float"),
+)
 
 enrollment_methods = (
     ("default", "Enroll Request"),
     ("open", "Open Enrollment"),
-    )
+)
 
 test_case_types = (
-        ("standardtestcase", "Standard Testcase"),
-        ("stdiobasedtestcase", "StdIO Based Testcase"),
-        ("mcqtestcase", "MCQ Testcase"),
-        ("hooktestcase", "Hook Testcase"),
-        ("integertestcase", "Integer Testcase"),
-        ("stringtestcase", "String Testcase"),
-        ("floattestcase", "Float Testcase"),
-    )
+    ("standardtestcase", "Standard Testcase"),
+    ("stdiobasedtestcase", "StdIO Based Testcase"),
+    ("mcqtestcase", "MCQ Testcase"),
+    ("hooktestcase", "Hook Testcase"),
+    ("integertestcase", "Integer Testcase"),
+    ("stringtestcase", "String Testcase"),
+    ("floattestcase", "Float Testcase"),
+)
 
 string_check_type = (
     ("lower", "Case Insensitive"),
     ("exact", "Case Sensitive"),
-    )
+)
 
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
 days_between_attempts = [(j, j) for j in range(401)]
 
 test_status = (
-                ('inprogress', 'Inprogress'),
-                ('completed', 'Completed'),
-              )
+    ('inprogress', 'Inprogress'),
+    ('completed', 'Completed'),
+)
 
 
 def get_assignment_dir(instance, filename):
     upload_dir = instance.question_paper.quiz.description.replace(" ", "_")
     return os.sep.join((
-        upload_dir, instance.user.username, str(instance.assignmentQuestion.id),
-        filename
+        upload_dir, instance.user.username,
+        str(instance.assignmentQuestion.id), filename
     ))
 
 
@@ -102,18 +99,20 @@ def get_upload_dir(instance, filename):
         'question_%s' % (instance.question.id), filename
     ))
 
+
 def dict_to_yaml(dictionary):
-    for k,v in dictionary.items():
+    for k, v in dictionary.items():
         if isinstance(v, list):
-            for  nested_v in v:
+            for nested_v in v:
                 if isinstance(nested_v, dict):
                     dict_to_yaml(nested_v)
-        elif v and isinstance(v,str):
+        elif v and isinstance(v, str):
             dictionary[k] = PreservedScalarString(v)
     return ruamel.yaml.round_trip_dump(dictionary, explicit_start=True,
                                        default_flow_style=False,
                                        allow_unicode=True,
                                        )
+
 
 ###############################################################################
 class CourseManager(models.Manager):
@@ -127,6 +126,7 @@ class CourseManager(models.Manager):
 
     def get_hidden_courses(self, code):
         return self.filter(code=code, hidden=True)
+
 
 ###############################################################################
 class Course(models.Model):
@@ -174,7 +174,6 @@ class Course(models.Model):
 
     def create_duplicate_course(self, user):
         quizzes = self.quiz_set.all()
-        prerequisite_map = []
         duplicate_quiz_map = {}
 
         new_course_name = "Copy Of {0}".format(self.name)
@@ -282,6 +281,9 @@ class Course(models.Model):
         students = self.students.exclude(id__in=teachers)
         return students
 
+    def is_student(self, student):
+        return True if student in self.students.all() else False
+
     def __str__(self):
         return self.name
 
@@ -317,9 +319,6 @@ class Profile(models.Model):
             os.makedirs(user_dir)
             os.chmod(user_dir, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         return user_dir
-
-    def __str__(self):
-        return '%s' % (self.user.get_full_name())
 
 
 ###############################################################################
@@ -383,10 +382,10 @@ class Question(models.Model):
         if self.type == "upload":
             assignment_files = AssignmentUpload.objects.filter(
                 assignmentQuestion=self, user=user
-                )
+            )
             if assignment_files:
                 metadata['assign_files'] = [(file.assignmentFile.path, False)
-                                             for file in assignment_files]
+                                            for file in assignment_files]
         question_data['metadata'] = metadata
 
         return json.dumps(question_data)
@@ -498,12 +497,12 @@ class Question(models.Model):
                 file_upload.extract = extract
                 file_upload.file.save(file_name, django_file, save=True)
 
-    def _add_yaml_to_zip(self, zip_file, q_dict,path_to_file=None):
-        
+    def _add_yaml_to_zip(self, zip_file, q_dict, path_to_file=None):
         tmp_file_path = tempfile.mkdtemp()
         yaml_path = os.path.join(tmp_file_path, "questions_dump.yaml")
         for elem in q_dict:
-            sorted_dict = CommentedMap(sorted(elem.items(), key=lambda x:x[0]))
+            sorted_dict = CommentedMap(sorted(elem.items(),
+                                              key=lambda x: x[0]))
             yaml_block = dict_to_yaml(sorted_dict)
             with open(yaml_path, "a") as yaml_file:
                 yaml_file.write(yaml_block)
@@ -517,9 +516,8 @@ class Question(models.Model):
         if os.path.exists(yaml_file):
             with open(yaml_file, 'r') as q_file:
                 questions_list = q_file.read()
-                msg = self.load_questions(questions_list, user, 
-                                          file_path, files
-                                          )
+                msg = self.load_questions(questions_list, user,
+                                          file_path, files)
         else:
             msg = "Please upload zip file with questions_dump.yaml in it."
 
@@ -707,6 +705,8 @@ class Quiz(models.Model):
     allow_skip = models.BooleanField("Allow students to skip questions",
                                      default=True)
 
+    enable_chat = models.BooleanField("Enable/Disable Chat", default=False)
+
     objects = QuizManager()
 
     class Meta:
@@ -720,11 +720,10 @@ class Quiz(models.Model):
 
     def _create_duplicate_quiz(self, course):
         questionpaper = self.questionpaper_set.all()
-        new_quiz = Quiz.objects.create(course=course,
-            start_date_time=self.start_date_time,
+        new_quiz = Quiz.objects.create(
+            course=course, start_date_time=self.start_date_time,
             end_date_time=self.end_date_time,
-            duration=self.duration,
-            active=self.active,
+            duration=self.duration, active=self.active,
             description="Copy Of {0}".format(self.description),
             pass_criteria=self.pass_criteria,
             language=self.language,
@@ -748,10 +747,17 @@ class Quiz(models.Model):
             attempts_allowed=-1,
             time_between_attempts=0,
             description='Yaksh Demo quiz', pass_criteria=0,
-            language='Python', prerequisite=None,
+            language='python', prerequisite=None,
             course=course
         )
         return demo_quiz
+
+    def toggle_chat_status(self):
+        if self.enable_chat:
+            self.enable_chat = False
+        else:
+            self.enable_chat = True
+        self.save()
 
     def __str__(self):
         desc = self.description or 'Quiz'
@@ -826,7 +832,8 @@ class QuestionPaper(models.Model):
     objects = QuestionPaperManager()
 
     def _create_duplicate_questionpaper(self, quiz):
-        new_questionpaper = QuestionPaper.objects.create(quiz=quiz,
+        new_questionpaper = QuestionPaper.objects.create(
+            quiz=quiz,
             shuffle_questions=self.shuffle_questions,
             total_marks=self.total_marks,
             fixed_question_order=self.fixed_question_order
@@ -1029,9 +1036,9 @@ class AnswerPaperManager(models.Manager):
                                                              attempt_number)
         questions = self.get_all_questions(questionpaper_id, attempt_number)
         all_questions = Question.objects.filter(
-                id__in=set(questions),
-                active=True
-            ).order_by('type')
+            id__in=set(questions),
+            active=True
+        ).order_by('type')
         for question in all_questions:
             if question.id in questions_answered:
                 question_stats[question] = [questions_answered[question.id],
@@ -1081,8 +1088,8 @@ class AnswerPaperManager(models.Manager):
             .distinct()
 
     def get_user_all_attempts(self, questionpaper, user):
-        return self.filter(question_paper=questionpaper, user=user)\
-                            .order_by('-attempt_number')
+        return self.filter(question_paper=questionpaper,
+                           user=user).order_by('-attempt_number')
 
     def get_user_data(self, user, questionpaper_id, attempt_number=None):
         if attempt_number is not None:
@@ -1180,7 +1187,7 @@ class AnswerPaper(models.Model):
             Adds the completed question to the list of answered
             questions and returns the next question.
         """
-        if question_id not in self.questions_answered.all(): 
+        if question_id not in self.questions_answered.all():
             self.questions_answered.add(question_id)
         self.questions_unanswered.remove(question_id)
 
@@ -1345,12 +1352,12 @@ class AnswerPaper(models.Model):
                 tc_status = []
                 for tc in question.get_test_cases():
                     if tc.string_check == "lower":
-                        if tc.correct.lower().splitlines()\
-                            == user_answer.lower().splitlines():
+                        if (tc.correct.lower().splitlines()
+                           == user_answer.lower().splitlines()):
                             tc_status.append(True)
                     else:
-                        if tc.correct.splitlines()\
-                            == user_answer.splitlines():
+                        if (tc.correct.splitlines()
+                           == user_answer.splitlines()):
                             tc_status.append(True)
                 if any(tc_status):
                     result['success'] = True
@@ -1376,7 +1383,8 @@ class AnswerPaper(models.Model):
         try:
             question = self.questions.get(id=question_id)
             msg = 'User: {0}; Quiz: {1}; Question: {2}.\n'.format(
-                    self.user, self.question_paper.quiz.description, question)
+                self.user, self.question_paper.quiz.description, question
+            )
         except Question.DoesNotExist:
             msg = 'User: {0}; Quiz: {1} Question id: {2}.\n'.format(
                 self.user, self.question_paper.quiz.description,
@@ -1425,29 +1433,29 @@ class AnswerPaper(models.Model):
                .format(u.first_name, u.last_name, q.description)
 
 
-################################################################################
+##############################################################################
 class AssignmentUploadManager(models.Manager):
 
     def get_assignments(self, qp, que_id=None, user_id=None):
         if que_id and user_id:
             assignment_files = AssignmentUpload.objects.filter(
-                        assignmentQuestion_id=que_id, user_id=user_id,
-                        question_paper=qp
-                        )
+                assignmentQuestion_id=que_id, user_id=user_id,
+                question_paper=qp
+            )
             file_name = User.objects.get(id=user_id).get_full_name()
         else:
             assignment_files = AssignmentUpload.objects.filter(
-                        question_paper=qp
-                        )
+                question_paper=qp
+            )
 
             file_name = "{0}_Assignment_files".format(
-                            assignment_files[0].question_paper.quiz.description
-                            )
+                assignment_files[0].question_paper.quiz.description
+            )
 
         return assignment_files, file_name
 
 
-################################################################################
+###############################################################################
 class AssignmentUpload(models.Model):
     user = models.ForeignKey(User)
     assignmentQuestion = models.ForeignKey(Question)
@@ -1539,6 +1547,7 @@ class HookTestCase(TestCase):
     def __str__(self):
         return u'Hook Testcase | Correct: {0}'.format(self.hook_code)
 
+
 class IntegerTestCase(TestCase):
     correct = models.IntegerField(default=None)
 
@@ -1551,11 +1560,11 @@ class IntegerTestCase(TestCase):
 
 class StringTestCase(TestCase):
     correct = models.TextField(default=None)
-    string_check = models.CharField(max_length=200,choices=string_check_type)
+    string_check = models.CharField(max_length=200, choices=string_check_type)
 
     def get_field_value(self):
         return {"test_case_type": "stringtestcase", "correct": self.correct,
-                "string_check":self.string_check}
+                "string_check": self.string_check}
 
     def __str__(self):
         return u'String Testcase | Correct: {0}'.format(self.correct)
@@ -1568,9 +1577,24 @@ class FloatTestCase(TestCase):
 
     def get_field_value(self):
         return {"test_case_type": "floattestcase", "correct": self.correct,
-                "error_margin":self.error_margin}
+                "error_margin": self.error_margin}
 
     def __str__(self):
         return u'Testcase | Correct: {0} | Error Margin: +or- {1}'.format(
-                self.correct, self.error_margin
-                )
+            self.correct, self.error_margin
+        )
+
+
+############################################################################
+class Room(models.Model):
+    label = models.SlugField(unique=True)
+    course = models.ForeignKey(Course)
+
+
+class Message(models.Model):
+    room = models.ForeignKey(Room, related_name='messages')
+    sender = models.ForeignKey(User, related_name='sender')
+    receiver = models.ForeignKey(User, related_name='receiver',
+                                 blank=True, null=True)
+    message = models.TextField()
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
