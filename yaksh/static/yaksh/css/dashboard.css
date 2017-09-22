@@ -87,3 +87,24 @@ body {
 .sidebar-right {
     float: right;
 }
+
+.btn-group-sm .btn-fab{
+  position: fixed !important;
+  right: 29px;
+}
+.btn-group .btn-fab{
+  position: fixed !important;
+  right: 20px;
+}
+#main{
+  bottom: 20px;
+}
+#mail{
+  bottom: 80px
+}
+#sms{
+  bottom: 125px
+}
+#autre{
+  bottom: 170px
+}

@@ -1,26 +1,21 @@
-import random
-import string
 import os
-from datetime import datetime, timedelta
-import collections
+from datetime import datetime
 import csv
+import uuid
 from django.http import HttpResponse, JsonResponse
-from django.core.urlresolvers import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.http import Http404
-from django.db.models import Sum, Max, Q, F
+from django.db.models import Max, Q, F
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.forms.models import inlineformset_factory
 from django.utils import timezone
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
-from django.conf import settings
 import pytz
 from taggit.models import Tag
-from itertools import chain
 import json
 import six
 from textwrap import dedent
@@ -31,22 +26,25 @@ except ImportError:
     from io import BytesIO as string_io
 import re
 # Local imports.
-from yaksh.code_server import get_result as get_result_from_code_server, SERVER_POOL_PORT
+from yaksh.code_server import (
+    get_result as get_result_from_code_server, SERVER_POOL_PORT
+)
 from yaksh.models import (
-    Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, FloatTestCase,
-    HookTestCase, IntegerTestCase, McqTestCase, Profile,
-    QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
-    StdIOBasedTestCase, StringTestCase, TestCase, User,
-    get_model_class
+    Answer, AnswerPaper, AssignmentUpload, Course, FileUpload,
+    Profile, QuestionPaper, QuestionSet, Quiz, Question, TestCase,
+    User, Room
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
-    RandomQuestionForm, QuestionFilterForm, CourseForm, ProfileForm,
-    UploadFileForm, get_object_form, FileForm, QuestionPaperForm
+    QuestionFilterForm, CourseForm, ProfileForm,
+    UploadFileForm, FileForm, QuestionPaperForm
 )
 from .settings import URL_ROOT
 from .file_utils import extract_files
-from .send_emails import send_user_mail, generate_activation_key, send_bulk_mail
+from .send_emails import (
+    send_user_mail,
+    generate_activation_key, send_bulk_mail
+)
 from .decorators import email_verified, has_profile
 
 
@@ -105,7 +103,7 @@ def user_register(request):
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            data = form.cleaned_data
+            form.cleaned_data
             u_name, pwd, user_email, key = form.save()
             new_user = authenticate(username=u_name, password=pwd)
             login(request, new_user)
@@ -154,7 +152,7 @@ def quizlist_user(request, enrolled=None):
         courses = Course.objects.filter(
             active=True, is_trial=False
         ).exclude(
-           ~Q(requests=user), ~Q(rejected=user), hidden=True
+            ~Q(requests=user), ~Q(rejected=user), hidden=True
         )
         title = 'All Courses'
 
@@ -217,8 +215,7 @@ def add_question(request, question_id=None):
             formset = inlineformset_factory(Question, testcase, extra=0,
                                             fields='__all__')
             formsets.append(formset(
-                request.POST, request.FILES, instance=question
-                )
+                request.POST, request.FILES, instance=question)
             )
         files = request.FILES.getlist('file_field')
         uploaded_files = FileUpload.objects.filter(question_id=question.id)
@@ -271,7 +268,8 @@ def add_quiz(request, course_id, quiz_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     ci = RequestContext(request)
-    if not is_moderator(user) or (user != course.creator and user not in course.teachers.all()):
+    result = [course.is_creator(user), course.is_teacher(user)]
+    if not is_moderator(user) or not any(result):
         raise Http404('You are not allowed to view this course !')
     context = {}
     if request.method == "POST":
@@ -283,16 +281,16 @@ def add_quiz(request, course_id, quiz_id=None):
 
         else:
             quiz = Quiz.objects.get(id=quiz_id)
-            form = QuizForm(request.POST, user=user, course=course_id,
+            form = QuizForm(
+                request.POST, user=user, course=course_id,
                 instance=quiz
             )
             if form.is_valid():
                 form.save()
                 return my_redirect("/exam/manage/courses/")
-
     else:
         quiz = Quiz.objects.get(id=quiz_id) if quiz_id else None
-        form = QuizForm(user=user,course=course_id, instance=quiz)
+        form = QuizForm(user=user, course=course_id, instance=quiz)
         context["quiz_id"] = quiz_id
     context["form"] = form
     return my_render_to_response(
@@ -404,13 +402,15 @@ def start(request, questionpaper_id=None, attempt_num=None):
         if is_moderator(user):
             return redirect("/exam/manage")
         return redirect("/exam/quizzes")
-    if quest_paper.quiz.has_prerequisite() and not quest_paper.is_prerequisite_passed(user):
+    if quest_paper.quiz.has_prerequisite() and not \
+       quest_paper.is_prerequisite_passed(user):
         if is_moderator(user):
             return redirect("/exam/manage")
         return redirect("/exam/quizzes")
     # if any previous attempt
     last_attempt = AnswerPaper.objects.get_user_last_attempt(
-            questionpaper=quest_paper, user=user)
+        questionpaper=quest_paper, user=user
+    )
     if last_attempt and last_attempt.is_attempt_inprogress():
         return show_question(
             request, last_attempt.current_question(), last_attempt
@@ -440,7 +440,7 @@ def start(request, questionpaper_id=None, attempt_num=None):
             msg = 'You do not have a profile and cannot take the quiz!'
             raise Http404(msg)
         new_paper = quest_paper.make_answerpaper(user, ip, attempt_number)
-        if new_paper.status ==  'inprogress':
+        if new_paper.status == 'inprogress':
             return show_question(request, new_paper.current_question(),
                                  new_paper
                                  )
@@ -448,11 +448,12 @@ def start(request, questionpaper_id=None, attempt_num=None):
             msg = 'You have already finished the quiz!'
             raise Http404(msg)
 
+
 @login_required
 @email_verified
-def show_question(request, question, paper, error_message=None, notification=None):
+def show_question(request, question, paper, error_message=None,
+                  notification=None):
     """Show a question if possible."""
-    user = request.user
     if not question:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(
@@ -498,7 +499,6 @@ def show_question(request, question, paper, error_message=None, notification=Non
 @login_required
 @email_verified
 def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
-    user = request.user
     paper = get_object_or_404(
         AnswerPaper, user=request.user, attempt_number=attempt_num,
         question_paper=questionpaper_id
@@ -567,14 +567,16 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                 )
             for fname in assignment_filename:
                 assignment_files = AssignmentUpload.objects.filter(
-                            assignmentQuestion=current_question,
-                            assignmentFile__icontains=fname, user=user,
-                            question_paper=questionpaper_id)
+                    assignmentQuestion=current_question,
+                    assignmentFile__icontains=fname, user=user,
+                    question_paper=questionpaper_id
+                )
                 if assignment_files.exists():
                     assign_file = assignment_files.get(
-                            assignmentQuestion=current_question,
-                            assignmentFile__icontains=fname, user=user,
-                            question_paper=questionpaper_id)
+                        assignmentQuestion=current_question,
+                        assignmentFile__icontains=fname, user=user,
+                        question_paper=questionpaper_id
+                    )
                     os.remove(assign_file.assignmentFile.path)
                     assign_file.delete()
                 AssignmentUpload.objects.create(
@@ -608,8 +610,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         # If we were not skipped, we were asked to check.  For any non-mcq
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
-        json_data = current_question.consolidate_answer_data(user_answer, user) \
-            if current_question.type == 'code' or \
+        json_data = current_question.consolidate_answer_data(
+            user_answer, user) if current_question.type == 'code' or \
             current_question.type == 'upload' else None
         result = paper.validate_answer(
             user_answer, current_question, json_data, uid
@@ -617,15 +619,18 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         if current_question.type in ['code', 'upload']:
             if paper.time_left() <= 0:
                 url = 'http://localhost:%s' % SERVER_POOL_PORT
-                result_details = get_result_from_code_server(url, uid, block=True)
+                result_details = get_result_from_code_server(url, uid,
+                                                             block=True)
                 result = json.loads(result_details.get('result'))
-                next_question, error_message, paper = _update_paper(request, uid,
-                        result)
-                return show_question(request, next_question, paper, error_message)
+                next_question, error_message, paper = _update_paper(
+                    request, uid, result)
+                return show_question(request, next_question, paper,
+                                     error_message)
             else:
                 return JsonResponse(result)
         else:
-            next_question, error_message, paper = _update_paper(request, uid, result)
+            next_question, error_message, paper = _update_paper(request, uid,
+                                                                result)
             return show_question(request, next_question, paper, error_message)
     else:
         return show_question(request, current_question, paper)
@@ -639,7 +644,8 @@ def get_result(request, uid):
     result['status'] = result_state.get('status')
     if result['status'] == 'done':
         result = json.loads(result_state.get('result'))
-        next_question, error_message, paper = _update_paper(request, uid, result)
+        next_question, error_message, paper = _update_paper(
+            request, uid, result)
         return show_question(request, next_question, paper, error_message)
     return JsonResponse(result)
 
@@ -650,22 +656,27 @@ def _update_paper(request, uid, result):
     paper = new_answer.answerpaper_set.first()
 
     if result.get('success'):
-        new_answer.marks = (current_question.points * result['weight'] /
+        new_answer.marks = (
+            current_question.points * result['weight'] /
             current_question.get_maximum_test_case_weight()) \
             if current_question.partial_grading and \
-            current_question.type == 'code' or current_question.type == 'upload' \
+            current_question.type == 'code' or \
+            current_question.type == 'upload' \
             else current_question.points
         new_answer.correct = result.get('success')
         error_message = None
         new_answer.error = json.dumps(result.get('error'))
         next_question = paper.add_completed_question(current_question.id)
     else:
-        new_answer.marks = (current_question.points * result['weight'] /
+        new_answer.marks = (
+            current_question.points * result['weight'] /
             current_question.get_maximum_test_case_weight()) \
             if current_question.partial_grading and \
-            current_question.type == 'code' or current_question.type == 'upload' \
+            current_question.type == 'code' or \
+            current_question.type == 'upload' \
             else 0
-        error_message = result.get('error') if current_question.type == 'code' \
+        error_message = result.get('error') \
+            if current_question.type == 'code' \
             or current_question.type == 'upload' else None
         new_answer.error = json.dumps(result.get('error'))
         next_question = current_question if current_question.type == 'code' \
@@ -695,8 +706,8 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
     """Show a page to inform user that the quiz has been compeleted."""
     user = request.user
     if questionpaper_id is None:
-        message = reason or "An Unexpected Error occurred. Please contact your '\
-            'instructor/administrator.'"
+        message = reason or "An Unexpected Error occurred. '\
+            Please contact your instructor/administrator.'"
         context = {'message': message}
         return my_render_to_response('yaksh/complete.html', context)
     else:
@@ -746,7 +757,6 @@ def add_course(request, course_id=None):
 @email_verified
 def enroll_request(request, course_id):
     user = request.user
-    ci = RequestContext(request)
     course = get_object_or_404(Course, pk=course_id)
     if not course.is_active_enrollment and course.hidden:
         msg = (
@@ -766,7 +776,6 @@ def enroll_request(request, course_id):
 @email_verified
 def self_enroll(request, course_id):
     user = request.user
-    ci = RequestContext(request)
     course = get_object_or_404(Course, pk=course_id)
     if course.is_self_enroll():
         was_rejected = False
@@ -973,7 +982,8 @@ def monitor(request, quiz_id=None):
     # quiz_id is not None.
     try:
         quiz = get_object_or_404(Quiz, id=quiz_id)
-        if not quiz.course.is_creator(user) and not quiz.course.is_teacher(user):
+        result = [quiz.course.is_creator(user), quiz.course.is_teacher(user)]
+        if not any(result):
             raise Http404('This course does not belong to you')
         q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user) |
                                                Q(quiz__course__teachers=user),
@@ -1053,10 +1063,10 @@ def _remove_already_present(questionpaper_id, questions):
         return questions
     questionpaper = QuestionPaper.objects.get(pk=questionpaper_id)
     questions = questions.exclude(
-            id__in=questionpaper.fixed_questions.values_list('id', flat=True))
+        id__in=questionpaper.fixed_questions.values_list('id', flat=True))
     for random_set in questionpaper.random_questions.all():
         questions = questions.exclude(
-                id__in=random_set.questions.values_list('id', flat=True))
+            id__in=random_set.questions.values_list('id', flat=True))
     return questions
 
 
@@ -1075,7 +1085,8 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
     marks = None
     state = None
     if questionpaper_id is None:
-        question_paper = QuestionPaper.objects.get_or_create(quiz_id=quiz_id)[0]
+        question_paper = QuestionPaper.objects.get_or_create(
+            quiz_id=quiz_id)[0]
     else:
         question_paper = get_object_or_404(QuestionPaper, id=questionpaper_id)
     qpaper_form = QuestionPaperForm(instance=question_paper)
@@ -1092,7 +1103,7 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
             question_ids = request.POST.get('checked_ques', None)
             if question_paper.fixed_question_order:
                 ques_order = question_paper.fixed_question_order.split(",") +\
-                            question_ids.split(",")
+                    question_ids.split(",")
                 questions_order = ",".join(ques_order)
             else:
                 questions_order = question_ids
@@ -1118,7 +1129,9 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
             question_ids = request.POST.getlist('random_questions', None)
             num_of_questions = request.POST.get('num_of_questions', 1)
             if question_ids and marks:
-                random_set = QuestionSet(marks=marks, num_questions=num_of_questions)
+                random_set = QuestionSet(
+                    marks=marks,
+                    num_questions=num_of_questions)
                 random_set.save()
                 for question in Question.objects.filter(id__in=question_ids):
                     random_set.questions.add(question)
@@ -1170,7 +1183,7 @@ def show_all_questions(request):
     questions = Question.objects.filter(user_id=user.id, active=True)
     form = QuestionFilterForm(user=user)
     user_tags = questions.values_list('tags', flat=True).distinct()
-    all_tags = Tag.objects.filter(id__in = user_tags)
+    all_tags = Tag.objects.filter(id__in=user_tags)
     upload_form = UploadFileForm()
     context['questions'] = questions
     context['all_tags'] = all_tags
@@ -1183,8 +1196,8 @@ def show_all_questions(request):
         if request.POST.get('delete') == 'delete':
             data = request.POST.getlist('question')
             if data is not None:
-                questions = Question.objects.filter(id__in=data, user_id=user.id,
-                                                    active=True)
+                questions = Question.objects.filter(
+                    id__in=data, user_id=user.id, active=True)
                 for question in questions:
                     question.active = False
                     question.save()
@@ -1216,7 +1229,8 @@ def show_all_questions(request):
                 response.write(zip_file.read())
                 return response
             else:
-                context['msg'] = "Please select atleast one question to download"
+                context['msg'] = "Please select atleast one question'\
+                    to download'"
 
         if request.POST.get('test') == 'test':
             question_ids = request.POST.getlist("question")
@@ -1232,7 +1246,7 @@ def show_all_questions(request):
             question_tags = request.POST.getlist("question_tags")
             search_tags = []
             for tags in question_tags:
-                search_tags.extend(re.split('[; |, |\*|\n]',tags))
+                search_tags.extend(re.split('[; |, |\*|\n]', tags))
             search_result = Question.objects.filter(tags__name__in=search_tags,
                                                     user=user).distinct()
             context['questions'] = search_result
@@ -1274,30 +1288,30 @@ def download_csv(request, questionpaper_id):
                                       (quiz.description).replace('.', ''))
     writer = csv.writer(response)
     header = [
-                'name',
-                'username',
-                'roll_number',
-                'institute',
-                'marks_obtained',
-                'total_marks',
-                'percentage',
-                'questions',
-                'questions_answered',
-                'status'
+        'name',
+        'username',
+        'roll_number',
+        'institute',
+        'marks_obtained',
+        'total_marks',
+        'percentage',
+        'questions',
+        'questions_answered',
+        'status'
     ]
     writer.writerow(header)
     for paper in papers:
         row = [
-                '{0} {1}'.format(paper.user.first_name, paper.user.last_name),
-                paper.user.username,
-                paper.user.profile.roll_number,
-                paper.user.profile.institute,
-                paper.marks_obtained,
-                paper.question_paper.total_marks,
-                paper.percent,
-                paper.questions.all(),
-                paper.questions_answered.all(),
-                paper.status
+            '{0} {1}'.format(paper.user.first_name, paper.user.last_name),
+            paper.user.username,
+            paper.user.profile.roll_number,
+            paper.user.profile.institute,
+            paper.marks_obtained,
+            paper.question_paper.total_marks,
+            paper.percent,
+            paper.questions.all(),
+            paper.questions_answered.all(),
+            paper.status
         ]
         writer.writerow(row)
     return response
@@ -1330,8 +1344,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
             raise Http404('This course does not belong to you')
 
         has_quiz_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id=questionpaper_id
-                                ).exists()
+            question_paper_id=questionpaper_id
+        ).exists()
         context = {
             "users": user_details,
             "quiz_id": quiz_id,
@@ -1348,9 +1362,9 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
             except IndexError:
                 raise Http404('No attempts for paper')
             has_user_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id=questionpaper_id,
-                                user_id=user_id
-                                ).exists()
+                question_paper_id=questionpaper_id,
+                user_id=user_id
+            ).exists()
             user = User.objects.get(id=user_id)
             data = AnswerPaper.objects.get_user_data(
                 user, questionpaper_id, attempt_number
@@ -1367,7 +1381,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
     if request.method == "POST":
         papers = data['papers']
         for paper in papers:
-            for question, answers in six.iteritems(paper.get_question_answers()):
+            paper_data = paper.get_question_answers()
+            for question, answers in six.iteritems(paper_data):
                 marks = float(request.POST.get('q%d_marks' % question.id, 0))
                 answer = answers[-1]['answer']
                 answer.set_marks(marks)
@@ -1388,7 +1403,6 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
 def view_profile(request):
     """ view moderators and users profile """
     user = request.user
-    ci = RequestContext(request)
     if is_moderator(user):
         template = 'manage.html'
     else:
@@ -1511,8 +1525,9 @@ def remove_teachers(request, course_id):
 
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
-    if not is_moderator(user) and (user != course.creator and user
-        not in course.teachers.all()):
+    result = [is_moderator(user), course.is_creator(user),
+              course.is_teacher(user)]
+    if not any(result):
         raise Http404('You are not allowed to view this page!')
 
     if request.method == "POST":
@@ -1528,16 +1543,18 @@ def test_mode(user, godmode=False, questions_list=None, quiz_id=None):
     if questions_list is not None:
         trial_course = Course.objects.create_trial_course(user)
         trial_quiz = Quiz.objects.create_trial_quiz(trial_course, user)
-        trial_questionpaper = QuestionPaper.objects.create_trial_paper_to_test_questions(
-            trial_quiz, questions_list
-        )
+        trial_questionpaper = QuestionPaper.objects.\
+            create_trial_paper_to_test_questions(
+                trial_quiz, questions_list
+            )
     else:
         trial_quiz = Quiz.objects.create_trial_from_quiz(
             quiz_id, user, godmode
         )
-        trial_questionpaper = QuestionPaper.objects.create_trial_paper_to_test_quiz(
-            trial_quiz, quiz_id
-        )
+        trial_questionpaper = QuestionPaper.objects.\
+            create_trial_paper_to_test_quiz(
+                trial_quiz, quiz_id
+            )
     return trial_questionpaper
 
 
@@ -1578,7 +1595,6 @@ def view_answerpaper(request, questionpaper_id):
 def create_demo_course(request):
     """ creates a demo course for user """
     user = request.user
-    ci = RequestContext(request)
     if not is_moderator(user):
         raise("You are not allowed to view this page")
     demo_course = Course()
@@ -1597,7 +1613,8 @@ def grader(request, extra_context=None):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     courses = Course.objects.filter(is_trial=False)
-    user_courses = list(courses.filter(creator=user)) + list(courses.filter(teachers=user))
+    user_courses = list(courses.filter(creator=user)) + \
+        list(courses.filter(teachers=user))
     context = {'courses': user_courses}
     if extra_context:
         context.update(extra_context)
@@ -1606,10 +1623,12 @@ def grader(request, extra_context=None):
 
 @login_required
 @email_verified
-def regrade(request, course_id, question_id=None, answerpaper_id=None, questionpaper_id=None):
+def regrade(request, course_id, question_id=None, answerpaper_id=None,
+            questionpaper_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
-    if not is_moderator(user) or (user != course.creator and user not in course.teachers.all()):
+    result = [course.is_creator(user), course.is_teacher(user)]
+    if not is_moderator(user) or not any(result):
         raise Http404('You are not allowed to view this page!')
     details = []
     if answerpaper_id is not None and question_id is None:
@@ -1617,8 +1636,10 @@ def regrade(request, course_id, question_id=None, answerpaper_id=None, questionp
         for question in answerpaper.questions.all():
             details.append(answerpaper.regrade(question.id))
     if questionpaper_id is not None and question_id is not None:
-        answerpapers = AnswerPaper.objects.filter(questions=question_id,
-                question_paper_id=questionpaper_id)
+        answerpapers = AnswerPaper.objects.filter(
+            questions=question_id,
+            question_paper_id=questionpaper_id
+        )
         for answerpaper in answerpapers:
             details.append(answerpaper.regrade(question_id))
     if answerpaper_id is not None and question_id is not None:
@@ -1649,8 +1670,8 @@ def download_course_csv(request, course_id):
         total_course_marks = 0.0
         user_course_marks = 0.0
         for quiz in quizzes:
-            quiz_best_marks = AnswerPaper.objects.get_user_best_of_attempts_marks\
-                               (quiz, student["id"])
+            quiz_best_marks = AnswerPaper.objects.\
+                get_user_best_of_attempts_marks(quiz, student["id"])
             user_course_marks += quiz_best_marks
             total_course_marks += quiz.questionpaper_set.values_list(
                 "total_marks", flat=True)[0]
@@ -1661,7 +1682,7 @@ def download_course_csv(request, course_id):
     response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(
                                       (course.name).lower().replace('.', ''))
     header = ['first_name', 'last_name', "roll_number", "email", "institute"]\
-            + [quiz.description for quiz in quizzes] + ['total_scored', 'out_of']
+        + [quiz.description for quiz in quizzes] + ['total_scored', 'out_of']
     writer = csv.DictWriter(response, fieldnames=header, extrasaction='ignore')
     writer.writeheader()
     for student in students:
@@ -1705,7 +1726,7 @@ def new_activation(request, email=None):
         user = User.objects.get(email=email)
     except MultipleObjectsReturned:
         context['email_err_msg'] = "Multiple entries found for this email"\
-                                    "Please change your email"
+            "Please change your email"
         return my_render_to_response(
             'yaksh/activation_status.html', context, context_instance=ci
         )
@@ -1771,8 +1792,8 @@ def download_assignment_file(request, quiz_id, question_id=None, user_id=None):
         folder = f_name.user.get_full_name().replace(" ", "_")
         sub_folder = f_name.assignmentQuestion.summary.replace(" ", "_")
         folder_name = os.sep.join((folder, sub_folder, os.path.basename(
-                        f_name.assignmentFile.name))
-                        )
+            f_name.assignmentFile.name))
+        )
         zip_file.write(
             f_name.assignmentFile.path, folder_name
         )
@@ -1780,8 +1801,8 @@ def download_assignment_file(request, quiz_id, question_id=None, user_id=None):
     zipfile_name.seek(0)
     response = HttpResponse(content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename={0}.zip'.format(
-                                            file_name.replace(" ", "_")
-                                            )
+        file_name.replace(" ", "_")
+    )
     response.write(zipfile_name.read())
     return response
 
@@ -1797,10 +1818,11 @@ def duplicate_course(request, course_id):
     if course.is_teacher(user) or course.is_creator(user):
         course.create_duplicate_course(user)
     else:
-        msg = 'You do not have permissions to clone this course, please contact your '\
-            'instructor/administrator.'
+        msg = 'You do not have permissions to clone this course, '\
+            'please contact your instructor/administrator.'
         return complete(request, msg, attempt_num=None, questionpaper_id=None)
     return my_redirect('/exam/manage/courses/')
+
 
 @login_required
 @email_verified
@@ -1816,6 +1838,105 @@ def download_yaml_template(request):
     response = HttpResponse(template_yaml, content_type='text/yaml')
     response['Content-Disposition'] = 'attachment;\
                                       filename="questions_dump.yaml"'
-    
+
     return response
 
+
+def chat_room(request, label, course_id):
+    """
+    Create a new chat room or get mesasges for already created chat room
+    """
+    user = request.user
+    context = {}
+    response_kwargs = {}
+    context['success'] = False
+    response_kwargs['content_type'] = 'application/json'
+    course = Course.objects.get(id=course_id)
+    result = [course.is_creator(user), course.is_teacher(user),
+              course.is_student(user)]
+    if not any(result):
+        context['messages'] = [{"message": "You do not belong to this course"}]
+        data = json.dumps(context)
+        return HttpResponse(data, **response_kwargs)
+
+    room, created = Room.objects.get_or_create(
+        label=label, course_id=course_id
+    )
+    chat_msgs_dict = []
+    messages = room.messages.order_by('-timestamp')
+    if messages:
+        messages = reversed(messages)
+        for message in messages:
+            chat_dict = {
+                "sender": message.sender.id,
+                "sender_name": message.sender.get_full_name().title(),
+                "timestamp": datetime.strftime(message.timestamp,
+                                               "%Y-%m-%dT%H:%M:%S"),
+                "message": message.message
+            }
+            chat_msgs_dict.append(chat_dict)
+        context['success'] = True
+    context['messages'] = chat_msgs_dict
+    context['room_label'] = room.label
+    data = json.dumps(context)
+    return HttpResponse(data, **response_kwargs)
+
+
+@login_required
+@email_verified
+def new_room(request, course_id):
+    """
+    Randomly create a new room, and redirect to it.
+    """
+    room = Room.objects.filter(course_id=course_id)
+    if room.exists():
+        room_label = room.get(course_id=course_id).label
+    else:
+        room_label = uuid.uuid4().__str__()
+    return chat_room(request, room_label, course_id)
+
+
+@login_required
+@email_verified
+def toggle_quiz_chat(request, quiz_id):
+    """
+    Enable/Disable chat per quiz
+    """
+    user = request.user
+    quiz = Quiz.objects.get(id=quiz_id)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+
+    if not quiz.course.is_creator(user) and not quiz.course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    quiz.toggle_chat_status()
+    return my_redirect('/exam/manage/monitor/'+quiz_id)
+
+
+@login_required
+@email_verified
+def get_question_answer(request, answerpaper_id, user_id, question_id):
+    """
+    Get latest answer for question
+    """
+    user = request.user
+    context = {}
+    response_kwargs = {}
+    response_kwargs['content_type'] = 'application/json'
+    answer_paper = get_object_or_404(AnswerPaper, pk=answerpaper_id,
+                                     user_id=user_id)
+    result = [answer_paper.question_paper.quiz.course.is_creator(user),
+              answer_paper.question_paper.quiz.course.is_teacher(user)]
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+    if not any(result):
+        raise Http404('This course does not belong to you')
+
+    answers = answer_paper.get_all_answers(question_id)
+    formatted_answers = [answer.answer.replace(
+        '\r\n', '<br>').replace(' ', '&nbsp;') for answer in answers]
+    context['answer'] = formatted_answers
+    context['question'] = answers.last().question.description
+    context['user'] = answer_paper.user.get_full_name().title()
+    data = json.dumps(context)
+    return HttpResponse(data, **response_kwargs)
