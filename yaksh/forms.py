@@ -1,7 +1,10 @@
 from django import forms
-from yaksh.models import get_model_class, Profile, Quiz, Question, TestCase, Course,\
-                         QuestionPaper, StandardTestCase, StdIOBasedTestCase, \
-                         HookTestCase, IntegerTestCase, StringTestCase
+from yaksh.models import (
+    get_model_class, Profile, Quiz, Question, TestCase, Course,
+    QuestionPaper, StandardTestCase, StdIOBasedTestCase,
+    HookTestCase, IntegerTestCase, StringTestCase,
+    GradingScheme, GradeRange
+)
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -342,3 +345,17 @@ class QuestionPaperForm(forms.ModelForm):
     class Meta:
         model = QuestionPaper
         fields = ['shuffle_questions']
+
+class GradingSchemeForm(forms.ModelForm):
+    """ grading scheme form for moderators """
+
+    class Meta:
+        model = GradingScheme
+        fields = ['title', 'course']
+
+GradeRangeFormset = inlineformset_factory(
+    GradingScheme, GradeRange,
+    fields=('upper_limit', 'lower_limit', 'label'),
+    can_delete=True,
+    extra=1
+)

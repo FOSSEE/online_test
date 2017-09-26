@@ -25,6 +25,7 @@
     Start time: {{ paper.start_time }} <br/>
     End time : {{ paper.end_time }} <br/>
     Percentage obtained: {{ paper.percent }}% <br/>
+    Grade: {{ paper.get_user_grade }} <br/>
     {% if paper.passed == 0 %}
     Status : <b style="color: red;"> Failed </b><br/>
     {% else %}

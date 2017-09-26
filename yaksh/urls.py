@@ -100,7 +100,7 @@ urlpatterns = [
             views.regrade, name='regrade'),
     url(r'^manage/regrade/paper/(?P<course_id>\d+)/(?P<answerpaper_id>\d+)/$',
             views.regrade, name='regrade'),
-    url(r'^manage/(?P<mode>[\w\-]+)/(?P<quiz_id>\d+)/$', views.test_quiz),
+    url(r'^manage/(?:godmode|usermode)/(?P<quiz_id>\d+)/$', views.test_quiz),
     url(r'^manage/create_demo_course/$', views.create_demo_course),
     url(r'^manage/courses/download_course_csv/(?P<course_id>\d+)/$',
         views.download_course_csv, name="download_course_csv"),
@@ -110,4 +110,7 @@ urlpatterns = [
         views.download_assignment_file, name="download_quiz_assignment"),
     url(r'^manage/courses/download_yaml_template/',
         views.download_yaml_template, name="download_yaml_template"),
+    url(r'manage/grading/$', views.add_grading, name='add_grading'),
+    url(r'manage/grading/(?P<course_id>\d+)/$', views.add_grading, name='edit_grading'),
 ]
+
