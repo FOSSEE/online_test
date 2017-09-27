@@ -174,13 +174,15 @@ class Course(models.Model):
 
     def create_duplicate_course(self, user):
         quizzes = self.quiz_set.all()
-        grading_scheme = self.grading_scheme_course
         prerequisite_map = []
         duplicate_quiz_map = {}
 
         new_course_name = "Copy Of {0}".format(self.name)
         new_course = self._create_duplicate_instance(user, new_course_name)
-        grading_scheme._create_duplicate_grading_scheme(new_course)
+
+        if hasattr(self, 'gradingscheme'):
+            grading_scheme = self.grading_scheme_course
+            grading_scheme._create_duplicate_grading_scheme(new_course)
 
         for q in quizzes:
             new_quiz = q._create_duplicate_quiz(new_course)
