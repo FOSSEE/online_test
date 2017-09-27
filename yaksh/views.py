@@ -1836,7 +1836,7 @@ def add_grading(request, course_id=None):
     except GradingScheme.DoesNotExist:
         grading_scheme = None
 
-    if not is_moderator(user):
+    if not is_moderator(user) or course_id is None:
         raise Http404('You are not allowed to view this page')
 
     if request.method == 'POST':
@@ -1845,6 +1845,7 @@ def add_grading(request, course_id=None):
         if form.is_valid():
             new_scheme = form.save(commit=False)
             new_scheme.creator = user
+            new_scheme.course = Course.objects.get(id=course_id)
             if formset.is_valid():
                 formset.save()
             else:

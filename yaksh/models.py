@@ -293,7 +293,6 @@ class Course(models.Model):
 ###############################################################################
 class GradingScheme(models.Model):
     creator = models.ForeignKey(User, related_name='grading_scheme_creator')
-    title = models.CharField(max_length=128)
     course = models.OneToOneField(Course, related_name='grading_scheme_course')
 
     def _create_duplicate_grading_scheme(self, course):

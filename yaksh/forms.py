@@ -351,7 +351,7 @@ class GradingSchemeForm(forms.ModelForm):
 
     class Meta:
         model = GradingScheme
-        fields = ['title', 'course']
+        exclude = ['course', 'creator', 'title']
 
 GradeRangeFormset = inlineformset_factory(
     GradingScheme, GradeRange,
