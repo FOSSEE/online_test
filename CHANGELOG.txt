@@ -1,3 +1,25 @@
+=== 0.7.0 (27-08-2017) ===
+
+* Added the feature to allow moderators to send email notifications to students.
+* Fixed activation key bug in email verification.
+* Improved the error display of the stdIO type questions in Yaksh.
+* Add more tests for views.
+* Fixed a bug that allowed quizzes to be prerequisites of each other and recursive quiz prerequisites.
+* Added the feature to allow searching for a question using tags.
+* Added search bar for Profile model in admin interface.
+* Added a has_profile decorator to check if User object has a related Profile object.
+* Fixed a bug that allowed students to attempt pre-enrolled deactivated course.
+* Fixed a bug that did not display hidden courses with pending enrollments.
+* Added the feature to allow Yaml serialisation instead of Json for dumping and uploading questions.
+* Fixed hyperlinks to Quizzes on moderator dashboard.
+* Added a link to Yaksh github repository on Login page.
+* Fixed a bug that returned multiple AnswerPaper objects.
+* Fixed a bug that caused 'AnonymousUser is not iterable' error.
+* Add installation of Firefox version 46.0 in travis.yml.
+* Code server overhaul.
+* Fixed broken change password link on Moderator's dashboard.
+* Fixed a bug that caused 'NoneType has no attribute encode' error.
+
 === 0.6.0 (11-05-2017) ===
 
 * Added a course code field that can be used to search a course.
