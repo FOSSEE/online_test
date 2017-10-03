@@ -419,9 +419,11 @@ class Question(models.Model):
             msg = "Questions Uploaded Successfully"
             for question in questions:
                 question['user'] = user
-                file_names = question.pop('files')
+                file_names = question.pop('files') \
+                             if 'files' in question \
+                             else None
+                tags = question.pop('tags') if 'tags' in question else None
                 test_cases = question.pop('testcase')
-                tags = question.pop('tags')
                 que, result = Question.objects.get_or_create(**question)
                 if file_names:
                     que._add_files_to_db(file_names, file_path)
