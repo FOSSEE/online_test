@@ -506,12 +506,15 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
     question = get_object_or_404(Question, pk=q_id)
 
     if request.method == 'POST' and question.type == 'code':
-        user_code = request.POST.get('answer')
-        new_answer = Answer(question=question, answer=user_code,
-                            correct=False, skipped=True,
-                            error=json.dumps([]))
-        new_answer.save()
-        paper.answers.add(new_answer)
+        if not paper.answers.filter(question=question, correct=True).exists():
+            user_code = request.POST.get('answer')
+            new_answer = Answer(
+                question=question, answer=user_code,
+                correct=False, skipped=True,
+                error=json.dumps([])
+            )
+            new_answer.save()
+            paper.answers.add(new_answer)
     if next_q is not None:
         next_q = get_object_or_404(Question, pk=next_q)
     else:
