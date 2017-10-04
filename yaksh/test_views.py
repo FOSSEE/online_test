@@ -3381,7 +3381,7 @@ class TestShowStatistics(TestCase):
         self.assertEqual(response.context['total'], 1)
 
 
-class TestCheck(TestCase):
+class TestQuestionPaper(TestCase):
     def setUp(self):
         self.client = Client()
 
