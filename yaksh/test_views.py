@@ -22,7 +22,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    AssignmentUpload, FileUpload
+    AssignmentUpload, FileUpload, McqTestCase, IntegerTestCase, StringTestCase,\
+    FloatTestCase
 from yaksh.decorators import user_has_profile
 
 
@@ -3378,3 +3379,387 @@ class TestShowStatistics(TestCase):
                                 [1, 1])
         self.assertEqual(response.context['attempts'][0], 1)
         self.assertEqual(response.context['total'], 1)
+
+
+class TestCheck(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Open Enrollment", creator=self.user)
+
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz', pass_criteria=40,
+            language='Python', course=self.course
+        )
+
+        # Mcq Question
+        self.question_mcq = Question.objects.create(
+            summary="Test_mcq_question", description="Test MCQ",
+            points=1.0, language="python", type="mcq", user=self.user
+        )
+        self.mcq_based_testcase = McqTestCase(
+            options="a",
+            question=self.question_mcq,
+            correct=True,
+            type='mcqtestcase'
+        )
+        self.mcq_based_testcase.save()
+
+        ordered_questions = str(self.question_mcq.id)
+
+        # Mcc Question
+        self.question_mcc = Question.objects.create(
+            summary="Test_mcc_question", description="Test MCC",
+            points=1.0, language="python", type="mcq", user=self.user
+        )
+        self.mcc_based_testcase = McqTestCase(
+            options="a",
+            question=self.question_mcc,
+            correct=True,
+            type='mcqtestcase'
+        )
+        self.mcc_based_testcase.save()
+
+        ordered_questions = ordered_questions + str(self.question_mcc.id)
+
+        # Integer Question
+        self.question_int = Question.objects.create(
+            summary="Test_mcc_question", description="Test MCC",
+            points=1.0, language="python", type="integer", user=self.user
+        )
+        self.int_based_testcase = IntegerTestCase(
+            correct=1,
+            question=self.question_int,
+            type='integertestcase'
+        )
+        self.int_based_testcase.save()
+
+        ordered_questions = ordered_questions + str(self.question_int.id)
+
+        # String Question
+        self.question_str = Question.objects.create(
+            summary="Test_mcc_question", description="Test MCC",
+            points=1.0, language="python", type="string", user=self.user
+        )
+        self.str_based_testcase = StringTestCase(
+            correct="abc",
+            string_check="lower",
+            question=self.question_str,
+            type='stringtestcase'
+        )
+        self.str_based_testcase.save()
+
+        # Float Question
+        self.question_float = Question.objects.create(
+            summary="Test_mcc_question", description="Test MCC",
+            points=1.0, language="python", type="float", user=self.user
+        )
+        self.float_based_testcase = FloatTestCase(
+            correct=2.0,
+            error_margin=0,
+            question=self.question_float,
+            type='floattestcase'
+        )
+        self.float_based_testcase.save()
+
+        ordered_questions = ordered_questions + str(self.question_float.id)
+
+        questions_list = [self.question_mcq, self.question_mcc,
+                          self.question_int, self.question_str,
+                          self.question_float]
+
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz,
+            total_marks=5.0, fixed_question_order=ordered_questions
+        )
+        self.question_paper.fixed_questions.add(*questions_list)
+        self.answerpaper = AnswerPaper.objects.create(
+            user=self.user, question_paper=self.question_paper,
+            attempt_number=1,
+            start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
+            user_ip="127.0.0.1", status="inprogress", passed=False,
+            percent=0, marks_obtained=0
+        )
+        self.answerpaper.questions.add(*questions_list)
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.quiz.delete()
+        self.course.delete()
+        self.answerpaper.delete()
+        self.question_mcq.delete()
+        self.question_mcc.delete()
+        self.question_int.delete()
+        self.question_paper.delete()
+
+    def test_mcq_attempt_right_after_wrong(self):
+        """ Case:- Check if answerpaper and answer marks are updated after
+            attempting same mcq question with wrong answer and then right
+            answer
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        # Given Wrong Answer
+        wrong_user_answer = "b"
+
+        # When
+        self.client.post(
+            reverse('yaksh:check',
+                    kwargs={"q_id": self.question_mcq.id, "attempt_num": 1,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"answer": wrong_user_answer}
+        )
+
+        # Then
+        wrong_answer_paper = AnswerPaper.objects.get(id=self.answerpaper.id)
+        self.assertEqual(wrong_answer_paper.marks_obtained, 0)
+
+        # Given Right Answer
+        right_user_answer = "a"
+
+        # When
+        self.client.post(
+            reverse('yaksh:check',
+                    kwargs={"q_id": self.question_mcq.id, "attempt_num": 1,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"answer": right_user_answer}
+        )
+
+        # Then
+        updated_answerpaper = AnswerPaper.objects.get(id=self.answerpaper.id)
+        self.assertEqual(updated_answerpaper.marks_obtained, 1)
+
+    def test_mcq_question_attempt_wrong_after_right(self):
+        """ Case:- Check if answerpaper and answer marks are updated after
+            attempting same mcq question with right answer and then wrong
+            answer
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        # Given Right Answer
+        right_user_answer = "a"
+
+        # When
+        self.client.post(
+            reverse('yaksh:check',
+                    kwargs={"q_id": self.question_mcq.id, "attempt_num": 1,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"answer": right_user_answer}
+        )
+
+        # Then
+        updated_answerpaper = AnswerPaper.objects.get(id=self.answerpaper.id)
+        self.assertEqual(updated_answerpaper.marks_obtained, 1)
+
+        # Given Wrong Answer
+        wrong_user_answer = "b"
+
+        # When
+        self.client.post(
+            reverse('yaksh:check',
+                    kwargs={"q_id": self.question_mcq.id, "attempt_num": 1,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"answer": wrong_user_answer}
+        )
+
+        # Then
+        wrong_answer_paper = AnswerPaper.objects.get(id=self.answerpaper.id)
+        self.assertEqual(wrong_answer_paper.marks_obtained, 0)
+
+    def test_mcc_question_attempt_wrong_after_right(self):
+        """ Case:- Check if answerpaper and answer marks are updated after
+            attempting same mcc question with right answer and then wrong
+            answer
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        # Given Right Answer
+        right_user_answer = "a"
+
+        # When
+        self.client.post(
+            reverse('yaksh:check',
+                    kwargs={"q_id": self.question_mcc.id, "attempt_num": 1,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"answer": right_user_answer}
+        )
+
+        # Then
+        updated_answerpaper = AnswerPaper.objects.get(id=self.answerpaper.id)
+        self.assertEqual(updated_answerpaper.marks_obtained, 1)
+
+        # Given Wrong Answer
+        wrong_user_answer = "b"
+
+        # When
+        self.client.post(
+            reverse('yaksh:check',
+                    kwargs={"q_id": self.question_mcc.id, "attempt_num": 1,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"answer": wrong_user_answer}
+        )
+
+        # Then
+        wrong_answer_paper = AnswerPaper.objects.get(id=self.answerpaper.id)
+        self.assertEqual(wrong_answer_paper.marks_obtained, 0)
+
+    def test_integer_question_attempt_wrong_after_right(self):
+        """ Case:- Check if answerpaper and answer marks are updated after
+            attempting same integer question with right answer and then wrong
+            answer
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        # Given Right Answer
+        right_user_answer = 1
+
+        # When
+        self.client.post(
+            reverse('yaksh:check',
+                    kwargs={"q_id": self.question_int.id, "attempt_num": 1,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"answer": right_user_answer}
+        )
+
+        # Then
+        updated_answerpaper = AnswerPaper.objects.get(id=self.answerpaper.id)
+        self.assertEqual(updated_answerpaper.marks_obtained, 1)
+
+        # Given Wrong Answer
+        wrong_user_answer = -1
+
+        # When
+        self.client.post(
+            reverse('yaksh:check',
+                    kwargs={"q_id": self.question_int.id, "attempt_num": 1,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"answer": wrong_user_answer}
+        )
+
+        # Then
+        wrong_answer_paper = AnswerPaper.objects.get(id=self.answerpaper.id)
+        self.assertEqual(wrong_answer_paper.marks_obtained, 0)
+
+    def test_string_question_attempt_wrong_after_right(self):
+        """ Case:- Check if answerpaper and answer marks are updated after
+            attempting same string question with right answer and then wrong
+            answer
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        # Given Right Answer
+        right_user_answer = "abc"
+
+        # When
+        self.client.post(
+            reverse('yaksh:check',
+                    kwargs={"q_id": self.question_str.id, "attempt_num": 1,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"answer": right_user_answer}
+        )
+
+        # Then
+        updated_answerpaper = AnswerPaper.objects.get(id=self.answerpaper.id)
+        self.assertEqual(updated_answerpaper.marks_obtained, 1)
+
+        # Given Wrong Answer
+        wrong_user_answer = "c"
+
+        # When
+        self.client.post(
+            reverse('yaksh:check',
+                    kwargs={"q_id": self.question_str.id, "attempt_num": 1,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"answer": wrong_user_answer}
+        )
+
+        # Then
+        wrong_answer_paper = AnswerPaper.objects.get(id=self.answerpaper.id)
+        self.assertEqual(wrong_answer_paper.marks_obtained, 0)
+
+    def test_float_question_attempt_wrong_after_right(self):
+        """ Case:- Check if answerpaper and answer marks are updated after
+            attempting same float question with right answer and then wrong
+            answer
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        # Given Right Answer
+        right_user_answer = 2.0
+
+        # When
+        self.client.post(
+            reverse('yaksh:check',
+                    kwargs={"q_id": self.question_float.id, "attempt_num": 1,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"answer": right_user_answer}
+        )
+
+        # Then
+        updated_answerpaper = AnswerPaper.objects.get(id=self.answerpaper.id)
+        self.assertEqual(updated_answerpaper.marks_obtained, 1)
+
+        # Given Wrong Answer
+        wrong_user_answer = -1
+
+        # When
+        self.client.post(
+            reverse('yaksh:check',
+                    kwargs={"q_id": self.question_float.id, "attempt_num": 1,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"answer": wrong_user_answer}
+        )
+
+        # Then
+        wrong_answer_paper = AnswerPaper.objects.get(id=self.answerpaper.id)
+        self.assertEqual(wrong_answer_paper.marks_obtained, 0)
