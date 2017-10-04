@@ -114,7 +114,7 @@ Status : <b style="color: green;"> Passed </b><br/>
     {% for question, answers in paper.get_question_answers.items %}
     {% with answers|last as answer %}
         <tr>
-        <td>{{ question.id }}</td>
+        <td>{{ question.summary }}</td>
         <td>{{ answer.answer.marks }}</td>
         </tr>
     {% endwith %}

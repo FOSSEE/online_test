@@ -1308,8 +1308,7 @@ class AnswerPaper(models.Model):
             return self.time_left() > 0
 
     def get_previous_answers(self, question):
-        if question.type == 'code':
-            return self.answers.filter(question=question).order_by('-id')
+        return self.answers.filter(question=question).order_by('-id')
 
     def validate_answer(self, user_answer, question, json_data=None, uid=None):
         """
