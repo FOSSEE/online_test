@@ -182,8 +182,13 @@ lang = "{{ question.language }}"
 
                      {% if question.type == "mcc" %}
                      {% for test_case in test_cases %}
-                     <input name="answer" type="checkbox" value="{{ test_case.options }}"> {{ test_case.options|safe }}
-                     <br>
+                     {% if last_attempt and last_attempt|safe == test_case.options|safe %}
+                     <input name="answer" type="checkbox" value="{{ test_case.options }}" checked />
+                        {{ test_case.options|safe }} <br/>
+                     {% else %}
+                     <input name="answer" type="checkbox" value="{{ test_case.options }}" />
+                        {{ test_case.options|safe }} <br/>
+                     {% endif %}
                      {% endfor %}
                      {% endif %}
                      {% if question.type == "upload" %}
