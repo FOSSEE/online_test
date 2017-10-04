@@ -1285,7 +1285,7 @@ class AnswerPaper(models.Model):
         return q_a
 
     def get_latest_answer(self, question_id):
-        return self.answers.filter(question=question_id).order_by("-id").last()
+        return self.answers.filter(question=question_id).order_by("id").last()
 
     def get_questions(self):
         return self.questions.filter(active=True)
