@@ -1284,6 +1284,11 @@ class AnswerPaper(models.Model):
                 }]
         return q_a
 
+    def get_latest_answer(self,question_id):
+        all_answers = self.answers.filter(question=question_id)
+        if all_answers:
+            return all_answers[0]
+
     def get_questions(self):
         return self.questions.filter(active=True)
 
