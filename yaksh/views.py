@@ -533,6 +533,9 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
     current_question = get_object_or_404(Question, pk=q_id)
 
     if request.method == 'POST':
+        if current_question in paper.questions_answered.all():
+            question = paper.next_question(current_question.id)
+            return show_question(request, question, paper)
         # Add the answer submitted, regardless of it being correct or not.
         if current_question.type == 'mcq':
             user_answer = request.POST.get('answer')

@@ -350,7 +350,7 @@ class Question(models.Model):
     tags = TaggableManager(blank=True)
 
     # Snippet of code provided to the user.
-    snippet = models.CharField(max_length=256, blank=True)
+    snippet = models.TextField(blank=True)
 
     # user for particular question
     user = models.ForeignKey(User, related_name="user")
@@ -1303,8 +1303,7 @@ class AnswerPaper(models.Model):
             return self.time_left() > 0
 
     def get_previous_answers(self, question):
-        if question.type == 'code':
-            return self.answers.filter(question=question).order_by('-id')
+        return self.answers.filter(question=question).order_by('-id')
 
     def validate_answer(self, user_answer, question, json_data=None, uid=None):
         """
