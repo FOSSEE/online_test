@@ -597,7 +597,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         else:
             user_answer = request.POST.get('answer')
         if not user_answer:
-            msg = "Please submit a valid option or code"
+            msg = "Please submit a valid answer."
             return show_question(
                 request, current_question, paper, notification=msg
             )
