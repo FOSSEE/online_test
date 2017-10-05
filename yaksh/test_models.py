@@ -592,7 +592,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
     def test_validate_and_regrade_mcc_correct_answer(self):
         # Given
-        mcc_answer = ['a']
+        mcc_answer = [str(self.mcc_based_testcase.id)]
         self.answer = Answer(question=self.question3,
                              answer=mcc_answer,
                              )
@@ -629,7 +629,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
     def test_validate_and_regrade_mcq_correct_answer(self):
         # Given
-        mcq_answer = 'a'
+        mcq_answer = str(self.mcq_based_testcase.id)
         self.answer = Answer(question=self.question2,
             answer=mcq_answer,
         )

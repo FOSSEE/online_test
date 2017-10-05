@@ -1321,15 +1321,15 @@ class AnswerPaper(models.Model):
                   'weight': 0.0}
         if user_answer is not None:
             if question.type == 'mcq':
-                expected_answer = question.get_test_case(correct=True).options
-                if user_answer.strip() == expected_answer.strip():
+                expected_answer = question.get_test_case(correct=True).id
+                if user_answer.strip() == str(expected_answer).strip():
                     result['success'] = True
                     result['error'] = ['Correct answer']
 
             elif question.type == 'mcc':
                 expected_answers = []
                 for opt in question.get_test_cases(correct=True):
-                    expected_answers.append(opt.options)
+                    expected_answers.append(str(opt.id))
                 if set(user_answer) == set(expected_answers):
                     result['success'] = True
                     result['error'] = ['Correct answer']

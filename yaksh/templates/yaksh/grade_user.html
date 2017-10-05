@@ -236,7 +236,7 @@ Status : <b style="color: green;"> Passed </b><br/>
           <col width="40%">
           <col width="40%">
           <col width="10%">
-          <tr class="info">
+          <tr>
           <th><center>Line No.</center></th>
           <th><center>Expected Output</center></th>
           <th><center>User output</center></th>
@@ -256,7 +256,7 @@ Status : <b style="color: green;"> Passed </b><br/>
           </table>
           <table width="100%" class='table table-bordered'>
           <col width="10">
-          <tr class = "danger">
+          <tr>
           <td><b>Error:</b></td>
            <td>{{error.error_msg}}</td>
            </tr>
@@ -268,12 +268,28 @@ Status : <b style="color: green;"> Passed </b><br/>
         </div>
         
         <div class="panel-body">
-        {% if question.type != "code" %}
+        {% if question.type == "code" %}
+        <pre><code>{{ ans.answer.answer.strip|safe }}</code></pre>
+        {% elif question.type == "mcc"%}
         <div class="well well-sm">
-        {{ ans.answer.answer.strip|safe }}
+        {% for testcases in question.get_test_cases %}
+        {%if testcases.id|stringformat:"i" in ans.answer.answer.strip|safe %}
+         <li>{{ testcases.options.strip|safe }}</li>
+        {% endif %}
+        {% endfor %}
+        </div>
+        {% elif question.type == "mcq"%}
+        <div class="well well-sm">
+        {% for testcases in question.get_test_cases %}
+        {%if testcases.id|stringformat:"i" == ans.answer.answer.strip|safe %}
+         <li>{{ testcases.options.strip|safe }}</li>
+        {% endif %}
+        {% endfor %}
         </div>
         {% else %}
-        <pre><code>{{ ans.answer.answer.strip|safe }}</code></pre>
+         <div class="well well-sm">
+        {{ ans.answer.answer.strip|safe }}
+        </div>
         {% endif %}
         </div>
         </div>
