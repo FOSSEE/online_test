@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from datetime import datetime, timedelta
 import json
+import random
 import ruamel.yaml
 from ruamel.yaml.scalarstring import PreservedScalarString
 from ruamel.yaml.comments import CommentedMap
@@ -851,6 +852,8 @@ class QuestionPaper(models.Model):
         questions = self.get_ordered_questions()
         for question_set in self.random_questions.all():
             questions += question_set.get_random_questions()
+        if self.shuffle_questions:
+            return self.get_shuffled_questions(questions)
         return questions
 
     def make_answerpaper(self, user, ip, attempt_num):
@@ -941,8 +944,13 @@ class QuestionPaper(models.Model):
             for que_id in que_order:
                 ques.append(self.fixed_questions.get(id=que_id))
         else:
-            ques = self.fixed_questions.all()
+            ques = list(self.fixed_questions.all())
         return ques
+
+    def get_shuffled_questions(self, questions):
+        """Get shuffled questions if auto suffle is enabled"""
+        random.shuffle(questions)
+        return questions
 
     def __str__(self):
         return "Question Paper for " + self.quiz.description
