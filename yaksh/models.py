@@ -350,7 +350,7 @@ class Question(models.Model):
     tags = TaggableManager(blank=True)
 
     # Snippet of code provided to the user.
-    snippet = models.CharField(max_length=256, blank=True)
+    snippet = models.TextField(blank=True)
 
     # user for particular question
     user = models.ForeignKey(User, related_name="user")
