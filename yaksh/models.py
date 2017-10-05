@@ -853,8 +853,11 @@ class QuestionPaper(models.Model):
         for question_set in self.random_questions.all():
             questions += question_set.get_random_questions()
         if self.shuffle_questions:
-            return self.get_shuffled_questions(questions)
-        return questions
+            all_questions = self.get_shuffled_questions(questions)
+            print("in _get_questions_for_answerpaper", all_questions, "\n")
+        else:
+            all_questions = questions
+        return all_questions
 
     def make_answerpaper(self, user, ip, attempt_num):
         """Creates an  answer paper for the user to attempt the quiz"""
@@ -950,6 +953,7 @@ class QuestionPaper(models.Model):
     def get_shuffled_questions(self, questions):
         """Get shuffled questions if auto suffle is enabled"""
         random.shuffle(questions)
+        print("in get_shuffled_questions", questions, "\n")
         return questions
 
     def __str__(self):
