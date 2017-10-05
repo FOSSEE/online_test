@@ -506,12 +506,15 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
     question = get_object_or_404(Question, pk=q_id)
 
     if request.method == 'POST' and question.type == 'code':
-        user_code = request.POST.get('answer')
-        new_answer = Answer(question=question, answer=user_code,
-                            correct=False, skipped=True,
-                            error=json.dumps([]))
-        new_answer.save()
-        paper.answers.add(new_answer)
+        if not paper.answers.filter(question=question, correct=True).exists():
+            user_code = request.POST.get('answer')
+            new_answer = Answer(
+                question=question, answer=user_code,
+                correct=False, skipped=True,
+                error=json.dumps([])
+            )
+            new_answer.save()
+            paper.answers.add(new_answer)
     if next_q is not None:
         next_q = get_object_or_404(Question, pk=next_q)
     else:
@@ -594,11 +597,17 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
         else:
             user_answer = request.POST.get('answer')
         if not user_answer:
-            msg = ["Please submit a valid option or code"]
+            msg = "Please submit a valid answer."
             return show_question(
                 request, current_question, paper, notification=msg
             )
-        new_answer = Answer(
+        if current_question in paper.get_questions_answered()\
+         and current_question.type not in ['code', 'upload']:
+            new_answer = paper.get_latest_answer(current_question.id)
+            new_answer.answer = user_answer
+            new_answer.correct = False
+        else:
+            new_answer = Answer(
             question=current_question, answer=user_answer,
             correct=False, error=json.dumps([])
         )

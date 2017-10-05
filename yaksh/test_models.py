@@ -547,6 +547,12 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.answerpaper.answers.add(self.answer_right)
         self.answerpaper.answers.add(self.answer_wrong)
 
+        self.answer1 = Answer.objects.create(
+            question=self.question1,
+            answer="answer1", correct=False, error=json.dumps([])
+        )
+        self.answerpaper.answers.add(self.answer1)
+
         self.question1.language = 'python'
         self.question1.test_case_type = 'standardtestcase'
         self.question1.summary = "Question1"
@@ -834,17 +840,22 @@ class AnswerPaperTestCases(unittest.TestCase):
 
     def test_get_previous_answers(self):
         answers = self.answerpaper.get_previous_answers(self.questions[0])
-        self.assertEqual(answers.count(), 1)
+        self.assertEqual(answers.count(), 2)
         self.assertTrue(answers[0], self.answer_right)
         answers = self.answerpaper.get_previous_answers(self.questions[1])
         self.assertEqual(answers.count(), 1)
         self.assertTrue(answers[0], self.answer_wrong)
 
-    def test_set_marks (self):
+    def test_set_marks(self):
         self.answer_wrong.set_marks(0.5)
         self.assertEqual(self.answer_wrong.marks, 0.5)
         self.answer_wrong.set_marks(10.0)
-        self.assertEqual(self.answer_wrong.marks,1.0)
+        self.assertEqual(self.answer_wrong.marks, 1.0)
+
+    def test_get_latest_answer(self):
+        latest_answer = self.answerpaper.get_latest_answer(self.question1.id)
+        self.assertEqual(latest_answer.id, self.answer1.id)
+        self.assertEqual(latest_answer.answer, "answer1")
 
 
 ###############################################################################

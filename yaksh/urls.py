@@ -19,10 +19,10 @@ urlpatterns = [
     url(r'^complete/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$',\
             views.complete),
     url(r'^register/$', views.user_register, name="register"),
-    url(r'^(?P<q_id>\d+)/check/$', views.check),
+    url(r'^(?P<q_id>\d+)/check/$', views.check, name="check"),
     url(r'^get_result/(?P<uid>\d+)/$', views.get_result),
     url(r'^(?P<q_id>\d+)/check/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$',\
-            views.check),
+            views.check, name="check"),
     url(r'^(?P<q_id>\d+)/skip/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$',
         views.skip),
     url(r'^(?P<q_id>\d+)/skip/(?P<next_q>\d+)/(?P<attempt_num>\d+)/(?P<questionpaper_id>\d+)/$',

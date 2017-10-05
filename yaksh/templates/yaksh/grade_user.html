@@ -9,6 +9,14 @@
 
 {% block script %}
 <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function()
+{
+  $("#marks_table").tablesorter({sortList: [[2,1]]});
+});
+
+</script>
 {% endblock script %}
 
 {% if course_details %}
@@ -108,17 +116,25 @@ Status : <b style="color: green;"> Passed </b><br/>
 {% if paper.answers.count %}
 
 <h4> Report </h4><br>
-<table class="table table-bordered">
+<table class="tablesorter table table-striped table-bordered" id ='marks_table'>
+  <thead>
+    <tr>
+    <th>Question Id</th>
     <th>Questions</th>
     <th>Marks Obtained</th>
+    </tr>
+    </thead>
+    <tbody>
     {% for question, answers in paper.get_question_answers.items %}
     {% with answers|last as answer %}
         <tr>
-        <td>{{ question.id }}</td>
+        <td>{{question.id}}</td>
+        <td><a href="#question_{{question.id}}">{{ question.summary }}</a></td>
         <td>{{ answer.answer.marks }}</td>
         </tr>
     {% endwith %}
     {% endfor %}
+    </tbody>
 </table>
 
 
@@ -135,7 +151,7 @@ Status : <b style="color: green;"> Passed </b><br/>
 {% for question, answers in paper.get_question_answers.items %}
 <div class = "well well-sm">
 <div class="panel panel-info">
-        <div class="panel-heading">
+        <div class="panel-heading" id="question_{{question.id}}">
             <strong> Details: {{forloop.counter}}. {{ question.summary }} 
             <span class="marks pull-right"> Mark(s): {{ question.points }} </span>
             </strong>
