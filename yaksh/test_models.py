@@ -502,6 +502,7 @@ class AnswerPaperTestCases(unittest.TestCase):
     def setUpClass(self):
         self.ip = '101.0.0.1'
         self.user = User.objects.get(username='demo_user')
+        self.user2 = User.objects.get(username='demo_user2')
         self.profile = self.user.profile
         self.quiz = Quiz.objects.get(description='demo quiz 1')
         self.question_paper = QuestionPaper(quiz=self.quiz, total_marks=3)
@@ -590,6 +591,23 @@ class AnswerPaperTestCases(unittest.TestCase):
         )
         self.mcc_based_testcase.save()
 
+        # Setup quiz where questions are shuffled
+        # Create Quiz and Question Paper
+        self.quiz2 = Quiz.objects.get(description="demo quiz 2")
+        self.question_paper2 = QuestionPaper(
+            quiz=self.quiz2, total_marks=3, shuffle_questions=True)
+        self.question_paper2.save()
+        que_list = [self.question1, self.question2, self.question3]
+        self.question_paper2.fixed_questions.add(*que_list)
+
+        # Create AnswerPaper for user1 and user2
+        self.user1_answerpaper = self.question_paper2.make_answerpaper(
+            self.user, self.ip, 1
+        )
+        self.user2_answerpaper = self.question_paper2.make_answerpaper(
+            self.user2, self.ip, 1
+        )
+
     def test_validate_and_regrade_mcc_correct_answer(self):
         # Given
         mcc_answer = [str(self.mcc_based_testcase.id)]
@@ -662,7 +680,6 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 0)
         self.assertFalse(self.answer.correct)
-
 
     def test_mcq_incorrect_answer(self):
         # Given
@@ -857,6 +874,21 @@ class AnswerPaperTestCases(unittest.TestCase):
         latest_answer = self.answerpaper.get_latest_answer(self.question1.id)
         self.assertEqual(latest_answer.id, self.answer1.id)
         self.assertEqual(latest_answer.answer, "answer1")
+
+    def test_shuffle_questions(self):
+        success = False
+        user1_question_set = []
+        user2_question_set = []
+        while not success:
+            ques_set_1 = list(self.user1_answerpaper.questions.all())
+            ques_set_2 = list(self.user2_answerpaper.questions.all())
+            if ques_set_1 == ques_set_2:
+                continue
+            else:
+                user1_question_set = ques_set_1
+                user2_question_set = ques_set_2
+                success = True
+        self.assertFalse(user1_question_set == user2_question_set)
 
 
 ###############################################################################
