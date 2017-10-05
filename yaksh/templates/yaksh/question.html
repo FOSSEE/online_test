@@ -153,11 +153,11 @@ lang = "{{ question.language }}"
                  <div class="panel-body">
                      {% if question.type == "mcq" %}
                      {% for test_case in test_cases %}
-                     {% if last_attempt and last_attempt|safe == test_case.options|safe %}
-                     <input name="answer" type="radio" value="{{ test_case.options }}" checked />
+                     {% if last_attempt and last_attempt|safe == test_case.id|safe %}
+                     <input name="answer" type="radio" value="{{ test_case.id }}" checked />
                         {{ test_case.options|safe }} <br/>
                      {% else %}
-                     <input name="answer" type="radio" value="{{ test_case.options }}" />
+                     <input name="answer" type="radio" value="{{ test_case.id }}" />
                         {{ test_case.options|safe }} <br/>
                      {% endif %}
                      {% endfor %}
@@ -183,11 +183,11 @@ lang = "{{ question.language }}"
 
                      {% if question.type == "mcc" %}
                      {% for test_case in test_cases %}
-                     {% if last_attempt and test_case.options|safe in last_attempt|safe %}
-                     <input name="answer" type="checkbox" value="{{ test_case.options }}" checked/> {{ test_case.options }}
+                     {% if last_attempt and test_case.id|safe in last_attempt|safe %}
+                     <input name="answer" type="checkbox" value="{{ test_case.id }}" checked/> {{ test_case.options }}
                      <br>
                      {% else %}
-                     <input name="answer" type="checkbox" value="{{ test_case.options }}">
+                     <input name="answer" type="checkbox" value="{{ test_case.id }}">
                      {{ test_case.options}}
                      <br/>
                      {% endif %}

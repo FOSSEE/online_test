@@ -3535,7 +3535,7 @@ class TestQuestionPaper(TestCase):
         )
 
         # Given Wrong Answer
-        wrong_user_answer = "b"
+        wrong_user_answer = "25"
 
         # When
         self.client.post(
@@ -3550,7 +3550,7 @@ class TestQuestionPaper(TestCase):
         self.assertEqual(wrong_answer_paper.marks_obtained, 0)
 
         # Given Right Answer
-        right_user_answer = "a"
+        right_user_answer = str(self.mcq_based_testcase.id)
 
         # When
         self.client.post(
@@ -3575,7 +3575,7 @@ class TestQuestionPaper(TestCase):
         )
 
         # Given Right Answer
-        right_user_answer = "a"
+        right_user_answer = str(self.mcq_based_testcase.id)
 
         # When
         self.client.post(
@@ -3590,7 +3590,7 @@ class TestQuestionPaper(TestCase):
         self.assertEqual(updated_answerpaper.marks_obtained, 1)
 
         # Given Wrong Answer
-        wrong_user_answer = "b"
+        wrong_user_answer = "25"
 
         # When
         self.client.post(
@@ -3615,7 +3615,7 @@ class TestQuestionPaper(TestCase):
         )
 
         # Given Right Answer
-        right_user_answer = "a"
+        right_user_answer = str(self.mcc_based_testcase.id)
 
         # When
         self.client.post(

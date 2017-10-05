@@ -82,16 +82,35 @@
                 Autocheck: {{ answers.0.error_list.0 }}
             </div>
             <div class="panel-body">
-                <h5><u>Student answer:</u></h5>
-                <div class="well well-sm">
-                 {{ answers.0.answer|safe }}
-                 {% if question.type == "upload" and has_user_assignment %}
+            {% if question.type == "mcc"%}
+        <div class="well well-sm">
+        {% for testcases in question.get_test_cases %}
+        {%if testcases.id|stringformat:"i" in answers.0.answer|safe %}
+         <li>{{ testcases.options.strip|safe }}</li>
+        {% endif %}
+        {% endfor %}
+        </div>
+        {% elif question.type == "mcq"%}
+        <div class="well well-sm">
+        {% for testcases in question.get_test_cases %}
+        {%if testcases.id|stringformat:"i" == answers.0.answer|safe %}
+         <li>{{ testcases.options.strip|safe }}</li>
+        {% endif %}
+        {% endfor %}
+        </div>
+        {% elif question.type == "upload" and has_user_assignment %}
                 <a href="{{URL_ROOT}}/exam/download/user_assignment/{{question.id}}/{{data.user.id}}/{{paper.question_paper.quiz.id}}">
+                <div class="well well-sm">
                 <div class="panel">
                 Assignment File for {{ data.user.get_full_name.title }}
                 </div></a>
-                {% endif %}
                 </div>
+        {% else %}
+                <h5><u>Student answer:</u></h5>
+                <div class="well well-sm">
+                 {{ answers.0.answer|safe }}
+                 </div>
+        {% endif %}
             </div>
             </div>
     {% else %}

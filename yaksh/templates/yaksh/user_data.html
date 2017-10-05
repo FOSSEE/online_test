@@ -104,11 +104,29 @@ User IP address: {{ paper.user_ip }}
             </div>
             <div class="panel-body">
                 <h5><u>Student answer:</u></h5>
+                {% if question.type == "mcc"%}
+        <div class="well well-sm">
+        {% for testcases in question.get_test_cases %}
+        {%if testcases.id|stringformat:"i" in answers.0.answer|safe %}
+         <li>{{ testcases.options.strip|safe }}</li>
+        {% endif %}
+        {% endfor %}
+        </div>
+        {% elif question.type == "mcq"%}
+        <div class="well well-sm">
+        {% for testcases in question.get_test_cases %}
+        {%if testcases.id|stringformat:"i" == answers.0.answer|safe %}
+         <li>{{ testcases.options.strip|safe }}</li>
+        {% endif %}
+        {% endfor %}
+        </div>
+        {%else%}
                  <div class="well well-sm">
                  {{ answers.0.answer|safe }}
                  </div>
             </div>
             </div>
+        {% endif %}
     {% else %}
     <h5>Student answer: </h5>
     {% for answer in answers %}
