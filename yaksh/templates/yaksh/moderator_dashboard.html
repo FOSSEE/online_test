@@ -79,3 +79,8 @@
   </div>
   {% endif %}
 {% endblock %}
+{% if user %}
+  {% block info %}
+  <h5>{{user.get_full_name|title}}({{user.profile.roll_number}}) Logged in as {{user.username}}</h5>
+  {% endblock %}
+{% endif %}

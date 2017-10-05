@@ -87,3 +87,11 @@ body {
 .sidebar-right {
     float: right;
 }
+
+.info {
+  height: 70px;
+  padding:0 5%;
+  position:absolute;
+  bottom:0;
+  width: 100%;
+}
