@@ -88,6 +88,7 @@ function call_skip(url)
 }
 init_val = '{{ last_attempt|escape_quotes|safe }}';
 lang = "{{ question.language }}"
+
 </script>
 
 {% endblock script %}
@@ -250,3 +251,8 @@ lang = "{{ question.language }}"
       </div>
    </div>
 {% endblock main %}
+{% if user %}
+  {% block info %}
+  <h5>{{user.get_full_name|title}}({{user.profile.roll_number}}) Logged in as {{user.username}}</h5>
+  {% endblock %}
+{% endif %}

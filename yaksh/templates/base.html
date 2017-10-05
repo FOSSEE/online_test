@@ -52,7 +52,11 @@
 	       {% block content %}
 	       {% endblock %}
      </div>
-     <footer class="footer">
+     <footer class="footer" id="footer_div">
+      <div class="info" align="center">
+            {% block info %}
+            {% endblock %}
+        </div>
      <div class="container">
          <p align="center">Developed by FOSSEE group, IIT Bombay</p>
      </div>
