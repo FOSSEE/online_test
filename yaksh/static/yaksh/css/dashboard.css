@@ -88,10 +88,11 @@ body {
     float: right;
 }
 
-.info {
+.logged_user_info {
   height: 70px;
   padding:0 5%;
   position:absolute;
   bottom:0;
   width: 100%;
 }
+
