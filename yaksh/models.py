@@ -1170,6 +1170,7 @@ class AnswerPaper(models.Model):
         """Returns the current active question to display."""
         if self.questions_unanswered.all():
             return self.questions_unanswered.all()[0]
+        return self.questions.all()[0]
 
     def questions_left(self):
         """Returns the number of questions left."""
@@ -1198,8 +1199,6 @@ class AnswerPaper(models.Model):
         unanswered_questions = self.questions_unanswered.all()
         questions = list(all_questions.values_list('id', flat=True))
         if len(questions) == 0:
-            return None
-        if unanswered_questions.count() == 0:
             return None
         try:
             index = questions.index(int(question_id))

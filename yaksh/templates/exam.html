@@ -18,7 +18,13 @@
           <form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" class="pull-right">
             {% csrf_token %}
             <ul class="nav navbar-nav navbar">
-              <li style="padding: 10px"><button class="btn btn-danger btn-sm" type="submit" name="quit">Quit Exam <span class="glyphicon glyphicon-off"></span></button></li>
+              <li style="padding: 10px"><button class="btn btn-danger btn-sm" type="submit" name="quit">
+                {% if paper.questions_unanswered.all %}
+                  Quit Exam
+                {% else %}
+                  Finish Exam
+                {% endif %}
+              <span class="glyphicon glyphicon-off"></span></button></li>
             </ul>
           </form>
           <div class="time-div" id="time_left"></div>
