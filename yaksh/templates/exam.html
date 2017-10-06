@@ -46,7 +46,7 @@
     <div class="col-sm-3 col-md-2 sidebar">
         <p> Question Navigator </p>
         <ul class="pagination pagination-sm">
-            {% for qid in paper.questions.all %}
+            {% for qid in paper.get_all_ordered_questions %}
                 {%if paper.question_paper.quiz.allow_skip %}
                 {% if qid in paper.get_questions_unanswered %}
                 {% if qid.id == question.id %}
