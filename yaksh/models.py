@@ -924,7 +924,7 @@ class QuestionPaper(models.Model):
     def create_demo_quiz_ppr(self, demo_quiz, user):
         question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
                                                       total_marks=6.0,
-                                                      shuffle_questions=True
+                                                      shuffle_questions=False
                                                       )
         summaries = ['Roots of quadratic equation', 'Print Output',
                      'Adding decimals', 'For Loop over String',
@@ -1241,7 +1241,7 @@ class AnswerPaper(models.Model):
         return self.questions.get(id=next_id)
 
     def get_all_ordered_questions(self):
-        """Get all questions in a specific"""
+        """Get all questions in a specific order for answerpaper"""
         if self.questions_order:
             que_ids = [int(q_id) for q_id in self.questions_order.split(',')]
             questions = [self.questions.get(id=que_id)
