@@ -958,7 +958,7 @@ class QuestionPaper(models.Model):
     def has_questions(self):
         questions = self.get_ordered_questions() + \
                     list(self.random_questions.all())
-        return False if len(questions) == 0 else True
+        return len(questions) > 0
 
     def __str__(self):
         return "Question Paper for " + self.quiz.description
@@ -1181,15 +1181,15 @@ class AnswerPaper(models.Model):
     )
 
     # set question order
-    questions_order = models.CharField(max_length=255, blank=True, default='')
+    questions_order = models.TextField(blank=True, default='')
 
     objects = AnswerPaperManager()
 
     def current_question(self):
         """Returns the current active question to display."""
-        if self.questions_unanswered.all():
-            cur_question = self.get_current_question(
-                self.questions_unanswered.all())
+        questions = self.questions_unanswered.all()
+        if questions.exists():
+            cur_question = self.get_current_question(questions)
         else:
             cur_question = self.get_current_question(self.questions.all())
         return cur_question
