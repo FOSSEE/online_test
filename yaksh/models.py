@@ -854,7 +854,6 @@ class QuestionPaper(models.Model):
             questions += question_set.get_random_questions()
         if self.shuffle_questions:
             all_questions = self.get_shuffled_questions(questions)
-            print("in _get_questions_for_answerpaper", all_questions, "\n")
         else:
             all_questions = questions
         return all_questions
@@ -878,10 +877,11 @@ class QuestionPaper(models.Model):
             ans_paper.question_paper = self
             ans_paper.save()
             questions = self._get_questions_for_answerpaper()
-            for question in questions:
-                ans_paper.questions.add(question)
-            for question in questions:
-                ans_paper.questions_unanswered.add(question)
+            ans_paper.questions.add(*questions)
+            question_ids = [str(que.id) for que in questions]
+            ans_paper.questions_order = ",".join(question_ids)
+            ans_paper.save()
+            ans_paper.questions_unanswered.add(*questions)
         except AnswerPaper.MultipleObjectsReturned:
             ans_paper = AnswerPaper.objects.get(user=user,
                                                 attempt_number=attempt_num,
@@ -953,8 +953,12 @@ class QuestionPaper(models.Model):
     def get_shuffled_questions(self, questions):
         """Get shuffled questions if auto suffle is enabled"""
         random.shuffle(questions)
-        print("in get_shuffled_questions", questions, "\n")
         return questions
+
+    def has_questions(self):
+        questions = self.get_ordered_questions() + \
+                    list(self.random_questions.all())
+        return False if len(questions) == 0 else True
 
     def __str__(self):
         return "Question Paper for " + self.quiz.description
@@ -1176,13 +1180,27 @@ class AnswerPaper(models.Model):
         default='inprogress'
     )
 
+    # set question order
+    questions_order = models.CharField(max_length=255, blank=True, default='')
+
     objects = AnswerPaperManager()
 
     def current_question(self):
         """Returns the current active question to display."""
         if self.questions_unanswered.all():
-            return self.questions_unanswered.all()[0]
-        return self.questions.all()[0]
+            cur_question = self.get_current_question(
+                self.questions_unanswered.all())
+        else:
+            cur_question = self.get_current_question(self.questions.all())
+        return cur_question
+
+    def get_current_question(self, questions):
+        if self.questions_order:
+            question_id = int(self.questions_order.split(',')[0])
+            question = self.questions_unanswered.get(id=question_id)
+        else:
+            question = questions.first()
+        return question
 
     def questions_left(self):
         """Returns the number of questions left."""
@@ -1207,17 +1225,30 @@ class AnswerPaper(models.Model):
             Skips the current question and returns the next sequentially
              available question.
         """
-        all_questions = self.questions.all()
-        unanswered_questions = self.questions_unanswered.all()
-        questions = list(all_questions.values_list('id', flat=True))
-        if len(questions) == 0:
+        if self.questions_order:
+            all_questions = [int(q_id)
+                             for q_id in self.questions_order.split(',')]
+        else:
+            all_questions = list(self.questions.all().values_list(
+                'id', flat=True))
+        if len(all_questions) == 0:
             return None
         try:
-            index = questions.index(int(question_id))
-            next_id = questions[index+1]
+            index = all_questions.index(int(question_id))
+            next_id = all_questions[index+1]
         except (ValueError, IndexError):
-            next_id = questions[0]
-        return all_questions.get(id=next_id)
+            next_id = all_questions[0]
+        return self.questions.get(id=next_id)
+
+    def get_all_ordered_questions(self):
+        """Get all questions in a specific"""
+        if self.questions_order:
+            que_ids = [int(q_id) for q_id in self.questions_order.split(',')]
+            questions = [self.questions.get(id=que_id)
+                         for que_id in que_ids]
+        else:
+            questions = list(self.questions.all())
+        return questions
 
     def time_left(self):
         """Return the time remaining for the user in seconds."""
