@@ -392,8 +392,7 @@ def start(request, questionpaper_id=None, attempt_num=None):
         msg = 'Quiz not found, please contact your '\
             'instructor/administrator.'
         return complete(request, msg, attempt_num, questionpaper_id=None)
-    if not quest_paper.get_ordered_questions() and not \
-            quest_paper.random_questions.all():
+    if not quest_paper.has_questions():
         msg = 'Quiz does not have Questions, please contact your '\
             'instructor/administrator.'
         return complete(request, msg, attempt_num, questionpaper_id=None)
