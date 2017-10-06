@@ -597,8 +597,8 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.question_paper2 = QuestionPaper(
             quiz=self.quiz2, total_marks=3, shuffle_questions=True)
         self.question_paper2.save()
-
-        que_list = Question.objects.filter(id__in=range(1, 21))
+        summary_list = ['Q%d' % (i) for i in range(1, 21)]
+        que_list = Question.objects.filter(summary__in=summary_list)
         self.question_paper2.fixed_questions.add(*que_list)
 
         # Create AnswerPaper for user1 and user2
@@ -877,9 +877,8 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(latest_answer.answer, "answer1")
 
     def test_shuffle_questions(self):
-        ques_set_1 = list(self.user1_answerpaper.questions.all())
-        ques_set_2 = list(self.user2_answerpaper.questions.all())
-        print("set1:-", ques_set_1, "\n", "set2:-", ques_set_2)
+        ques_set_1 = self.user1_answerpaper.get_all_ordered_questions()
+        ques_set_2 = self.user2_answerpaper.get_all_ordered_questions()
         self.assertFalse(ques_set_1 == ques_set_2)
 
 
