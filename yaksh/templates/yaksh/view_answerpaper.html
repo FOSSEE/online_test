@@ -79,7 +79,7 @@
             <div class="panel panel-danger">
         {% endif %}
             <div class="panel-heading">
-                Autocheck: {{ answers.0.error_list.0 }}
+                <strong>{{ answers.0.error_list.0 }}</strong>
             </div>
             <div class="panel-body">
             {% if question.type == "mcc"%}
@@ -117,12 +117,18 @@
     <h5>Student answer: </h5>
     {% for answer in answers %}
     {% if not answer.skipped %}
-    {% if "Correct answer" in answer.error %}
+    {% if answer.answer.correct %}
             <div class="panel panel-success">
+            <div class="panel-heading">
+            <strong>Correct Answer</strong>
+            </div>
         {% else %}
             <div class="panel panel-danger">
+            <div class="panel-heading">
+              <strong>Incorrect Answer</strong>
+            </div>
         {% endif %}
-    <div class="panel-heading">Error:</div>
+    
         {% with answer.error_list as err %}
             {% for error in err %}
             {% if not error.expected_output %}

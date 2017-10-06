@@ -184,11 +184,11 @@ lang = "{{ question.language }}"
                      {% if question.type == "mcc" %}
                      {% for test_case in test_cases %}
                      {% if last_attempt and test_case.id|safe in last_attempt|safe %}
-                     <input name="answer" type="checkbox" value="{{ test_case.id }}" checked/> {{ test_case.options }}
+                     <input name="answer" type="checkbox" value="{{ test_case.id }}" checked/> {{ test_case.options| safe }}
                      <br>
                      {% else %}
                      <input name="answer" type="checkbox" value="{{ test_case.id }}">
-                     {{ test_case.options}}
+                     {{ test_case.options| safe }}
                      <br/>
                      {% endif %}
                      {% endfor %}
