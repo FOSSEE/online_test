@@ -2092,13 +2092,13 @@ class TestViewAnswerPaper(TestCase):
 
         self.quiz = Quiz.objects.create(time_between_attempts=0, course=self.course,
                                         description='demo quiz', language='Python')
-
+        self.user3 = User.objects.get(username="demo_user3")
         self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
             total_marks=1.0)
         self.question_paper.fixed_questions.add(self.question)
         self.question_paper.save()
 
-        self.ans_paper = AnswerPaper.objects.create(user_id=3,
+        self.ans_paper = AnswerPaper.objects.create(user=self.user3,
                 attempt_number=1, question_paper=self.question_paper,
                 start_time=timezone.now(), user_ip='101.0.0.1',
                 end_time=timezone.now()+timezone.timedelta(minutes=20))
@@ -2382,7 +2382,7 @@ class TestGrader(TestCase):
         self.question_paper.fixed_questions.add(self.question)
         self.question_paper.save()
 
-        self.answerpaper = AnswerPaper.objects.create(user_id=3,
+        self.answerpaper = AnswerPaper.objects.create(user=self.user2,
                 attempt_number=1, question_paper=self.question_paper,
                 start_time=timezone.now(), user_ip='101.0.0.1',
                 end_time=timezone.now()+timezone.timedelta(minutes=20))
