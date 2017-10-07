@@ -525,6 +525,7 @@ class AnswerPaperTestCases(unittest.TestCase):
             question_paper=self.question_paper,
             user=self.user
         )
+        self.question_paper.fixed_questions.add(*self.questions)
         already_attempted = self.attempted_papers.count()
         self.answerpaper.attempt_number = already_attempted + 1
         self.answerpaper.save()
@@ -598,14 +599,18 @@ class AnswerPaperTestCases(unittest.TestCase):
             quiz=self.quiz2, total_marks=3, shuffle_questions=True)
         self.question_paper2.save()
         summary_list = ['Q%d' % (i) for i in range(1, 21)]
-        que_list = Question.objects.filter(summary__in=summary_list)
-        self.question_paper2.fixed_questions.add(*que_list)
+        self.que_list = Question.objects.filter(summary__in=summary_list)
+        self.question_paper2.fixed_questions.add(*self.que_list)
 
         # Create AnswerPaper for user1 and user2
         self.user1_answerpaper = self.question_paper2.make_answerpaper(
             self.user, self.ip, 1
         )
         self.user2_answerpaper = self.question_paper2.make_answerpaper(
+            self.user2, self.ip, 1
+        )
+
+        self.user2_answerpaper2 = self.question_paper.make_answerpaper(
             self.user2, self.ip, 1
         )
 
@@ -880,6 +885,11 @@ class AnswerPaperTestCases(unittest.TestCase):
         ques_set_1 = self.user1_answerpaper.get_all_ordered_questions()
         ques_set_2 = self.user2_answerpaper.get_all_ordered_questions()
         self.assertFalse(ques_set_1 == ques_set_2)
+
+    def test_validate_current_question(self):
+        self.user2_answerpaper2.questions_unanswered.remove(*self.questions)
+        self.assertEqual(self.user2_answerpaper2.current_question(),
+                         self.question1)
 
 
 ###############################################################################
