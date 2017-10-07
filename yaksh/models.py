@@ -1187,9 +1187,9 @@ class AnswerPaper(models.Model):
 
     def current_question(self):
         """Returns the current active question to display."""
-        questions = self.questions_unanswered.all()
-        if questions.exists():
-            cur_question = self.get_current_question(questions)
+        unanswered_questions = self.questions_unanswered.all()
+        if unanswered_questions.exists():
+            cur_question = self.get_current_question(unanswered_questions)
         else:
             cur_question = self.get_current_question(self.questions.all())
         return cur_question
@@ -1197,7 +1197,7 @@ class AnswerPaper(models.Model):
     def get_current_question(self, questions):
         if self.questions_order:
             question_id = int(self.questions_order.split(',')[0])
-            question = self.questions_unanswered.get(id=question_id)
+            question = questions.get(id=question_id)
         else:
             question = questions.first()
         return question
