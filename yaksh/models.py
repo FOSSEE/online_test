@@ -1215,10 +1215,7 @@ class AnswerPaper(models.Model):
             self.questions_answered.add(question_id)
         self.questions_unanswered.remove(question_id)
 
-        next_question = self.next_question(question_id)
-        if next_question and next_question.id == int(question_id):
-            return None
-        return next_question
+        return self.next_question(question_id)
 
     def next_question(self, question_id):
         """
