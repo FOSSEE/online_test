@@ -414,7 +414,6 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
     def test_only_stdout(self):
         # Given
         self.test_case_data = [{'expected_output': '11',
-                                'expected_input': '',
                                 'test_case_type': 'stdiobasedtestcase',
                                 'weight': 0.0
                                }]
