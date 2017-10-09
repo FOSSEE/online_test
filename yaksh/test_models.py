@@ -163,7 +163,20 @@ class QuestionTestCases(unittest.TestCase):
                            "summary": "Yaml Demo",
                            "tags": ['yaml_demo']
                            }]
+        questions_data_with_missing_fields = [{"active": True,
+                                               "points": 1.0,
+                                               "description":\
+                                                "factorial of a no",
+                                               "language": "Python",
+                                               "type": "Code",
+                                               "testcase":\
+                                                self.test_case_upload_data,
+                                               "summary": "Yaml Demo 2"
+                                               }]
         self.yaml_questions_data = yaml.safe_dump_all(questions_data)
+        self.yaml_questions_data_with_missing_fields = yaml.safe_dump_all(
+                questions_data_with_missing_fields
+                )
 
     def tearDown(self):
         shutil.rmtree(self.load_tmp_path)
@@ -213,12 +226,15 @@ class QuestionTestCases(unittest.TestCase):
                 self.assertEqual(self.question2.points, q['points'])
                 self.assertTrue(self.question2.active)
                 self.assertEqual(self.question2.snippet, q['snippet'])
-                self.assertEqual(os.path.basename(que_file.file.path), q['files'][0][0])
-                self.assertEqual([case.get_field_value() for case in test_case], q['testcase'])
+                self.assertEqual(os.path.basename(que_file.file.path),
+                                                  q['files'][0][0])
+                self.assertEqual([case.get_field_value() for case in test_case],
+                                 q['testcase']
+                                 )
         for file in zip_file.namelist():
             os.remove(os.path.join(tmp_path, file))
 
-    def test_load_questions(self):
+    def test_load_questions_with_all_fields(self):
         """ Test load questions into database from Yaml """
         question = Question()
         result = question.load_questions(self.yaml_questions_data, self.user1)
@@ -231,12 +247,38 @@ class QuestionTestCases(unittest.TestCase):
         self.assertEqual(question_data.description, 'factorial of a no')
         self.assertEqual(question_data.points, 1.0)
         self.assertTrue(question_data.active)
+        tags = question_data.tags.all().values_list("name",flat=True)
+        self.assertListEqual(list(tags), ['yaml_demo'])
         self.assertEqual(question_data.snippet, 'def fact()')
         self.assertEqual(os.path.basename(file.file.path), "test.txt")
         self.assertEqual([case.get_field_value() for case in test_case],
                          self.test_case_upload_data
                          )
 
+    def test_load_questions_with_missing_fields(self):
+        """ Test load questions into database from Yaml with
+            missing fields like files, snippet and tags. """
+        question = Question()
+        result = question.load_questions(
+                            self.yaml_questions_data_with_missing_fields,
+                            self.user1
+                            )
+        question_data = Question.objects.get(summary="Yaml Demo 2")
+        file = FileUpload.objects.filter(question=question_data)
+        test_case = question_data.get_test_cases()
+        self.assertEqual(question_data.summary,'Yaml Demo 2')
+        self.assertEqual(question_data.language,'Python')
+        self.assertEqual(question_data.type, 'Code')
+        self.assertEqual(question_data.description,'factorial of a no')
+        self.assertEqual(question_data.points, 1.0)
+        self.assertTrue(question_data.active)
+        self.assertEqual(question_data.snippet,'')
+        self.assertListEqual(list(file),[])
+        self.assertEqual([case.get_field_value() for case in test_case],
+                         self.test_case_upload_data
+                         )
+        tags = question_data.tags.all().values_list("name",flat=True)
+        self.assertListEqual(list(tags), [])
 
 ###############################################################################
 class QuizTestCases(unittest.TestCase):
