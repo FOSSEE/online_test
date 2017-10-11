@@ -1223,8 +1223,9 @@ class AnswerPaper(models.Model):
              available question.
         """
         if self.questions_order:
-            all_questions = [int(q_id)
-                             for q_id in self.questions_order.split(',')]
+            all_questions = [
+                int(q_id) for q_id in self.questions_order.split(',')
+            ]
         else:
             all_questions = list(self.questions.all().values_list(
                 'id', flat=True))
