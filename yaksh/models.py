@@ -1094,6 +1094,7 @@ class AnswerPaperManager(models.Manager):
     def get_users_for_questionpaper(self, questionpaper_id):
         return self._get_answerpapers_for_quiz(questionpaper_id, status=True)\
             .values("user__id", "user__first_name", "user__last_name")\
+            .order_by("user__first_name")\
             .distinct()
 
     def get_user_all_attempts(self, questionpaper, user):
