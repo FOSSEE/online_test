@@ -110,4 +110,6 @@ urlpatterns = [
         views.download_assignment_file, name="download_quiz_assignment"),
     url(r'^manage/courses/download_yaml_template/',
         views.download_yaml_template, name="download_yaml_template"),
+    url(r'^manage/download_questionpaper/(?P<questionpaper_id>\d+)/$',
+        views.download_questionpaper, name="download_questionpaper"),
 ]

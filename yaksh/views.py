@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
+from django.template.loader import get_template, render_to_string
 from django.http import Http404
 from django.db.models import Sum, Max, Q, F
 from django.views.decorators.csrf import csrf_exempt
@@ -1831,3 +1832,18 @@ def download_yaml_template(request):
     
     return response
 
+@login_required
+@email_verified
+def download_questionpaper(request, questionpaper_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    paper = QuestionPaper.objects.get(id=questionpaper_id)
+    context = {
+        'questions': paper._get_questions_for_answerpaper(),
+        'paper': paper,
+    }
+
+    return my_render_to_response(
+        'yaksh/download_questionpaper.html', context
+    )
