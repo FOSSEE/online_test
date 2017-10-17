@@ -504,8 +504,20 @@ class Question(models.Model):
         tmp_file_path = tempfile.mkdtemp()
         yaml_path = os.path.join(tmp_file_path, "questions_dump.yaml")
         for elem in q_dict:
-            sorted_dict = CommentedMap(sorted(elem.items(), key=lambda x:x[0]))
-            yaml_block = dict_to_yaml(sorted_dict)
+            relevant_dict = CommentedMap()
+            irrelevant_dict = CommentedMap()
+            relevant_dict['summary'] = elem.pop('summary')
+            relevant_dict['type'] = elem.pop('type')
+            relevant_dict['language'] = elem.pop('language')
+            relevant_dict['description'] = elem.pop('description')
+            relevant_dict['points'] = elem.pop('points')
+            relevant_dict['testcase'] = elem.pop('testcase')
+            relevant_dict.update(CommentedMap(sorted(elem.items(),
+                                                  key=lambda x:x[0]
+                                                  ))
+                                 )
+
+            yaml_block = dict_to_yaml(relevant_dict)
             with open(yaml_path, "a") as yaml_file:
                 yaml_file.write(yaml_block)
         zip_file.write(yaml_path, os.path.basename(yaml_path))
