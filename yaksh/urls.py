@@ -140,6 +140,7 @@ urlpatterns = [
         views.download_assignment_file, name="download_quiz_assignment"),
     url(r'^manage/courses/download_yaml_template/',
         views.download_yaml_template, name="download_yaml_template"),
+<<<<<<< HEAD
     url(r'^manage/download_sample_csv/',
         views.download_sample_csv, name="download_sample_csv"),
     url(r'^manage/courses/edit_lesson/$',
@@ -172,4 +173,6 @@ urlpatterns = [
         views.design_course, name="design_course"),
     url(r'^manage/course_status/(?P<course_id>\d+)/$',
         views.course_status, name="course_status"),
+    url(r'^manage/download_questionpaper/(?P<questionpaper_id>\d+)/$',
+        views.download_questionpaper, name="download_questionpaper"),
 ]
