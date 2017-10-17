@@ -77,7 +77,8 @@ class BashCodeEvaluator(BaseEvaluator):
         if self.test_case_args:
             self.tc_args_path = self.create_submit_code_file('main.args')
             self.write_to_submit_code_file(self.tc_args_path, self.test_case_args)
-        self.user_answer = self.user_answer.replace("\r", "")
+        shebang = "#!/bin/bash\n"
+        self.user_answer = shebang + self.user_answer.replace("\r", "")
         self.test_case = self.test_case.replace("\r", "")
         self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
         self.write_to_submit_code_file(self.test_code_path, self.test_case)
