@@ -415,7 +415,6 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
     def test_only_stdout(self):
         # Given
         self.test_case_data = [{'expected_output': '11',
-                               'expected_input': '',
                                 'weight': 0.0,
                                 'test_case_type': 'stdiobasedtestcase',
                                 }]
