@@ -19,6 +19,8 @@ install_requires = [
     'pytz==2016.4',
     'python-social-auth==0.2.19',
     'tornado',
+    'psutil',
+    'ruamel.yaml==0.15.23'
 ]
 
 setup(
