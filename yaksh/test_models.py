@@ -513,13 +513,14 @@ class AnswerPaperTestCases(unittest.TestCase):
         )
         self.qtn_paper_with_single_question.save()
 
-        self.questions = Question.objects.all()[0:3]
+        all_questions = Question.objects.all()
+        self.questions = all_questions[0:3]
         self.start_time = timezone.now()
         self.end_time = self.start_time + timedelta(minutes=20)
-        self.question1 = self.questions[0]
-        self.question2 = self.questions[1]
-        self.question3 = self.questions[2]
-        self.question4 = Question.objects.all()[3]
+        self.question1 = all_questions[0]
+        self.question2 = all_questions[1]
+        self.question3 = all_questions[2]
+        self.question4 = all_questions[3]
 
         # create answerpaper
         self.answerpaper = AnswerPaper(user=self.user,
@@ -578,6 +579,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.answerpaper_single_question.attempt_number = already_attempted + 1
         self.answerpaper_single_question.save()
         self.answerpaper_single_question.questions.add(self.question4)
+        self.answerpaper_single_question.questions_unanswered.add(self.question4)
         self.answerpaper_single_question.save()
         # answers for the Answer Paper
         self.single_answer = Answer(question=self.question4,
@@ -651,18 +653,26 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Test add_completed_question and next_question
         # When all questions are answered
 
+        # Before questions are answered
+        self.assertEqual(self.answerpaper_single_question.questions_left(), 1)
+
         current_question = self.answerpaper_single_question.add_completed_question(
-            self.question1.id
+            self.question4.id
         )
 
+
         # Then
+        self.assertEqual(
+            self.answerpaper_single_question.questions_answered.all()[0],
+            self.question4
+        )
         self.assertEqual(self.answerpaper_single_question.questions_left(), 0)
         self.assertIsNotNone(current_question)
         self.assertEqual(current_question.summary, "Q4")
 
         # When
         next_question = self.answerpaper_single_question.next_question(
-            self.question1.id
+            self.question4.id
         )
 
         # Then

@@ -1196,11 +1196,12 @@ class AnswerPaper(models.Model):
 
     def get_current_question(self, questions):
         if self.questions_order:
-            question_id = int(self.questions_order.split(',')[0])
-            question = questions.get(id=question_id)
-        else:
-            question = questions.first()
-        return question
+            available_question_ids = questions.values_list('id', flat=True)
+            ordered_question_ids = [int(q) for q in self.questions_order.split(',')]
+            for qid in ordered_question_ids:
+                if qid in available_question_ids:
+                    return questions.get(id=qid)
+        return questions.first()
 
     def questions_left(self):
         """Returns the number of questions left."""
