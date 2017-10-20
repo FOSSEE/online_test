@@ -1,3 +1,18 @@
+=== 0.7.0 (Tentatively 23-10-2017) ===
+
+* Simplified Standard I/O type question error output.
+* Added the facility to search questions using tags.
+* Added the facility to search for user profiles on admin site.
+* Replaced json format with yaml format for downloading and uploading questions.
+* Fixed a bug that returned multiple answerpaper objects for a user.
+* Fixed a bug that allowed anyonymous users access quit exam page.
+* Fixed a bug that prevented moderators from changing passwords.
+* Fixed a bug that returned nonetype object as the last attempted answer.
+* Updated the validation of MCQ/MCC type question.
+* Fixed a bug that did not allow expected input in Standard I/O type question to be none.
+* UI changes in grade user, view answerpaper and monitor pages.
+* Fixed a bug that would require shebang to be put in for Bash assertion based questions.
+
 === 0.6.0 (11-05-2017) ===
 
 * Added a course code field that can be used to search a course.
