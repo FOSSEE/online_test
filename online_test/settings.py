@@ -33,8 +33,6 @@ URL_ROOT = ''
 
 # Application definition
 
-FIXTURE_DIRS = os.path.join(BASE_DIR, "yaksh", "fixtures")
-
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
