@@ -181,6 +181,10 @@ class Course(models.Model):
         new_course_name = "Copy Of {0}".format(self.name)
         new_course = self._create_duplicate_instance(user, new_course_name)
 
+        if hasattr(self, 'gradingscheme'):
+            grading_scheme = self.grading_scheme_course
+            grading_scheme._create_duplicate_grading_scheme(new_course)
+
         for q in quizzes:
             new_quiz = q._create_duplicate_quiz(new_course)
             if q.id not in duplicate_quiz_map.keys():
@@ -285,6 +289,43 @@ class Course(models.Model):
 
     def __str__(self):
         return self.name
+
+
+###############################################################################
+class GradingScheme(models.Model):
+    creator = models.ForeignKey(User, related_name='grading_scheme_creator')
+    course = models.OneToOneField(Course, related_name='grading_scheme_course')
+
+    def _create_duplicate_grading_scheme(self, course):
+        grade_ranges = self.graderange_set.all()
+        new_grading_scheme = GradingScheme.objects.create(
+            course=course,
+            title="Copy Of {0}".format(self.title),
+            creator=course.creator
+        )
+
+        for gr in grade_ranges:
+            gr._create_duplicate_grade_range(new_grading_scheme)
+
+        return new_grading_scheme
+
+
+###############################################################################
+class GradeRange(models.Model):
+    grading_scheme = models.ForeignKey(GradingScheme)
+    upper_limit = models.FloatField(default=100.0)
+    lower_limit = models.FloatField(default=0.0)
+    label = models.CharField(max_length=128, default="No Grade")
+
+    def _create_duplicate_grade_range(self, grading_scheme):
+        new_grade_range = GradeRange.objects.create(
+            grading_scheme=grading_scheme,
+            label=self.label,
+            upper_limit=self.upper_limit,
+            lower_limit=self.lower_limit
+        )
+
+        return new_grade_range
 
 
 ###############################################################################
@@ -735,7 +776,8 @@ class Quiz(models.Model):
 
     def _create_duplicate_quiz(self, course):
         questionpaper = self.questionpaper_set.all()
-        new_quiz = Quiz.objects.create(course=course,
+        new_quiz = Quiz.objects.create(
+            course=course,
             start_date_time=self.start_date_time,
             end_date_time=self.end_date_time,
             duration=self.duration,
@@ -1476,6 +1518,14 @@ class AnswerPaper(models.Model):
         user_answer.save()
         self.update_marks('completed')
         return True, msg
+
+    def get_user_grade(self):
+        grading_scheme = self.question_paper.quiz.course.grading_scheme_course
+        grade_ranges = grading_scheme.graderange_set.all()
+        for grade_range in grade_ranges:
+            if grade_range.lower_limit <= self.marks_obtained <= grade_range.upper_limit:
+                return grade_range.label
+        return "No grade"
 
     def __str__(self):
         u = self.user

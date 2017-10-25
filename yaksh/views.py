@@ -14,7 +14,7 @@ from django.db.models import Sum, Max, Q, F
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
-from django.forms.models import inlineformset_factory
+from django.forms import inlineformset_factory
 from django.utils import timezone
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.conf import settings
@@ -36,13 +36,14 @@ from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, FloatTestCase,
     HookTestCase, IntegerTestCase, McqTestCase, Profile,
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
-    StdIOBasedTestCase, StringTestCase, TestCase, User,
-    get_model_class
+    StdIOBasedTestCase, StringTestCase, TestCase, User, GradingScheme,
+    GradeRange, get_model_class
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
     RandomQuestionForm, QuestionFilterForm, CourseForm, ProfileForm,
-    UploadFileForm, get_object_form, FileForm, QuestionPaperForm
+    UploadFileForm, get_object_form, FileForm, QuestionPaperForm,
+    GradingSchemeForm, GradeRangeFormset
 )
 from .settings import URL_ROOT
 from .file_utils import extract_files
@@ -1553,7 +1554,12 @@ def test_mode(user, godmode=False, questions_list=None, quiz_id=None):
 @email_verified
 def test_quiz(request, mode, quiz_id):
     """creates a trial quiz for the moderators"""
-    godmode = True if mode == "godmode" else False
+    if mode == "godmode":
+        godmode = True
+    elif mode == "usermode":
+        godmode = False
+    else:
+        raise Http404('You are not allowed to view this page!')
     current_user = request.user
     quiz = Quiz.objects.get(id=quiz_id)
     if (quiz.is_expired() or not quiz.active) and not godmode:
@@ -1827,3 +1833,44 @@ def download_yaml_template(request):
     
     return response
 
+
+@login_required
+@email_verified
+def add_grading(request, course_id=None):
+    user = request.user
+    ci = RequestContext(request)
+    try:
+        grading_scheme = GradingScheme.objects.get(course__id=course_id)
+    except GradingScheme.DoesNotExist:
+        grading_scheme = None
+
+    if not is_moderator(user) or course_id is None:
+        raise Http404('You are not allowed to view this page')
+
+    if request.method == 'POST':
+        form = GradingSchemeForm(request.POST, instance=grading_scheme)
+        formset = GradeRangeFormset(request.POST, instance=grading_scheme)
+        if form.is_valid():
+            new_scheme = form.save(commit=False)
+            new_scheme.creator = user
+            new_scheme.course = Course.objects.get(id=course_id)
+            if formset.is_valid():
+                formset.save()
+            else:
+                return my_redirect('/exam/manage/grading/{0}'.format(new_scheme.id))
+            new_scheme.save()
+            return my_redirect('/exam/manage/grading/{0}'.format(new_scheme.id))
+        else:
+            return my_render_to_response(
+                'yaksh/add_grading.html',
+                {'form': form, 'formset': formset},
+                context_instance=ci
+            )
+    else:
+        form = GradingSchemeForm(instance=grading_scheme)
+        formset = GradeRangeFormset(instance=grading_scheme)
+        return my_render_to_response(
+            'yaksh/add_grading.html',
+            {'form': form, 'formset': formset},
+            context_instance=ci
+        )
