@@ -100,7 +100,7 @@ urlpatterns = [
             views.regrade, name='regrade'),
     url(r'^manage/regrade/paper/(?P<course_id>\d+)/(?P<answerpaper_id>\d+)/$',
             views.regrade, name='regrade'),
-    url(r'^manage/(?:godmode|usermode)/(?P<quiz_id>\d+)/$', views.test_quiz),
+    url(r'^manage/(?P<mode>godmode|usermode)/(?P<quiz_id>\d+)/$', views.test_quiz),
     url(r'^manage/create_demo_course/$', views.create_demo_course),
     url(r'^manage/courses/download_course_csv/(?P<course_id>\d+)/$',
         views.download_course_csv, name="download_course_csv"),
