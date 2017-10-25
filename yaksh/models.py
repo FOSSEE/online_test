@@ -1199,11 +1199,12 @@ class AnswerPaper(models.Model):
 
     def get_current_question(self, questions):
         if self.questions_order:
-            question_id = int(self.questions_order.split(',')[0])
-            question = questions.get(id=question_id)
-        else:
-            question = questions.first()
-        return question
+            available_question_ids = questions.values_list('id', flat=True)
+            ordered_question_ids = [int(q) for q in self.questions_order.split(',')]
+            for qid in ordered_question_ids:
+                if qid in available_question_ids:
+                    return questions.get(id=qid)
+        return questions.first()
 
     def questions_left(self):
         """Returns the number of questions left."""
@@ -1218,10 +1219,7 @@ class AnswerPaper(models.Model):
             self.questions_answered.add(question_id)
         self.questions_unanswered.remove(question_id)
 
-        next_question = self.next_question(question_id)
-        if next_question and next_question.id == int(question_id):
-            return None
-        return next_question
+        return self.next_question(question_id)
 
     def next_question(self, question_id):
         """
@@ -1229,8 +1227,9 @@ class AnswerPaper(models.Model):
              available question.
         """
         if self.questions_order:
-            all_questions = [int(q_id)
-                             for q_id in self.questions_order.split(',')]
+            all_questions = [
+                int(q_id) for q_id in self.questions_order.split(',')
+            ]
         else:
             all_questions = list(self.questions.all().values_list(
                 'id', flat=True))
