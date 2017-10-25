@@ -37,10 +37,11 @@ $(".reject").change( function(){
     });
 
 $(function() {
-    $('textarea#email_body').froalaEditor({
-        heightMin: 200,
-        heightMax: 200
-    })
+    tinymce.init({ 
+        selector: 'textarea#email_body',
+        max_height: 200,
+        height: 200
+    });
   });
 
 $("#send_mail").click(function(){

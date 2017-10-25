@@ -255,7 +255,6 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
                              """
                              )
         test_case_data = [{'expected_output': '10',
-                           'expected_input': '',
                            'test_case_type': 'stdiobasedtestcase',
                            'weight': 0.0
                            }]

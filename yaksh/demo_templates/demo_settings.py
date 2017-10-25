@@ -111,6 +111,35 @@ EMAIL_PORT = 'your_email_port'
 
 EMAIL_HOST_USER = 'email_host_user'
 
+EMAIL_HOST_PASSWORD = 'email_host_password'
+
+# Set EMAIL_BACKEND to 'django.core.mail.backends.smtp.EmailBackend'
+# in production
+EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
+
+# SENDER_EMAIL, REPLY_EMAIL, PRODUCTION_URL, IS_DEVELOPMENT are used in email
+# verification. Set the variables accordingly to avoid errors in production
+
+# This email id will be used as <from address> for sending emails.
+# For example no_reply@<your_organization>.in can be used.
+SENDER_EMAIL = 'your_email'
+
+# Organisation/Indivudual Name.
+SENDER_NAME = 'your_name'
+
+# This email id will be used by users to send their queries
+# For example queries@<your_organization>.in can be used.
+REPLY_EMAIL = 'your_reply_email'
+
+# This url will be used in email verification to create activation link.
+# Add your hosted url to this variable.
+# For example https://127.0.0.1:8000 or 127.0.0.1:8000
+PRODUCTION_URL = 'your_project_url'
+
+# Set this variable to <False> once the project is in production.
+# If this variable is kept <True> in production, email will not be verified.
+IS_DEVELOPMENT = True
+
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 TEMPLATES = [

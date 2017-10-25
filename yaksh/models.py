@@ -420,9 +420,11 @@ class Question(models.Model):
             msg = "Questions Uploaded Successfully"
             for question in questions:
                 question['user'] = user
-                file_names = question.pop('files')
+                file_names = question.pop('files') \
+                             if 'files' in question \
+                             else None
+                tags = question.pop('tags') if 'tags' in question else None
                 test_cases = question.pop('testcase')
-                tags = question.pop('tags')
                 que, result = Question.objects.get_or_create(**question)
                 if file_names:
                     que._add_files_to_db(file_names, file_path)
@@ -935,7 +937,6 @@ class QuestionPaper(models.Model):
 
     def create_demo_quiz_ppr(self, demo_quiz, user):
         question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
-                                                      total_marks=6.0,
                                                       shuffle_questions=False
                                                       )
         summaries = ['Roots of quadratic equation', 'Print Output',
@@ -951,6 +952,8 @@ class QuestionPaper(models.Model):
         question_paper.save()
         # add fixed set of questions to the question paper
         question_paper.fixed_questions.add(*questions)
+        question_paper.update_total_marks()
+        question_paper.save()
 
     def get_ordered_questions(self):
         ques = []
