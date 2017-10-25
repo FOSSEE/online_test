@@ -5,7 +5,7 @@
 * Added the facility to search for user profiles on admin site.
 * Replaced json format with yaml format for downloading and uploading questions.
 * Fixed a bug that returned multiple answerpaper objects for a user.
-* Fixed a bug that allowed anyonymous users access quit exam page.
+* Fixed a bug that allowed anonymous users access quit exam page.
 * Fixed a bug that prevented moderators from changing passwords.
 * Fixed a bug that returned nonetype object as the last attempted answer.
 * Updated the validation of MCQ/MCC type question.
