@@ -464,14 +464,6 @@ class QuestionPaperTestCases(unittest.TestCase):
 
     def test_get_question_bank(self):
         # Given
-        ids = [4, 6, 7, 8, 9, 10, 12, 13, 14, 15]
-        questions = list(Question.objects.filter(id__in=ids))
-        # When
-        question_bank = self.question_paper.get_question_bank()
-        # Then
-        self.assertSequenceEqual(questions, question_bank)
-
-        # Given
         ids = [11, 10]
         questions = list(Question.objects.filter(id__in=ids))
         # When
