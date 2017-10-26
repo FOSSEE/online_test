@@ -342,6 +342,26 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.questions = Question.objects.filter(active=True)
         self.quiz = Quiz.objects.get(description="demo quiz 1")
 
+        # create question paper with only fixed questions
+        self.question_paper_fixed_questions = QuestionPaper.objects.create(
+                quiz=self.quiz)
+        self.question_paper_fixed_questions.fixed_questions.add(
+                self.questions.get(id=1), self.questions.get(id=10))
+
+        # create question paper with only random questions
+        self.question_paper_random_questions = QuestionPaper.objects.create(
+                quiz=self.quiz)
+        self.question_set_random = QuestionSet.objects.create(marks=2,
+            num_questions=2)
+        self.question_set_random.questions.add(self.questions.get(id=3),
+                self.questions.get(id=5), self.questions.get(id=7))
+        self.question_paper_random_questions.random_questions.add(
+                self.question_set_random)
+
+        # create question paper with no questions
+        self.question_paper_no_questions = QuestionPaper.objects.create(
+                quiz=self.quiz)
+
         # create question paper
         self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
             total_marks=0.0,
@@ -398,6 +418,39 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.questions_list = [self.questions[3].id, self.questions[5].id]
         self.trial_course = Course.objects.create_trial_course(self.user)
         self.trial_quiz = Quiz.objects.create_trial_quiz(self.trial_course, self.user)
+
+
+    def test_get_question_bank(self):
+        # Given
+        ids = [4, 6, 7, 8, 9, 10, 12, 13, 14, 15]
+        questions = list(Question.objects.filter(id__in=ids))
+        # When
+        question_bank = self.question_paper.get_question_bank()
+        # Then
+        self.assertSequenceEqual(questions, question_bank)
+
+        # Given
+        ids = [1, 10]
+        questions = list(Question.objects.filter(id__in=ids))
+        # When
+        question_bank = self.question_paper_fixed_questions.get_question_bank()
+        # Then
+        self.assertSequenceEqual(questions, question_bank)
+
+        # Given
+        ids = [3, 5, 7]
+        questions = list(Question.objects.filter(id__in=ids))
+        # When
+        question_bank = self.question_paper_random_questions.get_question_bank()
+        # Then
+        self.assertSequenceEqual(questions, question_bank)
+
+        # Given
+        questions = []
+        # When
+        question_bank = self.question_paper_no_questions.get_question_bank()
+        # Then
+        self.assertSequenceEqual(questions, question_bank)
 
     def test_questionpaper(self):
         """ Test question paper"""
@@ -507,12 +560,13 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.quiz = Quiz.objects.get(description='demo quiz 1')
         self.question_paper = QuestionPaper(quiz=self.quiz, total_marks=3)
         self.question_paper.save()
-        self.questions = Question.objects.all()[0:3]
+        self.questions = Question.objects.all()[0:4]
         self.start_time = timezone.now()
         self.end_time = self.start_time + timedelta(minutes=20)
         self.question1 = self.questions[0]
         self.question2 = self.questions[1]
         self.question3 = self.questions[2]
+        self.question4 = self.questions[3]
 
         # create answerpaper
         self.answerpaper = AnswerPaper(user=self.user,
@@ -544,10 +598,17 @@ class AnswerPaperTestCases(unittest.TestCase):
             marks=0,
             error=json.dumps(['error1', 'error2'])
         )
+        self.answer_correct = Answer(question=self.question4,
+            answer="correct answer",
+            correct=True, marks=1,
+            error=json.dumps([])
+        )
         self.answer_right.save()
         self.answer_wrong.save()
+        self.answer_correct.save()
         self.answerpaper.answers.add(self.answer_right)
         self.answerpaper.answers.add(self.answer_wrong)
+        self.answerpaper.answers.add(self.answer_correct)
 
         self.answer1 = Answer.objects.create(
             question=self.question1,
@@ -613,6 +674,31 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.user2_answerpaper2 = self.question_paper.make_answerpaper(
             self.user2, self.ip, 1
         )
+
+    def test_get_per_question_score(self):
+        # Given
+        question_id = self.question4.id
+        expected_score = 1
+        # When
+        score = self.answerpaper.get_per_question_score(question_id)
+        # Then
+        self.assertEqual(score, expected_score)
+
+        # Given
+        question_id = self.question2.id
+        expected_score = 0
+        # When
+        score = self.answerpaper.get_per_question_score(question_id)
+        # Then
+        self.assertEqual(score, expected_score)
+
+        # Given
+        question_id = 131
+        expected_score = 'NA'
+        # When
+        score = self.answerpaper.get_per_question_score(question_id)
+        # Then
+        self.assertEqual(score, expected_score)
 
     def test_validate_and_regrade_mcc_correct_answer(self):
         # Given

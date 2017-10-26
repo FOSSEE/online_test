@@ -2904,6 +2904,7 @@ class TestDownloadcsv(TestCase):
         self.mod_group.user_set.add(self.user)
         self.course = Course.objects.create(name="Python Course",
             enrollment="Enroll Request", creator=self.user)
+        self.course.students.add(self.student)
 
         self.quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
@@ -2956,8 +2957,9 @@ class TestDownloadcsv(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:download_csv',
-                                   kwargs={"questionpaper_id": self.question_paper.id}),
+        response = self.client.get(reverse('yaksh:download_quiz_csv',
+                                   kwargs={"course_id": self.course.id,
+                                           "quiz_id": self.quiz.id}),
                                    follow=True
                                    )
         self.assertEqual(response.status_code, 404)
@@ -2985,8 +2987,9 @@ class TestDownloadcsv(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:download_csv',
-                                   kwargs={"questionpaper_id": self.question_paper.id}),
+        response = self.client.get(reverse('yaksh:download_quiz_csv',
+                                   kwargs={"course_id": self.course.id,
+                                           "quiz_id": self.quiz.id}),
                                    follow=True
                                    )
         self.assertEqual(response.status_code, 404)
@@ -3031,11 +3034,14 @@ class TestDownloadcsv(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:download_csv',
-                            kwargs={'questionpaper_id': self.question_paper.id}),
+        response = self.client.get(reverse('yaksh:download_quiz_csv',
+                            kwargs={"course_id": self.course.id,
+                                           "quiz_id": self.quiz.id}),
+
                             follow=True
                             )
-        file_name = "{0}.csv".format(self.quiz.description)
+        file_name = "{0}-{1}-attempt{2}.csv".format(self.course.name.replace('.', ''),
+                self.quiz.description.replace('.', ''), 1)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
                         'attachment; filename="{0}"'.format(file_name))

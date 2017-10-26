@@ -76,7 +76,10 @@ $(document).ready(function()
  <p>Papers in progress:<b>  {{ inprogress_papers }} </b></p>
 
 <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{papers.0.question_paper.id}}">Question Statisitics</a></p>
-<p><a href="{{URL_ROOT}}/exam/manage/monitor/download_csv/{{papers.0.question_paper.id}}">Download CSV</a></p>
+<p>
+   <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#csvModal">
+       Download CSV <span class="glyphicon glyphicon-save"></span>
+   </button></p>
 <table id="result-table" class="tablesorter table table table-striped">
     <thead>
     <tr>
@@ -115,4 +118,43 @@ $(document).ready(function()
 <h4>No Quiz Found</h4>
 {% endif %}
 {% endif %}
+
+<!-- CSV Modal -->
+<div class="modal fade" id="csvModal" role="dialog">
+    <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal">&times;</button>
+      <h3 class="modal-title">Uncheck unwanted columns</h3>
+    </div>
+    <form action="{{URL_ROOT}}/exam/manage/download_quiz_csv/{{ quiz.course.id }}/{{ quiz.id }}/" method="post">
+        {% csrf_token %}
+    <div class="modal-body">
+        {% for field in csv_fields %}
+        <div class="form-check form-check-inline">
+          <label class="form-check-label">
+              <input class="form-check-input" name="csv_fields" type="checkbox" value="{{ field }}" checked> {{ field }}
+          </label>
+        </div>
+        {% endfor %}
+        <b>Select Attempt Number: Default latest attempt</b>
+        <select class="form-control" id = "attempt_number">
+        <option selected="">Latest</option>
+        {%for attempt_number in attempt_numbers %}
+        <option value = "{{ attempt_number }}"> {{ attempt_number }}</option>
+        {% endfor %}
+        </select>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn btn-primary"> Download <span class="glyphicon glyphicon-save"></span></button>
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+    </form>
+    </div>
+    </div>
+</div>
+
+
 {% endblock %}
