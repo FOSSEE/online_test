@@ -18,7 +18,8 @@ def compare_outputs(expected_output, user_output, given_input=None):
     exp_lines = expected_output.splitlines()
     msg = {"given_input":given_input,
            "expected_output": exp_lines,
-           "user_output":given_lines
+           "user_output":given_lines,
+           "type": "stdio"
             }
     ng = len(given_lines)
     ne = len(exp_lines)

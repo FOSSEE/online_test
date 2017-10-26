@@ -88,17 +88,31 @@
       <div class="panel-heading">Testcase No. {{ forloop.counter }}</div>
       <div class="panel-body">
       <div class="well well-sm">
-      {% if not error.expected_output %}
+      {% if not error.type %}
       <pre><code> {{error|safe}} </code></pre>
-      {% else %}
-        {% if error.given_input %}
-       <table class="table table-bordered">
-        <col width="30%">
-          <tr class = "active">
-          <td> For given Input value(s):</td>
-          <td>{{error.given_input}}</td>
+      {% elif error.type == 'assertion' %}
+            We tried the calling your function with the following test case:<br/>
+            <pre><code><strong>{{error.test_case}}</strong></code></pre>  
+        <table>
+          <tr> But the following error took place: </tr>
+          <tr>
+            <td>Exception Name</td>
+            <td><mark style="background-color:#ff9999;">{{error.exception}}</mark>
+          </td>  
           </tr>
-       </table>
+          <tr>
+            <td>Exception Message</td><td>{{error.message}}</td>
+          </tr>
+        </table>
+      {% elif error.type == 'stdio' %}
+        {% if error.given_input %}
+         <table class="table table-bordered">
+          <col width="30%">
+            <tr class = "active">
+            <td> For given Input value(s):</td>
+            <td>{{error.given_input}}</td>
+            </tr>
+         </table>
        {% endif %}
         <table class="table table-bordered" width="100%" id="output">
           <col width="10%">

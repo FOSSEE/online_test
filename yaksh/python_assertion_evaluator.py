@@ -4,6 +4,7 @@ import traceback
 import os
 import re
 from os.path import join
+from textwrap import dedent
 import importlib
 
 # Local imports
@@ -73,31 +74,26 @@ class PythonAssertionEvaluator(BaseEvaluator):
             exec(_tests, self.exec_scope)
         except TimeoutException:
             raise
+        except AssertionError:
+            type, _, tb = sys.exc_info()
+            tb_info = traceback.extract_tb(tb)
+            filename, line, func, text = tb_info[-1]
+            value = "Expected answer from the test case didnt match the output"
+            err = {"type": "assertion",
+                    "test_case": self.test_case,
+                    "exception": type.__name__,
+                    "message": value
+                    }
         except Exception:
             type, value, tb = sys.exc_info()
-            info = traceback.extract_tb(tb)
-            fname, lineno, func, text = info[-1]
-            text = str(self.test_case)
+            tb_info = traceback.extract_tb(tb)
+            filename, line, func, text = tb_info[-1]
+            err = {"type": "assertion",
+                    "test_case": self.test_case,
+                    "exception": type.__name__,
+                    "message": str(value)
+                    }   
 
-            # Get truncated traceback
-            err_tb_lines = traceback.format_exc().splitlines()
-            stripped_tb_lines = []
-            for line in err_tb_lines:
-                line = re.sub(r'File\s+".*?",\s+line',
-                     'File <file>, line',
-                     line
-                    )
-                stripped_tb_lines.append(line)
-            stripped_tb = '\n'.join(stripped_tb_lines[-10::])
-
-            err = "Expected Test Case:\n{0}\n" \
-                "Error Traceback - {1} {2} in:\n {3}\n{4}".format(
-                    self.test_case,
-                    type.__name__,
-                    str(value),
-                    text,
-                    stripped_tb
-                    )
         else:
             success = True
             err = None
