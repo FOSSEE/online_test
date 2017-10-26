@@ -420,9 +420,11 @@ class Question(models.Model):
             msg = "Questions Uploaded Successfully"
             for question in questions:
                 question['user'] = user
-                file_names = question.pop('files')
+                file_names = question.pop('files') \
+                             if 'files' in question \
+                             else None
+                tags = question.pop('tags') if 'tags' in question else None
                 test_cases = question.pop('testcase')
-                tags = question.pop('tags')
                 que, result = Question.objects.get_or_create(**question)
                 if file_names:
                     que._add_files_to_db(file_names, file_path)
@@ -504,8 +506,20 @@ class Question(models.Model):
         tmp_file_path = tempfile.mkdtemp()
         yaml_path = os.path.join(tmp_file_path, "questions_dump.yaml")
         for elem in q_dict:
-            sorted_dict = CommentedMap(sorted(elem.items(), key=lambda x:x[0]))
-            yaml_block = dict_to_yaml(sorted_dict)
+            relevant_dict = CommentedMap()
+            irrelevant_dict = CommentedMap()
+            relevant_dict['summary'] = elem.pop('summary')
+            relevant_dict['type'] = elem.pop('type')
+            relevant_dict['language'] = elem.pop('language')
+            relevant_dict['description'] = elem.pop('description')
+            relevant_dict['points'] = elem.pop('points')
+            relevant_dict['testcase'] = elem.pop('testcase')
+            relevant_dict.update(CommentedMap(sorted(elem.items(),
+                                                  key=lambda x:x[0]
+                                                  ))
+                                 )
+
+            yaml_block = dict_to_yaml(relevant_dict)
             with open(yaml_path, "a") as yaml_file:
                 yaml_file.write(yaml_block)
         zip_file.write(yaml_path, os.path.basename(yaml_path))
@@ -930,7 +944,6 @@ class QuestionPaper(models.Model):
 
     def create_demo_quiz_ppr(self, demo_quiz, user):
         question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
-                                                      total_marks=6.0,
                                                       shuffle_questions=False
                                                       )
         summaries = ['Roots of quadratic equation', 'Print Output',
@@ -946,6 +959,8 @@ class QuestionPaper(models.Model):
         question_paper.save()
         # add fixed set of questions to the question paper
         question_paper.fixed_questions.add(*questions)
+        question_paper.update_total_marks()
+        question_paper.save()
 
     def get_ordered_questions(self):
         ques = []
@@ -1101,6 +1116,7 @@ class AnswerPaperManager(models.Manager):
     def get_users_for_questionpaper(self, questionpaper_id):
         return self._get_answerpapers_for_quiz(questionpaper_id, status=True)\
             .values("user__id", "user__first_name", "user__last_name")\
+            .order_by("user__first_name")\
             .distinct()
 
     def get_user_all_attempts(self, questionpaper, user):
@@ -1212,11 +1228,12 @@ class AnswerPaper(models.Model):
 
     def get_current_question(self, questions):
         if self.questions_order:
-            question_id = int(self.questions_order.split(',')[0])
-            question = questions.get(id=question_id)
-        else:
-            question = questions.first()
-        return question
+            available_question_ids = questions.values_list('id', flat=True)
+            ordered_question_ids = [int(q) for q in self.questions_order.split(',')]
+            for qid in ordered_question_ids:
+                if qid in available_question_ids:
+                    return questions.get(id=qid)
+        return questions.first()
 
     def questions_left(self):
         """Returns the number of questions left."""
@@ -1231,10 +1248,7 @@ class AnswerPaper(models.Model):
             self.questions_answered.add(question_id)
         self.questions_unanswered.remove(question_id)
 
-        next_question = self.next_question(question_id)
-        if next_question and next_question.id == int(question_id):
-            return None
-        return next_question
+        return self.next_question(question_id)
 
     def next_question(self, question_id):
         """
@@ -1242,8 +1256,9 @@ class AnswerPaper(models.Model):
              available question.
         """
         if self.questions_order:
-            all_questions = [int(q_id)
-                             for q_id in self.questions_order.split(',')]
+            all_questions = [
+                int(q_id) for q_id in self.questions_order.split(',')
+            ]
         else:
             all_questions = list(self.questions.all().values_list(
                 'id', flat=True))

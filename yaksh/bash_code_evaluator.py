@@ -77,7 +77,8 @@ class BashCodeEvaluator(BaseEvaluator):
         if self.test_case_args:
             self.tc_args_path = self.create_submit_code_file('main.args')
             self.write_to_submit_code_file(self.tc_args_path, self.test_case_args)
-        self.user_answer = self.user_answer.replace("\r", "")
+        shebang = "#!/bin/bash\n"
+        self.user_answer = shebang + self.user_answer.replace("\r", "")
         self.test_case = self.test_case.replace("\r", "")
         self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
         self.write_to_submit_code_file(self.test_code_path, self.test_case)
@@ -99,13 +100,13 @@ class BashCodeEvaluator(BaseEvaluator):
             return False, msg, 0.0
 
         if not clean_test_case_path:
-            ret = self._run_command(clean_ref_code_path,
+            ret = self._run_command(["bash", clean_ref_code_path],
                 stdin=None,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
             proc, inst_stdout, inst_stderr = ret
-            ret = self._run_command(self.submit_code_path,
+            ret = self._run_command(["bash", self.submit_code_path],
                 stdin=None,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
@@ -136,7 +137,7 @@ class BashCodeEvaluator(BaseEvaluator):
             for tc in test_cases:
                 loop_count += 1
                 if valid_answer:
-                    args = [clean_ref_code_path] + \
+                    args = ["bash", clean_ref_code_path] + \
                         [x for x in tc.split()]
                     ret = self._run_command(args,
                         stdin=None,
@@ -146,7 +147,7 @@ class BashCodeEvaluator(BaseEvaluator):
                     proc, inst_stdout, inst_stderr = ret
                     if self.file_paths:
                         self.files = copy_files(self.file_paths)
-                    args = [self.submit_code_path] + \
+                    args = ["bash", self.submit_code_path] + \
                         [x for x in tc.split()]
                     ret = self._run_command(args,
                         stdin=None,

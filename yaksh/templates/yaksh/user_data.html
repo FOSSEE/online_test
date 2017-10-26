@@ -78,7 +78,8 @@ User IP address: {{ paper.user_ip }}
                         {% endif %}
                     {% endfor %}
 
-            {% elif question.type == "integer" or "string" or "float" %}
+            {% elif question.type == "integer" or question.type == "string"
+               or question.type == "float" %}
                 <h5> <u>Correct Answer:</u></h5>
                     {% for testcase in question.get_test_cases %}
                     <strong>{{ testcase.correct|safe }}</strong>
@@ -96,15 +97,14 @@ User IP address: {{ paper.user_ip }}
     {% if question.type != "code" %}
         {% if "Correct answer" in answers.0.error_list %}
             <div class="panel panel-success">
+            <div class="panel-heading"><strong>Correct</strong></div>
         {% else %}
             <div class="panel panel-danger">
+            <div class="panel-heading"><strong> Incorrect</strong></div>
         {% endif %}
-            <div class="panel-heading">
-                Autocheck: {{ answers.0.error_list.0 }}
-            </div>
             <div class="panel-body">
                 <h5><u>Student answer:</u></h5>
-                {% if question.type == "mcc"%}
+        {% if question.type == "mcc"%}
         <div class="well well-sm">
         {% for testcases in question.get_test_cases %}
         {%if testcases.id|stringformat:"i" in answers.0.answer|safe %}
@@ -124,9 +124,9 @@ User IP address: {{ paper.user_ip }}
                  <div class="well well-sm">
                  {{ answers.0.answer|safe }}
                  </div>
-            </div>
-            </div>
         {% endif %}
+            </div>
+        </div>
     {% else %}
     <h5>Student answer: </h5>
     {% for answer in answers %}

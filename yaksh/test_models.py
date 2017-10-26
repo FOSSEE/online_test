@@ -163,7 +163,20 @@ class QuestionTestCases(unittest.TestCase):
                            "summary": "Yaml Demo",
                            "tags": ['yaml_demo']
                            }]
+        questions_data_with_missing_fields = [{"active": True,
+                                               "points": 1.0,
+                                               "description":\
+                                                "factorial of a no",
+                                               "language": "Python",
+                                               "type": "Code",
+                                               "testcase":\
+                                                self.test_case_upload_data,
+                                               "summary": "Yaml Demo 2"
+                                               }]
         self.yaml_questions_data = yaml.safe_dump_all(questions_data)
+        self.yaml_questions_data_with_missing_fields = yaml.safe_dump_all(
+                questions_data_with_missing_fields
+                )
 
     def tearDown(self):
         shutil.rmtree(self.load_tmp_path)
@@ -213,12 +226,15 @@ class QuestionTestCases(unittest.TestCase):
                 self.assertEqual(self.question2.points, q['points'])
                 self.assertTrue(self.question2.active)
                 self.assertEqual(self.question2.snippet, q['snippet'])
-                self.assertEqual(os.path.basename(que_file.file.path), q['files'][0][0])
-                self.assertEqual([case.get_field_value() for case in test_case], q['testcase'])
+                self.assertEqual(os.path.basename(que_file.file.path),
+                                                  q['files'][0][0])
+                self.assertEqual([case.get_field_value() for case in test_case],
+                                 q['testcase']
+                                 )
         for file in zip_file.namelist():
             os.remove(os.path.join(tmp_path, file))
 
-    def test_load_questions(self):
+    def test_load_questions_with_all_fields(self):
         """ Test load questions into database from Yaml """
         question = Question()
         result = question.load_questions(self.yaml_questions_data, self.user1)
@@ -231,12 +247,38 @@ class QuestionTestCases(unittest.TestCase):
         self.assertEqual(question_data.description, 'factorial of a no')
         self.assertEqual(question_data.points, 1.0)
         self.assertTrue(question_data.active)
+        tags = question_data.tags.all().values_list("name",flat=True)
+        self.assertListEqual(list(tags), ['yaml_demo'])
         self.assertEqual(question_data.snippet, 'def fact()')
         self.assertEqual(os.path.basename(file.file.path), "test.txt")
         self.assertEqual([case.get_field_value() for case in test_case],
                          self.test_case_upload_data
                          )
 
+    def test_load_questions_with_missing_fields(self):
+        """ Test load questions into database from Yaml with
+            missing fields like files, snippet and tags. """
+        question = Question()
+        result = question.load_questions(
+                            self.yaml_questions_data_with_missing_fields,
+                            self.user1
+                            )
+        question_data = Question.objects.get(summary="Yaml Demo 2")
+        file = FileUpload.objects.filter(question=question_data)
+        test_case = question_data.get_test_cases()
+        self.assertEqual(question_data.summary,'Yaml Demo 2')
+        self.assertEqual(question_data.language,'Python')
+        self.assertEqual(question_data.type, 'Code')
+        self.assertEqual(question_data.description,'factorial of a no')
+        self.assertEqual(question_data.points, 1.0)
+        self.assertTrue(question_data.active)
+        self.assertEqual(question_data.snippet,'')
+        self.assertListEqual(list(file),[])
+        self.assertEqual([case.get_field_value() for case in test_case],
+                         self.test_case_upload_data
+                         )
+        tags = question_data.tags.all().values_list("name",flat=True)
+        self.assertListEqual(list(tags), [])
 
 ###############################################################################
 class QuizTestCases(unittest.TestCase):
@@ -560,13 +602,20 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.quiz = Quiz.objects.get(description='demo quiz 1')
         self.question_paper = QuestionPaper(quiz=self.quiz, total_marks=3)
         self.question_paper.save()
-        self.questions = Question.objects.all()[0:4]
+        self.quiz2 = Quiz.objects.get(description='demo quiz 2')
+        self.qtn_paper_with_single_question = QuestionPaper(
+            quiz=self.quiz2, total_marks=3
+        )
+        self.qtn_paper_with_single_question.save()
+
+        all_questions = Question.objects.all()
+        self.questions = all_questions[0:3]
         self.start_time = timezone.now()
         self.end_time = self.start_time + timedelta(minutes=20)
-        self.question1 = self.questions[0]
-        self.question2 = self.questions[1]
-        self.question3 = self.questions[2]
-        self.question4 = self.questions[3]
+        self.question1 = all_questions[0]
+        self.question2 = all_questions[1]
+        self.question3 = all_questions[2]
+        self.question4 = all_questions[3]
 
         # create answerpaper
         self.answerpaper = AnswerPaper(user=self.user,
@@ -615,6 +664,33 @@ class AnswerPaperTestCases(unittest.TestCase):
             answer="answer1", correct=False, error=json.dumps([])
         )
         self.answerpaper.answers.add(self.answer1)
+
+        # create an answerpaper with only one question
+        self.answerpaper_single_question = AnswerPaper(user=self.user,
+            question_paper=self.question_paper,
+            start_time=self.start_time,
+            end_time=self.end_time,
+            user_ip=self.ip
+        )
+        self.attempted_papers = AnswerPaper.objects.filter(
+            question_paper=self.question_paper,
+            user=self.user
+        )
+        self.qtn_paper_with_single_question.fixed_questions.add(self.question4)
+        already_attempted = self.attempted_papers.count()
+        self.answerpaper_single_question.attempt_number = already_attempted + 1
+        self.answerpaper_single_question.save()
+        self.answerpaper_single_question.questions.add(self.question4)
+        self.answerpaper_single_question.questions_unanswered.add(self.question4)
+        self.answerpaper_single_question.save()
+        # answers for the Answer Paper
+        self.single_answer = Answer(question=self.question4,
+            answer="Demo answer",
+            correct=True, marks=1,
+            error=json.dumps([])
+        )
+        self.single_answer.save()
+        self.answerpaper.answers.add(self.single_answer)
 
         self.question1.language = 'python'
         self.question1.test_case_type = 'standardtestcase'
@@ -699,6 +775,47 @@ class AnswerPaperTestCases(unittest.TestCase):
         score = self.answerpaper.get_per_question_score(question_id)
         # Then
         self.assertEqual(score, expected_score)
+
+    def test_returned_question_is_not_none(self):
+        # Test add_completed_question and next_question
+        # When all questions are answered
+
+        # Before questions are answered
+        self.assertEqual(self.answerpaper_single_question.questions_left(), 1)
+
+        current_question = self.answerpaper_single_question.add_completed_question(
+            self.question4.id
+        )
+
+
+        # Then
+        self.assertEqual(
+            self.answerpaper_single_question.questions_answered.all()[0],
+            self.question4
+        )
+        self.assertEqual(self.answerpaper_single_question.questions_left(), 0)
+        self.assertIsNotNone(current_question)
+        self.assertEqual(current_question.summary, "Q4")
+
+        # When
+        next_question = self.answerpaper_single_question.next_question(
+            self.question4.id
+        )
+
+        # Then
+        self.assertEqual(self.answerpaper_single_question.questions_left(), 0)
+        self.assertIsNotNone(next_question)
+        self.assertEqual(next_question.summary, "Q4")
+
+        # When
+        current_question = self.answerpaper_single_question.get_current_question(
+            self.answerpaper_single_question.questions.all()
+        )
+
+        # Then
+        self.assertEqual(self.answerpaper_single_question.questions_left(), 0)
+        self.assertIsNotNone(current_question)
+        self.assertEqual(current_question.summary, "Q4")
 
     def test_validate_and_regrade_mcc_correct_answer(self):
         # Given
@@ -830,6 +947,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Test completed_question() method of Answer Paper
 
         question = self.answerpaper.add_completed_question(self.question1.id)
+        self.assertIsNotNone(question)
         self.assertEqual(self.answerpaper.questions_left(), 2)
 
         # Test next_question() method of Answer Paper
@@ -861,7 +979,6 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(next_question_id is not None)
-
         self.assertEqual(next_question_id.summary, "Question1")
 
         # Given, last question in the list
@@ -895,11 +1012,12 @@ class AnswerPaperTestCases(unittest.TestCase):
         # When all questions are answered
 
         current_question = self.answerpaper.add_completed_question(
-                                            self.question2.id
-                                            )
+            self.question2.id
+        )
 
         # Then
         self.assertEqual(self.answerpaper.questions_left(), 1)
+        self.assertIsNotNone(current_question)
         self.assertEqual(current_question.summary, "Question3")
 
         # When
@@ -909,6 +1027,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Then
         self.assertEqual(self.answerpaper.questions_left(), 0)
+        self.assertIsNotNone(current_question)
         self.assertTrue(current_question == self.answerpaper.questions.all()[0])
 
         # When
@@ -942,7 +1061,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         first_answer_obj = first_answer['answer']
         self.assertEqual(first_answer_obj.answer, 'Demo answer')
         self.assertTrue(first_answer_obj.correct)
-        self.assertEqual(len(answered), 2)
+        self.assertEqual(len(answered), 3)
 
     def test_is_answer_correct(self):
         self.assertTrue(self.answerpaper.is_answer_correct(self.questions[0]))

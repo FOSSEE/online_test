@@ -83,6 +83,7 @@ function ajax_check_code(url, method_type, data_type, data, uid) {
 }
 
 var global_editor = {};
+
 $(document).ready(function(){
   // Codemirror object, language modes and initial content
   // Get the textarea node
@@ -113,14 +114,17 @@ $(document).ready(function(){
   // Setting code editors initial content
   global_editor.editor.setValue(init_val);
 
-  function reset_editor() {
+  $('#code').submit(function(e) {
+    lock_screen();
+    var data = $(this).serializeArray();
+    ajax_check_code($(this).attr("action"), "POST", "html", data, null)
+        e.preventDefault(); // To stop the default form submission.
+  });
+
+  reset_editor = function() {
       global_editor.editor.setValue(init_val);
       global_editor.editor.clearHistory();
   }
-    $('#code').submit(function(e) {
-      lock_screen();
-      var data = $(this).serializeArray();
-      ajax_check_code($(this).attr("action"), "POST", "html", data, null)
-          e.preventDefault(); // To stop the default form submission.
-    });
+
+
 });
