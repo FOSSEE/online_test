@@ -91,17 +91,31 @@
       {% if not error.type %}
       <pre><code> {{error|safe}} </code></pre>
       {% elif error.type == 'assertion' %}
-            We tried the calling your function with the following test case:<br/>
-            <pre><code><strong>{{error.test_case}}</strong></code></pre>  
-        <table>
-          <tr> But the following error took place: </tr>
-          <tr>
-            <td>Exception Name</td>
+            {% if error.test_case %}
+      <table class="table table-bordered">
+          <col width="30%">
+            <tr class = "active">
+            <td> We tried calling your function with the following test case:</td>
+              <td><code><strong>{{error.test_case}}</strong></code></td>
+            </tr>
+         </table>
+            {% endif %}
+          <p> <b>The following error took place: </b></p>
+        <table class="table table-bordered" width="100%">
+          <col width="30%">
+            <tr class = "active">
+            <td><b>Exception Name: </b></td>
             <td><mark style="background-color:#ff9999;">{{error.exception}}</mark>
           </td>  
           </tr>
           <tr>
-            <td>Exception Message</td><td>{{error.message}}</td>
+            <td><b>Exception Message: </b></td><td>{{error.message}}</td>
+          </tr>
+          <tr>
+            {% if error.traceback %}
+            <td><b>Full exception: </b></td>
+            <td><pre>{{error.traceback}}</pre></td>
+            {% endif %}
           </tr>
         </table>
       {% elif error.type == 'stdio' %}

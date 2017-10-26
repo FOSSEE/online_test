@@ -75,23 +75,23 @@ class PythonAssertionEvaluator(BaseEvaluator):
         except TimeoutException:
             raise
         except AssertionError:
-            type, _, tb = sys.exc_info()
-            tb_info = traceback.extract_tb(tb)
-            filename, line, func, text = tb_info[-1]
+            exc_type, exc_value, exc_tb = sys.exc_info()
             value = "Expected answer from the test case didnt match the output"
             err = {"type": "assertion",
                     "test_case": self.test_case,
-                    "exception": type.__name__,
-                    "message": value
+                    "exception": exc_type.__name__,
+                    "message": value,
                     }
         except Exception:
-            type, value, tb = sys.exc_info()
-            tb_info = traceback.extract_tb(tb)
-            filename, line, func, text = tb_info[-1]
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
+            if len(tb_list) > 2:
+                del tb_list[1:3]
+            
             err = {"type": "assertion",
-                    "test_case": self.test_case,
-                    "exception": type.__name__,
-                    "message": str(value)
+                    "traceback": "".join(tb_list),
+                    "exception": exc_type.__name__,
+                    "message": str(exc_value)
                     }   
 
         else:
