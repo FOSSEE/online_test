@@ -1335,6 +1335,7 @@ def download_quiz_csv(request, course_id, quiz_id):
                 = 'answerpaper.get_per_question_score({0})'.format(question.id) 
     csv_fields_values.update(questions_scores)
 
+    users = users.exclude(id=course.creator.id).exclude(id__in=course.teachers.all())
     for user in users:
         row = []
         answerpaper = None
