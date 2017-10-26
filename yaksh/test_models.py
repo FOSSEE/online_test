@@ -388,14 +388,14 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.question_paper_fixed_questions = QuestionPaper.objects.create(
                 quiz=self.quiz)
         self.question_paper_fixed_questions.fixed_questions.add(
-                self.questions.get(id=1), self.questions.get(id=10))
+                self.questions.get(id=11), self.questions.get(id=10))
 
         # create question paper with only random questions
         self.question_paper_random_questions = QuestionPaper.objects.create(
                 quiz=self.quiz)
         self.question_set_random = QuestionSet.objects.create(marks=2,
             num_questions=2)
-        self.question_set_random.questions.add(self.questions.get(id=3),
+        self.question_set_random.questions.add(self.questions.get(id=13),
                 self.questions.get(id=5), self.questions.get(id=7))
         self.question_paper_random_questions.random_questions.add(
                 self.question_set_random)
@@ -472,7 +472,7 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.assertSequenceEqual(questions, question_bank)
 
         # Given
-        ids = [1, 10]
+        ids = [11, 10]
         questions = list(Question.objects.filter(id__in=ids))
         # When
         question_bank = self.question_paper_fixed_questions.get_question_bank()
@@ -480,7 +480,7 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.assertSequenceEqual(questions, question_bank)
 
         # Given
-        ids = [3, 5, 7]
+        ids = [13, 5, 7]
         questions = list(Question.objects.filter(id__in=ids))
         # When
         question_bank = self.question_paper_random_questions.get_question_bank()
@@ -647,17 +647,10 @@ class AnswerPaperTestCases(unittest.TestCase):
             marks=0,
             error=json.dumps(['error1', 'error2'])
         )
-        self.answer_correct = Answer(question=self.question4,
-            answer="correct answer",
-            correct=True, marks=1,
-            error=json.dumps([])
-        )
         self.answer_right.save()
         self.answer_wrong.save()
-        self.answer_correct.save()
         self.answerpaper.answers.add(self.answer_right)
         self.answerpaper.answers.add(self.answer_wrong)
-        self.answerpaper.answers.add(self.answer_correct)
 
         self.answer1 = Answer.objects.create(
             question=self.question1,
@@ -690,7 +683,7 @@ class AnswerPaperTestCases(unittest.TestCase):
             error=json.dumps([])
         )
         self.single_answer.save()
-        self.answerpaper.answers.add(self.single_answer)
+        self.answerpaper_single_question.answers.add(self.single_answer)
 
         self.question1.language = 'python'
         self.question1.test_case_type = 'standardtestcase'
@@ -756,7 +749,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         question_id = self.question4.id
         expected_score = 1
         # When
-        score = self.answerpaper.get_per_question_score(question_id)
+        score = self.answerpaper_single_question.get_per_question_score(question_id)
         # Then
         self.assertEqual(score, expected_score)
 
@@ -1061,7 +1054,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         first_answer_obj = first_answer['answer']
         self.assertEqual(first_answer_obj.answer, 'Demo answer')
         self.assertTrue(first_answer_obj.correct)
-        self.assertEqual(len(answered), 3)
+        self.assertEqual(len(answered), 2)
 
     def test_is_answer_correct(self):
         self.assertTrue(self.answerpaper.is_answer_correct(self.questions[0]))
