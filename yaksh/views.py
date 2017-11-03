@@ -1406,7 +1406,6 @@ def view_profile(request):
 
 
 @login_required
-@has_profile
 @email_verified
 def edit_profile(request):
     """ edit profile details facility for moderator and students """
@@ -1418,7 +1417,10 @@ def edit_profile(request):
     else:
         template = 'user.html'
     context = {'template': template}
-    profile = Profile.objects.get(user_id=user.id)
+    try:
+        profile = Profile.objects.get(user_id=user.id)
+    except Profile.DoesNotExist:
+        profile = None
 
     if request.method == 'POST':
         form = ProfileForm(request.POST, user=user, instance=profile)
