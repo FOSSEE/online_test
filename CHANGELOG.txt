@@ -12,6 +12,7 @@
 * Fixed a bug that did not allow expected input in Standard I/O type question to be none.
 * UI changes in grade user, view answerpaper and monitor pages.
 * Fixed a bug that would require shebang to be put in for Bash assertion based questions.
+* Added a Datetime Picker to Add Course Page
 
 === 0.6.0 (11-05-2017) ===
 
