@@ -1,4 +1,4 @@
-from yaksh.compare_stdio import compare_outputs
+from yaksh.error_messages import compare_outputs
 
 def test_compare_outputs():
     exp = "5\n5\n"

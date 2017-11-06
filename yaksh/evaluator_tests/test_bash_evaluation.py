@@ -104,7 +104,9 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assert_correct_output(self.timeout_msg, result.get("error"))
+        self.assert_correct_output(self.timeout_msg,
+                                   result.get("error")[0]["message"]
+                                   )
         parent_proc = Process(os.getpid()).children()
         if parent_proc:
             children_procs = Process(parent_proc[0].pid)
@@ -533,7 +535,9 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assert_correct_output(self.timeout_msg, result.get('error'))
+        self.assert_correct_output(self.timeout_msg,
+                                   result.get("error")[0]["message"]
+                                   )
         parent_proc = Process(os.getpid()).children()
         if parent_proc:
             children_procs = Process(parent_proc[0].pid)
