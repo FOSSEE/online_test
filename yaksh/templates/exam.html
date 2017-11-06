@@ -80,6 +80,7 @@
                 {% block main %}
                 {% endblock %}
             </div>
+            <br/>
             {% if question.type == 'code' or question.type == 'upload' %}
                 {% if error_message %}
                     <div class="row" id="error_panel">
@@ -92,28 +93,22 @@
       <pre><code> {{error|safe}} </code></pre>
       {% elif error.type == 'assertion' %}
             {% if error.test_case %}
-      <table class="table table-bordered">
-          <col width="30%">
-            <tr class = "active">
-            <td> We tried calling your function with the following test case:</td>
-              <td><code><strong>{{error.test_case}}</strong></code></td>
-            </tr>
-         </table>
+      <strong> We tried you code with the following test case:</strong><br/></br>
+              <pre><code><strong style="color:#d9534f">{{error.test_case}}</strong></code></pre>
             {% endif %}
           <p> <b>The following error took place: </b></p>
         <table class="table table-bordered" width="100%">
           <col width="30%">
             <tr class = "active">
             <td><b>Exception Name: </b></td>
-            <td><mark style="background-color:#ff9999;">{{error.exception}}</mark>
-          </td>  
+            <td><span style="color: #d9534f">{{error.exception}}</span></td>
           </tr>
           <tr>
             <td><b>Exception Message: </b></td><td>{{error.message}}</td>
           </tr>
           <tr>
             {% if error.traceback %}
-            <td><b>Full exception: </b></td>
+            <td><b>Full Traceback: </b></td>
             <td><pre>{{error.traceback}}</pre></td>
             {% endif %}
           </tr>

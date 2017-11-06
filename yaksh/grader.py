@@ -21,7 +21,7 @@ except ImportError:
 # Local imports
 from .settings import SERVER_TIMEOUT
 from .language_registry import create_evaluator_instance
-
+from .error_messages import prettify_exceptions
 
 MY_DIR = abspath(dirname(__file__))
 registry = None
@@ -141,7 +141,8 @@ class Grader(object):
             for idx, test_case_instance in enumerate(test_case_instances):
                 test_case_success = False
                 test_case_instance.compile_code()
-                test_case_success, err, mark_fraction = test_case_instance.check_code()
+                eval_result = test_case_instance.check_code()
+                test_case_success, err, mark_fraction = eval_result
                 if test_case_success:
                     weight += mark_fraction * test_case_instance.weight
                 else:
@@ -154,7 +155,10 @@ class Grader(object):
                 test_case_instance.teardown()
 
         except TimeoutException:
-            error.append(self.timeout_msg)
+            error.append(prettify_exceptions("TimeoutException",
+                                             self.timeout_msg
+                                             )
+                         )
         except OSError:
             msg = traceback.format_exc(limit=0)
             error.append("Error: {0}".format(msg))
@@ -163,7 +167,11 @@ class Grader(object):
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
             if len(tb_list) > 2:
                 del tb_list[1:3]
-            error.append("Error: {0}".format("".join(tb_list)))
+            error.append(prettify_exceptions(exc_type.__name__,
+                                         str(exc_value),
+                                         "".join(tb_list),
+                                         )
+                         )
         finally:
             # Set back any original signal handler.
             set_original_signal_handler(prev_handler)

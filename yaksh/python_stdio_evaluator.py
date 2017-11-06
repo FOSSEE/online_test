@@ -9,7 +9,7 @@ except ImportError:
 # Local imports
 from .file_utils import copy_files, delete_files
 from .base_evaluator import BaseEvaluator
-from .compare_stdio import compare_outputs
+from .error_messages import compare_outputs
 
 
 @contextmanager

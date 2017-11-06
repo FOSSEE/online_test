@@ -11,6 +11,7 @@ import importlib
 from .file_utils import copy_files, delete_files
 from .base_evaluator import BaseEvaluator
 from .grader import TimeoutException
+from .error_messages import prettify_exceptions
 
 
 class PythonAssertionEvaluator(BaseEvaluator):
@@ -74,26 +75,16 @@ class PythonAssertionEvaluator(BaseEvaluator):
             exec(_tests, self.exec_scope)
         except TimeoutException:
             raise
-        except AssertionError:
-            exc_type, exc_value, exc_tb = sys.exc_info()
-            value = "Expected answer from the test case didnt match the output"
-            err = {"type": "assertion",
-                    "test_case": self.test_case,
-                    "exception": exc_type.__name__,
-                    "message": value,
-                    }
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
             if len(tb_list) > 2:
                 del tb_list[1:3]
-            
-            err = {"type": "assertion",
-                    "traceback": "".join(tb_list),
-                    "exception": exc_type.__name__,
-                    "message": str(exc_value)
-                    }   
-
+            err = prettify_exceptions(exc_type.__name__,
+                                      str(exc_value),
+                                      "".join(tb_list),
+                                      self.test_case
+                                      )
         else:
             success = True
             err = None
