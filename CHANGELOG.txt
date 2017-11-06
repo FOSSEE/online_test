@@ -12,7 +12,7 @@
 * Fixed a bug that did not allow expected input in Standard I/O type question to be none.
 * UI changes in grade user, view answerpaper and monitor pages.
 * Fixed a bug that would require shebang to be put in for Bash assertion based questions.
-* Latest Course will be shown on top of Courses Page.
+* Updated Courses Page to show Active Courses on top.
 
 === 0.6.0 (11-05-2017) ===
 
