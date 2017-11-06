@@ -2,7 +2,7 @@ import shutil
 import os
 import zipfile
 import tempfile
-
+import csv
 
 def copy_files(file_paths):
     """ Copy Files to current directory, takes
@@ -49,4 +49,31 @@ def extract_files(zip_file, path=None):
         zip_file.extractall(extract_path)
         zip_file.close()
         return zfiles, extract_path
+
+
+def is_csv(document):
+    try:
+        try:
+            content = document.read(1024).decode('utf-8')
+        except AttributeError:
+            document.seek(0)
+            content = document.read(1024)
+        sniffer = csv.Sniffer()
+        dialect = sniffer.sniff(content)
+        document.seek(0)
+    except (csv.Error, UnicodeDecodeError):
+        return False
+    return True
+
+
+def headers_present(dict_reader, headers):
+    fields = dict_reader.fieldnames
+    clist = set()
+    for field in fields:
+        if field.strip() in headers.keys():
+            headers[field.strip()] = field
+            clist.add(field.strip())
+    if  clist != headers.keys():
+        return False
+    return True
 

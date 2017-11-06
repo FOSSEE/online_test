@@ -41,6 +41,18 @@
         <a href="{{URL_ROOT}}/exam/manage/send_mail/{{ course.id }}/">
         Send Mail</a>
         </li>
+        <li>
+            <form id="upload_users" action="{{ URL_ROOT }}/exam/manage/upload_users/{{course.id}}/"
+                method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="file" name="csv_file" />
+                <button class="btn btn-primary" type=submit> Upload Users <span class="glyphicon glyphicon-open"/></button>
+            </form>
+            <div class="alert alert-info" role="alert">
+                The uploaded csv should have headers exactly same as mentioned below:<br>
+                <b>firstname, lastname, email</b>
+            </div>
+        </li>
       </ul>
     </div>
 </div>
@@ -51,6 +63,13 @@
         <center>
         <strong> {{ message }} </strong>
         </center>
+        </div>
+        {% endif %}
+        {% if upload_details %}
+        <div class="alert alert-info" role="info">
+            {% for detail in upload_details %}
+            <strong> {{ detail }} </strong><br>
+            {% endfor %}
         </div>
         {% endif %}
         {% if state == 'mail' %}
@@ -218,6 +237,7 @@
         {% endif %}
     </div>
 </div>
+
 <!-- Dialog to display error message -->
 <div id="dialog" title="Alert">
   <p id="error_msg"></p>
