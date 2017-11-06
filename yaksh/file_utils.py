@@ -68,12 +68,12 @@ def is_csv(document):
 
 def headers_present(dict_reader, headers):
     fields = dict_reader.fieldnames
-    clist = set()
+    header_fields = set()
     for field in fields:
         if field.strip() in headers.keys():
             headers[field.strip()] = field
-            clist.add(field.strip())
-    if  clist != headers.keys():
+            header_fields.add(field.strip())
+    if  header_fields != set(headers.keys()):
         return False
     return True
 
