@@ -167,19 +167,18 @@ To install this app follow the steps below:
 
 #### Using Dockerized Code Server
 
- 1. Install [Docker] (https://github.com/FOSSEE/online_test/blob/master/README.md)
+ 1. Install [Docker](https://github.com/FOSSEE/online_test/blob/master/README.md)
 
  1. Got to the directory where the project is located
         cd /path/to/online_test
 
  1. Create a docker image. This may take a few minutes
-        docker build -t yaksha:v1 .
+        docker build -t yaksh_code_server .
 
  1. Check if the image has been created using the output of,
         docker images
 
- 1. Run a container using the newly created image.
-        sudo docker run -d -p 53579:53579 -p 8001:8001 yaksha:v1
+ 1. Run the invoke script using the command ```invoke start```
     The command will create and run a new docker container (that is running the code_server.py within it), it will also bind the ports of the host with those of the container
 
 #### Additional commands available
