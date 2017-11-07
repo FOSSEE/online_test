@@ -2749,7 +2749,7 @@ def _update_unit_status(course_id, user, unit):
 
 @login_required
 @email_verified
-def download_questionpaper(request, questionpaper_id):
+def preview_questionpaper(request, questionpaper_id):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
@@ -2760,5 +2760,5 @@ def download_questionpaper(request, questionpaper_id):
     }
 
     return my_render_to_response(
-        'yaksh/download_questionpaper.html', context
+        'yaksh/preview_questionpaper.html', context
     )
