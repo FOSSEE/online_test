@@ -792,8 +792,10 @@ def courses(request):
     ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
-    courses = Course.objects.filter(creator=user, is_trial=False)
-    allotted_courses = Course.objects.filter(teachers=user, is_trial=False)
+    courses = Course.objects.filter(
+        creator=user, is_trial=False).order_by('-active', '-id')
+    allotted_courses = Course.objects.filter(
+        teachers=user, is_trial=False).order_by('-active', '-id')
     context = {'courses': courses, "allotted_courses": allotted_courses}
     return my_render_to_response('yaksh/courses.html', context,
                                  context_instance=ci)
@@ -1406,7 +1408,6 @@ def view_profile(request):
 
 
 @login_required
-@has_profile
 @email_verified
 def edit_profile(request):
     """ edit profile details facility for moderator and students """
@@ -1418,7 +1419,10 @@ def edit_profile(request):
     else:
         template = 'user.html'
     context = {'template': template}
-    profile = Profile.objects.get(user_id=user.id)
+    try:
+        profile = Profile.objects.get(user_id=user.id)
+    except Profile.DoesNotExist:
+        profile = None
 
     if request.method == 'POST':
         form = ProfileForm(request.POST, user=user, instance=profile)
