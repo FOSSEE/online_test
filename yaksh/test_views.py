@@ -196,6 +196,38 @@ class TestProfile(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/profile_updated.html')
 
+    def test_edit_profile_post_for_user_without_profile(self):
+        """
+        POST request to edit_profile view should update the user's profile
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.post(reverse('yaksh:edit_profile'),
+            data={
+                'user': self.user1,
+                'first_name': 'new_first_name',
+                'last_name': 'new_last_name',
+                'roll_number': 21,
+                'institute': 'new_institute',
+                'department': 'Aerospace',
+                'position': 'new_position',
+                'timezone': 'UTC'
+            }
+        )
+        updated_profile_user = User.objects.get(id=self.user1.id)
+        updated_profile = Profile.objects.get(user=updated_profile_user)
+        self.assertEqual(updated_profile_user.first_name, 'new_first_name')
+        self.assertEqual(updated_profile_user.last_name, 'new_last_name')
+        self.assertEqual(updated_profile.roll_number, '21')
+        self.assertEqual(updated_profile.institute, 'new_institute')
+        self.assertEqual(updated_profile.department, 'Aerospace')
+        self.assertEqual(updated_profile.position, 'new_position')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/profile_updated.html')
+
     def test_edit_profile_get(self):
         """
         GET request to edit profile should display profile form
