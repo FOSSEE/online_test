@@ -23,7 +23,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     AssignmentUpload, FileUpload, McqTestCase, IntegerTestCase, StringTestCase,\
-    FloatTestCase
+    FloatTestCase, FIXTURES_DIR_PATH
 from yaksh.decorators import user_has_profile
 
 
@@ -3201,7 +3201,7 @@ class TestShowQuestions(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        ques_file = os.path.join(settings.FIXTURE_DIRS, "demo_questions.zip")
+        ques_file = os.path.join(FIXTURES_DIR_PATH, "demo_questions.zip")
         f = open(ques_file, 'rb')
         questions_file = SimpleUploadedFile(ques_file, f.read(), 
                                             content_type="application/zip")
