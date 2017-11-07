@@ -840,6 +840,13 @@ class QuestionPaper(models.Model):
 
     objects = QuestionPaperManager()
 
+    def get_question_bank(self):
+        ''' Gets all the questions in the question paper'''
+        questions = list(self.fixed_questions.all())
+        for random_set in self.random_questions.all():
+            questions += list(random_set.questions.all())
+        return questions
+
     def _create_duplicate_questionpaper(self, quiz):
         new_questionpaper = QuestionPaper.objects.create(quiz=quiz,
             shuffle_questions=self.shuffle_questions,
@@ -1200,6 +1207,15 @@ class AnswerPaper(models.Model):
     questions_order = models.TextField(blank=True, default='')
 
     objects = AnswerPaperManager()
+
+    def get_per_question_score(self, question_id):
+        if question_id not in self.get_questions().values_list('id', flat=True):
+            return 'NA'
+        answer = self.get_latest_answer(question_id)
+        if answer:
+            return  answer.marks
+        else:
+            return 0
 
     def current_question(self):
         """Returns the current active question to display."""

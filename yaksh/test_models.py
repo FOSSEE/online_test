@@ -384,6 +384,26 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.questions = Question.objects.filter(active=True)
         self.quiz = Quiz.objects.get(description="demo quiz 1")
 
+        # create question paper with only fixed questions
+        self.question_paper_fixed_questions = QuestionPaper.objects.create(
+                quiz=self.quiz)
+        self.question_paper_fixed_questions.fixed_questions.add(
+                self.questions.get(summary='Q11'), self.questions.get(summary='Q10'))
+
+        # create question paper with only random questions
+        self.question_paper_random_questions = QuestionPaper.objects.create(
+                quiz=self.quiz)
+        self.question_set_random = QuestionSet.objects.create(marks=2,
+            num_questions=2)
+        self.question_set_random.questions.add(self.questions.get(summary='Q13'),
+                self.questions.get(summary='Q5'), self.questions.get(summary='Q7'))
+        self.question_paper_random_questions.random_questions.add(
+                self.question_set_random)
+
+        # create question paper with no questions
+        self.question_paper_no_questions = QuestionPaper.objects.create(
+                quiz=self.quiz)
+
         # create question paper
         self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
             total_marks=0.0,
@@ -440,6 +460,31 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.questions_list = [self.questions[3].id, self.questions[5].id]
         self.trial_course = Course.objects.create_trial_course(self.user)
         self.trial_quiz = Quiz.objects.create_trial_quiz(self.trial_course, self.user)
+
+
+    def test_get_question_bank(self):
+        # Given
+        summaries = ['Q11', 'Q10']
+        questions = list(Question.objects.filter(summary__in=summaries))
+        # When
+        question_bank = self.question_paper_fixed_questions.get_question_bank()
+        # Then
+        self.assertSequenceEqual(questions, question_bank)
+
+        # Given
+        summaries = ['Q13','Q5','Q7']
+        questions = list(Question.objects.filter(summary__in=summaries))
+        # When
+        question_bank = self.question_paper_random_questions.get_question_bank()
+        # Then
+        self.assertSequenceEqual(questions, question_bank)
+
+        # Given
+        questions = []
+        # When
+        question_bank = self.question_paper_no_questions.get_question_bank()
+        # Then
+        self.assertSequenceEqual(questions, question_bank)
 
     def test_questionpaper(self):
         """ Test question paper"""
@@ -630,7 +675,7 @@ class AnswerPaperTestCases(unittest.TestCase):
             error=json.dumps([])
         )
         self.single_answer.save()
-        self.answerpaper.answers.add(self.single_answer)
+        self.answerpaper_single_question.answers.add(self.single_answer)
 
         self.question1.language = 'python'
         self.question1.test_case_type = 'standardtestcase'
@@ -690,6 +735,31 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.user2_answerpaper2 = self.question_paper.make_answerpaper(
             self.user2, self.ip, 1
         )
+
+    def test_get_per_question_score(self):
+        # Given
+        question_id = self.question4.id
+        expected_score = 1
+        # When
+        score = self.answerpaper_single_question.get_per_question_score(question_id)
+        # Then
+        self.assertEqual(score, expected_score)
+
+        # Given
+        question_id = self.question2.id
+        expected_score = 0
+        # When
+        score = self.answerpaper.get_per_question_score(question_id)
+        # Then
+        self.assertEqual(score, expected_score)
+
+        # Given
+        question_id = 131
+        expected_score = 'NA'
+        # When
+        score = self.answerpaper.get_per_question_score(question_id)
+        # Then
+        self.assertEqual(score, expected_score)
 
     def test_returned_question_is_not_none(self):
         # Test add_completed_question and next_question
@@ -976,7 +1046,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         first_answer_obj = first_answer['answer']
         self.assertEqual(first_answer_obj.answer, 'Demo answer')
         self.assertTrue(first_answer_obj.correct)
-        self.assertEqual(len(answered), 3)
+        self.assertEqual(len(answered), 2)
 
     def test_is_answer_correct(self):
         self.assertTrue(self.answerpaper.is_answer_correct(self.questions[0]))
