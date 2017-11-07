@@ -53,10 +53,11 @@ def extract_files(zip_file, path=None):
 
 def is_csv(document):
     try:
-        content = document.read(1024).decode('utf-8')
-    except AttributeError:
-        document.seek(0)
-        content = document.read(1024)
+        try:
+            content = document.read(1024).decode('utf-8')
+        except AttributeError:
+            document.seek(0)
+            content = document.read(1024)
         sniffer = csv.Sniffer()
         dialect = sniffer.sniff(content)
         document.seek(0)
