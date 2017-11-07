@@ -80,6 +80,10 @@ def add_to_group(users):
             user.groups.add(group)
 
 
+CSV_FIELDS = ['name', 'username', 'roll_number', 'institute', 'department',
+    'questions', 'marks_obtained', 'out_of', 'percentage', 'status']
+
+
 @email_verified
 def index(request, next_url=None):
     """The start page.
@@ -1012,8 +1016,7 @@ def monitor(request, quiz_id=None):
                     attempt_number=last_attempt['last_attempt_num']
                 )
             )
-    csv_fields = ['name', 'username', 'roll_number', 'institute',
-            'department', 'questions', 'total', 'out_of', 'percentage', 'status']
+    csv_fields = CSV_FIELDS
     context = {
         "papers": papers,
         "quiz": quiz,
@@ -1302,8 +1305,7 @@ def download_quiz_csv(request, course_id, quiz_id):
         csv_fields = request.POST.getlist('csv_fields')
         attempt_number = request.POST.get('attempt_number', last_attempt_number)
     if not csv_fields:
-        csv_fields = ['name', 'username', 'roll_number', 'institute',
-                'department', 'questions', 'total', 'out_of', 'percentage', 'status']
+        csv_fields = CSV_FIELDS
     if not attempt_number:
         attempt_number = last_attempt_number
 
@@ -1326,7 +1328,8 @@ def download_quiz_csv(request, course_id, quiz_id):
             'roll_number': 'user.profile.roll_number',
             'institute': 'user.profile.institute',
             'department': 'user.profile.department',
-            'username': 'user.username', 'total': 'answerpaper.marks_obtained',
+            'username': 'user.username',
+            'marks_obtained': 'answerpaper.marks_obtained',
             'out_of': 'question_paper.total_marks',
             'percentage': 'answerpaper.percent', 'status': 'answerpaper.status'}
     questions_scores = {}

@@ -388,15 +388,15 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.question_paper_fixed_questions = QuestionPaper.objects.create(
                 quiz=self.quiz)
         self.question_paper_fixed_questions.fixed_questions.add(
-                self.questions.get(id=11), self.questions.get(id=10))
+                self.questions.get(summary='Q11'), self.questions.get(summary='Q10'))
 
         # create question paper with only random questions
         self.question_paper_random_questions = QuestionPaper.objects.create(
                 quiz=self.quiz)
         self.question_set_random = QuestionSet.objects.create(marks=2,
             num_questions=2)
-        self.question_set_random.questions.add(self.questions.get(id=13),
-                self.questions.get(id=5), self.questions.get(id=7))
+        self.question_set_random.questions.add(self.questions.get(summary='Q13'),
+                self.questions.get(summary='Q5'), self.questions.get(summary='Q7'))
         self.question_paper_random_questions.random_questions.add(
                 self.question_set_random)
 
@@ -464,16 +464,16 @@ class QuestionPaperTestCases(unittest.TestCase):
 
     def test_get_question_bank(self):
         # Given
-        ids = [11, 10]
-        questions = list(Question.objects.filter(id__in=ids))
+        summaries = ['Q11', 'Q10']
+        questions = list(Question.objects.filter(summary__in=summaries))
         # When
         question_bank = self.question_paper_fixed_questions.get_question_bank()
         # Then
         self.assertSequenceEqual(questions, question_bank)
 
         # Given
-        ids = [13, 5, 7]
-        questions = list(Question.objects.filter(id__in=ids))
+        summaries = ['Q13','Q5','Q7']
+        questions = list(Question.objects.filter(summary__in=summaries))
         # When
         question_bank = self.question_paper_random_questions.get_question_bank()
         # Then
