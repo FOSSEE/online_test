@@ -8,4 +8,4 @@ echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | de
 add-apt-repository -y ppa:webupd8team/java && \
 apt-get update && \
 apt-get install -y oracle-java8-installer && \
-apt-get install -y sudo software-properties-common python net-tools git python3-pip vim libmysqlclient-dev scilab build-essential
+apt-get install -y sudo python net-tools git python3-pip vim libmysqlclient-dev scilab build-essential python3-numpy python3-scipy ipython3 ipython3-notebook python3-pandas python3-nose

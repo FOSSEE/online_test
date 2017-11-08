@@ -5,7 +5,7 @@ from yaksh.settings import SERVER_POOL_PORT
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 TARGET_CONTAINER_NAME = 'yaksh_code_server'
-SRC_IMAGE_NAME = 'yaksh_code_server_image'
+SRC_IMAGE_NAME = 'fossee/yaksh_codeserver'
 
 def create_dir(path):
     if not os.path.exists(path):

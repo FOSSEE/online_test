@@ -82,7 +82,7 @@ test_status = (
                 ('completed', 'Completed'),
               )
 
-FIXTURES_DIR_PATH = os.path.join(settings.BASE_DIR, 'yaksh/fixtures/')
+FIXTURES_DIR_PATH = os.path.join(settings.BASE_DIR, 'yaksh', 'fixtures')
 
 
 def get_assignment_dir(instance, filename):
