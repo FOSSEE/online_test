@@ -47,11 +47,17 @@ Quick Start
 
     - Install the dependencies
 
+        - For Python 2 use:
+
+            $ pip install -r ./requirements/requirements-py2.txt
+
+        - For Python 3 (recommended) use:
+
             $ pip install -r ./requirements/requirements-py3.txt
 
 #### Short instructions
 
-1. To see a quick demo after installing yaksh do the following:
+1. To run the application do the following:
 
         $ invoke serve
 
@@ -59,14 +65,14 @@ Quick Start
 
     - To run the code server in a sandboxed docker environment, run the command:
 
-        $ invoke start
+            $ invoke start
 
     - Make sure that you have docker installed on your system beforehand
 
 
     - To run the code server without docker, locally use:
 
-        $ invoke start --unsafe
+            $ invoke start --unsafe
 
     - Note this command will run the yaksh code server locally on your machine
       and is susceptible to malicious code.

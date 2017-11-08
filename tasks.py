@@ -85,6 +85,7 @@ def stop(ctx, container=TARGET_CONTAINER_NAME, hide=True):
     result = ctx.run("sudo docker ps -q --filter='name={0}'".format(container))
     if result.stdout:
         print ("** Discarding the docker container <{0}>".format(container))
+        ctx.run("sudo docker stop {0}".format(container))
         ctx.run("sudo docker rm {0}".format(container))
     else:
         print("** Docker container <{0}> not found **".format(container))
