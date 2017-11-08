@@ -14,7 +14,9 @@ def create_dir(path):
 @task
 def setupdb(ctx):
     print("** Setting up & migrating database **")
+    ctx.run("python manage.py makemigrations")
     ctx.run("python manage.py migrate")
+    ctx.run("python manage.py loaddata demo_fixtures.json")
 
 @task(setupdb)
 def serve(ctx):
