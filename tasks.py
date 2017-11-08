@@ -34,13 +34,14 @@ def getimage(ctx, image=SRC_IMAGE_NAME):
         result = ctx.run("sudo docker inspect {0}".format(image), hide=True)
     except invoke.exceptions.Failure:
         print("The docker image {0} does not exist locally".format(image))
-        print("\nPulling latest image <{0}> from docker hub".format(image))
+        print("\n** Pulling latest image <{0}> from docker hub **".format(image))
         ctx.run("sudo docker pull {0}".format(image))
 
 @task
 def start(ctx, ports=SERVER_POOL_PORT, image=SRC_IMAGE_NAME, unsafe=False):
     if unsafe:
         with ctx.cd(SCRIPT_DIR):
+            print("** Initializing local code server **")
             ctx.run("sudo python -m yaksh.code_server")
     else:
         cmd_params = {'ports': ports,
@@ -55,6 +56,7 @@ def start(ctx, ports=SERVER_POOL_PORT, image=SRC_IMAGE_NAME, unsafe=False):
 
         getimage(ctx, image=SRC_IMAGE_NAME)
 
+        print("** Preparing code server **")
         create_dir(os.path.join(SCRIPT_DIR, 'yaksh_data/data'))
         create_dir(os.path.join(SCRIPT_DIR, 'yaksh_data/output'))
 
@@ -69,6 +71,7 @@ def start(ctx, ports=SERVER_POOL_PORT, image=SRC_IMAGE_NAME, unsafe=False):
             )
         )
 
+        print("** Initializing code server within docker container **")
         ctx.run(
             "sudo docker run \
             -dp {ports}:{ports} --name={name} \
