@@ -38,11 +38,15 @@ def getimage(ctx, image=SRC_IMAGE_NAME):
         ctx.run("sudo docker pull {0}".format(image))
 
 @task
-def start(ctx, ports=SERVER_POOL_PORT, image=SRC_IMAGE_NAME, unsafe=False):
+def start(ctx, ports=SERVER_POOL_PORT, image=SRC_IMAGE_NAME, unsafe=False,
+    version=3):
     if unsafe:
         with ctx.cd(SCRIPT_DIR):
             print("** Initializing local code server **")
-            ctx.run("sudo python -m yaksh.code_server")
+            ctx.run("sudo python{0} -m yaksh.code_server".format(
+                    version
+                )
+            )
     else:
         cmd_params = {'ports': ports,
             'image': SRC_IMAGE_NAME,
