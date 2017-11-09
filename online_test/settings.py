@@ -15,7 +15,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # The directory where user data can be saved.  This directory will be
 # world-writable and all user code will be written and saved here by the
 # code server with each user having their own sub-directory.
-OUTPUT_DIR = os.path.join(BASE_DIR, 'output')
+OUTPUT_DIR = os.path.join(BASE_DIR, "yaksh_data", "output")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -32,8 +32,6 @@ ALLOWED_HOSTS = []
 URL_ROOT = ''
 
 # Application definition
-
-FIXTURE_DIRS = os.path.join(BASE_DIR, "yaksh", "fixtures")
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -100,7 +98,7 @@ SOCIAL_AUTH_LOGIN_ERROR_URL = '/exam/login/'
 
 MEDIA_URL = "/data/"
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "yaksh", "data")
+MEDIA_ROOT = os.path.join(BASE_DIR, "yaksh_data", "data")
 
 # Set this varable to <True> if smtp-server is not allowing to send email.
 EMAIL_USE_TLS = False

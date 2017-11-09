@@ -82,6 +82,8 @@ test_status = (
                 ('completed', 'Completed'),
               )
 
+FIXTURES_DIR_PATH = os.path.join(settings.BASE_DIR, 'yaksh', 'fixtures')
+
 
 def get_assignment_dir(instance, filename):
     upload_dir = instance.question_paper.quiz.description.replace(" ", "_")
@@ -544,7 +546,7 @@ class Question(models.Model):
 
     def create_demo_questions(self, user):
         zip_file_path = os.path.join(
-            settings.FIXTURE_DIRS, 'demo_questions.zip'
+            FIXTURES_DIR_PATH, 'demo_questions.zip'
         )
         files, extract_path = extract_files(zip_file_path)
         self.read_yaml(extract_path, user, files)
@@ -839,6 +841,13 @@ class QuestionPaper(models.Model):
     fixed_question_order = models.CharField(max_length=255, blank=True)
 
     objects = QuestionPaperManager()
+
+    def get_question_bank(self):
+        ''' Gets all the questions in the question paper'''
+        questions = list(self.fixed_questions.all())
+        for random_set in self.random_questions.all():
+            questions += list(random_set.questions.all())
+        return questions
 
     def _create_duplicate_questionpaper(self, quiz):
         new_questionpaper = QuestionPaper.objects.create(quiz=quiz,
@@ -1200,6 +1209,15 @@ class AnswerPaper(models.Model):
     questions_order = models.TextField(blank=True, default='')
 
     objects = AnswerPaperManager()
+
+    def get_per_question_score(self, question_id):
+        if question_id not in self.get_questions().values_list('id', flat=True):
+            return 'NA'
+        answer = self.get_latest_answer(question_id)
+        if answer:
+            return  answer.marks
+        else:
+            return 0
 
     def current_question(self):
         """Returns the current active question to display."""
