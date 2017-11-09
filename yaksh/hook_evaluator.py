@@ -2,13 +2,13 @@
 import sys
 import traceback
 import os
-import signal
 import psutil
 
 # Local imports
 from .file_utils import copy_files, delete_files
 from .base_evaluator import BaseEvaluator
 from .grader import TimeoutException
+from .error_messages import prettify_exceptions
 
 
 class HookEvaluator(BaseEvaluator):
@@ -60,19 +60,32 @@ class HookEvaluator(BaseEvaluator):
         success = False
         mark_fraction = 0.0
         try:
-            tb = None
             _tests = compile(self.hook_code, '<string>', mode='exec')
             hook_scope = {}
             exec(_tests, hook_scope)
             check = hook_scope["check_answer"]
-            success, err, mark_fraction = check(self.user_answer)
+            try:
+                success, err, mark_fraction = check(self.user_answer)
+            except Exception:
+                raise
+
         except TimeoutException:
             processes = psutil.Process(os.getpid()).children(recursive=True)
             for process in processes:
                 process.kill()
             raise
         except Exception:
-            msg = traceback.format_exc(limit=0)
-            err = "Error in Hook code: {0}".format(msg)
-        del tb
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            tb_list = traceback.format_exception(exc_type,
+                                                 exc_value,
+                                                 exc_tb
+                                                 )
+            if len(tb_list) > 2:
+                del tb_list[1:3]
+            err = prettify_exceptions(exc_type.__name__,
+                                      str(exc_value),
+                                      "Error in Hook Code:\n"
+                                        + "".join(tb_list)
+                                      )
+
         return success, err, mark_fraction
