@@ -16,6 +16,7 @@
 * CSV download for quiz attempts enhanced.
 * Updated Courses Page to show Active Courses on top.
 * Added a Datetime Picker to Add Course Page
+* Added invoke script for quickstart and docker deployment
 
 === 0.6.0 (11-05-2017) ===
 

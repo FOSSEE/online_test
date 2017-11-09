@@ -37,56 +37,52 @@ Quick Start
 #### Installation
 
 1. Install yaksh
-    - For latest stable release
+    - Clone the repository
 
-            $ pip install yaksh
+            $ git clone https://github.com/FOSSEE/online_test.git
 
-    - For the development version
+    - Go to the online_test directory
 
-            $ pip install git+https://github.com/FOSSEE/online_test.git
+            $ cd ./online_test
+
+    - Install the dependencies
+
+        - For Python 2 use:
+
+            $ pip install -r ./requirements/requirements-py2.txt
+
+        - For Python 3 (recommended) use:
+
+            $ pip install -r ./requirements/requirements-py3.txt
 
 #### Short instructions
 
-To see a quick demo after installing yaksh do the following:
+1. To run the application do the following:
 
-    $ yaksh create_demo yaksh_demo
-    $ yaksh run yaksh_demo
+        $ invoke serve
 
-On another terminal start up the code server that executes the user code safely:
+    - *Note:* The serve command will run the django application server on the 8000 port
+    and hence this port will be unavailable to other processes.
 
-    $ sudo yaksh run_code_server
+1.  On another terminal start up the code server that executes the user code safely:
 
-Now point your browser to ```http://localhost:8000/exam```.
+    - To run the code server in a sandboxed docker environment, run the command:
 
-#### More detailed instructions
+            $ invoke start
 
-1. On the terminal run:
+    - Make sure that you have Docker installed on your system beforehand.
+    [Docker Installation](https://docs.docker.com/engine/installation/#desktop)
 
-        $ yaksh create_demo [project_path]
 
-    - `project_path` is the desired directory of the django project the
-      basename of which is also the Django project name. This can be a
-      relative directory.
+    - To run the code server without docker, locally use:
 
-    - In case a `project_path` is not specified, the project is created
-      in a `yaksh_demo` subdirectory of the current directory.
+            $ invoke start --unsafe
 
-1. The script does the following;
-    1. Creates a new django project with name as the basename of the specified
-       `project_path`
-    1. Creates a new demo database.
-    1. Creates two users, teacher and student.
-    1. Loads demo questions.
-    1. Loads demo quiz.
+    - Note this command will run the yaksh code server locally on your machine
+      and is susceptible to malicious code. You will have to install the code 
+      server requirements in sudo mode.
 
-1. To run the server, run:
 
-        $ yaksh run relpath/or/abspath/to/demo
-
-1. In a new terminal run the following command which executes user submitted
-   code safely:
-
-        $ sudo yaksh run_code_server
 
 1. Open your browser and open the URL ```http://localhost:8000/exam```
 

@@ -82,6 +82,8 @@ test_status = (
                 ('completed', 'Completed'),
               )
 
+FIXTURES_DIR_PATH = os.path.join(settings.BASE_DIR, 'yaksh', 'fixtures')
+
 
 def get_assignment_dir(instance, filename):
     upload_dir = instance.question_paper.quiz.description.replace(" ", "_")
@@ -544,7 +546,7 @@ class Question(models.Model):
 
     def create_demo_questions(self, user):
         zip_file_path = os.path.join(
-            settings.FIXTURE_DIRS, 'demo_questions.zip'
+            FIXTURES_DIR_PATH, 'demo_questions.zip'
         )
         files, extract_path = extract_files(zip_file_path)
         self.read_yaml(extract_path, user, files)
