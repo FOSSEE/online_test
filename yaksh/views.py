@@ -254,12 +254,19 @@ def add_question(request, question_id=None):
     formsets = []
     for testcase in TestCase.__subclasses__():
         if test_case_type == testcase.__name__.lower():
-            formset = inlineformset_factory(Question, testcase, extra=1,
-                                            fields='__all__')
+            formset = inlineformset_factory(
+                Question, testcase, extra=1, fields='__all__'
+            )
         else:
-            formset = inlineformset_factory(Question, testcase, extra=0,
-                                            fields='__all__')
-        formsets.append(formset(instance=question))
+            formset = inlineformset_factory(
+                Question, testcase, extra=0, fields='__all__'
+            )
+        formsets.append(
+            formset(
+                instance=question,
+                initial=[{'type': test_case_type}]
+            )
+        )
     context = {'qform': qform, 'fileform': fileform, 'question': question,
                'formsets': formsets, 'uploaded_files': uploaded_files}
     return my_render_to_response(
