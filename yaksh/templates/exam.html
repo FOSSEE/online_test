@@ -86,14 +86,14 @@
                     <div class="row" id="error_panel">
       {% for error in error_message %}
               <div class="panel panel-danger">
-      <div class="panel-heading">Testcase No. {{ forloop.counter }}</div>
+      <div class="panel-heading">Error No. {{ forloop.counter }}</div>
       <div class="panel-body">
       <div class="well well-sm">
       {% if not error.type %}
       <pre><code> {{error|safe}} </code></pre>
       {% elif error.type == 'assertion' %}
             {% if error.test_case %}
-      <strong> We tried you code with the following test case:</strong><br/></br>
+      <strong> We tried your code with the following test case:</strong><br/></br>
               <pre><code><strong style="color:#d9534f">{{error.test_case}}</strong></code></pre>
             {% endif %}
           <p> <b>The following error took place: </b></p>

@@ -4,7 +4,6 @@ import traceback
 import os
 import re
 from os.path import join
-from textwrap import dedent
 import importlib
 
 # Local imports
@@ -70,7 +69,6 @@ class PythonAssertionEvaluator(BaseEvaluator):
         success = False
         mark_fraction = 0.0
         try:
-            tb = None
             _tests = compile(self.test_case, '<string>', mode='exec')
             exec(_tests, self.exec_scope)
         except TimeoutException:
@@ -89,5 +87,4 @@ class PythonAssertionEvaluator(BaseEvaluator):
             success = True
             err = None
             mark_fraction = 1.0 if self.partial_grading else 0.0
-        del tb
         return success, err, mark_fraction

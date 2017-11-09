@@ -9,8 +9,8 @@ def prettify_exceptions(exception, message, traceback=None, testcase=None):
            "traceback": traceback,
            "message": message
            }
-    if exception == "RecursionError":
-      err["traceback"] = None
+    if traceback and traceback.count('\n') > 6:
+        err["traceback"] = None
     if exception == 'AssertionError':
         value = ("Expected answer from the"  
                 + " test case did not match the output")
@@ -32,11 +32,11 @@ def _get_incorrect_user_lines(exp_lines, user_lines):
 def compare_outputs(expected_output, user_output, given_input=None):
     given_lines = user_output.splitlines()
     exp_lines = expected_output.splitlines()
-    msg = {"given_input":given_input,
+    msg = {"type": "stdio",
+           "given_input": given_input,
            "expected_output": exp_lines,
-           "user_output":given_lines,
-           "type": "stdio"
-            }
+           "user_output": given_lines
+           }
     ng = len(given_lines)
     ne = len(exp_lines)
     err_line_numbers = _get_incorrect_user_lines(exp_lines, given_lines)
