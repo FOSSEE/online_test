@@ -47,26 +47,26 @@ def start(ctx, ports=SERVER_POOL_PORT, image=SRC_IMAGE_NAME, unsafe=False):
         cmd_params = {'ports': ports,
             'image': SRC_IMAGE_NAME,
             'name': TARGET_CONTAINER_NAME,
-            'vol_mount': os.path.join(SCRIPT_DIR, 'yaksh_data/'),
+            'vol_mount': os.path.join(SCRIPT_DIR, 'yaksh_data'),
             'command': 'sh {0}'.format(
                 os.path.join(SCRIPT_DIR,
-                'yaksh_data/yaksh/scripts/yaksh_script.sh')
+                'yaksh_data', 'yaksh', 'scripts', 'yaksh_script.sh')
             )
         }
 
         getimage(ctx, image=SRC_IMAGE_NAME)
 
         print("** Preparing code server **")
-        create_dir(os.path.join(SCRIPT_DIR, 'yaksh_data/data'))
-        create_dir(os.path.join(SCRIPT_DIR, 'yaksh_data/output'))
+        create_dir(os.path.join(SCRIPT_DIR, 'yaksh_data', 'data'))
+        create_dir(os.path.join(SCRIPT_DIR, 'yaksh_data', 'output'))
 
         ctx.run('cp -r {0} {1}'.format(
-                os.path.join(SCRIPT_DIR, 'yaksh/'),
-                os.path.join(SCRIPT_DIR, 'yaksh_data/')
+                os.path.join(SCRIPT_DIR, 'yaksh'),
+                os.path.join(SCRIPT_DIR, 'yaksh_data')
             )
         )
         ctx.run('cp {0} {1}'.format(
-                os.path.join(SCRIPT_DIR, 'requirements/requirements-codeserver.txt'),
+                os.path.join(SCRIPT_DIR, 'requirements', 'requirements-codeserver.txt'),
                 os.path.join(SCRIPT_DIR, 'yaksh_data')
             )
         )

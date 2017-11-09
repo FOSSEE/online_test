@@ -61,13 +61,17 @@ Quick Start
 
         $ invoke serve
 
+    - *Note:* The serve command will run the django application server on the 8000 port
+    and hence this port will be unavailable to other processes.
+
 1.  On another terminal start up the code server that executes the user code safely:
 
     - To run the code server in a sandboxed docker environment, run the command:
 
             $ invoke start
 
-    - Make sure that you have docker installed on your system beforehand
+    - Make sure that you have Docker installed on your system beforehand.
+    [Docker Installation](https://docs.docker.com/engine/installation/#desktop)
 
 
     - To run the code server without docker, locally use:
@@ -75,7 +79,8 @@ Quick Start
             $ invoke start --unsafe
 
     - Note this command will run the yaksh code server locally on your machine
-      and is susceptible to malicious code.
+      and is susceptible to malicious code. You will have to install the code 
+      server requirements in sudo mode.
 
 
 
