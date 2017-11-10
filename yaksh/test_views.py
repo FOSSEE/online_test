@@ -1792,21 +1792,20 @@ class TestCourseDetail(TestCase):
         self.student.delete()
         self.user1_course.delete()
 
-
     def test_upload_users_with_correct_csv(self):
         # Given
         self.client.login(
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(settings.FIXTURE_DIRS, "users_correct.csv")
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "users_correct.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
 
         # When
         response = self.client.post(reverse('yaksh:upload_users',
-                kwargs={'course_id': self.user1_course.id}),
-                                data={'csv_file': upload_file})
+                                    kwargs={'course_id': self.user1_course.id}),
+                                    data={'csv_file': upload_file})
         csv_file.close()
 
         # Then
@@ -1816,22 +1815,21 @@ class TestCourseDetail(TestCase):
         self.assertIn('upload_details', response.context)
         self.assertTemplateUsed(response, 'yaksh/course_detail.html')
 
-
     def test_upload_users_with_wrong_csv(self):
         # Given
         self.client.login(
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(settings.FIXTURE_DIRS, "demo_questions.zip")
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "demo_questions.zip")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
         message = "The file uploaded is not a CSV file."
 
         # When
         response = self.client.post(reverse('yaksh:upload_users',
-                kwargs={'course_id': self.user1_course.id}),
-                                data={'csv_file': upload_file})
+                                            kwargs={'course_id': self.user1_course.id}),
+                                            data={'csv_file': upload_file})
         csv_file.close()
 
         # Then
@@ -1841,22 +1839,21 @@ class TestCourseDetail(TestCase):
         self.assertEqual(response.context['message'], message)
         self.assertTemplateUsed(response, 'yaksh/course_detail.html')
 
-
     def test_upload_users_csv_with_missing_headers(self):
         # Given
         self.client.login(
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(settings.FIXTURE_DIRS, "users_some_headers_missing.csv")
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "users_some_headers_missing.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
         message = "The CSV file does not contain the required headers"
 
         # When
         response = self.client.post(reverse('yaksh:upload_users',
-                kwargs={'course_id': self.user1_course.id}),
-                                data={'csv_file': upload_file})
+                                            kwargs={'course_id': self.user1_course.id}),
+                                            data={'csv_file': upload_file})
         csv_file.close()
 
         # Then
@@ -1872,14 +1869,14 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(settings.FIXTURE_DIRS, "users_with_no_values.csv")
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "users_with_no_values.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
 
         # When
         response = self.client.post(reverse('yaksh:upload_users',
-                kwargs={'course_id': self.user1_course.id}),
-                                data={'csv_file': upload_file})
+                                            kwargs={'course_id': self.user1_course.id}),
+                                            data={'csv_file': upload_file})
         csv_file.close()
 
         # Then
@@ -1888,7 +1885,6 @@ class TestCourseDetail(TestCase):
         self.assertNotIn('message', response.context)
         self.assertIn("No rows in the CSV file", response.context['upload_details'])
         self.assertTemplateUsed(response, 'yaksh/course_detail.html')
-
 
     def test_upload_users_csv_with_missing_values(self):
         '''
@@ -1908,14 +1904,14 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(settings.FIXTURE_DIRS, "users_some_values_missing.csv")
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "users_some_values_missing.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
 
         # When
         response = self.client.post(reverse('yaksh:upload_users',
-                kwargs={'course_id': self.user1_course.id}),
-                                data={'csv_file': upload_file})
+                                    kwargs={'course_id': self.user1_course.id}),
+                                    data={'csv_file': upload_file})
         csv_file.close()
 
         # Then
@@ -1925,7 +1921,6 @@ class TestCourseDetail(TestCase):
         self.assertIn('upload_details', response.context)
         self.assertNotIn('message', response.context)
         self.assertTemplateUsed(response, 'yaksh/course_detail.html')
-
 
     def test_course_detail_denies_anonymous(self):
         """

@@ -52,6 +52,7 @@ def extract_files(zip_file, path=None):
 
 
 def is_csv(document):
+    ''' Check if document is csv with ',' as the delimiter'''
     try:
         try:
             content = document.read(1024).decode('utf-8')
@@ -62,8 +63,8 @@ def is_csv(document):
         dialect = sniffer.sniff(content)
         document.seek(0)
     except (csv.Error, UnicodeDecodeError):
-        return False
-    return True
+        return False, None
+    return True, dialect
 
 
 def headers_present(dict_reader, headers):

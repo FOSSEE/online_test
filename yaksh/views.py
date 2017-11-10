@@ -1856,49 +1856,54 @@ def upload_users(request, course_id):
         if 'csv_file' not in request.FILES:
             context['message'] = "Please upload a CSV file."
             return my_render_to_response('yaksh/course_detail.html', context,
-                    context_instance=ci)
+                                         context_instance=ci)
         csv_file = request.FILES['csv_file']
-        if not is_csv(csv_file):
+        is_csv_file, dialect = is_csv(csv_file)
+        if not is_csv_file:
             context['message'] = "The file uploaded is not a CSV file."
             return my_render_to_response('yaksh/course_detail.html', context,
-                    context_instance=ci)
-        headers = {'firstname':'', 'lastname':'', 'email':''}
-        reader = csv.DictReader(csv_file.read().decode('utf-8').splitlines())
+                                         context_instance=ci)
+        headers = {'firstname': '', 'lastname': '', 'email': ''}
+        try:
+            reader = csv.DictReader(csv_file.read().decode('utf-8').splitlines(),
+                                    dialect=dialect)
+        except TypeError:
+            context['message'] = "Bad CSV file"
+            return my_render_to_response('yaksh/course_detail.html', context,
+                                         context_instance=ci)
         if not headers_present(reader, headers):
             context['message'] = "The CSV file does not contain the required headers"
             return my_render_to_response('yaksh/course_detail.html', context,
-                    context_instance=ci)
+                                         context_instance=ci)
         context['upload_details'] = _read_user_csv(reader, headers, course)
     return my_render_to_response('yaksh/course_detail.html', context,
-            context_instance=ci)
+                                 context_instance=ci)
 
 
 def _read_user_csv(reader, headers, course):
     upload_details = ["Upload Summary:"]
-    counter = 0;
+    counter = 0
+    add_users = []
     for row in reader:
         counter += 1
         email, first_name, last_name = map(str.strip, [row[headers['email']],
-            row[headers['firstname']], row[headers['lastname']]])
+                                           row[headers['firstname']],
+                                           row[headers['lastname']]])
         if not email or not first_name or not last_name:
             upload_details.append("{0} -- Missing Values".format(counter))
             continue
-        user = User.objects.filter(email=email)
-        if user.exists():
-            upload_details.append("{0} -- {1} -- Email Already Exists".format(
-                counter, email))
+        if User.objects.filter(Q(username=email) | Q(email=email)).exists():
+            upload_details.append("{0} -- {1} -- Email or Username Already \
+                                  Exists".format(counter, email))
         else:
-            try:
-                user = User.objects.create_user(username=email, password=email,
-                        email=email, first_name=first_name, last_name=last_name)
-            except IntegrityError:
-                upload_details.append("{0} -- {1} -- User Already Exists".format(
-                    counter, email))
-            else:
-                Profile.objects.create(user=user, is_email_verified=True)
-                course.students.add(user)
-                upload_details.append("{0} -- {1} -- User Added Successfully".format(
-                    counter, email))
+            user = User.objects.create_user(username=email, password=email,
+                                            email=email, first_name=first_name,
+                                            last_name=last_name)
+            Profile.objects.create(user=user, is_email_verified=True)
+            add_users.append(user)
+            upload_details.append("{0} -- {1} -- User Added Successfully".format(
+                                  counter, email))
+    course.students.add(*add_users)
     if counter == 0:
         upload_details.append("No rows in the CSV file")
     return upload_details
