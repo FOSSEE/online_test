@@ -23,7 +23,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     AssignmentUpload, FileUpload, McqTestCase, IntegerTestCase, StringTestCase,\
-    FloatTestCase
+    FloatTestCase, FIXTURES_DIR_PATH
 from yaksh.decorators import user_has_profile
 
 
@@ -189,6 +189,38 @@ class TestProfile(TestCase):
         self.assertEqual(updated_profile_user.first_name, 'new_first_name')
         self.assertEqual(updated_profile_user.last_name, 'new_last_name')
         self.assertEqual(updated_profile.roll_number, '20')
+        self.assertEqual(updated_profile.institute, 'new_institute')
+        self.assertEqual(updated_profile.department, 'Aerospace')
+        self.assertEqual(updated_profile.position, 'new_position')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/profile_updated.html')
+
+    def test_edit_profile_post_for_user_without_profile(self):
+        """
+        POST request to edit_profile view should update the user's profile
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.post(reverse('yaksh:edit_profile'),
+            data={
+                'user': self.user1,
+                'first_name': 'new_first_name',
+                'last_name': 'new_last_name',
+                'roll_number': 21,
+                'institute': 'new_institute',
+                'department': 'Aerospace',
+                'position': 'new_position',
+                'timezone': 'UTC'
+            }
+        )
+        updated_profile_user = User.objects.get(id=self.user1.id)
+        updated_profile = Profile.objects.get(user=updated_profile_user)
+        self.assertEqual(updated_profile_user.first_name, 'new_first_name')
+        self.assertEqual(updated_profile_user.last_name, 'new_last_name')
+        self.assertEqual(updated_profile.roll_number, '21')
         self.assertEqual(updated_profile.institute, 'new_institute')
         self.assertEqual(updated_profile.department, 'Aerospace')
         self.assertEqual(updated_profile.position, 'new_position')
@@ -3041,6 +3073,7 @@ class TestDownloadcsv(TestCase):
         self.mod_group.user_set.add(self.user)
         self.course = Course.objects.create(name="Python Course",
             enrollment="Enroll Request", creator=self.user)
+        self.course.students.add(self.student)
 
         self.quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
@@ -3093,8 +3126,9 @@ class TestDownloadcsv(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:download_csv',
-                                   kwargs={"questionpaper_id": self.question_paper.id}),
+        response = self.client.get(reverse('yaksh:download_quiz_csv',
+                                   kwargs={"course_id": self.course.id,
+                                           "quiz_id": self.quiz.id}),
                                    follow=True
                                    )
         self.assertEqual(response.status_code, 404)
@@ -3122,8 +3156,9 @@ class TestDownloadcsv(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:download_csv',
-                                   kwargs={"questionpaper_id": self.question_paper.id}),
+        response = self.client.get(reverse('yaksh:download_quiz_csv',
+                                   kwargs={"course_id": self.course.id,
+                                           "quiz_id": self.quiz.id}),
                                    follow=True
                                    )
         self.assertEqual(response.status_code, 404)
@@ -3168,11 +3203,14 @@ class TestDownloadcsv(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:download_csv',
-                            kwargs={'questionpaper_id': self.question_paper.id}),
+        response = self.client.get(reverse('yaksh:download_quiz_csv',
+                            kwargs={"course_id": self.course.id,
+                                           "quiz_id": self.quiz.id}),
+
                             follow=True
                             )
-        file_name = "{0}.csv".format(self.quiz.description)
+        file_name = "{0}-{1}-attempt{2}.csv".format(self.course.name.replace('.', ''),
+                self.quiz.description.replace('.', ''), 1)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
                         'attachment; filename="{0}"'.format(file_name))
@@ -3300,7 +3338,7 @@ class TestShowQuestions(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        ques_file = os.path.join(settings.FIXTURE_DIRS, "demo_questions.zip")
+        ques_file = os.path.join(FIXTURES_DIR_PATH, "demo_questions.zip")
         f = open(ques_file, 'rb')
         questions_file = SimpleUploadedFile(ques_file, f.read(), 
                                             content_type="application/zip")

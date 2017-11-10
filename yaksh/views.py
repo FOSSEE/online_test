@@ -80,6 +80,10 @@ def add_to_group(users):
             user.groups.add(group)
 
 
+CSV_FIELDS = ['name', 'username', 'roll_number', 'institute', 'department',
+    'questions', 'marks_obtained', 'out_of', 'percentage', 'status']
+
+
 @email_verified
 def index(request, next_url=None):
     """The start page.
@@ -792,8 +796,10 @@ def courses(request):
     ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
-    courses = Course.objects.filter(creator=user, is_trial=False)
-    allotted_courses = Course.objects.filter(teachers=user, is_trial=False)
+    courses = Course.objects.filter(
+        creator=user, is_trial=False).order_by('-active', '-id')
+    allotted_courses = Course.objects.filter(
+        teachers=user, is_trial=False).order_by('-active', '-id')
     context = {'courses': courses, "allotted_courses": allotted_courses}
     return my_render_to_response('yaksh/courses.html', context,
                                  context_instance=ci)
@@ -991,7 +997,12 @@ def monitor(request, quiz_id=None):
         papers = []
         q_paper = None
         latest_attempts = []
+        attempt_numbers = []
     else:
+        if q_paper:
+            attempt_numbers = AnswerPaper.objects.get_attempt_numbers(q_paper.last().id)
+        else:
+            attempt_numbers = []
         latest_attempts = []
         papers = AnswerPaper.objects.filter(question_paper=q_paper).order_by(
             'user__profile__roll_number'
@@ -1007,11 +1018,14 @@ def monitor(request, quiz_id=None):
                     attempt_number=last_attempt['last_attempt_num']
                 )
             )
+    csv_fields = CSV_FIELDS
     context = {
         "papers": papers,
         "quiz": quiz,
         "msg": "Quiz Results",
-        "latest_attempts": latest_attempts
+        "latest_attempts": latest_attempts,
+        "csv_fields": csv_fields,
+        "attempt_numbers": attempt_numbers
     }
     return my_render_to_response('yaksh/monitor.html', context,
                                  context_instance=ci)
@@ -1264,49 +1278,80 @@ def user_data(request, user_id, questionpaper_id=None):
                                  context_instance=RequestContext(request))
 
 
+def _expand_questions(questions, field_list):
+    i = field_list.index('questions')
+    field_list.remove('questions')
+    for question in questions:
+        field_list.insert(i, '{0}-{1}'.format(question.summary, question.points))
+    return field_list 
+
+
 @login_required
 @email_verified
-def download_csv(request, questionpaper_id):
-    user = request.user
-    if not is_moderator(user):
+def download_quiz_csv(request, course_id, quiz_id):
+    current_user = request.user
+    if not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
-    quiz = Quiz.objects.get(questionpaper=questionpaper_id)
+    course = get_object_or_404(Course, id=course_id)
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    if not course.is_creator(current_user) and not course.is_teacher(current_user):
+        raise Http404('The quiz does not belong to your course')
+    users = course.get_enrolled().order_by('first_name')
+    if not users:
+        return monitor(request, quiz_id)
+    csv_fields = []
+    attempt_number = None
+    question_paper = quiz.questionpaper_set.last()
+    last_attempt_number =AnswerPaper.objects.get_attempt_numbers(question_paper.id).last()
+    if request.method == 'POST':
+        csv_fields = request.POST.getlist('csv_fields')
+        attempt_number = request.POST.get('attempt_number', last_attempt_number)
+    if not csv_fields:
+        csv_fields = CSV_FIELDS
+    if not attempt_number:
+        attempt_number = last_attempt_number
 
-    if not quiz.course.is_creator(user) and not quiz.course.is_teacher(user):
-        raise Http404('The question paper does not belong to your course')
-    papers = AnswerPaper.objects.get_latest_attempts(questionpaper_id)
-    if not papers:
-        return monitor(request, questionpaper_id)
+    questions = question_paper.get_question_bank()
+    answerpapers = AnswerPaper.objects.filter(question_paper=question_paper,
+            attempt_number=attempt_number)
+    if not answerpapers:
+        return monitor(request, quiz_id)
+
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(
-                                      (quiz.description).replace('.', ''))
+    response['Content-Disposition'] = 'attachment; filename="{0}-{1}-attempt{2}.csv"'.format(
+            course.name.replace('.', ''),  quiz.description.replace('.', ''),
+            attempt_number)
     writer = csv.writer(response)
-    header = [
-                'name',
-                'username',
-                'roll_number',
-                'institute',
-                'marks_obtained',
-                'total_marks',
-                'percentage',
-                'questions',
-                'questions_answered',
-                'status'
-    ]
-    writer.writerow(header)
-    for paper in papers:
-        row = [
-                '{0} {1}'.format(paper.user.first_name, paper.user.last_name),
-                paper.user.username,
-                paper.user.profile.roll_number,
-                paper.user.profile.institute,
-                paper.marks_obtained,
-                paper.question_paper.total_marks,
-                paper.percent,
-                paper.questions.all(),
-                paper.questions_answered.all(),
-                paper.status
-        ]
+    if 'questions' in csv_fields:
+        csv_fields = _expand_questions(questions, csv_fields)
+    writer.writerow(csv_fields)
+
+    csv_fields_values = {'name': 'user.get_full_name().title()',
+            'roll_number': 'user.profile.roll_number',
+            'institute': 'user.profile.institute',
+            'department': 'user.profile.department',
+            'username': 'user.username',
+            'marks_obtained': 'answerpaper.marks_obtained',
+            'out_of': 'question_paper.total_marks',
+            'percentage': 'answerpaper.percent', 'status': 'answerpaper.status'}
+    questions_scores = {}
+    for question in questions:
+        questions_scores['{0}-{1}'.format(question.summary, question.points)] \
+                = 'answerpaper.get_per_question_score({0})'.format(question.id) 
+    csv_fields_values.update(questions_scores)
+
+    users = users.exclude(id=course.creator.id).exclude(id__in=course.teachers.all())
+    for user in users:
+        row = []
+        answerpaper = None
+        papers = answerpapers.filter(user=user)
+        if papers:
+            answerpaper = papers.first()
+        for field in csv_fields:
+            try:
+                row.append(eval(csv_fields_values[field]))
+            except AttributeError:
+                row.append('-')
         writer.writerow(row)
     return response
 
@@ -1406,7 +1451,6 @@ def view_profile(request):
 
 
 @login_required
-@has_profile
 @email_verified
 def edit_profile(request):
     """ edit profile details facility for moderator and students """
@@ -1418,7 +1462,10 @@ def edit_profile(request):
     else:
         template = 'user.html'
     context = {'template': template}
-    profile = Profile.objects.get(user_id=user.id)
+    try:
+        profile = Profile.objects.get(user_id=user.id)
+    except Profile.DoesNotExist:
+        profile = None
 
     if request.method == 'POST':
         form = ProfileForm(request.POST, user=user, instance=profile)
