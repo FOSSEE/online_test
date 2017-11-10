@@ -1,4 +1,4 @@
-=== 0.7.0 (Tentatively 23-10-2017) ===
+=== 0.7.0 (14-11-2017) ===
 
 * Simplified Standard I/O type question error output.
 * Added the facility to search questions using tags.
@@ -14,10 +14,30 @@
 * Added the facility to create users by uploading CSV.
 * Fixed a bug that would require shebang to be put in for Bash assertion based questions.
 * Bug fixed that did not allow to edit a profile.
-* CSV download for quiz attempts enhanced.
-* Updated Courses Page to show Active Courses on top.
-* Added a Datetime Picker to Add Course Page
-* Added invoke script for quickstart and docker deployment
+* Updated Courses Page to show active courses on top.
+* Added a Datetimepicker to edit course Page.
+* Added invoke script for quickstart and docker deployment.
+* Added the facility to send mails to all students enrolled in a course.
+* Fixed a bug that would cause issue during email activation key check
+* Added comprehensive tests for views.py
+* Fixed a bug that allowed moderators to set cyclic quiz prerequisites in a course.
+* Added a feature that redirects to edit profile page if user has no profile.
+* Fixed a bug that would allow enrolled students to attempt quizzes for deactivated courses.
+* Added link on the landing page to Online test Github repository.
+* Updated Code server to tornado server which takes a post request to submit a job asynchronously.
+* Updated bulk email editor from Froala editor to TinyMCE editor.
+* Fixed a bug that would take the maximum marks scored by a user in all attempts for non coding questions.
+* Added a feature that would allow a user to see previously submitted answers for non code questions.
+* Last submitted answer is updated instead of appending for non coding questions.
+* User answers for code questions are stored but not evaluated during skipping questions.
+* Added logged in user information in footer of the base html page.
+* Fixed a bug that would not shuffle questions in a quiz.
+* Updated a feature that allows user to quit the paper manually and revisit the paper if necessary.
+* Updated snippets for questions to be multilines.
+* Fixed a bug that did not reset answer during quiz.
+* Updated download quiz details feature to be more informative.
+* Simplified Assertion type question error output for Python.
+* Added a feature that prepopulates the test case type field when adding test cases to questions.
 
 === 0.6.0 (11-05-2017) ===
 
