@@ -159,9 +159,6 @@ class Grader(object):
                                              self.timeout_msg
                                              )
                          )
-        except OSError:
-            msg = traceback.format_exc(limit=0)
-            error.append("Error: {0}".format(msg))
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)

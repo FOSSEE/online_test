@@ -9,8 +9,9 @@ def prettify_exceptions(exception, message, traceback=None, testcase=None):
            "traceback": traceback,
            "message": message
            }
-    if traceback and traceback.count('\n') > 6:
+    if exception == 'RuntimeError' or exception == 'RecursionError':
         err["traceback"] = None
+
     if exception == 'AssertionError':
         value = ("Expected answer from the"  
                 + " test case did not match the output")
