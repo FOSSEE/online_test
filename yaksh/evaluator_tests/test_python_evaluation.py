@@ -24,9 +24,15 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
         self.in_dir = tmp_in_dir_path
-        self.test_case_data = [{"test_case_type": "standardtestcase", "test_case": 'assert(add(1,2)==3)', 'weight': 0.0},
-                               {"test_case_type": "standardtestcase", "test_case": 'assert(add(-1,2)==1)', 'weight': 0.0},
-                               {"test_case_type": "standardtestcase", "test_case":  'assert(add(-1,-2)==-3)', 'weight': 0.0},
+        self.test_case_data = [{"test_case_type": "standardtestcase",
+                                "test_case": 'assert(add(1,2)==3)',
+                                 'weight': 0.0},
+                               {"test_case_type": "standardtestcase",
+                                "test_case": 'assert(add(-1,2)==1)',
+                                 'weight': 0.0},
+                               {"test_case_type": "standardtestcase",
+                                "test_case":  'assert(add(-1,-2)==-3)',
+                                 'weight': 0.0},
                                ]
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in"
@@ -76,23 +82,29 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assert_correct_output('AssertionError  in:\n assert(add(1,2)==3)',
-                        result.get('error')
-                      )
-        self.assert_correct_output('AssertionError  in:\n assert(add(-1,2)==1)',
-                        result.get('error')
-                      )
-        self.assert_correct_output('AssertionError  in:\n assert(add(-1,-2)==-3)',
-                        result.get('error')
-                      )
+        given_test_case_list = [tc["test_case"] for tc in self.test_case_data]
+        for error in result.get("error"):
+            self.assertEqual(error['exception'], 'AssertionError')
+            self.assertEqual(error['message'],
+                 "Expected answer from the test case did not match the output"
+                 )
+        error_testcase_list = [tc['test_case'] for tc in result.get('error')]
+        self.assertEqual(error_testcase_list, given_test_case_list)
+
 
     def test_partial_incorrect_answer(self):
         # Given
         user_answer = "def add(a,b):\n\treturn abs(a) + abs(b)"
-        test_case_data = [{"test_case_type": "standardtestcase", "test_case": 'assert(add(-1,2)==1)', 'weight': 1.0},
-                            {"test_case_type": "standardtestcase", "test_case":  'assert(add(-1,-2)==-3)', 'weight': 1.0},
-                            {"test_case_type": "standardtestcase", "test_case": 'assert(add(1,2)==3)', 'weight': 2.0}
-                               ]
+        test_case_data = [{"test_case_type": "standardtestcase",
+                           "test_case": 'assert(add(-1,2)==1)',
+                           'weight': 1.0},
+                          {"test_case_type": "standardtestcase",
+                           "test_case":  'assert(add(-1,-2)==-3)',
+                            'weight': 1.0},
+                          {"test_case_type": "standardtestcase",
+                           "test_case": 'assert(add(1,2)==3)',
+                           'weight': 2.0}
+                          ]
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -110,13 +122,15 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertFalse(result.get('success'))
         self.assertEqual(result.get('weight'), 2.0)
-        self.assert_correct_output('AssertionError  in:\n assert(add(-1,2)==1)',
-                        result.get('error')
-                      )
-        self.assert_correct_output('AssertionError  in:\n assert(add(-1,-2)==-3)',
-                        result.get('error')
-                      )
-
+        given_test_case_list = [tc["test_case"] for tc in self.test_case_data]
+        given_test_case_list.remove('assert(add(1,2)==3)')
+        for error in result.get("error"):
+            self.assertEqual(error['exception'], 'AssertionError')
+            self.assertEqual(error['message'],
+                 "Expected answer from the test case did not match the output"
+                 )
+        error_testcase_list = [tc['test_case'] for tc in result.get('error')]
+        self.assertEqual(error_testcase_list, given_test_case_list)
     def test_infinite_loop(self):
         # Given
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
@@ -136,7 +150,9 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assert_correct_output(self.timeout_msg, result.get('error'))
+        self.assert_correct_output(self.timeout_msg,
+                                   result.get("error")[0]["message"]
+                                   )
 
     def test_syntax_error(self):
         # Given
@@ -165,14 +181,12 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        error_as_str = ''.join(result.get("error"))
-        err = error_as_str.splitlines()
+        err = result.get("error")[0]['traceback']
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(5, len(err))
         for msg in syntax_error_msg:
-            self.assert_correct_output(msg, result.get("error"))
+            self.assert_correct_output(msg, err)
 
     def test_indent_error(self):
         # Given
@@ -200,13 +214,15 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        err = result.get("error")[0].splitlines()
+        err = result.get("error")[0]["traceback"].splitlines()
 
         # Then
         self.assertFalse(result.get("success"))
         self.assertEqual(5, len(err))
         for msg in indent_error_msg:
-            self.assert_correct_output(msg, result.get("error"))
+            self.assert_correct_output(msg, 
+                                      result.get("error")[0]['traceback']
+                                      )
 
     def test_name_error(self):
         # Given
@@ -231,14 +247,9 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        error_as_str = ''.join(result.get("error"))
-        err = error_as_str.splitlines()
-
-        # Then
-        self.assertFalse(result.get("success"))
-        self.assertEqual(25, len(err))
+        err = result.get("error")[0]["traceback"]
         for msg in name_error_msg:
-            self.assert_correct_output(msg, result.get("error"))
+            self.assertIn(msg, err)
 
     def test_recursion_error(self):
         # Given
@@ -246,10 +257,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         def add(a, b):
             return add(3, 3)
         """)
-        recursion_error_msg = ["Traceback", 
-                               "maximum recursion depth exceeded"
-                               ]
-
+        recursion_error_msg = "maximum recursion depth exceeded"
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -263,13 +271,11 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        error_as_str = ''.join(result.get("error"))
-        err = error_as_str.splitlines()
+        err = result.get("error")[0]['message']
 
         # Then
         self.assertFalse(result.get("success"))
-        for msg in recursion_error_msg:
-            self.assert_correct_output(msg, result.get("error"))
+        self.assert_correct_output(recursion_error_msg, err)
 
     def test_type_error(self):
         # Given
@@ -296,14 +302,12 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        error_as_str = ''.join(result.get("error"))
-        err = error_as_str.splitlines()
+        err = result.get("error")[0]['traceback']
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(25, len(err))
         for msg in type_error_msg:
-            self.assert_correct_output(msg, result.get("error"))
+            self.assert_correct_output(msg, err)
 
     def test_value_error(self):
         # Given
@@ -332,18 +336,19 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        error_as_str = ''.join(result.get("error"))
-        err = error_as_str.splitlines()
+        err = result.get("error")[0]['traceback']
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(28, len(err))
         for msg in value_error_msg:
-            self.assert_correct_output(msg, result.get("error"))
+            self.assert_correct_output(msg, err)
 
     def test_file_based_assert(self):
         # Given
-        self.test_case_data = [{"test_case_type": "standardtestcase", "test_case": "assert(ans()=='2')", "weight": 0.0}]
+        self.test_case_data = [{"test_case_type": "standardtestcase",
+                                "test_case": "assert(ans()=='2')",
+                                "weight": 0.0}
+                               ]
         self.file_paths = [(self.tmp_file, False)]
         user_answer = dedent("""
             def ans():
@@ -369,20 +374,17 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.assertTrue(result.get('success'))
 
     def test_single_testcase_error(self):
-        # Given
         """ Tests the user answer with just an incorrect test case """
 
+        # Given
         user_answer = "def palindrome(a):\n\treturn a == a[::-1]"
         test_case_data = [{"test_case_type": "standardtestcase",
-                             "test_case": 's="abbb"\nasert palindrome(s)==False',
-                             "weight": 0.0
-                            }
+                           "test_case": 's="abbb"\nasert palindrome(s)==False',
+                           "weight": 0.0
+                           }
                           ]
         syntax_error_msg = ["Traceback",
                             "call",
-                            "File",
-                            "line",
-                            "<string>",
                             "SyntaxError",
                             "invalid syntax"
                             ]
@@ -399,14 +401,12 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        error_as_str = ''.join(result.get("error"))
-        err = error_as_str.splitlines()
+        err =  result.get("error")[0]['traceback']
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(13, len(err))
         for msg in syntax_error_msg:
-            self.assert_correct_output(msg, result.get("error"))
+            self.assert_correct_output(msg, err)
 
 
     def test_multiple_testcase_error(self):
@@ -415,13 +415,11 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         # Given
         user_answer = "def palindrome(a):\n\treturn a == a[::-1]"
         test_case_data = [{"test_case_type": "standardtestcase",
-                             "test_case": 'assert(palindrome("abba")==True)',
-                             "weight": 0.0
-                            },
+                           "test_case": 'assert(palindrome("abba")==True)',
+                           "weight": 0.0},
                           {"test_case_type": "standardtestcase",
-                             "test_case": 's="abbb"\nassert palindrome(S)==False',
-                             "weight": 0.0
-                            }
+                           "test_case": 's="abbb"\nassert palindrome(S)==False',
+                           "weight": 0.0}
                           ]
         name_error_msg = ["Traceback",
                           "call",
@@ -441,14 +439,12 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        error_as_str = ''.join(result.get("error"))
-        err = error_as_str.splitlines()
+        err = result.get("error")[0]['traceback']
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertEqual(11, len(err))
         for msg in name_error_msg:
-            self.assert_correct_output(msg, result.get("error"))
+            self.assertIn(msg, err)
 
     def test_unicode_literal_bug(self):
         # Given
@@ -674,7 +670,9 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         # Then
-        self.assert_correct_output(timeout_msg, result.get('error'))
+        self.assert_correct_output(timeout_msg,
+                                   result.get("error")[0]["message"]
+                                   )
         self.assertFalse(result.get('success'))
 
 
@@ -915,7 +913,9 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assert_correct_output(self.timeout_msg, result.get('error'))
+        self.assert_correct_output(self.timeout_msg,
+                                   result.get("error")[0]["message"]
+                                   )
 
     def test_assignment_upload(self):
         # Given

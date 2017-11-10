@@ -10,6 +10,7 @@ import importlib
 from .file_utils import copy_files, delete_files
 from .base_evaluator import BaseEvaluator
 from .grader import TimeoutException
+from .error_messages import prettify_exceptions
 
 
 class PythonAssertionEvaluator(BaseEvaluator):
@@ -68,39 +69,22 @@ class PythonAssertionEvaluator(BaseEvaluator):
         success = False
         mark_fraction = 0.0
         try:
-            tb = None
             _tests = compile(self.test_case, '<string>', mode='exec')
             exec(_tests, self.exec_scope)
         except TimeoutException:
             raise
         except Exception:
-            type, value, tb = sys.exc_info()
-            info = traceback.extract_tb(tb)
-            fname, lineno, func, text = info[-1]
-            text = str(self.test_case)
-
-            # Get truncated traceback
-            err_tb_lines = traceback.format_exc().splitlines()
-            stripped_tb_lines = []
-            for line in err_tb_lines:
-                line = re.sub(r'File\s+".*?",\s+line',
-                     'File <file>, line',
-                     line
-                    )
-                stripped_tb_lines.append(line)
-            stripped_tb = '\n'.join(stripped_tb_lines[-10::])
-
-            err = "Expected Test Case:\n{0}\n" \
-                "Error Traceback - {1} {2} in:\n {3}\n{4}".format(
-                    self.test_case,
-                    type.__name__,
-                    str(value),
-                    text,
-                    stripped_tb
-                    )
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
+            if len(tb_list) > 2:
+                del tb_list[1:3]
+            err = prettify_exceptions(exc_type.__name__,
+                                      str(exc_value),
+                                      "".join(tb_list),
+                                      self.test_case
+                                      )
         else:
             success = True
             err = None
             mark_fraction = 1.0 if self.partial_grading else 0.0
-        del tb
         return success, err, mark_fraction

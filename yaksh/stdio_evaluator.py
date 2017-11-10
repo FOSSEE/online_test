@@ -5,7 +5,7 @@ import signal
 # Local imports
 from .base_evaluator import BaseEvaluator
 from .grader import TimeoutException
-from .compare_stdio import compare_outputs
+from .error_messages import compare_outputs
 
 
 class StdIOEvaluator(BaseEvaluator):

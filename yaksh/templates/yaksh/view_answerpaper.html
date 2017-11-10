@@ -131,9 +131,8 @@
     
         {% with answer.error_list as err %}
             {% for error in err %}
-            {% if not error.expected_output %}
-      <pre><code> {{error|safe}} </code></pre>
-      {% else %}
+            
+      {% if error.type == 'stdio' %}
         <div class = "well well-sm">
         {% if error.given_input %}
        <table class="table table-bordered">
@@ -175,6 +174,32 @@
            </tr>
           </table>
         </div>
+        {% elif error.type == 'assertion' %}
+            {% if error.test_case %}
+      <strong> We tried you code with the following test case:</strong><br/></br>
+              <pre><code><strong style="color:#d9534f">{{error.test_case}}</strong></code></pre>
+            {% endif %}
+          <p> <b>The following error took place: </b></p>
+          <div class="well well-sm">
+        <table class="table table-bordered" width="100%">
+          <col width="30%">
+            <tr class = "active">
+            <td><b>Exception Name: </b></td>
+            <td><span style="color: #d9534f">{{error.exception}}</span></td>
+          </tr>
+          <tr>
+            <td><b>Exception Message: </b></td><td>{{error.message}}</td>
+          </tr>
+          <tr>
+            {% if error.traceback %}
+            <td><b>Full Traceback: </b></td>
+            <td><pre>{{error.traceback}}</pre></td>
+            {% endif %}
+          </tr>
+        </table>
+      </div> <!-- Closes well -->
+        {% else %}
+          <pre><code> {{error|safe}} </code></pre>
         {% endif %}
         {% endfor %}
         {% endwith %}

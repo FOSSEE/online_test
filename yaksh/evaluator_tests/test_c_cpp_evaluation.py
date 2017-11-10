@@ -151,7 +151,9 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assert_correct_output(self.timeout_msg, result.get("error"))
+        self.assert_correct_output(self.timeout_msg,
+                                   result.get("error")[0]["message"]
+                                   )
         parent_proc = Process(os.getpid()).children()
         if parent_proc:
             children_procs = Process(parent_proc[0].pid)
@@ -406,7 +408,9 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assert_correct_output(self.timeout_msg, result.get("error"))
+        self.assert_correct_output(self.timeout_msg,
+                                   result.get("error")[0]["message"]
+                                   )
         parent_proc = Process(os.getpid()).children()
         if parent_proc:
             children_procs = Process(parent_proc[0].pid)
@@ -616,7 +620,9 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assert_correct_output(self.timeout_msg, result.get("error"))
+        self.assert_correct_output(self.timeout_msg,
+                                   result.get("error")[0]["message"]
+                                   )
 
     def test_cpp_only_stdout(self):
         # Given
@@ -976,7 +982,9 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assert_correct_output(self.timeout_msg, result.get('error'))
+        self.assert_correct_output(self.timeout_msg,
+                                   result.get("error")[0]["message"]
+                                   )
         parent_proc = Process(os.getpid()).children()
         if parent_proc:
             children_procs = Process(parent_proc[0].pid)

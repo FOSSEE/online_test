@@ -80,27 +80,50 @@
                 {% block main %}
                 {% endblock %}
             </div>
+            <br/>
             {% if question.type == 'code' or question.type == 'upload' %}
                 {% if error_message %}
                     <div class="row" id="error_panel">
       {% for error in error_message %}
               <div class="panel panel-danger">
-      <div class="panel-heading">Testcase No. {{ forloop.counter }}</div>
+      <div class="panel-heading">Error No. {{ forloop.counter }}</div>
       <div class="panel-body">
       <div class="well well-sm">
-      {% if not error.expected_output %}
+      {% if not error.type %}
       <pre><code> {{error|safe}} </code></pre>
-      {% else %}
-        {% if error.given_input %}
-       <table class="table table-bordered">
-        <col width="30%">
-          <tr class = "active">
-          <td> For given Input value(s):</td>
-          <td>{{error.given_input}}</td>
+      {% elif error.type == 'assertion' %}
+            {% if error.test_case %}
+      <strong> We tried your code with the following test case:</strong><br/></br>
+              <pre><code><strong style="color:#d9534f">{{error.test_case}}</strong></code></pre>
+            {% endif %}
+          <p> <b>The following error took place: </b></p>
+        <table class="table table-bordered" width="100%" id='assertion'>
+          <col width="30%">
+            <tr class = "active">
+            <td><b>Exception Name: </b></td>
+            <td><span style="color: #d9534f">{{error.exception}}</span></td>
           </tr>
-       </table>
+          <tr>
+            <td><b>Exception Message: </b></td><td>{{error.message}}</td>
+          </tr>
+          <tr>
+            {% if error.traceback %}
+            <td><b>Full Traceback: </b></td>
+            <td><pre>{{error.traceback}}</pre></td>
+            {% endif %}
+          </tr>
+        </table>
+      {% elif error.type == 'stdio' %}
+        {% if error.given_input %}
+         <table class="table table-bordered">
+          <col width="30%">
+            <tr class = "active">
+            <td> For given Input value(s):</td>
+            <td>{{error.given_input}}</td>
+            </tr>
+         </table>
        {% endif %}
-        <table class="table table-bordered" width="100%" id="output">
+        <table class="table table-bordered" width="100%" id="stdio">
           <col width="10%">
           <col width="40%">
           <col width="40%">
