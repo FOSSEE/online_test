@@ -1938,6 +1938,8 @@ def _get_csv_values(row, fields):
                                        row['lastname']])
     if 'password' in fields:
         password = row['password'].strip()
+        if not password:
+            password = email
     else:
         password = email
     if 'roll_no' in fields:
