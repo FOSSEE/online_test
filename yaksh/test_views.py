@@ -1815,6 +1815,33 @@ class TestCourseDetail(TestCase):
         self.assertIn('upload_details', response.context)
         self.assertTemplateUsed(response, 'yaksh/course_detail.html')
 
+    def test_upload_users_add_update_reject(self):
+        # Given
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     "users_add_update_reject.csv")
+        csv_file = open(csv_file_path, 'rb')
+        upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
+
+        # When
+        response = self.client.post(reverse('yaksh:upload_users',
+                                    kwargs={'course_id': self.user1_course.id}),
+                                    data={'csv_file': upload_file})
+        csv_file.close()
+
+        # Then
+        uploaded_user = User.objects.filter(username="test")
+        user = uploaded_user[0]
+        self.assertEqual(uploaded_user.count(), 1)
+        self.assertEqual(user.first_name, "test2")
+        self.assertIn(user, self.user1_course.get_rejected())
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('upload_details', response.context)
+        self.assertTemplateUsed(response, 'yaksh/course_detail.html')
+
     def test_upload_users_with_wrong_csv(self):
         # Given
         self.client.login(

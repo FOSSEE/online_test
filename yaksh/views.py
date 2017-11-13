@@ -1887,7 +1887,6 @@ def _read_user_csv(reader, course):
     fields = reader.fieldnames
     upload_details = ["Upload Summary:"]
     counter = 0
-    add_users = []
     for row in reader:
         counter += 1
         (username, email, first_name, last_name, password, roll_no, institute,
@@ -1919,12 +1918,11 @@ def _read_user_csv(reader, course):
         _create_or_update_profile(user, profile_defaults)
         if created:
             state = "Added"
-            add_users.append(user)
+            course.students.add(user)
         else:
             state = "Updated"
         upload_details.append("{0} -- {1} -- User {2} Successfully".format(
                               counter, user.username, state))
-    course.students.add(*add_users)
     if counter == 0:
         upload_details.append("No rows in the CSV file")
     return upload_details
