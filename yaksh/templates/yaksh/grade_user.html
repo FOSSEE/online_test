@@ -8,7 +8,6 @@
 {% block content %}
 
 {% block script %}
-<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function()
@@ -107,10 +106,10 @@ End time: {{ paper.end_time }} <br/>
 {%if paper.percent%}
 Percentage obtained: {{paper.percent}}% <br/>
 {% endif %}
-{% if paper.passed == 0 %}
-Status : <b style="color: red;"> Failed </b><br/>
-{% else %}
+{% if paper.passed %}
 Status : <b style="color: green;"> Passed </b><br/>
+{% else %}
+Status : <b style="color: red;"> Failed </b><br/>
 {% endif %}
 </p>
 {% if paper.answers.count %}

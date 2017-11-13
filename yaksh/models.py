@@ -29,7 +29,9 @@ import tempfile
 from textwrap import dedent
 from ast import literal_eval
 from .file_utils import extract_files, delete_files
-from yaksh.code_server import submit, SERVER_POOL_PORT
+from yaksh.code_server import(submit, SERVER_POOL_PORT,
+                              get_result as get_result_from_code_server
+                              )
 from django.conf import settings
 from django.forms.models import model_to_dict
 
@@ -1435,6 +1437,7 @@ class AnswerPaper(models.Model):
 
             elif question.type == 'float':
                 tc_status = []
+                user_answer = float(user_answer)
                 for tc in question.get_test_cases():
                     if abs(tc.correct - user_answer) <= tc.error_margin:
                         tc_status.append(True)
@@ -1474,9 +1477,16 @@ class AnswerPaper(models.Model):
             answer = user_answer.answer
         json_data = question.consolidate_answer_data(answer) \
             if question.type == 'code' else None
-        result = self.validate_answer(answer, question, json_data)
+        result = self.validate_answer(answer, question,
+                                      json_data, user_answer.id)
+        if question.type == "code":
+            url = 'http://localhost:%s' % SERVER_POOL_PORT
+            check_result = get_result_from_code_server(url, result['uid'],
+                                                       block=True
+                                                       )
+            result = json.loads(check_result.get('result'))
         user_answer.correct = result.get('success')
-        user_answer.error = result.get('error')
+        user_answer.error = json.dumps(result.get('error'))
         if result.get('success'):
             if question.partial_grading and question.type == 'code':
                 max_weight = question.get_maximum_test_case_weight()
