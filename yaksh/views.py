@@ -1910,14 +1910,16 @@ def _read_user_csv(reader, course):
                 upload_details.append("{0} -- {1} not added to course".format(
                     counter, user))
                 continue
-        user_defaults = {'password': password, 'email': email,
-                         'first_name': first_name, 'last_name': last_name}
+        user_defaults = {'email': email, 'first_name': first_name,
+                         'last_name': last_name}
         user, created = _create_or_update_user(username, user_defaults)
         profile_defaults = {'institute': institute, 'roll_number': roll_no,
                             'department': department, 'is_email_verified': True}
         _create_or_update_profile(user, profile_defaults)
         if created:
             state = "Added"
+            user.set_password(password)
+            user.save()
             course.students.add(user)
         else:
             state = "Updated"
