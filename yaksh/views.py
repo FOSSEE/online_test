@@ -45,7 +45,7 @@ from yaksh.forms import (
     UploadFileForm, get_object_form, FileForm, QuestionPaperForm
 )
 from .settings import URL_ROOT
-from .file_utils import extract_files, is_csv, headers_present
+from .file_utils import extract_files, is_csv
 from .send_emails import send_user_mail, generate_activation_key, send_bulk_mail
 from .decorators import email_verified, has_profile
 
@@ -1863,7 +1863,7 @@ def upload_users(request, course_id):
             context['message'] = "The file uploaded is not a CSV file."
             return my_render_to_response('yaksh/course_detail.html', context,
                                          context_instance=ci)
-        headers = {'firstname': '', 'lastname': '', 'email': ''}
+        required_fields = ['firstname', 'lastname', 'email']
         try:
             reader = csv.DictReader(csv_file.read().decode('utf-8').splitlines(),
                                     dialect=dialect)
@@ -1871,42 +1871,111 @@ def upload_users(request, course_id):
             context['message'] = "Bad CSV file"
             return my_render_to_response('yaksh/course_detail.html', context,
                                          context_instance=ci)
-        if not headers_present(reader, headers):
-            context['message'] = "The CSV file does not contain the required headers"
-            return my_render_to_response('yaksh/course_detail.html', context,
-                                         context_instance=ci)
-        context['upload_details'] = _read_user_csv(reader, headers, course)
+        stripped_fieldnames = [field.strip().lower() for field in reader.fieldnames]
+        for field in required_fields:
+            if field not in stripped_fieldnames:
+                context['message'] = "The CSV file does not contain the required headers"
+                return my_render_to_response('yaksh/course_detail.html', context,
+                                             context_instance=ci)
+        reader.fieldnames = stripped_fieldnames
+        context['upload_details'] = _read_user_csv(reader, course)
     return my_render_to_response('yaksh/course_detail.html', context,
                                  context_instance=ci)
 
 
-def _read_user_csv(reader, headers, course):
+def _read_user_csv(reader, course):
+    fields = reader.fieldnames
     upload_details = ["Upload Summary:"]
     counter = 0
     add_users = []
     for row in reader:
         counter += 1
-        email, first_name, last_name = map(str.strip, [row[headers['email']],
-                                           row[headers['firstname']],
-                                           row[headers['lastname']]])
+        (username, email, first_name, last_name, password, roll_no, institute,
+         department, remove) = _get_csv_values(row, fields)
         if not email or not first_name or not last_name:
             upload_details.append("{0} -- Missing Values".format(counter))
             continue
-        if User.objects.filter(Q(username=email) | Q(email=email)).exists():
-            upload_details.append("{0} -- {1} -- Email or Username Already \
-                                  Exists".format(counter, email))
-        else:
-            user = User.objects.create_user(username=email, password=email,
-                                            email=email, first_name=first_name,
-                                            last_name=last_name)
-            Profile.objects.create(user=user, is_email_verified=True)
+        users = User.objects.filter(username=username)
+        if users.exists():
+            user = users[0]
+            if remove.strip().lower() == 'true':
+                if _remove_from_course(user, course):
+                    upload_details.append("{0} -- {1} -- User rejected".format(
+                                          counter, user.username))
+                    continue
+            else:
+                if _add_to_course(user, course):
+                    upload_details.append("{0} -- {1} -- User rejected".format(
+                                          counter, user.username))
+            if user not in course.get_enrolled():
+                upload_details.append("{0} -- {1} not added to course".format(
+                    counter, user))
+                continue
+        user_defaults = {'password': password, 'email': email,
+                         'first_name': first_name, 'last_name': last_name}
+        user, created = _create_or_update_user(username, user_defaults)
+        profile_defaults = {'institute': institute, 'roll_number': roll_no,
+                            'department': department, 'is_email_verified': True}
+        _create_or_update_profile(user, profile_defaults)
+        if created:
+            state = "Added"
             add_users.append(user)
-            upload_details.append("{0} -- {1} -- User Added Successfully".format(
-                                  counter, email))
+        else:
+            state = "Updated"
+        upload_details.append("{0} -- {1} -- User {2} Successfully".format(
+                              counter, user.username, state))
     course.students.add(*add_users)
     if counter == 0:
         upload_details.append("No rows in the CSV file")
     return upload_details
+
+
+def _get_csv_values(row, fields):
+    roll_no, institute, department = "", "", ""
+    remove = "false"
+    email, first_name, last_name = map(str.strip, [row['email'],
+                                       row['firstname'],
+                                       row['lastname']])
+    if 'password' in fields:
+        password = row['password'].strip()
+    else:
+        password = email
+    if 'roll_no' in fields:
+        roll_no = row['roll_no'].strip()
+    if 'institute' in fields:
+        institute = row['institute'].strip()
+    if 'department' in fields:
+        department = row['department'].strip()
+    if 'remove' in fields:
+        remove = row['remove'].strip()
+    if 'username' in fields:
+        username = row['username'].strip()
+    else:
+        username = email
+    if 'remove' in fields:
+        remove = row['remove']
+    return (username, email, first_name, last_name, password, roll_no, institute,
+            department, remove)
+
+
+def _remove_from_course(user, course):
+    if user in course.get_enrolled():
+        course.reject(True, user)
+        return True
+
+
+def _add_to_course(user, course):
+    if user in course.get_rejected():
+        course.enroll(True, user)
+        return True
+
+
+def _create_or_update_user(username, defaults):
+    return User.objects.update_or_create(username=username, defaults=defaults)
+
+
+def _create_or_update_profile(user, defaults):
+    Profile.objects.update_or_create(user=user, defaults=defaults)
 
 
 @login_required

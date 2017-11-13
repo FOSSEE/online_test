@@ -66,15 +66,3 @@ def is_csv(document):
         return False, None
     return True, dialect
 
-
-def headers_present(dict_reader, headers):
-    fields = dict_reader.fieldnames
-    header_fields = set()
-    for field in fields:
-        if field.strip() in headers.keys():
-            headers[field.strip()] = field
-            header_fields.add(field.strip())
-    if  header_fields != set(headers.keys()):
-        return False
-    return True
-
