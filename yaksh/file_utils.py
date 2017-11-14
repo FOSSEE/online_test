@@ -60,7 +60,7 @@ def is_csv(document):
             document.seek(0)
             content = document.read(1024)
         sniffer = csv.Sniffer()
-        dialect = sniffer.sniff(content)
+        dialect = sniffer.sniff(content, delimiters=',')
         document.seek(0)
     except (csv.Error, UnicodeDecodeError):
         return False, None
