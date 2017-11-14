@@ -4,7 +4,10 @@ Release testing guide:
 
 1. Installation and deployment:
    ----------------------------
-    **To be filled**
+   a. Follow the instruction guide to see if all steps work without issues.
+   b. Try login in with admin, student, teacher
+   c. Try removing any folder with code server inside docker.
+   d. Repeat step c with `invoke --unsafe`
 
 2. Authentication:
    ---------------
