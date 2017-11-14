@@ -65,7 +65,11 @@
                     <p><b><u>Question Paper(s)</u></b></p>
                     {% for quiz in course.get_quizzes %}
                     {% if quiz.questionpaper_set.get %}
-                    <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/">Question Paper for {{ quiz.description }}</a><br>
+                    <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/">Question Paper for {{ quiz.description }}</a>
+                    <a href="{{URL_ROOT}}/exam/manage/preview_questionpaper/{{quiz.questionpaper_set.get.id}}" class="btn btn-primary active btn-xs" target="_blank">
+                        View
+                    </a>
+                    <br>
                     {% else %}
                     <p>No Question Paper 
                     <a href="#" onClick='location.replace("{{URL_ROOT}}/exam/manage/quiz/designquestionpaper/{{ quiz.id }}/");'>Add</a>

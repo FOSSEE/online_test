@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block pagetitle %} Quiz: {{ paper.quiz.description }} {% endblock pagetitle %}
+
+{% block content %}
+<div class="well">
+	<div class="col-md-12">
+		<div class="col-md-6">Maximum Mark(s): {{ paper.total_marks }}</div>
+		<div class="col-md-6"><span class="pull-right">Total Time: {{ paper.quiz.duration }}</span></div>
+	</div>
+</div>
+<div class="panel panel-default">
+	<div class="panel-heading">Instructions</div>
+	<div class="panel-body" id="instructions">
+		{{ paper.quiz.instructions|safe }}
+	</div>
+</div>
+{% for question in questions %}
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <strong> {{forloop.counter}}. {{ question.summary }} 
+            <span class="marks pull-right"> Mark(s): {{ question.points }} </span>
+            </strong>
+        </div>
+        <div class="panel-body">
+            <h5><u>Question:</u></h5> <strong>{{ question.description|safe }}</strong>
+            <br/><b>Answer:</b><br/>
+            {% if question.type == "code" %}
+                <div class="well">{{ question.snippet }}<br/></div>
+            {% endif %}
+            {% if question.type == "mcq" or question.type == "mcc" %}
+                <h5> <u>Choices:</u></h5>
+                {% for testcase in question.get_test_cases %}
+                <br/><strong>
+                {{ forloop.counter }}. {{ testcase.options|safe }}</strong>
+                {% endfor %}
+            {% endif %}
+            
+        </div>
+    </div>
+{% endfor %}
+{% endblock %}
