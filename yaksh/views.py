@@ -37,7 +37,7 @@ from yaksh.models import (
     HookTestCase, IntegerTestCase, McqTestCase, Profile,
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
-    get_model_class
+    get_model_class, FIXTURES_DIR_PATH
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -45,7 +45,7 @@ from yaksh.forms import (
     UploadFileForm, get_object_form, FileForm, QuestionPaperForm
 )
 from .settings import URL_ROOT
-from .file_utils import extract_files
+from .file_utils import extract_files, is_csv
 from .send_emails import send_user_mail, generate_activation_key, send_bulk_mail
 from .decorators import email_verified, has_profile
 
@@ -1846,6 +1846,158 @@ def download_assignment_file(request, quiz_id, question_id=None, user_id=None):
                                             )
     response.write(zipfile_name.read())
     return response
+
+
+@login_required
+@email_verified
+def upload_users(request, course_id):
+    user = request.user
+    ci = RequestContext(request)
+    course = get_object_or_404(Course, pk=course_id)
+    context = {'course': course}
+
+    if not (course.is_teacher(user) or course.is_creator(user)):
+        msg = 'You do not have permissions to this course.'
+        return complete(request, reason=msg)
+    if request.method == 'POST':
+        if 'csv_file' not in request.FILES:
+            context['message'] = "Please upload a CSV file."
+            return my_render_to_response('yaksh/course_detail.html', context,
+                                         context_instance=ci)
+        csv_file = request.FILES['csv_file']
+        is_csv_file, dialect = is_csv(csv_file)
+        if not is_csv_file:
+            context['message'] = "The file uploaded is not a CSV file."
+            return my_render_to_response('yaksh/course_detail.html', context,
+                                         context_instance=ci)
+        required_fields = ['firstname', 'lastname', 'email']
+        try:
+            reader = csv.DictReader(csv_file.read().decode('utf-8').splitlines(),
+                                    dialect=dialect)
+        except TypeError:
+            context['message'] = "Bad CSV file"
+            return my_render_to_response('yaksh/course_detail.html', context,
+                                         context_instance=ci)
+        stripped_fieldnames = [field.strip().lower() for field in reader.fieldnames]
+        for field in required_fields:
+            if field not in stripped_fieldnames:
+                context['message'] = "The CSV file does not contain the required headers"
+                return my_render_to_response('yaksh/course_detail.html', context,
+                                             context_instance=ci)
+        reader.fieldnames = stripped_fieldnames
+        context['upload_details'] = _read_user_csv(reader, course)
+    return my_render_to_response('yaksh/course_detail.html', context,
+                                 context_instance=ci)
+
+
+def _read_user_csv(reader, course):
+    fields = reader.fieldnames
+    upload_details = ["Upload Summary:"]
+    counter = 0
+    for row in reader:
+        counter += 1
+        (username, email, first_name, last_name, password, roll_no, institute,
+         department, remove) = _get_csv_values(row, fields)
+        if not email or not first_name or not last_name:
+            upload_details.append("{0} -- Missing Values".format(counter))
+            continue
+        users = User.objects.filter(username=username)
+        if users.exists():
+            user = users[0]
+            if remove.strip().lower() == 'true':
+                if _remove_from_course(user, course):
+                    upload_details.append("{0} -- {1} -- User rejected".format(
+                                          counter, user.username))
+                    continue
+            else:
+                if _add_to_course(user, course):
+                    upload_details.append("{0} -- {1} -- User rejected".format(
+                                          counter, user.username))
+            if user not in course.get_enrolled():
+                upload_details.append("{0} -- {1} not added to course".format(
+                    counter, user))
+                continue
+        user_defaults = {'email': email, 'first_name': first_name,
+                         'last_name': last_name}
+        user, created = _create_or_update_user(username, password, user_defaults)
+        profile_defaults = {'institute': institute, 'roll_number': roll_no,
+                            'department': department, 'is_email_verified': True}
+        _create_or_update_profile(user, profile_defaults)
+        if created:
+            state = "Added"
+            course.students.add(user)
+        else:
+            state = "Updated"
+        upload_details.append("{0} -- {1} -- User {2} Successfully".format(
+                              counter, user.username, state))
+    if counter == 0:
+        upload_details.append("No rows in the CSV file")
+    return upload_details
+
+
+def _get_csv_values(row, fields):
+    roll_no, institute, department = "", "", ""
+    remove = "false"
+    email, first_name, last_name = map(str.strip, [row['email'],
+                                       row['firstname'],
+                                       row['lastname']])
+    password = email
+    username = email
+    if 'password' in fields and row['password']:
+        password = row['password'].strip()
+    if 'roll_no' in fields:
+        roll_no = row['roll_no'].strip()
+    if 'institute' in fields:
+        institute = row['institute'].strip()
+    if 'department' in fields:
+        department = row['department'].strip()
+    if 'remove' in fields:
+        remove = row['remove'].strip()
+    if 'username' in fields and row['username']:
+        username = row['username'].strip()
+    if 'remove' in fields:
+        remove = row['remove']
+    return (username, email, first_name, last_name, password, roll_no, institute,
+            department, remove)
+
+
+def _remove_from_course(user, course):
+    if user in course.get_enrolled():
+        course.reject(True, user)
+        return True
+
+
+def _add_to_course(user, course):
+    if user in course.get_rejected():
+        course.enroll(True, user)
+        return True
+
+
+def _create_or_update_user(username, password, defaults):
+    user, created = User.objects.update_or_create(username=username,
+                                                  defaults=defaults)
+    user.set_password(password)
+    user.save()
+    return user, created
+
+
+def _create_or_update_profile(user, defaults):
+    Profile.objects.update_or_create(user=user, defaults=defaults)
+
+
+@login_required
+@email_verified
+def download_sample_csv(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                 "sample_user_upload.csv")
+    with open(csv_file_path, 'rb') as csv_file:
+        response = HttpResponse(csv_file.read(), content_type='text/csv')
+        response['Content-Disposition'] = 'attachment;\
+                                          filename="sample_user_upload"'
+        return response
 
 
 @login_required

@@ -11,6 +11,7 @@
 * Updated the validation of MCQ/MCC type question.
 * Fixed a bug that did not allow expected input in Standard I/O type question to be none.
 * UI changes in grade user, view answerpaper and monitor pages.
+* Added the facility to create users by uploading CSV.
 * Fixed a bug that would require shebang to be put in for Bash assertion based questions.
 * Bug fixed that did not allow to edit a profile.
 * CSV download for quiz attempts enhanced.

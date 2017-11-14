@@ -45,6 +45,27 @@
     </div>
 </div>
 <div class="col-md-9 col-md-offset-2 main">
+    <form id="upload_users" action="{{ URL_ROOT }}/exam/manage/upload_users/{{course.id}}/"
+        method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="csv_file" />
+        <button class="btn btn-primary" type=submit> Upload Users <span class="glyphicon glyphicon-open"/></button>
+    </form>
+    <div class="alert alert-info" role="alert">
+        <p>
+        - The uploaded csv should have headers exactly same as mentioned below:<br />
+        <b>firstname, lastname, email, username, password, institute, roll_no, department,
+           remove</b><br />
+        - Mandatory fields are <b> firstname, lastname and email. </b><br />
+        - Other fields are optional. <br />
+        - If username and password are not provided then
+        <b>Users created will have username and password same as their email</b>
+        </p>
+        <p>
+        <b> Click <a class="btn btn-success" href="{{ URL_ROOT }}/exam/manage/download_sample_csv/
+">here</a> to download a sample CSV, edit and upload it</b>
+        </p>
+    </div>
     <div class="row">
         {% if message %}
         <div class="alert alert-warning" role="alert">
@@ -53,6 +74,14 @@
         </center>
         </div>
         {% endif %}
+        {% if upload_details %}
+        <div class="alert alert-info" role="info">
+            {% for detail in upload_details %}
+            <strong> {{ detail }} </strong><br>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <hr>
         {% if state == 'mail' %}
             <div id="enrolled-students">
             <center><b><u>Send Mails to Students</u></b></center><br>
@@ -218,6 +247,7 @@
         {% endif %}
     </div>
 </div>
+
 <!-- Dialog to display error message -->
 <div id="dialog" title="Alert">
   <p id="error_msg"></p>
