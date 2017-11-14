@@ -8,9 +8,11 @@ Release testing guide:
 
    b. Try login in with admin, student, teacher individually.
 
-   c. Try removing any folder with code server inside docker from the quiz interface.
+   c. Try to run `rm -rf ../*` from quiz interface for bash to check if student is nobody
+      inside docker.
 
-   d. Repeat step c with `invoke --unsafe`
+   d. Try to run `rm -rf ../*` from quiz interface for bash with `invoke start --unsafe`
+      to check if student is not nobody.
 
 
 2. Authentication:
@@ -21,6 +23,7 @@ Release testing guide:
       - Try the same thing with all fields filled. This should register and redirect to quizzes page.
 
    b. **Login with Google/Facebook oauth:**
+         (To be done from live server only)
    	  - Check if google facebook oauth authentication works or not.
 
    c. **Forgot Password:**
@@ -52,19 +55,24 @@ Release testing guide:
    e. Try to quit the quiz in between, with some questions still remaining and quit the quiz by
       clicking yes to check if it safely quits the quiz. 
 
-   f. Try to move back and forth using browser back button to check if multiple objects
+   f. Try to close the browser in between the quiz and restart quiz again to check if quiz
+      resumes properly.
+
+   g. Try to move back and forth using browser back button to check if multiple objects
       error occurs.
 
-   g. Attempt all the questions and check if revisiting questions works.
+   h. Attempt all the questions and check if revisiting questions works.
 
-   h. Attempt all the questions and try to quit and click on no and comeback to interface.
+   i. Attempt all the questions and try to quit and click on no and comeback to interface.
 
-   i. Attempt all the questions and try to quit and click on yes and quit the quiz.
+   j. Attempt all the questions and try to quit and click on yes and quit the quiz.
 
-   j. Try steps c to g for single question in a quiz.
+   k. Try steps c to g for single question in a quiz.
 
-   k. Try to attempt the questions until time runs out and check if timeout closes the quiz
+   l. Try to attempt the questions until time runs out and check if timeout closes the quiz
       safely.
+
+   m. Try view answerpaper if student is getting proper marks.
 
 
 4. Moderator Interface.
