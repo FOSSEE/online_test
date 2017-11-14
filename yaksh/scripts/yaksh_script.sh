@@ -5,7 +5,8 @@ chown -R nobody output
 chmod -R a+rwX output
 chmod -R a+rX data yaksh
 chmod -R o-w data yaksh
-echo "** Installing python dependencies **"
+echo "** [CONTAINER] Installing python dependencies **"
 pip3 install -r ./requirements-codeserver.txt
-echo "** Running code server **"
+echo "** [CONTAINER] Running code server **"
+touch server_running.txt
 /usr/bin/sudo -su nobody python3 -m yaksh.code_server
