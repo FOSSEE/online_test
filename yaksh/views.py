@@ -37,7 +37,7 @@ from yaksh.models import (
     HookTestCase, IntegerTestCase, McqTestCase, Profile,
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
-    get_model_class
+    get_model_class, FIXTURES_DIR_PATH
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -1912,14 +1912,12 @@ def _read_user_csv(reader, course):
                 continue
         user_defaults = {'email': email, 'first_name': first_name,
                          'last_name': last_name}
-        user, created = _create_or_update_user(username, user_defaults)
+        user, created = _create_or_update_user(username, password, user_defaults)
         profile_defaults = {'institute': institute, 'roll_number': roll_no,
                             'department': department, 'is_email_verified': True}
         _create_or_update_profile(user, profile_defaults)
         if created:
             state = "Added"
-            user.set_password(password)
-            user.save()
             course.students.add(user)
         else:
             state = "Updated"
@@ -1936,12 +1934,10 @@ def _get_csv_values(row, fields):
     email, first_name, last_name = map(str.strip, [row['email'],
                                        row['firstname'],
                                        row['lastname']])
-    if 'password' in fields:
+    password = email
+    username = email
+    if 'password' in fields and row['password']:
         password = row['password'].strip()
-        if not password:
-            password = email
-    else:
-        password = email
     if 'roll_no' in fields:
         roll_no = row['roll_no'].strip()
     if 'institute' in fields:
@@ -1950,10 +1946,8 @@ def _get_csv_values(row, fields):
         department = row['department'].strip()
     if 'remove' in fields:
         remove = row['remove'].strip()
-    if 'username' in fields:
+    if 'username' in fields and row['username']:
         username = row['username'].strip()
-    else:
-        username = email
     if 'remove' in fields:
         remove = row['remove']
     return (username, email, first_name, last_name, password, roll_no, institute,
@@ -1972,12 +1966,31 @@ def _add_to_course(user, course):
         return True
 
 
-def _create_or_update_user(username, defaults):
-    return User.objects.update_or_create(username=username, defaults=defaults)
+def _create_or_update_user(username, password, defaults):
+    user, created = User.objects.update_or_create(username=username,
+                                                  defaults=defaults)
+    user.set_password(password)
+    user.save()
+    return user, created
 
 
 def _create_or_update_profile(user, defaults):
     Profile.objects.update_or_create(user=user, defaults=defaults)
+
+
+@login_required
+@email_verified
+def download_sample_csv(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                 "sample_user_upload.csv")
+    with open(csv_file_path, 'rb') as csv_file:
+        response = HttpResponse(csv_file.read(), content_type='text/csv')
+        response['Content-Disposition'] = 'attachment;\
+                                          filename="sample_user_upload"'
+        return response
 
 
 @login_required

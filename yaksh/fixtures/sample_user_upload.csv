@@ -1,0 +1,2 @@
+firstname,lastname,email,username,password,institute,department,roll_no,remove
+sample,user,sampleuser@xyz.com,sample_user,sample,sample,sample,sample123,False

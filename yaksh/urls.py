@@ -111,4 +111,6 @@ urlpatterns = [
         views.download_assignment_file, name="download_quiz_assignment"),
     url(r'^manage/courses/download_yaml_template/',
         views.download_yaml_template, name="download_yaml_template"),
+    url(r'^manage/download_sample_csv/',
+        views.download_sample_csv, name="download_sample_csv"),
 ]
