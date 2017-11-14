@@ -49,22 +49,15 @@ Quick Start
 
         - For Python 2 use:
 
-            $ pip install -r ./requirements/requirements-py2.txt
+                $ pip install -r ./requirements/requirements-py2.txt
 
         - For Python 3 (recommended) use:
 
-            $ pip install -r ./requirements/requirements-py3.txt
+                $ pip install -r ./requirements/requirements-py3.txt
 
 #### Short instructions
 
-1. To run the application do the following:
-
-        $ invoke serve
-
-    - *Note:* The serve command will run the django application server on the 8000 port
-    and hence this port will be unavailable to other processes.
-
-1.  On another terminal start up the code server that executes the user code safely:
+1.  Start up the code server that executes the user code safely:
 
     - To run the code server in a sandboxed docker environment, run the command:
 
@@ -82,7 +75,12 @@ Quick Start
       and is susceptible to malicious code. You will have to install the code 
       server requirements in sudo mode.
 
+1. On another terminal, run the application using the following command:
 
+        $ invoke serve
+
+    - *Note:* The serve command will run the django application server on the 8000 port
+    and hence this port will be unavailable to other processes.
 
 1. Open your browser and open the URL ```http://localhost:8000/exam```
 
