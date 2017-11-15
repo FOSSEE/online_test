@@ -1,4 +1,4 @@
-=== 0.7.0 (14-11-2017) ===
+=== 0.7.0 (15-11-2017) ===
 
 * Simplified Standard I/O type question error output.
 * Added the facility to search questions using tags.

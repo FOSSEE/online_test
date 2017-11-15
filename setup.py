@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-README = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
+README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
@@ -20,7 +20,10 @@ install_requires = [
     'python-social-auth==0.2.19',
     'tornado',
     'psutil',
-    'ruamel.yaml==0.15.23'
+    'ruamel.yaml==0.15.23',
+    'invoke==0.21.0',
+    'six',
+    'requests',
 ]
 
 setup(
@@ -37,7 +40,7 @@ setup(
                 'yaksh = yaksh.scripts.cli:main',
             ],
     },
-    description='A django app to conduct online tests.',
+    description='A django app to conduct online programming tests.',
     long_description=README,
     install_requires=install_requires,
     classifiers=[
