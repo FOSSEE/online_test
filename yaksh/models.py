@@ -29,9 +29,10 @@ import tempfile
 from textwrap import dedent
 from ast import literal_eval
 from .file_utils import extract_files, delete_files
-from yaksh.code_server import(submit, SERVER_POOL_PORT,
+from yaksh.code_server import(submit,
                               get_result as get_result_from_code_server
                               )
+from yaksh.settings import SERVER_POOL_PORT
 from django.conf import settings
 from django.forms.models import model_to_dict
 
@@ -1385,7 +1386,8 @@ class AnswerPaper(models.Model):
     def get_previous_answers(self, question):
         return self.answers.filter(question=question).order_by('-id')
 
-    def validate_answer(self, user_answer, question, json_data=None, uid=None):
+    def validate_answer(self, user_answer, question, json_data=None, uid=None,
+                        server_port=SERVER_POOL_PORT):
         """
             Checks whether the answer submitted by the user is right or wrong.
             If right then returns correct = True, success and
@@ -1447,12 +1449,12 @@ class AnswerPaper(models.Model):
 
             elif question.type == 'code' or question.type == "upload":
                 user_dir = self.user.profile.get_user_dir()
-                url = 'http://localhost:%s' % SERVER_POOL_PORT
+                url = 'http://localhost:%s' % server_port
                 submit(url, uid, json_data, user_dir)
                 result = {'uid': uid, 'status': 'running'}
         return result
 
-    def regrade(self, question_id):
+    def regrade(self, question_id, server_port=SERVER_POOL_PORT):
         try:
             question = self.questions.get(id=question_id)
             msg = 'User: {0}; Quiz: {1}; Question: {2}.\n'.format(
@@ -1478,9 +1480,11 @@ class AnswerPaper(models.Model):
         json_data = question.consolidate_answer_data(answer) \
             if question.type == 'code' else None
         result = self.validate_answer(answer, question,
-                                      json_data, user_answer.id)
+                                      json_data, user_answer.id,
+                                      server_port=server_port
+                                      )
         if question.type == "code":
-            url = 'http://localhost:%s' % SERVER_POOL_PORT
+            url = 'http://localhost:%s' % server_port
             check_result = get_result_from_code_server(url, result['uid'],
                                                        block=True
                                                        )

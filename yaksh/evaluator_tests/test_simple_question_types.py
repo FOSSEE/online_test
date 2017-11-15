@@ -68,6 +68,7 @@ class IntegerQuestionTestCases(unittest.TestCase):
         self.answerpaper = AnswerPaper.objects.get(question_paper\
                                                    =self.question_paper)
         self.answerpaper.attempt_number = 1
+        self.answerpaper.questions.add(self.question1)
         self.answerpaper.save()
         # For question 
         self.integer_based_testcase = IntegerTestCase(question=self.question1,
@@ -80,7 +81,7 @@ class IntegerQuestionTestCases(unittest.TestCase):
     def tearDownClass(self):
       self.question1.delete()
 
-    def test_integer_correct_answer(self):
+    def test_validate_regrade_integer_correct_answer(self):
         # Given
         integer_answer = 25
         self.answer = Answer(question=self.question1,
@@ -88,7 +89,7 @@ class IntegerQuestionTestCases(unittest.TestCase):
                              )
         self.answer.save()
         self.answerpaper.answers.add(self.answer)
-
+        self.answerpaper.save()
         # When
         json_data = None
         result = self.answerpaper.validate_answer(integer_answer,
@@ -98,7 +99,26 @@ class IntegerQuestionTestCases(unittest.TestCase):
         # Then
         self.assertTrue(result['success'])
 
-    def test_integer_incorrect_answer(self):
+        # Regrade
+         # Given
+        self.answer.correct = True
+        self.answer.marks = 1
+
+        self.answer.answer = 200
+        self.answer.save()
+
+        # When
+        details = self.answerpaper.regrade(self.question1.id)
+
+        # Then
+        self.answer = self.answerpaper.answers.filter(question=self.question1
+                                                      ).last()
+        self.assertTrue(details[0])
+        self.assertEqual(self.answer.marks, 0)
+        self.assertFalse(self.answer.correct)
+
+
+    def test_validate_regrade_integer_incorrect_answer(self):
         # Given
         integer_answer = 26
         self.answer = Answer(question=self.question1,
@@ -115,6 +135,24 @@ class IntegerQuestionTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result['success'])
+
+        # Regrade
+         # Given
+        self.answer.correct = True
+        self.answer.marks = 1
+
+        self.answer.answer = 25
+        self.answer.save()
+
+        # When
+        details = self.answerpaper.regrade(self.question1.id)
+
+        # Then
+        self.answer = self.answerpaper.answers.filter(question=self.question1
+                                                      ).last()
+        self.assertTrue(details[0])
+        self.assertEqual(self.answer.marks, 1)
+        self.assertTrue(self.answer.correct)
 
 
 class StringQuestionTestCases(unittest.TestCase):
@@ -147,6 +185,7 @@ class StringQuestionTestCases(unittest.TestCase):
         self.answerpaper = AnswerPaper.objects.get(question_paper\
                                                    =self.question_paper)
         self.answerpaper.attempt_number = 1
+        self.answerpaper.questions.add(*[self.question1, self.question2])
         self.answerpaper.save()
 
         # For question 
@@ -169,7 +208,7 @@ class StringQuestionTestCases(unittest.TestCase):
       self.question1.delete()
       self.question2.delete()
 
-    def test_case_insensitive_string_correct_answer(self):
+    def test_validate_regrade_case_insensitive_string_correct_answer(self):
         # Given
         string_answer = "hello, earth!"
         answer = Answer(question=self.question1,answer=string_answer)
@@ -184,7 +223,25 @@ class StringQuestionTestCases(unittest.TestCase):
         # Then
         self.assertTrue(result['success'])
 
-    def test_case_insensitive_string_incorrect_answer(self):
+        # Regrade
+         # Given
+        answer.correct = True
+        answer.marks = 1
+
+        answer.answer = "hello, mars!"
+        answer.save()
+
+        # When
+        details = self.answerpaper.regrade(self.question1.id)
+
+        # Then
+        answer = self.answerpaper.answers.filter(question=self.question1)\
+                                               .last()
+        self.assertTrue(details[0])
+        self.assertEqual(answer.marks, 0)
+        self.assertFalse(answer.correct)
+
+    def test_validate_regrade_case_insensitive_string_incorrect_answer(self):
         # Given
         string_answer = "hello, mars!"
         answer = Answer(question=self.question1,answer=string_answer)
@@ -200,7 +257,25 @@ class StringQuestionTestCases(unittest.TestCase):
         # Then
         self.assertFalse(result['success'])
 
-    def test_case_sensitive_string_correct_answer(self):
+        # Regrade
+         # Given
+        answer.correct = True
+        answer.marks = 1
+
+        answer.answer = "hello, earth!"
+        answer.save()
+
+        # When
+        details = self.answerpaper.regrade(self.question1.id)
+
+        # Then
+        answer = self.answerpaper.answers.filter(question=self.question1)\
+                                               .last()
+        self.assertTrue(details[0])
+        self.assertEqual(answer.marks, 1)
+        self.assertTrue(answer.correct)
+
+    def test_validate_regrade_case_sensitive_string_correct_answer(self):
         # Given
         string_answer = "Hello, EARTH!"
         answer = Answer(question=self.question2,answer=string_answer)
@@ -214,6 +289,24 @@ class StringQuestionTestCases(unittest.TestCase):
                                                   )
         # Then
         self.assertTrue(result['success'])
+
+        # Regrade
+         # Given
+        answer.correct = True
+        answer.marks = 1
+
+        answer.answer = "hello, earth!"
+        answer.save()
+
+        # When
+        details = self.answerpaper.regrade(self.question2.id)
+
+        # Then
+        answer = self.answerpaper.answers.filter(question=self.question2)\
+                                               .last()
+        self.assertTrue(details[0])
+        self.assertEqual(answer.marks, 0)
+        self.assertFalse(answer.correct)
 
     def test_case_sensitive_string_incorrect_answer(self):
         # Given
@@ -230,6 +323,24 @@ class StringQuestionTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result['success'])
+
+        # Regrade
+         # Given
+        answer.correct = True
+        answer.marks = 1
+
+        answer.answer = "Hello, EARTH!"
+        answer.save()
+
+        # When
+        details = self.answerpaper.regrade(self.question2.id)
+
+        # Then
+        answer = self.answerpaper.answers.filter(question=self.question2)\
+                                               .last()
+        self.assertTrue(details[0])
+        self.assertEqual(answer.marks, 1)
+        self.assertTrue(answer.correct)
 
 
 class FloatQuestionTestCases(unittest.TestCase):
@@ -254,6 +365,7 @@ class FloatQuestionTestCases(unittest.TestCase):
         self.answerpaper = AnswerPaper.objects.get(question_paper\
                                                    =self.question_paper)
         self.answerpaper.attempt_number = 1
+        self.answerpaper.questions.add(self.question1)
         self.answerpaper.save()
         # For question 
         self.float_based_testcase = FloatTestCase(question=self.question1,
@@ -267,7 +379,7 @@ class FloatQuestionTestCases(unittest.TestCase):
     def tearDownClass(self):
       self.question1.delete()
 
-    def test_float_correct_answer(self):
+    def test_validate_regrade_float_correct_answer(self):
         # Given
         float_answer = 99.9
         self.answer = Answer(question=self.question1,
@@ -285,7 +397,25 @@ class FloatQuestionTestCases(unittest.TestCase):
         # Then
         self.assertTrue(result['success'])
 
-    def test_integer_incorrect_answer(self):
+        # Regrade
+         # Given
+        self.answer.correct = True
+        self.answer.marks = 1
+
+        self.answer.answer = 0.0
+        self.answer.save()
+
+        # When
+        details = self.answerpaper.regrade(self.question1.id)
+
+        # Then
+        self.answer = self.answerpaper.answers.filter(question=self.question1
+                                                      ).last()
+        self.assertTrue(details[0])
+        self.assertEqual(self.answer.marks, 0)
+        self.assertFalse(self.answer.correct)
+
+    def test_float_incorrect_answer(self):
         # Given
         float_answer = 99.8
         self.answer = Answer(question=self.question1,
@@ -302,3 +432,21 @@ class FloatQuestionTestCases(unittest.TestCase):
 
         # Then
         self.assertFalse(result['success'])
+
+        # Regrade
+         # Given
+        self.answer.correct = True
+        self.answer.marks = 1
+
+        self.answer.answer = 99.9
+        self.answer.save()
+
+        # When
+        details = self.answerpaper.regrade(self.question1.id)
+
+        # Then
+        self.answer = self.answerpaper.answers.filter(question=self.question1
+                                                      ).last()
+        self.assertTrue(details[0])
+        self.assertEqual(self.answer.marks, 1)
+        self.assertTrue(self.answer.correct)
