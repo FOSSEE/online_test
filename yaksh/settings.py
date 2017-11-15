@@ -2,16 +2,21 @@
 settings for yaksh app.
 """
 
+from decouple import config
+
 # The number of code server processes to run..
-N_CODE_SERVERS = 5
+N_CODE_SERVERS = config('N_CODE_SERVERS', default=5, cast=int)
 
 # The server pool port.  This is the server which returns available server
 # ports so as to minimize load.  This is some random number where no other
 # service is running.  It should be > 1024 and less < 65535 though.
-SERVER_POOL_PORT = 53579
+SERVER_POOL_PORT = config('EMAIL_PORT', default=55555, cast=int)
+
+SERVER_HOST_NAME = config('SERVER_HOST_NAME', default='http://localhost')
+#'localhost'
 
 # Timeout for the code to run in seconds.  This is an integer!
-SERVER_TIMEOUT = 4
+SERVER_TIMEOUT = config('SERVER_TIMEOUT', default=4, cast=int)
 
 # The root of the URL, for example you might be in the situation where you
 # are not hosted as host.org/exam/  but as host.org/foo/exam/ for whatever
