@@ -2,6 +2,9 @@ import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload 
+from yaksh.code_server import(ServerPool,
+                              get_result as get_result_from_code_server
+                              )
 import json
 import ruamel.yaml as yaml
 from datetime import datetime, timedelta
@@ -10,10 +13,13 @@ import pytz
 from django.contrib.auth.models import Group
 from django.core.files import File
 from django.forms.models import model_to_dict
+from textwrap import dedent
 import zipfile
 import os
 import shutil
 import tempfile
+from threading import Thread
+from yaksh import settings
 
 def setUpModule():
     # create user profile
@@ -735,6 +741,20 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.user2_answerpaper2 = self.question_paper.make_answerpaper(
             self.user2, self.ip, 1
         )
+        settings.code_evaluators['python']['standardtestcase'] = \
+            "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
+        self.SERVER_POOL_PORT = 4000
+        server_pool = ServerPool(n=1, pool_port=self.SERVER_POOL_PORT)
+        self.server_pool = server_pool
+        self.server_thread = t = Thread(target=server_pool.run)
+        t.start()
+    
+    @classmethod
+    def tearDownClass(self):
+        self.server_pool.stop()
+        self.server_thread.join()
+        settings.code_evaluators['python']['standardtestcase'] = \
+            "python_assertion_evaluator.PythonAssertionEvaluator"
 
     def test_get_per_question_score(self):
         # Given
@@ -835,6 +855,65 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Then
         self.answer = self.answerpaper.answers.filter(question=self.question3).last()
+        self.assertTrue(details[0])
+        self.assertEqual(self.answer.marks, 0)
+        self.assertFalse(self.answer.correct)
+
+    def test_validate_and_regrade_code_correct_answer(self):
+        # Given
+        # Start code server
+        
+        user_answer = dedent("""\
+                                def add(a,b):
+                                    return a+b
+                             """)
+        self.answer = Answer(question=self.question1,
+                             answer=user_answer,
+                             )
+        self.answer.save()
+        self.answerpaper.answers.add(self.answer)
+        user = self.answerpaper.user
+
+        # When
+        json_data = self.question1.consolidate_answer_data(user_answer,
+                                                          user
+                                                          )
+        get_result = self.answerpaper.validate_answer(user_answer,
+                                                      self.question1,
+                                                      json_data,
+                                                      self.answer.id,
+                                                      self.SERVER_POOL_PORT
+                                                      )
+        url = 'http://localhost:%s' % self.SERVER_POOL_PORT
+        check_result = get_result_from_code_server(url,get_result['uid'],
+                                                   block=True
+                                                   )
+        result = json.loads(check_result.get('result'))
+
+        # Then
+        self.assertTrue(result['success'])
+        self.answer.correct = True
+        self.answer.marks = 1
+
+        # Regrade
+        # Given
+        self.answer.correct = True
+        self.answer.marks = 1
+
+        self.answer.answer = dedent("""
+                                    def add(a,b):
+                                        return a-b
+                                    """)
+        self.answer.save()
+
+        # When
+        details = self.answerpaper.regrade(self.question1.id,
+                                           self.SERVER_POOL_PORT
+                                           )
+
+        # Then
+        self.answer = self.answerpaper.answers.filter(question=self.question1
+                                                      ).last()
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 0)
         self.assertFalse(self.answer.correct)
