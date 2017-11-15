@@ -301,36 +301,8 @@ Features in Question
 			
 			Click on the browse button. This will open up a window. Select the zip file of questions and click Ok and then click on Upload file button, questions will be uploaded and displayed on the Questions page.
 
-				Zip file should contain **questions_dump.json** from which questions will be loaded.
+				Zip file should contain **questions_dump.yaml** from which questions will be loaded.
 				Zip file can contain files related to questions.
-				Sample entry in **questions_dump.json** is as shown below. ::
-					[{
-					"snippet": "",
-					"testcase": [
-					{
-					"test_case_args": "",
-					"test_case_type": "standardtestcase",
-					"weight": 1.0,
-					"test_case": "Test Case here"
-					},
-					],
-					"points": 2.0,
-					"description": "Question Description here",
-					"language": "python",
-					"active": true,
-					"type": "code",
-					"files": [[demo1.txt, false], [demo2.zip, true]],
-					"summary": "Question Summary here"
-					}]
-
-				.. Note::	1. In **files** entry in json, the list contains two items which
-					are filename (demo1.txt) and extract status (false) i.e file needs to extracted or not.
-
-					2. If there are no files then **files** entry can be empty
-					i.e it should be "files": [].
-
-					3. From sample, zip file should contain demo1.txt and demo2.zip since it is
-					required for question.
 
 	* **Test Questions**
 			

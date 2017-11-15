@@ -21,7 +21,7 @@ Contact
 
 License
 -------
-	This is distributed under the terms of the BSD license. Copyright information is at the bottom of this file.
+	This is distributed under the terms of the BSD license.
 
 Authors
 -------
