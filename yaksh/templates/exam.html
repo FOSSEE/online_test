@@ -15,7 +15,7 @@
           <a class="navbar-brand" href="#"> Yaksh </a>
         </div>
         <div class= "collapse navbar-collapse" id="navbar">
-          <form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" class="pull-right">
+          <form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{module_id}}/{{ paper.question_paper.id }}/{{course_id}}/" method="post" class="pull-right">
             {% csrf_token %}
             <ul class="nav navbar-nav navbar">
               <li style="padding: 10px"><button class="btn btn-danger btn-sm" type="submit" name="quit">
@@ -52,15 +52,15 @@
                 {% if qid.id == question.id %}
                 <li class="active"><a style="width:25%" href="#"data-toggle="tooltip"
                     title="{{ qid.description|striptags }}"
-                    onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
+                    onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module_id }}/{{ paper.question_paper.id }}/{{course_id}}/')">{{ forloop.counter }}</a></li>
                 {% else %}
                 <li><a style="width:25%" href="#" data-toggle="tooltip" title="{{ qid.description|striptags }}"
-                    onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
+                    onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module_id }}/{{ paper.question_paper.id }}/{{course_id}}/')">{{ forloop.counter }}</a></li>
                 {% endif %}
                 {% endif %}
                 {% if qid in paper.get_questions_answered %}
                 <li><a style="background-color:#B4B8BA; width:25%" href="#" data-toggle="tooltip"
-                onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')"
+                onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module_id }}/{{ paper.question_paper.id }}/{{course_id}}/')"
                 title="{{ qid.description }}">{{ forloop.counter }}</a></li>
                 {% endif %}
                 {% else %}

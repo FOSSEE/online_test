@@ -1,0 +1,61 @@
+{% extends "manage.html" %}
+{% load custom_filters %}
+
+{% block title %}Create/Edit Lesson{% endblock %}
+
+{% block script %}
+<script src="{{ URL_ROOT }}/static/yaksh/js/lesson.js"></script>
+{% endblock %}
+
+{% block content %}
+<form name=frm id=frm action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <center>
+    <table class="table table-bordered">
+    {{ lesson_form.as_table }}
+    {{ lesson_file_form.as_table }}
+    </table>
+    </center>
+    <br><br>
+    <center>
+    {% if lesson_files %}
+    <div class="alert alert-success">
+        <h4>Files added to this lesson</h4>
+    </div>
+        {% for f in lesson_files %}
+            <h4><input type="checkbox" name="delete_files" value="{{f.id}}">&nbsp;Delete</input>&nbsp;
+            <a href="{{f.file.url}}">{{ f.file.name|file_title }}</a> 
+            ({{f.file.url}})
+            </h4><br>
+        {% endfor %}
+    {% else %}
+    <div class="alert alert-warning">
+        <h4 class="alert-warning">No Files added to this lesson</h4>
+    </div>
+    {% endif %}
+
+    </center>
+    <br><br>
+    <center>
+    <button class="btn" type="submit" id="submit" name="Save"> Save
+    </button>
+    {% if lesson_files %}
+    <button class="btn" type="submit" id="submit" name="Delete"> Delete Files
+    </button>
+    {% endif %}
+    <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button>
+    <button class="btn" type="button" name="button" id="preview">Preview Lesson Description
+    </button>
+    </center>
+    <hr>
+    <div class="panel panel-default" id="preview_text_div" style="display: none;">
+        <div class="panel-heading">
+            <center>
+                <h3>Description Preview</h3>
+            </center>
+        </div>
+        <div class="panel-body" id="description_body">
+        </div>
+    </div>
+</form>
+{% endblock %}

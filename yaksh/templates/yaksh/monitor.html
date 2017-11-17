@@ -46,7 +46,7 @@ $(document).ready(function()
     {% if course.get_quizzes %}
     <td>
     {% for quiz in course.get_quizzes %}
-     <li class="list-group-item"><a href = "{{URL_ROOT}}/exam/manage/monitor/{{quiz.id}}">
+     <li class="list-group-item"><a href = "{{URL_ROOT}}/exam/manage/monitor/{{quiz.id}}/{{course.id}}/">
      {{quiz.description}}
      </a></li>
     {% endfor %}
@@ -64,7 +64,7 @@ $(document).ready(function()
 {% if msg != "Monitor" %}
 {% if quiz %}
 {% if papers %}
-<p>Course Name: {{ quiz.course.name }}</p>
+<p>Course Name: {{ course.name }}</p>
 <p>Quiz Name: {{ quiz.description }}</p>
 <p>Number of papers: {{ papers|length }} </p>
 {% completed papers as completed_papers %}
@@ -75,7 +75,7 @@ $(document).ready(function()
  {# template tag used to get the count of inprogress papers #}
  <p>Papers in progress:<b>  {{ inprogress_papers }} </b></p>
 
-<p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{papers.0.question_paper.id}}">Question Statisitics</a></p>
+<p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{papers.0.question_paper.id}}/{{course.id}}">Question Statisitics</a></p>
 <p>
    <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#csvModal">
        Download CSV <span class="glyphicon glyphicon-save"></span>
@@ -97,7 +97,7 @@ $(document).ready(function()
     <tbody>
     {% for paper in latest_attempts %}
     <tr> 
-        <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.id}}/{{paper.question_paper.id}}">{{ paper.user.get_full_name.title }}</a> </td>
+        <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.id}}/{{paper.question_paper.id}}/{{course.id}}">{{ paper.user.get_full_name.title }}</a> </td>
         <td> {{ paper.user.username }} </td>
         <td> {{ paper.user.profile.roll_number }} </td>
         <td> {{ paper.user.profile.institute }} </td>
@@ -129,7 +129,7 @@ $(document).ready(function()
       <button type="button" class="close" data-dismiss="modal">&times;</button>
       <h3 class="modal-title">Uncheck unwanted columns</h3>
     </div>
-    <form action="{{URL_ROOT}}/exam/manage/download_quiz_csv/{{ quiz.course.id }}/{{ quiz.id }}/" method="post">
+    <form action="{{URL_ROOT}}/exam/manage/download_quiz_csv/{{ course.id }}/{{ quiz.id }}/" method="post">
         {% csrf_token %}
     <div class="modal-body">
         {% for field in csv_fields %}

@@ -32,5 +32,12 @@
 		<center><h2> Good bye! </h2></center>
 		<center><h4> {{message}} </h4></center>
 		<br><center><h4>You may now close the browser.</h4></center><br>
-	<center><a href="{{URL_ROOT}}/exam/" id="home"> Home </a></center>
+	<center>
+        <a href="{{URL_ROOT}}/exam/" id="home" class="btn btn-success"> Home </a>
+        {% if first_unit %}
+            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}/1" class="btn btn-info"> Next Unit </a>
+        {% else %}
+            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}" class="btn btn-info"> Next Unit </a>
+        {% endif %}
+    </center>
 {% endblock content %}

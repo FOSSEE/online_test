@@ -14,16 +14,16 @@
     <th>Taken By</th>
     <th>No. of users Passed</th>
     <th>No. of users Failed</th>
-    {% for paper, answer_papers, users_passed, users_failed in users_per_paper %}
+    {% for course, quiz, answer_papers, users_passed, users_failed in users_per_paper %}
         <tr>
             <td>
-                {{ paper.quiz.course.name }}
+                {{ course }}
             </td>
             <td>
-                <a href="{{URL_ROOT}}/exam/manage/monitor/{{ paper.quiz.id }}/">{{ paper.quiz.description }}</a>
+                <a href="{{URL_ROOT}}/exam/manage/monitor/{{ quiz.id }}/{{course.id}}">{{ quiz.description }}</a>
             </td>
             <td>
-                {{ answer_papers|length }} user(s)
+                {{ answer_papers }} user(s)
             </td>
             <td>
                 {{ users_passed }}
@@ -34,6 +34,7 @@
         </tr>
     {% endfor %}
 </table>
+
 <hr>
 <center>
     <a href="{{URL_ROOT}}/exam/manage/add_course" class="btn btn-default">
@@ -70,7 +71,7 @@
    {% for paper in trial_paper %}
   <tr>
   <td> <input type = "checkbox" name="delete_paper" class="check" value = {{paper.id}}></input></td>
-  <td> <a href="{{URL_ROOT}}/exam/manage/gradeuser/{{paper.question_paper.quiz.id}}">{{paper.question_paper.quiz.description}}</a></td>
+  <td> <a href="{{URL_ROOT}}/exam/manage/gradeuser/{{paper.question_paper.quiz.id}}/{{paper.course.id}}/">{{paper.question_paper.quiz.description}}</a></td>
   </tr>
   {% endfor %}
   </table>
