@@ -9,6 +9,7 @@ TARGET_CONTAINER_NAME = 'yaksh_code_server'
 SRC_IMAGE_NAME = 'fossee/yaksh_codeserver'
 CHECK_FILE = 'server_running.txt'
 CHECK_FILE_PATH = os.path.join(SCRIPT_DIR, 'yaksh_data', CHECK_FILE)
+OS_NAME = sys.platform
 
 
 def create_dir(path):
@@ -18,6 +19,18 @@ def create_dir(path):
 def remove_check_file(path):
     if os.path.isfile(path):
         os.remove(path)
+
+def run_as(os_name):
+    if os_name.startswith('linux') or os_name == 'darwin':
+        return 'sudo'
+    elif os_name.startswith('Win32'):
+        return None
+
+def get_cmd(run_as_cmd, base_cmd):
+    if run_as_cmd:
+        return '{0} {1}'.format(run_as_cmd, base_cmd)
+    else:
+        return base_cmd
 
 @task
 def setupdb(ctx):
@@ -43,7 +56,10 @@ def getimage(ctx, image=SRC_IMAGE_NAME):
     except invoke.exceptions.Failure:
         print("The docker image {0} does not exist locally".format(image))
         print("\n** Pulling latest image <{0}> from docker hub **".format(image))
-        ctx.run("sudo docker pull {0}".format(image))
+        base_cmd = "docker pull {0}".format(image)
+        run_as_cmd = run_as(OS_NAME)
+        cmd = get_cmd(run_as_cmd, base_cmd)
+        ctx.run(cmd)
         print("\n** Done! Successfully pulled latest image <{0}> **".format(image))
 
 @task
@@ -52,10 +68,12 @@ def start(ctx, ports=SERVER_POOL_PORT, image=SRC_IMAGE_NAME, unsafe=False,
     if unsafe:
         with ctx.cd(SCRIPT_DIR):
             print("** Initializing local code server **")
-            ctx.run("sudo python{0} -m yaksh.code_server".format(
-                    version
-                )
+            base_cmd = "python{0} -m yaksh.code_server".format(
+                version
             )
+            run_as_cmd = run_as(OS_NAME)
+            cmd = get_cmd(run_as_cmd, base_cmd)
+            ctx.run(cmd)
     else:
         cmd_params = {'ports': ports,
             'image': SRC_IMAGE_NAME,
@@ -104,9 +122,17 @@ def stop(ctx, container=TARGET_CONTAINER_NAME, hide=True):
     result = ctx.run("sudo docker ps -q --filter='name={0}'".format(container))
     remove_check_file(CHECK_FILE_PATH)
     if result.stdout:
+        print ("** Stopping the docker container <{0}>".format(container))
+        base_cmd = "docker stop {0}".format(container)
+        run_as_cmd = run_as(OS_NAME)
+        cmd = get_cmd(run_as_cmd, base_cmd)
+        ctx.run(cmd)
+        print ("** Done! Stopped the docker container <{0}>".format(container))
+
         print ("** Discarding the docker container <{0}>".format(container))
-        ctx.run("sudo docker stop {0}".format(container))
-        ctx.run("sudo docker rm {0}".format(container))
+        base_cmd = "docker rm {0}".format(container)
+        run_as_cmd = run_as(OS_NAME)
+        cmd = get_cmd(run_as_cmd, base_cmd)
         print ("** Done! Discarded the docker container <{0}>".format(container))
     else:
         print("** Docker container <{0}> not found **".format(container))
