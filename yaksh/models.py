@@ -121,6 +121,12 @@ def dict_to_yaml(dictionary):
                                        allow_unicode=True,
                                        )
 
+
+def get_file_dir(instance, filename):
+    upload_dir = instance.lesson.name.replace(" ", "_")
+    return os.sep.join((upload_dir, filename))
+
+
 ###############################################################################
 class CourseManager(models.Manager):
 
@@ -133,6 +139,331 @@ class CourseManager(models.Manager):
 
     def get_hidden_courses(self, code):
         return self.filter(code=code, hidden=True)
+
+
+#############################################################################
+class Lesson(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    html_data = models.TextField(null=True, blank=True)
+    creator = models.ForeignKey(User)
+
+    def get_files(self):
+        return LessonFile.objects.filter(lesson=self)
+
+    def get_lesson_completion_status(self, user, course):
+        course_status = CourseStatus.objects.filter(user=user, course=course)
+        if course_status.exists():
+            learning_unit = course_status.first().completed_units.filter(
+                lesson_id=self.id)
+            if learning_unit.exists():
+                return "completed"
+            else:
+                return "inprogress"
+        else:
+            return "not attempted"
+
+    def __str__(self):
+        return "{0}".format(self.name)
+
+
+#############################################################################
+class LessonFile(models.Model):
+    lesson = models.ForeignKey(Lesson, related_name="lesson")
+    file = models.FileField(upload_to=get_file_dir)
+
+    def remove(self):
+        if os.path.exists(self.file.path):
+            os.remove(self.file.path)
+            if os.listdir(os.path.dirname(self.file.path)) == []:
+                os.rmdir(os.path.dirname(self.file.path))
+        self.delete()
+
+
+###############################################################################
+class QuizManager(models.Manager):
+    def get_active_quizzes(self):
+        return self.filter(active=True, is_trial=False)
+
+    def create_trial_quiz(self, trial_course, user):
+        """Creates a trial quiz for testing questions"""
+        trial_quiz = self.create(duration=1000,
+                                 description="trial_questions",
+                                 is_trial=True,
+                                 time_between_attempts=0
+                                 )
+        return trial_quiz
+
+    def create_trial_from_quiz(self, original_quiz_id, user, godmode,
+                               course_id):
+        """Creates a trial quiz from existing quiz"""
+        trial_course_name = "Trial_course_for_course_{0}_{1}".format(
+            course_id, "godmode" if godmode else "usermode")
+        trial_quiz_name = "Trial_orig_id_{0}_{1}".format(
+            original_quiz_id,
+            "godmode" if godmode else "usermode"
+        )
+        # Get or create Trial Course for usermode/godmode
+        trial_course = Course.objects.filter(name=trial_course_name)
+        if trial_course.exists():
+            trial_course = trial_course.get(name=trial_course_name)
+        else:
+            trial_course = Course.objects.create(
+                name=trial_course_name, creator=user, enrollment="open",
+                is_trial=True)
+
+        # Get or create Trial Quiz for usermode/godmode
+        if self.filter(description=trial_quiz_name).exists():
+            trial_quiz = self.get(description=trial_quiz_name)
+
+        else:
+            trial_quiz = self.get(id=original_quiz_id)
+            trial_quiz.user = user
+            trial_quiz.pk = None
+            trial_quiz.description = trial_quiz_name
+            trial_quiz.is_trial = True
+            trial_quiz.prerequisite = None
+            if godmode:
+                trial_quiz.time_between_attempts = 0
+                trial_quiz.duration = 1000
+                trial_quiz.attempts_allowed = -1
+                trial_quiz.active = True
+                trial_quiz.start_date_time = timezone.now()
+                trial_quiz.end_date_time = datetime(
+                    2199, 1, 1, 0, 0, 0, 0, tzinfo=pytz.utc
+                )
+            trial_quiz.save()
+
+        # Get or create Trial Ordered Lesson for usermode/godmode
+        learning_modules = trial_course.get_learning_modules()
+        if learning_modules:
+            quiz = learning_modules[0].learning_unit.filter(quiz=trial_quiz)
+            if not quiz.exists():
+                trial_learning_unit = LearningUnit.objects.create(
+                    order=1, quiz=trial_quiz, learning_type="quiz",
+                    check_prerequisite=False)
+                learning_modules[0].learning_unit.add(trial_learning_unit.id)
+            trial_learning_module = learning_modules[0]
+        else:
+            trial_learning_module = LearningModule.objects.create(
+                name="Trial for {}".format(trial_course), order=1,
+                check_prerequisite=False, creator=user, is_trial=True)
+            trial_learning_unit = LearningUnit.objects.create(
+                order=1, quiz=trial_quiz, learning_type="quiz",
+                check_prerequisite=False)
+            trial_learning_module.learning_unit.add(trial_learning_unit.id)
+            trial_course.learning_module.add(trial_learning_module.id)
+
+        # Add user to trial_course
+        trial_course.enroll(False, user)
+        return trial_quiz, trial_course, trial_learning_module
+
+
+###############################################################################
+class Quiz(models.Model):
+    """A quiz that students will participate in. One can think of this
+    as the "examination" event.
+    """
+
+    # The start date of the quiz.
+    start_date_time = models.DateTimeField(
+        "Start Date and Time of the quiz",
+        default=timezone.now,
+        null=True
+    )
+
+    # The end date and time of the quiz
+    end_date_time = models.DateTimeField(
+        "End Date and Time of the quiz",
+        default=datetime(
+            2199, 1, 1,
+            tzinfo=pytz.timezone(timezone.get_current_timezone_name())
+        ),
+        null=True
+    )
+
+    # This is always in minutes.
+    duration = models.IntegerField("Duration of quiz in minutes", default=20)
+
+    # Is the quiz active. The admin should deactivate the quiz once it is
+    # complete.
+    active = models.BooleanField(default=True)
+
+    # Description of quiz.
+    description = models.CharField(max_length=256)
+
+    # Mininum passing percentage condition.
+    pass_criteria = models.FloatField("Passing percentage", default=40)
+
+    # Number of attempts for the quiz
+    attempts_allowed = models.IntegerField(default=1, choices=attempts)
+
+    time_between_attempts = models.IntegerField(
+        "Number of Days", choices=days_between_attempts
+    )
+
+    is_trial = models.BooleanField(default=False)
+
+    instructions = models.TextField('Instructions for Students',
+                                    default=None, blank=True, null=True)
+
+    view_answerpaper = models.BooleanField('Allow student to view their answer\
+                                            paper', default=False)
+
+    allow_skip = models.BooleanField("Allow students to skip questions",
+                                     default=True)
+
+    weightage = models.FloatField(default=1.0)
+
+    creator = models.ForeignKey(User, null=True)
+
+    objects = QuizManager()
+
+    class Meta:
+        verbose_name_plural = "Quizzes"
+
+    def is_expired(self):
+        return not self.start_date_time <= timezone.now() < self.end_date_time
+
+    def create_demo_quiz(self, user):
+        demo_quiz = Quiz.objects.create(
+            start_date_time=timezone.now(),
+            end_date_time=timezone.now() + timedelta(176590),
+            duration=30, active=True,
+            attempts_allowed=-1,
+            time_between_attempts=0,
+            description='Yaksh Demo quiz', pass_criteria=0,
+            prerequisite=None, creator=user
+        )
+        return demo_quiz
+
+    def get_total_students(self, course):
+        return AnswerPaper.objects.filter(
+                question_paper=self.questionpaper_set.get().id,
+                course=course
+            ).values_list("user", flat=True).distinct().count()
+
+    def get_passed_students(self, course):
+        return AnswerPaper.objects.filter(
+                question_paper=self.questionpaper_set.get().id,
+                course=course, passed=True
+            ).values_list("user", flat=True).distinct().count()
+
+    def get_failed_students(self, course):
+        return AnswerPaper.objects.filter(
+                question_paper=self.questionpaper_set.get().id,
+                course=course, passed=False
+            ).values_list("user", flat=True).distinct().count()
+
+    def get_quiz_completion_status(self, user, course):
+        ans_pprs = AnswerPaper.objects.filter(
+            question_paper=self.questionpaper_set.get().id,
+            user=user, course=course).order_by("-attempt_number")
+        if ans_pprs.exists():
+            latest_ans_ppr_status = ans_pprs.first().status
+        else:
+            latest_ans_ppr_status = "not attempted"
+        return latest_ans_ppr_status
+
+    def __str__(self):
+        desc = self.description or 'Quiz'
+        return '%s: on %s for %d minutes' % (desc, self.start_date_time,
+                                             self.duration)
+
+
+##########################################################################
+class LearningUnit(models.Model):
+    """ Maintain order of lesson and quiz added in the course """
+    order = models.IntegerField()
+    learning_type = models.CharField(max_length=16)
+    lesson = models.ForeignKey(Lesson, null=True, blank=True)
+    quiz = models.ForeignKey(Quiz, null=True, blank=True)
+    check_prerequisite = models.BooleanField(default=True)
+
+    def toggle_check_prerequisite(self):
+        if self.check_prerequisite:
+            self.check_prerequisite = False
+        else:
+            self.check_prerequisite = True
+
+    def get_completion_status(self, user, course):
+        if self.learning_type == "quiz":
+            status = self.quiz.get_quiz_completion_status(user, course)
+        else:
+            status = self.lesson.get_lesson_completion_status(user, course)
+        return status
+
+    def has_prerequisite(self):
+        return self.check_prerequisite
+
+    def is_prerequisite_passed(self, user, learning_module, course):
+        ordered_units = learning_module.learning_unit.order_by("order")
+        ordered_units_ids = list(ordered_units.values_list("id", flat=True))
+        current_unit_index = ordered_units_ids.index(self.id)
+        if current_unit_index == 0:
+            success = True
+        else:
+            prev_unit = ordered_units.get(
+                id=ordered_units_ids[current_unit_index-1])
+            if prev_unit.learning_type == "quiz":
+                success = prev_unit.quiz.get_quiz_completion_status(
+                    user, course)
+            else:
+                success = prev_unit.lesson.get_lesson_completion_status(
+                    user, course)
+        return success
+
+
+###############################################################################
+class LearningModule(models.Model):
+    """ Learning Module to maintain learning units"""
+    learning_unit = models.ManyToManyField(LearningUnit,
+                                           related_name="learning_unit")
+    name = models.CharField(max_length=255)
+    description = models.TextField(default=None, null=True, blank=True)
+    order = models.IntegerField(default=0)
+    creator = models.ForeignKey(User, related_name="module_creator")
+    check_prerequisite = models.BooleanField(default=True)
+    html_data = models.TextField(null=True, blank=True)
+    is_trial = models.BooleanField(default=False)
+
+    def get_quiz_units(self):
+        return [unit.quiz for unit in self.learning_unit.filter(
+                learning_type="quiz")]
+
+    def get_learning_units(self):
+        return self.learning_unit.order_by("order")
+
+    def get_added_quiz_lesson(self):
+        learning_units = self.learning_unit.order_by("order")
+        added_quiz_lessons = []
+        if learning_units.exists():
+            for unit in learning_units:
+                if unit.learning_type == "quiz":
+                    added_quiz_lessons.append(("quiz", unit.quiz))
+                else:
+                    added_quiz_lessons.append(("lesson", unit.lesson))
+        return added_quiz_lessons
+
+    def toggle_check_prerequisite(self):
+        if self.check_prerequisite:
+            self.check_prerequisite = False
+        else:
+            self.check_prerequisite = True
+
+    def get_next_unit(self, current_unit_id):
+        ordered_units = self.learning_unit.order_by("order")
+        ordered_units_ids = list(ordered_units.values_list("id", flat=True))
+        current_unit_index = ordered_units_ids.index(current_unit_id)
+        if current_unit_index + 1 == len(ordered_units_ids):
+            next_index = 0
+        else:
+            next_index = current_unit_index + 1
+        return ordered_units.get(id=ordered_units_ids[next_index])
+
+    def __str__(self):
+        return self.name
+
 
 ###############################################################################
 class Course(models.Model):
@@ -150,6 +481,8 @@ class Course(models.Model):
     teachers = models.ManyToManyField(User, related_name='teachers')
     is_trial = models.BooleanField(default=False)
     instructions = models.TextField(default=None, null=True, blank=True)
+    learning_module = models.ManyToManyField(LearningModule,
+                                             related_name='learning_module')
 
     # The start date of the course enrollment.
     start_enroll_time = models.DateTimeField(
@@ -179,30 +512,12 @@ class Course(models.Model):
         return new_course
 
     def create_duplicate_course(self, user):
-        quizzes = self.quiz_set.all()
-        prerequisite_map = []
-        duplicate_quiz_map = {}
+        learning_modules = self.learning_module.all()
 
         new_course_name = "Copy Of {0}".format(self.name)
         new_course = self._create_duplicate_instance(user, new_course_name)
 
-        for q in quizzes:
-            new_quiz = q._create_duplicate_quiz(new_course)
-            if q.id not in duplicate_quiz_map.keys():
-                duplicate_quiz_map[q.id] = new_quiz.id
-
-        for orig_qid, dupl_qid in duplicate_quiz_map.items():
-            original_quiz = Quiz.objects.get(id=orig_qid)
-            if original_quiz.prerequisite:
-                duplicate_quiz = Quiz.objects.get(id=dupl_qid)
-                prereq_id = original_quiz.prerequisite.id
-                duplicate_prereq_id = duplicate_quiz_map.get(prereq_id)
-                if duplicate_prereq_id:
-                    duplicate_prerequisite = Quiz.objects.get(
-                        id=duplicate_prereq_id
-                    )
-                    duplicate_quiz.prerequisite = duplicate_prerequisite
-                    duplicate_quiz.save()
+        new_course.learning_module.add(*learning_modules)
 
         return new_course
 
@@ -247,9 +562,6 @@ class Course(models.Model):
     def is_self_enroll(self):
         return True if self.enrollment == enrollment_methods[1][0] else False
 
-    def get_quizzes(self):
-        return self.quiz_set.filter(is_trial=False)
-
     def activate(self):
         self.active = True
 
@@ -266,18 +578,25 @@ class Course(models.Model):
         self.teachers.remove(*teachers)
 
     def create_demo(self, user):
-        course = Course.objects.filter(creator=user, name="Yaksh Demo course")
+        course = Course.objects.filter(creator=user,
+                                       name="Yaksh Demo course").exists()
         if not course:
             course = Course.objects.create(name="Yaksh Demo course",
                                            enrollment="open",
                                            creator=user)
             quiz = Quiz()
-            demo_quiz = quiz.create_demo_quiz(course)
+            demo_quiz = quiz.create_demo_quiz(user)
             demo_ques = Question()
             demo_ques.create_demo_questions(user)
             demo_que_ppr = QuestionPaper()
             demo_que_ppr.create_demo_quiz_ppr(demo_quiz, user)
             success = True
+            ordered_unit = LearningUnit.objects.create(
+                order=1, learning_type="quiz", quiz=demo_quiz)
+            learning_module = LearningModule.objects.create(
+                name="demo module", description="demo module", creator=user)
+            learning_module.learning_unit.add(ordered_unit)
+            course.learning_module.add(learning_module)
         else:
             success = False
         return success
@@ -288,8 +607,48 @@ class Course(models.Model):
         students = self.students.exclude(id__in=teachers)
         return students
 
+    def get_learning_modules(self):
+        return self.learning_module.order_by("order")
+
+    def get_unit_completion_status(self, module, user, unit):
+        course_module = self.learning_module.get(id=module.id)
+        learning_unit = course_module.learning_unit.get(id=unit.id)
+        return learning_unit.get_completion_status(user, self)
+
+    def get_quizzes(self):
+        learning_modules = self.learning_module.all()
+        quiz_list = []
+        for module in learning_modules:
+            quiz_list.extend(module.get_quiz_units())
+        return quiz_list
+
+    def get_quiz_details(self):
+        return [(self, quiz, quiz.get_total_students(self),
+                 quiz.get_passed_students(self),
+                 quiz.get_failed_students(self))
+                for quiz in self.get_quizzes()]
+
+    def get_learning_units(self):
+        learning_modules = self.learning_module.all()
+        learning_unit_list = []
+        for module in learning_modules:
+            learning_unit_list.extend(module.get_learning_units())
+        return learning_unit_list
+
     def __str__(self):
         return self.name
+
+
+###############################################################################
+class CourseStatus(models.Model):
+    completed_units = models.ManyToManyField(LearningUnit,
+                                             related_name="completed_units")
+    current_unit = models.ForeignKey(LearningUnit, related_name="last_lesson",
+                                     null=True, blank=True)
+    course = models.ForeignKey(Course)
+    user = models.ForeignKey(User)
+    grade = models.CharField(max_length=255, null=True, blank=True)
+    total_marks = models.FloatField(default=0.0)
 
 
 ###############################################################################
@@ -621,165 +980,6 @@ class Answer(models.Model):
 
 
 ###############################################################################
-class QuizManager(models.Manager):
-    def get_active_quizzes(self):
-        return self.filter(active=True, is_trial=False)
-
-    def create_trial_quiz(self, trial_course, user):
-        """Creates a trial quiz for testing questions"""
-        trial_quiz = self.create(course=trial_course,
-                                 duration=1000,
-                                 description="trial_questions",
-                                 is_trial=True,
-                                 time_between_attempts=0
-                                 )
-        return trial_quiz
-
-    def create_trial_from_quiz(self, original_quiz_id, user, godmode):
-        """Creates a trial quiz from existing quiz"""
-        trial_quiz_name = "Trial_orig_id_{0}_{1}".format(
-            original_quiz_id,
-            "godmode" if godmode else "usermode"
-        )
-
-        if self.filter(description=trial_quiz_name).exists():
-            trial_quiz = self.get(description=trial_quiz_name)
-
-        else:
-            trial_quiz = self.get(id=original_quiz_id)
-            trial_quiz.course.enroll(False, user)
-            trial_quiz.pk = None
-            trial_quiz.description = trial_quiz_name
-            trial_quiz.is_trial = True
-            trial_quiz.prerequisite = None
-            if godmode:
-                trial_quiz.time_between_attempts = 0
-                trial_quiz.duration = 1000
-                trial_quiz.attempts_allowed = -1
-                trial_quiz.active = True
-                trial_quiz.start_date_time = timezone.now()
-                trial_quiz.end_date_time = datetime(
-                    2199, 1, 1, 0, 0, 0, 0, tzinfo=pytz.utc
-                )
-            trial_quiz.save()
-        return trial_quiz
-
-
-###############################################################################
-class Quiz(models.Model):
-    """A quiz that students will participate in. One can think of this
-    as the "examination" event.
-    """
-
-    course = models.ForeignKey(Course)
-
-    # The start date of the quiz.
-    start_date_time = models.DateTimeField(
-        "Start Date and Time of the quiz",
-        default=timezone.now,
-        null=True
-    )
-
-    # The end date and time of the quiz
-    end_date_time = models.DateTimeField(
-        "End Date and Time of the quiz",
-        default=datetime(
-            2199, 1, 1,
-            tzinfo=pytz.timezone(timezone.get_current_timezone_name())
-        ),
-        null=True
-    )
-
-    # This is always in minutes.
-    duration = models.IntegerField("Duration of quiz in minutes", default=20)
-
-    # Is the quiz active. The admin should deactivate the quiz once it is
-    # complete.
-    active = models.BooleanField(default=True)
-
-    # Description of quiz.
-    description = models.CharField(max_length=256)
-
-    # Mininum passing percentage condition.
-    pass_criteria = models.FloatField("Passing percentage", default=40)
-
-    # List of prerequisite quizzes to be passed to take this quiz
-    prerequisite = models.ForeignKey("Quiz", null=True, blank=True)
-
-    # Programming language for a quiz
-    language = models.CharField(max_length=20, choices=languages)
-
-    # Number of attempts for the quiz
-    attempts_allowed = models.IntegerField(default=1, choices=attempts)
-
-    time_between_attempts = models.IntegerField(
-        "Number of Days", choices=days_between_attempts
-    )
-
-    is_trial = models.BooleanField(default=False)
-
-    instructions = models.TextField('Instructions for Students',
-                                    default=None, blank=True, null=True)
-
-    view_answerpaper = models.BooleanField('Allow student to view their answer\
-                                            paper', default=False)
-
-    allow_skip = models.BooleanField("Allow students to skip questions",
-                                     default=True)
-
-    objects = QuizManager()
-
-    class Meta:
-        verbose_name_plural = "Quizzes"
-
-    def is_expired(self):
-        return not self.start_date_time <= timezone.now() < self.end_date_time
-
-    def has_prerequisite(self):
-        return True if self.prerequisite else False
-
-    def _create_duplicate_quiz(self, course):
-        questionpaper = self.questionpaper_set.all()
-        new_quiz = Quiz.objects.create(course=course,
-            start_date_time=self.start_date_time,
-            end_date_time=self.end_date_time,
-            duration=self.duration,
-            active=self.active,
-            description="Copy Of {0}".format(self.description),
-            pass_criteria=self.pass_criteria,
-            language=self.language,
-            attempts_allowed=self.attempts_allowed,
-            time_between_attempts=self.time_between_attempts,
-            is_trial=self.is_trial,
-            instructions=self.instructions,
-            allow_skip=self.allow_skip
-        )
-
-        for qp in questionpaper:
-            qp._create_duplicate_questionpaper(new_quiz)
-
-        return new_quiz
-
-    def create_demo_quiz(self, course):
-        demo_quiz = Quiz.objects.create(
-            start_date_time=timezone.now(),
-            end_date_time=timezone.now() + timedelta(176590),
-            duration=30, active=True,
-            attempts_allowed=-1,
-            time_between_attempts=0,
-            description='Yaksh Demo quiz', pass_criteria=0,
-            language='Python', prerequisite=None,
-            course=course
-        )
-        return demo_quiz
-
-    def __str__(self):
-        desc = self.description or 'Quiz'
-        return '%s: on %s for %d minutes' % (desc, self.start_date_time,
-                                             self.duration)
-
-
-###############################################################################
 class QuestionPaperManager(models.Manager):
 
     def _create_trial_from_questionpaper(self, original_quiz_id):
@@ -884,18 +1084,20 @@ class QuestionPaper(models.Model):
             all_questions = questions
         return all_questions
 
-    def make_answerpaper(self, user, ip, attempt_num):
+    def make_answerpaper(self, user, ip, attempt_num, course_id):
         """Creates an  answer paper for the user to attempt the quiz"""
         try:
             ans_paper = AnswerPaper.objects.get(user=user,
                                                 attempt_number=attempt_num,
-                                                question_paper=self
+                                                question_paper=self,
+                                                course_id=course_id
                                                 )
         except AnswerPaper.DoesNotExist:
             ans_paper = AnswerPaper(
                 user=user,
                 user_ip=ip,
-                attempt_number=attempt_num
+                attempt_number=attempt_num,
+                course_id=course_id
             )
             ans_paper.start_time = timezone.now()
             ans_paper.end_time = ans_paper.start_time + \
@@ -911,25 +1113,22 @@ class QuestionPaper(models.Model):
         except AnswerPaper.MultipleObjectsReturned:
             ans_paper = AnswerPaper.objects.get(user=user,
                                                 attempt_number=attempt_num,
-                                                question_paper=self
+                                                question_paper=self,
+                                                course_id=course_id
                                                 ).order_by('-id')
             ans_paper = ans_paper[0]
 
         return ans_paper
-
-    def _is_questionpaper_passed(self, user):
-        return AnswerPaper.objects.filter(question_paper=self, user=user,
-                                          passed=True).exists()
 
     def _is_attempt_allowed(self, user):
         attempts = AnswerPaper.objects.get_total_attempt(questionpaper=self,
                                                          user=user)
         return attempts != self.quiz.attempts_allowed
 
-    def can_attempt_now(self, user):
+    def can_attempt_now(self, user, course_id):
         if self._is_attempt_allowed(user):
             last_attempt = AnswerPaper.objects.get_user_last_attempt(
-                user=user, questionpaper=self
+                user=user, questionpaper=self, course_id=course_id
             )
             if last_attempt:
                 time_lag = (timezone.now() - last_attempt.start_time).days
@@ -938,14 +1137,6 @@ class QuestionPaper(models.Model):
                 return True
         else:
             return False
-
-    def _get_prequisite_paper(self):
-        return self.quiz.prerequisite.questionpaper_set.get()
-
-    def is_prerequisite_passed(self, user):
-        if self.quiz.has_prerequisite():
-            prerequisite = self._get_prequisite_paper()
-            return prerequisite._is_questionpaper_passed(user)
 
     def create_demo_quiz_ppr(self, demo_quiz, user):
         question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
@@ -1038,27 +1229,32 @@ class AnswerPaperManager(models.Manager):
                     questions_answered.append(question.id)
         return Counter(questions_answered)
 
-    def get_attempt_numbers(self, questionpaper_id, status='completed'):
+    def get_attempt_numbers(self, questionpaper_id, course_id,
+                            status='completed'):
         ''' Return list of attempt numbers'''
         attempt_numbers = self.filter(
-            question_paper_id=questionpaper_id, status=status
+            question_paper_id=questionpaper_id, status=status,
+            course_id=course_id
         ).values_list('attempt_number', flat=True).distinct()
         return attempt_numbers
 
-    def has_attempt(self, questionpaper_id, attempt_number,
+    def has_attempt(self, questionpaper_id, attempt_number, course_id,
                     status='completed'):
         ''' Whether question paper is attempted'''
         return self.filter(
             question_paper_id=questionpaper_id,
-            attempt_number=attempt_number, status=status
+            attempt_number=attempt_number, status=status,
+            course_id=course_id
         ).exists()
 
-    def get_count(self, questionpaper_id, attempt_number, status='completed'):
+    def get_count(self, questionpaper_id, attempt_number, course_id,
+                  status='completed'):
         ''' Return count of answerpapers for a specfic question paper
             and attempt number'''
         return self.filter(
             question_paper_id=questionpaper_id,
-            attempt_number=attempt_number, status=status
+            attempt_number=attempt_number, status=status,
+            course_id=course_id
         ).count()
 
     def get_question_statistics(self, questionpaper_id, attempt_number,
@@ -1083,18 +1279,21 @@ class AnswerPaperManager(models.Manager):
                 question_stats[question] = [0, questions[question.id]]
         return question_stats
 
-    def _get_answerpapers_for_quiz(self, questionpaper_id, status=False):
+    def _get_answerpapers_for_quiz(self, questionpaper_id, course_id,
+                                   status=False):
         if not status:
-            return self.filter(question_paper_id=questionpaper_id)
+            return self.filter(question_paper_id=questionpaper_id,
+                               course_id=course_id)
         else:
             return self.filter(question_paper_id=questionpaper_id,
+                               course_id=course_id,
                                status="completed")
 
     def _get_answerpapers_users(self, answerpapers):
         return answerpapers.values_list('user', flat=True).distinct()
 
-    def get_latest_attempts(self, questionpaper_id):
-        papers = self._get_answerpapers_for_quiz(questionpaper_id)
+    def get_latest_attempts(self, questionpaper_id, course_id):
+        papers = self._get_answerpapers_for_quiz(questionpaper_id, course_id)
         users = self._get_answerpapers_users(papers)
         latest_attempts = []
         for user in users:
@@ -1106,9 +1305,10 @@ class AnswerPaperManager(models.Manager):
             user_id=user_id
         ).order_by('-attempt_number')[0]
 
-    def get_user_last_attempt(self, questionpaper, user):
+    def get_user_last_attempt(self, questionpaper, user, course_id):
         attempts = self.filter(question_paper=questionpaper,
-                               user=user).order_by('-attempt_number')
+                               user=user,
+                               course_id=course_id).order_by('-attempt_number')
         if attempts:
             return attempts[0]
 
@@ -1118,23 +1318,28 @@ class AnswerPaperManager(models.Manager):
     def get_total_attempt(self, questionpaper, user):
         return self.filter(question_paper=questionpaper, user=user).count()
 
-    def get_users_for_questionpaper(self, questionpaper_id):
-        return self._get_answerpapers_for_quiz(questionpaper_id, status=True)\
+    def get_users_for_questionpaper(self, questionpaper_id, course_id):
+        return self._get_answerpapers_for_quiz(questionpaper_id, course_id,
+                                               status=True)\
             .values("user__id", "user__first_name", "user__last_name")\
             .order_by("user__first_name")\
             .distinct()
 
-    def get_user_all_attempts(self, questionpaper, user):
-        return self.filter(question_paper=questionpaper, user=user)\
+    def get_user_all_attempts(self, questionpaper, user, course_id):
+        return self.filter(question_paper=questionpaper, user=user,
+                           course_id=course_id)\
                             .order_by('-attempt_number')
 
-    def get_user_data(self, user, questionpaper_id, attempt_number=None):
+    def get_user_data(self, user, questionpaper_id, course_id,
+                      attempt_number=None):
         if attempt_number is not None:
             papers = self.filter(user=user, question_paper_id=questionpaper_id,
+                                 course_id=course_id,
                                  attempt_number=attempt_number)
         else:
             papers = self.filter(
-                user=user, question_paper_id=questionpaper_id
+                user=user, question_paper_id=questionpaper_id,
+                course_id=course_id
             ).order_by("-attempt_number")
         data = {}
         profile = user.profile if hasattr(user, 'profile') else None
@@ -1144,9 +1349,9 @@ class AnswerPaperManager(models.Manager):
         data['questionpaperid'] = questionpaper_id
         return data
 
-    def get_user_best_of_attempts_marks(self, quiz, user_id):
+    def get_user_best_of_attempts_marks(self, quiz, user_id, course_id):
         best_attempt = 0.0
-        papers = self.filter(question_paper__quiz=quiz,
+        papers = self.filter(question_paper__quiz=quiz, course_id=course_id,
                              user=user_id).values("marks_obtained")
         if papers:
             best_attempt = max([marks["marks_obtained"] for marks in papers])
@@ -1164,6 +1369,9 @@ class AnswerPaper(models.Model):
 
     # The Quiz to which this question paper is attached to.
     question_paper = models.ForeignKey(QuestionPaper)
+
+    # Answepaper will be unique to the course
+    course = models.ForeignKey(Course)
 
     # The attempt number for the question paper.
     attempt_number = models.IntegerField()
@@ -1438,6 +1646,7 @@ class AnswerPaper(models.Model):
                     result['error'] = ['Correct answer']
 
             elif question.type == 'float':
+                user_answer = float(user_answer)
                 tc_status = []
                 user_answer = float(user_answer)
                 for tc in question.get_test_cases():
