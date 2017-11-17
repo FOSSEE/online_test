@@ -46,13 +46,12 @@ $(function() {
 
 $("#send_mail").click(function(){
     var subject = $("#subject").val();
-    var body = $('#email_body').val();
+    var body = tinymce.get("email_body").getContent();
     var status = false;
     var selected = [];
     $('#reject input:checked').each(function() {
         selected.push($(this).attr('value'));
     });
-
     if (subject == '' || body == ''){
         $("#error_msg").html("Please enter mail details");
         $("#dialog").dialog();
