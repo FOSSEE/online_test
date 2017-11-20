@@ -417,12 +417,12 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
         msg = 'Quiz not found, please contact your '\
             'instructor/administrator.'
         return complete(request, msg, attempt_num, course_id=course_id,
-                        questionpaper_id=None, module_id=module_id)
+                        questionpaper_id=None)
     if not quest_paper.has_questions():
         msg = 'Quiz does not have Questions, please contact your '\
             'instructor/administrator.'
         return complete(request, msg, attempt_num, course_id=course_id,
-                        questionpaper_id=None, module_id=module_id)
+                        questionpaper_id=None)
     course = Course.objects.prefetch_related("learning_module").get(
         id=course_id)
     learning_module = course.learning_module.get(id=module_id)
@@ -1073,7 +1073,8 @@ def monitor(request, quiz_id=None, course_id=None):
         attempt_numbers = []
     else:
         if q_paper:
-            attempt_numbers = AnswerPaper.objects.get_attempt_numbers(q_paper.last().id)
+            attempt_numbers = AnswerPaper.objects.get_attempt_numbers(
+                q_paper.last().id, course.id)
         else:
             attempt_numbers = []
         latest_attempts = []
@@ -1378,7 +1379,8 @@ def download_quiz_csv(request, course_id, quiz_id):
     csv_fields = []
     attempt_number = None
     question_paper = quiz.questionpaper_set.last()
-    last_attempt_number =AnswerPaper.objects.get_attempt_numbers(question_paper.id).last()
+    last_attempt_number = AnswerPaper.objects.get_attempt_numbers(
+        question_paper.id, course.id).last()
     if request.method == 'POST':
         csv_fields = request.POST.getlist('csv_fields')
         attempt_number = request.POST.get('attempt_number', last_attempt_number)
