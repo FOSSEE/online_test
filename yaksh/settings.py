@@ -10,7 +10,7 @@ N_CODE_SERVERS = config('N_CODE_SERVERS', default=5, cast=int)
 # The server pool port.  This is the server which returns available server
 # ports so as to minimize load.  This is some random number where no other
 # service is running.  It should be > 1024 and less < 65535 though.
-SERVER_POOL_PORT = config('EMAIL_PORT', default=55555, cast=int)
+SERVER_POOL_PORT = config('SERVER_POOL_PORT', default=55555, cast=int)
 
 SERVER_HOST_NAME = config('SERVER_HOST_NAME', default='http://localhost')
 #'localhost'

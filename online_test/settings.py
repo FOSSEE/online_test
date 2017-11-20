@@ -23,7 +23,7 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "yaksh_data", "output")
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='dUmMy_s3cR3t_k3y')#'0=fsi3g5dw*7ze1cyh441_e^5^$2ay@&z(5(n7mhir0xb267=6'
+SECRET_KEY = config('SECRET_KEY', default='dUmMy_s3cR3t_k3y')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -65,16 +65,17 @@ WSGI_APPLICATION = 'online_test.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        #'ENGINE': 'django.db.backends.sqlite3',
         'ENGINE': 'django.db.backends.{0}'.format(
             config('DB_ENGINE', default='sqlite3')
         ),
-        'NAME': config('DB_NAME', default=os.path.join(BASE_DIR, 'db.sqlite3'))
-        #os.path.join(BASE_DIR, 'db.sqlite3'),
-        
+        'NAME': config('DB_NAME', default=os.path.join(BASE_DIR, 'db.sqlite3')),
+        # The following settings are not used with sqlite3:
+        'USER': config('DB_USER', default=''),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': config('DB_HOST', default='localhost'), # Empty for localhost through domain sockets or '1$
+        'PORT': config('DB_PORT', default=''),
     },
 }
 

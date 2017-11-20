@@ -35,7 +35,7 @@ except ImportError:
     from io import BytesIO as string_io
 import re
 # Local imports.
-from yaksh.code_server import get_result as get_result_from_code_server,
+from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, FloatTestCase,
     HookTestCase, IntegerTestCase, McqTestCase, Profile,
