@@ -1,10 +1,16 @@
 {% extends "user.html" %}
 {% load custom_filters %}
+{% block title %} Student Dashboard {% endblock %}
 {% block pagetitle %} {{ title }} {% endblock %}
 {% block main %}
+    {% if msg %}
+        <div class="alert alert-warning" role="alert">
+            {{ msg }}
+        </div>
+    {% endif %}
     {% if 'Enrolled Courses' not in title%}
         <div class="row well">
-            <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" class="form-search form-horizontal pull-right">
+            <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" class="form-search form-horizontal">
                 {% csrf_token %}
                 <div class="col-md-12">
                     <div class="input-group">
@@ -63,6 +69,10 @@ No Courses to display
                             {{module.name}}</a>
                         </td>
                         <td>
+                        <a data-toggle="collapse" data-target="#learning_units{{module.id}}{{course.id}}">
+                            <span class="glyphicon glyphicon-chevron-down">
+                            View Learning Units</span></a>
+                            <div id="learning_units{{module.id}}{{course.id}}" class="collapse">
                             <table class="table table-bordered">
                             <th>Lesson/quiz</th>
                             <th>status</th>
@@ -80,9 +90,9 @@ No Courses to display
                                     <td>
                                     {% get_unit_status course module unit user as status %}
                                     {% if status == "completed" %}
-                                        <span class="label label-info">{{status}}</span>
+                                        <span class="label label-info">{{status|title}}</span>
                                     {% else %}
-                                        <span class="label label-warning">{{status}}</span>
+                                        <span class="label label-warning">{{status|title}}</span>
                                     {% endif %}
                                     </td>
                                     <td>
@@ -100,12 +110,14 @@ No Courses to display
                                 </tr>
                             {% endfor %}
                             </table>
+                            </div>
                         </td>
                         <td>
-                            {% if module.status == "completed" %}
-                            <span class="label label-info">{{module.status}}</span>
+                            {% get_module_status user module course as module_status %}
+                            {% if module_status == "completed" %}
+                            <span class="label label-info">{{module_status|title}}</span>
                             {% else %}
-                            <span class="label label-warning">{{module.status}}</span>
+                            <span class="label label-warning">{{module_status|title}}</span>
                             {% endif %}
                         </td>
                     </tr>

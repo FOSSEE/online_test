@@ -5,7 +5,7 @@
 {% csrf_token %}
     {% if paper.questions_answered.all or paper.questions_unanswered.all %}
 <center><table class="table table-bordered" >
-        <caption> Submission Status </caption>
+        <caption> <center><h2>Submission Status</h2> </center></caption>
         <thead>
             <tr>
                 <th> Question</th>
@@ -29,21 +29,25 @@
         {% endfor %}
 </table></center>
     {% endif %}
-		<center><h2> Good bye! </h2></center>
-		<center><h4> {{message}} </h4></center>
-        {% if not module_id %}
-		<br><center><h4>You may now close the browser.</h4></center><br>
-        {% endif %}
-        <center>
-        <a href="{{URL_ROOT}}/exam/" id="home" class="btn btn-success"> Home </a>
-        </center>
-    {% if module_id %}
-	<center>
-        {% if first_unit %}
-            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}/1" class="btn btn-info"> Next Unit </a>
-        {% else %}
-            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}" class="btn btn-info"> Next Unit </a>
-        {% endif %}
-    </center>
+	<center><h3>{{message}}</h3></center>
+    <center>
+    <br>
+    {% if not module_id %}
+        <br><center><h4>You may now close the browser.</h4></center><br>
     {% endif %}
+    <a href="{{URL_ROOT}}/exam/" id="home" class="btn btn-success"> Home </a>
+    {% if module_id %}
+        {% if first_unit %}
+            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}/1" class="btn btn-info"> Next Unit
+                <span class="glyphicon glyphicon-chevron-right">
+                </span>
+            </a>
+        {% else %}
+            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}" class="btn btn-info"> Next Unit
+                <span class="glyphicon glyphicon-chevron-right">
+                </span>
+            </a>
+        {% endif %}
+    {% endif %}
+    </center>
 {% endblock content %}

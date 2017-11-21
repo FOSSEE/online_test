@@ -30,7 +30,7 @@
             </div>
             <div class="col-md-6">
                   {% if not questionpaper.quiz.is_expired %}
-                      <form action="{{URL_ROOT}}/exam/start/{{ attempt_num }}/{{module_id}}/{{ questionpaper.id }}/{{course}}/" method="post" align="center">
+                      <form action="{{URL_ROOT}}/exam/start/{{ attempt_num }}/{{module.id}}/{{ questionpaper.id }}/{{course.id}}/" method="post" align="center">
                        {% csrf_token %}
                        <center><button class="btn btn-success" type="submit" name="start"> Start Exam <span class="glyphicon glyphicon-chevron-right"></span></button></center>
                       </form>

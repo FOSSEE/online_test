@@ -16,13 +16,16 @@
 
 {% block content %}
 {% if course_id %}
-    <a href="{{URL_ROOT}}/exam/manage/courses/" class="btn btn-primary">Cancel</a>
+    <a href="{{URL_ROOT}}/exam/manage/courses/" class="btn btn-primary">
+    Back to Courses</a>
 {% else %}
-    <a href="{{URL_ROOT}}/exam/manage/courses/all_learning_module" class="btn btn-primary">Cancel</a>
+    <a href="{{URL_ROOT}}/exam/manage/courses/all_learning_module" class="btn btn-primary">
+    Back to Learning Modules</a>
 {% endif %}
 {% if status == "add" %}
 <form name=frm id=frm action="" method="post">
     {% csrf_token %}
+    <br>
     <center>
     <table class="table table-bordered">
     {{ module_form.as_table }}

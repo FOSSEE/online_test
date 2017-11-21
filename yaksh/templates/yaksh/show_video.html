@@ -7,24 +7,35 @@
 
 {% block usersidebar %}
 <br><br><br>
-<center><h3>Module List</h3></center>
+<center><h3>Lessons/Quizzes</h3></center>
 <ul class="list">
 {% for unit in learning_units %}
 <span>
 <li>
-{% if unit.learning_type == "quiz" %}
-    <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{learning_module.id}}/{{course.id}}">
-    {{ unit.quiz.description }}</a>
-{% else %}
-    <a href="{{ URL_ROOT }}/exam/show_video/{{unit.lesson.id}}/{{learning_module.id}}/{{course.id}}">
-    {{ unit.lesson.name }}</a>
-{% endif %}
-
 {% get_unit_status course learning_module unit user as status %}
-{% if status == "completed" %}
-    <span class="label label-info">{{status}}</span>
+
+{% if unit.id == current_unit.id %}
+    <span class="glyphicon glyphicon-pencil" data-toggle="tooltip" title="Current Unit">
+    </span>
+{% endif %}
+{% if unit.learning_type == "quiz" %}
+    {% if status == "completed" %}
+        <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{learning_module.id}}/{{course.id}}">
+            {{ unit.quiz.description }}
+        </a>
+        <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
+    {% else %}
+        {{ unit.quiz.description }}
+    {% endif %}
 {% else %}
-    <span class="label label-warning">{{status}}</span>
+    {% if status == "completed" %}
+    <a href="{{ URL_ROOT }}/exam/show_video/{{unit.lesson.id}}/{{learning_module.id}}/{{course.id}}">
+        {{ unit.lesson.name }}
+    </a>
+    <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
+    {% else %}
+        {{ unit.lesson.name }}
+    {% endif %}
 {% endif %}
 </li>
 </span>
@@ -34,6 +45,11 @@
 {% endblock %}
 
 {% block main %}
+{% if msg %}
+<center>
+<div class="alert alert-warning">{{msg}}</div>
+</center>
+{% endif %}
 {% if state == "module" %}
 <div class="panel panel-default">
     <div class="panel-body">

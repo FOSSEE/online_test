@@ -1696,14 +1696,14 @@ def test_mode(user, godmode=False, questions_list=None, quiz_id=None,
         trial_questionpaper = QuestionPaper.objects.create_trial_paper_to_test_questions(
             trial_quiz, questions_list
         )
-        trial_unit = LearningUnit.objects.get_or_create(
+        trial_unit, created = LearningUnit.objects.get_or_create(
             order=1, learning_type="quiz", quiz=trial_quiz,
             check_prerequisite=False)
-        module = LearningModule.objects.get_or_create(
+        module, created = LearningModule.objects.get_or_create(
             order=1, creator=user, check_prerequisite=False,
             name="Trial for {0}".format(trial_course.name))
-        module[0].learning_unit.add(trial_unit[0])
-        trial_course.learning_module.add(module[0].id)
+        module.learning_unit.add(trial_unit)
+        trial_course.learning_module.add(module.id)
     else:
         trial_quiz, trial_course, module = Quiz.objects.create_trial_from_quiz(
             quiz_id, user, godmode, course_id
@@ -1711,7 +1711,7 @@ def test_mode(user, godmode=False, questions_list=None, quiz_id=None,
         trial_questionpaper = QuestionPaper.objects.create_trial_paper_to_test_quiz(
             trial_quiz, quiz_id
         )
-    return trial_questionpaper, trial_course, module[0]
+    return trial_questionpaper, trial_course, module
 
 
 @login_required
