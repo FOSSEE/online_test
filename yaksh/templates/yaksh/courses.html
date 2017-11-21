@@ -45,7 +45,7 @@
             </li>
             <li>
                 <a href="{{URL_ROOT}}/exam/manage/courses/all_learning_module">
-                View all LearningModules</a>
+                View all Learning Modules</a>
             </li>
         </ul>
     </div>
@@ -287,14 +287,14 @@
 <!-- {% endif %} -->
 
 <!-- Show all Quizzes -->
-<div id="all_quizzes">
+<div id="all_quizzes" >
+<div class="col-md-offset-2 main">
 {% if type == "quiz" %}
     <a href="{{URL_ROOT}}/exam/manage/addquiz/" class="btn btn-primary">Add new Quiz</a>
     {% if not quizzes %}
         <center><h4> No new Quiz Added</h4></center>
         <br><br>
     {% else %}
-    <div class="col-md-offset-2 main">
         <center><h3> Quizzes </h3></center>
         <table id="course-details" class="table table-bordered">
         <tr>
@@ -338,13 +338,13 @@
 <!-- Show all lessons -->
 
 <div id="all_lessons">
+    <div class="col-md-offset-2 main">
 {% if type == "lesson" %}
     <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/" class="btn btn-primary">Add new Lesson</a>
     {% if not lessons %}
         <center><h4> No new Lessons Added</h4></center>
         <br><br>
     {% else %}
-    <div class="col-md-offset-2 main">
         <center><h3> Lessons </h3></center>
         <table id="course-details" class="table table-bordered">
         <tr>
@@ -370,6 +370,7 @@
 </div>
 
 <!-- Show all learning modules -->
+    <div class="col-md-offset-2 main">
 <div id="all_lessons">
 {% if type == "learning_module" %}
     <a href="{{URL_ROOT}}/exam/manage/courses/add_module/" class="btn btn-primary">
@@ -378,7 +379,6 @@
         <center><h4> No new learning modules Added</h4></center>
         <br><br>
     {% else %}
-    <div class="col-md-offset-2 main">
         <center><h3> Learning Modules </h3></center>
         <table id="course-details" class="table table-bordered">
         <tr>
