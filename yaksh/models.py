@@ -151,18 +151,6 @@ class Lesson(models.Model):
     def get_files(self):
         return LessonFile.objects.filter(lesson=self)
 
-    def get_lesson_completion_status(self, user, course):
-        course_status = CourseStatus.objects.filter(user=user, course=course)
-        if course_status.exists():
-            learning_unit = course_status.first().completed_units.filter(
-                lesson_id=self.id)
-            if learning_unit.exists():
-                return "completed"
-            else:
-                return "inprogress"
-        else:
-            return "not attempted"
-
     def __str__(self):
         return "{0}".format(self.name)
 
@@ -330,10 +318,9 @@ class Quiz(models.Model):
             start_date_time=timezone.now(),
             end_date_time=timezone.now() + timedelta(176590),
             duration=30, active=True,
-            attempts_allowed=-1,
-            time_between_attempts=0,
+            attempts_allowed=-1, time_between_attempts=0,
             description='Yaksh Demo quiz', pass_criteria=0,
-            prerequisite=None, creator=user
+            creator=user
         )
         return demo_quiz
 
@@ -354,16 +341,6 @@ class Quiz(models.Model):
                 question_paper=self.questionpaper_set.get().id,
                 course=course, passed=False
             ).values_list("user", flat=True).distinct().count()
-
-    def get_quiz_completion_status(self, user, course):
-        ans_pprs = AnswerPaper.objects.filter(
-            question_paper=self.questionpaper_set.get().id,
-            user=user, course=course).order_by("-attempt_number")
-        if ans_pprs.exists():
-            latest_ans_ppr_status = ans_pprs.first().status
-        else:
-            latest_ans_ppr_status = "not attempted"
-        return latest_ans_ppr_status
 
     def __str__(self):
         desc = self.description or 'Quiz'
@@ -387,11 +364,14 @@ class LearningUnit(models.Model):
             self.check_prerequisite = True
 
     def get_completion_status(self, user, course):
-        if self.learning_type == "quiz":
-            status = self.quiz.get_quiz_completion_status(user, course)
-        else:
-            status = self.lesson.get_lesson_completion_status(user, course)
-        return status
+        course_status = CourseStatus.objects.filter(user=user, course=course)
+        state = "not attempted"
+        if course_status.exists():
+            if self in course_status.first().completed_units.all():
+                state = "completed"
+            elif course_status.first().current_unit == self:
+                state = "inprogress"
+        return state
 
     def has_prerequisite(self):
         return self.check_prerequisite
@@ -405,12 +385,11 @@ class LearningUnit(models.Model):
         else:
             prev_unit = ordered_units.get(
                 id=ordered_units_ids[current_unit_index-1])
-            if prev_unit.learning_type == "quiz":
-                success = prev_unit.quiz.get_quiz_completion_status(
-                    user, course)
+            status = prev_unit.get_completion_status(user, course)
+            if status == "completed":
+                success = True
             else:
-                success = prev_unit.lesson.get_lesson_completion_status(
-                    user, course)
+                success = False
         return success
 
 
@@ -460,6 +439,41 @@ class LearningModule(models.Model):
         else:
             next_index = current_unit_index + 1
         return ordered_units.get(id=ordered_units_ids[next_index])
+
+    def get_status(self, user, course):
+        """ Get module status if it completed, inprogress or not attempted"""
+        learning_module = course.learning_module.prefetch_related(
+            "learning_unit").get(id=self.id)
+        ordered_units = learning_module.learning_unit.order_by("order")
+        status_list = [unit.get_completion_status(user, course)
+                       for unit in ordered_units]
+        if all([status == "completed" for status in status_list]):
+            return "completed"
+        elif "inprogress" in status_list:
+            return "inprogress"
+        else:
+            return "not attempted"
+
+    def is_prerequisite_passed(self, user, course):
+        """ Check if prerequisite module is completed """
+        ordered_modules = course.learning_module.order_by("order")
+        ordered_modules_ids = list(ordered_modules.values_list(
+            "id", flat=True))
+        current_module_index = ordered_modules_ids.index(self.id)
+        if current_module_index == 0:
+            success = True
+        else:
+            prev_module = ordered_modules.get(
+                id=ordered_modules_ids[current_module_index-1])
+            status = prev_module.get_status(user, course)
+            if status == "completed":
+                success = True
+            else:
+                success = False
+        return success
+
+    def has_prerequisite(self):
+        return self.check_prerequisite
 
     def __str__(self):
         return self.name
@@ -635,6 +649,12 @@ class Course(models.Model):
             learning_unit_list.extend(module.get_learning_units())
         return learning_unit_list
 
+    def remove_trial_modules(self):
+        learning_modules = self.learning_module.all()
+        for module in learning_modules:
+            module.learning_unit.all().delete()
+        learning_modules.delete()
+
     def __str__(self):
         return self.name
 
@@ -643,7 +663,7 @@ class Course(models.Model):
 class CourseStatus(models.Model):
     completed_units = models.ManyToManyField(LearningUnit,
                                              related_name="completed_units")
-    current_unit = models.ForeignKey(LearningUnit, related_name="last_lesson",
+    current_unit = models.ForeignKey(LearningUnit, related_name="current_unit",
                                      null=True, blank=True)
     course = models.ForeignKey(Course)
     user = models.ForeignKey(User)
