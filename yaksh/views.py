@@ -1689,7 +1689,7 @@ def test_mode(user, godmode=False, questions_list=None, quiz_id=None,
 
     if questions_list is not None:
         trial_course = Course.objects.create_trial_course(user)
-        trial_quiz = Quiz.objects.create_trial_quiz(trial_course, user)
+        trial_quiz = Quiz.objects.create_trial_quiz(user)
         trial_questionpaper = QuestionPaper.objects.create_trial_paper_to_test_questions(
             trial_quiz, questions_list
         )

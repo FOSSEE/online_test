@@ -173,13 +173,14 @@ class QuizManager(models.Manager):
     def get_active_quizzes(self):
         return self.filter(active=True, is_trial=False)
 
-    def create_trial_quiz(self, trial_course, user):
+    def create_trial_quiz(self, user):
         """Creates a trial quiz for testing questions"""
         trial_quiz = self.create(duration=1000,
                                  description="trial_questions",
                                  is_trial=True,
-                                 time_between_attempts=0
-                                 )
+                                 time_between_attempts=0,
+                                 creator=user
+                                )
         return trial_quiz
 
     def create_trial_from_quiz(self, original_quiz_id, user, godmode,
@@ -1391,7 +1392,7 @@ class AnswerPaper(models.Model):
     question_paper = models.ForeignKey(QuestionPaper)
 
     # Answepaper will be unique to the course
-    course = models.ForeignKey(Course)
+    course = models.ForeignKey(Course, null=True)
 
     # The attempt number for the question paper.
     attempt_number = models.IntegerField()
