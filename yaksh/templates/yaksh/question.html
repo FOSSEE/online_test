@@ -110,23 +110,18 @@ module_id = "{{module.id}}"
 {% endif %}
 
 {% if unit.learning_type == "quiz" %}
-    {% if status == "completed" %}
-        <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{learning_module.id}}/{{course.id}}">
+    <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{learning_module.id}}/{{course.id}}">
         {{ unit.quiz.description }}
-        </a>
-        <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
-    {% else %}
-        {{ unit.quiz.description }}
-    {% endif %}
+    </a>
 {% else %}
-    {% if status == "completed" %}
-        <a href="{{ URL_ROOT }}/exam/show_video/{{unit.lesson.id}}/{{learning_module.id}}/{{course.id}}">
+    <a href="{{ URL_ROOT }}/exam/show_video/{{unit.lesson.id}}/{{learning_module.id}}/{{course.id}}">
             {{ unit.lesson.name }}
-        </a>
-        <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
-    {% else %}
-        {{ unit.lesson.name }}
-    {% endif %}
+    </a>
+{% endif %}
+{% if status == "completed" %}
+  <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
+{% else %}
+  <span class="glyphicon glyphicon-remove" style="color:  #FF0000"></span>
 {% endif %}
 </li>
 </span>

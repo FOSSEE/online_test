@@ -15,27 +15,22 @@
 {% get_unit_status course learning_module unit user as status %}
 
 {% if unit.id == current_unit.id %}
-    <span class="glyphicon glyphicon-pencil" data-toggle="tooltip" title="Current Unit">
+    <span class="glyphicon glyphicon-pencil" data-toggle="tooltip" title="Currently on">
     </span>
 {% endif %}
 {% if unit.learning_type == "quiz" %}
-    {% if status == "completed" %}
-        <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{learning_module.id}}/{{course.id}}">
-            {{ unit.quiz.description }}
-        </a>
-        <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
-    {% else %}
+    <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{learning_module.id}}/{{course.id}}">
         {{ unit.quiz.description }}
-    {% endif %}
+    </a>
 {% else %}
-    {% if status == "completed" %}
     <a href="{{ URL_ROOT }}/exam/show_video/{{unit.lesson.id}}/{{learning_module.id}}/{{course.id}}">
         {{ unit.lesson.name }}
     </a>
-    <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
-    {% else %}
-        {{ unit.lesson.name }}
-    {% endif %}
+{% endif %}
+{% if status == "completed" %}
+  <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
+{% else %}
+  <span class="glyphicon glyphicon-remove" style="color:  #FF0000"></span>
 {% endif %}
 </li>
 </span>
@@ -57,7 +52,7 @@
     </div>
 </div>
 <div style="text-align: center;">
-    <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{first_unit.id}}/1" class="btn btn-primary">Next Unit
+    <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{first_unit.id}}/1" class="btn btn-info">Next Unit
         <span class="glyphicon glyphicon-chevron-right">
         </span>
     </a>
@@ -70,7 +65,7 @@
     </div>
 </div>
 <div style="text-align: center;">
-    <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{current_unit.id}}" class="btn btn-primary" style="display: inline-block;">Next Unit
+    <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{current_unit.id}}" class="btn btn-info" style="display: inline-block;">Next Unit
         <span class="glyphicon glyphicon-chevron-right">
         </span>
     </a>

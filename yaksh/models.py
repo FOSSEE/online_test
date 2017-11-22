@@ -637,7 +637,7 @@ class Course(models.Model):
         return quiz_list
 
     def get_quiz_details(self):
-        return [(self, quiz, quiz.get_total_students(self),
+        return [(quiz, quiz.get_total_students(self),
                  quiz.get_passed_students(self),
                  quiz.get_failed_students(self))
                 for quiz in self.get_quizzes()]

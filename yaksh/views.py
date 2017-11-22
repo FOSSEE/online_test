@@ -364,10 +364,7 @@ def prof_manage(request, msg=None):
                     qpaper.quiz.delete()
                 else:
                     answerpaper.delete()
-    users_per_paper = []
-    for course in courses:
-        users_per_paper.extend(course.get_quiz_details())
-    context = {'user': user, 'users_per_paper': users_per_paper,
+    context = {'user': user, 'courses': courses,
                'trial_paper': trial_paper, 'msg': msg
                }
     return my_render_to_response(
@@ -437,16 +434,14 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
         msg = 'You are not enrolled in {0} course'.format(course.name)
         if is_moderator(user):
             return prof_manage(request, msg=msg)
-        return view_module(request, module_id=module_id, course_id=course_id,
-                           msg=msg)
+        return quizlist_user(request, msg=msg)
 
     # if course is active and is not expired
     if not course.active or not course.is_active_enrollment():
         msg = "{0} is either expired or not active".format(course.name)
         if is_moderator(user):
             return prof_manage(request, msg=msg)
-        return view_module(request, module_id=module_id, course_id=course_id,
-                           msg=msg)
+        return quizlist_user(request, msg=msg)
 
     # is quiz is active and is not expired
     if quest_paper.quiz.is_expired() or not quest_paper.quiz.active:
@@ -815,6 +810,8 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None,
         context = {'message': message, 'paper': paper,
                    'module_id': learning_module.id,
                    'course_id': course_id, 'learning_unit': learning_unit}
+        if is_moderator(user):
+            context['user'] = "moderator"
         return my_render_to_response('yaksh/complete.html', context)
 
 
@@ -2217,6 +2214,9 @@ def show_video(request, lesson_id, module_id, course_id):
     course = Course.objects.get(id=course_id)
     if user not in course.students.all():
         raise Http404('This course does not belong to you')
+    if not course.active or not course.is_active_enrollment():
+        msg = "{0} is either expired or not active".format(course.name)
+        return quizlist_user(request, msg=msg)
     learn_module = course.learning_module.get(id=module_id)
     learn_unit = learn_module.learning_unit.get(lesson_id=lesson_id)
     learning_units = learn_module.get_learning_units()
@@ -2503,6 +2503,9 @@ def view_module(request, module_id, course_id, msg=None):
     if user not in course.students.all():
         raise Http404('You are not enrolled for this course!')
     context = {}
+    if not course.active or not course.is_active_enrollment():
+        msg = "{0} is either expired or not active".format(course.name)
+        return quizlist_user(request, msg=msg)
     learning_module = course.learning_module.get(id=module_id)
     if learning_module.has_prerequisite():
         if not learning_module.is_prerequisite_passed(user, course):
