@@ -8,7 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.core.urlresolvers import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
-from django.template import RequestContext
+from django.template import RequestContext, Context, Template
 from django.http import Http404
 from django.db.models import Sum, Max, Q, F
 from django.views.decorators.csrf import csrf_exempt
@@ -44,7 +44,7 @@ from yaksh.forms import (
     RandomQuestionForm, QuestionFilterForm, CourseForm, ProfileForm,
     UploadFileForm, get_object_form, FileForm, QuestionPaperForm
 )
-from .settings import URL_ROOT
+from .settings import URL_ROOT 
 from .file_utils import extract_files, is_csv
 from .send_emails import send_user_mail, generate_activation_key, send_bulk_mail
 from .decorators import email_verified, has_profile
@@ -653,13 +653,29 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
 @csrf_exempt
 def get_result(request, uid):
     result = {}
+    template_dir = os.path.dirname(os.path.realpath(__file__))
+    template_path = os.path.join(*[template_dir, 'templates',
+                                   'yaksh','error_messages.html'
+                                   ])
     url = 'http://localhost:%s' % SERVER_POOL_PORT
-    result_state = get_result_from_code_server(url, uid)
+    result_state = get_result_from_code_server(url, uid)    
     result['status'] = result_state.get('status')
     if result['status'] == 'done':
         result = json.loads(result_state.get('result'))
-        next_question, error_message, paper = _update_paper(request, uid, result)
-        return show_question(request, next_question, paper, error_message)
+        if result.get('success'):
+            next_question, error_message, paper = _update_paper(request,
+                                                                uid, result
+                                                                )
+            return show_question(request, next_question, paper, error_message)
+        # else:
+        #         with open(template_path) as f:
+        #             template_data = f.read()
+        #             template = Template(template_data)
+        #             context = Context(result.get('error')[0])
+        #             render_error = template.render(context)
+        #             print(render_error)
+        #             result["error"] = render_error
+
     return JsonResponse(result)
 
 
