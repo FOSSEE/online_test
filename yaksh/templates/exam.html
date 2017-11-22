@@ -33,15 +33,6 @@
     </nav><!-- /.navbar -->
 {% endblock %}
 {% block content %}
-  <script>
-    $(document).ready(function() {
-        var ele = document.getElementById('error_panel')
-        if (ele) {
-          ele.scrollIntoView(true);
-          window.scrollBy(0, -15);
-        }
-    });
-  </script>
 <div class="container-fluid">
     <div class="col-sm-3 col-md-2 sidebar">
         <p> Question Navigator </p>
@@ -80,13 +71,12 @@
                 {% block main %}
                 {% endblock %}
             </div>
+            </div>
             <br/>
+        </div>
             {% if question.type == 'code' or question.type == 'upload' %}
-            <div class="row" id="error_panel">
-              </div>
-            </div>
+            <div class="row" id="error_panel"></div>
             {% endif %}
-            </div>
         </div>
     </div>
 </div>

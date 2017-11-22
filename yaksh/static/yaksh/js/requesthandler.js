@@ -61,9 +61,9 @@ function response_handler(method_type, content_type, data, uid){
         }
         else{
           unlock_screen();
-          error_array = res.error;
-          generic_error(error_array)
-
+          var error_output = document.getElementById("error_panel");
+          error_output.innerHTML = res.error;
+          focus_on_error();
         }
     } else {
         reset_values();
@@ -71,35 +71,14 @@ function response_handler(method_type, content_type, data, uid){
     }
 }
 
-function generic_error(error_array){
-  var error_output = document.getElementById("error_panel");
-  error_output.innerHTML = "" 
-  for (var i = 0; i < error_array.length; i++) {
-    var panel_danger = document.createElement('div');
-    panel_danger.setAttribute('class', "panel panel-danger");
-    
-    var panel_heading = document.createElement('div');
-    panel_heading.setAttribute('class', "panel-heading");
-    panel_heading.innerHTML = "Error no. " + (i + 1);
-    
-    var panel_body = document.createElement('div');
-    panel_body.setAttribute('class', "panel-body");
+function focus_on_error(){
+    var ele = document.getElementById('error_panel')
+    if (ele) {
+      ele.scrollIntoView(true);
+      window.scrollBy(0, -15);
+        }
+    }
 
-    var well = document.createElement('div');
-    well.setAttribute('class', "well well-sm"); 
-
-    var pre = document.createElement('pre');
-    var code = document.createElement('code');
-    console.log(error_array[i])
-    code.append(error_array[i]);
-    pre.appendChild(code);
-    well.appendChild(pre);
-    panel_body.appendChild(well);
-    panel_danger.appendChild(panel_heading);
-    panel_danger.appendChild(panel_body);
-    error_output.appendChild(panel_danger);
-  }
-}
 function ajax_check_code(url, method_type, data_type, data, uid) {
     $.ajax({
         method: method_type,

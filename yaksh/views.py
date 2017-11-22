@@ -662,19 +662,23 @@ def get_result(request, uid):
     result['status'] = result_state.get('status')
     if result['status'] == 'done':
         result = json.loads(result_state.get('result'))
+        template_path = os.path.join(*[os.path.dirname(__file__),
+                                       'templates','yaksh',
+                                       'error_template.html'
+                                       ]
+                                     )
+        next_question, error_message, paper = _update_paper(request,uid,
+                                                            result
+                                                            )
         if result.get('success'):
-            next_question, error_message, paper = _update_paper(request,
-                                                                uid, result
-                                                                )
             return show_question(request, next_question, paper, error_message)
-        # else:
-        #         with open(template_path) as f:
-        #             template_data = f.read()
-        #             template = Template(template_data)
-        #             context = Context(result.get('error')[0])
-        #             render_error = template.render(context)
-        #             print(render_error)
-        #             result["error"] = render_error
+        else:
+            with open(template_path) as f:
+                template_data = f.read()
+                template = Template(template_data)
+                context = Context({"error_message": result.get('error')})
+                render_error = template.render(context)
+                result["error"] = render_error
 
     return JsonResponse(result)
 
