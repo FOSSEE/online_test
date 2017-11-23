@@ -61,9 +61,14 @@ function response_handler(method_type, content_type, data, uid){
         }
         else{
           unlock_screen();
+          // var notify =  document.getElementById("notification");
+          if ($("#notification")){
+            $("#notification").toggle();
+          }
+
           var error_output = document.getElementById("error_panel");
           error_output.innerHTML = res.error;
-          focus_on_error();
+          focus_on_error(error_output);
         }
     } else {
         reset_values();
@@ -71,8 +76,7 @@ function response_handler(method_type, content_type, data, uid){
     }
 }
 
-function focus_on_error(){
-    var ele = document.getElementById('error_panel')
+function focus_on_error(ele){
     if (ele) {
       ele.scrollIntoView(true);
       window.scrollBy(0, -15);

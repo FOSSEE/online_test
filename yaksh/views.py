@@ -653,10 +653,6 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
 @csrf_exempt
 def get_result(request, uid):
     result = {}
-    template_dir = os.path.dirname(os.path.realpath(__file__))
-    template_path = os.path.join(*[template_dir, 'templates',
-                                   'yaksh','error_messages.html'
-                                   ])
     url = 'http://localhost:%s' % SERVER_POOL_PORT
     result_state = get_result_from_code_server(url, uid)    
     result['status'] = result_state.get('status')

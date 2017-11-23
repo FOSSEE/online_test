@@ -5,7 +5,6 @@
 {% load custom_filters %}
 
 {% if error_message %}
-<div class="col-md-12">
     {% for error in error_message %}
 
       <div class="panel panel-danger">
@@ -89,5 +88,4 @@
       </div>
       </div>
       {% endfor %}
-    </div>
 {% endif %}
