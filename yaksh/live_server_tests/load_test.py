@@ -73,5 +73,7 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
     def test_load(self):
         url = '%s%s' % (self.live_server_url, '/exam/login/')
         quiz_name = "Yaksh Demo quiz"
-        selenium_test = SeleniumTest(url=url, quiz_name=quiz_name)
+        module_name = "demo module"
+        selenium_test = SeleniumTest(url=url, quiz_name=quiz_name,
+                                     module_name=module_name)
         selenium_test.run_load_test(url=url, username='demo_student', password='demo_student')

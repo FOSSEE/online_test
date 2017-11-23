@@ -26,9 +26,10 @@ class SeleniumTestError(Exception):
     pass
 
 class SeleniumTest():
-    def __init__(self, url, quiz_name):
+    def __init__(self, url, quiz_name, module_name):
         self.driver = webdriver.Firefox()
         self.quiz_name = quiz_name
+        self.module_name = module_name
         self.url = url
 
     def run_load_test(self, url, username, password):
@@ -119,6 +120,8 @@ class SeleniumTest():
         self.submit_answer(question_label, answer, loop_count)
 
     def open_quiz(self):
+        # open module link
+        self.driver.find_element_by_link_text(self.module_name).click()
         # open quiz link
         quiz_link_elem = self.driver.find_element_by_link_text(self.quiz_name).click()
      
@@ -171,7 +174,9 @@ if __name__ == '__main__':
     opts = parser.parse_args()
 
     quiz_name = "Demo quiz"
-    selenium_test = SeleniumTest(url=opts.url, quiz_name=quiz_name)
+    module_name = "demo module"
+    selenium_test = SeleniumTest(url=opts.url, quiz_name=quiz_name,
+                                 module_name=module_name)
     pool = multiprocessing.Pool(opts.number)
     pool.map(wrap_run_load_test, user_gen(opts.url, range(opts.start, opts.start + opts.number)))
     pool.close()
