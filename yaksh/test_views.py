@@ -23,7 +23,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     AssignmentUpload, FileUpload, McqTestCase, IntegerTestCase, StringTestCase,\
-    FloatTestCase, FIXTURES_DIR_PATH
+    FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit
 from yaksh.decorators import user_has_profile
 
 
@@ -492,8 +492,15 @@ class TestMonitor(TestCase):
             duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
-            language='Python', course=self.course
+            creator=self.user
         )
+        self.learning_unit = LearningUnit.objects.create(
+            order=1, learning_type="quiz", quiz=self.quiz)
+        self.learning_module = LearningModule.objects.create(
+            order=1, name="test module", description="test",
+            creator=self.user, check_prerequisite=False)
+        self.learning_module.learning_unit.add(self.learning_unit.id)
+        self.course.learning_module.add(self.learning_module)
 
         self.question = Question.objects.create(
             summary="Test_question", description="Add two numbers",
@@ -514,7 +521,7 @@ class TestMonitor(TestCase):
             start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
             end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
             user_ip="127.0.0.1", status="completed", passed=True,
-            percent=1, marks_obtained=1
+            percent=1, marks_obtained=1, course=self.course
             )
         self.answerpaper.answers.add(self.new_answer)
         self.answerpaper.questions_answered.add(self.question)
@@ -529,6 +536,8 @@ class TestMonitor(TestCase):
         self.question.delete()
         self.question_paper.delete()
         self.new_answer.delete()
+        self.learning_module.delete()
+        self.learning_unit.delete()
 
     def test_monitor_denies_student(self):
         """
@@ -568,7 +577,8 @@ class TestMonitor(TestCase):
             password=self.user_plaintext_pass
         )
         response = self.client.get(reverse('yaksh:monitor', 
-                                            kwargs={'quiz_id': self.quiz.id}),
+                                            kwargs={'quiz_id': self.quiz.id,
+                                                    'course_id': self.course.id}),
                                    follow=True
                                    )
 
@@ -588,7 +598,8 @@ class TestMonitor(TestCase):
         )
         response = self.client.get(reverse('yaksh:user_data',
                                 kwargs={'user_id':self.student.id,
-                                    'questionpaper_id': self.question_paper.id}),
+                                    'questionpaper_id': self.question_paper.id,
+                                    'course_id': self.course.id}),
                                 follow=True
                                 )
         self.assertEqual(response.status_code, 200)
@@ -655,8 +666,15 @@ class TestGradeUser(TestCase):
             duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
-            language='Python', course=self.course
+            creator=self.user
         )
+        self.learning_unit = LearningUnit.objects.create(
+            order=1, learning_type="quiz", quiz=self.quiz)
+        self.learning_module = LearningModule.objects.create(
+            order=1, name="test module", description="test",
+            creator=self.user, check_prerequisite=False)
+        self.learning_module.learning_unit.add(self.learning_unit.id)
+        self.course.learning_module.add(self.learning_module)
 
         self.question = Question.objects.create(
             summary="Test_question", description="Add two numbers",
@@ -677,7 +695,7 @@ class TestGradeUser(TestCase):
             start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
             end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
             user_ip="127.0.0.1", status="completed", passed=True,
-            marks_obtained=0.5
+            marks_obtained=0.5, course=self.course
             )
         self.answerpaper.answers.add(self.new_answer)
         self.answerpaper.questions_answered.add(self.question)
@@ -693,6 +711,8 @@ class TestGradeUser(TestCase):
         self.question.delete()
         self.question_paper.delete()
         self.new_answer.delete()
+        self.learning_module.delete()
+        self.learning_unit.delete()
 
     def test_grade_user_denies_student(self):
         """
@@ -731,7 +751,8 @@ class TestGradeUser(TestCase):
             password=self.user_plaintext_pass
         )
         response = self.client.get(reverse('yaksh:grade_user', 
-                                            kwargs={"quiz_id": self.quiz.id}),
+                                            kwargs={"quiz_id": self.quiz.id,
+                                            'course_id': self.course.id}),
                                    follow=True
                                    )
         self.assertEqual(response.status_code, 200)
@@ -751,6 +772,7 @@ class TestGradeUser(TestCase):
         )
         response = self.client.get(reverse('yaksh:grade_user', 
                                             kwargs={"quiz_id": self.quiz.id,
+                                                    "course_id": self.course.id,
                                                     "user_id": self.student.id}),
                                    follow=True
                                    )
@@ -771,6 +793,7 @@ class TestGradeUser(TestCase):
         )
         self.client.get(reverse('yaksh:grade_user', 
                                 kwargs={"quiz_id": self.quiz.id,
+                                        "course_id": self.course.id,
                                         "user_id": self.student.id}),
                                 follow=True
                                 )
@@ -778,6 +801,7 @@ class TestGradeUser(TestCase):
         response = self.client.post(reverse('yaksh:grade_user', 
                                     kwargs={"quiz_id": self.quiz.id,
                                         "user_id": self.student.id,
+                                        "course_id": self.course.id,
                                         "attempt_number": self.answerpaper.attempt_number}),
                                     data={question_marks: 1.0}
                                     )
@@ -848,9 +872,15 @@ class TestDownloadAssignment(TestCase):
             end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
             duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
-            description='demo_quiz', pass_criteria=40,
-            language='Python', course=self.course
+            description='demo_quiz', pass_criteria=40
         )
+        self.learning_unit = LearningUnit.objects.create(
+            order=1, learning_type="quiz", quiz=self.quiz)
+        self.learning_module = LearningModule.objects.create(
+            order=1, name="test module", description="test",
+            creator=self.user, check_prerequisite=False)
+        self.learning_module.learning_unit.add(self.learning_unit.id)
+        self.course.learning_module.add(self.learning_module)
 
         self.question = Question.objects.create(
             summary="Test_question", description="Assignment Upload",
@@ -886,6 +916,8 @@ class TestDownloadAssignment(TestCase):
         self.assignment2.delete()
         self.quiz.delete()
         self.course.delete()
+        self.learning_module.delete()
+        self.learning_unit.delete()
         dir_name = self.quiz.description.replace(" ", "_")
         file_path = os.sep.join((settings.MEDIA_ROOT, dir_name))
         if os.path.exists(file_path):
@@ -999,24 +1031,13 @@ class TestAddQuiz(TestCase):
         self.course = Course.objects.create(name="Python Course",
             enrollment="Enroll Request", creator=self.user)
 
-        self.pre_req_quiz = Quiz.objects.create(
-            start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0, tzone),
-            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
-            duration=30, active=True, instructions="Demo Instructions",
-            attempts_allowed=-1, time_between_attempts=0,
-            description='pre requisite quiz', pass_criteria=40,
-            language='Python', prerequisite=None,
-            course=self.course
-        )
-
         self.quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
             end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
             duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
-            language='Python', prerequisite=self.pre_req_quiz,
-            course=self.course
+            creator=self.user
         )
 
     def tearDown(self):
@@ -1024,18 +1045,16 @@ class TestAddQuiz(TestCase):
         self.user.delete()
         self.student.delete()
         self.quiz.delete()
-        self.pre_req_quiz.delete()
         self.course.delete()
 
     def test_add_quiz_denies_anonymous(self):
         """
         If not logged in redirect to login page
         """
-        response = self.client.get(reverse('yaksh:add_quiz',
-                                           kwargs={'course_id': self.course.id}),
+        response = self.client.get(reverse('yaksh:add_quiz'),
                                    follow=True
                                    )
-        redirect_destination = '/exam/login/?next=/exam/manage/addquiz/{0}/'.format(self.course.id)
+        redirect_destination = '/exam/login/?next=/exam/manage/addquiz/'
         self.assertRedirects(response, redirect_destination)
 
     def test_add_quiz_denies_non_moderator(self):
@@ -1047,8 +1066,7 @@ class TestAddQuiz(TestCase):
             password=self.student_plaintext_pass
         )
         course_id = self.course.id
-        response = self.client.get(reverse('yaksh:add_quiz',
-                                           kwargs={'course_id': self.course.id}),
+        response = self.client.get(reverse('yaksh:add_quiz'),
                                    follow=True
                                    )
         self.assertEqual(response.status_code, 404)
@@ -1061,8 +1079,7 @@ class TestAddQuiz(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:add_quiz',
-                                   kwargs={'course_id': self.course.id})
+        response = self.client.get(reverse('yaksh:add_quiz')
                                    )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/add_quiz.html')
@@ -1078,7 +1095,7 @@ class TestAddQuiz(TestCase):
         )
         tzone = pytz.timezone('UTC')
         response = self.client.post(reverse('yaksh:edit_quiz',
-            kwargs={'course_id':self.course.id, 'quiz_id': self.quiz.id}),
+            kwargs={'quiz_id': self.quiz.id}),
             data={
                 'start_date_time': '2016-01-10 09:00:15',
                 'end_date_time': '2016-01-15 09:00:15',
@@ -1088,10 +1105,8 @@ class TestAddQuiz(TestCase):
                 'time_between_attempts': 1,
                 'description': 'updated demo quiz',
                 'pass_criteria': 40,
-                'language': 'java',
                 'instructions': "Demo Instructions",
-                'prerequisite': self.pre_req_quiz.id,
-                'course': self.course.id
+                'weightage': 1.0
             }
         )
 
@@ -1108,12 +1123,9 @@ class TestAddQuiz(TestCase):
         self.assertEqual(updated_quiz.time_between_attempts, 1)
         self.assertEqual(updated_quiz.description, 'updated demo quiz')
         self.assertEqual(updated_quiz.pass_criteria, 40)
-        self.assertEqual(updated_quiz.language, 'java')
-        self.assertEqual(updated_quiz.prerequisite, self.pre_req_quiz)
-        self.assertEqual(updated_quiz.course, self.course)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/exam/manage/courses/')
+        self.assertRedirects(response, '/exam/manage/courses/all_quizzes/')
 
     def test_add_quiz_post_new_quiz(self):
         """
@@ -1125,8 +1137,7 @@ class TestAddQuiz(TestCase):
         )
 
         tzone = pytz.timezone('UTC')
-        response = self.client.post(reverse('yaksh:add_quiz',
-            kwargs={"course_id": self.course.id}),
+        response = self.client.post(reverse('yaksh:add_quiz'),
             data={
                 'start_date_time': '2016-01-10 09:00:15',
                 'end_date_time': '2016-01-15 09:00:15',
@@ -1136,10 +1147,8 @@ class TestAddQuiz(TestCase):
                 'time_between_attempts': 2,
                 'description': 'new demo quiz',
                 'pass_criteria': 50,
-                'language': 'python',
                 'instructions': "Demo Instructions",
-                'prerequisite': self.pre_req_quiz.id,
-                'course': self.course.id
+                'weightage': 1.0
             }
         )
         quiz_list = Quiz.objects.all().order_by('-id')
@@ -1156,12 +1165,9 @@ class TestAddQuiz(TestCase):
         self.assertEqual(new_quiz.time_between_attempts, 2)
         self.assertEqual(new_quiz.description, 'new demo quiz')
         self.assertEqual(new_quiz.pass_criteria, 50)
-        self.assertEqual(new_quiz.language, 'python')
-        self.assertEqual(new_quiz.prerequisite, self.pre_req_quiz)
-        self.assertEqual(new_quiz.course, self.course)
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/exam/manage/courses/')
+        self.assertRedirects(response, '/exam/manage/courses/all_quizzes/')
 
 
 class TestAddTeacher(TestCase):
@@ -1212,8 +1218,7 @@ class TestAddTeacher(TestCase):
             duration=30, active=True,
             attempts_allowed=-1, time_between_attempts=0,
             description='pre requisite quiz', pass_criteria=40,
-            language='Python', prerequisite=None,
-            course=self.course
+            creator=self.user
         )
 
         self.quiz = Quiz.objects.create(
@@ -1222,8 +1227,7 @@ class TestAddTeacher(TestCase):
             duration=30, active=True,
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
-            language='Python', prerequisite=self.pre_req_quiz,
-            course=self.course
+            creator=self.user
         )
 
     def tearDown(self):
@@ -1372,8 +1376,7 @@ class TestRemoveTeacher(TestCase):
             duration=30, active=True,
             attempts_allowed=-1, time_between_attempts=0,
             description='pre requisite quiz', pass_criteria=40,
-            language='Python', prerequisite=None,
-            course=self.course
+            creator=self.user
         )
 
         self.quiz = Quiz.objects.create(
@@ -1382,8 +1385,7 @@ class TestRemoveTeacher(TestCase):
             duration=30, active=True,
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
-            language='Python', prerequisite=self.pre_req_quiz,
-            course=self.course
+            creator=self.user
         )
     def tearDown(self):
         self.client.logout()
@@ -1632,8 +1634,7 @@ class TestAddCourse(TestCase):
             duration=30, active=True,
             attempts_allowed=-1, time_between_attempts=0,
             description='pre requisite quiz', pass_criteria=40,
-            language='Python', prerequisite=None,
-            course=self.course
+            creator=self.user
         )
 
         self.quiz = Quiz.objects.create(
@@ -1642,8 +1643,7 @@ class TestAddCourse(TestCase):
             duration=30, active=True,
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
-            language='Python', prerequisite=self.pre_req_quiz,
-            course=self.course
+            creator=self.user
         )
 
     def tearDown(self):
@@ -1714,7 +1714,8 @@ class TestAddCourse(TestCase):
         self.assertEqual(new_course.enrollment, 'open')
         self.assertEqual(new_course.active, True)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/exam/manage/')
+        self.assertRedirects(response, '/exam/manage/courses',
+                             target_status_code=301)
 
 
 class TestCourseDetail(TestCase):
@@ -2082,12 +2083,11 @@ class TestCourseDetail(TestCase):
         response = self.client.post(reverse('yaksh:toggle_course_status',
                     kwargs={'course_id': self.user1_course.id})
                         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         course = Course.objects.get(name="Python Course")
         self.assertFalse(course.active)
-        self.assertEqual(self.user1_course, response.context['course'])
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'yaksh/course_detail.html')
+        self.assertRedirects(response, '/exam/manage/courses',
+                             target_status_code=301)
 
     def test_send_mail_to_course_students(self):
         """ Check if bulk mail is sent to multiple students enrolled in a course
@@ -2281,8 +2281,8 @@ class TestViewAnswerPaper(TestCase):
         self.question = Question.objects.create(summary='Dummy', points=1,
                                                type='code', user=self.user1)
 
-        self.quiz = Quiz.objects.create(time_between_attempts=0, course=self.course,
-                                        description='demo quiz', language='Python')
+        self.quiz = Quiz.objects.create(time_between_attempts=0,
+                                        description='demo quiz')
         self.user3 = User.objects.get(username="demo_user3")
         self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
             total_marks=1.0)
@@ -2292,7 +2292,8 @@ class TestViewAnswerPaper(TestCase):
         self.ans_paper = AnswerPaper.objects.create(user=self.user3,
                 attempt_number=1, question_paper=self.question_paper,
                 start_time=timezone.now(), user_ip='101.0.0.1',
-                end_time=timezone.now()+timezone.timedelta(minutes=20))
+                end_time=timezone.now()+timezone.timedelta(minutes=20),
+                course=self.course)
 
     def tearDown(self):
         User.objects.all().delete()
@@ -2305,11 +2306,13 @@ class TestViewAnswerPaper(TestCase):
     def test_anonymous_user(self):
         # Given, user not logged in
         redirect_destination = ('/exam/login/?next=/exam'
-            '/view_answerpaper/{0}/'.format(self.question_paper.id))
+            '/view_answerpaper/{0}/{1}'.format(
+                self.question_paper.id, self.course.id))
 
         # When
         response = self.client.get(reverse('yaksh:view_answerpaper',
-                kwargs={'questionpaper_id': self.question_paper.id}
+                kwargs={'questionpaper_id': self.question_paper.id,
+                        'course_id': self.course.id}
             ),
             follow=True
         )
@@ -2331,7 +2334,8 @@ class TestViewAnswerPaper(TestCase):
 
         # When
         response = self.client.get(reverse('yaksh:view_answerpaper',
-                kwargs={'questionpaper_id': self.question_paper.id}
+                kwargs={'questionpaper_id': self.question_paper.id,
+                        'course_id': self.course.id}
             ),
             follow=True
         )
@@ -2354,7 +2358,8 @@ class TestViewAnswerPaper(TestCase):
 
         # When
         response = self.client.get(reverse('yaksh:view_answerpaper',
-                kwargs={'questionpaper_id': self.question_paper.id}
+                kwargs={'questionpaper_id': self.question_paper.id,
+                        'course_id': self.course.id}
             ),
             follow=True
         )
@@ -2368,7 +2373,8 @@ class TestViewAnswerPaper(TestCase):
 
         # When, wrong question paper id
         response = self.client.get(reverse('yaksh:view_answerpaper',
-                kwargs={'questionpaper_id': 190}
+                kwargs={'questionpaper_id': 190,
+                        'course_id': self.course.id}
             ),
             follow=True
         )
@@ -2391,7 +2397,8 @@ class TestViewAnswerPaper(TestCase):
 
         # When
         response = self.client.get(reverse('yaksh:view_answerpaper',
-                kwargs={'questionpaper_id': self.question_paper.id}
+                kwargs={'questionpaper_id': self.question_paper.id,
+                        'course_id': self.course.id}
             ),
             follow=True
         )
@@ -2565,8 +2572,8 @@ class TestGrader(TestCase):
         self.question = Question.objects.create(summary='Dummy', points=1,
                                                type='code', user=self.user1)
 
-        self.quiz = Quiz.objects.create(time_between_attempts=0, course=self.course,
-                                        description='demo quiz', language='Python')
+        self.quiz = Quiz.objects.create(time_between_attempts=0,
+                                        description='demo quiz')
 
         self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
             total_marks=1.0)
@@ -2576,7 +2583,8 @@ class TestGrader(TestCase):
         self.answerpaper = AnswerPaper.objects.create(user=self.user2,
                 attempt_number=1, question_paper=self.question_paper,
                 start_time=timezone.now(), user_ip='101.0.0.1',
-                end_time=timezone.now()+timezone.timedelta(minutes=20))
+                end_time=timezone.now()+timezone.timedelta(minutes=20),
+                course=self.course)
 
     def tearDown(self):
         User.objects.all().delete()
@@ -2832,7 +2840,7 @@ class TestModeratorDashboard(TestCase):
             duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
-            language='Python', course=self.course
+            creator=self.user
         )
 
         self.question = Question.objects.create(
@@ -2856,20 +2864,22 @@ class TestModeratorDashboard(TestCase):
             start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
             end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
             user_ip="127.0.0.1", status="completed", passed=True,
-            marks_obtained=0.5
+            marks_obtained=0.5, course=self.course
             )
         self.answerpaper.answers.add(self.new_answer)
         self.answerpaper.questions_answered.add(self.question)
         self.answerpaper.questions.add(self.question)
 
         # moderator trial answerpaper
+        self.trial_course = Course.objects.create(name="Trial Course",
+            enrollment="Enroll Request", creator=self.user, is_trial=True)
         self.trial_quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
             end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
             duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
             description='trial quiz', pass_criteria=40,
-            language='Python', course=self.course, is_trial=True
+            is_trial=True
         )
 
         self.trial_question_paper = QuestionPaper.objects.create(
@@ -2887,7 +2897,7 @@ class TestModeratorDashboard(TestCase):
             start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
             end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
             user_ip="127.0.0.1", status="completed", passed=True,
-            marks_obtained=0.5
+            marks_obtained=0.5, course=self.trial_course
             )
         self.trial_answerpaper.answers.add(self.new_answer1)
         self.trial_answerpaper.questions_answered.add(self.question)
@@ -2913,7 +2923,6 @@ class TestModeratorDashboard(TestCase):
                                    follow=True
                                    )
         self.assertEqual(response.status_code, 200)
-        self.assertRedirects(response, '/exam/quizzes/')
 
     def test_moderator_dashboard_get_for_user_without_profile(self):
         """
@@ -2954,12 +2963,7 @@ class TestModeratorDashboard(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/moderator_dashboard.html")
         self.assertEqual(response.context['trial_paper'][0], self.trial_answerpaper)
-        paper, answer_papers, users_passed, users_failed =\
-                                response.context['users_per_paper'][0]
-        self.assertEqual(paper, self.question_paper)
-        self.assertEqual(answer_papers[0], self.answerpaper)
-        self.assertEqual(users_passed, 1)
-        self.assertEqual(users_failed, 0)
+        self.assertEqual(response.context['courses'][0], self.course)
 
     def test_moderator_dashboard_delete_trial_papers(self):
         """
@@ -2982,7 +2986,7 @@ class TestModeratorDashboard(TestCase):
                         description=self.trial_question_paper.quiz.description
                         )
         updated_course = Course.objects.filter(
-                            name=self.trial_question_paper.quiz.course.name)
+                            name=self.trial_course.name)
         self.assertSequenceEqual(updated_answerpaper, [])
         self.assertSequenceEqual(updated_quiz, [])
         self.assertSequenceEqual(updated_course, [])
@@ -3103,7 +3107,7 @@ class TestDownloadcsv(TestCase):
             duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
-            language='Python', course=self.course
+            creator=self.user
         )
 
         self.question = Question.objects.create(
@@ -3127,7 +3131,7 @@ class TestDownloadcsv(TestCase):
             start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
             end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
             user_ip="127.0.0.1", status="completed", passed=True,
-            marks_obtained=0.5
+            marks_obtained=0.5, course=self.course
             )
         self.answerpaper.answers.add(self.new_answer)
         self.answerpaper.questions_answered.add(self.question)
@@ -3405,7 +3409,11 @@ class TestShowQuestions(TestCase):
         trial_que_paper = QuestionPaper.objects.get(
                                             quiz__description="trial_questions"
                                             )
-        redirection_url = "/exam/start/1/{}".format(trial_que_paper.id)
+        trial_course = Course.objects.get(name="trial_course")
+        trial_module = trial_course.learning_module.all()[0]
+        redirection_url = "/exam/start/1/{0}/{1}/{2}".format(
+            trial_module.id, trial_que_paper.id, trial_course.id
+        )
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, redirection_url, target_status_code=301)
 
@@ -3484,7 +3492,7 @@ class TestShowStatistics(TestCase):
             duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
-            language='Python', course=self.course
+            creator=self.user
         )
 
         self.question = Question.objects.create(
@@ -3506,7 +3514,7 @@ class TestShowStatistics(TestCase):
             start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
             end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
             user_ip="127.0.0.1", status="completed", passed=True,
-            percent=1, marks_obtained=1
+            percent=1, marks_obtained=1, course=self.course
             )
         self.answerpaper.answers.add(self.new_answer)
         self.answerpaper.questions_answered.add(self.question)
@@ -3532,7 +3540,8 @@ class TestShowStatistics(TestCase):
             password=self.student_plaintext_pass
         )
         response = self.client.get(reverse('yaksh:show_statistics',
-                                   kwargs={"questionpaper_id": self.question_paper.id}),
+                                   kwargs={"questionpaper_id": self.question_paper.id,
+                                           "course_id": self.course.id}),
                                    follow=True
                                    )
         self.assertEqual(response.status_code, 404)
@@ -3546,7 +3555,8 @@ class TestShowStatistics(TestCase):
             password=self.user_plaintext_pass
         )
         response = self.client.get(reverse('yaksh:show_statistics',
-                            kwargs={'questionpaper_id': self.question_paper.id}),
+                            kwargs={'questionpaper_id': self.question_paper.id,
+                                    "course_id": self.course.id}),
                             follow=True
                             )
         self.assertEqual(response.status_code, 200)
@@ -3567,7 +3577,8 @@ class TestShowStatistics(TestCase):
         )
         response = self.client.get(reverse('yaksh:show_statistics',
                     kwargs={'questionpaper_id': self.question_paper.id,
-                            'attempt_number': self.answerpaper.attempt_number}),
+                            'attempt_number': self.answerpaper.attempt_number,
+                            "course_id": self.course.id}),
                     follow=True
                     )
         self.assertEqual(response.status_code, 200)
@@ -3616,8 +3627,16 @@ class TestQuestionPaper(TestCase):
             duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
-            language='Python', course=self.course
+            creator=self.user
         )
+
+        self.learning_unit = LearningUnit.objects.create(
+            order=1, learning_type="quiz", quiz=self.quiz)
+        self.learning_module = LearningModule.objects.create(
+            order=1, name="test module", description="module",
+            check_prerequisite=False, creator=self.user)
+        self.learning_module.learning_unit.add(self.learning_unit.id)
+        self.course.learning_module.add(self.learning_module)
 
         # Mcq Question
         self.question_mcq = Question.objects.create(
@@ -3706,7 +3725,7 @@ class TestQuestionPaper(TestCase):
             start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
             end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
             user_ip="127.0.0.1", status="inprogress", passed=False,
-            percent=0, marks_obtained=0
+            percent=0, marks_obtained=0, course=self.course
         )
         self.answerpaper.questions.add(*questions_list)
 
@@ -3720,6 +3739,8 @@ class TestQuestionPaper(TestCase):
         self.question_mcc.delete()
         self.question_int.delete()
         self.question_paper.delete()
+        self.learning_module.delete()
+        self.learning_unit.delete()
 
     def test_mcq_attempt_right_after_wrong(self):
         """ Case:- Check if answerpaper and answer marks are updated after
@@ -3738,7 +3759,9 @@ class TestQuestionPaper(TestCase):
         self.client.post(
             reverse('yaksh:check',
                     kwargs={"q_id": self.question_mcq.id, "attempt_num": 1,
-                            "questionpaper_id": self.question_paper.id}),
+                            "questionpaper_id": self.question_paper.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
             data={"answer": wrong_user_answer}
         )
 
@@ -3753,7 +3776,9 @@ class TestQuestionPaper(TestCase):
         self.client.post(
             reverse('yaksh:check',
                     kwargs={"q_id": self.question_mcq.id, "attempt_num": 1,
-                            "questionpaper_id": self.question_paper.id}),
+                            "questionpaper_id": self.question_paper.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
             data={"answer": right_user_answer}
         )
 
@@ -3778,7 +3803,9 @@ class TestQuestionPaper(TestCase):
         self.client.post(
             reverse('yaksh:check',
                     kwargs={"q_id": self.question_mcq.id, "attempt_num": 1,
-                            "questionpaper_id": self.question_paper.id}),
+                            "questionpaper_id": self.question_paper.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
             data={"answer": right_user_answer}
         )
 
@@ -3793,7 +3820,9 @@ class TestQuestionPaper(TestCase):
         self.client.post(
             reverse('yaksh:check',
                     kwargs={"q_id": self.question_mcq.id, "attempt_num": 1,
-                            "questionpaper_id": self.question_paper.id}),
+                            "questionpaper_id": self.question_paper.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
             data={"answer": wrong_user_answer}
         )
 
@@ -3818,7 +3847,9 @@ class TestQuestionPaper(TestCase):
         self.client.post(
             reverse('yaksh:check',
                     kwargs={"q_id": self.question_mcc.id, "attempt_num": 1,
-                            "questionpaper_id": self.question_paper.id}),
+                            "questionpaper_id": self.question_paper.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
             data={"answer": right_user_answer}
         )
 
@@ -3833,7 +3864,9 @@ class TestQuestionPaper(TestCase):
         self.client.post(
             reverse('yaksh:check',
                     kwargs={"q_id": self.question_mcc.id, "attempt_num": 1,
-                            "questionpaper_id": self.question_paper.id}),
+                            "questionpaper_id": self.question_paper.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
             data={"answer": wrong_user_answer}
         )
 
@@ -3858,7 +3891,9 @@ class TestQuestionPaper(TestCase):
         self.client.post(
             reverse('yaksh:check',
                     kwargs={"q_id": self.question_int.id, "attempt_num": 1,
-                            "questionpaper_id": self.question_paper.id}),
+                            "questionpaper_id": self.question_paper.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
             data={"answer": right_user_answer}
         )
 
@@ -3873,7 +3908,9 @@ class TestQuestionPaper(TestCase):
         self.client.post(
             reverse('yaksh:check',
                     kwargs={"q_id": self.question_int.id, "attempt_num": 1,
-                            "questionpaper_id": self.question_paper.id}),
+                            "questionpaper_id": self.question_paper.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
             data={"answer": wrong_user_answer}
         )
 
@@ -3898,7 +3935,9 @@ class TestQuestionPaper(TestCase):
         self.client.post(
             reverse('yaksh:check',
                     kwargs={"q_id": self.question_str.id, "attempt_num": 1,
-                            "questionpaper_id": self.question_paper.id}),
+                            "questionpaper_id": self.question_paper.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
             data={"answer": right_user_answer}
         )
 
@@ -3913,7 +3952,9 @@ class TestQuestionPaper(TestCase):
         self.client.post(
             reverse('yaksh:check',
                     kwargs={"q_id": self.question_str.id, "attempt_num": 1,
-                            "questionpaper_id": self.question_paper.id}),
+                            "questionpaper_id": self.question_paper.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
             data={"answer": wrong_user_answer}
         )
 
@@ -3938,7 +3979,9 @@ class TestQuestionPaper(TestCase):
         self.client.post(
             reverse('yaksh:check',
                     kwargs={"q_id": self.question_float.id, "attempt_num": 1,
-                            "questionpaper_id": self.question_paper.id}),
+                            "questionpaper_id": self.question_paper.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
             data={"answer": right_user_answer}
         )
 
@@ -3953,7 +3996,9 @@ class TestQuestionPaper(TestCase):
         self.client.post(
             reverse('yaksh:check',
                     kwargs={"q_id": self.question_float.id, "attempt_num": 1,
-                            "questionpaper_id": self.question_paper.id}),
+                            "questionpaper_id": self.question_paper.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
             data={"answer": wrong_user_answer}
         )
 

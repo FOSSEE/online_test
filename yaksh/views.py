@@ -1732,7 +1732,8 @@ def test_quiz(request, mode, quiz_id, course_id=None):
 def view_answerpaper(request, questionpaper_id, course_id):
     user = request.user
     quiz = get_object_or_404(QuestionPaper, pk=questionpaper_id).quiz
-    if quiz.view_answerpaper and user in quiz.course.students.all():
+    course = get_object_or_404(Course, pk=course_id)
+    if quiz.view_answerpaper and user in course.students.all():
         data = AnswerPaper.objects.get_user_data(user, questionpaper_id,
                                                  course_id)
         has_user_assignment = AssignmentUpload.objects.filter(
