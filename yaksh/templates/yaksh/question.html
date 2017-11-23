@@ -227,12 +227,16 @@ lang = "{{ question.language }}"
          {% if question in paper.get_questions_unanswered %}
          <button class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')" name="skip" id="skip">Attempt Later <span class="glyphicon glyphicon-arrow-right"></span></button>
          {% endif %}
-         </div>
-                 </div>
-             </div>
-
+         {% endif %} 
+       </div>
          </form>
-         {% endif %}
+         </div>
+     </div>
+   </div>
+   <br/>
+  {% if question.type == 'code' or question.type == 'upload' %}
+  <div class="row" id="error_panel"></div>
+  {% endif %}
          
     <!-- Modal -->
     <div class="modal fade " id="upload_alert" >

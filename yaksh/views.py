@@ -8,7 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.core.urlresolvers import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
-from django.template import RequestContext
+from django.template import RequestContext, Context, Template
 from django.http import Http404
 from django.db.models import Sum, Max, Q, F
 from django.views.decorators.csrf import csrf_exempt
@@ -658,8 +658,24 @@ def get_result(request, uid):
     result['status'] = result_state.get('status')
     if result['status'] == 'done':
         result = json.loads(result_state.get('result'))
-        next_question, error_message, paper = _update_paper(request, uid, result)
-        return show_question(request, next_question, paper, error_message)
+        template_path = os.path.join(*[os.path.dirname(__file__),
+                                       'templates','yaksh',
+                                       'error_template.html'
+                                       ]
+                                     )
+        next_question, error_message, paper = _update_paper(request,uid,
+                                                            result
+                                                            )
+        if result.get('success'):
+            return show_question(request, next_question, paper, error_message)
+        else:
+            with open(template_path) as f:
+                template_data = f.read()
+                template = Template(template_data)
+                context = Context({"error_message": result.get('error')})
+                render_error = template.render(context)
+                result["error"] = render_error
+
     return JsonResponse(result)
 
 
