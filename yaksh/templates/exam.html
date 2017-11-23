@@ -66,18 +66,11 @@
             <p>Question(s) left: <b>{{ paper.questions_left }}</b></p>
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-            <div class="row">
                 <div class="row">
                 {% block main %}
                 {% endblock %}
             </div>
-            </div>
-            <br/>
-            {% if question.type == 'code' or question.type == 'upload' %}
-            <div class="row" id="error_panel"></div>
-            {% endif %}
         </div>
         </div>
-    </div>
-</div>
+
 {% endblock %}

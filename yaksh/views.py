@@ -44,7 +44,7 @@ from yaksh.forms import (
     RandomQuestionForm, QuestionFilterForm, CourseForm, ProfileForm,
     UploadFileForm, get_object_form, FileForm, QuestionPaperForm
 )
-from .settings import URL_ROOT 
+from .settings import URL_ROOT
 from .file_utils import extract_files, is_csv
 from .send_emails import send_user_mail, generate_activation_key, send_bulk_mail
 from .decorators import email_verified, has_profile
@@ -654,7 +654,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
 def get_result(request, uid):
     result = {}
     url = 'http://localhost:%s' % SERVER_POOL_PORT
-    result_state = get_result_from_code_server(url, uid)    
+    result_state = get_result_from_code_server(url, uid)
     result['status'] = result_state.get('status')
     if result['status'] == 'done':
         result = json.loads(result_state.get('result'))

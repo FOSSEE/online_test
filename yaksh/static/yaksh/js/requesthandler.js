@@ -61,7 +61,6 @@ function response_handler(method_type, content_type, data, uid){
         }
         else{
           unlock_screen();
-          // var notify =  document.getElementById("notification");
           if ($("#notification")){
             $("#notification").toggle();
           }
