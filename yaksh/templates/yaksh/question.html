@@ -165,19 +165,19 @@ lang = "{{ question.language }}"
 
                      {% if question.type == "integer" %}
                      Enter Integer:<br/>
-                     <input name="answer" type="number" id="integer" value={{ last_attempt|safe }} />
+                     <input autofocus name="answer" type="number" id="integer" value={{ last_attempt|safe }} />
                      <br/><br/>
                      {% endif %}
 
                      {% if question.type == "string" %}
                      Enter Text:<br/>
-                     <textarea name="answer" id="string">{{ last_attempt|safe }}</textarea>
+                     <textarea autofocus name="answer" id="string">{{ last_attempt|safe }}</textarea>
                      <br/><br/>
                      {% endif %}
 
                      {% if question.type == "float" %}
                      Enter Decimal Value :<br/>
-                     <input name="answer" type="number" step="any" id="float" value={{ last_attempt|safe }} />
+                     <input autofocus name="answer" type="number" step="any" id="float" value={{ last_attempt|safe }} />
                      <br/><br/>
                      {% endif %}
 
@@ -207,7 +207,7 @@ lang = "{{ question.language }}"
                              <a href="#answer" class="pull-right" onclick="reset_editor()" name="reset" id="reset">Undo Changes&nbsp;<span class="glyphicon glyphicon-refresh"></span></a>
                              </div>
                     </div>
-                     <textarea name="answer" id="answer"></textarea>
+                     <textarea autofocus name="answer" id="answer"></textarea>
                      <br>
                      {% endif %}
         <div class="from-group">
