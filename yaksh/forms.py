@@ -1,15 +1,11 @@
 from django import forms
-from yaksh.models import get_model_class, Profile, Quiz, Question, TestCase, Course,\
-                         QuestionPaper, StandardTestCase, StdIOBasedTestCase, \
-                         HookTestCase, IntegerTestCase, StringTestCase
+from yaksh.models import (
+    get_model_class, Profile, Quiz, Question, Course, QuestionPaper, Lesson,
+    LearningModule
+)
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
-from taggit.managers import TaggableManager
-from taggit.forms import TagField
-from django.forms.models import inlineformset_factory
-from django.db.models import Q
 from django.utils import timezone
 from textwrap import dedent
 try:
@@ -17,7 +13,6 @@ try:
 except ImportError:
     from string import ascii_letters as letters
 from string import punctuation, digits
-import datetime
 import pytz
 from .send_emails import generate_activation_key
 
@@ -29,7 +24,7 @@ languages = (
     ("cpp", "C++ Language"),
     ("java", "Java Language"),
     ("scilab", "Scilab"),
-    )
+)
 
 question_types = (
     ("select", "Select Question Type"),
@@ -40,17 +35,17 @@ question_types = (
     ("integer", "Answer in Integer"),
     ("string", "Answer in String"),
     ("float", "Answer in Float"),
-    )
+)
 
 test_case_types = (
-        ("standardtestcase", "Standard Testcase"),
-        ("stdiobasedtestcase", "StdIO Based Testcase"),
-        ("mcqtestcase", "MCQ Testcase"),
-        ("hooktestcase", "Hook Testcase"),
-        ("integertestcase", "Integer Testcase"),
-        ("stringtestcase", "String Testcase"),
-        ("floattestcase", "Float Testcase"),
-        )
+    ("standardtestcase", "Standard Testcase"),
+    ("stdiobasedtestcase", "StdIO Based Testcase"),
+    ("mcqtestcase", "MCQ Testcase"),
+    ("hooktestcase", "Hook Testcase"),
+    ("integertestcase", "Integer Testcase"),
+    ("stringtestcase", "String Testcase"),
+    ("floattestcase", "Float Testcase"),
+)
 
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
@@ -59,8 +54,10 @@ attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
 days_between_attempts = ((j, j) for j in range(401))
 
-def get_object_form(model, exclude_fields=None):  
+
+def get_object_form(model, exclude_fields=None):
     model_class = get_model_class(model)
+
     class _ObjectForm(forms.ModelForm):
         class Meta:
             model = model_class
@@ -77,20 +74,21 @@ class UserRegisterForm(forms.Form):
                 period and underscores only.')
     email = forms.EmailField()
     password = forms.CharField(max_length=30, widget=forms.PasswordInput())
-    confirm_password = forms.CharField\
-                       (max_length=30, widget=forms.PasswordInput())
+    confirm_password = forms.CharField(
+        max_length=30, widget=forms.PasswordInput())
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
-    roll_number = forms.CharField\
-                (max_length=30, help_text="Use a dummy if you don't have one.")
-    institute = forms.CharField\
-                (max_length=128, help_text='Institute/Organization')
-    department = forms.CharField\
-                (max_length=64, help_text='Department you work/study at')
-    position = forms.CharField\
-        (max_length=64, help_text='Student/Faculty/Researcher/Industry/etc.')
-    timezone = forms.ChoiceField(choices=[(tz, tz) for tz in pytz.common_timezones],
-                                initial=pytz.utc)
+    roll_number = forms.CharField(
+        max_length=30, help_text="Use a dummy if you don't have one.")
+    institute = forms.CharField(
+        max_length=128, help_text='Institute/Organization')
+    department = forms.CharField(
+        max_length=64, help_text='Department you work/study at')
+    position = forms.CharField(
+        max_length=64, help_text='Student/Faculty/Researcher/Industry/etc.')
+    timezone = forms.ChoiceField(
+        choices=[(tz, tz) for tz in pytz.common_timezones],
+        initial=pytz.utc)
 
     def clean_username(self):
         u_name = self.cleaned_data["username"]
@@ -146,9 +144,10 @@ class UserRegisterForm(forms.Form):
         if settings.IS_DEVELOPMENT:
             new_profile.is_email_verified = True
         else:
-            new_profile.activation_key = generate_activation_key(new_user.username)
-            new_profile.key_expiry_time = timezone.now() + \
-                                        timezone.timedelta(minutes=20)
+            new_profile.activation_key = generate_activation_key(
+                new_user.username)
+            new_profile.key_expiry_time = timezone.now() + timezone.timedelta(
+                minutes=20)
         new_profile.save()
         return u_name, pwd, new_user.email, new_profile.activation_key
 
@@ -166,8 +165,9 @@ class UserLoginForm(forms.Form):
                           self.cleaned_data["password"]
             user = authenticate(username=u_name, password=pwd)
         except Exception:
-            raise forms.ValidationError\
-                        ("Username and/or Password is not entered")
+            raise forms.ValidationError(
+                "Username and/or Password is not entered"
+            )
         if not user:
             raise forms.ValidationError("Invalid username/password")
         return user
@@ -178,82 +178,38 @@ class QuizForm(forms.ModelForm):
     It has the related fields and functions required."""
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user')
-        course_id = kwargs.pop('course')
         super(QuizForm, self).__init__(*args, **kwargs)
 
-        prerequisite_list = Quiz.objects.filter(
-            course__id=course_id,
-            is_trial=False
-        ).exclude(id=self.instance.id)
-
-        self.fields['prerequisite'] = forms.ModelChoiceField(prerequisite_list)
-        self.fields['prerequisite'].required = False
-        self.fields['course'] = forms.ModelChoiceField(
-                queryset=Course.objects.filter(id=course_id), empty_label=None)
-        self.fields["instructions"].initial =  dedent("""\
-                                              <p>
-                                              This examination system has been 
-                                              developed with the intention of 
-                                              making you learn programming and 
-                                              be assessed in an interactive and
-                                              fun manner.
-                                              You will be presented with a 
-                                              series of programming questions 
-                                              and problems that you will answer 
-                                              online and get immediate 
-                                              feedback for.
-                                              </p>
-                                              <p> 
-                                              Here are some important 
-                                              instructions and rules that you 
-                                              should understand carefully.</p> 
-                                              <ul>
-                                              <li>For any programming questions,
-                                               you can submit solutions as many 
-                                               times as you want without a 
-                                               penalty. You may skip questions 
-                                               and solve them later.</li>
-                                               <li> You <strong>may</strong> 
-                                               use your computer's Python/IPython 
-                                               shell or an editor to solve the 
-                                               problem and cut/paste the 
-                                               solution to the web interface.
-                                               </li>
-                                               <li> <strong>You are not allowed 
-                                               to use any internet resources, 
-                                               i.e. no google etc.</strong> 
-                                               </li>
-                                               <li> Do not copy or share the 
-                                               questions or answers with anyone 
-                                               until the exam is complete 
-                                               <strong>for everyone</strong>.
-                                               </li>
-                                               <li> <strong>All</strong> your 
-                                               attempts at the questions are 
-                                               logged. Do not try to outsmart 
-                                               and break the testing system. 
-                                               If you do, we know who you are 
-                                               and we will expel you from the 
-                                               course. You have been warned.
-                                               </li>
-                                               </ul>
-                                               <p>
-                                                We hope you enjoy taking this 
-                                                exam !!!
-                                                </p>
-                                                """)
-
-    def clean_prerequisite(self):
-        prereq = self.cleaned_data['prerequisite']
-        if prereq and prereq.prerequisite:
-            if prereq.prerequisite.id == self.instance.id:
-                raise forms.ValidationError("Please set another prerequisite quiz")
-        return prereq
+        self.fields["instructions"].initial = dedent("""\
+            <p>
+            This examination system has been developed with the intention of
+            making you learn programming and be assessed in an interactive and
+            fun manner.You will be presented with a series of programming
+            questions and problems that you will answer online and get
+            immediate feedback for.
+            </p><p>Here are some important instructions and rules that you
+            should understand carefully.</p>
+            <ul><li>For any programming questions, you can submit solutions as
+            many times as you want without a penalty. You may skip questions
+            and solve them later.</li><li> You <strong>may</strong>
+            use your computer's Python/IPython shell or an editor to solve the
+            problem and cut/paste the solution to the web interface.
+            </li><li> <strong>You are not allowed to use any internet resources
+            i.e. no google etc.</strong>
+            </li>
+            <li> Do not copy or share the questions or answers with anyone
+            until the exam is complete <strong>for everyone</strong>.
+            </li><li> <strong>All</strong> your attempts at the questions are
+            logged. Do not try to outsmart and break the testing system.
+            If you do, we know who you are and we will expel you from the
+            course. You have been warned.
+            </li></ul>
+            <p>We hope you enjoy taking this exam !!!</p>
+        """)
 
     class Meta:
         model = Quiz
-        exclude = ["is_trial"]
+        exclude = ["is_trial", "creator"]
 
 
 class QuestionForm(forms.ModelForm):
@@ -266,15 +222,19 @@ class QuestionForm(forms.ModelForm):
 
 
 class FileForm(forms.Form):
-    file_field = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
-                                 required=False)
+    file_field = forms.FileField(widget=forms.ClearableFileInput(
+                                attrs={'multiple': True}),
+                                required=False)
 
 
 class RandomQuestionForm(forms.Form):
-    question_type = forms.CharField(max_length=8, widget=forms.Select\
-                                    (choices=question_types))
-    marks = forms.CharField(max_length=8, widget=forms.Select\
-            (choices=(('select', 'Select Marks'),)))
+    question_type = forms.CharField(
+        max_length=8, widget=forms.Select(choices=question_types)
+    )
+    marks = forms.CharField(
+        max_length=8, widget=forms.Select(
+            choices=(('select', 'Select Marks'),))
+    )
     shuffle_questions = forms.BooleanField(required=False)
 
 
@@ -286,13 +246,14 @@ class QuestionFilterForm(forms.Form):
         points_list = questions.values_list('points', flat=True).distinct()
         points_options = [(None, 'Select Marks')]
         points_options.extend([(point, point) for point in points_list])
-        self.fields['marks'] = forms.FloatField(widget=forms.Select\
-                                                    (choices=points_options))
-
-    language = forms.CharField(max_length=8, widget=forms.Select\
-                                (choices=languages))
-    question_type = forms.CharField(max_length=8, widget=forms.Select\
-                                    (choices=question_types))
+        self.fields['marks'] = forms.FloatField(
+            widget=forms.Select(choices=points_options)
+        )
+    language = forms.CharField(
+        max_length=8, widget=forms.Select(choices=languages))
+    question_type = forms.CharField(
+        max_length=8, widget=forms.Select(choices=question_types)
+    )
 
 
 class CourseForm(forms.ModelForm):
@@ -311,8 +272,8 @@ class CourseForm(forms.ModelForm):
 
     class Meta:
         model = Course
-        exclude = ['creator', 'requests', 'students', 'rejected',
-            'created_on', 'is_trial', 'hidden', 'teachers']
+        fields = ['name', 'enrollment', 'active', 'code', 'instructions',
+                  'start_enroll_time', 'end_enroll_time']
 
 
 class ProfileForm(forms.ModelForm):
@@ -342,3 +303,34 @@ class QuestionPaperForm(forms.ModelForm):
     class Meta:
         model = QuestionPaper
         fields = ['shuffle_questions']
+
+
+class LessonForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(LessonForm, self).__init__(*args, **kwargs)
+        des_msg = "Enter Lesson Description as Markdown text"
+        name_msg = "Enter Lesson Name"
+        self.fields['description'].widget.attrs['placeholder'] = des_msg
+        self.fields['name'].widget.attrs['placeholder'] = name_msg
+
+    class Meta:
+        model = Lesson
+        exclude = ['completed_lessons', 'creator', 'html_data']
+
+
+class LessonFileForm(forms.Form):
+    Lesson_files = forms.FileField(widget=forms.ClearableFileInput(
+                                attrs={'multiple': True}),
+                                required=False)
+
+
+class LearningModuleForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(LearningModuleForm, self).__init__(*args, **kwargs)
+        name_msg = "Enter Learning Module Name"
+        self.fields['name'].widget.attrs['placeholder'] = name_msg
+        self.fields['name'].widget.attrs['size'] = 30
+
+    class Meta:
+        model = LearningModule
+        fields = ['name', 'description']

@@ -25,6 +25,7 @@ import json
 import six
 from textwrap import dedent
 import zipfile
+from markdown import Markdown
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -37,12 +38,15 @@ from yaksh.models import (
     HookTestCase, IntegerTestCase, McqTestCase, Profile,
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
-    get_model_class, FIXTURES_DIR_PATH
+    get_model_class, FIXTURES_DIR_PATH, Lesson, LessonFile,
+    LearningUnit, LearningModule,
+    CourseStatus
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
     RandomQuestionForm, QuestionFilterForm, CourseForm, ProfileForm,
-    UploadFileForm, get_object_form, FileForm, QuestionPaperForm
+    UploadFileForm, get_object_form, FileForm, QuestionPaperForm, LessonForm,
+    LessonFileForm, LearningModuleForm
 )
 from .settings import URL_ROOT
 from .file_utils import extract_files, is_csv
@@ -79,9 +83,13 @@ def add_to_group(users):
         if not is_moderator(user):
             user.groups.add(group)
 
-
 CSV_FIELDS = ['name', 'username', 'roll_number', 'institute', 'department',
     'questions', 'marks_obtained', 'out_of', 'percentage', 'status']
+
+
+def get_html_text(md_text):
+    """Takes markdown text and converts it to html"""
+    return Markdown().convert(md_text)
 
 
 @email_verified
@@ -140,7 +148,7 @@ def user_logout(request):
 @login_required
 @has_profile
 @email_verified
-def quizlist_user(request, enrolled=None):
+def quizlist_user(request, enrolled=None, msg=None):
     """Show All Quizzes that is available to logged-in user."""
     user = request.user
     ci = RequestContext(request)
@@ -162,7 +170,8 @@ def quizlist_user(request, enrolled=None):
         )
         title = 'All Courses'
 
-    context = {'user': user, 'courses': courses, 'title': title}
+    context = {'user': user, 'courses': courses, 'title': title,
+               'msg': msg}
 
     return my_render_to_response(
         "yaksh/quizzes_user.html", context, context_instance=ci
@@ -276,35 +285,49 @@ def add_question(request, question_id=None):
 
 @login_required
 @email_verified
-def add_quiz(request, course_id, quiz_id=None):
+def add_quiz(request, quiz_id=None, course_id=None):
     """To add a new quiz in the database.
     Create a new quiz and store it."""
     user = request.user
-    course = get_object_or_404(Course, pk=course_id)
     ci = RequestContext(request)
-    if not is_moderator(user) or (user != course.creator and user not in course.teachers.all()):
+    if not is_moderator(user):
         raise Http404('You are not allowed to view this course !')
+    if quiz_id and not course_id:
+        quiz = get_object_or_404(Quiz, pk=quiz_id)
+        if quiz.creator != user:
+            raise Http404('This quiz does not belong to you')
+    if course_id:
+        course = get_object_or_404(Course, pk=course_id)
+        if not course.is_creator(user) and not course.is_teacher(user):
+            raise Http404('This quiz does not belong to you')
+
     context = {}
     if request.method == "POST":
         if quiz_id is None:
-            form = QuizForm(request.POST, user=user, course=course_id)
+            form = QuizForm(request.POST)
             if form.is_valid():
+                form.instance.creator = user
                 form.save()
-                return my_redirect("/exam/manage/courses/")
-
+                if not course_id:
+                    return my_redirect("/exam/manage/courses/all_quizzes/")
+                else:
+                    return my_redirect("/exam/manage/courses/")
         else:
             quiz = Quiz.objects.get(id=quiz_id)
-            form = QuizForm(request.POST, user=user, course=course_id,
-                instance=quiz
-            )
+            form = QuizForm(request.POST, instance=quiz)
             if form.is_valid():
+                form.instance.creator = user
                 form.save()
-                return my_redirect("/exam/manage/courses/")
+                if not course_id:
+                    return my_redirect("/exam/manage/courses/all_quizzes/")
+                else:
+                    return my_redirect("/exam/manage/courses/")
 
     else:
         quiz = Quiz.objects.get(id=quiz_id) if quiz_id else None
-        form = QuizForm(user=user,course=course_id, instance=quiz)
+        form = QuizForm(instance=quiz)
         context["quiz_id"] = quiz_id
+        context["course_id"] = course_id
     context["form"] = form
     return my_render_to_response(
         'yaksh/add_quiz.html', context, context_instance=ci
@@ -319,46 +342,34 @@ def prof_manage(request, msg=None):
     rights/permissions and log in."""
     user = request.user
     ci = RequestContext(request)
-    if user.is_authenticated() and is_moderator(user):
-        question_papers = QuestionPaper.objects.filter(
-            Q(quiz__course__creator=user) |
-            Q(quiz__course__teachers=user),
-            quiz__is_trial=False
-        ).distinct()
-        trial_paper = AnswerPaper.objects.filter(
-            user=user, question_paper__quiz__is_trial=True
-        )
-        if request.method == "POST":
-            delete_paper = request.POST.getlist('delete_paper')
-            for answerpaper_id in delete_paper:
-                answerpaper = AnswerPaper.objects.get(id=answerpaper_id)
-                qpaper = answerpaper.question_paper
-                if qpaper.quiz.course.is_trial:
-                    qpaper.quiz.course.delete()
+    if not user.is_authenticated() and not is_moderator(user):
+        return my_redirect('/exam/login/')
+    courses = Course.objects.filter(creator=user, is_trial=False)
+
+    trial_paper = AnswerPaper.objects.filter(
+        user=user, question_paper__quiz__is_trial=True,
+        course__is_trial=True
+    )
+    if request.method == "POST":
+        delete_paper = request.POST.getlist('delete_paper')
+        for answerpaper_id in delete_paper:
+            answerpaper = AnswerPaper.objects.get(id=answerpaper_id)
+            qpaper = answerpaper.question_paper
+            answerpaper.course.remove_trial_modules()
+            answerpaper.course.delete()
+            if qpaper.quiz.is_trial:
+                qpaper.quiz.delete()
+            else:
+                if qpaper.answerpaper_set.count() == 1:
+                    qpaper.quiz.delete()
                 else:
-                    if qpaper.answerpaper_set.count() == 1:
-                        qpaper.quiz.delete()
-                    else:
-                        answerpaper.delete()
-        users_per_paper = []
-        for paper in question_papers:
-            answer_papers = AnswerPaper.objects.filter(question_paper=paper)
-            users_passed = AnswerPaper.objects.filter(
-                question_paper=paper, passed=True
-            ).count()
-            users_failed = AnswerPaper.objects.filter(
-                question_paper=paper,
-                passed=False
-            ).count()
-            temp = paper, answer_papers, users_passed, users_failed
-            users_per_paper.append(temp)
-        context = {'user': user, 'users_per_paper': users_per_paper,
-                   'trial_paper': trial_paper, 'msg': msg
-                   }
-        return my_render_to_response(
-            'yaksh/moderator_dashboard.html', context, context_instance=ci
-        )
-    return my_redirect('/exam/login/')
+                    answerpaper.delete()
+    context = {'user': user, 'courses': courses,
+               'trial_paper': trial_paper, 'msg': msg
+               }
+    return my_render_to_response(
+        'yaksh/moderator_dashboard.html', context, context_instance=ci
+    )
 
 
 def user_login(request):
@@ -391,7 +402,8 @@ def user_login(request):
 
 @login_required
 @email_verified
-def start(request, questionpaper_id=None, attempt_num=None):
+def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
+          module_id=None):
     """Check the user cedentials and if any quiz is available,
     start the exam."""
     user = request.user
@@ -402,31 +414,64 @@ def start(request, questionpaper_id=None, attempt_num=None):
     except QuestionPaper.DoesNotExist:
         msg = 'Quiz not found, please contact your '\
             'instructor/administrator.'
-        return complete(request, msg, attempt_num, questionpaper_id=None)
+        if is_moderator(user):
+            return prof_manage(request, msg=msg)
+        return view_module(request, module_id=module_id, course_id=course_id,
+                           msg=msg)
     if not quest_paper.has_questions():
         msg = 'Quiz does not have Questions, please contact your '\
             'instructor/administrator.'
-        return complete(request, msg, attempt_num, questionpaper_id=None)
-    if not quest_paper.quiz.course.is_enrolled(user):
-        raise Http404('You are not allowed to view this page!')
-    # prerequisite check and passing criteria
-    if quest_paper.quiz.is_expired() or not quest_paper.quiz.course.active:
         if is_moderator(user):
-            return redirect("/exam/manage")
-        return redirect("/exam/quizzes")
-    if quest_paper.quiz.has_prerequisite() and not quest_paper.is_prerequisite_passed(user):
+            return prof_manage(request, msg=msg)
+        return view_module(request, module_id=module_id, course_id=course_id,
+                           msg=msg)
+    course = Course.objects.get(id=course_id)
+    learning_module = course.learning_module.get(id=module_id)
+    learning_unit = learning_module.learning_unit.get(quiz=quest_paper.quiz.id)
+
+    # is user enrolled in the course
+    if not course.is_enrolled(user):
+        msg = 'You are not enrolled in {0} course'.format(course.name)
         if is_moderator(user):
-            return redirect("/exam/manage")
-        return redirect("/exam/quizzes")
+            return prof_manage(request, msg=msg)
+        return quizlist_user(request, msg=msg)
+
+    # if course is active and is not expired
+    if not course.active or not course.is_active_enrollment():
+        msg = "{0} is either expired or not active".format(course.name)
+        if is_moderator(user):
+            return prof_manage(request, msg=msg)
+        return quizlist_user(request, msg=msg)
+
+    # is quiz is active and is not expired
+    if quest_paper.quiz.is_expired() or not quest_paper.quiz.active:
+        msg = "{0} is either expired or not active".format(
+            quest_paper.quiz.description)
+        if is_moderator(user):
+            return prof_manage(request, msg=msg)
+        return view_module(request, module_id=module_id, course_id=course_id,
+                           msg=msg)
+
+    # prerequisite check and passing criteria for quiz
+    if learning_unit.has_prerequisite():
+        if not learning_unit.is_prerequisite_passed(
+                user, learning_module, course):
+            msg = "You have not completed the prerequisite"
+            if is_moderator(user):
+                return prof_manage(request, msg=msg)
+            return view_module(request, module_id=module_id,
+                               course_id=course_id, msg=msg)
+
     # if any previous attempt
     last_attempt = AnswerPaper.objects.get_user_last_attempt(
-            questionpaper=quest_paper, user=user)
+        quest_paper, user, course_id)
     if last_attempt and last_attempt.is_attempt_inprogress():
         return show_question(
-            request, last_attempt.current_question(), last_attempt
+            request, last_attempt.current_question(), last_attempt,
+            course_id=course_id, module_id=module_id
         )
     # allowed to start
-    if not quest_paper.can_attempt_now(user):
+    if not quest_paper.can_attempt_now(user, course_id):
         if is_moderator(user):
             return redirect("/exam/manage")
         return redirect("/exam/quizzes")
@@ -438,7 +483,9 @@ def start(request, questionpaper_id=None, attempt_num=None):
         context = {
             'user': user,
             'questionpaper': quest_paper,
-            'attempt_num': attempt_number
+            'attempt_num': attempt_number,
+            'course': course,
+            'module': learning_module,
         }
         if is_moderator(user):
             context["user"] = "moderator"
@@ -449,10 +496,12 @@ def start(request, questionpaper_id=None, attempt_num=None):
         if not hasattr(user, 'profile'):
             msg = 'You do not have a profile and cannot take the quiz!'
             raise Http404(msg)
-        new_paper = quest_paper.make_answerpaper(user, ip, attempt_number)
+        new_paper = quest_paper.make_answerpaper(user, ip, attempt_number,
+                                                 course_id)
         if new_paper.status ==  'inprogress':
             return show_question(request, new_paper.current_question(),
-                                 new_paper
+                                 new_paper, course_id=course_id,
+                                 module_id=module_id
                                  )
         else:
             msg = 'You have already finished the quiz!'
@@ -460,23 +509,27 @@ def start(request, questionpaper_id=None, attempt_num=None):
 
 @login_required
 @email_verified
-def show_question(request, question, paper, error_message=None, notification=None):
+def show_question(request, question, paper, error_message=None, notification=None,
+                  course_id=None, module_id=None):
     """Show a question if possible."""
     user = request.user
     if not question:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(
-            request, msg, paper.attempt_number, paper.question_paper.id
+            request, msg, paper.attempt_number, paper.question_paper.id,
+            course_id=course_id, module_id=module_id
         )
     if not paper.question_paper.quiz.active:
         reason = 'The quiz has been deactivated!'
         return complete(
-            request, reason, paper.attempt_number, paper.question_paper.id
+            request, reason, paper.attempt_number, paper.question_paper.id,
+            module_id=module_id
         )
     if paper.time_left() <= 0:
         reason = 'Your time is up!'
         return complete(
-            request, reason, paper.attempt_number, paper.question_paper.id
+            request, reason, paper.attempt_number, paper.question_paper.id,
+            course_id, module_id=module_id
         )
     if question in paper.questions_answered.all():
         notification = (
@@ -486,6 +539,8 @@ def show_question(request, question, paper, error_message=None, notification=Non
         )
     test_cases = question.get_test_cases()
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
+    course = Course.objects.get(id=course_id)
+    module = course.learning_module.get(id=module_id)
     context = {
         'question': question,
         'paper': paper,
@@ -493,7 +548,9 @@ def show_question(request, question, paper, error_message=None, notification=Non
         'test_cases': test_cases,
         'files': files,
         'notification': notification,
-        'last_attempt': question.snippet.encode('unicode-escape')
+        'last_attempt': question.snippet.encode('unicode-escape'),
+        'course': course,
+        'module': module
     }
     answers = paper.get_previous_answers(question)
     if answers:
@@ -507,11 +564,12 @@ def show_question(request, question, paper, error_message=None, notification=Non
 
 @login_required
 @email_verified
-def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
+def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None,
+         course_id=None, module_id=None):
     user = request.user
     paper = get_object_or_404(
         AnswerPaper, user=request.user, attempt_number=attempt_num,
-        question_paper=questionpaper_id
+        question_paper=questionpaper_id, course_id=course_id
     )
     question = get_object_or_404(Question, pk=q_id)
 
@@ -529,19 +587,22 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None):
         next_q = get_object_or_404(Question, pk=next_q)
     else:
         next_q = paper.next_question(q_id)
-    return show_question(request, next_q, paper)
+    return show_question(request, next_q, paper, course_id=course_id,
+                         module_id=module_id)
 
 
 @login_required
 @email_verified
-def check(request, q_id, attempt_num=None, questionpaper_id=None):
+def check(request, q_id, attempt_num=None, questionpaper_id=None,
+          course_id=None, module_id=None):
     """Checks the answers of the user for particular question"""
     user = request.user
     paper = get_object_or_404(
         AnswerPaper,
         user=request.user,
         attempt_number=attempt_num,
-        question_paper=questionpaper_id
+        question_paper=questionpaper_id,
+        course_id=course_id
     )
     current_question = get_object_or_404(Question, pk=q_id)
 
@@ -555,7 +616,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             except ValueError:
                 msg = "Please enter an Integer Value"
                 return show_question(
-                    request, current_question, paper, notification=msg
+                    request, current_question, paper, notification=msg,
+                    course_id=course_id, module_id=module_id
                 )
         elif current_question.type == 'float':
             try:
@@ -563,7 +625,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             except ValueError:
                 msg = "Please enter a Float Value"
                 return show_question(request, current_question,
-                                     paper, notification=msg)
+                                     paper, notification=msg,
+                                     course_id=course_id, module_id=module_id)
         elif current_question.type == 'string':
             user_answer = str(request.POST.get('answer'))
 
@@ -576,7 +639,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
             if not assignment_filename:
                 msg = "Please upload assignment file"
                 return show_question(
-                    request, current_question, paper, notification=msg
+                    request, current_question, paper, notification=msg,
+                    course_id=course_id, module_id=module_id
                 )
             for fname in assignment_filename:
                 assignment_files = AssignmentUpload.objects.filter(
@@ -603,13 +667,15 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                 new_answer.save()
                 paper.answers.add(new_answer)
                 next_q = paper.add_completed_question(current_question.id)
-                return show_question(request, next_q, paper)
+                return show_question(request, next_q, paper,
+                                     course_id=course_id, module_id=module_id)
         else:
             user_answer = request.POST.get('answer')
         if not user_answer:
             msg = "Please submit a valid answer."
             return show_question(
-                request, current_question, paper, notification=msg
+                request, current_question, paper, notification=msg,
+                course_id=course_id, module_id=module_id
             )
         if current_question in paper.get_questions_answered()\
          and current_question.type not in ['code', 'upload']:
@@ -640,18 +706,22 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None):
                 result = json.loads(result_details.get('result'))
                 next_question, error_message, paper = _update_paper(request, uid,
                         result)
-                return show_question(request, next_question, paper, error_message)
+                return show_question(request, next_question, paper,
+                                     error_message, course_id=course_id,
+                                     module_id=module_id)
             else:
                 return JsonResponse(result)
         else:
             next_question, error_message, paper = _update_paper(request, uid, result)
-            return show_question(request, next_question, paper, error_message)
+            return show_question(request, next_question, paper, error_message,
+                                 course_id=course_id, module_id=module_id)
     else:
-        return show_question(request, current_question, paper)
+        return show_question(request, current_question, paper,
+                             course_id=course_id, module_id=module_id)
 
 
 @csrf_exempt
-def get_result(request, uid):
+def get_result(request, uid, course_id, module_id):
     result = {}
     url = 'http://localhost:%s' % SERVER_POOL_PORT
     result_state = get_result_from_code_server(url, uid)
@@ -675,7 +745,6 @@ def get_result(request, uid):
                 context = Context({"error_message": result.get('error')})
                 render_error = template.render(context)
                 result["error"] = render_error
-
     return JsonResponse(result)
 
 
@@ -714,19 +783,23 @@ def _update_paper(request, uid, result):
 
 @login_required
 @email_verified
-def quit(request, reason=None, attempt_num=None, questionpaper_id=None):
+def quit(request, reason=None, attempt_num=None, questionpaper_id=None,
+         course_id=None, module_id=None):
     """Show the quit page when the user logs out."""
     paper = AnswerPaper.objects.get(user=request.user,
                                     attempt_number=attempt_num,
-                                    question_paper=questionpaper_id)
-    context = {'paper': paper, 'message': reason}
+                                    question_paper=questionpaper_id,
+                                    course_id=course_id)
+    context = {'paper': paper, 'message': reason, 'course_id': course_id,
+               'module_id': module_id}
     return my_render_to_response('yaksh/quit.html', context,
                                  context_instance=RequestContext(request))
 
 
 @login_required
 @email_verified
-def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
+def complete(request, reason=None, attempt_num=None, questionpaper_id=None,
+             course_id=None, module_id=None):
     """Show a page to inform user that the quiz has been compeleted."""
     user = request.user
     if questionpaper_id is None:
@@ -738,12 +811,21 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None):
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
         paper = AnswerPaper.objects.get(
             user=user, question_paper=q_paper,
-            attempt_number=attempt_num
+            attempt_number=attempt_num,
+            course_id=course_id
         )
+        course = Course.objects.get(id=course_id)
+        learning_module = course.learning_module.get(id=module_id)
+        learning_unit = learning_module.learning_unit.get(quiz=q_paper.quiz)
+
         paper.update_marks()
         paper.set_end_time(timezone.now())
         message = reason or "Quiz has been submitted"
-        context = {'message': message, 'paper': paper}
+        context = {'message': message, 'paper': paper,
+                   'module_id': learning_module.id,
+                   'course_id': course_id, 'learning_unit': learning_unit}
+        if is_moderator(user):
+            context['user'] = "moderator"
         return my_render_to_response('yaksh/complete.html', context)
 
 
@@ -765,7 +847,7 @@ def add_course(request, course_id=None):
             new_course = form.save(commit=False)
             new_course.creator = user
             new_course.save()
-            return my_redirect('/exam/manage/')
+            return my_redirect('/exam/manage/courses')
         else:
             return my_render_to_response(
                 'yaksh/add_course.html', {'form': form}, context_instance=ci
@@ -823,7 +905,8 @@ def courses(request):
         creator=user, is_trial=False).order_by('-active', '-id')
     allotted_courses = Course.objects.filter(
         teachers=user, is_trial=False).order_by('-active', '-id')
-    context = {'courses': courses, "allotted_courses": allotted_courses}
+    context = {'courses': courses, "allotted_courses": allotted_courses,
+               "type": "courses"}
     return my_render_to_response('yaksh/courses.html', context,
                                  context_instance=ci)
 
@@ -955,39 +1038,45 @@ def toggle_course_status(request, course_id):
     else:
         course.activate()
     course.save()
-    return course_detail(request, course_id)
+    return my_redirect("/exam/manage/courses")
 
 
 @login_required
 @email_verified
-def show_statistics(request, questionpaper_id, attempt_number=None):
+def show_statistics(request, questionpaper_id, attempt_number=None,
+                    course_id=None):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
-    attempt_numbers = AnswerPaper.objects.get_attempt_numbers(questionpaper_id)
+    attempt_numbers = AnswerPaper.objects.get_attempt_numbers(
+        questionpaper_id, course_id)
     quiz = get_object_or_404(QuestionPaper, pk=questionpaper_id).quiz
     if attempt_number is None:
         context = {'quiz': quiz, 'attempts': attempt_numbers,
-                   'questionpaper_id': questionpaper_id}
+                   'questionpaper_id': questionpaper_id,
+                   'course_id': course_id}
         return my_render_to_response('yaksh/statistics_question.html', context,
                                      context_instance=RequestContext(request))
     total_attempt = AnswerPaper.objects.get_count(questionpaper_id,
-                                                  attempt_number)
-    if not AnswerPaper.objects.has_attempt(questionpaper_id, attempt_number):
+                                                  attempt_number,
+                                                  course_id)
+    if not AnswerPaper.objects.has_attempt(questionpaper_id, attempt_number,
+                                           course_id):
         return my_redirect('/exam/manage/')
     question_stats = AnswerPaper.objects.get_question_statistics(
         questionpaper_id, attempt_number
     )
     context = {'question_stats': question_stats, 'quiz': quiz,
                'questionpaper_id': questionpaper_id,
-               'attempts': attempt_numbers, 'total': total_attempt}
+               'attempts': attempt_numbers, 'total': total_attempt,
+               'course_id': course_id}
     return my_render_to_response('yaksh/statistics_question.html', context,
                                  context_instance=RequestContext(request))
 
 
 @login_required
 @email_verified
-def monitor(request, quiz_id=None):
+def monitor(request, quiz_id=None, course_id=None):
     """Monitor the progress of the papers taken so far."""
 
     user = request.user
@@ -1010,24 +1099,25 @@ def monitor(request, quiz_id=None):
     # quiz_id is not None.
     try:
         quiz = get_object_or_404(Quiz, id=quiz_id)
-        if not quiz.course.is_creator(user) and not quiz.course.is_teacher(user):
+        course = get_object_or_404(Course, id=course_id)
+        if not course.is_creator(user) and not course.is_teacher(user):
             raise Http404('This course does not belong to you')
-        q_paper = QuestionPaper.objects.filter(Q(quiz__course__creator=user) |
-                                               Q(quiz__course__teachers=user),
-                                               quiz__is_trial=False,
+        q_paper = QuestionPaper.objects.filter(quiz__is_trial=False,
                                                quiz_id=quiz_id).distinct()
-    except QuestionPaper.DoesNotExist:
+    except (QuestionPaper.DoesNotExist, Course.DoesNotExist):
         papers = []
         q_paper = None
         latest_attempts = []
         attempt_numbers = []
     else:
         if q_paper:
-            attempt_numbers = AnswerPaper.objects.get_attempt_numbers(q_paper.last().id)
+            attempt_numbers = AnswerPaper.objects.get_attempt_numbers(
+                q_paper.last().id, course.id)
         else:
             attempt_numbers = []
         latest_attempts = []
-        papers = AnswerPaper.objects.filter(question_paper=q_paper).order_by(
+        papers = AnswerPaper.objects.filter(question_paper=q_paper,
+                                            course_id=course_id).order_by(
             'user__profile__roll_number'
         )
         users = papers.values_list('user').distinct()
@@ -1048,7 +1138,8 @@ def monitor(request, quiz_id=None):
         "msg": "Quiz Results",
         "latest_attempts": latest_attempts,
         "csv_fields": csv_fields,
-        "attempt_numbers": attempt_numbers
+        "attempt_numbers": attempt_numbers,
+        "course": course
     }
     return my_render_to_response('yaksh/monitor.html', context,
                                  context_instance=ci)
@@ -1113,7 +1204,7 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     quiz = Quiz.objects.get(id=quiz_id)
-    if not quiz.course.is_creator(user) and not quiz.course.is_teacher(user):
+    if not quiz.creator == user:
         raise Http404('This course does not belong to you')
     filter_form = QuestionFilterForm(user=user)
     questions = None
@@ -1175,7 +1266,7 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
 
         if 'save' in request.POST or 'back' in request.POST:
             qpaper_form.save()
-            return my_redirect('/exam/manage/courses/')
+            return my_redirect('/exam/manage/courses/all_quizzes/')
 
         if marks:
             questions = _get_questions(user, question_type, marks)
@@ -1266,10 +1357,12 @@ def show_all_questions(request):
         if request.POST.get('test') == 'test':
             question_ids = request.POST.getlist("question")
             if question_ids:
-                trial_paper = test_mode(user, False, question_ids, None)
+                trial_paper, trial_course, trial_module = test_mode(
+                    user, False, question_ids, None)
                 trial_paper.update_total_marks()
                 trial_paper.save()
-                return my_redirect("/exam/start/1/{0}".format(trial_paper.id))
+                return my_redirect("/exam/start/1/{0}/{1}/{2}".format(
+                    trial_module.id, trial_paper.id, trial_course.id))
             else:
                 context["msg"] = "Please select atleast one question to test"
 
@@ -1288,15 +1381,15 @@ def show_all_questions(request):
 
 @login_required
 @email_verified
-def user_data(request, user_id, questionpaper_id=None):
+def user_data(request, user_id, questionpaper_id=None, course_id=None):
     """Render user data."""
     current_user = request.user
     if not current_user.is_authenticated() or not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
     user = User.objects.get(id=user_id)
-    data = AnswerPaper.objects.get_user_data(user, questionpaper_id)
+    data = AnswerPaper.objects.get_user_data(user, questionpaper_id, course_id)
 
-    context = {'data': data}
+    context = {'data': data, 'course_id': course_id}
     return my_render_to_response('yaksh/user_data.html', context,
                                  context_instance=RequestContext(request))
 
@@ -1325,7 +1418,8 @@ def download_quiz_csv(request, course_id, quiz_id):
     csv_fields = []
     attempt_number = None
     question_paper = quiz.questionpaper_set.last()
-    last_attempt_number =AnswerPaper.objects.get_attempt_numbers(question_paper.id).last()
+    last_attempt_number = AnswerPaper.objects.get_attempt_numbers(
+        question_paper.id, course.id).last()
     if request.method == 'POST':
         csv_fields = request.POST.getlist('csv_fields')
         attempt_number = request.POST.get('attempt_number', last_attempt_number)
@@ -1339,7 +1433,6 @@ def download_quiz_csv(request, course_id, quiz_id):
             attempt_number=attempt_number)
     if not answerpapers:
         return monitor(request, quiz_id)
-
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="{0}-{1}-attempt{2}.csv"'.format(
             course.name.replace('.', ''),  quiz.description.replace('.', ''),
@@ -1381,7 +1474,8 @@ def download_quiz_csv(request, course_id, quiz_id):
 
 @login_required
 @email_verified
-def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
+def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
+               course_id=None):
     """Present an interface with which we can easily grade a user's papers
     and update all their marks and also give comments for each paper.
     """
@@ -1398,11 +1492,12 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
             quiz_id=quiz_id
         ).values("id")
         user_details = AnswerPaper.objects.get_users_for_questionpaper(
-            questionpaper_id
+            questionpaper_id, course_id
         )
         quiz = get_object_or_404(Quiz, id=quiz_id)
-        if not quiz.course.is_creator(current_user) and not \
-                quiz.course.is_teacher(current_user):
+        course = get_object_or_404(Course, id=course_id)
+        if not course.is_creator(current_user) and not \
+                course.is_teacher(current_user):
             raise Http404('This course does not belong to you')
 
         has_quiz_assignments = AssignmentUpload.objects.filter(
@@ -1412,11 +1507,12 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
             "users": user_details,
             "quiz_id": quiz_id,
             "quiz": quiz,
-            "has_quiz_assignments": has_quiz_assignments
+            "has_quiz_assignments": has_quiz_assignments,
+            "course_id": course_id
         }
         if user_id is not None:
             attempts = AnswerPaper.objects.get_user_all_attempts(
-                questionpaper_id, user_id
+                questionpaper_id, user_id, course_id
             )
             try:
                 if attempt_number is None:
@@ -1429,7 +1525,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
                                 ).exists()
             user = User.objects.get(id=user_id)
             data = AnswerPaper.objects.get_user_data(
-                user, questionpaper_id, attempt_number
+                user, questionpaper_id, course_id, attempt_number
             )
             context = {
                 "data": data,
@@ -1438,7 +1534,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None):
                 "attempts": attempts,
                 "user_id": user_id,
                 "has_user_assignments": has_user_assignments,
-                "has_quiz_assignments": has_quiz_assignments
+                "has_quiz_assignments": has_quiz_assignments,
+                "course_id": course_id
             }
     if request.method == "POST":
         papers = data['papers']
@@ -1600,28 +1697,37 @@ def remove_teachers(request, course_id):
     return my_redirect('/exam/manage/courses')
 
 
-def test_mode(user, godmode=False, questions_list=None, quiz_id=None):
+def test_mode(user, godmode=False, questions_list=None, quiz_id=None,
+              course_id=None):
     """creates a trial question paper for the moderators"""
 
     if questions_list is not None:
         trial_course = Course.objects.create_trial_course(user)
-        trial_quiz = Quiz.objects.create_trial_quiz(trial_course, user)
+        trial_quiz = Quiz.objects.create_trial_quiz(user)
         trial_questionpaper = QuestionPaper.objects.create_trial_paper_to_test_questions(
             trial_quiz, questions_list
         )
+        trial_unit, created = LearningUnit.objects.get_or_create(
+            order=1, learning_type="quiz", quiz=trial_quiz,
+            check_prerequisite=False)
+        module, created = LearningModule.objects.get_or_create(
+            order=1, creator=user, check_prerequisite=False,
+            name="Trial for {0}".format(trial_course.name))
+        module.learning_unit.add(trial_unit)
+        trial_course.learning_module.add(module.id)
     else:
-        trial_quiz = Quiz.objects.create_trial_from_quiz(
-            quiz_id, user, godmode
+        trial_quiz, trial_course, module = Quiz.objects.create_trial_from_quiz(
+            quiz_id, user, godmode, course_id
         )
         trial_questionpaper = QuestionPaper.objects.create_trial_paper_to_test_quiz(
             trial_quiz, quiz_id
         )
-    return trial_questionpaper
+    return trial_questionpaper, trial_course, module
 
 
 @login_required
 @email_verified
-def test_quiz(request, mode, quiz_id):
+def test_quiz(request, mode, quiz_id, course_id=None):
     """creates a trial quiz for the moderators"""
     godmode = True if mode == "godmode" else False
     current_user = request.user
@@ -1629,17 +1735,21 @@ def test_quiz(request, mode, quiz_id):
     if (quiz.is_expired() or not quiz.active) and not godmode:
         return my_redirect('/exam/manage')
 
-    trial_questionpaper = test_mode(current_user, godmode, None, quiz_id)
-    return my_redirect("/exam/start/{0}".format(trial_questionpaper.id))
+    trial_questionpaper, trial_course, trial_module = test_mode(
+        current_user, godmode, None, quiz_id, course_id)
+    return my_redirect("/exam/start/{0}/{1}/{2}".format(
+        trial_questionpaper.id, trial_module.id, trial_course.id))
 
 
 @login_required
 @email_verified
-def view_answerpaper(request, questionpaper_id):
+def view_answerpaper(request, questionpaper_id, course_id):
     user = request.user
     quiz = get_object_or_404(QuestionPaper, pk=questionpaper_id).quiz
-    if quiz.view_answerpaper and user in quiz.course.students.all():
-        data = AnswerPaper.objects.get_user_data(user, questionpaper_id)
+    course = get_object_or_404(Course, pk=course_id)
+    if quiz.view_answerpaper and user in course.students.all():
+        data = AnswerPaper.objects.get_user_data(user, questionpaper_id,
+                                                 course_id)
         has_user_assignment = AssignmentUpload.objects.filter(
             user=user,
             question_paper_id=questionpaper_id
@@ -1684,7 +1794,8 @@ def grader(request, extra_context=None):
 
 @login_required
 @email_verified
-def regrade(request, course_id, question_id=None, answerpaper_id=None, questionpaper_id=None):
+def regrade(request, course_id, question_id=None, answerpaper_id=None,
+            questionpaper_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     if not is_moderator(user) or (user != course.creator and user not in course.teachers.all()):
@@ -1696,7 +1807,7 @@ def regrade(request, course_id, question_id=None, answerpaper_id=None, questionp
             details.append(answerpaper.regrade(question.id))
     if questionpaper_id is not None and question_id is not None:
         answerpapers = AnswerPaper.objects.filter(questions=question_id,
-                question_paper_id=questionpaper_id)
+                question_paper_id=questionpaper_id, course_id=course_id)
         for answerpaper in answerpapers:
             details.append(answerpaper.regrade(question_id))
     if answerpaper_id is not None and question_id is not None:
@@ -1711,7 +1822,8 @@ def download_course_csv(request, course_id):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    course = get_object_or_404(Course, pk=course_id)
+    course = Course.objects.prefetch_related("learning_module").get(
+        id=course_id)
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('The question paper does not belong to your course')
     students = course.get_only_students().annotate(
@@ -1721,14 +1833,14 @@ def download_course_csv(request, course_id):
         "id", "first_name", "last_name",
         "email", "institute", "roll_number"
     )
-    quizzes = Quiz.objects.filter(course=course, is_trial=False)
+    quizzes = course.get_quizzes()
 
     for student in students:
         total_course_marks = 0.0
         user_course_marks = 0.0
         for quiz in quizzes:
             quiz_best_marks = AnswerPaper.objects.get_user_best_of_attempts_marks\
-                               (quiz, student["id"])
+                               (quiz, student["id"], course_id)
             user_course_marks += quiz_best_marks
             total_course_marks += quiz.questionpaper_set.values_list(
                 "total_marks", flat=True)[0]
@@ -2020,7 +2132,7 @@ def download_sample_csv(request):
 @email_verified
 def duplicate_course(request, course_id):
     user = request.user
-    course = get_object_or_404(Course, pk=course_id)
+    course = Course.objects.get(id=course_id)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
@@ -2049,3 +2161,377 @@ def download_yaml_template(request):
     
     return response
 
+
+@login_required
+@email_verified
+def edit_lesson(request, lesson_id=None, course_id=None):
+    user = request.user
+    ci = RequestContext(request)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    if lesson_id:
+        lesson = Lesson.objects.get(id=lesson_id)
+        if not lesson.creator == user and not course_id:
+            raise Http404('This Lesson does not belong to you')
+    else:
+        lesson = None
+    if course_id:
+        course = get_object_or_404(Course, id=course_id)
+        if not course.is_creator(user) and not course.is_teacher(user):
+            raise Http404('This Lesson does not belong to you')
+        redirect_url = "/exam/manage/courses/"
+    else:
+        redirect_url = "/exam/manage/courses/all_lessons/"
+    context = {}
+    if request.method == "POST":
+        if "Save" in request.POST:
+            lesson_form = LessonForm(request.POST, instance=lesson)
+            lesson_file_form = LessonFileForm(request.POST, request.FILES)
+            lessonfiles = request.FILES.getlist('Lesson_files')
+            if lesson_form.is_valid():
+                lesson_form.instance.creator = user
+                lesson = lesson_form.save()
+                lesson.html_data = get_html_text(lesson.description)
+                lesson.save()
+                if lessonfiles:
+                    for les_file in lessonfiles:
+                        LessonFile.objects.get_or_create(
+                            lesson=lesson, file=les_file
+                        )
+                return my_redirect(redirect_url)
+            else:
+                context['lesson_form'] = lesson_form
+                context['lesson_file_form'] = lesson_file_form
+
+        if 'Delete' in request.POST:
+            remove_files_id = request.POST.getlist('delete_files')
+            if remove_files_id:
+                files = LessonFile.objects.filter(id__in=remove_files_id)
+                for file in files:
+                    file.remove()
+
+    lesson_files = LessonFile.objects.filter(lesson=lesson)
+    lesson_files_form = LessonFileForm()
+    lesson_form = LessonForm(instance=lesson)
+    context['lesson_form'] = lesson_form
+    context['lesson_file_form'] = lesson_files_form
+    context['lesson_files'] = lesson_files
+    context['course_id'] = course_id
+    return my_render_to_response(
+        'yaksh/add_lesson.html', context, context_instance=ci
+    )
+
+
+@login_required
+@email_verified
+def show_video(request, lesson_id, module_id, course_id):
+    user = request.user
+    course = Course.objects.get(id=course_id)
+    if user not in course.students.all():
+        raise Http404('This course does not belong to you')
+    if not course.active or not course.is_active_enrollment():
+        msg = "{0} is either expired or not active".format(course.name)
+        return quizlist_user(request, msg=msg)
+    learn_module = course.learning_module.get(id=module_id)
+    learn_unit = learn_module.learning_unit.get(lesson_id=lesson_id)
+    learning_units = learn_module.get_learning_units()
+    if learn_unit.has_prerequisite():
+        if not learn_unit.is_prerequisite_passed(user, learn_module, course):
+            return my_redirect("/exam/quizzes/")
+    context = {'lesson': learn_unit.lesson, 'user': user,
+               'course': course, 'state': "lesson",
+               'learning_units': learning_units, "current_unit": learn_unit,
+               'learning_module': learn_module}
+    return my_render_to_response('yaksh/show_video.html', context)
+
+
+@login_required
+@email_verified
+def design_module(request, module_id, course_id=None):
+    user = request.user
+    ci = RequestContext(request)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    context = {}
+    if course_id:
+        course = Course.objects.get(id=course_id)
+        if not course.is_creator(user) and not course.is_teacher(user):
+            raise Http404('This course does not belong to you')
+    learning_module = LearningModule.objects.get(id=module_id)
+    if request.method == "POST":
+        if "Add" in request.POST:
+            add_values = request.POST.get("choosen_list").split(',')
+            to_add_list = []
+            if add_values:
+                ordered_units = learning_module.get_learning_units()
+                if ordered_units.exists():
+                    start_val = ordered_units.last().order + 1
+                else:
+                    start_val = 1
+                for order, value in enumerate(add_values, start_val):
+                    learning_id, learning_type = value.split(":")
+                    if learning_type == "quiz":
+                        learning_unit = LearningUnit.objects.create(
+                            order=order, quiz_id=learning_id,
+                            learning_type=learning_type)
+                    else:
+                        learning_unit = LearningUnit.objects.create(
+                            order=order, lesson_id=learning_id,
+                            learning_type=learning_type)
+                    to_add_list.append(learning_unit)
+                learning_module.learning_unit.add(*to_add_list)
+
+        if "Change" in request.POST:
+            order_list = request.POST.get("ordered_list").split(",")
+            for order in order_list:
+                learning_unit, learning_order = order.split(":")
+                if learning_order:
+                    learning_unit = learning_module.learning_unit.get(
+                        id=learning_unit)
+                    learning_unit.order = learning_order
+                    learning_unit.save()
+
+        if "Remove" in request.POST:
+            remove_values = request.POST.getlist("delete_list")
+            if remove_values:
+                learning_module.learning_unit.remove(*remove_values)
+                LearningUnit.objects.filter(id__in=remove_values).delete()
+
+        if "Change_prerequisite" in request.POST:
+            unit_list = request.POST.getlist("check_prereq")
+            for unit in unit_list:
+                learning_unit = learning_module.learning_unit.get(id=unit)
+                learning_unit.toggle_check_prerequisite()
+                learning_unit.save()
+
+    added_quiz_lesson = learning_module.get_added_quiz_lesson()
+    quizzes = [("quiz", quiz) for quiz in Quiz.objects.filter(
+               creator=user, is_trial=False)]
+    lessons = [("lesson", lesson)
+               for lesson in Lesson.objects.filter(creator=user)]
+    quiz_les_list = set(quizzes + lessons) - set(added_quiz_lesson)
+    context['quiz_les_list'] = quiz_les_list
+    context['learning_units'] = learning_module.get_learning_units()
+    context['status'] = 'design'
+    context['module_id'] = module_id
+    context['course_id'] = course_id
+    return my_render_to_response('yaksh/add_module.html', context,
+                                 context_instance=ci)
+
+
+@login_required
+@email_verified
+def add_module(request, module_id=None, course_id=None):
+    user = request.user
+    ci = RequestContext(request)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    redirect_url = "/exam/manage/courses/all_learning_module/"
+    if course_id:
+        course = Course.objects.get(id=course_id)
+        if not course.is_creator(user) and not course.is_teacher(user):
+            raise Http404('This course does not belong to you')
+        redirect_url = "/exam/manage/courses/"
+    if module_id:
+        module = LearningModule.objects.get(id=module_id)
+        if not module.creator == user and not course_id:
+            raise Http404('This Learning Module does not belong to you')
+    else:
+        module = None
+    context = {}
+    if request.method == "POST":
+        if "Save" in request.POST:
+            module_form = LearningModuleForm(request.POST, instance=module)
+            if module_form.is_valid():
+                module_form.instance.creator = user
+                module = module_form.save()
+                module.html_data = get_html_text(module.description)
+                module.save()
+                return my_redirect(redirect_url)
+            else:
+                context['module_form'] = module_form
+
+    module_form = LearningModuleForm(instance=module)
+    context['module_form'] = module_form
+    context['course_id'] = course_id
+    context['status'] = "add"
+    return my_render_to_response("yaksh/add_module.html",
+                                 context, context_instance=ci)
+
+
+@login_required
+@email_verified
+def show_all_quizzes(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    quizzes = Quiz.objects.filter(creator=user, is_trial=False)
+    context = {"quizzes": quizzes, "type": "quiz"}
+    return my_render_to_response('yaksh/courses.html', context)
+
+
+@login_required
+@email_verified
+def show_all_lessons(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    lessons = Lesson.objects.filter(creator=user)
+    context = {"lessons": lessons, "type": "lesson"}
+    return my_render_to_response('yaksh/courses.html', context)
+
+
+@login_required
+@email_verified
+def show_all_modules(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    learning_modules = LearningModule.objects.filter(
+        creator=user, is_trial=False)
+    context = {"learning_modules": learning_modules, "type": "learning_module"}
+    return my_render_to_response('yaksh/courses.html', context)
+
+
+@login_required
+@email_verified
+def preview_html_text(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    response_kwargs = {}
+    request_data = json.loads(request.body.decode("utf-8"))
+    html_text = get_html_text(request_data['description'])
+    return HttpResponse(json.dumps({"data": html_text}), **response_kwargs)
+
+
+@login_required
+@email_verified
+def get_next_unit(request, course_id, module_id, current_unit_id,
+                  first_unit=None):
+    user = request.user
+    course = Course.objects.prefetch_related("learning_module").get(
+        id=course_id)
+    if user not in course.students.all():
+        raise Http404('You are not enrolled for this course!')
+    learning_module = course.learning_module.prefetch_related(
+        "learning_unit").get(id=module_id)
+    current_learning_unit = learning_module.learning_unit.get(
+        id=current_unit_id)
+
+    course_status = CourseStatus.objects.filter(
+        user=user, course_id=course_id,
+    )
+    if first_unit:
+        next_unit = current_learning_unit
+    else:
+        next_unit = learning_module.get_next_unit(current_learning_unit.id)
+    if not course_status.exists():
+        course_status = CourseStatus.objects.create(
+            user=user, course_id=course_id
+        )
+    else:
+        course_status = course_status.first()
+
+    # Add learning unit to completed units list
+    if not first_unit:
+        course_status.completed_units.add(current_learning_unit.id)
+
+    # make next available unit as current unit
+    course_status.current_unit = next_unit
+    course_status.save()
+    if next_unit.learning_type == "quiz":
+        return my_redirect("/exam/start/{0}/{1}/{2}".format(
+            next_unit.quiz.questionpaper_set.get().id, module_id, course_id))
+    else:
+        return my_redirect("/exam/show_video/{0}/{1}/{2}".format(
+            next_unit.lesson.id, module_id, course_id))
+
+
+@login_required
+@email_verified
+def design_course(request, course_id):
+    user = request.user
+    ci = RequestContext(request)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    course = Course.objects.get(id=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    context = {}
+    if request.method == "POST":
+        if "Add" in request.POST:
+            add_values = request.POST.getlist("module_list")
+            to_add_list = []
+            if add_values:
+                ordered_modules = course.get_learning_modules()
+                if ordered_modules.exists():
+                    start_val = ordered_modules.last().order + 1
+                else:
+                    start_val = 1
+                for order, value in enumerate(add_values, start_val):
+                    learning_module = LearningModule.objects.get(id=int(value))
+                    learning_module.order = order
+                    learning_module.save()
+                    to_add_list.append(learning_module)
+                course.learning_module.add(*to_add_list)
+
+        if "Change" in request.POST:
+            order_list = request.POST.get("ordered_list").split(",")
+            for order in order_list:
+                learning_unit, learning_order = order.split(":")
+                if learning_order:
+                    learning_module = course.learning_module.get(
+                        id=learning_unit)
+                    learning_module.order = learning_order
+                    learning_module.save()
+
+        if "Remove" in request.POST:
+            remove_values = request.POST.getlist("delete_list")
+            if remove_values:
+                course.learning_module.remove(*remove_values)
+
+        if "Change_prerequisite" in request.POST:
+            unit_list = request.POST.getlist("check_prereq")
+            for unit in unit_list:
+                learning_module = course.learning_module.get(id=unit)
+                learning_module.toggle_check_prerequisite()
+                learning_module.save()
+
+    added_learning_modules = course.get_learning_modules()
+    all_learning_modules = LearningModule.objects.filter(
+        creator=user, is_trial=False)
+
+    learning_modules = set(all_learning_modules) - set(added_learning_modules)
+    context['added_learning_modules'] = added_learning_modules
+    context['learning_modules'] = learning_modules
+    context['course_id'] = course_id
+    return my_render_to_response('yaksh/design_course_session.html', context,
+                                 context_instance=ci)
+
+
+@login_required
+@email_verified
+def view_module(request, module_id, course_id, msg=None):
+    user = request.user
+    course = Course.objects.get(id=course_id)
+    if user not in course.students.all():
+        raise Http404('You are not enrolled for this course!')
+    context = {}
+    if not course.active or not course.is_active_enrollment():
+        msg = "{0} is either expired or not active".format(course.name)
+        return quizlist_user(request, msg=msg)
+    learning_module = course.learning_module.get(id=module_id)
+    if learning_module.has_prerequisite():
+        if not learning_module.is_prerequisite_passed(user, course):
+            msg = "You have not completed previous learning module"
+            return quizlist_user(request, msg=msg)
+    learning_units = learning_module.get_learning_units()
+    context['learning_units'] = learning_units
+    context['learning_module'] = learning_module
+    context['first_unit'] = learning_units[0]
+    context['user'] = user
+    context['course'] = course
+    context['state'] = "module"
+    context['msg'] = msg
+    return my_render_to_response('yaksh/show_video.html', context)

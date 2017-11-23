@@ -1,9 +1,16 @@
 {% extends "user.html" %}
+{% load custom_filters %}
+{% block title %} Student Dashboard {% endblock %}
 {% block pagetitle %} {{ title }} {% endblock %}
 {% block main %}
+    {% if msg %}
+        <div class="alert alert-warning" role="alert">
+            <center>{{ msg }}</center>
+        </div>
+    {% endif %}
     {% if 'Enrolled Courses' not in title%}
         <div class="row well">
-            <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" class="form-search form-horizontal pull-right">
+            <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" class="form-search form-horizontal">
                 {% csrf_token %}
                 <div class="col-md-12">
                     <div class="input-group">
@@ -50,39 +57,70 @@ No Courses to display
         </div>
 
         <div class="row">
-        {% if user in course.students.all %}
+        {% if user in course.students.all and course.get_learning_modules %}
             <table class="table table-bordered">
-                <th>Quiz</th>
-                <th>View Answer Paper</th>
-                <th>Pre requisite quiz</th>
-                {% for quiz in course.get_quizzes %}
-                    {% if quiz.active and quiz.course_id == course.id %}
+                <th>Learning Modules</th>
+                <th>Learning Units</th>
+                <th>Status</th>
+                {% for module in course.get_learning_modules %}
                     <tr>
-                        {% if not quiz.is_expired and course.active %}
-                            <td>
-                                <a href="{{ URL_ROOT }}/exam/start/{{quiz.questionpaper_set.get.id}}">{{ quiz.description }}</a><br>
-                            </td>
-                        {% else %}
-                            <td>
-                                {{ quiz.description }} <span class="label label-danger">Inactive</span><br>
-                            </td>
-                        {% endif %}
                         <td>
-                            {% if quiz.view_answerpaper %}
-                                <a href="{{ URL_ROOT }}/exam/view_answerpaper/{{ quiz.questionpaper_set.get.id }}/"><i class="fa fa-eye" aria-hidden="true"></i> Can View </a>
-                            {% else %}
-                                <a><i class="fa fa-eye-slash" aria-hidden="true"></i> Cannot view now </a>
-                            {% endif %}
+                            <a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}">
+                            {{module.name}}</a>
                         </td>
                         <td>
-                            {% if quiz.prerequisite %}
-                                You have to pass {{ quiz.prerequisite.description }} for taking {{ paper.quiz.description }}
+                        <a data-toggle="collapse" data-target="#learning_units{{module.id}}{{course.id}}">
+                            <span class="glyphicon glyphicon-chevron-down">
+                            View Learning Units</span></a>
+                            <div id="learning_units{{module.id}}{{course.id}}" class="collapse">
+                            <table class="table table-bordered">
+                            <th>Lesson/quiz</th>
+                            <th>status</th>
+                            <th>View Answerpaper</th>
+                            {% for unit in module.get_learning_units %}
+                                <tr>
+                                <ul class="inputs-list">
+                                    <td>
+                                    {% if unit.learning_type == "quiz" %}
+                                        {{unit.quiz.description}}
+                                    {% else %}
+                                        {{unit.lesson.name}}
+                                    {% endif %}
+                                    </td>
+                                    <td>
+                                    {% get_unit_status course module unit user as status %}
+                                    {% if status == "completed" %}
+                                        <span class="label label-info">{{status|title}}</span>
+                                    {% else %}
+                                        <span class="label label-warning">{{status|title}}</span>
+                                    {% endif %}
+                                    </td>
+                                    <td>
+                                    {% if unit.learning_type == "quiz" %}
+                                        {% if unit.quiz.view_answerpaper %}
+                                            <a href="{{ URL_ROOT }}/exam/view_answerpaper/{{ unit.quiz.questionpaper_set.get.id }}/{{course.id}}"><i class="fa fa-eye" aria-hidden="true"></i> Can View </a>
+                                        {% else %}
+                                            <a><i class="fa fa-eye-slash" aria-hidden="true"></i> Cannot view now </a>
+                                        {% endif %}
+                                    {% else %}
+                                        ------
+                                    {% endif %}
+                                    </td>
+                                </ul>
+                                </tr>
+                            {% endfor %}
+                            </table>
+                            </div>
+                        </td>
+                        <td>
+                            {% get_module_status user module course as module_status %}
+                            {% if module_status == "completed" %}
+                            <span class="label label-info">{{module_status|title}}</span>
                             {% else %}
-                                No pre requisites for {{ quiz.description }}
+                            <span class="label label-warning">{{module_status|title}}</span>
                             {% endif %}
                         </td>
                     </tr>
-                    {% endif %}
                 {% endfor %}
             </table>
         {% endif %}

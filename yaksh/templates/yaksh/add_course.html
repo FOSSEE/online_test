@@ -15,7 +15,7 @@
 <form name=frm id=frm action="" method="post" >
   {% csrf_token %}
   <center>
-  <table class=span1>
+  <table class="table table-bordered">
   {{ form.as_table }}
   </table>
   <br/>
@@ -25,7 +25,7 @@
   </script>
   </center>
 
-  <center><button class="btn btn-default" type="submit" id="submit" name="questionpaper">Save </button>
-  <button class="btn btn-default" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/");'>Cancel</button> </center>
+  <center><button class="btn primary" type="submit" id="submit" name="questionpaper">Save</button>
+  <button class="btn primary" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses");'>Cancel</button> </center>
 </form>
 {% endblock %}

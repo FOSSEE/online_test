@@ -11,7 +11,7 @@
                   <span class="icon-bar"></span>
                   <span class="icon-bar"></span>
               </button>
-          <a class="navbar-brand" href="{{ URL_ROOT }}/exam/manage/"> Yaksh </a>
+          <a class="navbar-brand" href="{{ URL_ROOT }}/exam/quizzes"> Yaksh </a>
         </div>
         <div class= "collapse navbar-collapse" id="navbar">
           <ul class="nav navbar-nav navbar-right">
@@ -31,6 +31,8 @@
         <li><a href="{{ URL_ROOT }}/exam/viewprofile"> Profile </a></li>
         <li><a href="{{ URL_ROOT }}/exam/reset/changepassword"> Change Password </a></li>
       </ul>
+      {% block usersidebar %}
+      {% endblock %}
     </div>
     <div class="col-sm-8 col-sm-offset-3 col-md-9 col-md-offset-2 main">
     <div class="row">

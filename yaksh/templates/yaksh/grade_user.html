@@ -34,7 +34,7 @@ $(document).ready(function()
     {% if course.get_quizzes %}
     <td>
     {% for quiz in course.get_quizzes %}
-     <li class="list-group-item"><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}">
+     <li class="list-group-item"><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}/{{course.id}}/">
      {{quiz.description}}
      </a></li>
     {% endfor %}
@@ -52,7 +52,7 @@ $(document).ready(function()
 {% if users %}
     <div id = "student" class="col-md-2">
     {% for user in users %}
-    <p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}">
+    <p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}/{{course_id}}/">
     {{user.user__first_name}} {{user.user__last_name}}</a></p>
     {% endfor %}
     </div>
@@ -95,7 +95,7 @@ Attempt Number: <b>{{paper.attempt_number}} </b>
 <select id = "attempt" onchange="window.location.href=this.value">
 <option selected="">Select attempt number</option>
 {%for attempt in attempts %}
-<option value = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user_id}}/{{attempt.attempt_number}}/"> 
+<option value = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user_id}}/{{attempt.attempt_number}}/{{course_id}}/"> 
 {{attempt.attempt_number}}
 </option>
 {% endfor %}
@@ -141,11 +141,7 @@ Status : <b style="color: red;"> Failed </b><br/>
 
 <h3> Answers </h3><br>
 <form name=frm id="q{{ paper.quiz.id }}_form"
-    {% if data.questionpaperid %}
-    action="{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user_id}}/{{paper.attempt_number}}/"
-    {% else %}
-    action="{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user_id}}/{{paper.attempt_number}}/"
-    {% endif %}
+    action="{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user_id}}/{{paper.attempt_number}}/{{course_id}}/"
     method="post">
 {% csrf_token %}
 

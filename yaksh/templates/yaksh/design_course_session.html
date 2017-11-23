@@ -1,0 +1,110 @@
+{% extends "manage.html" %}
+{% load custom_filters %}
+{% block title %}Design Course Session{% endblock %}
+
+{% block pagetitle %}Design Course Session{% endblock %}
+
+{% block script %}
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/design_course.js"></script>
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/design_course.css" />
+{% endblock %}
+
+{% block main %}
+<a href="{{URL_ROOT}}/exam/manage/courses/" class="btn btn-primary">
+    Back to Courses
+</a>
+<form action="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course_id}}/" method="POST" id="design_course_form">
+{% csrf_token %}
+    <div class="tab-pane active" id="available-lesson-quiz">
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2 available-list">
+                <div id="fixed-available-wrapper">
+                    <p><u><b>Available Lessons and quizzes: (Add Lessons and Quizzes)</b></u></p>
+                    <div id="fixed-available">
+                        <table id="course-details" class="table table-bordered">
+                        <tr>
+                        <th width="2%">Select</th>
+                        <th>Learning Module</th>
+                        <th>Learning Units</th>
+                        </tr>
+                        {% for module in learning_modules %}
+                        <ul class="inputs-list">
+                            <tr>
+                                <td><input type="checkbox" name="module_list" value="{{module.id}}"></td>
+                                <td><span>{{ module.name }}</span></td>
+                                <td>
+                                    {% for unit in module.get_learning_units %}
+                                        <ul class="inputs-list">
+                                        <li>
+                                        {% if unit.learning_type == "quiz" %}
+                                            {{unit.quiz.description}}
+                                        {% else %}
+                                            {{unit.lesson.name}}
+                                        {% endif %}
+                                        </li>
+                                        </ul>
+                                    {% endfor %}
+                                </td>
+                            </li>
+                            </tr>
+                        </ul>
+                        {% endfor %}
+                        </table>
+                    </div>
+                </div>
+                <br>
+                <center>
+                <button id="Add" name="Add" class="btn small primary" type="submit">Add to course</button>
+                </center>
+                <br><br>
+            </div>
+            <div class="col-md-8 col-md-offset-2">
+                <div id="fixed-added-wrapper">
+                    <p><u><b>Choosen Lessons and quizzes: (Change Order)</b></u></p>
+                    <div id="fixed-added">
+                        <table id="course-details" class="table table-bordered">
+                        <tr>
+                        <th>Select</th>
+                        <th>Learning Module</th>
+                        <th>Order</th>
+                        <th width="20%">Check Prerequisite
+                            <a href="#" data-toggle="tooltip" id="prereq_msg">
+                                <span class="glyphicon glyphicon-question-sign">
+                                </span> What's This
+                            </a>
+                        </th>
+                        </tr>
+                        {% for module in added_learning_modules %}
+                            <tr>
+                            <ul class="inputs-list">
+                            <td>
+                                <input type="checkbox" name="delete_list" value="{{module.id}}">
+                            </td>
+                            <td><span>{{ module.name }}</span></td>
+                            <td>
+                                <input type="number" name="order" data-item-id="{{module.id}}" value="{{module.order}}" step="1">
+                            </td>
+                            <td>
+                                <input type="checkbox" name="check_prereq" value="{{module.id}}">&nbsp;{{module.check_prerequisite}}
+                            </td>
+                            </ul>
+                            </tr>
+                        {% endfor %}
+                        </table>
+                    </div>
+                </div>
+                <br>
+                <center>
+                <button id="Remove" name="Remove" class="btn small primary" type="submit">Remove from course</button>
+                <button id="Change" name="Change" class="btn small primary" type="submit"> Change Order</button>&nbsp;&nbsp;
+                <button id="Change" name="Change_prerequisite" class="btn small primary" type="submit"> Change Prerequisite</button>
+                </center>
+            </div>
+        </div> <!-- /.row -->
+    </div>
+</form>
+{% endblock %}

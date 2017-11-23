@@ -26,14 +26,9 @@ Last login: {{ data.user.last_login }}
 </p>
 
 {% if data.papers %}
-{% if data.questionpaperid %}
-<p><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{data.papers.0.question_paper.quiz.id}}/{{ data.user.id }}">
+<p><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{data.papers.0.question_paper.quiz.id}}/{{ data.user.id }}/{{course_id}}/">
     Grade/correct paper</a>
 </p>
-{% else %}
-<p><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{data.papers.0.question_paper.quiz.id}}/{{ data.user.id }}">
-    Grade/correct paper</a>
-{% endif %}
 
 {% for paper in data.papers %}
 {% if forloop.counter == 2 and data.questionpaperid %}
@@ -58,11 +53,11 @@ User IP address: {{ paper.user_ip }}
         <div class="panel-heading">
 
             <strong> Details: {{forloop.counter}}. {{ question.summary }}
-            <a href="" onClick="grade_data('show_question{{question.id}}'); return false;"> Show Question </a>
+            <a href="" onClick="grade_data('show_question{{question.id}}{{paper.attempt_number}}'); return false;"> Show Question </a>
             <span class="marks pull-right"> Mark(s): {{ question.points }} </span>
             </strong>
         </div>
-        <div class="panel-body" id="show_question{{question.id}}" style="display: none;">
+        <div class="panel-body" id="show_question{{question.id}}{{paper.attempt_number}}" style="display: none;">
         
             <h5><u>Question:</u></h5> <strong>{{ question.description|safe }}</strong>
             {% if question.type == "mcq" or question.type == "mcc" %}
@@ -241,7 +236,7 @@ User IP address: {{ paper.user_ip }}
 <hr />
 
 {% with data.papers.0 as paper %}
-<a href="{{URL_ROOT}}/exam/manage/gradeuser/{{paper.question_paper.quiz.id}}/{{ data.user.id }}/">Grade/correct paper</a>
+<a href="{{URL_ROOT}}/exam/manage/gradeuser/{{paper.question_paper.quiz.id}}/{{ data.user.id }}/{{course_id}}/">Grade/correct paper</a>
 {% endwith %}
 <br />
 

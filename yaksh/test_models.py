@@ -61,8 +61,7 @@ def setUpModule():
                         duration=30, active=True,
                         attempts_allowed=1, time_between_attempts=0,
                         description='demo quiz 1', pass_criteria=0,
-                        language='Python', prerequisite=None,
-                        course=course, instructions="Demo Instructions")
+                        instructions="Demo Instructions")
 
     Quiz.objects.create(start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0,
                                                  tzinfo=pytz.utc),
@@ -71,8 +70,7 @@ def setUpModule():
                         duration=30, active=False,
                         attempts_allowed=-1, time_between_attempts=0,
                         description='demo quiz 2', pass_criteria=40,
-                        language='Python', prerequisite=quiz,
-                        course=course, instructions="Demo Instructions")
+                        instructions="Demo Instructions")
     tmp_file1 = os.path.join(tempfile.gettempdir(), "test.txt")
     with open(tmp_file1, 'wb') as f:
         f.write('2'.encode('ascii'))
@@ -289,6 +287,7 @@ class QuestionTestCases(unittest.TestCase):
 ###############################################################################
 class QuizTestCases(unittest.TestCase):
     def setUp(self):
+        self.course = Course.objects.get(name="Python Course")
         self.creator = User.objects.get(username="demo_user")
         self.teacher = User.objects.get(username="demo_user2")
         self.quiz1 = Quiz.objects.get(description='demo quiz 1')
@@ -304,18 +303,12 @@ class QuizTestCases(unittest.TestCase):
         self.assertEqual(self.quiz1.duration, 30)
         self.assertTrue(self.quiz1.active)
         self.assertEqual(self.quiz1.description, 'demo quiz 1')
-        self.assertEqual(self.quiz1.language, 'Python')
         self.assertEqual(self.quiz1.pass_criteria, 0)
-        self.assertEqual(self.quiz1.prerequisite, None)
         self.assertEqual(self.quiz1.instructions, "Demo Instructions")
 
     def test_is_expired(self):
         self.assertFalse(self.quiz1.is_expired())
         self.assertTrue(self.quiz2.is_expired())
-
-    def test_has_prerequisite(self):
-        self.assertFalse(self.quiz1.has_prerequisite())
-        self.assertTrue(self.quiz2.has_prerequisite())
 
     def test_get_active_quizzes(self):
         quizzes = Quiz.objects.get_active_quizzes()
@@ -324,10 +317,7 @@ class QuizTestCases(unittest.TestCase):
 
     def test_create_trial_quiz(self):
         """Test to check if trial quiz is created"""
-        trial_quiz = Quiz.objects.create_trial_quiz(self.trial_course,
-                                                    self.creator
-                                                    )
-        self.assertEqual(trial_quiz.course, self.trial_course)
+        trial_quiz = Quiz.objects.create_trial_quiz(self.creator)
         self.assertEqual(trial_quiz.duration, 1000)
         self.assertEqual(trial_quiz.description, "trial_questions")
         self.assertTrue(trial_quiz.is_trial)
@@ -337,8 +327,8 @@ class QuizTestCases(unittest.TestCase):
         """Test to check if a copy of original quiz is created in godmode"""
         trial_quiz = Quiz.objects.create_trial_from_quiz(self.quiz1.id,
                                                          self.creator,
-                                                         True
-                                                         )
+                                                         True, self.course.id
+                                                         )[0]
         self.assertEqual(trial_quiz.description,
                          "Trial_orig_id_{}_godmode".format(self.quiz1.id)
                          )
@@ -354,8 +344,8 @@ class QuizTestCases(unittest.TestCase):
         """Test to check if a copy of original quiz is created in usermode"""
         trial_quiz = Quiz.objects.create_trial_from_quiz(self.quiz2.id,
                                                          self.creator,
-                                                         False
-                                                         )
+                                                         False, self.course.id
+                                                         )[0]
         self.assertEqual(trial_quiz.description,
                          "Trial_orig_id_{}_usermode".format(self.quiz2.id))
         self.assertTrue(trial_quiz.is_trial)
@@ -386,6 +376,7 @@ class QuizTestCases(unittest.TestCase):
 class QuestionPaperTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(self):
+        self.course = Course.objects.get(name="Python Course")
         # All active questions
         self.questions = Question.objects.filter(active=True)
         self.quiz = Quiz.objects.get(description="demo quiz 1")
@@ -465,7 +456,7 @@ class QuestionPaperTestCases(unittest.TestCase):
         # For Trial case
         self.questions_list = [self.questions[3].id, self.questions[5].id]
         self.trial_course = Course.objects.create_trial_course(self.user)
-        self.trial_quiz = Quiz.objects.create_trial_quiz(self.trial_course, self.user)
+        self.trial_quiz = Quiz.objects.create_trial_quiz(self.user)
 
 
     def test_get_question_bank(self):
@@ -533,7 +524,8 @@ class QuestionPaperTestCases(unittest.TestCase):
         already_attempted = self.attempted_papers.count()
         attempt_num = already_attempted + 1
         answerpaper = self.question_paper.make_answerpaper(self.user, self.ip,
-                                                             attempt_num)
+                                                           attempt_num,
+                                                           self.course.id)
         self.assertIsInstance(answerpaper, AnswerPaper)
         paper_questions = answerpaper.questions.all()
         self.assertEqual(len(paper_questions), 7)
@@ -541,12 +533,13 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.assertTrue(fixed_questions.issubset(set(paper_questions)))
         answerpaper.passed = True
         answerpaper.save()
-        self.assertFalse(self.question_paper.is_prerequisite_passed(self.user))
         # test can_attempt_now(self):
-        self.assertFalse(self.question_paper.can_attempt_now(self.user))
+        self.assertFalse(self.question_paper.can_attempt_now(self.user,
+                                                             self.course.id))
         # trying to create an answerpaper with same parameters passed.
         answerpaper2 = self.question_paper.make_answerpaper(self.user, self.ip,
-                                                             attempt_num)
+                                                            attempt_num,
+                                                            self.course.id)
         # check if make_answerpaper returned an object instead of creating one.
         self.assertEqual(answerpaper, answerpaper2)
 
@@ -593,6 +586,7 @@ class QuestionPaperTestCases(unittest.TestCase):
 class AnswerPaperTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(self):
+        self.course = Course.objects.get(name="Python Course")
         self.ip = '101.0.0.1'
         self.user = User.objects.get(username='demo_user')
         self.user2 = User.objects.get(username='demo_user2')
@@ -732,14 +726,14 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Create AnswerPaper for user1 and user2
         self.user1_answerpaper = self.question_paper2.make_answerpaper(
-            self.user, self.ip, 1
+            self.user, self.ip, 1, self.course.id
         )
         self.user2_answerpaper = self.question_paper2.make_answerpaper(
-            self.user2, self.ip, 1
+            self.user2, self.ip, 1, self.course.id
         )
 
         self.user2_answerpaper2 = self.question_paper.make_answerpaper(
-            self.user2, self.ip, 1
+            self.user2, self.ip, 1, self.course.id
         )
         settings.code_evaluators['python']['standardtestcase'] = \
             "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
@@ -1223,8 +1217,6 @@ class CourseTestCases(unittest.TestCase):
             time_between_attempts=0,
             description='template quiz 1',
             pass_criteria=40,
-            language='Python',
-            course=self.template_course,
             instructions="Demo Instructions"
         )
 
@@ -1246,11 +1238,7 @@ class CourseTestCases(unittest.TestCase):
             active=True,
             attempts_allowed=1,
             time_between_attempts=0,
-            description='template quiz 2',
             pass_criteria=0,
-            language='Python',
-            prerequisite=self.template_quiz,
-            course=self.template_course,
             instructions="Demo Instructions"
         )
 
@@ -1264,141 +1252,6 @@ class CourseTestCases(unittest.TestCase):
             self.questions[2],
             self.questions[3]
         )
-
-    def test_create_duplicate_course(self):
-        """ Test create_duplicate_course method of course """
-        # create a duplicate course
-        cloned_course = self.template_course.create_duplicate_course(
-            self.template_course_user
-        )
-        self.assertEqual(cloned_course.name,
-            'Copy Of Template Course to clone')
-        self.assertEqual(cloned_course.enrollment,
-            self.template_course.enrollment
-        )
-        self.assertEqual(cloned_course.creator,
-            self.template_course_user
-        )
-        self.assertEqual(cloned_course.start_enroll_time,
-            self.template_course.start_enroll_time
-        )
-        self.assertEqual(cloned_course.end_enroll_time,
-            self.template_course.end_enroll_time
-        )
-
-        # check if attributes are same
-        cloned_course_dict = model_to_dict(cloned_course,
-            fields=[field.name for field in cloned_course._meta.fields \
-                if field.name != 'id']
-        )
-        template_course_dict = model_to_dict(self.template_course,
-            fields=[field.name for field in self.template_course._meta.fields \
-                if field.name != 'id']
-        )
-        self.assertEqual(cloned_course_dict, template_course_dict)
-
-        # get duplicate quiz associated with duplicate course
-        cloned_quiz = cloned_course.quiz_set.all()[0]
-
-        self.assertEqual(cloned_quiz.start_date_time,
-            self.template_quiz.start_date_time
-        )
-        self.assertEqual(cloned_quiz.end_date_time,
-            self.template_quiz.end_date_time
-        )
-        self.assertEqual(cloned_quiz.duration,
-            self.template_quiz.duration
-        )
-        self.assertEqual(cloned_quiz.active,
-            self.template_quiz.active
-        )
-        self.assertEqual(cloned_quiz.attempts_allowed,
-            self.template_quiz.attempts_allowed
-        )
-        self.assertEqual(cloned_quiz.time_between_attempts,
-            self.template_quiz.time_between_attempts
-        )
-        self.assertEqual(cloned_quiz.description,
-            'Copy Of template quiz 1'
-        )
-        self.assertEqual(cloned_quiz.pass_criteria,
-            self.template_quiz.pass_criteria
-        )
-        self.assertEqual(cloned_quiz.language,
-            self.template_quiz.language
-        )
-        self.assertEqual(cloned_quiz.course,
-            cloned_course
-        )
-        self.assertEqual(cloned_quiz.instructions,
-            self.template_quiz.instructions
-        )
-
-        # Get duplicate questionpaper associated with duplicate quiz
-        cloned_qp = cloned_quiz.questionpaper_set.all()[0]
-
-        self.assertEqual(cloned_qp.quiz, cloned_quiz)
-        self.assertEqual(cloned_qp.total_marks,
-            self.template_question_paper.total_marks
-        )
-        self.assertEqual(cloned_qp.shuffle_questions,
-            self.template_question_paper.shuffle_questions
-        )
-
-        for q in cloned_qp.fixed_questions.all():
-            self.assertIn(q, self.template_question_paper.fixed_questions.all())
-
-        # get second duplicate quiz associated with duplicate course
-        cloned_quiz = cloned_course.quiz_set.all()[1]
-
-        self.assertEqual(cloned_quiz.start_date_time,
-            self.template_quiz2.start_date_time
-        )
-        self.assertEqual(cloned_quiz.end_date_time,
-            self.template_quiz2.end_date_time
-        )
-        self.assertEqual(cloned_quiz.duration,
-            self.template_quiz2.duration
-        )
-        self.assertEqual(cloned_quiz.active,
-            self.template_quiz2.active
-        )
-        self.assertEqual(cloned_quiz.attempts_allowed,
-            self.template_quiz2.attempts_allowed
-        )
-        self.assertEqual(cloned_quiz.time_between_attempts,
-            self.template_quiz2.time_between_attempts
-        )
-        self.assertEqual(cloned_quiz.description,
-            'Copy Of template quiz 2'
-        )
-        self.assertEqual(cloned_quiz.pass_criteria,
-            self.template_quiz2.pass_criteria
-        )
-        self.assertEqual(cloned_quiz.language,
-            self.template_quiz2.language
-        )
-        self.assertEqual(cloned_quiz.course,
-            cloned_course
-        )
-        self.assertEqual(cloned_quiz.instructions,
-            self.template_quiz2.instructions
-        )
-
-        # Get second duplicate questionpaper associated with duplicate quiz
-        cloned_qp = cloned_quiz.questionpaper_set.all()[0]
-
-        self.assertEqual(cloned_qp.quiz, cloned_quiz)
-        self.assertEqual(cloned_qp.total_marks,
-            self.template_question_paper2.total_marks
-        )
-        self.assertEqual(cloned_qp.shuffle_questions,
-            self.template_question_paper2.shuffle_questions
-        )
-
-        for q in cloned_qp.fixed_questions.all():
-            self.assertIn(q, self.template_question_paper2.fixed_questions.all())
-
 
     def test_is_creator(self):
         """ Test is_creator method of Course"""
@@ -1448,11 +1301,6 @@ class CourseTestCases(unittest.TestCase):
         self.assertSequenceEqual(self.course.get_enrolled(), [self.student1])
 
         self.assertTrue(self.course.is_enrolled(self.student1))
-
-    def test_get_quizzes(self):
-        """ Test get_quizzes method of Courses"""
-        self.assertSequenceEqual(self.course.get_quizzes(),
-                                     [self.quiz1, self.quiz2])
 
     def test_add_teachers(self):
         """ Test to add teachers to a course"""

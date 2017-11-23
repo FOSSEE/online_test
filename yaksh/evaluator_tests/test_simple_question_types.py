@@ -26,8 +26,7 @@ def setUpModule():
                                                       tzinfo=pytz.utc),
                                duration=30, active=True, attempts_allowed=1,
                                time_between_attempts=0, description='demo quiz 100',
-                               pass_criteria=0,language='Python',
-                               prerequisite=None,course=course,
+                               pass_criteria=0,
                                instructions="Demo Instructions"
                                )
     question_paper = QuestionPaper.objects.create(quiz=quiz,
@@ -38,7 +37,8 @@ def setUpModule():
                                              question_paper=question_paper,
                                              end_time=timezone.now()
                                               +timedelta(minutes=5),
-                                             attempt_number=1
+                                             attempt_number=1,
+                                             course=course
                                              )
 
 def tearDownModule():
