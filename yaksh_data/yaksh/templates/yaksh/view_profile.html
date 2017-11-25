@@ -1,0 +1,36 @@
+{% extends template %}
+
+{% block pagetitle %} Profile {% endblock %}
+{% block main %}
+  <table class="table table-bordered">
+  <tr>
+    <th><label for="id_first_name"><h5>First name:</h5></label></th>
+    <th><label for="id_first_name"><h5>{{ user.first_name }}</h5></label></th>
+  </tr>
+  <tr>
+    <th><label for="id_last_name"><h5>Last name:</h5></label></th>
+    <th><label for="id_last_name"><h5>{{ user.last_name }}</h5></label></th>
+  </tr>
+  <tr>
+    <th><label for="id_email"><h5>Email:</h5></label></th>
+    <th><label for="id_email"><h5>{{ user.email }}</h5></label></th>
+  </tr>
+  <tr>
+    <th><label for="id_institute"><h5>Institute:</h5></label></th>
+    <th><label for="id_institute"><h5>{{ user.profile.institute }}</h5></label></th>
+  </tr>
+  <tr>
+    <th><label for="id_department"><h5>Department:</h5></label></th>
+    <th><label for="id_department"><h5>{{ user.profile.department }}</h5></label></th>
+  </tr>
+  <tr>
+    <th><label for="id_roll_number"><h5>Roll number:</h5></label></th>
+    <th><label for="id_roll_number"><h5>{{ user.profile.roll_number }}</h5></label></th>
+  </tr>
+  <tr>
+    <th><label for="id_position"><h5>Position:</h5></label></th>
+    <th><label for="id_position"><h5>{{ user.profile.position }}</h5></label></th>
+  </tr>
+  </table>
+  <a class="btn btn-primary pull-right" href="{{ URL_ROOT }}/exam/editprofile/">Edit Profile</a>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% block css%}
+    <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
+{% endblock %}
+{% block nav %}
+    <nav class="navbar navbar-fixed-top navbar-inverse">
+      <div class="container">
+        <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                  <span class="icon-bar"></span>
+                  <span class="icon-bar"></span>
+                  <span class="icon-bar"></span>
+              </button>
+          <a class="navbar-brand" href="#"> Yaksh </a>
+        </div>
+        <div class= "collapse navbar-collapse" id="navbar">
+          <form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" class="pull-right">
+            {% csrf_token %}
+            <ul class="nav navbar-nav navbar">
+              <li style="padding: 10px"><button class="btn btn-danger btn-sm" type="submit" name="quit">
+                {% if paper.questions_unanswered.all %}
+                  Quit Exam
+                {% else %}
+                  Finish Exam
+                {% endif %}
+              <span class="glyphicon glyphicon-off"></span></button></li>
+            </ul>
+          </form>
+          <div class="time-div" id="time_left"></div>
+        </div><!-- /.navbar -->
+      </div><!-- /.container -->
+    </nav><!-- /.navbar -->
+{% endblock %}
+{% block content %}
+  <script>
+    $(document).ready(function() {
+        var ele = document.getElementById('error_panel')
+        if (ele) {
+          ele.scrollIntoView(true);
+          window.scrollBy(0, -15);
+        }
+    });
+  </script>
+<div class="container-fluid">
+    <div class="col-sm-3 col-md-2 sidebar">
+        <p> Question Navigator </p>
+        <ul class="pagination pagination-sm">
+            {% for qid in paper.get_all_ordered_questions %}
+                {%if paper.question_paper.quiz.allow_skip %}
+                {% if qid in paper.get_questions_unanswered %}
+                {% if qid.id == question.id %}
+                <li class="active"><a style="width:25%" href="#"data-toggle="tooltip"
+                    title="{{ qid.description|striptags }}"
+                    onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
+                {% else %}
+                <li><a style="width:25%" href="#" data-toggle="tooltip" title="{{ qid.description|striptags }}"
+                    onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')">{{ forloop.counter }}</a></li>
+                {% endif %}
+                {% endif %}
+                {% if qid in paper.get_questions_answered %}
+                <li><a style="background-color:#B4B8BA; width:25%" href="#" data-toggle="tooltip"
+                onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')"
+                title="{{ qid.description }}">{{ forloop.counter }}</a></li>
+                {% endif %}
+                {% else %}
+                {% if qid.id == question.id %}
+                <li class="active"><a style="width:25%" data-toggle="tooltip" title="{{ qid.description|striptags }}">{{ forloop.counter }}</a></li>
+                {% else %}
+                <li  class="disabled"><a style="width:25%" data-toggle="tooltip" title="{{ qid.description|striptags }}">{{ forloop.counter }}</a></li>
+                {% endif %}
+                {% endif %}
+                {% endfor %}
+            </ul>
+            <p>Question(s) left: <b>{{ paper.questions_left }}</b></p>
+        </div>
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            <div class="row">
+                <div class="row">
+                {% block main %}
+                {% endblock %}
+            </div>
+            <br/>
+            {% if question.type == 'code' or question.type == 'upload' %}
+                {% if error_message %}
+                    <div class="row" id="error_panel">
+      {% for error in error_message %}
+              <div class="panel panel-danger">
+      <div class="panel-heading">Error No. {{ forloop.counter }}</div>
+      <div class="panel-body">
+      <div class="well well-sm">
+      {% if not error.type %}
+      <pre><code> {{error|safe}} </code></pre>
+      {% elif error.type == 'assertion' %}
+            {% if error.test_case %}
+      <strong> We tried your code with the following test case:</strong><br/></br>
+              <pre><code><strong style="color:#d9534f">{{error.test_case}}</strong></code></pre>
+            {% endif %}
+          <p> <b>The following error took place: </b></p>
+        <table class="table table-bordered" width="100%" id='assertion'>
+          <col width="30%">
+            <tr class = "active">
+            <td><b>Exception Name: </b></td>
+            <td><span style="color: #d9534f">{{error.exception}}</span></td>
+          </tr>
+          <tr>
+            <td><b>Exception Message: </b></td><td>{{error.message}}</td>
+          </tr>
+          <tr>
+            {% if error.traceback %}
+            <td><b>Full Traceback: </b></td>
+            <td><pre>{{error.traceback}}</pre></td>
+            {% endif %}
+          </tr>
+        </table>
+      {% elif error.type == 'stdio' %}
+        {% if error.given_input %}
+         <table class="table table-bordered">
+          <col width="30%">
+            <tr class = "active">
+            <td> For given Input value(s):</td>
+            <td>{{error.given_input}}</td>
+            </tr>
+         </table>
+       {% endif %}
+        <table class="table table-bordered" width="100%" id="stdio">
+          <col width="10%">
+          <col width="40%">
+          <col width="40%">
+          <col width="10%">
+          <tr class="info">
+          <th><center>Line No.</center></th>
+          <th><center>Expected Output</center></th>
+          <th><center>User output</center></th>
+          <th><center>Status</center></th>
+          </tr>
+          {% for expected,user in error.expected_output|zip:error.user_output %}
+          <td> {{forloop.counter}} </td>
+          <td>{{expected|default:""}} </td>
+          <td>{{user|default:""}}</td>
+          {% if forloop.counter0 in error.error_line_numbers or not expected or not user %}
+          <td><span class ="glyphicon glyphicon-remove text-warning"/></td>
+          {% else %}
+          <td><span class ="glyphicon glyphicon-ok text-success"/></td>
+          {% endif %}
+          </tr>
+          {% endfor %}
+          </table>
+          <table width="100%" class='table table-bordered'>
+          <col width="10">
+          <tr class = "danger">
+          <td><b>Error:</b></td>
+           <td>{{error.error_msg}}</td>
+           </tr>
+          </table>
+        
+        {% endif %}
+        </div>
+      </div>
+      </div>
+      {% endfor %}
+
+                    </div>
+                {% endif %}
+            {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

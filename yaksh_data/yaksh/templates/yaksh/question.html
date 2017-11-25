@@ -1,0 +1,258 @@
+{% extends "exam.html" %}
+{% load custom_filters %}
+
+{% block pagetitle %} {{ paper.question_paper.quiz.description }} {% endblock pagetitle %}
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question.css" type="text/css" />
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/codemirror/lib/codemirror.css" type="text/css" />
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/exam.css" type="text/css" />
+<style>
+    .CodeMirror{
+        border-style: groove;
+    }
+</style>
+{% endblock %}
+
+{% block script %}
+<script src="{{ URL_ROOT }}/static/yaksh/js/requesthandler.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/lib/codemirror.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/python/python.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/clike/clike.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/shell/shell.js"></script>
+<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script>
+var time_left = {{ paper.time_left }}
+
+function getTimeRemaining(endtime){
+  var t = Date.parse(endtime) - Date.parse(new Date());
+  var seconds = Math.floor( (t/1000) % 60 );
+  var minutes = Math.floor( (t/1000/60) % 60 );
+  var hours = Math.floor( (t/(1000*60*60)) % 24 );
+  var days = Math.floor( t/(1000*60*60*24) );
+  return {
+    'total': t,
+    'days': days,
+    'hours': hours,
+    'minutes': minutes,
+    'seconds': seconds
+  };
+}
+
+function updateTime()
+{
+var timeInSeconds = time_left;
+var currentTime = Date.parse(new Date());
+var deadline = new Date(currentTime + timeInSeconds*1000);
+
+function updateClock(){
+    var t = getTimeRemaining(deadline);
+    var hh = ('0' + t.hours).slice(-2);
+    var mm = ('0' + t.minutes).slice(-2);
+    var ss = ('0' + t.seconds).slice(-2);
+
+    if(t.total<0){
+        
+      document.forms["code"].submit();
+      clearInterval(timeinterval);
+      return null;
+    }
+    if (t.total<=300000){
+        clock.innerHTML = "<blink><center><span style='color:red'><strong>" + hh + ":" + mm + ":" + ss + "</strong></center></span></blink>";
+    }
+    if (t.total>=300000) {
+        clock.innerHTML = "<center><strong>" + hh + ":" + mm + ":" + ss + "</strong></center>";
+    }
+  }
+
+var clock = document.getElementById("time_left");
+updateClock();
+var timeinterval = setInterval(updateClock,1000);
+}
+
+function validate(){
+    uploaded_file = document.getElementById("assignment").value;
+    if(uploaded_file == ""){
+        $("#upload_alert").modal("show");
+        return false;
+    }
+    return true;
+}
+
+function call_skip(url)
+{
+    form = document.forms["code"]
+    form.action = url
+    form.submit();
+}
+init_val = '{{ last_attempt|escape_quotes|safe }}';
+lang = "{{ question.language }}"
+
+</script>
+
+{% endblock script %}
+
+{% block onload %} onload="updateTime();" {% endblock %}
+
+{% block main %}
+        <p id="status"></p>
+        {% if notification %}
+          {% if question.type == "code" %}
+          <div id="notification" class="alert alert-success" role="alert">
+            <strong>Note:</strong> {{ notification }}
+          </div>
+          {% else %}
+          <div id="notification" class="alert alert-warning" role="alert">
+            <strong>Note:</strong> {{ notification }}
+          </div>
+          {% endif %}
+        {% else %}
+          <div id="notification" role="alert">
+          </div>
+        {% endif %}
+        <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type=hidden name="question_id" id="question_id" value={{ question.id }}></input>
+            <div class="panel panel-default">
+                  <div class="panel-heading">
+                      <h4>
+                        <u> {{ question.summary }}
+                             {% if question.type == "mcq" %}
+                             (SINGLE CORRECT CHOICE)
+                             {% elif question.type == "mcc" %}
+                             (MULTIPLE CORRECT CHOICES)
+                             {% elif question.type == "code" %}
+                             (PROGRAMMING)
+                             {% elif question.type == "upload" %}
+                             (ASSIGNMENT UPLOAD)
+                             {% elif question.type == "integer" %}
+                             (FILL IN THE BLANKS WITH INTEGER ANSWER)
+                             {% elif question.type == "string" %}
+                             (FILL IN THE BLANKS WITH STRING ANSWER)
+                                {% if testcase.string_check == "lower" %}
+                                    <h5>(CASE INSENSITIVE)</h5>
+                                {% else %}
+                                    <h5>(CASE SENSITIVE)</h5>
+                                {% endif %}
+
+                             {% elif question.type == "float" %}
+                             (FILL IN THE BLANKS WITH FLOAT ANSWER)
+                             {% endif %}
+                        </u>
+                        <font class=pull-right>(Marks : {{ question.points }}) </font>
+                      </h4>
+                      <font size=3 face=arial> {{ question.description|safe }} </font>
+                      {% if files %}
+                      <h4>Files to download for this question</h4>
+                      {% for f_name in files %}
+                      <h5><a href="{{f_name.file.url}}">{{f_name.file.name}}</a></h5>
+                      {% endfor %}
+                      {% endif %}
+                 </div>
+                 <div class="panel-body">
+                     {% if question.type == "mcq" %}
+                     {% for test_case in test_cases %}
+                     {% if last_attempt and last_attempt|safe == test_case.id|safe %}
+                     <input name="answer" type="radio" value="{{ test_case.id }}" checked />
+                        {{ test_case.options|safe }} <br/>
+                     {% else %}
+                     <input name="answer" type="radio" value="{{ test_case.id }}" />
+                        {{ test_case.options|safe }} <br/>
+                     {% endif %}
+                     {% endfor %}
+                     {% endif %}
+
+                     {% if question.type == "integer" %}
+                     Enter Integer:<br/>
+                     <input name="answer" type="number" id="integer" value={{ last_attempt|safe }} />
+                     <br/><br/>
+                     {% endif %}
+
+                     {% if question.type == "string" %}
+                     Enter Text:<br/>
+                     <textarea name="answer" id="string">{{ last_attempt|safe }}</textarea>
+                     <br/><br/>
+                     {% endif %}
+
+                     {% if question.type == "float" %}
+                     Enter Decimal Value :<br/>
+                     <input name="answer" type="number" step="any" id="float" value={{ last_attempt|safe }} />
+                     <br/><br/>
+                     {% endif %}
+
+                     {% if question.type == "mcc" %}
+                     {% for test_case in test_cases %}
+                     {% if last_attempt and test_case.id|safe in last_attempt|safe %}
+                     <input name="answer" type="checkbox" value="{{ test_case.id }}" checked/> {{ test_case.options| safe }}
+                     <br>
+                     {% else %}
+                     <input name="answer" type="checkbox" value="{{ test_case.id }}">
+                     {{ test_case.options| safe }}
+                     <br/>
+                     {% endif %}
+                     {% endfor %}
+                     {% endif %}
+                     {% if question.type == "upload" %}
+                     <p>Upload assignment file for the said question<p>
+                     <input type=file id="assignment" name="assignment" multiple="">
+                     <hr>
+                     {% endif %}
+                     {% if question.type == "code" %}
+                     <div class="row">
+                         <div class="col-md-9">
+                             <h4>Write your program below:</h4>
+                         </div>
+                         <div class="col-md-3">
+                             <a href="#answer" class="pull-right" onclick="reset_editor()" name="reset" id="reset">Undo Changes&nbsp;<span class="glyphicon glyphicon-refresh"></span></a>
+                             </div>
+                    </div>
+                     <textarea name="answer" id="answer"></textarea>
+                     <br>
+                     {% endif %}
+        <div class="from-group">
+
+         {% if question.type == "mcq" or  question.type == "mcc" or question.type == "integer" or question.type == "float" or question.type ==  "string" %}
+         <br><button class="btn btn-primary" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
+         {% elif question.type == "upload" %}
+         <br><button class="btn btn-primary" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
+
+         {% else %}
+           {% if question in paper.get_questions_unanswered %}
+           <button class="btn btn-primary" type="submit" name="check" id="check" >Check Answer <span class="glyphicon glyphicon-cog"></span></button>&nbsp;&nbsp;
+           {% endif %}
+         {% endif %}
+
+         {% if paper.question_paper.quiz.allow_skip and not paper.get_questions_unanswered|length_is:"1" %}
+         {% if question in paper.get_questions_unanswered %}
+         <button class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/')" name="skip" id="skip">Attempt Later <span class="glyphicon glyphicon-arrow-right"></span></button>
+         {% endif %}
+         </div>
+                 </div>
+             </div>
+
+         </form>
+         {% endif %}
+         
+    <!-- Modal -->
+    <div class="modal fade " id="upload_alert" >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="myModalLabel">File not selected</h4>
+          </div>
+          <div id = "modal_body"class="modal-body">
+              <font color="brown"><b>Kindly attach a file and then click upload.</b></font>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn primary close" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+   </div>
+{% endblock main %}
+{% if user %}
+  {% block info %}
+  <h5>{{user.get_full_name|title}}({{user.profile.roll_number}}) Logged in as {{user.username}}</h5>
+  {% endblock %}
+{% endif %}

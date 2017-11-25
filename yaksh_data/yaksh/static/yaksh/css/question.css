@@ -1,0 +1,43 @@
+
+.time-div
+{
+    background-color:black;
+    padding: 10px;
+    color: #5DFC0A;
+    vertical-align:middle;
+    width: 160px;
+    height: 50px;
+    float:right;
+    border-radius: 6px 6px 6px 6px;
+    font-size:30px;
+}
+.td1-class
+{
+       width:300px;
+}
+.td2-class
+{
+       width:50px;
+  padding: 5px 10px 9px;
+}
+#codeTextarea{
+         
+       }
+       .textAreaWithLines{
+          font-family:courier;      
+          border:1px solid #eee;
+          
+       }
+       .textAreaWithLines textarea,.textAreaWithLines div{
+          border:0px;
+          line-height:120%;
+          font-size:12px;
+       }
+       .lineObj{
+          color: grey;
+       }
+
+#string{
+    width: 60em;
+    height: 10em;
+}

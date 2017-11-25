@@ -1,0 +1,2 @@
+-r requirements-common.txt
+mysql-python==1.2.5

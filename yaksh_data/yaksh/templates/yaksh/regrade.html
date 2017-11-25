@@ -1,0 +1,155 @@
+{% extends "manage.html" %}
+
+{% block pagetitle %} Grader {% endblock pagetitle %}
+
+{% block content %}
+
+<div class="row">
+ <div class="col-md-3">
+  <ul class="nav nav-pills nav-stacked">
+   <li class="active"><a href="#intro" data-toggle="pill" > Intro </a></li>
+   <li><a href="#questions" data-toggle="pill" > Question-wise regrade </a></li>
+   <li><a href="#quizzes" data-toggle="pill" > Quiz-wise regrade </a></li>
+   <li><a href="#users" data-toggle="pill" > User-wise regrade </a></li>
+  </ul>
+ </div><!--span2-->
+ <div class="col-md-9">
+  <div class="tab-content">
+   <div id="intro" class="tab-pane fade in active">
+    <h3> Regrade </h3>
+    <dl>
+     <dt> Question wise regrade </dt>
+     <dd> You can regrade a question for all answerpapers for a given quiz. </dd>
+     <dt> Quiz wise regrade <dt>
+     <dd> You can regrade an answerpaper for a quiz or a question for the same. </dd>
+     <dt> User wise regrade </dt>
+     <dd> You can regrade an answerpaper for an user or a question for the same. </dd>
+    </dl>
+   </div>
+   <div id="questions" class="tab-pane fade">
+    {% for course in courses %}
+     <div class="well">
+      <h4><span class="label label-info">
+       <a href="#questions_quizzes{{ course.id }}" data-toggle="collapse">Course: {{ course }}</a>
+      </span></h4>
+       <div id="questions_quizzes{{ course.id }}" class="collapse">
+        {% for quiz in course.quiz_set.all %}
+          <p><a href="#questions_questions{{ course.id }}{{ quiz.id }}" data-toggle="collapse">Quiz: {{ quiz }}</a></p>
+          <div id="questions_questions{{ course.id }}{{ quiz.id }}" class="collapse">
+           {% with questionpaper=quiz.questionpaper_set.get %}
+            <p class="bg-info"> Questions: </p>
+            <ol class="list-group">
+            {% for question in questionpaper.fixed_questions.all %}
+             <li class="list-group">{{ question.summary }}
+              <a href="{{ URL_ROOT }}/exam/manage/regrade/questionpaper/{{ course.id }}/{{ question.id }}/{{ questionpaper.id }}/"
+              class="btn btn-default btn-sm pull-right"><span class="glyphicon glyphicon-repeat"></span> Regrade </a>
+             </li>
+            {% endfor %}
+            {% for random_set in questionpaper.random_questions.all %}
+             {% for question in random_set.questions.all %}
+              <li class="list-group"> {{ question.summary }}
+               <a href="{{ URL_ROOT }}/exam/manage/regrade/questionpaper/{{ course.id}}/{{ question.id }}/{{ questionpaper.id }}/"
+               class="btn btn-default btn-sm pull-right"><span class="glyphicon glyphicon-repeat"></span> Regrade </a>
+              </li>
+             {% endfor %}
+            {% endfor %}
+            </ol>
+           {% endwith %}<br /><br />
+          </div>
+        {% endfor %}
+      </div>
+     </div><!--well-->
+    {% endfor %}
+   </div>
+
+   <div id="quizzes" class="tab-pane fade">
+    {% for course in courses %}
+    <div class="well">
+     <h4><span class="label label-info">
+      <a href="#quizzes_quizzes{{ course.id }}" data-toggle="collapse">Course: {{ course }}</a>
+     </span></h4>
+     <div id="quizzes_quizzes{{ course.id }}" class="collapse">
+      {% for quiz in course.quiz_set.all %}
+      <p><a href="#quizzes_papers{{ course.id }}{{ quiz.id }}" data-toggle="collapse">Quiz: {{ quiz }}</a></p>
+       <div id="quizzes_papers{{ course.id }}{{ quiz.id }}" class="collapse">
+       <ol class="list-group">
+       {% for answerpaper in quiz.questionpaper_set.get.answerpaper_set.all %}
+       <li class="list-group">
+        Username: {{ answerpaper.user.username }}; Name: {{ answerpaper.user.get_full_name }}; Attempt Number: {{ answerpaper.attempt_number}}
+        <a href="{{ URL_ROOT }}/exam/manage/regrade/paper/{{ course.id }}/{{ answerpaper.id }}/"
+        class="btn btn-default btn-sm pull-right"><span class="glyphicon glyphicon-repeat"></span> Regrade whole paper </a>
+        </li>
+         <ol class="list-group">
+          {% for question in answerpaper.questions.all %}
+           <li class="list-group"> {{ question.summary }}
+            <a href="{{ URL_ROOT }}/exam/manage/regrade/answerpaper/{{ course.id }}/{{ question.id }}/{{ answerpaper.id }}/"
+            class="btn btn-default btn-sm pull-right"><span class="glyphicon glyphicon-repeat"></span> Regrade </a>
+           </li>
+          {% endfor %}
+         </ol>
+       {% endfor %}
+       </ol>
+       </div>
+      {% endfor %}
+     </div>
+    </div><!--well-->
+    {% endfor %}
+   </div>
+
+   <div id="users" class="tab-pane fade">
+    {% for course in courses %}
+     <div class="well">
+      <h4><span class="label label-info">
+       <a href="#users_users{{ course.id }}" data-toggle="collapse">Course: {{ course }}</a>
+      </span></h4>
+      <div id="users_users{{ course.id }}" class="collapse">
+       {% for user in course.students.all %}
+       <p><a href="#users_papers{{ course.id }}{{ user.id }}" data-toggle="collapse"> Answer Papers for {{ user.get_full_name }}</a></p>
+        <div id="users_papers{{ course.id }}{{ user.id }}" class="collapse">
+         <ol class="list-group">
+         {% for answerpaper in user.answerpaper_set.all %}
+         <li class="list-group"> Quiz: {{answerpaper.question_paper.quiz.description }}; Attempt Number: {{ answerpaper.attempt_number }}
+          <a href="{{ URL_ROOT }}/exam/manage/regrade/paper/{{ course.id }}/{{ answerpaper.id }}/"
+          class="btn btn-default btn-sm pull-right" ><span class="glyphicon glyphicon-repeat"></span> Regrade whole paper </a>
+         </li>
+         <ol class="list-group">
+             {% for question in answerpaper.questions.all %}
+             <li class="list-group"> {{ question.summary }}
+             <a href="{{ URL_ROOT }}/exam/manage/regrade/answerpaper/{{ course.id }}/{{ question.id }}/{{ answerpaper.id }}/"
+                 class="btn btn-default btn-sm pull-right"><span class="glyphicon glyphicon-repeat"></span> Regrade </a>
+             </li>
+             {% endfor %}
+         </ol>
+         {% endfor %}
+     </ol>
+ </div>
+ {% endfor %}
+      </div>
+  </div><!--well-->
+  {% endfor %}
+   </div>
+  </div>
+ </div><!--span10-->
+</div><!--row-->
+
+{% if details %}
+<div>
+    <table class="table">
+        <tbody>
+            {% for detail in details %}
+            {% if detail.0 %}
+            <tr class="success">
+                <td> Graded Successfully </td>
+                {% else%}
+                <tr class="danger">
+                    <td> Did not Grade </td>
+                    {% endif %}
+                    <td> {{ detail.1|linebreaks }} </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block pagetitle %} OnlineTest Instructions and Rules
+<h3> Important instructions & rules </h3>
+{% endblock pagetitle %}
+{% block content %}
+
+         {% if questionpaper.quiz.is_expired %}
+              <div class="alert alert-error">
+                  This Quiz has expired. You can no longer attempt this Quiz.
+              <br/>
+              </div>
+         {% else %}
+              <div class="alert">
+              {% load tz %}
+              {% get_current_timezone as TIME_ZONE %}
+                  You can attempt this Quiz at any time between {{ questionpaper.quiz.start_date_time }} {{ TIME_ZONE }} and {{ questionpaper.quiz.end_date_time }} {{ TIME_ZONE }}
+                  <br/>
+                  You are not allowed to attempt the Quiz before or after this duration
+              <br/>
+              </div>
+         {% endif %}
+          <p> Welcome <strong>{{user.first_name.title}} {{user.last_name.title}}</strong>, to the programming quiz! </p>
+          {{ questionpaper.quiz.instructions|safe }}
+        <div class="row">
+            <div class="col-md-6">
+              {% if user == "moderator" %}
+              <form action="{{URL_ROOT}}/exam/manage/" method="post" align="center">
+              {%else%}
+              <form action="{{URL_ROOT}}/exam/quizzes/" method="post" align="center">
+              {% endif %}
+              {% csrf_token %}
+              <center><button class="btn btn-primary" name="home">Home</button></center>
+          </form>
+            </div>
+            <div class="col-md-6">
+                  {% if not questionpaper.quiz.is_expired %}
+                      <form action="{{URL_ROOT}}/exam/start/{{ attempt_num }}/{{ questionpaper.id }}/" method="post" align="center">
+                       {% csrf_token %}
+                       <center><button class="btn btn-success" type="submit" name="start"> Start Exam <span class="glyphicon glyphicon-chevron-right"></span></button></center>
+                      </form>
+                  {% endif %}
+            </div>
+        </div>
+{% endblock content %}
+{% if user %}
+  {% block info %}
+  <h5>{{user.get_full_name|title}}({{user.profile.roll_number}}) Logged in as {{user.username}}</h5>
+  {% endblock %}
+{% endif %}
