@@ -9,6 +9,7 @@ except ImportError:
 import zipfile
 import shutil
 from textwrap import dedent
+from markdown import Markdown
 
 from django.contrib.auth.models import Group
 from django.contrib.auth import authenticate
@@ -23,7 +24,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     AssignmentUpload, FileUpload, McqTestCase, IntegerTestCase, StringTestCase,\
-    FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit
+    FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,\
+    LessonFile
 from yaksh.decorators import user_has_profile
 
 
@@ -1523,12 +1525,30 @@ class TestCourses(TestCase):
             email='demo_student@test.com'
         )
 
+        self.teacher_plaintext_pass = 'teacher'
+        self.teacher = User.objects.create_user(
+            username='teacher',
+            password=self.teacher_plaintext_pass,
+            first_name='teacher_first_name',
+            last_name='teacher_last_name',
+            email='demo_teacher@test.com'
+        )
+
         # Add to moderator group
         self.mod_group.user_set.add(self.user1)
         self.mod_group.user_set.add(self.user2)
+        self.mod_group.user_set.add(self.teacher)
+
+        # Create a learning module to add to course
+        self.learning_module = LearningModule.objects.create(
+            order=0, name="test module", description="module",
+            check_prerequisite=False, creator=self.teacher)
 
         self.user1_course = Course.objects.create(name="Python Course",
             enrollment="Enroll Request", creator=self.user1)
+
+        # Add teacher to user1 course
+        self.user1_course.teachers.add(self.teacher)
 
         self.user2_course = Course.objects.create(name="Java Course",
             enrollment="Enroll Request", creator=self.user2)
@@ -1540,8 +1560,8 @@ class TestCourses(TestCase):
         self.student.delete()
         self.user1_course.delete()
         self.user2_course.delete()
-
-
+        self.teacher.delete()
+        self.learning_module.delete()
 
     def test_courses_denies_anonymous(self):
         """
@@ -1584,6 +1604,64 @@ class TestCourses(TestCase):
         self.assertTemplateUsed(response, 'yaksh/courses.html')
         self.assertIn(self.user1_course, response.context['courses'])
         self.assertNotIn(self.user2_course, response.context['courses'])
+
+    def test_teacher_can_design_course(self):
+        """ Check if teacher can design the course i.e add learning modules """
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
+        response = self.client.post(
+            reverse('yaksh:design_course',
+                    kwargs={"course_id": self.user1_course.id}),
+            data={"Add": "Add",
+                  "module_list": [str(self.learning_module.id)]
+                  })
+
+        # Test add learning module
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/design_course_session.html')
+        added_learning_module = self.user1_course.learning_module.all().first()
+        self.assertEqual(self.learning_module, added_learning_module)
+        self.assertEqual(added_learning_module.order, 1)
+
+        # Test change order of learning module
+        response = self.client.post(
+            reverse('yaksh:design_course',
+                    kwargs={"course_id": self.user1_course.id}),
+            data={"Change": "Change", "ordered_list": ",".join(
+                [str(self.learning_module.id)+":"+"0"]
+                )}
+        )
+        updated_learning_module = LearningModule.objects.get(
+            id=self.learning_module.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/design_course_session.html')
+        self.assertEqual(updated_learning_module.order, 0)
+
+        # Test change check prerequisite
+        response = self.client.post(
+            reverse('yaksh:design_course',
+                    kwargs={"course_id": self.user1_course.id}),
+            data={"Change_prerequisite": "Change_prerequisite",
+                  "check_prereq": [str(self.learning_module.id)]
+                  })
+        updated_learning_module = LearningModule.objects.get(
+            id=self.learning_module.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/design_course_session.html')
+        self.assertTrue(updated_learning_module.check_prerequisite)
+
+        # Test to remove learning module from course
+        response = self.client.post(
+            reverse('yaksh:design_course',
+                    kwargs={"course_id": self.user1_course.id}),
+            data={"Remove": "Remove",
+                  "delete_list": [str(self.learning_module.id)]
+                  })
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/design_course_session.html')
+        self.assertFalse(self.user1_course.learning_module.all().exists())
 
 
 class TestAddCourse(TestCase):
@@ -4005,3 +4083,544 @@ class TestQuestionPaper(TestCase):
         # Then
         wrong_answer_paper = AnswerPaper.objects.get(id=self.answerpaper.id)
         self.assertEqual(wrong_answer_paper.marks_obtained, 0)
+
+
+class TestLearningModule(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Create a student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@student.com'
+        )
+
+        # Create a teacher to add to the course
+        self.teacher_plaintext_pass = 'demo_teacher'
+        self.teacher = User.objects.create_user(
+            username='demo_teacher',
+            password=self.teacher_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@student.com'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+        self.mod_group.user_set.add(self.teacher)
+
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Open Enrollment", creator=self.user)
+
+        self.question = Question.objects.create(
+            summary="Test_question", description="Add two numbers",
+            points=1.0, language="python", type="code", user=self.user
+            )
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz', pass_criteria=40,
+            creator=self.user
+        )
+
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz,
+            total_marks=5.0, fixed_question_order=str(self.question.id)
+        )
+
+        self.question_paper.fixed_questions.add(self.question)
+
+        self.lesson = Lesson.objects.create(
+            name="test lesson", description="test description",
+            creator=self.user)
+        # create quiz leanring unit
+        self.learning_unit = LearningUnit.objects.create(
+            order=0, learning_type="quiz", quiz=self.quiz)
+        # create lesson leanring unit
+        self.learning_unit1 = LearningUnit.objects.create(
+            order=1, learning_type="lesson", lesson=self.lesson)
+        # create learning module
+        self.learning_module = LearningModule.objects.create(
+            order=0, name="test module", description="module",
+            check_prerequisite=False, creator=self.user)
+        self.learning_module.learning_unit.add(self.learning_unit)
+        self.learning_module.learning_unit.add(self.learning_unit1)
+        self.learning_module1 = LearningModule.objects.create(
+            order=0, name="my module", description="my description",
+            check_prerequisite=False, creator=self.user)
+        self.course.teachers.add(self.teacher)
+        self.course.learning_module.add(self.learning_module)
+
+        self.expected_url = "/exam/manage/courses/all_learning_module/"
+
+    def tearDown(self):
+        self.user.delete()
+        self.student.delete()
+        self.teacher.delete()
+        self.quiz.delete()
+        self.course.delete()
+        self.learning_unit.delete()
+        self.learning_module.delete()
+
+    def test_add_new_module_denies_non_moderator(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        # Student tries to add learning module
+        response = self.client.post(reverse('yaksh:add_module'),
+                                    data={"name": "test module1",
+                                          "description": "my test1",
+                                          "Save": "Save"})
+        self.assertEqual(response.status_code, 404)
+
+        # Student tries to view learning modules
+        response = self.client.get(reverse('yaksh:show_all_modules'))
+        self.assertEqual(response.status_code, 404)
+
+    def test_add_new_module(self):
+        """ Check if new module is created """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        # Test add new module
+        response = self.client.post(reverse('yaksh:add_module'),
+                                    data={"name": "test module1",
+                                          "description": "my test1",
+                                          "Save": "Save"})
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, self.expected_url)
+        learning_module = LearningModule.objects.get(name="test module1")
+        self.assertEqual(learning_module.description, "my test1")
+        self.assertEqual(learning_module.creator, self.user)
+        self.assertTrue(learning_module.check_prerequisite)
+        self.assertEqual(learning_module.html_data,
+                         Markdown().convert("my test1"))
+
+    def test_edit_module(self):
+        """ Check if existing module is editable """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        # Test add new module
+        response = self.client.post(
+            reverse('yaksh:edit_module',
+                    kwargs={"module_id": self.learning_module.id}),
+            data={"name": "test module2",
+                  "description": "my test2",
+                  "Save": "Save"})
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, self.expected_url)
+        learning_module = LearningModule.objects.get(name="test module2")
+        self.assertEqual(learning_module.description, "my test2")
+        self.assertEqual(learning_module.creator, self.user)
+        self.assertFalse(learning_module.check_prerequisite)
+        self.assertEqual(learning_module.html_data,
+                         Markdown().convert("my test2"))
+
+    def test_show_all_modules(self):
+        """Try to get all learning modules"""
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:show_all_modules'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/courses.html')
+        self.assertEqual(response.context['type'], "learning_module")
+        self.assertEqual(response.context['learning_modules'][0],
+                         self.learning_module)
+
+    def test_teacher_can_edit_module(self):
+        """ Check if teacher can edit the module """
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
+        response = self.client.post(
+            reverse('yaksh:edit_module',
+                    kwargs={"module_id": self.learning_module.id,
+                            "course_id": self.course.id}),
+            data={"name": "teacher module 2",
+                  "description": "teacher module 2",
+                  "Save": "Save"})
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/exam/manage/courses/")
+        learning_module = LearningModule.objects.get(name="teacher module 2")
+        self.assertEqual(learning_module.description, "teacher module 2")
+        self.assertEqual(learning_module.creator, self.user)
+
+    def test_teacher_can_design_module(self):
+        """ Check if teacher can design the module i.e add learning units """
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
+        response = self.client.post(
+            reverse('yaksh:design_module',
+                    kwargs={"module_id": self.learning_module1.id,
+                            "course_id": self.course.id}),
+            data={"Add": "Add",
+                  "choosen_list": ",".join([str(self.quiz.id)+":"+"quiz"])
+                  })
+
+        # Test add learning unit
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/add_module.html')
+        learning_unit = self.learning_module1.learning_unit.all().first()
+        self.assertEqual(self.quiz, learning_unit.quiz)
+        self.assertEqual(learning_unit.learning_type, "quiz")
+        self.assertEqual(learning_unit.order, 1)
+
+        # Test change order of learning unit
+        response = self.client.post(
+            reverse('yaksh:design_module',
+                    kwargs={"module_id": self.learning_module1.id,
+                            "course_id": self.course.id}),
+            data={"Change": "Change",
+                  "ordered_list": ",".join([str(learning_unit.id)+":"+"0"])
+                  })
+        updated_learning_unit = LearningUnit.objects.get(id=learning_unit.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/add_module.html')
+        self.assertEqual(updated_learning_unit.order, 0)
+
+        # Test change check prerequisite
+        response = self.client.post(
+            reverse('yaksh:design_module',
+                    kwargs={"module_id": self.learning_module1.id,
+                            "course_id": self.course.id}),
+            data={"Change_prerequisite": "Change_prerequisite",
+                  "check_prereq": [str(learning_unit.id)]
+                  })
+        updated_learning_unit = LearningUnit.objects.get(id=learning_unit.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/add_module.html')
+        self.assertFalse(updated_learning_unit.check_prerequisite)
+
+        # Test to remove learning unit from learning module
+        response = self.client.post(
+            reverse('yaksh:design_module',
+                    kwargs={"module_id": self.learning_module1.id,
+                            "course_id": self.course.id}),
+            data={"Remove": "Remove",
+                  "delete_list": [str(learning_unit.id)]
+                  })
+        updated_learning_unit = LearningUnit.objects.filter(
+            id=learning_unit.id).exists()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/add_module.html')
+        self.assertFalse(updated_learning_unit)
+        self.assertFalse(self.learning_module1.learning_unit.all().exists())
+
+    def test_get_learning_units_for_design(self):
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:design_module',
+                    kwargs={"module_id": self.learning_module1.id,
+                            "course_id": self.course.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/add_module.html')
+        self.assertEqual(response.context['quiz_les_list'], set())
+        self.assertEqual(len(response.context['learning_units']), 0)
+        self.assertEqual(response.context['status'], "design")
+        self.assertEqual(response.context['module_id'],
+                         str(self.learning_module1.id))
+        self.assertEqual(response.context['course_id'], str(self.course.id))
+
+    def test_view_module(self):
+        """ Student tries to view a module containing learning units """
+
+        # Student is not enrolled in the course is thrown out
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:view_module',
+                    kwargs={"module_id": self.learning_module.id,
+                            "course_id": self.course.id}))
+        self.assertEqual(response.status_code, 404)
+
+        # add student to the course
+        self.course.students.add(self.student.id)
+
+        # check if enrolled student can view module
+        response = self.client.get(
+            reverse('yaksh:view_module',
+                    kwargs={"module_id": self.learning_module.id,
+                            "course_id": self.course.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/show_video.html")
+        self.assertEqual(response.context['learning_units'][0],
+                         self.learning_unit)
+        self.assertEqual(response.context["state"], "module")
+        self.assertEqual(response.context["first_unit"], self.learning_unit)
+        self.assertEqual(response.context["user"], self.student)
+
+    def test_get_next_unit(self):
+        """ Check if we get correct next unit """
+
+        # Student who is not enrolled is thrown out
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:view_module',
+                    kwargs={"module_id": self.learning_module.id,
+                            "course_id": self.course.id}))
+        self.assertEqual(response.status_code, 404)
+
+        # Enroll student in the course
+        self.course.students.add(self.student.id)
+
+        # Get First unit as next unit
+        response = self.client.get(
+            reverse('yaksh:next_unit',
+                    kwargs={"module_id": self.learning_module.id,
+                            "course_id": self.course.id,
+                            "current_unit_id": self.learning_unit.id,
+                            "first_unit": "1"}),
+            follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['attempt_num'], 1)
+        self.assertEqual(response.context["questionpaper"],
+                         self.question_paper)
+        self.assertEqual(response.context["course"], self.course)
+        self.assertEqual(response.context["module"], self.learning_module)
+        self.assertEqual(response.context["user"], self.student)
+
+        # Get next unit after first unit
+        response = self.client.get(
+            reverse('yaksh:next_unit',
+                    kwargs={"module_id": self.learning_module.id,
+                            "course_id": self.course.id,
+                            "current_unit_id": self.learning_unit.id}),
+            follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["state"], "lesson")
+        self.assertEqual(response.context["current_unit"].id,
+                         self.learning_unit1.id)
+
+
+class TestLessons(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Create a student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@student.com'
+        )
+
+        # Create a teacher to add to the course
+        self.teacher_plaintext_pass = 'demo_teacher'
+        self.teacher = User.objects.create_user(
+            username='demo_teacher',
+            password=self.teacher_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@student.com'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+        self.mod_group.user_set.add(self.teacher)
+
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Open Enrollment", creator=self.user)
+
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz', pass_criteria=40,
+            creator=self.user
+        )
+
+        self.lesson = Lesson.objects.create(
+            name="test lesson", description="test description",
+            creator=self.user)
+        self.learning_unit = LearningUnit.objects.create(
+            order=0, learning_type="lesson", lesson=self.lesson)
+        self.learning_module = LearningModule.objects.create(
+            order=0, name="test module", description="module",
+            check_prerequisite=False, creator=self.user)
+        self.learning_module.learning_unit.add(self.learning_unit.id)
+        self.course.learning_module.add(self.learning_module.id)
+        self.course.teachers.add(self.teacher.id)
+
+        self.expected_url = "/exam/manage/courses/"
+
+    def tearDown(self):
+        self.user.delete()
+        self.student.delete()
+        self.teacher.delete()
+        self.quiz.delete()
+        self.course.delete()
+        self.learning_unit.delete()
+        self.learning_module.delete()
+        self.lesson.delete()
+
+    def test_edit_lesson_denies_non_moderator(self):
+        """ Student should not be allowed to edit lesson """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        # Student tries to edit lesson
+        response = self.client.get(
+            reverse('yaksh:edit_lesson',
+                    kwargs={"lesson_id": self.lesson.id,
+                            "course_id": self.course.id}))
+        self.assertEqual(response.status_code, 404)
+
+    def test_teacher_can_edit_lesson(self):
+        """ Teacher should be allowed to edit lesson """
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
+        dummy_file = SimpleUploadedFile("test.txt", b"test")
+        response = self.client.post(
+            reverse('yaksh:edit_lesson',
+                    kwargs={"lesson_id": self.lesson.id,
+                            "course_id": self.course.id}),
+            data={"name": "updated lesson",
+                  "description": "updated description",
+                  "Lesson_files": dummy_file,
+                  "Save": "Save"}
+            )
+
+        # Teacher edits existing lesson and adds file
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, self.expected_url)
+        updated_lesson = Lesson.objects.get(name="updated lesson")
+        self.assertEqual(updated_lesson.description, "updated description")
+        self.assertEqual(updated_lesson.creator, self.user)
+        self.assertEqual(updated_lesson.html_data,
+                         Markdown().convert("updated description"))
+        lesson_files = LessonFile.objects.filter(
+            lesson=self.lesson).first()
+        self.assertIn("test.txt", lesson_files.file.name)
+        lesson_file_path = lesson_files.file.path
+        # Teacher removes the lesson file
+        response = self.client.post(
+            reverse('yaksh:edit_lesson',
+                    kwargs={"lesson_id": self.lesson.id,
+                            "course_id": self.course.id}),
+            data={"delete_files": [str(lesson_files.id)],
+                  "Delete": "Delete"}
+            )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, self.expected_url)
+        lesson_file_exists = LessonFile.objects.filter(
+            lesson=self.lesson).exists()
+        self.assertFalse(lesson_file_exists)
+        self.assertFalse(os.path.exists(lesson_file_path))
+
+    def test_show_lesson(self):
+        """ Student should be able to view lessons """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:show_lesson',
+                    kwargs={"lesson_id": self.lesson.id,
+                            "module_id": self.learning_module.id,
+                            "course_id": self.course.id}))
+        # Student is unable to view lesson
+        self.assertEqual(response.status_code, 404)
+
+        # Add student to course
+        self.course.students.add(self.student.id)
+        response = self.client.get(
+            reverse('yaksh:show_lesson',
+                    kwargs={"lesson_id": self.lesson.id,
+                            "module_id": self.learning_module.id,
+                            "course_id": self.course.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["state"], "lesson")
+        self.assertEqual(response.context["current_unit"], self.learning_unit)
+
+    def test_show_all_lessons(self):
+        """ Moderator should be able to see all created lessons"""
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:show_all_lessons'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/courses.html")
+        self.assertEqual(response.context["type"], "lesson")
+        self.assertEqual(response.context["lessons"][0], self.lesson)
+
