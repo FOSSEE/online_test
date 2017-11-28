@@ -23,7 +23,7 @@
         {{ unit.quiz.description }}
     </a>
 {% else %}
-    <a href="{{ URL_ROOT }}/exam/show_video/{{unit.lesson.id}}/{{learning_module.id}}/{{course.id}}">
+    <a href="{{ URL_ROOT }}/exam/show_lesson/{{unit.lesson.id}}/{{learning_module.id}}/{{course.id}}">
         {{ unit.lesson.name }}
     </a>
 {% endif %}
@@ -42,7 +42,8 @@
 {% block main %}
 {% if msg %}
 <center>
-<div class="alert alert-warning">{{msg}}</div>
+<div class="col-md-12 col-md-offset-1 main">
+<div class="alert alert-warning">{{msg}}</div></div>
 </center>
 {% endif %}
 <div class="col-md-12 col-md-offset-1 main">
