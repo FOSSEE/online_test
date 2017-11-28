@@ -296,6 +296,8 @@ def add_quiz(request, quiz_id=None, course_id=None):
         quiz = get_object_or_404(Quiz, pk=quiz_id)
         if quiz.creator != user:
             raise Http404('This quiz does not belong to you')
+    else:
+        quiz = None
     if course_id:
         course = get_object_or_404(Course, pk=course_id)
         if not course.is_creator(user) and not course.is_teacher(user):
@@ -303,25 +305,15 @@ def add_quiz(request, quiz_id=None, course_id=None):
 
     context = {}
     if request.method == "POST":
-        if quiz_id is None:
-            form = QuizForm(request.POST)
-            if form.is_valid():
+        form = QuizForm(request.POST, instance=quiz)
+        if form.is_valid():
+            if quiz is None:
                 form.instance.creator = user
-                form.save()
-                if not course_id:
-                    return my_redirect("/exam/manage/courses/all_quizzes/")
-                else:
-                    return my_redirect("/exam/manage/courses/")
-        else:
-            quiz = Quiz.objects.get(id=quiz_id)
-            form = QuizForm(request.POST, instance=quiz)
-            if form.is_valid():
-                form.instance.creator = user
-                form.save()
-                if not course_id:
-                    return my_redirect("/exam/manage/courses/all_quizzes/")
-                else:
-                    return my_redirect("/exam/manage/courses/")
+            form.save()
+            if not course_id:
+                return my_redirect("/exam/manage/courses/all_quizzes/")
+            else:
+                return my_redirect("/exam/manage/courses/")
 
     else:
         quiz = Quiz.objects.get(id=quiz_id) if quiz_id else None
@@ -729,15 +721,16 @@ def get_result(request, uid, course_id, module_id):
     if result['status'] == 'done':
         result = json.loads(result_state.get('result'))
         template_path = os.path.join(*[os.path.dirname(__file__),
-                                       'templates','yaksh',
+                                       'templates', 'yaksh',
                                        'error_template.html'
                                        ]
                                      )
-        next_question, error_message, paper = _update_paper(request,uid,
+        next_question, error_message, paper = _update_paper(request, uid,
                                                             result
                                                             )
         if result.get('success'):
-            return show_question(request, next_question, paper, error_message)
+            return show_question(request, next_question, paper, error_message,
+                                 course_id=course_id, module_id=module_id)
         else:
             with open(template_path) as f:
                 template_data = f.read()
@@ -836,6 +829,8 @@ def add_course(request, course_id=None):
     ci = RequestContext(request)
     if course_id:
         course = Course.objects.get(id=course_id)
+        if not course.is_creator(user) and not course.is_teacher(user):
+            raise Http404("You are not allowed to view this course")
     else:
         course = None
 
@@ -2189,7 +2184,8 @@ def edit_lesson(request, lesson_id=None, course_id=None):
             lesson_file_form = LessonFileForm(request.POST, request.FILES)
             lessonfiles = request.FILES.getlist('Lesson_files')
             if lesson_form.is_valid():
-                lesson_form.instance.creator = user
+                if lesson is None:
+                    lesson_form.instance.creator = user
                 lesson = lesson_form.save()
                 lesson.html_data = get_html_text(lesson.description)
                 lesson.save()
@@ -2209,6 +2205,7 @@ def edit_lesson(request, lesson_id=None, course_id=None):
                 files = LessonFile.objects.filter(id__in=remove_files_id)
                 for file in files:
                     file.remove()
+            return my_redirect(redirect_url)
 
     lesson_files = LessonFile.objects.filter(lesson=lesson)
     lesson_files_form = LessonFileForm()
@@ -2224,7 +2221,7 @@ def edit_lesson(request, lesson_id=None, course_id=None):
 
 @login_required
 @email_verified
-def show_video(request, lesson_id, module_id, course_id):
+def show_lesson(request, lesson_id, module_id, course_id):
     user = request.user
     course = Course.objects.get(id=course_id)
     if user not in course.students.all():
@@ -2237,7 +2234,8 @@ def show_video(request, lesson_id, module_id, course_id):
     learning_units = learn_module.get_learning_units()
     if learn_unit.has_prerequisite():
         if not learn_unit.is_prerequisite_passed(user, learn_module, course):
-            return my_redirect("/exam/quizzes/")
+            msg = "You have not passed the prerequisite"
+            return view_module(request, learn_module.id, course_id, msg=msg)
     context = {'lesson': learn_unit.lesson, 'user': user,
                'course': course, 'state': "lesson",
                'learning_units': learning_units, "current_unit": learn_unit,
@@ -2343,7 +2341,8 @@ def add_module(request, module_id=None, course_id=None):
         if "Save" in request.POST:
             module_form = LearningModuleForm(request.POST, instance=module)
             if module_form.is_valid():
-                module_form.instance.creator = user
+                if module is None:
+                    module_form.instance.creator = user
                 module = module_form.save()
                 module.html_data = get_html_text(module.description)
                 module.save()
@@ -2444,7 +2443,7 @@ def get_next_unit(request, course_id, module_id, current_unit_id,
         return my_redirect("/exam/start/{0}/{1}/{2}".format(
             next_unit.quiz.questionpaper_set.get().id, module_id, course_id))
     else:
-        return my_redirect("/exam/show_video/{0}/{1}/{2}".format(
+        return my_redirect("/exam/show_lesson/{0}/{1}/{2}".format(
             next_unit.lesson.id, module_id, course_id))
 
 
@@ -2524,7 +2523,7 @@ def view_module(request, module_id, course_id, msg=None):
     learning_module = course.learning_module.get(id=module_id)
     if learning_module.has_prerequisite():
         if not learning_module.is_prerequisite_passed(user, course):
-            msg = "You have not completed previous learning module"
+            msg = "You have not completed the previous learning module"
             return quizlist_user(request, msg=msg)
     learning_units = learning_module.get_learning_units()
     context['learning_units'] = learning_units
