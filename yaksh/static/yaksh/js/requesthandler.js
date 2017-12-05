@@ -53,15 +53,34 @@ function response_handler(method_type, content_type, data, uid){
     } else if(content_type.indexOf("application/json") !== -1) {
         res = JSON.parse(data);
         request_status = res.status;
-        if(method_type === "POST") {
-            uid = res.uid;
+        if (request_status){
+          if(method_type === "POST") {
+              uid = res.uid;
+          }
+          check_state(request_status, uid);
         }
-        check_state(request_status, uid);
+        else{
+          unlock_screen();
+          if ($("#notification")){
+            $("#notification").toggle();
+          }
+
+          var error_output = document.getElementById("error_panel");
+          error_output.innerHTML = res.error;
+          focus_on_error(error_output);
+        }
     } else {
         reset_values();
         unlock_screen();
     }
 }
+
+function focus_on_error(ele){
+    if (ele) {
+      ele.scrollIntoView(true);
+      window.scrollBy(0, -15);
+        }
+    }
 
 function ajax_check_code(url, method_type, data_type, data, uid) {
     $.ajax({

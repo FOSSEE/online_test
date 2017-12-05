@@ -143,13 +143,17 @@ class CourseManager(models.Manager):
 
 #############################################################################
 class Lesson(models.Model):
+    # Lesson name
     name = models.CharField(max_length=255)
-    description = models.TextField()
-    html_data = models.TextField(null=True, blank=True)
-    creator = models.ForeignKey(User)
 
-    def get_files(self):
-        return LessonFile.objects.filter(lesson=self)
+    # Markdown text of lesson content
+    description = models.TextField()
+
+    # Markdown text should be in html format
+    html_data = models.TextField(null=True, blank=True)
+
+    # Creator of the lesson
+    creator = models.ForeignKey(User)
 
     def __str__(self):
         return "{0}".format(self.name)

@@ -106,15 +106,15 @@ module_id = "{{module.id}}"
 {% get_unit_status course module unit user as status %}
 
 {% if unit.quiz.id == paper.question_paper.quiz.id %}
-    <span class="glyphicon glyphicon-pencil" data-toggle="tooltip" title="Current Unit"></span>
+    <span class="glyphicon glyphicon-pencil" data-toggle="tooltip" title="Currently on"></span>
 {% endif %}
 
 {% if unit.learning_type == "quiz" %}
-    <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{learning_module.id}}/{{course.id}}">
+    <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{module.id}}/{{course.id}}">
         {{ unit.quiz.description }}
     </a>
 {% else %}
-    <a href="{{ URL_ROOT }}/exam/show_video/{{unit.lesson.id}}/{{learning_module.id}}/{{course.id}}">
+    <a href="{{ URL_ROOT }}/exam/show_lesson/{{unit.lesson.id}}/{{module.id}}/{{course.id}}">
             {{ unit.lesson.name }}
     </a>
 {% endif %}
@@ -200,19 +200,19 @@ module_id = "{{module.id}}"
 
                      {% if question.type == "integer" %}
                      Enter Integer:<br/>
-                     <input name="answer" type="number" id="integer" value={{ last_attempt|safe }} />
+                     <input autofocus name="answer" type="number" id="integer" value={{ last_attempt|safe }} />
                      <br/><br/>
                      {% endif %}
 
                      {% if question.type == "string" %}
                      Enter Text:<br/>
-                     <textarea name="answer" id="string">{{ last_attempt|safe }}</textarea>
+                     <textarea autofocus name="answer" id="string">{{ last_attempt|safe }}</textarea>
                      <br/><br/>
                      {% endif %}
 
                      {% if question.type == "float" %}
                      Enter Decimal Value :<br/>
-                     <input name="answer" type="number" step="any" id="float" value={{ last_attempt|safe }} />
+                     <input autofocus name="answer" type="number" step="any" id="float" value={{ last_attempt|safe }} />
                      <br/><br/>
                      {% endif %}
 
@@ -242,7 +242,7 @@ module_id = "{{module.id}}"
                              <a href="#answer" class="pull-right" onclick="reset_editor()" name="reset" id="reset">Undo Changes&nbsp;<span class="glyphicon glyphicon-refresh"></span></a>
                              </div>
                     </div>
-                     <textarea name="answer" id="answer"></textarea>
+                     <textarea autofocus name="answer" id="answer"></textarea>
                      <br>
                      {% endif %}
         <div class="from-group">
@@ -262,12 +262,16 @@ module_id = "{{module.id}}"
          {% if question in paper.get_questions_unanswered %}
          <button class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" id="skip">Attempt Later <span class="glyphicon glyphicon-arrow-right"></span></button>
          {% endif %}
-         </div>
-                 </div>
-             </div>
-
+         {% endif %} 
+       </div>
          </form>
-         {% endif %}
+         </div>
+     </div>
+   </div>
+   <br/>
+  {% if question.type == 'code' or question.type == 'upload' %}
+  <div class="row" id="error_panel"></div>
+  {% endif %}
          
     <!-- Modal -->
     <div class="modal fade " id="upload_alert" >
