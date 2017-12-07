@@ -1,0 +1,173 @@
+{% extends "manage.html" %}
+{% block title %} Courses {% endblock %}
+{% block pagetitle %} Courses {% endblock pagetitle %}
+{% block content %}
+{% if not courses %}
+    <center><h4> No new Courses created </h4></center>
+{% else %}
+<center><h3> Course(s) Created</h3></center>
+    {% for course in courses %}
+    {% if user != course.creator %}
+        <h4> {{course.creator.get_full_name}} added you to this course</h4>
+    {% endif %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>
+                        <b><u>Course</u></b>
+                        {% if course.active %}
+                            <span class="label label-success">Active</span>
+                        {% else %}
+                            <span class="label label-danger">Closed</span>
+                        {% endif %}
+                    </p>
+                    <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">{{ course.name }}</a>
+                    </br></br>
+                    {% if user == course.creator %}
+                    <div class="row">
+                        <div class="col-md-4 ">
+                            <center><b><u>Teacher(s) Added to {{ course }}</u></b></center>
+                            {% if course.get_teachers %}
+                            <div align="left">
+                            <form action="{{URL_ROOT}}/exam/manage/remove_teachers/{{ course.id }}/" method="post">
+                            {% csrf_token %}
+                            {% for teacher in course.get_teachers %}
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-md-333" style="width: auto;">
+                                        <input type="checkbox" name="remove" value="{{ teacher.id }}">&nbsp;{{ teacher.get_full_name }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <button class="btn btn-danger" type="submit">Remove Selected</button>
+                            </div>
+                            {% else %}
+                            <center><b>No Teacher(s) Added</b></center>
+                            {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if user == course.creator %}
+                    <p><b><a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher</a></b></p>
+                {% endif %}
+                <div class="col-md-2" style="text-align:left">
+                    {% if course.get_quizzes %}
+                        <p><b><u>Quiz(zes)</u></b></p>
+                            {% for quiz in course.get_quizzes %}
+                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{course.id}}/{{quiz.id}}/">{{ quiz.description }}</a><br>
+                    {% endfor %}
+                </div>
+                <div class="col-md-4" style="text-align:left">
+                    <p><b><u>Question Paper(s)</u></b></p>
+                    {% for quiz in course.get_quizzes %}
+                    {% if quiz.questionpaper_set.get %}
+                    <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/">Question Paper for {{ quiz.description }}</a><br>
+                    {% else %}
+                    <p>No Question Paper 
+                    <a href="#" onClick='location.replace("{{URL_ROOT}}/exam/manage/quiz/designquestionpaper/{{ quiz.id }}/");'>Add</a>
+                    </p>
+                    {% endif %}
+                    {% endfor %}
+                    {% else %}
+                        <p><b>No quiz </b></p>
+                    {% endif %}
+                </div>
+            </div>
+            <br/>
+                <a class="btn btn-success" href="{{URL_ROOT}}/exam/manage/addquiz/{{course.id}}/">Add New Quiz</a>
+                <a class="btn btn-primary"href="{{URL_ROOT}}/exam/manage/edit_course/{{course.id}}">Edit Course</a>
+                <a class="btn btn-default"href="{{URL_ROOT}}/exam/manage/courses/download_course_csv/{{course.id}}">Download CSV</a>
+        </div>
+    </div>
+    <br><br>
+    {% endfor %}
+    {% endif %}
+<hr/>
+{% if allotted_courses %}
+    <center><h3> Course(s) Allotted </h3></center>
+    {% for course in allotted_courses %}
+        <div class="row">
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>
+                        <b><u>Course</u></b>
+                        {% if course.active %}
+                            <span class="label label-success">Active</span>
+                        {% else %}
+                            <span class="label label-danger">Closed</span>
+                        {% endif %}
+                    </p>
+                    <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">{{ course.name }}</a>
+                    </br></br>
+                    <div class="row">
+                        <div class="col-md-4 wrap">
+                            <center><b><u> Course Creator</u></b></center>
+                            {{course.creator}}
+                            <center><b><u>Teacher(s) Added to {{ course }}</u></b></center>
+                            {% if course.get_teachers %}
+                            <div align="left">
+                            <form action="{{URL_ROOT}}/exam/manage/remove_teachers/{{ course.id }}/" method="post">
+                            {% csrf_token %}
+                            {% for teacher in course.get_teachers %}
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-md-3" style="width: auto;">
+                                        <input type="checkbox" name="remove" value="{{ teacher.id }}">&nbsp;{{ teacher.get_full_name }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <button class="btn btn-danger" type="submit">Remove Selected</button>
+                            </div>
+                            {% else %}
+                            <center><b>No Teacher(s) Added</b></center>
+                            {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <p><b><a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher</a></b></p>
+                </div>
+                <div class="col-md-2">
+                    <p><b><u>Quiz(zes)</u></b></p>
+                    {% if course.get_quizzes %}
+                        {% for quiz in course.get_quizzes %}
+                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{course.id}}/{{quiz.id}}/">{{ quiz.description }}</a><br>
+                        {% endfor %}
+                    {% else %}
+                        <p><b>No quiz </b></p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <p><b><u>Question Paper(s)</u></b></p>
+                    {% for quiz in course.get_quizzes %}
+                    {% if quiz.questionpaper_set.get %}
+                    <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/">Question Paper for {{ quiz.description }}</a><br>
+                    {% else %}
+                    <p>No Question Paper
+                    <a href="#" onClick='location.replace("{{URL_ROOT}}/exam/manage/quiz/designquestionpaper/{{ quiz.id }}/");'>Add</a>
+                    </p>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            <br/>
+            <button class="btn btn-primary pull-right"type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/addquiz/{{course.id}}/");'>Add New Quiz</button>
+            <p><a href="{{URL_ROOT}}/exam/manage/courses/download_course_csv/{{course.id}}">Download CSV</a></p>
+        </div>
+    </div>
+    <br><br>
+    {% endfor %}
+{% else %}
+    <center><h4> No new Courses allotted</h4></center>
+    <br><br>
+{% endif %}
+<hr/>
+<center><button class="btn primary" type="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/add_course");'>Add New Course</button></center>
+{% endblock %}

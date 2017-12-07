@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block pagetitle %} Yaksh Online Test {% endblock %}
+{% block content %}
+<center><table class="table table-bordered" >
+        <caption> Submission Status </caption>
+        <thead>
+            <tr>
+                <th> Question</th>
+                <th> State </th>
+            </tr>
+        </thead>
+
+        {% for question in paper.questions.all %}
+            <tbody>
+                {% if question in paper.questions_answered.all %}
+                    <tr class="info">
+                    <td> {{ question.summary }} </td>
+                    <td> Attempted </td>
+                {% else %}
+                    <tr class="danger">
+                    <td> {{ question }} </td>
+                    <td> Not completed </td>
+                {% endif %}
+                </tr>
+            </tbody>
+        {% endfor %}
+</table></center>
+
+	<center><h4>Your current answers are saved.</h4></center>
+	<center><h4> Are you sure you wish to quit the exam?</h4></center>
+	<center><h4> Be sure, as you won't be able to restart this exam.</h4></center>
+	<form action="{{URL_ROOT}}/exam/complete/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post">
+	{% csrf_token %}
+	<center><button class="btn" type="submit" name="yes">Yes!</button>&nbsp;<button class="btn" type="button" name="no" onClick="window.location='{{ URL_ROOT }}/exam/start/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/'">No!</button></center>
+	</form>
+{% endblock content %}

@@ -1,0 +1,71 @@
+{% extends "manage.html" %}
+
+{% block pagetitle %} Add Question {% endblock pagetitle %}
+
+{% block css %}
+<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/autotaggit.css" />
+{% endblock %}
+
+{% block script %}
+<script src="{{ URL_ROOT }}/static/yaksh/js/add_question.js"></script>
+<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+{% endblock %}
+
+{% block onload %} onload='javascript:textareaformat();' {% endblock %}
+
+{% block content %}
+<form action="{{ URL_ROOT }}/exam/manage/addquestion/{{ question.id }}/" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
+  {% csrf_token %}
+  <center><table class="table">
+  <tr><td>Summary: <td>{{ qform.summary }}{{ qform.summary.errors }}
+  <tr><td> Language: <td> {{qform.language}}{{qform.language.errors}}
+  <tr><td> Type: <td> {{ qform.type }}{{qform.type.errors}}
+  <tr><td>Points:<td><button class="btn-mini" type="button" onClick="increase(frm);">+</button>{{qform.points }}<button class="btn-mini" type="button" onClick="decrease(frm);">-</button>{{ qform.points.errors }} 
+    <tr><td><strong>Rendered: </strong><td><p id='my'></p>
+  <tr><td>Description: <td>{{ qform.description}}  {{qform.description.errors}}
+  <tr><td>Tags: <td>{{ qform.tags }}
+  <tr><td>Snippet: <td>{{ qform.snippet }}
+  <tr><td>Partial Grading: <td>{{ qform.partial_grading }}
+  <tr><td>Grade Assignment Upload:<td> {{ qform.grade_assignment_upload }}
+  <tr><td> File: <td> {{ fileform.file_field }}{{ fileform.file_field.errors }}
+  {% if uploaded_files %}<br><b>Uploaded files:</b><br>Check on delete to delete files,
+  extract to extract files and hide to hide files from student(if required)<br>
+  {% for file in uploaded_files %}
+  <input type="checkbox" name="clear" value="{{file.id}}">&nbsp;delete</input>&nbsp;
+  <input type="checkbox" name="extract" value="{{file.id}}" >{% if file.extract %} dont extract{% else %}
+  extract{% endif %}</input>&nbsp;&nbsp;
+  <input type="checkbox" name="hide" value="{{file.id}}" >{% if file.hide %} show{% else %}
+  hide{% endif %}</input>
+  <a href="{{file.file.url}}">{{ file.file.name }}</a>
+  <br>
+  {% endfor %}{% endif %}
+  </table></center>
+  {% for formset in formsets %}
+  <div class="form-group">
+      {{ formset.management_form }}
+
+      {% for form in formset %}
+        <div class="link-formset well">
+            {{ form.as_p }}
+        </div>
+      {% endfor %}
+
+  </div>
+  {% endfor %}
+  <p><label for="case_type">Add Test Case:</label> <select id="case_type" name="case_type" onchange="frm.submit()">
+      <option value="" selected="selected">---------</option>
+      <option value="standardtestcase">Standard </option>
+      <option value="stdiobasedtestcase">StdIO </option>
+      <option value="mcqtestcase">MCQ/MCC </option>
+      <option value="hooktestcase">Hook </option>
+      <option value="integertestcase">Integer </option>
+      <option value="stringtestcase"> String </option>
+      <option value="floattestcase"> Float </option>
+  </select></p>
+  <center>
+    <button class="btn" type="submit" name="save_question">Save</button>
+    <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Back to Questions</button>
+    <button class="btn" type="submit" name="delete_files">Delete Selected Files</button>
+  </center>
+</form>
+{% endblock %}

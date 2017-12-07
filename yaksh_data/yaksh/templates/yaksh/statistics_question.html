@@ -1,0 +1,24 @@
+{% extends "manage.html" %}
+
+{% block pagetitle %} Statistics for {{ quiz.description }}{% endblock pagetitle %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-2">
+{% for attempt in attempts %}
+    <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{questionpaper_id}}/{{attempt}}">Attempt {{ attempt }}</a></p>
+    {% endfor %}
+</div>
+<div class="col-md-9">
+{% if question_stats %}
+    <p><b>Total number of participants: {{ total }}</b></p>
+    <table class="table table-bordered">
+        <tr><th>Question</th><th>Type</th><th>Total</th><th>Answered</th></tr>
+        {% for question, value in question_stats.items  %}
+        <tr><td>{{ question.summary }}</td><td>{{ question.type }}</td><td>{{value.1}}</td><td>{{ value.0 }} ({% widthratio value.0 value.1 100 %}%)</td></tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}

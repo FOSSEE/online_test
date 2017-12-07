@@ -169,7 +169,7 @@ To install this app follow the steps below:
 
  1. Install [Docker](https://github.com/FOSSEE/online_test/blob/master/README.md)
 
- 1. Got to the directory where the project is located
+ 1. Go to the directory where the project is located
         cd /path/to/online_test
 
  1. Create a docker image. This may take a few minutes
@@ -180,6 +180,29 @@ To install this app follow the steps below:
 
  1. Run the invoke script using the command ```invoke start```
     The command will create and run a new docker container (that is running the code_server.py within it), it will also bind the ports of the host with those of the container
+
+#### Deploying Multiple Dockers
+
+ 1. Install [Docker](https://github.com/FOSSEE/online_test/blob/master/README.md)
+
+ 1. Go to the ```docker``` directory
+
+ 1. Build the docker images
+        invoke build
+
+ 1. Run the containers and scripts necessary to deploy the web application
+        invoke deploy
+
+    Use ```invoke deploy --fixtures``` to load the fixtures
+
+ 1. Create the superuser and moderator group
+        invoke createsuperuser
+
+ 1. Stop the containers
+        invoke halt
+
+ 1. Remove the containers
+        invoke clean
 
 #### Additional commands available
 

@@ -1,0 +1,64 @@
+{% extends "manage.html" %}
+
+
+{% block subtitle %}Add Quiz{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question_quiz.css" type="text/css" /> 
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/jquery.datetimepicker.css" type="text/css" /> 
+{% endblock %}
+{% block script %}
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/add_quiz.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery.datetimepicker.full.min.js"></script>
+{% endblock %}
+{% block onload %} onload="javascript:test();"  {% endblock %}
+{% block content %}
+
+<form name=frm id=frm action="" method="post" >
+  {% csrf_token %}
+  <center>
+  <table class=span1>
+  {{ form.as_table }}
+  </table>
+  <script type="text/javascript">
+    $("#id_start_date_time").datetimepicker({format: 'Y-m-d H:i:s'});
+    $("#id_end_date_time").datetimepicker({format: 'Y-m-d H:i:s'});
+  </script>
+  <br/><br/>
+  </center>
+
+  <center><button class="btn" type="submit" id="submit" name="questionpaper"> Save
+  </button>
+
+  <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button> </center>
+  
+</form>
+{% if quiz_id %}
+
+    <h5>You can check the quiz by attempting it in the following modes:</h5>
+    <center>
+  	<button class="btn" type="button" name="button" onClick='usermode("{{URL_ROOT}}/exam/manage/usermode/{{quiz_id}}");'>User Mode</button>
+    
+  	<button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/godmode/{{quiz_id}}");'>God Mode</button> 
+    <a data-toggle="collapse" data-target="#help">
+    <span class="glyphicon glyphicon-info-sign">Help</span></a>
+   <div id="help" class="collapse">
+   <br/>
+   <ul>
+   <li><b>User Mode:</b> Attempt quiz the way normal users will attempt i.e. -
+   <ul>
+   <li><i>Quiz will have the same duration as that of the original quiz.</li>
+   <li>Quiz won't start if the course is inactive or the quiz time has expired.</li>
+   <li>You will be notified about quiz prerequisites.(You can still attempt the quiz though)</i></li>
+   </ul>
+   </p>
+   <li> <b>God Mode:</b> Attempt quiz without any time or eligibilty constraints.</p>
+   </div>
+ {% endif %}
+ <style type="text/css">
+   #rendered_text{
+    width: 550px;
+   }
+ </style>
+{% endblock %}

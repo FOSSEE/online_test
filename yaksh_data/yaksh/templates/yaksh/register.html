@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+
+{% block pagetitle %} Online Test Registration {% endblock %}
+
+{% block content %}
+
+<form action="" method="post">
+    {% csrf_token %}
+    <h3> Please fill in the following details:</h3>
+    <center>
+        <table class="table">
+    {{ form.as_table }}
+    </table></center>
+    <center><button class="btn btn-primary" type="submit">Register</button>&nbsp;&nbsp;<button class="btn btn-primary" type="reset">Cancel</button></center>
+</form>
+
+{% endblock content %}

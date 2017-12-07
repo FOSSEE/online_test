@@ -1,0 +1,113 @@
+{% extends "user.html" %}
+{% block pagetitle %} {{ title }} {% endblock %}
+{% block main %}
+    {% if 'Enrolled Courses' not in title%}
+        <div class="row well">
+            <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" class="form-search form-horizontal pull-right">
+                {% csrf_token %}
+                <div class="col-md-12">
+                    <div class="input-group">
+                        <span class="input-group-addon" id="basic-addon1">Search Course</span>
+                        <input type="text" name="course_code" class="form-control" placeholder="Course Code">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="submit">Search</button>
+                            <button class="btn btn-default" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/quizzes/");'>Cancel</button>
+                        </span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+{% if not courses %}
+No Courses to display
+{% endif %}
+{% for course in courses %}
+<div class="row well">
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-4">
+                <h4><b><u> {{ course.name }} by {{ course.creator.get_full_name }}</u></b></h4>
+            </div>
+            <div class="col-md-4">
+                {% if not course.active %}
+                    <span class="label label-danger">Closed</span>
+                {% endif %}
+                {% if user in course.requests.all %} <span class="label label-warning">Request Pending </span>
+                {% elif user in course.rejected.all %}<span class="label label-danger">Request Rejected</span>
+                {% elif user in course.students.all %}<span class="label label-info">Enrolled</span>
+                {% else %}
+                    {% if course.is_active_enrollment %}
+                        {% if course.is_self_enroll %}
+                            <a class="btn btn-success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.id }}">Enroll</a>
+                        {% else %}
+                            <a class="btn btn-success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.id }}">Enroll</a>
+                        {% endif %}
+                    {% else %}
+                        <span class="label label-danger">Enrollment Closed</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row">
+        {% if user in course.students.all %}
+            <table class="table table-bordered">
+                <th>Quiz</th>
+                <th>View Answer Paper</th>
+                <th>Pre requisite quiz</th>
+                {% for quiz in course.get_quizzes %}
+                    {% if quiz.active and quiz.course_id == course.id %}
+                    <tr>
+                        {% if not quiz.is_expired and course.active %}
+                            <td>
+                                <a href="{{ URL_ROOT }}/exam/start/{{quiz.questionpaper_set.get.id}}">{{ quiz.description }}</a><br>
+                            </td>
+                        {% else %}
+                            <td>
+                                {{ quiz.description }} <span class="label label-danger">Inactive</span><br>
+                            </td>
+                        {% endif %}
+                        <td>
+                            {% if quiz.view_answerpaper %}
+                                <a href="{{ URL_ROOT }}/exam/view_answerpaper/{{ quiz.questionpaper_set.get.id }}/"><i class="fa fa-eye" aria-hidden="true"></i> Can View </a>
+                            {% else %}
+                                <a><i class="fa fa-eye-slash" aria-hidden="true"></i> Cannot view now </a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if quiz.prerequisite %}
+                                You have to pass {{ quiz.prerequisite.description }} for taking {{ paper.quiz.description }}
+                            {% else %}
+                                No pre requisites for {{ quiz.description }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </table>
+        {% endif %}
+        </div>
+
+        {% if course.instructions %}
+        <div class="row">
+        <div class="panel-group">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" href="#collapse{{ forloop.counter }}">Course Instructions</a>
+              </h4>
+            </div>
+            <div id="collapse{{ forloop.counter }}" class="panel-collapse collapse">
+              <div class="panel-body"> {{ course.instructions|safe }}</div> 
+            </div>
+          </div>
+        </div>
+        </div>
+        {% endif %}
+    </div>
+</div><!--/row-->
+</br>
+{% endfor %}
+
+{% endblock %}
+

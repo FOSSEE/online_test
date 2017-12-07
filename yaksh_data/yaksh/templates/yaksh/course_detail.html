@@ -1,0 +1,255 @@
+{% extends "manage.html" %}
+
+{% block title %} Course Details {% endblock title %}
+
+{% block pagetitle %} Course Details for {{ course.name|title }} {% endblock %}
+
+{% block script %}
+<script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/course.js"></script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/tinymce/js/tinymce/tinymce.min.js"></script>
+<script src="https://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css">
+{% endblock %}
+{% block content %}
+<br/>
+<br>
+<div class="row">
+    <div class="col-sm-3 col-md-2 sidebar">
+      <ul class="nav nav-sidebar">
+        {% if state == 'mail'%}
+            <li><a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">
+            Go to Course Details</a></li>
+        {% else %}
+            <li><a href="#student-requests" id="request">
+            Requested Students </a></li>
+            <li><a href="#enrolled-students" id="enroll-students">
+            Enrolled Students </a></li>
+            <li><a href="#rejected-students" id="reject-students">
+            Rejected Students </a></li>
+        {% endif %}
+        <li>
+        <a href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">
+        {% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}</a>
+        </li>
+        <li>
+        <a href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/">
+        Clone Course</a>
+        </li>
+        <li>
+        <a href="{{URL_ROOT}}/exam/manage/send_mail/{{ course.id }}/">
+        Send Mail</a>
+        </li>
+      </ul>
+    </div>
+</div>
+<div class="col-md-9 col-md-offset-2 main">
+    <form id="upload_users" action="{{ URL_ROOT }}/exam/manage/upload_users/{{course.id}}/"
+        method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="csv_file" />
+        <button class="btn btn-primary" type=submit> Upload Users <span class="glyphicon glyphicon-open"/></button>
+    </form>
+    <div class="alert alert-info" role="alert">
+        <p>
+        - The uploaded csv should have headers exactly same as mentioned below:<br />
+        <b>firstname, lastname, email, username, password, institute, roll_no, department,
+           remove</b><br />
+        - Mandatory fields are <b> firstname, lastname and email. </b><br />
+        - Other fields are optional. <br />
+        - If username and password are not provided then
+        <b>Users created will have username and password same as their email</b>
+        </p>
+        <p>
+        <b> Click <a class="btn btn-success" href="{{ URL_ROOT }}/exam/manage/download_sample_csv/
+">here</a> to download a sample CSV, edit and upload it</b>
+        </p>
+    </div>
+    <div class="row">
+        {% if message %}
+        <div class="alert alert-warning" role="alert">
+        <center>
+        <strong> {{ message }} </strong>
+        </center>
+        </div>
+        {% endif %}
+        {% if upload_details %}
+        <div class="alert alert-info" role="info">
+            {% for detail in upload_details %}
+            <strong> {{ detail }} </strong><br>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <hr>
+        {% if state == 'mail' %}
+            <div id="enrolled-students">
+            <center><b><u>Send Mails to Students</u></b></center><br>
+            {% if course.get_enrolled %}
+            <input type="checkbox" class="reject"/>&nbsp;<font size="2">Select all</font>
+            <div id="reject">
+            <form action="{{URL_ROOT}}/exam/manage/send_mail/{{ course.id }}/" method="post" id="send_mail_form">
+                {% csrf_token %}
+                <table class="table table-striped">
+                    <th></th>
+                    <th></th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Roll Number</th>
+                    <th>Institute</th>
+                    <th>Department</th>
+                    {% for enrolled in course.get_enrolled %}
+                        <tr>
+                        <td><input type="checkbox" name="check" value="{{ enrolled.id }}"></td>
+                        <td>{{ forloop.counter }}.</td>
+                        <td> {{ enrolled.get_full_name|title }} </td>
+                        <td> {{enrolled.email}}</td>
+                        <td> {{enrolled.profile.roll_number}}</td>
+                        <td> {{enrolled.profile.institute}}</td>
+                        <td> {{enrolled.profile.department}}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                <br>
+                <textarea name="subject" id="subject" placeholder="Email Subject" cols="50"></textarea>
+                <br><br>
+                <textarea name="body" id="email_body"></textarea><br>
+                Attachments: <input type="file" name="email_attach" multiple="">
+                <br>
+                <button class="btn btn-success" type="submit" name='send_mail' value='send_mail' id="send_mail">
+                Send Mail to Selected Students</button>
+            </div>
+            {% endif %}
+            </form>
+        </div>
+        {% else %}
+        <div id="student-requests">
+            <center><b><u>Requests</u></b></center><br>
+            {% if course.get_requests %}
+            <input type="checkbox" class="checkall"/>&nbsp;<font size="2">Select all</font>
+            <div id="enroll-all">
+            <form action="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/" method="post">
+                {% csrf_token %}
+                <table class="table table-striped">
+                    <th></th>
+                    <th></th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Roll Number</th>
+                    <th>Institute</th>
+                    <th>Department</th>
+                    <th>Enroll/Reject</th>
+                    {% for request in course.get_requests %}
+                    <tr>
+                        <td><input type="checkbox" name="check" value="{{ request.id }}"></td>
+                        <td>{{ forloop.counter }}.</td>
+                        <td>{{request.get_full_name}}</td>
+                        <td> {{request.email}}</td>
+                        <td> {{request.profile.roll_number}}</td>
+                        <td> {{request.profile.institute}}</td>
+                        <td> {{request.profile.department}}</td>
+                        <td>
+                            <a class="btn btn-success"
+                            href="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/{{ request.id }}/">
+                            Enroll </a>
+                            <a class="btn btn-danger"
+                            href="{{URL_ROOT}}/exam/manage/reject/{{ course.id }}/{{ request.id }}/">
+                            Reject </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </table>
+                <button class="btn btn-success" type="submit" name='enroll' value='enroll'>Enroll Selected</button>
+            </div>
+            {% endif %}
+            </form>
+        </div>
+        <br>
+        <div id="enrolled-students">
+            <center><b><u>Enrolled</u></b></center><br>
+            {% if course.get_enrolled %}
+            <input type="checkbox" class="reject"/>&nbsp;<font size="2">Select all</font>
+            <div id="reject">
+            <form action="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/" method="post" id="reject-form">
+                {% csrf_token %}
+                <table class="table table-striped">
+                    <th></th>
+                    <th></th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Roll Number</th>
+                    <th>Institute</th>
+                    <th>Department</th>
+                    <th>Reject</th>
+                    {% for enrolled in course.get_enrolled %}
+                        <tr>
+                        <td><input type="checkbox" name="check" value="{{ enrolled.id }}"></td>
+                        <td>{{ forloop.counter }}.</td>
+                        <td> {{ enrolled.get_full_name|title }} </td>
+                        <td> {{enrolled.email}}</td>
+                        <td> {{enrolled.profile.roll_number}}</td>
+                        <td> {{enrolled.profile.institute}}</td>
+                        <td> {{enrolled.profile.department}}</td>
+                        <td><a class="btn btn-danger"
+                        href="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/{{ enrolled.id }}/">
+                        Reject </a>
+                        </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                <button class="btn btn-danger" type="submit" name='reject' value='reject'>
+                Reject Selected</button>
+            </div>
+            {% endif %}
+            </form>
+        </div>
+        <br>
+        <div id="rejected-students">
+            <center><b><u>Rejected</u></b></center><br>
+            {% if course.get_rejected %}
+            <input type="checkbox" class="enroll"/>&nbsp;<font size="2">Select all</font>
+            <div id="enroll">
+            <form action="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/" method="post">
+                {% csrf_token %}
+                <table class="table table-striped">
+                    <th></th>
+                    <th></th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Roll Number</th>
+                    <th>Institute</th>
+                    <th>Department</th>
+                    <th>Enroll</th>
+                    {% for rejected in course.get_rejected %}
+                        <tr>
+                            <td><input type="checkbox" name="check" value="{{ rejected.id }}"></td>
+                            <td>{{ forloop.counter }}.</td>
+                            <td>{{rejected.get_full_name|title}}</td>
+                            <td> {{rejected.email}}</td>
+                            <td> {{rejected.profile.roll_number}}</td>
+                            <td> {{rejected.profile.institute}}</td>
+                            <td> {{rejected.profile.department}}</td>
+                            <td>
+                                <a class="btn btn-success"
+                                href="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/{{ rejected.id }}/">
+                                Enroll </a>
+                            </td>
+                        </tr>
+                {% endfor %}
+                </table>
+                <br>
+                <button class="btn btn-success" type="submit" name='enroll' value='enroll'>
+                Enroll Selected</button>
+            </div>
+            {% endif %}
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Dialog to display error message -->
+<div id="dialog" title="Alert">
+  <p id="error_msg"></p>
+</div>
+{% endblock %}
