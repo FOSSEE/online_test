@@ -43,9 +43,14 @@ def setupdb(ctx):
     print("** Setting up & migrating database **")
     ctx.run("python manage.py makemigrations")
     ctx.run("python manage.py migrate")
-    ctx.run("python manage.py loaddata demo_fixtures.json")
+    print("** Done! Migrations complete **")
 
-@task(setupdb)
+def loadfixtures(ctx):
+    print("** Loading fixtures into database **")
+    ctx.run("python manage.py loaddata demo_fixtures.json")
+    print("** Done! Loaded fixtures into database **")
+
+@task(setupdb, loadfixtures)
 def serve(ctx):
     print("** Running the Django web server. Press Ctrl-C to Exit **")
     ctx.run("python manage.py runserver")
@@ -135,16 +140,105 @@ def stop(ctx, container=TARGET_CONTAINER_NAME, hide=True):
 
     remove_check_file(CHECK_FILE_PATH)
     if result.stdout:
-        print ("** Stopping the docker container <{0}>".format(container))
+        print ("** Stopping the docker container <{0}> **".format(container))
         base_stop_cmd = "docker stop {0}".format(container)
         cmd = get_cmd(run_as_cmd, base_stop_cmd)
         ctx.run(cmd)
-        print ("** Done! Stopped the docker container <{0}>".format(container))
+        print ("** Done! Stopped the docker container <{0}> **".format(container))
 
-        print ("** Discarding the docker container <{0}>".format(container))
+        print ("** Discarding the docker container <{0}> **".format(container))
         base_rm_cmd = "docker rm {0}".format(container)
         cmd = get_cmd(run_as_cmd, base_rm_cmd)
         ctx.run(cmd)
-        print ("** Done! Discarded the docker container <{0}>".format(container))
+        print ("** Done! Discarded the docker container <{0}> **".format(container))
     else:
         print("** Docker container <{0}> not found **".format(container))
+
+@task
+def build(ctx):
+    run_as_cmd = run_as(OS_NAME)
+
+    base_build_cmd = "docker-compose build --no-cache"
+    cmd = get_cmd(run_as_cmd, base_build_cmd)
+    print ("** Building docker images **")
+    ctx.run(cmd)
+    print ("** Done! Built the docker images **")
+
+    base_build_cmd = "docker pull mariadb:10.2 "
+    cmd = get_cmd(run_as_cmd, base_build_cmd)
+    print ("** Pulling maria-db base image **")
+    ctx.run(cmd)
+    print ("** Done! Pulled maria-db base image **")
+
+@task
+def begin(ctx):
+    print("** Initializing docker containers **")
+    base_cmd = "docker-compose up -d"
+    run_as_cmd = run_as(OS_NAME)
+    cmd = get_cmd(run_as_cmd, base_cmd)
+    ctx.run(cmd)
+    print ("** Done! Initialized the docker containers **")
+
+@task(begin)
+def deploy(ctx, fixtures=False):
+    run_as_cmd = run_as(OS_NAME)
+
+    print("** Setting up & migrating database **")
+    base_make_migrate_cmd = "docker exec -i yaksh_django" \
+        " python3 manage.py makemigrations"
+    cmd = get_cmd(run_as_cmd, base_make_migrate_cmd)
+    ctx.run(cmd)
+
+    base_migrate_cmd = "docker exec -i yaksh_django" \
+        " python3 manage.py migrate"
+    cmd = get_cmd(run_as_cmd, base_migrate_cmd)
+    ctx.run(cmd)
+    print("** Done! Migrations complete **")
+
+    if fixtures:
+        base_fixture_cmd = "docker exec -i yaksh_django" \
+            " python3 manage.py loaddata demo_fixtures.json"
+        cmd = get_cmd(run_as_cmd, base_fixture_cmd)
+        print("** Loading fixtures into database **")
+        ctx.run(cmd)
+        print("** Done! Loaded fixtures into database **")
+
+    base_static_cmd = "docker exec -i yaksh_django python3 manage.py collectstatic"
+    cmd = get_cmd(run_as_cmd, base_static_cmd)
+    print ("** Setting up static assets **")
+    ctx.run(cmd)
+    print ("** Done! Set up static assets **")
+
+@task
+def createsuperuser(ctx):
+    run_as_cmd = run_as(OS_NAME)
+
+    base_su_cmd = "docker exec -it yaksh_django python3 manage.py createsuperuser"
+    cmd = get_cmd(run_as_cmd, base_su_cmd)
+    print ("** Creating Superuser **")
+    ctx.run(cmd)
+    print ("** Done! Created Superuser **")
+
+    base_mod_cmd = "docker exec -it yaksh_django python3 manage.py add_group"
+    cmd = get_cmd(run_as_cmd, base_mod_cmd)
+    print ("** Creating Moderator group **")
+    ctx.run(cmd)
+    print ("** Done! Created Moderator group **")
+
+@task
+def halt(ctx):
+    run_as_cmd = run_as(OS_NAME)
+    base_cmd = "docker-compose stop"
+    cmd = get_cmd(run_as_cmd, base_cmd)
+    print ("** Stopping containers **")
+    ctx.run(cmd)
+    print ("** Done! Stopped containers **")
+
+@task(halt)
+def remove(ctx):
+    run_as_cmd = run_as(OS_NAME)
+    base_cmd = "docker-compose rm --force"
+    cmd = get_cmd(run_as_cmd, base_cmd)
+    print ("** Removing containers **")
+    ctx.run(cmd)
+    print ("** Done! Removed containers **")
