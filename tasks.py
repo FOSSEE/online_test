@@ -154,9 +154,15 @@ def stop(ctx, container=TARGET_CONTAINER_NAME, hide=True):
     else:
         print("** Docker container <{0}> not found **".format(container))
 
+# Docker compose based deployment
 @task
 def build(ctx):
     run_as_cmd = run_as(OS_NAME)
+
+    copy_tree(
+        os.path.join(SCRIPT_DIR, 'requirements'),
+        os.path.join(SCRIPT_DIR, 'docker', 'Files')
+    )
 
     base_build_cmd = "docker-compose build --no-cache"
     cmd = get_cmd(run_as_cmd, base_build_cmd)

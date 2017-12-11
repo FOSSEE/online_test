@@ -1,6 +1,0 @@
-pytest
-python-decouple
-six
-requests
-tornado
-psutil
