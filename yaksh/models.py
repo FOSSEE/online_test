@@ -1705,7 +1705,7 @@ class AnswerPaper(models.Model):
 
             elif question.type == 'code' or question.type == "upload":
                 user_dir = self.user.profile.get_user_dir()
-                url = '{0}:{1}'.format(SERVER_HOST_NAME, SERVER_POOL_PORT)
+                url = '{0}:{1}'.format(SERVER_HOST_NAME, server_port)
                 submit(url, uid, json_data, user_dir)
                 result = {'uid': uid, 'status': 'running'}
         return result
