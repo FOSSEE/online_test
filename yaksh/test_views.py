@@ -1171,6 +1171,20 @@ class TestAddQuiz(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, '/exam/manage/courses/all_quizzes/')
 
+    def test_show_all_quizzes(self):
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:show_all_quizzes'),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['type'], "quiz")
+        self.assertEqual(response.context['quizzes'][0], self.quiz)
+        self.assertTemplateUsed(response, "yaksh/courses.html")
+
 
 class TestAddTeacher(TestCase):
     def setUp(self):
@@ -1524,6 +1538,14 @@ class TestCourses(TestCase):
             last_name='student_last_name',
             email='demo_student@test.com'
         )
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Aeronautical',
+            position='Moderator',
+            timezone='UTC'
+        )
 
         self.teacher_plaintext_pass = 'teacher'
         self.teacher = User.objects.create_user(
@@ -1662,6 +1684,54 @@ class TestCourses(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/design_course_session.html')
         self.assertFalse(self.user1_course.learning_module.all().exists())
+
+    def test_get_course_modules(self):
+        """ Test to check if student gets course modules """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:course_modules',
+                    kwargs={"course_id": self.user1_course.id}),
+            follow=True
+        )
+        # Student is not allowed if not enrolled in the course
+        err_msg = "You are not enrolled for this course!"
+        self.assertEqual(response.context['msg'], err_msg)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
+
+        # enroll student in the course
+        self.user1_course.students.add(self.student)
+        # deactivate the course and check if student is able to view course
+        self.user1_course.active = False
+        self.user1_course.save()
+        response = self.client.get(
+            reverse('yaksh:course_modules',
+                    kwargs={"course_id": self.user1_course.id}),
+            follow=True
+        )
+        err_msg = "{0} is either expired or not active".format(
+            self.user1_course.name)
+        self.assertEqual(response.context['msg'], err_msg)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
+
+        # activate the course and check if students gets course modules
+        self.user1_course.active = True
+        self.user1_course.save()
+        self.user1_course.learning_module.add(self.learning_module)
+        response = self.client.get(
+            reverse('yaksh:course_modules',
+                    kwargs={"course_id": self.user1_course.id}),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/course_modules.html")
+        self.assertEqual(response.context['course'], self.user1_course)
+        self.assertEqual(response.context['learning_modules'][0],
+                         self.learning_module)
 
 
 class TestAddCourse(TestCase):
@@ -4624,3 +4694,16 @@ class TestLessons(TestCase):
         self.assertEqual(response.context["type"], "lesson")
         self.assertEqual(response.context["lessons"][0], self.lesson)
 
+    def test_preview_lesson_description(self):
+        """ Test preview lesson description converted from md to html"""
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
+        lesson = json.dumps({'description': self.lesson.description})
+        response = self.client.post(
+            reverse('yaksh:preview_html_text'),
+            data=lesson, content_type="application/json"
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['data'], '<p>test description</p>')

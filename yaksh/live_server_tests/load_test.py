@@ -1,17 +1,10 @@
-import os
-import signal
-import subprocess
-from datetime import datetime
-import pytz
 from threading import Thread
-from selenium.webdriver.firefox.webdriver import WebDriver
-
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 
-from yaksh.models import User, Profile, Question, Quiz, Course, QuestionPaper, TestCase
+# Local imports
+from yaksh.models import User, Profile, Course
 from yaksh.code_server import ServerPool
 from yaksh import settings
-
 from .selenium_test import SeleniumTest
 
 
@@ -33,20 +26,24 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
         cls.code_server_thread = t = Thread(target=code_server_pool.run)
         t.start()
 
-        cls.demo_student = User.objects.create_user(username='demo_student',
-           password='demo_student',
-           email='demo_student@test.com'
+        cls.demo_student = User.objects.create_user(
+            username='demo_student',
+            password='demo_student',
+            email='demo_student@test.com'
         )
-        cls.demo_student_profile = Profile.objects.create(user=cls.demo_student,
+        cls.demo_student_profile = Profile.objects.create(
+            user=cls.demo_student,
             roll_number=3, institute='IIT',
             department='Chemical', position='Student'
         )
 
-        cls.demo_mod = User.objects.create_user(username='demo_mod',
-           password='demo_mod',
-           email='demo_mod@test.com'
+        cls.demo_mod = User.objects.create_user(
+            username='demo_mod',
+            password='demo_mod',
+            email='demo_mod@test.com'
         )
-        cls.demo_mod_profile = Profile.objects.create(user=cls.demo_mod,
+        cls.demo_mod_profile = Profile.objects.create(
+            user=cls.demo_mod,
             roll_number=0, institute='IIT',
             department='Chemical', position='Moderator'
         )
@@ -73,7 +70,11 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
     def test_load(self):
         url = '%s%s' % (self.live_server_url, '/exam/login/')
         quiz_name = "Yaksh Demo quiz"
-        module_name = "demo module"
+        module_name = "Demo Module"
+        course_name = "Yaksh Demo course"
         selenium_test = SeleniumTest(url=url, quiz_name=quiz_name,
-                                     module_name=module_name)
-        selenium_test.run_load_test(url=url, username='demo_student', password='demo_student')
+                                     module_name=module_name,
+                                     course_name=course_name)
+        selenium_test.run_load_test(
+            url=url, username='demo_student', password='demo_student'
+        )
