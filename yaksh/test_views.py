@@ -1574,6 +1574,7 @@ class TestCourses(TestCase):
 
         self.user2_course = Course.objects.create(name="Java Course",
             enrollment="Enroll Request", creator=self.user2)
+        self.user2_course.learning_module.add(self.learning_module)
 
     def tearDown(self):
         self.client.logout()
@@ -1732,6 +1733,61 @@ class TestCourses(TestCase):
         self.assertEqual(response.context['course'], self.user1_course)
         self.assertEqual(response.context['learning_modules'][0],
                          self.learning_module)
+
+    def test_duplicate_course(self):
+        """ Test To clone/duplicate course """
+
+        # Student Login
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        response = self.client.get(
+            reverse('yaksh:duplicate_course',
+                    kwargs={"course_id": self.user2_course.id}),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 404)
+
+        # Teacher Login
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
+
+        # Denies teacher not added in the course
+        response = self.client.get(
+            reverse('yaksh:duplicate_course',
+                    kwargs={"course_id": self.user2_course.id}),
+            follow=True
+        )
+        err_msg = "You do not have permissions"
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "yaksh/complete.html")
+        self.assertIn(err_msg, response.context['message'])
+
+        # Moderator/Course creator login
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+
+        # Allows creator to duplicate the course
+        response = self.client.get(
+            reverse('yaksh:duplicate_course',
+                    kwargs={"course_id": self.user2_course.id}),
+            follow=True
+        )
+
+        self.assertEqual(response.status_code, 200)
+        courses = Course.objects.filter(
+            creator=self.user2).order_by("id")
+        self.assertEqual(courses.count(), 2)
+        self.assertEqual(courses.last().creator, self.user2)
+        self.assertEqual(courses.last().name, "Copy Of Java Course")
+        self.assertEqual(courses.last().get_learning_modules()[0].id,
+                         self.user2_course.get_learning_modules()[0].id)
 
 
 class TestAddCourse(TestCase):
@@ -2297,6 +2353,27 @@ class TestCourseDetail(TestCase):
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.context['course'], self.user1_course)
         self.assertEqual(get_response.context['state'], 'mail')
+
+    def test_download_users_template(self):
+        """ Test to check download users template """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        # Denies student to download users upload template
+        response = self.client.get(reverse('yaksh:download_sample_csv'))
+        self.assertEqual(response.status_code, 404)
+
+        # Moderator Login
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:download_sample_csv'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-Disposition'),
+                         'attachment; filename="sample_user_upload"')
 
 
 class TestEnrollRequest(TestCase):
@@ -3582,6 +3659,27 @@ class TestShowQuestions(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/ajax_question_filter.html')
         self.assertEqual(response.context['questions'][0], self.question1)
+
+    def test_download_question_yaml_template(self):
+        """ Test to check download question yaml template """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        # Denies student to download question yaml template
+        response = self.client.get(reverse('yaksh:download_yaml_template'))
+        self.assertEqual(response.status_code, 404)
+
+        # Moderator Login
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:download_yaml_template'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-Disposition'),
+                         'attachment; filename="questions_dump.yaml"')
 
 
 class TestShowStatistics(TestCase):

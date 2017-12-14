@@ -2121,8 +2121,9 @@ def download_sample_csv(request):
                                  "sample_user_upload.csv")
     with open(csv_file_path, 'rb') as csv_file:
         response = HttpResponse(csv_file.read(), content_type='text/csv')
-        response['Content-Disposition'] = 'attachment;\
-                                          filename="sample_user_upload"'
+        response['Content-Disposition'] = (
+            'attachment; filename="sample_user_upload"'
+        )
         return response
 
 
@@ -2142,6 +2143,7 @@ def duplicate_course(request, course_id):
         return complete(request, msg, attempt_num=None, questionpaper_id=None)
     return my_redirect('/exam/manage/courses/')
 
+
 @login_required
 @email_verified
 def download_yaml_template(request):
@@ -2154,9 +2156,9 @@ def download_yaml_template(request):
     yaml_file = zipfile.ZipFile(template_path, 'r')
     template_yaml = yaml_file.open('questions_dump.yaml', 'r')
     response = HttpResponse(template_yaml, content_type='text/yaml')
-    response['Content-Disposition'] = 'attachment;\
-                                      filename="questions_dump.yaml"'
-    
+    response['Content-Disposition'] = (
+        'attachment; filename="questions_dump.yaml"'
+    )
     return response
 
 
