@@ -430,19 +430,15 @@ class LearningModule(models.Model):
         return added_quiz_lessons
 
     def toggle_check_prerequisite(self):
-        if self.check_prerequisite:
-            self.check_prerequisite = False
-        else:
-            self.check_prerequisite = True
+        self.check_prerequisite = not self.check_prerequisite
 
     def get_next_unit(self, current_unit_id):
         ordered_units = self.learning_unit.order_by("order")
         ordered_units_ids = list(ordered_units.values_list("id", flat=True))
         current_unit_index = ordered_units_ids.index(current_unit_id)
-        if current_unit_index + 1 == len(ordered_units_ids):
+        next_index = current_unit_index + 1
+        if next_index == len(ordered_units_ids):
             next_index = 0
-        else:
-            next_index = current_unit_index + 1
         return ordered_units.get(id=ordered_units_ids[next_index])
 
     def get_status(self, user, course):
@@ -649,10 +645,10 @@ class Course(models.Model):
 
     def get_learning_units(self):
         learning_modules = self.learning_module.all()
-        learning_unit_list = []
+        learning_units = []
         for module in learning_modules:
-            learning_unit_list.extend(module.get_learning_units())
-        return learning_unit_list
+            learning_units.extend(module.get_learning_units())
+        return learning_units
 
     def remove_trial_modules(self):
         learning_modules = self.learning_module.all()
