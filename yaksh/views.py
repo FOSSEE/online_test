@@ -292,9 +292,9 @@ def add_quiz(request, quiz_id=None, course_id=None):
     ci = RequestContext(request)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this course !')
-    if quiz_id and not course_id:
+    if quiz_id:
         quiz = get_object_or_404(Quiz, pk=quiz_id)
-        if quiz.creator != user:
+        if quiz.creator != user and not course_id:
             raise Http404('This quiz does not belong to you')
     else:
         quiz = None
@@ -464,9 +464,12 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
         )
     # allowed to start
     if not quest_paper.can_attempt_now(user, course_id):
+        msg = "You cannot attempt {0} quiz more than {1} times".format(
+            quest_paper.quiz.description, quest_paper.quiz.attempts_allowed)
         if is_moderator(user):
-            return redirect("/exam/manage")
-        return redirect("/exam/quizzes")
+            return prof_manage(request, msg=msg)
+        return view_module(request, module_id=module_id, course_id=course_id,
+                           msg=msg)
     if not last_attempt:
         attempt_number = 1
     else:
@@ -480,7 +483,7 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
             'module': learning_module,
         }
         if is_moderator(user):
-            context["user"] = "moderator"
+            context["status"] = "moderator"
         return my_render_to_response('yaksh/intro.html', context,
                                      context_instance=ci)
     else:
@@ -2234,7 +2237,7 @@ def show_lesson(request, lesson_id, module_id, course_id):
     learning_units = learn_module.get_learning_units()
     if learn_unit.has_prerequisite():
         if not learn_unit.is_prerequisite_passed(user, learn_module, course):
-            msg = "You have not passed the prerequisite"
+            msg = "You have not completed the prerequisite"
             return view_module(request, learn_module.id, course_id, msg=msg)
     context = {'lesson': learn_unit.lesson, 'user': user,
                'course': course, 'state': "lesson",
@@ -2399,6 +2402,7 @@ def preview_html_text(request):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     response_kwargs = {}
+    response_kwargs['content_type'] = 'application/json'
     request_data = json.loads(request.body.decode("utf-8"))
     html_text = get_html_text(request_data['description'])
     return HttpResponse(json.dumps({"data": html_text}), **response_kwargs)
@@ -2519,12 +2523,12 @@ def view_module(request, module_id, course_id, msg=None):
     context = {}
     if not course.active or not course.is_active_enrollment():
         msg = "{0} is either expired or not active".format(course.name)
-        return quizlist_user(request, msg=msg)
+        return course_modules(request, course_id, msg)
     learning_module = course.learning_module.get(id=module_id)
     if learning_module.has_prerequisite():
         if not learning_module.is_prerequisite_passed(user, course):
             msg = "You have not completed the previous learning module"
-            return quizlist_user(request, msg=msg)
+            return course_modules(request, course_id, msg)
     learning_units = learning_module.get_learning_units()
     context['learning_units'] = learning_units
     context['learning_module'] = learning_module
@@ -2534,3 +2538,21 @@ def view_module(request, module_id, course_id, msg=None):
     context['state'] = "module"
     context['msg'] = msg
     return my_render_to_response('yaksh/show_video.html', context)
+
+
+@login_required
+@email_verified
+def course_modules(request, course_id, msg=None):
+    user = request.user
+    course = Course.objects.get(id=course_id)
+    if user not in course.students.all():
+        msg = 'You are not enrolled for this course!'
+        return quizlist_user(request, msg=msg)
+
+    if not course.active or not course.is_active_enrollment():
+        msg = "{0} is either expired or not active".format(course.name)
+        return quizlist_user(request, msg=msg)
+    learning_modules = course.get_learning_modules()
+    context = {"course": course, "learning_modules": learning_modules,
+               "user": user, "msg": msg}
+    return my_render_to_response('yaksh/course_modules.html', context)
