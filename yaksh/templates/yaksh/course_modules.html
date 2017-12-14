@@ -1,0 +1,112 @@
+{% extends "user.html" %}
+{% load custom_filters %}
+{% block title %} Course Modules {% endblock %}
+{% block pagetitle %} Curriculum for {{course}} {% endblock %}
+{% block script %}
+<script>
+    function view_unit(unit){
+        $("#"+unit+"_down").toggle();
+        $("#"+unit+"_up").toggle();
+    }
+
+</script>
+{% endblock %}
+{% block main %}
+{% if msg %}
+    <div class="alert alert-warning" role="alert">
+        <center>{{ msg }}</center>
+    </div>
+{% endif %}
+{% if learning_modules %}
+    {% for module in learning_modules %}
+        <div class="row well">
+            <table class="table">
+                <tr>
+                <td>
+                <a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}">
+                {{module.name|title}}</a>
+                </td>
+                <td>
+                <span class="glyphicon glyphicon-chevron-down" id="learning_units{{module.id}}{{course.id}}_down">
+                </span>
+                <span class="glyphicon glyphicon-chevron-up" id="learning_units{{module.id}}{{course.id}}_up" style="display: none;"></span>
+                <a data-toggle="collapse" data-target="#learning_units{{module.id}}{{course.id}}" onclick="view_unit('learning_units{{module.id}}{{course.id}}');">
+                View Lessons/Quizzes</a>
+                </td>
+                <td>
+                {% get_module_status user module course as module_status %}
+                Status:
+                {% if module_status == "completed" %}
+                <span class="label label-success">
+                    {{module_status|title}}
+                </span>
+                {% elif module_status == "inprogress" %}
+                <span class="label label-info">
+                    {{module_status|title}}
+                </span>
+                {% else %}
+                <span class="label label-warning">
+                    {{module_status|title}}
+                </span>
+                {% endif %}
+                </td>
+                </tr>
+            </table>
+        </div>
+        <div id="learning_units{{module.id}}{{course.id}}" class="collapse">
+        <table class="table">
+            <tr>
+            <th>Lesson/Quiz</th>
+            <th>Status</th>
+            <th>Type</th>
+            <th>View AnswerPaper</th>
+            </tr>
+            {% for unit in module.get_learning_units %}
+            <tr>
+            <ul class="inputs-list">
+                <td>
+                {% if unit.learning_type == "quiz" %}
+                    {{unit.quiz.description}}
+                {% else %}
+                    {{unit.lesson.name}}
+                {% endif %}
+                </td>
+                <td>
+                {% get_unit_status course module unit user as status %}
+                {% if status == "completed" %}
+                    <span class="label label-success">{{status|title}}
+                    </span>
+                {% elif status == "inprogress" %}
+                    <span class="label label-info">{{status|title}}
+                    </span>
+                {% else %}
+                    <span class="label label-warning">{{status|title}}
+                    </span>
+                {% endif %}
+                </td>
+                <td>
+                    {{unit.learning_type|title}}
+                </td>
+                <td>
+                {% if unit.learning_type == "quiz" %}
+                    {% if unit.quiz.view_answerpaper %}
+                        <a href="{{ URL_ROOT }}/exam/view_answerpaper/{{ unit.quiz.questionpaper_set.get.id }}/{{course.id}}"><i class="fa fa-eye" aria-hidden="true"></i> Can View </a>
+                    {% else %}
+                        <a>
+                        <i class="fa fa-eye-slash" aria-hidden="true">
+                        </i> Cannot view now </a>
+                    {% endif %}
+                {% else %}
+                    ------
+                {% endif %}
+                </td>
+            </ul>
+            </tr>
+            {% endfor %}
+        </table>
+        </div>
+    {% endfor %}
+{% else %}
+    <h3> No lectures found </h3>
+{% endif %}
+{% endblock %}

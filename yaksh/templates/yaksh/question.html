@@ -106,7 +106,7 @@ module_id = "{{module.id}}"
 {% get_unit_status course module unit user as status %}
 
 {% if unit.quiz.id == paper.question_paper.quiz.id %}
-    <span class="glyphicon glyphicon-pencil" data-toggle="tooltip" title="Currently on"></span>
+    <span class=" glyphicon glyphicon-edit" data-toggle="tooltip" title="Currently on"></span>
 {% endif %}
 
 {% if unit.learning_type == "quiz" %}

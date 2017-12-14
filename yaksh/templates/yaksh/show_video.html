@@ -1,9 +1,9 @@
 {% extends "user.html" %}
 {% load custom_filters %}
 
-{% block title %} {{ learning_module.name }} {% endblock %}
+{% block title %} {{ learning_module.name|title }} {% endblock %}
 
-{% block pagetitle %} {{ learning_module.name }} {% endblock %}
+{% block pagetitle %} {{ learning_module.name|title }} {% endblock %}
 
 {% block usersidebar %}
 <br><br><br>
@@ -15,7 +15,7 @@
 {% get_unit_status course learning_module unit user as status %}
 
 {% if unit.id == current_unit.id %}
-    <span class="glyphicon glyphicon-pencil" data-toggle="tooltip" title="Currently on">
+    <span class="glyphicon glyphicon-edit" data-toggle="tooltip" title="Currently on">
     </span>
 {% endif %}
 {% if unit.learning_type == "quiz" %}
@@ -54,7 +54,7 @@
     </div>
 </div>
 <div style="text-align: center;">
-    <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{first_unit.id}}/1" class="btn btn-info">Next Unit
+    <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{first_unit.id}}/1" class="btn btn-info">First Unit
         <span class="glyphicon glyphicon-chevron-right">
         </span>
     </a>

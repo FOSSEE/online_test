@@ -20,12 +20,22 @@
               <br/>
               </div>
          {% endif %}
-          <p> Welcome <strong>{{user.first_name.title}} {{user.last_name.title}}</strong>, to the programming quiz! </p>
+          <p> Welcome <strong>{{user.get_full_name|title}}</strong>, to the programming quiz! </p>
           {{ questionpaper.quiz.instructions|safe }}
         <div class="row">
             <div class="col-md-6">
               <center>
-                <a href="{{URL_ROOT}}/exam" class="btn btn-primary" name="home">Home</a>
+                {% if status == "moderator" %}
+                    <a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}" class="btn btn-primary" name="home">
+                    <span class=" glyphicon glyphicon-arrow-left">
+                    </span>
+                    Go Back</a>
+                {% else %}
+                    <a href="{{URL_ROOT}}/exam" class="btn btn-primary" name="home">
+                    <span class=" glyphicon glyphicon-arrow-left">
+                    </span>
+                    Go Back</a>
+                {% endif %}
               </center>
             </div>
             <div class="col-md-6">

@@ -1,5 +1,4 @@
 {% extends "user.html" %}
-{% load custom_filters %}
 {% block title %} Student Dashboard {% endblock %}
 {% block pagetitle %} {{ title }} {% endblock %}
 {% block main %}
@@ -33,7 +32,11 @@ No Courses to display
     <div class="col-md-12">
         <div class="row">
             <div class="col-md-4">
-                <h4><b><u> {{ course.name }} by {{ course.creator.get_full_name }}</u></b></h4>
+                <h4><b>
+                    <a href="{{URL_ROOT}}/exam/course_modules/{{course.id}}">
+                    {{ course.name }} by {{ course.creator.get_full_name }}
+                    </a>
+                </b></h4>
             </div>
             <div class="col-md-4">
                 {% if not course.active %}
@@ -54,76 +57,6 @@ No Courses to display
                     {% endif %}
                 {% endif %}
             </div>
-        </div>
-
-        <div class="row">
-        {% if user in course.students.all and course.get_learning_modules %}
-            <table class="table table-bordered">
-                <th>Learning Modules</th>
-                <th>Learning Units</th>
-                <th>Status</th>
-                {% for module in course.get_learning_modules %}
-                    <tr>
-                        <td>
-                            <a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}">
-                            {{module.name}}</a>
-                        </td>
-                        <td>
-                        <a data-toggle="collapse" data-target="#learning_units{{module.id}}{{course.id}}">
-                            <span class="glyphicon glyphicon-chevron-down">
-                            View Learning Units</span></a>
-                            <div id="learning_units{{module.id}}{{course.id}}" class="collapse">
-                            <table class="table table-bordered">
-                            <th>Lesson/quiz</th>
-                            <th>status</th>
-                            <th>View Answerpaper</th>
-                            {% for unit in module.get_learning_units %}
-                                <tr>
-                                <ul class="inputs-list">
-                                    <td>
-                                    {% if unit.learning_type == "quiz" %}
-                                        {{unit.quiz.description}}
-                                    {% else %}
-                                        {{unit.lesson.name}}
-                                    {% endif %}
-                                    </td>
-                                    <td>
-                                    {% get_unit_status course module unit user as status %}
-                                    {% if status == "completed" %}
-                                        <span class="label label-info">{{status|title}}</span>
-                                    {% else %}
-                                        <span class="label label-warning">{{status|title}}</span>
-                                    {% endif %}
-                                    </td>
-                                    <td>
-                                    {% if unit.learning_type == "quiz" %}
-                                        {% if unit.quiz.view_answerpaper %}
-                                            <a href="{{ URL_ROOT }}/exam/view_answerpaper/{{ unit.quiz.questionpaper_set.get.id }}/{{course.id}}"><i class="fa fa-eye" aria-hidden="true"></i> Can View </a>
-                                        {% else %}
-                                            <a><i class="fa fa-eye-slash" aria-hidden="true"></i> Cannot view now </a>
-                                        {% endif %}
-                                    {% else %}
-                                        ------
-                                    {% endif %}
-                                    </td>
-                                </ul>
-                                </tr>
-                            {% endfor %}
-                            </table>
-                            </div>
-                        </td>
-                        <td>
-                            {% get_module_status user module course as module_status %}
-                            {% if module_status == "completed" %}
-                            <span class="label label-info">{{module_status|title}}</span>
-                            {% else %}
-                            <span class="label label-warning">{{module_status|title}}</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </table>
-        {% endif %}
         </div>
 
         {% if course.instructions %}
