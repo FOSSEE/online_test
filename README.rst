@@ -1,7 +1,7 @@
 Yaksh
 =====
 
-|Build Status| |Documentation Status| |Version Status|
+|Build Status| |Documentation Status| |Version Status| |Coverage Status|
 
 To get an overview of the Yaksh interface please refer to the user documentation at `Yaksh Docs <http://yaksh.readthedocs.io>`_
 
@@ -164,3 +164,5 @@ Copyright (c) 2011-2017 `FOSSEE <https://fossee.in>`_
    :target: http://yaksh.readthedocs.io/en/latest/?badge=latest
 .. |Version Status| image:: https://badge.fury.io/gh/fossee%2Fonline_test.svg
     :target: https://badge.fury.io/gh/fossee%2Fonline_test
+.. |Coverage Status| image:: https://codecov.io/gh/fossee/online_test/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/fossee/online_test
