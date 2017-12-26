@@ -27,9 +27,9 @@ def remove_check_file(path):
         os.remove(path)
 
 def run_as(os_name):
-    if os_name.startswith('linux') or os_name == 'darwin':
+    if os_name.startswith('linux') or os_name == 'darwin' or os_name.startswith('freebsd'):
         return 'sudo'
-    elif os_name.startswith('Win32'):
+    else: # For os_name = 'Win32'
         return None
 
 def get_cmd(run_as_cmd, base_cmd):
@@ -225,7 +225,7 @@ def createsuperuser(ctx):
     ctx.run(cmd)
     print ("** Done! Created Superuser **")
 
-    base_mod_cmd = "docker exec -it yaksh_django python3 manage.py add_group"
+    base_mod_cmd = "docker exec -i yaksh_django python3 manage.py add_group"
     cmd = get_cmd(run_as_cmd, base_mod_cmd)
     print ("** Creating Moderator group **")
     ctx.run(cmd)
