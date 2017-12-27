@@ -6,6 +6,12 @@ environment. If you wish to take Yaksh on a trial run, here is a
 [Quickstart Guide]
 (https://github.com/FOSSEE/online\_test/blob/master/README.md)
 
+###################
+Deploying Locally
+###################
+
+Follow these steps to deploy locally on the server. For deployment instructions using Docker see :ref:`deploying-multiple-dockers`.
+
 Pre-Requisite
 ^^^^^^^^^^^^^
 
@@ -15,9 +21,6 @@ Pre-Requisite
 3. Install MySql Server
 4. Install Python MySql support
 5. Install Apache Server for deployment
-
-Configure MySql server
-^^^^^^^^^^^^^^^^^^^^^^
 
 1. Create a database named ``yaksh`` by following the steps below
 
@@ -153,7 +156,7 @@ To install this app follow the steps below:
    that this will likely spawn multiple processes as "nobody" depending
    on the number of server ports specified.
 
-   You can also use a Dockerized code server (see below)
+   You can also use a Dockerized code server, see :ref:`dockerized-code-server`.
 
 4. Now, Run:
 
@@ -179,6 +182,8 @@ To install this app follow the steps below:
    and user data interactively. You could also "grade" the papers
    manually if needed.
 
+.. _dockerized-code-server:
+
 Using Dockerized Code Server
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -199,11 +204,17 @@ Using Dockerized Code Server
    code\_server.py within it), it will also bind the ports of the host
    with those of the container
 
-Deploying Multiple Dockers
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _deploying-multiple-dockers:
 
-1. Install
-   `Docker <https://docs.docker.com/engine/installation/>`__
+######################################
+Deploying Multiple Dockers
+######################################
+
+Follow these steps to deploy and run the Django Server, MySQL instance and Code Server in seperate Docker instances.
+
+1. Install `Docker <https://docs.docker.com/engine/installation/>`__
+
+2. Install `Docker Compose <https://docs.docker.com/compose/install/>`__
 
 2. Go to the directory where the project is located at:
    
@@ -244,8 +255,11 @@ Deploying Multiple Dockers
        invoke clean
 
 
+.. _add-commands:
+
+######################################
 Additional commands available
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+######################################
 
 We provide several convenient commands for you to use:
 
