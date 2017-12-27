@@ -173,6 +173,12 @@ class UserLoginForm(forms.Form):
         return user
 
 
+class ExerciseForm(forms.ModelForm):
+    class Meta:
+        model = Quiz
+        fields = ['description']
+
+
 class QuizForm(forms.ModelForm):
     """Creates a form to add or edit a Quiz.
     It has the related fields and functions required."""
@@ -209,7 +215,7 @@ class QuizForm(forms.ModelForm):
 
     class Meta:
         model = Quiz
-        exclude = ["is_trial", "creator"]
+        exclude = ["is_trial", "creator", "is_exercise"]
 
 
 class QuestionForm(forms.ModelForm):

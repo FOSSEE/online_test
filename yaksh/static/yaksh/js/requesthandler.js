@@ -36,6 +36,10 @@ function unlock_screen() {
     document.getElementById("ontop").style.display = "none";
 }
 
+function show_skip() {
+    document.getElementById("skip_ex").style.visibility = "visible";
+}
+
 function get_result(uid){
     var url = "/exam/get_result/" + uid + "/" + course_id + "/" + module_id + "/";
     ajax_check_code(url, "GET", "html", null, uid)
@@ -104,6 +108,9 @@ function ajax_check_code(url, method_type, data_type, data, uid) {
 var global_editor = {};
 
 $(document).ready(function(){
+  if(is_exercise == "True" && can_skip == "False"){
+      setTimeout(function() {show_skip();}, delay_time*1000);
+  }
   // Codemirror object, language modes and initial content
   // Get the textarea node
   var textarea_node = document.querySelector('#answer');

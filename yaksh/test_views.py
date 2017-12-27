@@ -1042,11 +1042,19 @@ class TestAddQuiz(TestCase):
             creator=self.user
         )
 
+        self.exercise = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            attempts_allowed=-1, time_between_attempts=0,
+            is_exercise=True, description='demo exercise', creator=self.user
+        )
+
     def tearDown(self):
         self.client.logout()
         self.user.delete()
         self.student.delete()
         self.quiz.delete()
+        self.exercise.delete()
         self.course.delete()
 
     def test_add_quiz_denies_anonymous(self):
@@ -1168,6 +1176,98 @@ class TestAddQuiz(TestCase):
         self.assertEqual(new_quiz.description, 'new demo quiz')
         self.assertEqual(new_quiz.pass_criteria, 50)
 
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/exam/manage/courses/all_quizzes/')
+
+    def test_add_exercise_denies_anonymous(self):
+        """
+        If not logged in redirect to login page
+        """
+        response = self.client.get(reverse('yaksh:add_exercise'),
+                                   follow=True
+                                   )
+        redirect_destination = '/exam/login/?next=/exam/manage/add_exercise/'
+        self.assertRedirects(response, redirect_destination)
+
+    def test_add_exercise_denies_non_moderator(self):
+        """
+        If not moderator in redirect to login page
+        """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        course_id = self.course.id
+        response = self.client.get(reverse('yaksh:add_exercise'),
+                                   follow=True
+                                   )
+        self.assertEqual(response.status_code, 404)
+
+    def test_add_exercise_get(self):
+        """
+        GET request to add exercise should display add exercise form
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:add_exercise')
+                                   )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/add_exercise.html')
+        self.assertIsNotNone(response.context['form'])
+
+    def test_add_exercise_post_existing_exercise(self):
+        """
+        POST request to edit exercise
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        tzone = pytz.timezone('UTC')
+        response = self.client.post(reverse('yaksh:add_exercise',
+            kwargs={'quiz_id': self.exercise.id}),
+            data={
+                'description': 'updated demo exercise',
+            }
+        )
+
+        updated_exercise = Quiz.objects.get(id=self.exercise.id)
+        self.assertEqual(updated_exercise.active, True)
+        self.assertEqual(updated_exercise.duration, 1000)
+        self.assertEqual(updated_exercise.attempts_allowed, -1)
+        self.assertEqual(updated_exercise.time_between_attempts, 0)
+        self.assertEqual(updated_exercise.description, 'updated demo exercise')
+        self.assertEqual(updated_exercise.pass_criteria, 0)
+        self.assertTrue(updated_exercise.is_exercise)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/exam/manage/courses/all_quizzes/')
+
+    def test_add_exercise_post_new_exercise(self):
+        """
+        POST request to add new exercise
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        tzone = pytz.timezone('UTC')
+        response = self.client.post(reverse('yaksh:add_exercise'),
+            data={
+                'description': "Demo Exercise",
+            }
+        )
+        quiz_list = Quiz.objects.all().order_by('-id')
+        new_exercise = quiz_list[0]
+        self.assertEqual(new_exercise.active, True)
+        self.assertEqual(new_exercise.duration, 1000)
+        self.assertEqual(new_exercise.attempts_allowed, -1)
+        self.assertEqual(new_exercise.time_between_attempts, 0)
+        self.assertEqual(new_exercise.description, 'Demo Exercise')
+        self.assertEqual(new_exercise.pass_criteria, 0)
+        self.assertTrue(new_exercise.is_exercise)
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, '/exam/manage/courses/all_quizzes/')
 

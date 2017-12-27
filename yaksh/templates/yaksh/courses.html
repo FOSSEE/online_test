@@ -290,7 +290,8 @@
 <div id="all_quizzes" >
 <div class="col-md-offset-2 main">
 {% if type == "quiz" %}
-    <a href="{{URL_ROOT}}/exam/manage/addquiz/" class="btn btn-primary">Add new Quiz</a>
+    <a href="{{URL_ROOT}}/exam/manage/addquiz/" class="btn btn-primary">Add New Quiz</a>
+    <a href="{{URL_ROOT}}/exam/manage/add_exercise/" class="btn btn-primary">Add New Exercise</a>
     {% if not quizzes %}
         <center><h4> No new Quiz Added</h4></center>
         <br><br>
@@ -308,7 +309,11 @@
         <td>{{forloop.counter}}</td>
         <td width="30%">
             <ul class="list-group">
+            {% if quiz.is_exercise %}
+                <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{quiz.id}}/">{{ quiz.description }}</a>
+            {% else %}
             <a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}</a>
+            {% endif %}
             {% if quiz.active %}
                 <span class="label label-success">Active</span>
             {% else %}

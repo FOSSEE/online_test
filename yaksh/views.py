@@ -46,7 +46,7 @@ from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
     RandomQuestionForm, QuestionFilterForm, CourseForm, ProfileForm,
     UploadFileForm, get_object_form, FileForm, QuestionPaperForm, LessonForm,
-    LessonFileForm, LearningModuleForm
+    LessonFileForm, LearningModuleForm, ExerciseForm
 )
 from .settings import URL_ROOT
 from .file_utils import extract_files, is_csv
@@ -327,6 +327,56 @@ def add_quiz(request, quiz_id=None, course_id=None):
 
 
 @login_required
+@email_verified
+def add_exercise(request, quiz_id=None, course_id=None):
+    user = request.user
+    ci = RequestContext(request)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this course !')
+    if quiz_id:
+        quiz = get_object_or_404(Quiz, pk=quiz_id)
+        if quiz.creator != user and not course_id:
+            raise Http404('This quiz does not belong to you')
+    else:
+        quiz = None
+    if course_id:
+        course = get_object_or_404(Course, pk=course_id)
+        if not course.is_creator(user) and not course.is_teacher(user):
+            raise Http404('This quiz does not belong to you')
+
+    context = {}
+    if request.method == "POST":
+        form = ExerciseForm(request.POST, instance=quiz)
+        if form.is_valid():
+            if quiz is None:
+                form.instance.creator = user
+            quiz = form.save(commit=False)
+            quiz.is_exercise = True
+            quiz.time_between_attempts = 0
+            quiz.weightage = 0
+            quiz.allow_skip = False
+            quiz.attempts_allowed = -1
+            quiz.duration = 1000
+            quiz.pass_criteria = 0
+            quiz.save()
+
+            if not course_id:
+                return my_redirect("/exam/manage/courses/all_quizzes/")
+            else:
+                return my_redirect("/exam/manage/courses/")
+
+    else:
+        quiz = Quiz.objects.get(id=quiz_id) if quiz_id else None
+        form = ExerciseForm(instance=quiz)
+        context["quiz_id"] = quiz_id
+        context["course_id"] = course_id
+    context["form"] = form
+    return my_render_to_response(
+        'yaksh/add_exercise.html', context, context_instance=ci
+    )
+
+
+@login_required
 @has_profile
 @email_verified
 def prof_manage(request, msg=None):
@@ -460,7 +510,8 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     if last_attempt and last_attempt.is_attempt_inprogress():
         return show_question(
             request, last_attempt.current_question(), last_attempt,
-            course_id=course_id, module_id=module_id
+            course_id=course_id, module_id=module_id,
+            previous_question=last_attempt.current_question()
         )
     # allowed to start
     if not quest_paper.can_attempt_now(user, course_id):
@@ -474,7 +525,7 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
         attempt_number = 1
     else:
         attempt_number = last_attempt.attempt_number + 1
-    if attempt_num is None:
+    if attempt_num is None and not quest_paper.quiz.is_exercise:
         context = {
             'user': user,
             'questionpaper': quest_paper,
@@ -496,7 +547,7 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
         if new_paper.status ==  'inprogress':
             return show_question(request, new_paper.current_question(),
                                  new_paper, course_id=course_id,
-                                 module_id=module_id
+                                 module_id=module_id, previous_question=None
                                  )
         else:
             msg = 'You have already finished the quiz!'
@@ -505,27 +556,42 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
 @login_required
 @email_verified
 def show_question(request, question, paper, error_message=None, notification=None,
-                  course_id=None, module_id=None):
+                  course_id=None, module_id=None, previous_question=None):
     """Show a question if possible."""
     user = request.user
+    quiz = paper.question_paper.quiz
+    quiz_type = 'Exam'
+    can_skip = False
+    if previous_question:
+        delay_time = paper.time_left_on_question(previous_question)
+    else:
+        delay_time = paper.time_left_on_question(question)
+
+    if previous_question and quiz.is_exercise:
+        if delay_time <= 0:
+            can_skip = True
+        question = previous_question
     if not question:
         msg = 'Congratulations!  You have successfully completed the quiz.'
         return complete(
             request, msg, paper.attempt_number, paper.question_paper.id,
             course_id=course_id, module_id=module_id
         )
-    if not paper.question_paper.quiz.active:
+    if not quiz.active:
         reason = 'The quiz has been deactivated!'
         return complete(
             request, reason, paper.attempt_number, paper.question_paper.id,
             module_id=module_id
         )
-    if paper.time_left() <= 0:
-        reason = 'Your time is up!'
-        return complete(
-            request, reason, paper.attempt_number, paper.question_paper.id,
-            course_id, module_id=module_id
-        )
+    if not quiz.is_exercise:
+        if paper.time_left() <= 0:
+            reason = 'Your time is up!'
+            return complete(
+                request, reason, paper.attempt_number, paper.question_paper.id,
+                course_id, module_id=module_id
+            )
+    else:
+        quiz_type = 'Exercise'
     if question in paper.questions_answered.all():
         notification = (
             'You have already attempted this question successfully'
@@ -539,13 +605,17 @@ def show_question(request, question, paper, error_message=None, notification=Non
     context = {
         'question': question,
         'paper': paper,
+        'quiz': quiz,
         'error_message': error_message,
         'test_cases': test_cases,
         'files': files,
         'notification': notification,
         'last_attempt': question.snippet.encode('unicode-escape'),
         'course': course,
-        'module': module
+        'module': module,
+        'can_skip': can_skip,
+        'delay_time': delay_time,
+        'quiz_type': quiz_type
     }
     answers = paper.get_previous_answers(question)
     if answers:
@@ -567,6 +637,11 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None,
         question_paper=questionpaper_id, course_id=course_id
     )
     question = get_object_or_404(Question, pk=q_id)
+
+    if paper.question_paper.quiz.is_exercise:
+        if paper.time_left_on_question(question) <= 0:
+            paper.start_time = timezone.now()
+            paper.save()
 
     if request.method == 'POST' and question.type == 'code':
         if not paper.answers.filter(question=question, correct=True).exists():
@@ -612,7 +687,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                 msg = "Please enter an Integer Value"
                 return show_question(
                     request, current_question, paper, notification=msg,
-                    course_id=course_id, module_id=module_id
+                    course_id=course_id, module_id=module_id,
+                    previous_question=current_question
                 )
         elif current_question.type == 'float':
             try:
@@ -621,7 +697,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                 msg = "Please enter a Float Value"
                 return show_question(request, current_question,
                                      paper, notification=msg,
-                                     course_id=course_id, module_id=module_id)
+                                     course_id=course_id, module_id=module_id,
+                                     previous_question=current_question)
         elif current_question.type == 'string':
             user_answer = str(request.POST.get('answer'))
 
@@ -635,7 +712,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                 msg = "Please upload assignment file"
                 return show_question(
                     request, current_question, paper, notification=msg,
-                    course_id=course_id, module_id=module_id
+                    course_id=course_id, module_id=module_id,
+                    previous_question=current_question
                 )
             for fname in assignment_filename:
                 assignment_files = AssignmentUpload.objects.filter(
@@ -663,14 +741,16 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                 paper.answers.add(new_answer)
                 next_q = paper.add_completed_question(current_question.id)
                 return show_question(request, next_q, paper,
-                                     course_id=course_id, module_id=module_id)
+                                     course_id=course_id, module_id=module_id,
+                                     previous_question=current_question)
         else:
             user_answer = request.POST.get('answer')
         if not user_answer:
             msg = "Please submit a valid answer."
             return show_question(
                 request, current_question, paper, notification=msg,
-                course_id=course_id, module_id=module_id
+                course_id=course_id, module_id=module_id,
+                previous_question=current_question
             )
         if current_question in paper.get_questions_answered()\
          and current_question.type not in ['code', 'upload']:
@@ -703,16 +783,19 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                         result)
                 return show_question(request, next_question, paper,
                                      error_message, course_id=course_id,
-                                     module_id=module_id)
+                                     module_id=module_id,
+                                     previous_question=current_question)
             else:
                 return JsonResponse(result)
         else:
             next_question, error_message, paper = _update_paper(request, uid, result)
             return show_question(request, next_question, paper, error_message,
-                                 course_id=course_id, module_id=module_id)
+                                 course_id=course_id, module_id=module_id,
+                                 previous_question=current_question)
     else:
         return show_question(request, current_question, paper,
-                             course_id=course_id, module_id=module_id)
+                             course_id=course_id, module_id=module_id,
+                             previous_question=current_question)
 
 
 @csrf_exempt
@@ -731,9 +814,12 @@ def get_result(request, uid, course_id, module_id):
         next_question, error_message, paper = _update_paper(request, uid,
                                                             result
                                                             )
+        answer = Answer.objects.get(id=uid)
+        current_question = answer.question
         if result.get('success'):
             return show_question(request, next_question, paper, error_message,
-                                 course_id=course_id, module_id=module_id)
+                                 course_id=course_id, module_id=module_id,
+                                 previous_question=current_question)
         else:
             with open(template_path) as f:
                 template_data = f.read()
