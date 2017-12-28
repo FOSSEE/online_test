@@ -63,7 +63,9 @@ To deploy this app follow the steps below:
 
     ::
 
-        $ sudo python yaksh/code_server.py
+        $ sudo python -m yaksh.code_server # For Python 2
+
+        $ sudo python3 -m yaksh.code_server # For Python 3
 
     Put this in the background once it has started since this will not
     return back the prompt. It is important that the server be running
@@ -194,7 +196,7 @@ Using Dockerized Code Server
    /path/to/online\_test
 
 3. Create a docker image. This may take a few minutes docker build -t
-   yaksh\_code\_server ./docker/Dockerfile\_codeserver
+   yaksh\_code\_server -f ./docker/Dockerfile\_codeserver
 
 4. Check if the image has been created using the output of, docker
    images
@@ -203,6 +205,8 @@ Using Dockerized Code Server
    will create and run a new docker container (that is running the
    code\_server.py within it), it will also bind the ports of the host
    with those of the container
+
+6. You can use ``invoke --list`` to get a list of all the available commands
 
 .. _deploying-multiple-dockers:
 
@@ -216,11 +220,11 @@ Follow these steps to deploy and run the Django Server, MySQL instance and Code 
 
 2. Install `Docker Compose <https://docs.docker.com/compose/install/>`__
 
-2. Go to the directory where the project is located at:
+2. Go to the ``docker`` directory where the project is located:
    
    ::
 
-       cd /path/to/online_test
+       cd /path/to/online_test/docker
 
 3. Build the docker images
 
@@ -253,6 +257,8 @@ Follow these steps to deploy and run the Django Server, MySQL instance and Code 
    ::
 
        invoke clean
+
+9. You can use ``invoke --list`` to get a list of all the available commands
 
 
 .. _add-commands:

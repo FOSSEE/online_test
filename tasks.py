@@ -45,6 +45,7 @@ def setupdb(ctx):
     ctx.run("python manage.py migrate")
     print("** Done! Migrations complete **")
 
+@task
 def loadfixtures(ctx):
     print("** Loading fixtures into database **")
     ctx.run("python manage.py loaddata demo_fixtures.json")
