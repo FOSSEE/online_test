@@ -11,7 +11,7 @@ ADD Files/requirements-* /tmp/
 
 RUN pip3 install -r /tmp/requirements-codeserver.txt && mkdir -p /Sites/online_test/yaksh_data/output /Sites/online_test/yaksh_data/data
 
-WORKDIR /Sites/online_test/yaksh_data
+WORKDIR /Sites/online_test
 
 ADD Files/Start-codeserver.sh /Sites
 

@@ -26,7 +26,7 @@ services:
     image: yaksh.codeserver
     container_name: yaksh_codeserver
     volumes:
-      - ../yaksh_data:/Sites/online_test/yaksh_data
+      - ..:/Sites/online_test
     restart: always 
 
 
