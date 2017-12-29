@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block pagetitle %}Online Test{% endblock %}
+{% block pagetitle %}<img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_text.png"
+width="80" alt="YAKSH"></img>{% endblock %}
 {% block content %}
 {% csrf_token %}
     {% if paper.questions_answered.all or paper.questions_unanswered.all %}

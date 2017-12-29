@@ -12,7 +12,10 @@
                   <span class="icon-bar"></span>
                   <span class="icon-bar"></span>
               </button>
-          <a class="navbar-brand" href="#"> Yaksh </a>
+          <a class="navbar-brand" href="#">
+            <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_crane.png" alt="YAKSH" style="margin-top: -3px; margin-left:-15px">
+          </img>
+          </a>
         </div>
         <div class= "collapse navbar-collapse" id="navbar">
           <form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{ paper.question_paper.id }}/" method="post" class="pull-right">
