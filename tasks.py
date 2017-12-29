@@ -217,22 +217,6 @@ def deploy(ctx, fixtures=False):
     print ("** Done! Set up static assets **")
 
 @task
-def createsuperuser(ctx):
-    run_as_cmd = run_as(OS_NAME)
-
-    base_su_cmd = "docker exec -it yaksh_django python3 manage.py createsuperuser"
-    cmd = get_cmd(run_as_cmd, base_su_cmd)
-    print ("** Creating Superuser **")
-    ctx.run(cmd)
-    print ("** Done! Created Superuser **")
-
-    base_mod_cmd = "docker exec -i yaksh_django python3 manage.py add_group"
-    cmd = get_cmd(run_as_cmd, base_mod_cmd)
-    print ("** Creating Moderator group **")
-    ctx.run(cmd)
-    print ("** Done! Created Moderator group **")
-
-@task
 def halt(ctx):
     run_as_cmd = run_as(OS_NAME)
     base_cmd = "docker-compose stop"

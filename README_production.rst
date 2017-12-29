@@ -17,7 +17,14 @@ Pre-Requisite
 
 1. Ensure `pip <https://pip.pypa.io/en/latest/installing.html>`__ is
    installed
-2. Install dependencies using pip install -r requirements.txt
+2. Install dependencies, Run;
+   
+   ::
+
+       pip install -r requirements/requirements-py2.txt # For Python 2
+
+       pip3 install -r requirements/requirements-py3.txt # For Python 3
+
 3. Install MySql Server
 4. Install Python MySql support
 5. Install Apache Server for deployment
@@ -240,11 +247,6 @@ Follow these steps to deploy and run the Django Server, MySQL instance and Code 
        invoke deploy
 
 5. Use ``invoke deploy --fixtures`` to load the fixtures
-
-6. Create the superuser and moderator group
-   ::
-
-       invoke createsuperuser
 
 7. Stop the containers
 
