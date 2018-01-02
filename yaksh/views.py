@@ -337,8 +337,10 @@ def prof_manage(request, msg=None):
     rights/permissions and log in."""
     user = request.user
     ci = RequestContext(request)
-    if not user.is_authenticated() and not is_moderator(user):
-        return my_redirect('/exam/login/')
+    if not user.is_authenticated():
+        return my_redirect('/exam/login')
+    if not is_moderator(user):
+        return my_redirect('/exam/')
     courses = Course.objects.filter(creator=user, is_trial=False)
 
     trial_paper = AnswerPaper.objects.filter(
@@ -467,7 +469,7 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
         )
     # allowed to start
     if not quest_paper.can_attempt_now(user, course_id):
-        msg = "You cannot attempt {0} quiz more than {1} times".format(
+        msg = "You cannot attempt {0} quiz more than {1} time(s)".format(
             quest_paper.quiz.description, quest_paper.quiz.attempts_allowed)
         if is_moderator(user):
             return prof_manage(request, msg=msg)

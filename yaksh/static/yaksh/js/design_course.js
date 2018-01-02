@@ -20,9 +20,7 @@ $(document).ready(function(){
         $(this).append('<input type="hidden" name="ordered_list" value='+order_list+'>');
         return true;
     });
-    var msg = "If the value is True, Check if Prerequisite is completed. \n" + 
-              "If the value is False, Don't check for Prerequisite. \n" +
-              "Prerequisite can either be a Quiz or Lesson. \n" +
-              "Prerequisite is checked according to the order of Quiz or Lesson.";
+    var msg = "Check Prerequisite is set to Yes by default \n" + 
+              "To change, select the Change checkbox and Click Change Prerequisite button \n";
     $("#prereq_msg").attr("title", msg);
 });

@@ -58,25 +58,33 @@
                 </div>
                 <br>
                 <center>
-                <button id="Add" name="Add" class="btn small primary" type="submit">Add to course</button>
+                <button id="Add" name="Add" class="btn btn-success" type="submit">Add to course</button>
                 </center>
                 <br><br>
             </div>
             <div class="col-md-8 col-md-offset-2">
                 <div id="fixed-added-wrapper">
-                    <p><u><b>Choosen Lessons and quizzes: (Change Order)</b></u></p>
+                    <p><u><b>Choosen Lessons and quizzes:</b></u></p>
                     <div id="fixed-added">
                         <table id="course-details" class="table table-bordered">
                         <tr>
-                        <th>Select</th>
+                        <th width="5%">Select</th>
                         <th>Learning Module</th>
-                        <th>Order</th>
-                        <th width="20%">Check Prerequisite
+                        <th width="20%">Order</th>
+                        <th width="25%" colspan="2">Check Prerequisite
+                            <br>
                             <a href="#" data-toggle="tooltip" id="prereq_msg">
                                 <span class="glyphicon glyphicon-question-sign">
                                 </span> What's This
                             </a>
                         </th>
+                        </tr>
+                        <tr>
+                            <th scope="row">&nbsp;</th>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <th>Currently</th>
+                            <th>Change</th>
                         </tr>
                         {% for module in added_learning_modules %}
                             <tr>
@@ -89,7 +97,14 @@
                                 <input type="number" name="order" data-item-id="{{module.id}}" value="{{module.order}}" step="1">
                             </td>
                             <td>
-                                <input type="checkbox" name="check_prereq" value="{{module.id}}">&nbsp;{{module.check_prerequisite}}
+                                {% if module.check_prerequisite %}
+                                    Yes
+                                {% else %}
+                                    No
+                                {% endif %}
+                            </td>
+                            <td>
+                                <input type="checkbox" name="check_prereq" value="{{module.id}}">
                             </td>
                             </ul>
                             </tr>
@@ -99,9 +114,9 @@
                 </div>
                 <br>
                 <center>
-                <button id="Remove" name="Remove" class="btn small primary" type="submit">Remove from course</button>
-                <button id="Change" name="Change" class="btn small primary" type="submit"> Change Order</button>&nbsp;&nbsp;
-                <button id="Change" name="Change_prerequisite" class="btn small primary" type="submit"> Change Prerequisite</button>
+                <button id="Remove" name="Remove" class="btn btn-danger" type="submit">Remove from course</button>
+                <button id="Change" name="Change" class="btn btn-info" type="submit"> Change Order</button>
+                <button id="Change" name="Change_prerequisite" class="btn btn-primary" type="submit"> Change Prerequisite</button>
                 </center>
             </div>
         </div> <!-- /.row -->

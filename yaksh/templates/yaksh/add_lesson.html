@@ -48,7 +48,11 @@
     <button class="btn" type="submit" id="submit" name="Delete"> Delete Files
     </button>
     {% endif %}
+    {% if course_id %}
     <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button>
+    {% else %}
+    <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/all_lessons/");'>Cancel</button>
+    {% endif %}
     </form>
     <button class="btn" type="button" name="button" id="preview">Preview Lesson Description
     </button>

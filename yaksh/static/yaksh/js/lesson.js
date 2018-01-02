@@ -42,8 +42,8 @@ $(document).ready(function(){
     }
 
     $("#embed").click(function() {
-        $("#dialog").toggle();
-        $("#dialog").dialog({
+        $("#dialog_iframe").toggle();
+        $("#dialog_iframe").dialog({
             resizable: false,
             height: '300',
             width: '450'

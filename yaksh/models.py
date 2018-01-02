@@ -609,11 +609,18 @@ class Course(models.Model):
             demo_que_ppr = QuestionPaper()
             demo_que_ppr.create_demo_quiz_ppr(demo_quiz, user)
             success = True
-            ordered_unit = LearningUnit.objects.create(
+            demo_lesson = Lesson.objects.create(
+                name="Demo lesson", description="demo lesson",
+                html_data="demo lesson", creator=user)
+            quiz_unit = LearningUnit.objects.create(
                 order=1, type="quiz", quiz=demo_quiz)
+            lesson_unit = LearningUnit.objects.create(
+                order=2, type="lesson", lesson=demo_lesson)
             learning_module = LearningModule.objects.create(
-                name="demo module", description="demo module", creator=user)
-            learning_module.learning_unit.add(ordered_unit)
+                name="demo module", description="demo module", creator=user,
+                html_data="demo module")
+            learning_module.learning_unit.add(quiz_unit)
+            learning_module.learning_unit.add(lesson_unit)
             course.learning_module.add(learning_module)
         else:
             success = False

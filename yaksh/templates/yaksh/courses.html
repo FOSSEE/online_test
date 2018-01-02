@@ -29,7 +29,7 @@
     <div class="col-sm-3 col-md-2 sidebar">
         <ul class="nav nav-sidebar">
             {% if type == "courses" %}
-                <li><a href="#" id="link_created_courses">Created Courses</a></li>
+                <li><a href="#" id="link_created_courses">My Courses</a></li>
                 <li><a href="#" id="link_allotted_courses">Allotted Courses</a></li>
             {% else %}
                 <li><a href="{{URL_ROOT}}/exam/manage/courses">View all Courses</a></li>
@@ -45,12 +45,13 @@
             </li>
             <li>
                 <a href="{{URL_ROOT}}/exam/manage/courses/all_learning_module">
-                Add/View Learning Modules</a>
+                Add/View Modules</a>
             </li>
         </ul>
     </div>
 </div>
-<!-- {% if type == "courses" %} -->
+
+{% if type == "courses" %}
 <div id="created_courses" style="display: none;">
 {% if not courses %}
     <center><h4> No new Courses created </h4></center>
@@ -60,7 +61,7 @@
     <table id="course-details" class="table table-bordered">
     <tr>
     <th>Courses</th>
-    <th>Lessons/Quizzes</th>
+    <th>Modules</th>
     </tr>
 
     {% for course in courses %}
@@ -98,6 +99,11 @@
         <br><br>
         <ul>
             <li>
+                <a href="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course.id}}/">Design Course
+                </a>
+            </li>
+            <br>
+            <li>
                 <a href="{{URL_ROOT}}/exam/manage/edit_course/{{course.id}}">Edit Course</a>
             </li>
             <br>
@@ -108,11 +114,6 @@
             <br>
             <li>
                 <a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher</a>
-            </li>
-            <br>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course.id}}/">Design Course Session
-                </a>
             </li>
             <br>
             <li>
@@ -131,8 +132,8 @@
         <table id="course-details" class="table table-bordered">
         {% if course.get_learning_modules %}
             <tr>
-            <th>Learning Modules</th>
-            <th>Design Learning module</th>
+            <th>Module</th>
+            <th>Module Design</th>
             <th>Lessons/Quizzes</th>
             </tr>
             {% for module in course.get_learning_modules %}
@@ -186,7 +187,7 @@
     <table id="course-details" class="table table-bordered">
     <tr>
     <th>Courses</th>
-    <th>Lessons/Quizzes</th>
+    <th>Modules</th>
     </tr>
 
     {% for course in allotted_courses %}
@@ -228,6 +229,11 @@
         <br><br>
         <ul>
             <li>
+                <a href="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course.id}}/">Design Course
+                </a>
+            </li>
+            <br>
+            <li>
                 <a href="{{URL_ROOT}}/exam/manage/edit_course/{{course.id}}">Edit Course</a>
             </li>
             <br>
@@ -257,8 +263,9 @@
         <table id="course-details" class="table table-bordered">
         {% if course.get_learning_modules %}
             <tr>
-            <th>Learning Modules</th>
-            <th>Design Learning module</th>
+            <th>Module</th>
+            <th>Module Design</th>
+            <th>Lessons/Quizzes</th>
             </tr>
             {% for module in course.get_learning_modules %}
             <tr>
@@ -270,6 +277,21 @@
                     <a href="{{URL_ROOT}}/exam/manage/courses/designmodule/{{module.id}}/{{course.id}}/">
                         Add Quizzes/Lessons for {{module.name}}
                     </a>
+                </td>
+                <td>
+                    {% for unit in module.get_learning_units %}
+                        <ul class="inputs-list">
+                        <li>
+                        {% if unit.type == "quiz" %}
+                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
+                            {{unit.quiz.description}}</a>
+                        {% else %}
+                            <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{unit.lesson.id}}/{{course.id}}">
+                            {{unit.lesson.name}}</a>
+                        {% endif %}
+                        </li>
+                        </ul>
+                    {% endfor %}
                 </td>
             </tr>
             {% endfor %} <!-- end for modules -->
@@ -284,7 +306,8 @@
 </div>
 {% endif %}
 </div>
-<!-- {% endif %} -->
+{% endif %}
+<!-- End if all Courses  -->
 
 <!-- Show all Quizzes -->
 <div id="all_quizzes" >
@@ -308,7 +331,8 @@
         <td>{{forloop.counter}}</td>
         <td width="30%">
             <ul class="list-group">
-            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}</a>
+            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}
+            </a>
             {% if quiz.active %}
                 <span class="label label-success">Active</span>
             {% else %}
