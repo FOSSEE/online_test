@@ -63,7 +63,7 @@ def serve(ctx):
 @task
 def clean(ctx):
     print("** Discarding database **")
-    ctx.run("rm -rf {0}".format(os.path.join(SCRIPT_DIR, 'db.sqlite3')))
+    remove_check_file(os.path.join(SCRIPT_DIR, 'db.sqlite3'))
 
 @task
 def getimage(ctx, image=SRC_IMAGE_NAME):

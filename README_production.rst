@@ -3,14 +3,13 @@ Production Deployment
 
 This README provides documentation to help deploy Yaksh in a production
 environment. If you wish to take Yaksh on a trial run, here is a
-[Quickstart Guide]
-(https://github.com/FOSSEE/online\_test/blob/master/README.md)
+`Quickstart Guide <https://github.com/FOSSEE/online\_test/blob/master/README.rst>`__
 
 ###################
 Deploying Locally
 ###################
 
-Follow these steps to deploy locally on the server. For deployment instructions using Docker see :ref:`deploying-multiple-dockers`.
+Follow these steps to deploy locally on the server. For deployment instructions using Docker see `Deploying Multiple Dockers <https://github.com/FOSSEE/online_test/blob/add-docker-compose-test/README_production.rst#deploying-multiple-dockers>`__
 
 Pre-Requisite
 ^^^^^^^^^^^^^
@@ -56,7 +55,10 @@ Installation & Usage
 To install this app follow the steps below:
 
 1. Clone this repository and cd to the cloned repo.
-   ``$ git clone  https://github.com/FOSSEE/online_test.git``
+
+   ::
+
+       $ git clone  https://github.com/FOSSEE/online_test.git
 
 2. Rename the ``.sampleenv`` to ``.env``
 
@@ -98,7 +100,8 @@ To install this app follow the steps below:
    that this will likely spawn multiple processes as "nobody" depending
    on the number of server ports specified.
 
-   You can also use a Dockerized code server, see :ref:`dockerized-code-server`.
+   You can also use a Dockerized code server, see `Dockerized Code Server <https://github.com/FOSSEE/online_test/blob/add-docker-compose-test/README_production.rst#using-dockerized-code-server>`__
+
 
 6.  The ``wsgi.py`` script should make it easy to deploy this using
     mod\_wsgi. You will need to add a line of the form:
@@ -109,7 +112,7 @@ To install this app follow the steps below:
 
     to your apache.conf. For more details see the Django docs here:
 
-    https://docs.djangoproject.com/en/1.6/howto/deployment/wsgi/
+    https://docs.djangoproject.com/en/2.0/howto/deployment/wsgi/
 
 7. Create a Superuser/Administrator:
 
@@ -125,9 +128,7 @@ To install this app follow the steps below:
    each user. Users can potentially write output into these that can be
    used for checking later.
 
-10. As admin user you can visit http://desired\_host\_or\_ip/exam/monitor to view results
-   and user data interactively. You could also "grade" the papers
-   manually if needed.
+10. As admin user you can visit http://desired\_host\_or\_ip/exam/monitor to view results and user data interactively. You could also "grade" the papers manually if needed.
 
 .. _dockerized-code-server:
 
@@ -137,14 +138,20 @@ Using Dockerized Code Server
 1. Install
    `Docker <https://docs.docker.com/engine/installation/>`__
 
-2. Go to the directory where the project is located cd
-   /path/to/online\_test
+2. Go to the directory where the project is located 
 
-3. Create a docker image. This may take a few minutes docker build -t
-   yaksh\_code\_server -f ./docker/Dockerfile\_codeserver
+   ::
 
-4. Check if the image has been created using the output of, docker
-   images
+       cd /path/to/online_test
+
+3. Create a docker image. This may take a few minutes,
+
+   ::
+
+       docker build -t yaksh_code_server -f ./docker/Dockerfile_codeserver
+
+4. Check if the image has been created using the output of ``docker
+   images``
 
 5. Run the invoke script using the command ``invoke start`` The command
    will create and run a new docker container (that is running the
@@ -152,6 +159,7 @@ Using Dockerized Code Server
    with those of the container
 
 6. You can use ``invoke --list`` to get a list of all the available commands
+
 
 .. _deploying-multiple-dockers:
 
@@ -211,7 +219,7 @@ Follow these steps to deploy and run the Django Server, MySQL instance and Code 
 
    ::
 
-       invoke clean
+       invoke remove
 
 12. You can use ``invoke --list`` to get a list of all the available commands
 
