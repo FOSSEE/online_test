@@ -28,8 +28,11 @@ after_success:
   - coverage report
   - codecov
 
+sudo:
+    required
+
 dist:
-    precise
+    trusty
 
 addons:
   firefox: "46.0"
