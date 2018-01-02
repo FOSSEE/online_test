@@ -29,14 +29,14 @@ Pre-Requisite
 4. Install Python MySql support
 5. Install Apache Server for deployment
 
-1. Create a database named ``yaksh`` by following the steps below
+6. Create a database named ``yaksh`` by following the steps below
 
    ::
 
        $> mysql -u root -p    
        $> mysql> create database yaksh
 
-2. Add a user named ``yaksh_user`` and give access to it on the database
+7. Add a user named ``yaksh_user`` and give access to it on the database
    ``yaksh`` by following the steps below
 
    ::
@@ -46,88 +46,9 @@ Pre-Requisite
 
       mysql> grant all privileges on yaksh to yaksh_user@localhost;
 
-3. Add ``DATABASE_PASSWORD = 'mysecretpassword'`` and
+8. Add ``DATABASE_PASSWORD = 'mysecretpassword'`` and
    ``DATABASE_USER = 'yaksh_user'`` to online\_test/settings.py
 
-To deploy this app follow the steps below:
-
-1.  Clone this repository and cd to the cloned repo. 
-
-   ::
-
-       $ git clone https://github.com/FOSSEE/online\_test.git
-
-2.  Run:
-
-   ::
-
-       python manage.py makemigrations yaksh
-
-       python manage.py migrate yaksh 
-
-4.  First run the python server provided. This ensures that the code is
-    executed in a safe environment. Do this like so:
-
-    ::
-
-        $ sudo python -m yaksh.code_server # For Python 2
-
-        $ sudo python3 -m yaksh.code_server # For Python 3
-
-    Put this in the background once it has started since this will not
-    return back the prompt. It is important that the server be running
-    *before* students start attempting the exam. Using sudo is necessary
-    since the server is run as the user "nobody". This runs on the ports
-    configured in the settings.py file in the variable "SERVER\_PORTS".
-    The "SERVER\_TIMEOUT" also can be changed there. This is the maximum
-    time allowed to execute the submitted code. Note that this will
-    likely spawn multiple processes as "nobody" depending on the number
-    of server ports specified.
-
-5.  The ``wsgi.py`` script should make it easy to deploy this using
-    mod\_wsgi. You will need to add a line of the form:
-
-    ::
-
-        WSGIScriptAlias / "/online_test/wsgi.py"
-
-    to your apache.conf. For more details see the Django docs here:
-
-    https://docs.djangoproject.com/en/1.6/howto/deployment/wsgi/
-
-6.  Go to http://desired\_host\_or\_ip:desired\_port/admin
-
-7.  Login with your credentials and look at the questions and modify if
-    needed. Create a new Quiz, set the date and duration or
-    activate/deactivate the quiz.
-
-8.  Now ask users to login at:
-
-    ::
-
-        http://host:port/exam
-
-    And you should be all set.
-
-9.  Note that the directory "output" will contain directories, one for
-    each user. Users can potentially write output into these that can be
-    used for checking later.
-
-10. As Moderator user you can visit http://host/exam/monitor to view
-    results and user data interactively. You could also "grade" the
-    papers manually if needed.
-
-11. You may dump the results and user data using the results2csv and
-    dump\_user\_data commands.
-
-12. The file docs/sample\_questions.py is a template that you can use
-    for your own questions.
-
-13. Sometimes you might be in the situation where you are not hosted as
-    "host.org/exam/" but as "host.org/foo/exam/" for whatever reason. In
-    this case edit "settings.py" and set the "URL\_ROOT" to the root you
-    have to serve at. In the above example for "host.org/foo/exam" set
-    URL\_ROOT='/foo'.
 
 Installation & Usage
 ^^^^^^^^^^^^^^^^^^^^
@@ -137,7 +58,19 @@ To install this app follow the steps below:
 1. Clone this repository and cd to the cloned repo.
    ``$ git clone  https://github.com/FOSSEE/online_test.git``
 
-2. Run:
+2. Rename the ``.sampleenv`` to ``.env``
+
+3. In the ``.env`` file, uncomment the following and replace the values (please keep the remaining settings as is);
+
+   ::
+
+       DB_ENGINE=mysql # Or psycopg (postgresql), sqlite3 (SQLite)
+       DB_NAME=yaksh
+       DB_USER=root
+       DB_PASSWORD=mypassword # Or the password used while creating a Database
+       DB_PORT=3306
+
+4. Run:
 
    ::
 
@@ -145,7 +78,7 @@ To install this app follow the steps below:
 
        $ python manage.py migrate yaksh
 
-3. Run the python server provided. This ensures that the code is
+5. Run the python server provided. This ensures that the code is
    executed in a safe environment. Do this like so:
 
    ::
@@ -167,27 +100,32 @@ To install this app follow the steps below:
 
    You can also use a Dockerized code server, see :ref:`dockerized-code-server`.
 
-4. Now, Run:
+6.  The ``wsgi.py`` script should make it easy to deploy this using
+    mod\_wsgi. You will need to add a line of the form:
 
-   ::
+    ::
 
-          python manage.py runserver <desired_ip>:<desired_port>
+        WSGIScriptAlias / "/online_test/wsgi.py"
 
-5. Create a Superuser/Administrator:
+    to your apache.conf. For more details see the Django docs here:
+
+    https://docs.djangoproject.com/en/1.6/howto/deployment/wsgi/
+
+7. Create a Superuser/Administrator:
 
    ::
 
        python manage.py createsuperuser
 
-6. Go to http://desired\_host\_or\_ip:desired\_port/exam
+8. Go to http://desired\_host\_or\_ip:desired\_port/exam
 
    And you should be all set.
 
-7. Note that the directory "output" will contain directories, one for
+9. Note that the directory "output" will contain directories, one for
    each user. Users can potentially write output into these that can be
    used for checking later.
 
-8. As admin user you can visit http://desired\_host\_or\_ip/exam/monitor to view results
+10. As admin user you can visit http://desired\_host\_or\_ip/exam/monitor to view results
    and user data interactively. You could also "grade" the papers
    manually if needed.
 
@@ -227,40 +165,55 @@ Follow these steps to deploy and run the Django Server, MySQL instance and Code 
 
 2. Install `Docker Compose <https://docs.docker.com/compose/install/>`__
 
-2. Go to the ``docker`` directory where the project is located:
+3. Rename the ``.sampleenv`` to ``.env``
+
+4. In the ``.env`` file, uncomment all the values and keep the default values as is.
+
+5. Go to the ``docker`` directory where the project is located:
    
    ::
 
        cd /path/to/online_test/docker
 
-3. Build the docker images
+6. Build the docker images
 
    ::
 
        invoke build
 
-4. Run the containers and scripts necessary to deploy the web
+7. Run the containers and scripts necessary to deploy the web
    application
 
    ::
 
-       invoke deploy
+       invoke begin
 
-5. Use ``invoke deploy --fixtures`` to load the fixtures
+8. Make sure that all the containers are ``Up`` and stable
 
-7. Stop the containers
+   ::
+
+       invoke status
+
+8. Run the containers and scripts necessary to deploy the web
+   application, ``--fixtures`` allows you to load fixtures.
+
+   ::
+
+       invoke deploy --fixtures
+
+10. Stop the containers, you can use ``invoke restart`` to restart the containers without removing them
 
    ::
 
        invoke halt
 
-8. Remove the containers
+11. Remove the containers
 
    ::
 
        invoke clean
 
-9. You can use ``invoke --list`` to get a list of all the available commands
+12. You can use ``invoke --list`` to get a list of all the available commands
 
 
 .. _add-commands:

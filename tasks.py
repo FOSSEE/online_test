@@ -26,6 +26,10 @@ def remove_check_file(path):
     if os.path.isfile(path):
         os.remove(path)
 
+def remove_dir(path):
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+
 def run_as(os_name):
     if os_name.startswith('linux') or os_name == 'darwin' or os_name.startswith('freebsd'):
         return 'sudo'
@@ -186,8 +190,8 @@ def begin(ctx):
     ctx.run(cmd)
     print ("** Done! Initialized the docker containers **")
 
-@task(begin)
-def deploy(ctx, fixtures=False):
+@task
+def deploy(ctx, fixtures=False, static=True):
     run_as_cmd = run_as(OS_NAME)
 
     print("** Setting up & migrating database **")
@@ -210,11 +214,20 @@ def deploy(ctx, fixtures=False):
         ctx.run(cmd)
         print("** Done! Loaded fixtures into database **")
 
-    base_static_cmd = "docker exec -i yaksh_django python3 manage.py collectstatic"
-    cmd = get_cmd(run_as_cmd, base_static_cmd)
-    print ("** Setting up static assets **")
+    if static:
+        base_static_cmd = "docker exec -i yaksh_django python3 manage.py collectstatic"
+        cmd = get_cmd(run_as_cmd, base_static_cmd)
+        print ("** Setting up static assets **")
+        ctx.run(cmd)
+        print ("** Done! Set up static assets **")
+
+@task
+def status(ctx):
+    run_as_cmd = run_as(OS_NAME)
+    base_cmd = "docker-compose ps"
+    cmd = get_cmd(run_as_cmd, base_cmd)
+    print ("** Fetching container status **")
     ctx.run(cmd)
-    print ("** Done! Set up static assets **")
 
 @task
 def halt(ctx):
@@ -225,11 +238,22 @@ def halt(ctx):
     ctx.run(cmd)
     print ("** Done! Stopped containers **")
 
+@task
+def restart(ctx):
+    run_as_cmd = run_as(OS_NAME)
+    base_cmd = "docker-compose restart"
+    cmd = get_cmd(run_as_cmd, base_cmd)
+    print ("** Restarting containers **")
+    ctx.run(cmd)
+    print ("** Done! Restarted containers **")
+
 @task(halt)
 def remove(ctx):
     run_as_cmd = run_as(OS_NAME)
     base_cmd = "docker-compose rm --force"
     cmd = get_cmd(run_as_cmd, base_cmd)
+    sql_dir = os.path.join(SCRIPT_DIR, 'docker', 'mysql')
     print ("** Removing containers **")
+    remove_dir(sql_dir)
     ctx.run(cmd)
     print ("** Done! Removed containers **")
