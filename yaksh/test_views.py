@@ -1226,7 +1226,7 @@ class TestAddQuiz(TestCase):
             password=self.user_plaintext_pass
         )
         tzone = pytz.timezone('UTC')
-        response = self.client.post(reverse('yaksh:add_exercise',
+        response = self.client.post(reverse('yaksh:edit_exercise',
             kwargs={'quiz_id': self.exercise.id}),
             data={
                 'description': 'updated demo exercise',

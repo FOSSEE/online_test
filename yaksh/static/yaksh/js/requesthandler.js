@@ -36,7 +36,8 @@ function unlock_screen() {
     document.getElementById("ontop").style.display = "none";
 }
 
-function show_skip() {
+function show_solution() {
+    document.getElementById("solution").style.display = "block";
     document.getElementById("skip_ex").style.visibility = "visible";
 }
 
@@ -109,7 +110,7 @@ var global_editor = {};
 
 $(document).ready(function(){
   if(is_exercise == "True" && can_skip == "False"){
-      setTimeout(function() {show_skip();}, delay_time*1000);
+      setTimeout(function() {show_solution();}, delay_time*1000);
   }
   // Codemirror object, language modes and initial content
   // Get the textarea node

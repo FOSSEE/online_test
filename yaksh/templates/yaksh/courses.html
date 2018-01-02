@@ -151,8 +151,13 @@
                         <ul class="inputs-list">
                         <li>
                         {% if unit.learning_type == "quiz" %}
-                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
-                            {{unit.quiz.description}}</a>
+                            {% if unit.quiz.is_exercise %}
+                                <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{unit.quiz.id}}/{{course.id}}">
+                                {{unit.quiz.description}}</a>
+                            {% else %}
+                                <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
+                                {{unit.quiz.description}}</a>
+                            {% endif %}
                         {% else %}
                             <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{unit.lesson.id}}/{{course.id}}">
                             {{unit.lesson.name}}</a>

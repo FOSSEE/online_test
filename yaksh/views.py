@@ -568,7 +568,7 @@ def show_question(request, question, paper, error_message=None, notification=Non
         delay_time = paper.time_left_on_question(question)
 
     if previous_question and quiz.is_exercise:
-        if delay_time <= 0:
+        if delay_time <= 0 or previous_question in paper.questions_answered.all():
             can_skip = True
         question = previous_question
     if not question:
@@ -639,9 +639,8 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None,
     question = get_object_or_404(Question, pk=q_id)
 
     if paper.question_paper.quiz.is_exercise:
-        if paper.time_left_on_question(question) <= 0:
-            paper.start_time = timezone.now()
-            paper.save()
+        paper.start_time = timezone.now()
+        paper.save()
 
     if request.method == 'POST' and question.type == 'code':
         if not paper.answers.filter(question=question, correct=True).exists():
@@ -775,7 +774,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
             user_answer, current_question, json_data, uid
         )
         if current_question.type in ['code', 'upload']:
-            if paper.time_left() <= 0:
+            if paper.time_left() <= 0 and not paper.question_paper.quiz.is_exercise:
                 url = 'http://localhost:%s' % SERVER_POOL_PORT
                 result_details = get_result_from_code_server(url, uid, block=True)
                 result = json.loads(result_details.get('result'))

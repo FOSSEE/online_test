@@ -751,6 +751,8 @@ class Question(models.Model):
 
     min_time =  models.IntegerField("time in minutes", default=0)
 
+    solution = models.TextField(blank=True)
+
     def consolidate_answer_data(self, user_answer, user=None):
         question_data = {}
         metadata = {}

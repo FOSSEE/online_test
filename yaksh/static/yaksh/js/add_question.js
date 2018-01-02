@@ -110,6 +110,9 @@ function textareaformat()
 		document.getElementById('my').innerHTML = document.getElementById('id_description').value ;
 	});
 
+	$('#id_solution').bind('keypress', function (event){
+		document.getElementById('rend_solution').innerHTML = document.getElementById('id_solution').value ;
+	});
 
     $('#id_type').bind('focus', function(event){
         var type = document.getElementById('id_type');
@@ -121,6 +124,7 @@ function textareaformat()
         language.style.border = '1px solid #ccc';
     });
 	document.getElementById('my').innerHTML = document.getElementById('id_description').value ;
+	document.getElementById('rend_solution').innerHTML = document.getElementById('id_solution').value ;
 
     if (document.getElementById('id_grade_assignment_upload').checked ||
         document.getElementById('id_type').value == 'upload'){
