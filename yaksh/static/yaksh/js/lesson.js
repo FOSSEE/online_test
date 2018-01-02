@@ -1,21 +1,6 @@
 $(document).ready(function(){
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie != '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+    var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
 
-    var csrftoken = getCookie("csrftoken");
     function csrfSafeMethod(method) {
         // These HTTP methods do not require CSRF protection
         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
@@ -55,4 +40,39 @@ $(document).ready(function(){
         $("#description_body").empty();
         $("#description_body").append(data);
     }
+
+    $("#embed").click(function() {
+        $("#dialog").toggle();
+        $("#dialog").dialog({
+            resizable: false,
+            height: '300',
+            width: '450'
+        });
+    });
+
+    $("#submit_info").click(function(){
+        var url = $("#url").val();
+        if (url == "") {
+            if (!$("#error_div").is(":visible")){
+                $("#error_div").toggle();
+            }
+        }
+        else{
+            if ($("#error_div").is(":visible")){
+                $("#error_div").toggle();
+            }
+            $("#video_frame").attr("src", url);
+            $("#html_text").text($("#iframe_div").html().trim());
+        }
+    });
+
+    $("#copy").click(function(){
+        try{
+            var text = $("#html_text");
+            text.select();
+            document.execCommand("Copy");
+        } catch (err) {
+            alert("Unable to copy. Press Ctrl+C or Cmd+C to copy")    
+        }
+    });
 });

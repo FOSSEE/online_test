@@ -65,7 +65,7 @@
             <tr>
             <ul class="inputs-list">
                 <td>
-                {% if unit.learning_type == "quiz" %}
+                {% if unit.type == "quiz" %}
                     {{unit.quiz.description}}
                 {% else %}
                     {{unit.lesson.name}}
@@ -85,10 +85,10 @@
                 {% endif %}
                 </td>
                 <td>
-                    {{unit.learning_type|title}}
+                    {{unit.type|title}}
                 </td>
                 <td>
-                {% if unit.learning_type == "quiz" %}
+                {% if unit.type == "quiz" %}
                     {% if unit.quiz.view_answerpaper %}
                         <a href="{{ URL_ROOT }}/exam/view_answerpaper/{{ unit.quiz.questionpaper_set.get.id }}/{{course.id}}"><i class="fa fa-eye" aria-hidden="true"></i> Can View </a>
                     {% else %}

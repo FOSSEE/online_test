@@ -16,7 +16,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.forms.models import inlineformset_factory
 from django.utils import timezone
-from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
+from django.core.validators import URLValidator
+from django.core.exceptions import (
+    MultipleObjectsReturned, ObjectDoesNotExist, ValidationError
+)
 from django.conf import settings
 import pytz
 from taggit.models import Tag
@@ -638,6 +641,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                     course_id=course_id, module_id=module_id
                 )
             for fname in assignment_filename:
+                fname._name = fname._name.replace(" ","_")
                 assignment_files = AssignmentUpload.objects.filter(
                             assignmentQuestion=current_question,
                             assignmentFile__icontains=fname, user=user,
@@ -647,7 +651,8 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                             assignmentQuestion=current_question,
                             assignmentFile__icontains=fname, user=user,
                             question_paper=questionpaper_id)
-                    os.remove(assign_file.assignmentFile.path)
+                    if os.path.exists(assign_file.assignmentFile.path):
+                        os.remove(assign_file.assignmentFile.path)
                     assign_file.delete()
                 AssignmentUpload.objects.create(
                     user=user, assignmentQuestion=current_question,
@@ -1706,7 +1711,7 @@ def test_mode(user, godmode=False, questions_list=None, quiz_id=None,
             trial_quiz, questions_list
         )
         trial_unit, created = LearningUnit.objects.get_or_create(
-            order=1, learning_type="quiz", quiz=trial_quiz,
+            order=1, type="quiz", quiz=trial_quiz,
             check_prerequisite=False)
         module, created = LearningModule.objects.get_or_create(
             order=1, creator=user, check_prerequisite=False,
@@ -2272,15 +2277,15 @@ def design_module(request, module_id, course_id=None):
                 else:
                     start_val = 1
                 for order, value in enumerate(add_values, start_val):
-                    learning_id, learning_type = value.split(":")
-                    if learning_type == "quiz":
+                    learning_id, type = value.split(":")
+                    if type == "quiz":
                         learning_unit = LearningUnit.objects.create(
                             order=order, quiz_id=learning_id,
-                            learning_type=learning_type)
+                            type=type)
                     else:
                         learning_unit = LearningUnit.objects.create(
                             order=order, lesson_id=learning_id,
-                            learning_type=learning_type)
+                            type=type)
                     to_add_list.append(learning_unit)
                 learning_module.learning_unit.add(*to_add_list)
 
@@ -2445,7 +2450,7 @@ def get_next_unit(request, course_id, module_id, current_unit_id,
     # make next available unit as current unit
     course_status.current_unit = next_unit
     course_status.save()
-    if next_unit.learning_type == "quiz":
+    if next_unit.type == "quiz":
         return my_redirect("/exam/start/{0}/{1}/{2}".format(
             next_unit.quiz.questionpaper_set.get().id, module_id, course_id))
     else:

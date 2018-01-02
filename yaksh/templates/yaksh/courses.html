@@ -38,14 +38,14 @@
                 <a href="{{URL_ROOT}}/exam/manage/add_course">Add New Course</a>
             </li>
             <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/all_quizzes/">View all Quizzes</a>
+                <a href="{{URL_ROOT}}/exam/manage/courses/all_quizzes/">Add/View Quizzes</a>
             </li>
             <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/all_lessons/">View all Lessons</a>
+                <a href="{{URL_ROOT}}/exam/manage/courses/all_lessons/">Add/View Lessons</a>
             </li>
             <li>
                 <a href="{{URL_ROOT}}/exam/manage/courses/all_learning_module">
-                View all Learning Modules</a>
+                Add/View Learning Modules</a>
             </li>
         </ul>
     </div>
@@ -133,7 +133,7 @@
             <tr>
             <th>Learning Modules</th>
             <th>Design Learning module</th>
-            <th>Learning Units</th>
+            <th>Lessons/Quizzes</th>
             </tr>
             {% for module in course.get_learning_modules %}
             <tr>
@@ -150,7 +150,7 @@
                     {% for unit in module.get_learning_units %}
                         <ul class="inputs-list">
                         <li>
-                        {% if unit.learning_type == "quiz" %}
+                        {% if unit.type == "quiz" %}
                             <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
                             {{unit.quiz.description}}</a>
                         {% else %}
@@ -403,7 +403,7 @@
             {% if module.get_learning_units %}
                 {% for unit in module.get_learning_units %}
                     <ul class="list-group">
-                    {% if unit.learning_type == 'quiz' %}
+                    {% if unit.type == 'quiz' %}
                         {{unit.quiz.description}}
                     {% else %}
                         {{unit.lesson.name}}

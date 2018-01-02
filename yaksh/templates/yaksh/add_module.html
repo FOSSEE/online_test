@@ -1,5 +1,4 @@
 {% extends "manage.html" %}
-{% load custom_filters %}
 {% block title %}Create/Edit Learning Module{% endblock %}
 
 {% block pagetitle %}<h4>Design Learning Module</h4>{% endblock %}
@@ -8,10 +7,12 @@
 <script src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/design_course.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/lesson.js"></script>
+<script src="https://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
 {% endblock %}
 
 {% block css %}
 <link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/design_course.css" />
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css">
 {% endblock %}
 
 {% block content %}
@@ -33,10 +34,14 @@
     </center>
     <br><br>
     <center>
-    <button class="btn" type="submit" id="submit" name="Save"> Save
+    <button class="btn" type="submit" id="submit" name="Save">
+        Save
     </button>
     <button class="btn" type="button" name="button" id="preview">
         Preview Module Description
+    </button>
+    <button class="btn" type="button" name="button" id="embed">
+        Embed Video link
     </button>
     </center>
 </form>
@@ -110,12 +115,12 @@
                             <td>
                                 <input type="checkbox" name="delete_list" value="{{unit.id}}">
                             </td>
-                            {% if unit.learning_type == "quiz" %}
-                                <td><span>{{ unit.quiz.description }} ({{unit.learning_type}})
+                            {% if unit.type == "quiz" %}
+                                <td><span>{{ unit.quiz.description }} ({{unit.type}})
                                 </span></td>
                                 <td><input type="number" name="order" data-item-id="{{unit.id}}" value="{{unit.order}}" step="1"></td>
                             {% else %}
-                                <td><span>{{ unit.lesson.name }} ({{unit.learning_type}})
+                                <td><span>{{ unit.lesson.name }} ({{unit.type}})
                                 </span></td>
                                 <td><input type="number" name="order" data-item-id="{{unit.id}}" value="{{unit.order}}" step="1"></td>
                             {% endif %}

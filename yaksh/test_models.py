@@ -87,9 +87,9 @@ def setUpModule():
     lesson = Lesson.objects.create(name='L1', description='Video Lesson',
                                    creator=user)
     learning_unit_lesson = LearningUnit.objects.create(order=1, lesson=lesson,
-                                                       learning_type='lesson')
+                                                       type='lesson')
     learning_unit_quiz = LearningUnit.objects.create(order=2, quiz=quiz,
-                                                     learning_type='quiz')
+                                                     type='quiz')
     learning_module_one.learning_unit.add(learning_unit_lesson)
     learning_module_one.learning_unit.add(learning_unit_quiz)
     learning_module_one.save()
@@ -214,8 +214,8 @@ class LearningUnitTestCases(unittest.TestCase):
         self.quiz = Quiz.objects.get(description='demo quiz 1')
 
     def test_learning_unit(self):
-        self.assertEqual(self.learning_unit_one.learning_type, 'lesson')
-        self.assertEqual(self.learning_unit_two.learning_type, 'quiz')
+        self.assertEqual(self.learning_unit_one.type, 'lesson')
+        self.assertEqual(self.learning_unit_two.type, 'quiz')
         self.assertEqual(self.learning_unit_one.lesson, self.lesson)
         self.assertEqual(self.learning_unit_two.quiz, self.quiz)
         self.assertIsNone(self.learning_unit_one.quiz)

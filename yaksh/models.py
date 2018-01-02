@@ -158,6 +158,9 @@ class Lesson(models.Model):
     def __str__(self):
         return "{0}".format(self.name)
 
+    def get_files(self):
+        return LessonFile.objects.filter(lesson=self)
+
 
 #############################################################################
 class LessonFile(models.Model):
@@ -233,7 +236,7 @@ class QuizManager(models.Manager):
             quiz = learning_modules[0].learning_unit.filter(quiz=trial_quiz)
             if not quiz.exists():
                 trial_learning_unit = LearningUnit.objects.create(
-                    order=1, quiz=trial_quiz, learning_type="quiz",
+                    order=1, quiz=trial_quiz, type="quiz",
                     check_prerequisite=False)
                 learning_modules[0].learning_unit.add(trial_learning_unit.id)
             trial_learning_module = learning_modules[0]
@@ -242,7 +245,7 @@ class QuizManager(models.Manager):
                 name="Trial for {}".format(trial_course), order=1,
                 check_prerequisite=False, creator=user, is_trial=True)
             trial_learning_unit = LearningUnit.objects.create(
-                order=1, quiz=trial_quiz, learning_type="quiz",
+                order=1, quiz=trial_quiz, type="quiz",
                 check_prerequisite=False)
             trial_learning_module.learning_unit.add(trial_learning_unit.id)
             trial_course.learning_module.add(trial_learning_module.id)
@@ -357,7 +360,7 @@ class Quiz(models.Model):
 class LearningUnit(models.Model):
     """ Maintain order of lesson and quiz added in the course """
     order = models.IntegerField()
-    learning_type = models.CharField(max_length=16)
+    type = models.CharField(max_length=16)
     lesson = models.ForeignKey(Lesson, null=True, blank=True)
     quiz = models.ForeignKey(Quiz, null=True, blank=True)
     check_prerequisite = models.BooleanField(default=True)
@@ -413,7 +416,7 @@ class LearningModule(models.Model):
 
     def get_quiz_units(self):
         return [unit.quiz for unit in self.learning_unit.filter(
-                learning_type="quiz")]
+                type="quiz")]
 
     def get_learning_units(self):
         return self.learning_unit.order_by("order")
@@ -423,7 +426,7 @@ class LearningModule(models.Model):
         added_quiz_lessons = []
         if learning_units.exists():
             for unit in learning_units:
-                if unit.learning_type == "quiz":
+                if unit.type == "quiz":
                     added_quiz_lessons.append(("quiz", unit.quiz))
                 else:
                     added_quiz_lessons.append(("lesson", unit.lesson))
@@ -607,7 +610,7 @@ class Course(models.Model):
             demo_que_ppr.create_demo_quiz_ppr(demo_quiz, user)
             success = True
             ordered_unit = LearningUnit.objects.create(
-                order=1, learning_type="quiz", quiz=demo_quiz)
+                order=1, type="quiz", quiz=demo_quiz)
             learning_module = LearningModule.objects.create(
                 name="demo module", description="demo module", creator=user)
             learning_module.learning_unit.add(ordered_unit)

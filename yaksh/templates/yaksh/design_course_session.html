@@ -40,7 +40,7 @@
                                     {% for unit in module.get_learning_units %}
                                         <ul class="inputs-list">
                                         <li>
-                                        {% if unit.learning_type == "quiz" %}
+                                        {% if unit.type == "quiz" %}
                                             {{unit.quiz.description}}
                                         {% else %}
                                             {{unit.lesson.name}}
