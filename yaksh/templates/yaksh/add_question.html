@@ -8,7 +8,7 @@
 
 {% block script %}
 <script src="{{ URL_ROOT }}/static/yaksh/js/add_question.js"></script>
-<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/mathjax/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 {% endblock %}
 
 {% block onload %} onload='javascript:textareaformat();' {% endblock %}

@@ -5,6 +5,11 @@
 
 {% block script %}
 <script src="{{ URL_ROOT }}/static/yaksh/js/lesson.js"></script>
+<script src="https://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css">
 {% endblock %}
 
 {% block content %}
@@ -43,8 +48,16 @@
     <button class="btn" type="submit" id="submit" name="Delete"> Delete Files
     </button>
     {% endif %}
+    {% if course_id %}
     <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button>
+    {% else %}
+    <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/all_lessons/");'>Cancel</button>
+    {% endif %}
+    </form>
     <button class="btn" type="button" name="button" id="preview">Preview Lesson Description
+    </button>
+    <button class="btn" type="button" name="button" id="embed">
+        Embed Video link
     </button>
     </center>
     <hr>
@@ -57,5 +70,5 @@
         <div class="panel-body" id="description_body">
         </div>
     </div>
-</form>
+
 {% endblock %}

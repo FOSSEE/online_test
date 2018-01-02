@@ -1,5 +1,4 @@
 {% extends "manage.html" %}
-{% load custom_filters %}
 {% block title %}Create/Edit Learning Module{% endblock %}
 
 {% block pagetitle %}<h4>Design Learning Module</h4>{% endblock %}
@@ -8,10 +7,12 @@
 <script src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/design_course.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/lesson.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-ui.js"></script>
 {% endblock %}
 
 {% block css %}
 <link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/design_course.css" />
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/jquery-ui/jquery-ui.css">
 {% endblock %}
 
 {% block content %}
@@ -33,10 +34,14 @@
     </center>
     <br><br>
     <center>
-    <button class="btn" type="submit" id="submit" name="Save"> Save
+    <button class="btn" type="submit" id="submit" name="Save">
+        Save
     </button>
     <button class="btn" type="button" name="button" id="preview">
         Preview Module Description
+    </button>
+    <button class="btn" type="button" name="button" id="embed">
+        Embed Video link
     </button>
     </center>
 </form>
@@ -81,7 +86,7 @@
                 </div>
                 <br>
                 <center>
-                <button class="btn" type="submit" id="submit" name="Add">
+                <button class="btn btn-success" type="submit" id="submit" name="Add">
                     Add to Module
                 </button>
                 </center>
@@ -94,15 +99,24 @@
                     <div id="fixed-added">
                         <table id="course-details" class="table table-bordered">
                         <tr>
-                        <th>Select</th>
+                        <th width="5%">Select</th>
                         <th>Quiz/Lesson</th>
-                        <th>Order</th>
-                        <th width="20%">Check Prerequisite
+                        <th width="20%">Order</th>
+                        <th width="25%" colspan="2">Check Prerequisite
+                            <br>
                             <a href="#" data-toggle="tooltip" id="prereq_msg">
                                 <span class="glyphicon glyphicon-question-sign">
                                 </span> What's This
                             </a>
                         </th>
+                        </tr>
+                        <tr>
+                            <th scope="row">&nbsp;</th>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <th>Currently</th>
+                            <th>Change</th>
+                        </tr>
                         </tr>
                            {% for unit in learning_units %}
                             <tr>
@@ -110,18 +124,24 @@
                             <td>
                                 <input type="checkbox" name="delete_list" value="{{unit.id}}">
                             </td>
-                            {% if unit.learning_type == "quiz" %}
-                                <td><span>{{ unit.quiz.description }} ({{unit.learning_type}})
+                            {% if unit.type == "quiz" %}
+                                <td><span>{{ unit.quiz.description }} ({{unit.type}})
                                 </span></td>
                                 <td><input type="number" name="order" data-item-id="{{unit.id}}" value="{{unit.order}}" step="1"></td>
                             {% else %}
-                                <td><span>{{ unit.lesson.name }} ({{unit.learning_type}})
+                                <td><span>{{ unit.lesson.name }} ({{unit.type}})
                                 </span></td>
                                 <td><input type="number" name="order" data-item-id="{{unit.id}}" value="{{unit.order}}" step="1"></td>
                             {% endif %}
                                 <td>
-                                <input type="checkbox" name="check_prereq" value="{{unit.id}}">
-                                &nbsp;{{unit.check_prerequisite}}
+                                    {% if unit.check_prerequisite %}
+                                        Yes
+                                    {% else %}
+                                        No
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <input type="checkbox" name="check_prereq" value="{{unit.id}}">
                                 </td>
                             </ul>
                             </tr>
@@ -131,9 +151,9 @@
                 </div>
                 <br>
                 <center>
-                <button id="Remove" name="Remove" class="btn small primary" type="submit">Remove from Module</button>
-                <button id="Change" name="Change" class="btn small primary" type="submit"> Change Order</button>
-                <button id="Change" name="Change_prerequisite" class="btn small primary" type="submit"> Change Prerequisite</button>
+                <button id="Remove" name="Remove" class="btn btn-danger" type="submit">Remove from Module</button>
+                <button id="Change" name="Change" class="btn btn-info" type="submit"> Change Order</button>
+                <button id="Change" name="Change_prerequisite" class="btn btn-primary" type="submit"> Change Prerequisite</button>
                 </center>
             </div>
         </div> <!-- /.row -->

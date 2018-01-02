@@ -14,6 +14,7 @@ before_install:
 # command to install dependencies
 install:
   - pip install -r requirements/requirements-common.txt
+  - pip install codecov
   - python setup.py develop
 
 # command to run tests and coverage
@@ -25,9 +26,13 @@ script:
 after_success:
   - coverage combine
   - coverage report
+  - codecov
+
+sudo:
+    required
 
 dist:
-    precise
+    trusty
 
 addons:
   firefox: "46.0"

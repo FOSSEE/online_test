@@ -86,34 +86,50 @@ function focus_on_error(ele){
       window.scrollBy(0, -15);
         }
     }
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
 
-function ajax_check_code(url, method_type, data_type, data, uid) {
-    $.ajax({
-        method: method_type,
-        url: url,
-        data: data,
-        dataType: data_type,
-        success: function(data, status, xhr) {
+function ajax_check_code(url, method_type, data_type, data, uid)
+ {
+    var ajax_post_data = {
+        "method": method_type,
+        "url": url,
+        "data": data,
+        "dataType": data_type,
+        "beforeSend": function(xhr, settings) {
+          if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+              xhr.setRequestHeader("X-CSRFToken", csrftoken);
+          }
+        },
+        "success": function(data, status, xhr) {
             content_type = xhr.getResponseHeader("content-type");
             response_handler(method_type, content_type, data, uid)
         },
-        error: function(xhr, text_status, error_thrown ) {
+        "error": function(xhr, text_status, error_thrown ) {
             reset_values();
             unlock_screen();
             notify("There is some problem. Try later.")
         }
-    });
+    }
+    if (question_type == "upload"){
+        ajax_post_data["processData"] = false;
+        ajax_post_data["contentType"] = false;
+    }
+    $.ajax(ajax_post_data);
 
 }
 
 var global_editor = {};
-
+var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
 $(document).ready(function(){
   if(is_exercise == "True" && can_skip == "False"){
       setTimeout(function() {show_solution();}, delay_time*1000);
   }
   // Codemirror object, language modes and initial content
   // Get the textarea node
+
   var textarea_node = document.querySelector('#answer');
 
   var mode_dict = {
@@ -134,19 +150,26 @@ $(document).ready(function(){
           render();
       }
   };
-
+  if (question_type == 'code'){
+  
   // Initialize the codemirror editor
   global_editor.editor = CodeMirror.fromTextArea(textarea_node, options);
-
   // Setting code editors initial content
   global_editor.editor.setValue(init_val);
-
+}
+if (question_type == 'upload' || question_type == 'code') {
   $('#code').submit(function(e) {
     lock_screen();
+    if (question_type == "code"){
     var data = $(this).serializeArray();
+  }
+  else if (question_type == "upload"){
+    var data = new FormData(getElementById("code"));
+  }
     ajax_check_code($(this).attr("action"), "POST", "html", data, null)
-        e.preventDefault(); // To stop the default form submission.
+    e.preventDefault(); // To stop the default form submission.
   });
+  }
 
   reset_editor = function() {
       global_editor.editor.setValue(init_val);

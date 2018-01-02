@@ -4,7 +4,8 @@
 {% block pagetitle %} Answer Paper  for {{ quiz.description }}{% endblock pagetitle %}
 
 {% block script %}
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/mathjax/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
 {% endblock script %}
 
 {% block main %}

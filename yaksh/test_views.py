@@ -497,7 +497,7 @@ class TestMonitor(TestCase):
             creator=self.user
         )
         self.learning_unit = LearningUnit.objects.create(
-            order=1, learning_type="quiz", quiz=self.quiz)
+            order=1, type="quiz", quiz=self.quiz)
         self.learning_module = LearningModule.objects.create(
             order=1, name="test module", description="test",
             creator=self.user, check_prerequisite=False)
@@ -671,7 +671,7 @@ class TestGradeUser(TestCase):
             creator=self.user
         )
         self.learning_unit = LearningUnit.objects.create(
-            order=1, learning_type="quiz", quiz=self.quiz)
+            order=1, type="quiz", quiz=self.quiz)
         self.learning_module = LearningModule.objects.create(
             order=1, name="test module", description="test",
             creator=self.user, check_prerequisite=False)
@@ -877,7 +877,7 @@ class TestDownloadAssignment(TestCase):
             description='demo_quiz', pass_criteria=40
         )
         self.learning_unit = LearningUnit.objects.create(
-            order=1, learning_type="quiz", quiz=self.quiz)
+            order=1, type="quiz", quiz=self.quiz)
         self.learning_module = LearningModule.objects.create(
             order=1, name="test module", description="test",
             creator=self.user, check_prerequisite=False)
@@ -3977,7 +3977,7 @@ class TestQuestionPaper(TestCase):
         )
 
         self.learning_unit = LearningUnit.objects.create(
-            order=1, learning_type="quiz", quiz=self.quiz)
+            order=1, type="quiz", quiz=self.quiz)
         self.learning_module = LearningModule.objects.create(
             order=1, name="test module", description="module",
             check_prerequisite=False, creator=self.user)
@@ -4429,12 +4429,12 @@ class TestLearningModule(TestCase):
         self.lesson = Lesson.objects.create(
             name="test lesson", description="test description",
             creator=self.user)
-        # create quiz leanring unit
+        # create quiz learning unit
         self.learning_unit = LearningUnit.objects.create(
-            order=0, learning_type="quiz", quiz=self.quiz)
-        # create lesson leanring unit
+            order=0, type="quiz", quiz=self.quiz)
+        # create lesson learning unit
         self.learning_unit1 = LearningUnit.objects.create(
-            order=1, learning_type="lesson", lesson=self.lesson)
+            order=1, type="lesson", lesson=self.lesson)
         # create learning module
         self.learning_module = LearningModule.objects.create(
             order=0, name="test module", description="module",
@@ -4573,7 +4573,7 @@ class TestLearningModule(TestCase):
         self.assertTemplateUsed(response, 'yaksh/add_module.html')
         learning_unit = self.learning_module1.learning_unit.all().first()
         self.assertEqual(self.quiz, learning_unit.quiz)
-        self.assertEqual(learning_unit.learning_type, "quiz")
+        self.assertEqual(learning_unit.type, "quiz")
         self.assertEqual(learning_unit.order, 1)
 
         # Test change order of learning unit
@@ -4777,7 +4777,7 @@ class TestLessons(TestCase):
             name="test lesson", description="test description",
             creator=self.user)
         self.learning_unit = LearningUnit.objects.create(
-            order=0, learning_type="lesson", lesson=self.lesson)
+            order=0, type="lesson", lesson=self.lesson)
         self.learning_module = LearningModule.objects.create(
             order=0, name="test module", description="module",
             check_prerequisite=False, creator=self.user)

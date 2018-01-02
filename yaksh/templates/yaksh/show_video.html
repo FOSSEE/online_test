@@ -5,41 +5,39 @@
 
 {% block pagetitle %} {{ learning_module.name|title }} {% endblock %}
 
-{% block usersidebar %}
-<br><br><br>
-<center><h3>Lessons/Quizzes</h3></center>
-<ul class="list">
-{% for unit in learning_units %}
-<span>
-<li>
-{% get_unit_status course learning_module unit user as status %}
-
-{% if unit.id == current_unit.id %}
-    <span class="glyphicon glyphicon-edit" data-toggle="tooltip" title="Currently on">
-    </span>
-{% endif %}
-{% if unit.learning_type == "quiz" %}
-    <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{learning_module.id}}/{{course.id}}">
-        {{ unit.quiz.description }}
-    </a>
-{% else %}
-    <a href="{{ URL_ROOT }}/exam/show_lesson/{{unit.lesson.id}}/{{learning_module.id}}/{{course.id}}">
-        {{ unit.lesson.name }}
-    </a>
-{% endif %}
-{% if status == "completed" %}
-  <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
-{% else %}
-  <span class="glyphicon glyphicon-remove" style="color:  #FF0000"></span>
-{% endif %}
-</li>
-</span>
-<br>
-{% endfor %}
-</ul>
-{% endblock %}
-
 {% block main %}
+<div class="col-sm-3 col-md-2 sidebar">
+    <center><h3>Lessons/Quizzes</h3></center>
+    <ul class="list">
+    {% for unit in learning_units %}
+    <span>
+    <li>
+    {% get_unit_status course learning_module unit user as status %}
+
+    {% if unit.id == current_unit.id %}
+        <span class="glyphicon glyphicon-edit" data-toggle="tooltip" title="Currently on">
+        </span>
+    {% endif %}
+    {% if unit.type == "quiz" %}
+        <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{learning_module.id}}/{{course.id}}">
+            {{ unit.quiz.description }}
+        </a>
+    {% else %}
+        <a href="{{ URL_ROOT }}/exam/show_lesson/{{unit.lesson.id}}/{{learning_module.id}}/{{course.id}}">
+            {{ unit.lesson.name }}
+        </a>
+    {% endif %}
+    {% if status == "completed" %}
+      <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
+    {% else %}
+      <span class="glyphicon glyphicon-remove" style="color:  #FF0000"></span>
+    {% endif %}
+    </li>
+    </span>
+    <br>
+    {% endfor %}
+    </ul>
+</div>
 {% if msg %}
 <center>
 <div class="col-md-12 col-md-offset-1 main">
@@ -48,7 +46,7 @@
 {% endif %}
 <div class="col-md-12 col-md-offset-1 main">
 {% if state == "module" %}
-<div class="panel panel-default">
+<div class="panel panel-default" style="border: none; box-shadow: none;">
     <div class="panel-body">
         {{learning_module.html_data|safe}}
     </div>
@@ -61,11 +59,26 @@
 </div>
 {% else %}
 <center><h3>{{lesson.name}}</h3></center>
-<div class="panel panel-default">
+<div class="panel panel-default" style="border: none; box-shadow: none;">
     <div class="panel-body">
         {{lesson.html_data|safe}}
     </div>
 </div>
+{% if lesson.get_files %}
+    <div class="panel" style="border-width: 10px;">
+        <center>
+        <div class="alert alert-success">
+            <h4>Files for this lesson</h4>
+        </div>
+        {% for f in lesson.get_files %}
+            <h4>
+            <b>{{forloop.counter}}.</b>
+            <a href="{{f.file.url}}">{{ f.file.name|file_title }}</a>
+            </h4><br>
+        {% endfor %}
+        </center>
+    </div>
+{% endif %}
 <div style="text-align: center;">
     <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{current_unit.id}}" class="btn btn-info" style="display: inline-block;">Next Unit
         <span class="glyphicon glyphicon-chevron-right">

@@ -25,7 +25,7 @@
         <div class="row">
             <div class="col-md-6">
               <center>
-                {% if status == "moderator" %}
+                {% if status != "moderator" %}
                     <a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}" class="btn btn-primary" name="home">
                     <span class=" glyphicon glyphicon-arrow-left">
                     </span>
