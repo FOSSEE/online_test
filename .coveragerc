@@ -6,6 +6,21 @@ omit =
      *migrations*
      yaksh/test_views.py
      yaksh/test_models.py
+     yaksh/scripts/*
+     online_test/settings.py
+     online_test/urls.py
+     online_test/test_settings.py
+     manage.py
+     online_test/wsgi.py
+     online_test/__init__.py
+     yaksh/__init__.py
+     yaksh/pipeline/*
+     yaksh/migrations/*
+     yaksh/templatetags/__init__.py
+     yaksh/middleware/__init__.py
+     setup.py
+     tasks.py
+     yaksh/admin.py
      *management*
 
 [report]

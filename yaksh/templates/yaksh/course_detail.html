@@ -2,7 +2,9 @@
 
 {% block title %} Course Details {% endblock title %}
 
+<div class="col-md-9 col-md-offset-2 main">
 {% block pagetitle %} Course Details for {{ course.name|title }} {% endblock %}
+</div>
 
 {% block script %}
 <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/course.js"></script>
@@ -29,14 +31,6 @@
             <li><a href="#rejected-students" id="reject-students">
             Rejected Students </a></li>
         {% endif %}
-        <li>
-        <a href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">
-        {% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}</a>
-        </li>
-        <li>
-        <a href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/">
-        Clone Course</a>
-        </li>
         <li>
         <a href="{{URL_ROOT}}/exam/manage/send_mail/{{ course.id }}/">
         Send Mail</a>

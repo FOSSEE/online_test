@@ -1,4 +1,5 @@
 {% extends "manage.html" %}
+{% load custom_filters %}
 {% block pagetitle %} Moderator's Dashboard {% endblock pagetitle %}
 
 {% block script %}
@@ -9,31 +10,48 @@
 
 <center><h4>List of quizzes! Click on the given links to have a look at answer papers for a quiz.</h4></center>
 <table class="table table-bordered">
-    <th>Course</th>
-    <th>Quiz</th>
-    <th>Taken By</th>
-    <th>No. of users Passed</th>
-    <th>No. of users Failed</th>
-    {% for paper, answer_papers, users_passed, users_failed in users_per_paper %}
+    <th>Courses</th>
+    <th>Quizzes</th>
+    {% for course in courses %}
         <tr>
             <td>
-                {{ paper.quiz.course.name }}
+                <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}">
+                {{ course }}
+                </a>
             </td>
             <td>
-                <a href="{{URL_ROOT}}/exam/manage/monitor/{{ paper.quiz.id }}/">{{ paper.quiz.description }}</a>
-            </td>
-            <td>
-                {{ answer_papers|length }} user(s)
-            </td>
-            <td>
-                {{ users_passed }}
-            </td>
-            <td>
-                {{ users_failed }}
+                {% get_course_details course as course_details %}
+                {% if course_details %}
+                <table class="table table-bordered">
+                  <th>Quiz</th>
+                  <th>Taken By</th>
+                  <th>No. of users Passed</th>
+                  <th>No. of users Failed</th>
+                  {% for quiz, users_no, passed, failed in course_details %}
+                  <tr>
+                    <td>
+                    <a href="{{URL_ROOT}}/exam/manage/monitor/{{ quiz.id }}/{{course.id}}">{{ quiz.description }}</a>
+                    </td>
+                    <td>
+                      {{users_no}} user(s)
+                    </td>
+                    <td>
+                      {{passed}}
+                    </td>
+                    <td>
+                      {{failed}}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </table>
+                {% else %}
+                  No Quizzes
+                {% endif %}
             </td>
         </tr>
     {% endfor %}
 </table>
+
 <hr>
 <center>
     <a href="{{URL_ROOT}}/exam/manage/add_course" class="btn btn-default">
@@ -46,7 +64,7 @@
       <span class="glyphicon glyphicon-question-sign"></span> What's This
     </a>
     <div id="help" class="collapse">
-      <ul>
+      <ul class="list">
         <li>A Demo Course and Demo Quiz will be created (Click Courses link on nav bar to view courses).</li>
         <li>Some Demo Questions are also created for you (Click Questions link on nav bar to view questions).</li>
         <li>In Courses you can view Demo Quiz.</li>
@@ -70,7 +88,7 @@
    {% for paper in trial_paper %}
   <tr>
   <td> <input type = "checkbox" name="delete_paper" class="check" value = {{paper.id}}></input></td>
-  <td> <a href="{{URL_ROOT}}/exam/manage/gradeuser/{{paper.question_paper.quiz.id}}">{{paper.question_paper.quiz.description}}</a></td>
+  <td> <a href="{{URL_ROOT}}/exam/manage/gradeuser/{{paper.question_paper.quiz.id}}/{{paper.course.id}}/">{{paper.question_paper.quiz.description}}</a></td>
   </tr>
   {% endfor %}
   </table>

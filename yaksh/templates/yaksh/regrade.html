@@ -33,7 +33,7 @@
        <a href="#questions_quizzes{{ course.id }}" data-toggle="collapse">Course: {{ course }}</a>
       </span></h4>
        <div id="questions_quizzes{{ course.id }}" class="collapse">
-        {% for quiz in course.quiz_set.all %}
+        {% for quiz in course.get_quizzes %}
           <p><a href="#questions_questions{{ course.id }}{{ quiz.id }}" data-toggle="collapse">Quiz: {{ quiz }}</a></p>
           <div id="questions_questions{{ course.id }}{{ quiz.id }}" class="collapse">
            {% with questionpaper=quiz.questionpaper_set.get %}
@@ -69,7 +69,7 @@
       <a href="#quizzes_quizzes{{ course.id }}" data-toggle="collapse">Course: {{ course }}</a>
      </span></h4>
      <div id="quizzes_quizzes{{ course.id }}" class="collapse">
-      {% for quiz in course.quiz_set.all %}
+      {% for quiz in course.get_quizzes %}
       <p><a href="#quizzes_papers{{ course.id }}{{ quiz.id }}" data-toggle="collapse">Quiz: {{ quiz }}</a></p>
        <div id="quizzes_papers{{ course.id }}{{ quiz.id }}" class="collapse">
        <ol class="list-group">

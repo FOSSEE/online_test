@@ -6,7 +6,7 @@
 <div class="row">
     <div class="col-md-2">
 {% for attempt in attempts %}
-    <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{questionpaper_id}}/{{attempt}}">Attempt {{ attempt }}</a></p>
+    <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{questionpaper_id}}/{{attempt}}/{{course_id}}">Attempt {{ attempt }}</a></p>
     {% endfor %}
 </div>
 <div class="col-md-9">

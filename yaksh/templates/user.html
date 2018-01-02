@@ -11,10 +11,9 @@
                   <span class="icon-bar"></span>
                   <span class="icon-bar"></span>
               </button>
-
-          <a class="navbar-brand navbar-left" href="{{ URL_ROOT }}/exam/manage/">
+          <a class="navbar-brand navbar-left" href="{{ URL_ROOT }}/exam/">
             <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH" style="margin-top: -3px; margin-left:-15px">
-          </img>
+            </img>
           </a>
         </div>
         <div class= "collapse navbar-collapse" id="navbar">
@@ -30,8 +29,12 @@
 {% endblock %}
 {% block content %}
 <div class="row">
+    <div class="col-sm-8 col-sm-offset-3 col-md-9 col-md-offset-2 main">
+    <div class="row">
         {% block main %}
         {% endblock %}
+    </div>
+    </div>
 </div>
 {% endblock %}
 {% if user %}

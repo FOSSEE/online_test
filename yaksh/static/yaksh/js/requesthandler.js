@@ -37,7 +37,7 @@ function unlock_screen() {
 }
 
 function get_result(uid){
-    var url = "/exam/get_result/" + uid + "/";
+    var url = "/exam/get_result/" + uid + "/" + course_id + "/" + module_id + "/";
     ajax_check_code(url, "GET", "html", null, uid)
 }
 

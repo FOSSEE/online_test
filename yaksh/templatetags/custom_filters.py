@@ -1,5 +1,6 @@
 from django import template
 from django.template.defaultfilters import stringfilter
+import os
 try:
     from itertools import zip_longest
 except ImportError:
@@ -27,3 +28,23 @@ def inprogress(answerpaper):
 @register.filter(name='zip')
 def zip_longest_out(a, b):
 	return zip_longest(a, b)
+
+
+@register.filter(name="file_title")
+def file_title(name):
+	return os.path.basename(name)
+
+
+@register.simple_tag
+def get_unit_status(course, module, unit, user):
+	return course.get_unit_completion_status(module, user, unit)
+
+
+@register.simple_tag
+def get_module_status(user, module, course):
+	return module.get_status(user, course)
+
+
+@register.simple_tag
+def get_course_details(course):
+	return course.get_quiz_details()

@@ -1,9 +1,15 @@
 {% extends "user.html" %}
+{% block title %} Student Dashboard {% endblock %}
 {% block pagetitle %} {{ title }} {% endblock %}
 {% block main %}
+    {% if msg %}
+        <div class="alert alert-warning" role="alert">
+            <center>{{ msg }}</center>
+        </div>
+    {% endif %}
     {% if 'Enrolled Courses' not in title%}
         <div class="row well">
-            <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" class="form-search form-horizontal pull-right">
+            <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" class="form-search form-horizontal">
                 {% csrf_token %}
                 <div class="col-md-12">
                     <div class="input-group">
@@ -26,7 +32,11 @@ No Courses to display
     <div class="col-md-12">
         <div class="row">
             <div class="col-md-4">
-                <h4><b><u> {{ course.name }} by {{ course.creator.get_full_name }}</u></b></h4>
+                <h4><b>
+                    <a href="{{URL_ROOT}}/exam/course_modules/{{course.id}}">
+                    {{ course.name }} by {{ course.creator.get_full_name }}
+                    </a>
+                </b></h4>
             </div>
             <div class="col-md-4">
                 {% if not course.active %}
@@ -47,45 +57,6 @@ No Courses to display
                     {% endif %}
                 {% endif %}
             </div>
-        </div>
-
-        <div class="row">
-        {% if user in course.students.all %}
-            <table class="table table-bordered">
-                <th>Quiz</th>
-                <th>View Answer Paper</th>
-                <th>Pre requisite quiz</th>
-                {% for quiz in course.get_quizzes %}
-                    {% if quiz.active and quiz.course_id == course.id %}
-                    <tr>
-                        {% if not quiz.is_expired and course.active %}
-                            <td>
-                                <a href="{{ URL_ROOT }}/exam/start/{{quiz.questionpaper_set.get.id}}">{{ quiz.description }}</a><br>
-                            </td>
-                        {% else %}
-                            <td>
-                                {{ quiz.description }} <span class="label label-danger">Inactive</span><br>
-                            </td>
-                        {% endif %}
-                        <td>
-                            {% if quiz.view_answerpaper %}
-                                <a href="{{ URL_ROOT }}/exam/view_answerpaper/{{ quiz.questionpaper_set.get.id }}/"><i class="fa fa-eye" aria-hidden="true"></i> Can View </a>
-                            {% else %}
-                                <a><i class="fa fa-eye-slash" aria-hidden="true"></i> Cannot view now </a>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if quiz.prerequisite %}
-                                You have to pass {{ quiz.prerequisite.description }} for taking {{ paper.quiz.description }}
-                            {% else %}
-                                No pre requisites for {{ quiz.description }}
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endif %}
-                {% endfor %}
-            </table>
-        {% endif %}
         </div>
 
         {% if course.instructions %}
