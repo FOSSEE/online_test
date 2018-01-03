@@ -23,9 +23,9 @@
             <ul class="nav navbar-nav navbar">
               <li style="padding: 10px"><button class="btn btn-danger btn-sm" type="submit" name="quit">
                 {% if paper.questions_unanswered.all %}
-                  Quit Exam
+                  Quit {{ quiz_type }}
                 {% else %}
-                  Finish Exam
+                  Finish {{ quiz_type }}
                 {% endif %}
               <span class="glyphicon glyphicon-off"></span></button></li>
             </ul>

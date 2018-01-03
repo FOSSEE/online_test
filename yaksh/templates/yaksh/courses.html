@@ -152,8 +152,13 @@
                         <ul class="inputs-list">
                         <li>
                         {% if unit.type == "quiz" %}
-                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
-                            {{unit.quiz.description}}</a>
+                            {% if unit.quiz.is_exercise %}
+                                <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{unit.quiz.id}}/{{course.id}}">
+                                {{unit.quiz.description}}</a>
+                            {% else %}
+                                <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
+                                {{unit.quiz.description}}</a>
+                            {% endif %}
                         {% else %}
                             <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{unit.lesson.id}}/{{course.id}}">
                             {{unit.lesson.name}}</a>
@@ -283,8 +288,13 @@
                         <ul class="inputs-list">
                         <li>
                         {% if unit.type == "quiz" %}
-                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
-                            {{unit.quiz.description}}</a>
+                            {% if unit.quiz.is_exercise %}
+                                <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{unit.quiz.id}}/{{course.id}}">
+                                {{unit.quiz.description}}</a>
+                            {% else %}
+                                <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
+                                {{unit.quiz.description}}</a>
+                            {% endif %}
                         {% else %}
                             <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{unit.lesson.id}}/{{course.id}}">
                             {{unit.lesson.name}}</a>
@@ -313,7 +323,8 @@
 <div id="all_quizzes" >
 <div class="col-md-offset-2 main">
 {% if type == "quiz" %}
-    <a href="{{URL_ROOT}}/exam/manage/addquiz/" class="btn btn-primary">Add new Quiz</a>
+    <a href="{{URL_ROOT}}/exam/manage/addquiz/" class="btn btn-primary">Add New Quiz</a>
+    <a href="{{URL_ROOT}}/exam/manage/add_exercise/" class="btn btn-primary">Add New Exercise</a>
     {% if not quizzes %}
         <center><h4> No new Quiz Added</h4></center>
         <br><br>
@@ -331,8 +342,11 @@
         <td>{{forloop.counter}}</td>
         <td width="30%">
             <ul class="list-group">
-            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}
-            </a>
+            {% if quiz.is_exercise %}
+                <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{quiz.id}}/">{{ quiz.description }}</a>
+            {% else %}
+            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}</a>
+            {% endif %}
             {% if quiz.active %}
                 <span class="label label-success">Active</span>
             {% else %}

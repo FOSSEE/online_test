@@ -311,6 +311,8 @@ class Quiz(models.Model):
 
     weightage = models.FloatField(default=1.0)
 
+    is_exercise = models.BooleanField(default=False)
+
     creator = models.ForeignKey(User, null=True)
 
     objects = QuizManager()
@@ -756,6 +758,10 @@ class Question(models.Model):
 
     # Check assignment upload based question
     grade_assignment_upload = models.BooleanField(default=False)
+
+    min_time =  models.IntegerField("time in minutes", default=0)
+
+    solution = models.TextField(blank=True)
 
     def consolidate_answer_data(self, user_answer, user=None):
         question_data = {}
@@ -1527,15 +1533,25 @@ class AnswerPaper(models.Model):
 
     def time_left(self):
         """Return the time remaining for the user in seconds."""
+        secs = self._get_total_seconds()
+        total = self.question_paper.quiz.duration*60.0
+        remain = max(total - secs, 0)
+        return int(remain)
+
+    def time_left_on_question(self, question):
+        secs = self._get_total_seconds()
+        total = question.min_time*60.0
+        remain = max(total - secs, 0)
+        return int(remain)
+
+    def _get_total_seconds(self):
         dt = timezone.now() - self.start_time
         try:
             secs = dt.total_seconds()
         except AttributeError:
             # total_seconds is new in Python 2.7. :(
             secs = dt.seconds + dt.days*24*3600
-        total = self.question_paper.quiz.duration*60.0
-        remain = max(total - secs, 0)
-        return int(remain)
+        return secs
 
     def _update_marks_obtained(self):
         """Updates the total marks earned by student for this paper."""

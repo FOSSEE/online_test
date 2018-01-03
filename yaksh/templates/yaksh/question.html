@@ -22,7 +22,18 @@
 <script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/shell/shell.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/mathjax/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 <script>
+init_val = '{{ last_attempt|escape_quotes|safe }}';
+lang = "{{ question.language }}"
+course_id = "{{course.id}}"
+module_id = "{{module.id}}"
+is_exercise = "{{ quiz.is_exercise }}"
+can_skip = "{{ can_skip }}"
+delay_time = new Number("{{ delay_time }}")
+
 var time_left = {{ paper.time_left }}
+{% if quiz.is_exercise %}
+    time_left = {{ delay_time }}
+{% endif %}
 
 function getTimeRemaining(endtime){
   var t = Date.parse(endtime) - Date.parse(new Date());
@@ -51,13 +62,15 @@ function updateClock(){
     var mm = ('0' + t.minutes).slice(-2);
     var ss = ('0' + t.seconds).slice(-2);
 
-    if(t.total<0){
-        
+    if(t.total<0 && is_exercise=="False"){
       document.forms["code"].submit();
       clearInterval(timeinterval);
       return null;
     }
-    if (t.total<=300000){
+    if(t.total<=0 && is_exercise=="True"){
+      clearInterval(timeinterval);
+    }
+    if (t.total<=300000 && t.total > 0){
         clock.innerHTML = "<blink><center><span style='color:red'><strong>" + hh + ":" + mm + ":" + ss + "</strong></center></span></blink>";
     }
     if (t.total>=300000) {
@@ -67,6 +80,7 @@ function updateClock(){
 var clock = document.getElementById("time_left");
 updateClock();
 var timeinterval = setInterval(updateClock,1000);
+
 }
 
 function validate(){
@@ -91,7 +105,6 @@ module_id = "{{module.id}}"
 question_type = "{{ question.type }}"
 
 </script>
-
 {% endblock script %}
 
 {% block onload %} onload="updateTime();" {% endblock %}
@@ -184,6 +197,21 @@ question_type = "{{ question.type }}"
                       <h5><a href="{{f_name.file.url}}">{{f_name.file.name}}</a></h5>
                       {% endfor %}
                       {% endif %}
+
+                        {% if quiz.is_exercise %}
+                            {% if can_skip %}
+                                <div id="solution">
+                            {% else %}
+                                <div id="solution" style="display:none">
+                            {% endif %}
+                                {% if question.solution %}
+                                <h4><u> Solution by teacher</u></h4>
+                                {% else %}
+                                <h4><u> No solution provided by teacher </u></h4>
+                                {% endif%}
+                                <font size=3 face=arial> {{ question.solution|safe }} </font>
+                                </div>
+                        {% endif %}
                  </div>
                  <div class="panel-body">
                      {% if question.type == "mcq" %}
@@ -253,16 +281,23 @@ question_type = "{{ question.type }}"
          <br><button class="btn btn-primary" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
 
          {% else %}
-           {% if question in paper.get_questions_unanswered %}
+           {% if question in paper.get_questions_unanswered or quiz.is_exercise %}
            <button class="btn btn-primary" type="submit" name="check" id="check" >Check Answer <span class="glyphicon glyphicon-cog"></span></button>&nbsp;&nbsp;
            {% endif %}
          {% endif %}
+         {% if quiz.is_exercise %}
+         {% if can_skip %}
+             <button id="skip_ex" class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip"> Next <span class="glyphicon glyphicon-arrow-right"></span></button>
+         {% else %}
+             <button id="skip_ex" class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" style="visibility:hidden"> Next <span class="glyphicon glyphicon-arrow-right"></span></button>
+        {% endif %}
+        {% endif %}
 
          {% if paper.question_paper.quiz.allow_skip and not paper.get_questions_unanswered|length_is:"1" %}
          {% if question in paper.get_questions_unanswered %}
          <button class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" id="skip">Attempt Later <span class="glyphicon glyphicon-arrow-right"></span></button>
          {% endif %}
-         {% endif %} 
+         {% endif %}
        </div>
          </form>
          </div>
