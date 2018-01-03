@@ -11,13 +11,21 @@
 {% block main %}
 
 {% if not data.papers %}
+    {% if quiz.is_exercise %}
+    <p><b> You have not attempted the Exercise {{ quiz.description }} </b></p>
+    {% else %}
     <p><b> You have not attempted the quiz {{ quiz.description }} </b></p>
+    {% endif %}
 {% else %}
     {% for paper in data.papers %}
     {% if forloop.counter == 2 and data.questionpaperid %}
     <U><h2> Previous attempts </h2></U>
     {% endif %}
-    <h2> Quiz: {{ paper.question_paper.quiz.description }} </h2>
+    {% if quiz.is_exercise %}
+        <h2> Exercise: {{ paper.question_paper.quiz.description }} </h2>
+    {% else %}
+        <h2> Quiz: {{ paper.question_paper.quiz.description }} </h2>
+    {% endif %}
 
     <p>
     Attempt Number: {{ paper.attempt_number }}<br/>

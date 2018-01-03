@@ -199,20 +199,18 @@ question_type = "{{ question.type }}"
                       {% endif %}
 
                         {% if quiz.is_exercise %}
-                            {% if question.solution %}
-                                <h4><u> Solution by teacher</u></h4>
-                            {% else %}
-                                <h4><u> No solution provided by teacher </u></h4>
-                            {% endif%}
                             {% if can_skip %}
                                 <div id="solution">
-                                    <font size=3 face=arial> {{ question.solution|safe }} </font>
-                                </div>
                             {% else %}
                                 <div id="solution" style="display:none">
-                                    <font size=3 face=arial> {{ question.solution|safe }} </font>
-                                </div>
                             {% endif %}
+                                {% if question.solution %}
+                                <h4><u> Solution by teacher</u></h4>
+                                {% else %}
+                                <h4><u> No solution provided by teacher </u></h4>
+                                {% endif%}
+                                <font size=3 face=arial> {{ question.solution|safe }} </font>
+                                </div>
                         {% endif %}
                  </div>
                  <div class="panel-body">

@@ -176,7 +176,7 @@ class UserLoginForm(forms.Form):
 class ExerciseForm(forms.ModelForm):
     class Meta:
         model = Quiz
-        fields = ['description']
+        fields = ['description', 'view_answerpaper']
 
 
 class QuizForm(forms.ModelForm):

@@ -586,7 +586,7 @@ def show_question(request, question, paper, error_message=None, notification=Non
         reason = 'The quiz has been deactivated!'
         return complete(
             request, reason, paper.attempt_number, paper.question_paper.id,
-            module_id=module_id
+            course_id=course_id, module_id=module_id
         )
     if not quiz.is_exercise:
         if paper.time_left() <= 0:
@@ -955,7 +955,7 @@ def enroll_request(request, course_id):
     user = request.user
     ci = RequestContext(request)
     course = get_object_or_404(Course, pk=course_id)
-    if not course.is_active_enrollment and course.hidden:
+    if not course.is_active_enrollment() and course.hidden:
         msg = (
             'Unable to add enrollments for this course, please contact your '
             'instructor/administrator.'
@@ -1028,7 +1028,7 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
         raise Http404('You are not allowed to view this page')
 
     course = get_object_or_404(Course, pk=course_id)
-    if not course.is_active_enrollment:
+    if not course.is_active_enrollment():
         msg = (
             'Enrollment for this course has been closed,'
             ' please contact your '

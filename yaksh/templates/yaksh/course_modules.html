@@ -31,7 +31,7 @@
                 </span>
                 <span class="glyphicon glyphicon-chevron-up" id="learning_units{{module.id}}{{course.id}}_up" style="display: none;"></span>
                 <a data-toggle="collapse" data-target="#learning_units{{module.id}}{{course.id}}" onclick="view_unit('learning_units{{module.id}}{{course.id}}');">
-                View Lessons/Quizzes</a>
+                View Lessons/Quizzes/Exercises</a>
                 </td>
                 <td>
                 {% get_module_status user module course as module_status %}
@@ -56,7 +56,7 @@
         <div id="learning_units{{module.id}}{{course.id}}" class="collapse">
         <table class="table">
             <tr>
-            <th>Lesson/Quiz</th>
+            <th>Lesson/Quiz/Exercise</th>
             <th>Status</th>
             <th>Type</th>
             <th>View AnswerPaper</th>
@@ -85,7 +85,15 @@
                 {% endif %}
                 </td>
                 <td>
-                    {{unit.type|title}}
+                {% if unit.type == "quiz" %}
+                    {% if unit.quiz.is_exercise %}
+                        Exercise
+                    {% else %}
+                        Quiz
+                    {% endif %}
+                {% else %}
+                    Lesson
+                {% endif %}
                 </td>
                 <td>
                 {% if unit.type == "quiz" %}
