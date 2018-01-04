@@ -1740,7 +1740,7 @@ class AnswerPaper(models.Model):
                                       server_port=server_port
                                       )
         if question.type == "code":
-            url = 'http://localhost:%s' % server_port
+            url = '{0}:{1}'.format(SERVER_HOST_NAME, server_port)
             check_result = get_result_from_code_server(url, result['uid'],
                                                        block=True
                                                        )
