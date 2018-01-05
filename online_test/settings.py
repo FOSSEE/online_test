@@ -8,8 +8,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.6/ref/settings/
 """
 from yaksh.pipeline.settings import AUTH_PIPELINE
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from decouple import config
+
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # The directory where user data can be saved.  This directory will be
@@ -21,11 +23,10 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "yaksh_data", "output")
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '0=fsi3g5dw*7ze1cyh441_e^5^$2ay@&z(5(n7mhir0xb267=6'
+SECRET_KEY = config('SECRET_KEY', default='dUmMy_s3cR3t_k3y')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 
 ALLOWED_HOSTS = []
 
@@ -64,11 +65,17 @@ WSGI_APPLICATION = 'online_test.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.{0}'.format(
+            config('DB_ENGINE', default='sqlite3')
+        ),
+        'NAME': config('DB_NAME', default=os.path.join(BASE_DIR, 'db.sqlite3')),
+        # The following settings are not used with sqlite3:
+        'USER': config('DB_USER', default=''),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': config('DB_HOST', default='localhost'), # Empty for localhost through domain sockets or '1$
+        'PORT': config('DB_PORT', default=''),
     },
 }
 
@@ -99,6 +106,8 @@ SOCIAL_AUTH_LOGIN_ERROR_URL = '/exam/login/'
 MEDIA_URL = "/data/"
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "yaksh_data", "data")
+
+STATIC_ROOT='yaksh/static/'
 
 # Set this varable to <True> if smtp-server is not allowing to send email.
 EMAIL_USE_TLS = False
