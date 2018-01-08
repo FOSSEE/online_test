@@ -330,7 +330,7 @@ class Quiz(models.Model):
             duration=30, active=True,
             attempts_allowed=-1, time_between_attempts=0,
             description='Yaksh Demo quiz', pass_criteria=0,
-            creator=user
+            creator=user, instructions="<b>This is a demo quiz.</b>"
         )
         return demo_quiz
 

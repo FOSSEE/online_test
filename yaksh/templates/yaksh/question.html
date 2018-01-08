@@ -144,21 +144,6 @@ question_type = "{{ question.type }}"
 {% endblock %}
 
 {% block main %}
-        <p id="status"></p>
-        {% if notification %}
-          {% if question.type == "code" %}
-          <div id="notification" class="alert alert-success" role="alert">
-            <strong>Note:</strong> {{ notification }}
-          </div>
-          {% else %}
-          <div id="notification" class="alert alert-warning" role="alert">
-            <strong>Note:</strong> {{ notification }}
-          </div>
-          {% endif %}
-        {% else %}
-          <div id="notification" role="alert">
-          </div>
-        {% endif %}
         <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <input type=hidden name="question_id" id="question_id" value={{ question.id }}></input>
@@ -197,22 +182,20 @@ question_type = "{{ question.type }}"
                       <h5><a href="{{f_name.file.url}}">{{f_name.file.name}}</a></h5>
                       {% endfor %}
                       {% endif %}
-
+                </div>
+                <br/>
                         {% if quiz.is_exercise %}
                             {% if can_skip %}
-                                <div id="solution">
+                                <div class = "well well-sm" id="solution">
                             {% else %}
                                 <div id="solution" style="display:none">
                             {% endif %}
                                 {% if question.solution %}
                                 <h4><u> Solution by teacher</u></h4>
-                                {% else %}
-                                <h4><u> No solution provided by teacher </u></h4>
                                 {% endif%}
                                 <font size=3 face=arial> {{ question.solution|safe }} </font>
                                 </div>
                         {% endif %}
-                 </div>
                  <div class="panel-body">
                      {% if question.type == "mcq" %}
                      {% for test_case in test_cases %}
@@ -304,6 +287,21 @@ question_type = "{{ question.type }}"
      </div>
    </div>
    <br/>
+   <p id="status"></p>
+        {% if notification %}
+          {% if question.type == "code" %}
+          <div id="notification" class="alert alert-success" role="alert">
+            <strong>Note:</strong> {{ notification }}
+          </div>
+          {% else %}
+          <div id="notification" class="alert alert-warning" role="alert">
+            <strong>Note:</strong> {{ notification }}
+          </div>
+          {% endif %}
+        {% else %}
+          <div id="notification" role="alert">
+          </div>
+        {% endif %}
   {% if question.type == 'code' or question.type == 'upload' %}
   <div class="row" id="error_panel"></div>
   {% endif %}

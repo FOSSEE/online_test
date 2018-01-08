@@ -37,7 +37,9 @@ function unlock_screen() {
 }
 
 function show_solution() {
-    document.getElementById("solution").style.display = "block";
+    var solution = document.getElementById("solution");
+    solution.style.display = "block";
+    solution.className ="well well-sm";
     document.getElementById("skip_ex").style.visibility = "visible";
 }
 
@@ -164,7 +166,7 @@ if (question_type == 'upload' || question_type == 'code') {
     var data = $(this).serializeArray();
   }
   else if (question_type == "upload"){
-    var data = new FormData(getElementById("code"));
+    var data = new FormData(document.getElementById("code"));
   }
     ajax_check_code($(this).attr("action"), "POST", "html", data, null)
     e.preventDefault(); // To stop the default form submission.
