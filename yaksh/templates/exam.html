@@ -60,6 +60,10 @@
                 {% else %}
                 {% if qid.id == question.id %}
                 <li class="active"><a style="width:25%" data-toggle="tooltip" title="{{ qid.description|striptags }}">{{ forloop.counter }}</a></li>
+                {% elif qid in paper.get_questions_answered %}
+                <li><a style="background-color:#B4B8BA; width:25%" href="#" data-toggle="tooltip"
+                onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')"
+                title="{{ qid.description }}">{{ forloop.counter }}</a></li>
                 {% else %}
                 <li  class="disabled"><a style="width:25%" data-toggle="tooltip" title="{{ qid.description|striptags }}">{{ forloop.counter }}</a></li>
                 {% endif %}
