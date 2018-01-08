@@ -37,7 +37,9 @@ function unlock_screen() {
 }
 
 function show_solution() {
-    document.getElementById("solution").style.display = "block";
+    var solution = document.getElementById("solution");
+    solution.style.display = "block";
+    solution.className ="well well-sm";
     document.getElementById("skip_ex").style.visibility = "visible";
 }
 
