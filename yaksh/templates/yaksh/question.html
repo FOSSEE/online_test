@@ -110,37 +110,44 @@ question_type = "{{ question.type }}"
 {% block onload %} onload="updateTime();" {% endblock %}
 
 {% block learning_units %}
-<center><h3>Lessons/Quizzes</h3></center>
-<ul class="list">
-{% for unit in module.get_learning_units %}
-<span>
-<li>
+<center><h4>{{course.name}}</h4></center>
+    <br>
+    {% for learning_module in all_modules %}
+        {% if learning_module.id == module.id %}
+            <span class="glyphicon glyphicon-edit" data-toggle="tooltip" title="Currently on">
+            </span>
+        {% endif %}
+        <b><u><a href="{{URL_ROOT}}/exam/quizzes/view_module/{{learning_module.id}}/{{course.id}}">{{learning_module.name}}</u></b>
+        </a>
+        <ul class="list">
+        {% for unit in learning_module.get_learning_units %}
+        <span>
+        <li>
+        {% get_unit_status course learning_module unit user as status %}
 
-{% get_unit_status course module unit user as status %}
-
-{% if unit.quiz.id == paper.question_paper.quiz.id %}
-    <span class=" glyphicon glyphicon-edit" data-toggle="tooltip" title="Currently on"></span>
-{% endif %}
-
-{% if unit.type == "quiz" %}
-    <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{module.id}}/{{course.id}}">
-        {{ unit.quiz.description }}
-    </a>
-{% else %}
-    <a href="{{ URL_ROOT }}/exam/show_lesson/{{unit.lesson.id}}/{{module.id}}/{{course.id}}">
-            {{ unit.lesson.name }}
-    </a>
-{% endif %}
-{% if status == "completed" %}
-  <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
-{% else %}
-  <span class="glyphicon glyphicon-remove" style="color:  #FF0000"></span>
-{% endif %}
-</li>
-</span>
-<br>
-{% endfor %}
-</ul>
+        {% if unit.quiz.id == paper.question_paper.quiz.id %}
+            <span class="glyphicon glyphicon-edit" data-toggle="tooltip" title="Currently on">
+            </span>
+        {% endif %}
+        {% if unit.type == "quiz" %}
+            <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{learning_module.id}}/{{course.id}}">
+                {{ unit.quiz.description }}
+            </a>
+        {% else %}
+            <a href="{{ URL_ROOT }}/exam/show_lesson/{{unit.lesson.id}}/{{learning_module.id}}/{{course.id}}">
+                {{ unit.lesson.name }}
+            </a>
+        {% endif %}
+        {% if status == "completed" %}
+          <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
+        {% else %}
+          <span class="glyphicon glyphicon-remove" style="color:  #FF0000"></span>
+        {% endif %}
+        </li>
+        </span>
+        {% endfor %}
+        </ul>
+    {% endfor %}
 {% endblock %}
 
 {% block main %}

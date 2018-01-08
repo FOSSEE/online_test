@@ -668,6 +668,19 @@ class Course(models.Model):
             module.learning_unit.all().delete()
         learning_modules.delete()
 
+    def is_last_unit(self, module, unit_id):
+        last_unit = module.get_learning_units().last()
+        return unit_id == last_unit.id
+
+    def next_module(self, current_module_id):
+        modules = self.get_learning_modules()
+        module_ids = list(modules.values_list("id", flat=True))
+        current_unit_index = module_ids.index(current_module_id)
+        next_index = current_unit_index + 1
+        if next_index == len(module_ids):
+            next_index = 0
+        return modules.get(id=module_ids[next_index])
+
     def __str__(self):
         return self.name
 

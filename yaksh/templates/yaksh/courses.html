@@ -75,7 +75,7 @@
             <span class="label label-danger">Closed</span>
         {% endif %}
         <br><br>
-        <center><b><u>Teacher(s) Added to {{ course }}</u></b></center>
+        <center><b><u>Teacher(s) added to {{ course }}</u></b></center>
         <br>
         <form action="{{URL_ROOT}}/exam/manage/remove_teachers/{{ course.id }}/" method="post">
         {% if course.get_teachers %}
@@ -93,7 +93,7 @@
         <button class="btn btn-danger" type="submit" data-toggle="tooltip" title="Remove Selected Teachers from this course">Remove Teachers</button>
         </div>
         {% else %}
-        <center><b>No Teacher(s) Added</b></center>
+        <center><b>No Teacher(s) added</b></center>
         {% endif %}
         </form>
         <br><br>
@@ -209,7 +209,7 @@
         <center><b><u> Course Creator</u></b><br>
             <h4>{{course.creator.get_full_name.title}}</h4>
         </center><br>
-        <center><b><u>Teacher(s) Added to {{ course }}</u></b></center>
+        <center><b><u>Teacher(s) added to {{ course }}</u></b></center>
         <br>
         <form action="{{URL_ROOT}}/exam/manage/remove_teachers/{{ course.id }}/" method="post">
         {% if course.get_teachers %}
@@ -228,7 +228,7 @@
         <button class="btn btn-danger" type="submit" data-toggle="tooltip" title="Remove Selected Teachers from this course">Remove Teachers</button>
         </div>
         {% else %}
-        <center><b>No Teacher(s) Added</b></center>
+        <center><b>No Teacher(s) added</b></center>
         {% endif %}
         </form>
         <br><br>
@@ -326,7 +326,7 @@
     <a href="{{URL_ROOT}}/exam/manage/addquiz/" class="btn btn-primary">Add New Quiz</a>
     <a href="{{URL_ROOT}}/exam/manage/add_exercise/" class="btn btn-primary">Add New Exercise</a>
     {% if not quizzes %}
-        <center><h4> No new Quiz Added</h4></center>
+        <center><h4> No new Quiz added</h4></center>
         <br><br>
     {% else %}
         <center><h3> Quizzes </h3></center>
@@ -380,7 +380,7 @@
 {% if type == "lesson" %}
     <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/" class="btn btn-primary">Add new Lesson</a>
     {% if not lessons %}
-        <center><h4> No new Lessons Added</h4></center>
+        <center><h4> No new Lessons added</h4></center>
         <br><br>
     {% else %}
         <center><h3> Lessons </h3></center>
@@ -414,7 +414,7 @@
     <a href="{{URL_ROOT}}/exam/manage/courses/add_module/" class="btn btn-primary">
     Add new Module</a>
     {% if not learning_modules %}
-        <center><h4> No new learning modules Added</h4></center>
+        <center><h4> No new learning modules added</h4></center>
         <br><br>
     {% else %}
         <center><h3> Learning Modules </h3></center>
