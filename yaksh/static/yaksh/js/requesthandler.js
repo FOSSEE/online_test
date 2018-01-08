@@ -164,7 +164,7 @@ if (question_type == 'upload' || question_type == 'code') {
     var data = $(this).serializeArray();
   }
   else if (question_type == "upload"){
-    var data = new FormData(getElementById("code"));
+    var data = new FormData(document.getElementById("code"));
   }
     ajax_check_code($(this).attr("action"), "POST", "html", data, null)
     e.preventDefault(); // To stop the default form submission.
