@@ -503,7 +503,7 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     if learning_unit.has_prerequisite():
         if not learning_unit.is_prerequisite_passed(
                 user, learning_module, course):
-            msg = "You have not completed the prerequisite"
+            msg = "You have not completed the previous Lesson/Quiz/Exercise"
             if is_moderator(user):
                 return prof_manage(request, msg=msg)
             return view_module(request, module_id=module_id,
@@ -607,6 +607,7 @@ def show_question(request, question, paper, error_message=None, notification=Non
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
     course = Course.objects.get(id=course_id)
     module = course.learning_module.get(id=module_id)
+    all_modules = course.get_learning_modules()
     context = {
         'question': question,
         'paper': paper,
@@ -620,7 +621,8 @@ def show_question(request, question, paper, error_message=None, notification=Non
         'module': module,
         'can_skip': can_skip,
         'delay_time': delay_time,
-        'quiz_type': quiz_type
+        'quiz_type': quiz_type,
+        'all_modules': all_modules
     }
     answers = paper.get_previous_answers(question)
     if answers:
@@ -2329,12 +2331,13 @@ def show_lesson(request, lesson_id, module_id, course_id):
     learn_module = course.learning_module.get(id=module_id)
     learn_unit = learn_module.learning_unit.get(lesson_id=lesson_id)
     learning_units = learn_module.get_learning_units()
+    all_modules = course.get_learning_modules()
     if learn_unit.has_prerequisite():
         if not learn_unit.is_prerequisite_passed(user, learn_module, course):
-            msg = "You have not completed the prerequisite"
+            msg = "You have not completed previous Lesson/Quiz/Exercise"
             return view_module(request, learn_module.id, course_id, msg=msg)
     context = {'lesson': learn_unit.lesson, 'user': user,
-               'course': course, 'state': "lesson",
+               'course': course, 'state': "lesson", "all_modules": all_modules,
                'learning_units': learning_units, "current_unit": learn_unit,
                'learning_module': learn_module}
     return my_render_to_response('yaksh/show_video.html', context)
@@ -2516,13 +2519,14 @@ def get_next_unit(request, course_id, module_id, current_unit_id,
     current_learning_unit = learning_module.learning_unit.get(
         id=current_unit_id)
 
-    course_status = CourseStatus.objects.filter(
-        user=user, course_id=course_id,
-    )
     if first_unit:
         next_unit = current_learning_unit
     else:
         next_unit = learning_module.get_next_unit(current_learning_unit.id)
+
+    course_status = CourseStatus.objects.filter(
+        user=user, course_id=course_id,
+    )
     if not course_status.exists():
         course_status = CourseStatus.objects.create(
             user=user, course_id=course_id
@@ -2533,6 +2537,14 @@ def get_next_unit(request, course_id, module_id, current_unit_id,
     # Add learning unit to completed units list
     if not first_unit:
         course_status.completed_units.add(current_learning_unit.id)
+
+        # if last unit of current module go to next module
+        is_last_unit = course.is_last_unit(learning_module,
+                                           current_learning_unit.id)
+        if is_last_unit:
+            next_module = course.next_module(learning_module.id)
+            return my_redirect("/exam/quizzes/view_module/{0}/{1}/".format(
+                next_module.id, course.id))
 
     # make next available unit as current unit
     course_status.current_unit = next_unit
@@ -2619,14 +2631,17 @@ def view_module(request, module_id, course_id, msg=None):
         msg = "{0} is either expired or not active".format(course.name)
         return course_modules(request, course_id, msg)
     learning_module = course.learning_module.get(id=module_id)
+    all_modules = course.get_learning_modules()
     if learning_module.has_prerequisite():
         if not learning_module.is_prerequisite_passed(user, course):
             msg = "You have not completed the previous learning module"
             return course_modules(request, course_id, msg)
+
     learning_units = learning_module.get_learning_units()
     context['learning_units'] = learning_units
     context['learning_module'] = learning_module
     context['first_unit'] = learning_units[0]
+    context['all_modules'] = all_modules
     context['user'] = user
     context['course'] = course
     context['state'] = "module"
