@@ -78,7 +78,6 @@ string_check_type = (
 
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
-days_between_attempts = [(j, j) for j in range(401)]
 
 test_status = (
                 ('inprogress', 'Inprogress'),
@@ -294,8 +293,8 @@ class Quiz(models.Model):
     # Number of attempts for the quiz
     attempts_allowed = models.IntegerField(default=1, choices=attempts)
 
-    time_between_attempts = models.IntegerField(
-        "Number of Days", choices=days_between_attempts
+    time_between_attempts = models.FloatField(
+        "Time Between Quiz Attempts in hours"
     )
 
     is_trial = models.BooleanField(default=False)
@@ -335,20 +334,32 @@ class Quiz(models.Model):
         return demo_quiz
 
     def get_total_students(self, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
         return AnswerPaper.objects.filter(
-                question_paper=self.questionpaper_set.get().id,
+                question_paper=qp,
                 course=course
             ).values_list("user", flat=True).distinct().count()
 
     def get_passed_students(self, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
         return AnswerPaper.objects.filter(
-                question_paper=self.questionpaper_set.get().id,
+                question_paper=qp,
                 course=course, passed=True
             ).values_list("user", flat=True).distinct().count()
 
     def get_failed_students(self, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
         return AnswerPaper.objects.filter(
-                question_paper=self.questionpaper_set.get().id,
+                question_paper=qp,
                 course=course, passed=False
             ).values_list("user", flat=True).distinct().count()
 
@@ -1181,7 +1192,7 @@ class QuestionPaper(models.Model):
                 user=user, questionpaper=self, course_id=course_id
             )
             if last_attempt:
-                time_lag = (timezone.now() - last_attempt.start_time).days
+                time_lag = (timezone.now() - last_attempt.start_time).total_seconds() / 3600
                 return time_lag >= self.quiz.time_between_attempts
             else:
                 return True
