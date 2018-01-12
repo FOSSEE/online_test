@@ -2,7 +2,7 @@ import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
-    LearningModule, LearningUnit, Lesson, LessonFile
+    LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus
 from yaksh.code_server import(ServerPool,
                               get_result as get_result_from_code_server
                               )
@@ -203,6 +203,26 @@ class LearningModuleTestCases(unittest.TestCase):
         status = self.learning_module.get_status(self.student, self.course)
         # Then
         self.assertEqual(status, module_status)
+
+    def test_module_completion_percent(self):
+        # for module without learning units
+        percent = self.learning_module_two.get_module_complete_percent(
+            self.course, self.student
+        )
+        self.assertEqual(percent, 0)
+
+        # for module with learning units
+        lesson = Lesson.objects.get(name='L1')
+        self.completed_unit = LearningUnit.objects.get(lesson=lesson)
+
+        course_status = CourseStatus.objects.create(
+            course=self.course, user=self.student)
+        course_status.completed_units.add(self.completed_unit)
+
+        percent = self.learning_module.get_module_complete_percent(
+            self.course, self.student
+        )
+        self.assertEqual(percent, 50)
 
 
 class LearningUnitTestCases(unittest.TestCase):
@@ -1523,6 +1543,26 @@ class CourseTestCases(unittest.TestCase):
         """Test to check enrollment is closed for open course"""
         self.assertFalse(self.enroll_request_course.is_active_enrollment())
 
+    def test_course_complete_percent(self):
+        # for course with no modules
+        self.no_module_course = Course.objects.create(
+            name="test_course", creator=self.creator, enrollment="open")
+        percent = self.course.percent_completed(self.student1)
+        self.assertEqual(percent, 0)
+
+        # for course with module but zero percent completed
+        percent = self.course.percent_completed(self.student1)
+        self.assertEqual(percent, 0)
+
+        # Add completed unit to course status and check percent
+        lesson = Lesson.objects.get(name='L1')
+        self.completed_unit = LearningUnit.objects.get(lesson=lesson)
+
+        course_status = CourseStatus.objects.create(
+            course=self.course, user=self.student1)
+        course_status.completed_units.add(self.completed_unit)
+        updated_percent = self.course.percent_completed(self.student1)
+        self.assertEqual(updated_percent, 25)
 
 
 ###############################################################################
