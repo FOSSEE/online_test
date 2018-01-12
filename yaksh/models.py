@@ -453,12 +453,16 @@ class LearningModule(models.Model):
         ordered_units = learning_module.learning_unit.order_by("order")
         status_list = [unit.get_completion_status(user, course)
                        for unit in ordered_units]
-        if all([status == "completed" for status in status_list]):
-            return "completed"
+
+        if not status_list:
+            default_status = "no units"
+        elif all([status == "completed" for status in status_list]):
+            default_status = "completed"
         elif "inprogress" in status_list:
-            return "inprogress"
+            default_status = "inprogress"
         else:
-            return "not attempted"
+            default_status = "not attempted"
+        return default_status
 
     def is_prerequisite_passed(self, user, course):
         """ Check if prerequisite module is completed """
@@ -480,6 +484,17 @@ class LearningModule(models.Model):
 
     def has_prerequisite(self):
         return self.check_prerequisite
+
+    def get_module_complete_percent(self, course, user):
+        units = self.get_learning_units()
+        if not units:
+            percent = 0
+        else:
+            status_list = [unit.get_completion_status(user, course)
+                           for unit in units]
+            count = status_list.count("completed")
+            percent = round((count / len(units)) * 100)
+        return percent
 
     def __str__(self):
         return self.name
@@ -680,6 +695,17 @@ class Course(models.Model):
         if next_index == len(module_ids):
             next_index = 0
         return modules.get(id=module_ids[next_index])
+
+    def percent_completed(self, user):
+        modules = self.get_learning_modules()
+        if not modules:
+            percent = 0
+        else:
+            status_list = [module.get_module_complete_percent(self, user)
+                           for module in modules]
+            count = sum(status_list)
+            percent = round((count / len(modules)))
+        return percent
 
     def __str__(self):
         return self.name
