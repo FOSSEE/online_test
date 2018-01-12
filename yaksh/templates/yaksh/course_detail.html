@@ -1,5 +1,5 @@
 {% extends "manage.html" %}
-
+{% load custom_filters %}
 {% block title %} Course Details {% endblock title %}
 
 <div class="col-md-9 col-md-offset-2 main">
@@ -34,6 +34,10 @@
         <li>
         <a href="{{URL_ROOT}}/exam/manage/send_mail/{{ course.id }}/">
         Send Mail</a>
+        </li>
+        <li>
+        <a href="{{URL_ROOT}}/exam/manage/course_status/{{ course.id }}/">
+        View Course Status</a>
         </li>
       </ul>
     </div>
@@ -116,6 +120,64 @@
             {% endif %}
             </form>
         </div>
+        {% elif state == "course_status" %}
+            <div class="course_data">
+            <input type="hidden" id="course_name" value="{{course.name}}">
+            <a href="#" class="btn btn-info" id="export">Export to CSV</a>
+            <center><h2>Course Status</h2></center>
+            <table class="table table-bordered" id="course_table">
+                <tr>
+                <th>Sr No.</th>
+                <th>Students</th>
+                <th>Total</th>
+                <th colspan="{{modules|length}}">Modules</th>
+                </tr>
+                <tr>
+                    <th scope="row"></th>
+                    <th></th>
+                    <th></th>
+                    {% if modules %}
+                        {% for module in modules %}
+                            <th>
+                                {{module.name}}
+                                <br>
+                                <a data-target="tooltip" title="{% for unit in module.get_learning_units %}{% if unit.type == 'quiz' %}{{unit.quiz.description}}{% else %}{{unit.lesson.name}}{% endif %} / {% endfor %}" id="unit_status{{module.id}}" onmouseover="view_status('#unit_status{{module.id}}')">
+                                    View Units</a>
+                            </th>
+                        {% endfor %}
+                    {% else %}
+                        <th></th>
+                    {% endif %}
+                </tr>
+                {% for student in students %}
+                    <tr>
+                    <td width="5%">
+                        {{forloop.counter}}.
+                    </td>
+                    <td>
+                        {{ student.get_full_name|title }}
+                    </td>
+                    <td>
+                        {% course_completion_percent course student as c_percent %}
+                        {{c_percent}} %
+                    </td>
+                        {% if modules %}
+                            {% for module in modules %}
+                                <td>
+                                    {% module_completion_percent course module student as m_percent %}
+                                    {{m_percent}} %
+                                    <br>
+                                    <a data-target="tooltip" title="{% for unit in module.get_learning_units %}{% if unit.type == 'quiz' %}{{unit.quiz.description}}{% else %}{{unit.lesson.name}}{% endif %} - {% get_unit_status course module unit student as status %}{{status|title}} / {% endfor %}" id="unit_status{{module.id}}{{student.id}}" onmouseover="view_status('#unit_status{{module.id}}{{student.id}}')">
+                                    View Unit Status</a>
+                                </td>
+                            {% endfor %}
+                        {% else %}
+                            <td>-------</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </table>
+            </div>
         {% else %}
         <div id="student-requests">
             <center><b><u>Requests</u></b></center><br>
