@@ -121,7 +121,7 @@ function exportTableToCSV($table, filename) {
         var $col = $(col),
             $text = $col.text();
 
-        return $text.replace('"', '""').replace("View Unit Status", ''); // escape double quotes
+        return $text.replace('"', '""').replace("View Unit Status", '').replace("View Units", ""); // escape double quotes
 
     }
 }
