@@ -55,11 +55,6 @@ def get_course_details(course):
 
 
 @register.simple_tag
-def current_unit(course, student):
-    return course.get_current_unit(student)
-
-
-@register.simple_tag
 def module_completion_percent(course, module, user):
     return module.get_module_complete_percent(course, user)
 
