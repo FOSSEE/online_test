@@ -133,6 +133,9 @@ $("#export").click(function (event) {
     exportTableToCSV.apply(this, [$('#course_table'), outputFile]);
 });
 
+// Table sorter for course details
+$("table").tablesorter({});
+
 });
 
 function view_status(unit){

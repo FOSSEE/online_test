@@ -1,5 +1,4 @@
-from __future__ import unicode_literals
-from __future__ import division
+from __future__ import unicode_literals, division
 from datetime import datetime, timedelta
 import json
 import random
@@ -489,7 +488,7 @@ class LearningModule(models.Model):
     def get_module_complete_percent(self, course, user):
         units = self.get_learning_units()
         if not units:
-            percent = 0
+            percent = 0.0
         else:
             status_list = [unit.get_completion_status(user, course)
                            for unit in units]
@@ -700,7 +699,7 @@ class Course(models.Model):
     def percent_completed(self, user):
         modules = self.get_learning_modules()
         if not modules:
-            percent = 0
+            percent = 0.0
         else:
             status_list = [module.get_module_complete_percent(self, user)
                            for module in modules]
