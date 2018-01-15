@@ -76,6 +76,8 @@ urlpatterns = [
         name='design_questionpaper'),
     url(r'^manage/designquestionpaper/(?P<quiz_id>\d+)/(?P<questionpaper_id>\d+)/$',
         views.design_questionpaper, name='designquestionpaper'),
+    url(r'^manage/designquestionpaper/(?P<quiz_id>\d+)/(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$',
+        views.design_questionpaper, name='designquestionpaper'),
     url(r'^manage/statistics/question/(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$',
         views.show_statistics, name="show_statistics"),
     url(r'^manage/statistics/question/(?P<questionpaper_id>\d+)/(?P<attempt_number>\d+)/(?P<course_id>\d+)/$',

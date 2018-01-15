@@ -324,6 +324,7 @@ def add_quiz(request, quiz_id=None, course_id=None):
         form = QuizForm(instance=quiz)
         context["quiz_id"] = quiz_id
         context["course_id"] = course_id
+        context["quiz"] = quiz
     context["form"] = form
     return my_render_to_response(
         'yaksh/add_quiz.html', context, context_instance=ci
@@ -1291,14 +1292,21 @@ def _remove_already_present(questionpaper_id, questions):
 
 @login_required
 @email_verified
-def design_questionpaper(request, quiz_id, questionpaper_id=None):
+def design_questionpaper(request, quiz_id, questionpaper_id=None,
+                         course_id=None):
     user = request.user
 
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    quiz = Quiz.objects.get(id=quiz_id)
-    if not quiz.creator == user:
-        raise Http404('This course does not belong to you')
+    if quiz_id:
+        quiz = get_object_or_404(Quiz, pk=quiz_id)
+        if quiz.creator != user and not course_id:
+            raise Http404('This quiz does not belong to you')
+    if course_id:
+        course = get_object_or_404(Course, pk=course_id)
+        if not course.is_creator(user) and not course.is_teacher(user):
+            raise Http404('This quiz does not belong to you')
+
     filter_form = QuestionFilterForm(user=user)
     questions = None
     marks = None
@@ -1306,7 +1314,8 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
     if questionpaper_id is None:
         question_paper = QuestionPaper.objects.get_or_create(quiz_id=quiz_id)[0]
     else:
-        question_paper = get_object_or_404(QuestionPaper, id=questionpaper_id)
+        question_paper = get_object_or_404(QuestionPaper, id=questionpaper_id,
+                                           quiz_id=quiz_id)
     qpaper_form = QuestionPaperForm(instance=question_paper)
 
     if request.method == 'POST':
