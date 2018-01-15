@@ -2666,3 +2666,20 @@ def course_modules(request, course_id, msg=None):
     context = {"course": course, "learning_modules": learning_modules,
                "user": user, "msg": msg}
     return my_render_to_response('yaksh/course_modules.html', context)
+
+
+@login_required
+@email_verified
+def course_status(request, course_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    students = course.get_only_students()
+    context = {
+        'course': course, 'students': students,
+        'state': 'course_status', 'modules': course.get_learning_modules()
+    }
+    return my_render_to_response('yaksh/course_detail.html', context)
