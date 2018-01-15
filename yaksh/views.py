@@ -616,7 +616,10 @@ def show_question(request, question, paper, error_message=None, notification=Non
             if question.type == "code" else
             'You have already attempted this question'
         )
-    test_cases = question.get_ordered_test_cases(paper)
+    if question.type in ['mcc', 'mcq']:
+        test_cases = question.get_ordered_test_cases(paper)
+    else:
+        test_cases = question.get_test_cases()
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
     course = Course.objects.get(id=course_id)
     module = course.learning_module.get(id=module_id)
