@@ -40,6 +40,8 @@ urlpatterns = [
         views.view_module, name='view_module'),
     url(r'^next_unit/(?P<course_id>\d+)/(?P<module_id>\d+)/(?P<current_unit_id>\d+)/$',
         views.get_next_unit, name='next_unit'),
+    url(r'^next_unit/(?P<course_id>\d+)/(?P<module_id>\d+)/$',
+        views.get_next_unit, name='next_unit'),
     url(r'^next_unit/(?P<course_id>\d+)/(?P<module_id>\d+)/(?P<current_unit_id>\d+)/(?P<first_unit>\d+)/$',
         views.get_next_unit, name='next_unit'),
     url(r'^course_modules/(?P<course_id>\d+)/$',

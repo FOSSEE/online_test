@@ -64,6 +64,7 @@
         {% if learning_module.html_data%}
         <hr>
         {% endif %}
+        {% if learning_module.get_learning_units %}
         <center><h4>Following are the units in this modules</h4></center>
         <table class="table">
         <tr>
@@ -95,13 +96,23 @@
         </tr>
         {% endfor %}
         </table>
+        {% else %}
+            <center><h3>No Lessons/Quizzes Found</h3></center>
+        {% endif %}
     </div>
 </div>
 <div style="text-align: center;">
-    <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{first_unit.id}}/1" class="btn btn-info">Start
-        <span class="glyphicon glyphicon-chevron-right">
-        </span>
-    </a>
+    {% if first_unit %}
+        <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{first_unit.id}}/1" class="btn btn-info">Start
+            <span class="glyphicon glyphicon-chevron-right">
+            </span>
+        </a>
+    {% else %}
+        <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}" class="btn btn-info">Next
+            <span class="glyphicon glyphicon-chevron-right">
+            </span>
+        </a>
+    {% endif %}
 </div>
 {% else %}
 <div class="panel panel-default" style="border: none; box-shadow: none;">
