@@ -4745,7 +4745,6 @@ class TestLessons(TestCase):
         self.client = Client()
 
         self.mod_group = Group.objects.create(name='moderator')
-        tzone = pytz.timezone('UTC')
         # Create Moderator with profile
         self.user_plaintext_pass = 'demo'
         self.user = User.objects.create_user(
@@ -4793,25 +4792,30 @@ class TestLessons(TestCase):
             name="Python Course",
             enrollment="Open Enrollment", creator=self.user)
 
-        self.quiz = Quiz.objects.create(
-            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
-            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
-            duration=30, active=True, instructions="Demo Instructions",
-            attempts_allowed=-1, time_between_attempts=0,
-            description='demo quiz', pass_criteria=40,
-            creator=self.user
-        )
-
         self.lesson = Lesson.objects.create(
             name="test lesson", description="test description",
             creator=self.user)
+        self.lesson2 = Lesson.objects.create(
+            name="test lesson2", description="test description2",
+            creator=self.user)
         self.learning_unit = LearningUnit.objects.create(
-            order=0, type="lesson", lesson=self.lesson)
+            order=0, type="lesson", lesson=self.lesson
+            )
+        self.learning_unit2 = LearningUnit.objects.create(
+            order=0, type="lesson", lesson=self.lesson2
+            )
         self.learning_module = LearningModule.objects.create(
             order=0, name="test module", description="module",
-            check_prerequisite=False, creator=self.user)
+            check_prerequisite=False, creator=self.user
+            )
+        self.learning_module2 = LearningModule.objects.create(
+            order=1, name="test module 2", description="module 2",
+            check_prerequisite=True, creator=self.user
+            )
         self.learning_module.learning_unit.add(self.learning_unit.id)
-        self.course.learning_module.add(self.learning_module.id)
+        self.learning_module2.learning_unit.add(self.learning_unit2.id)
+        self.course.learning_module.add(*[
+            self.learning_module.id, self.learning_module2.id])
         self.course.teachers.add(self.teacher.id)
 
         self.expected_url = "/exam/manage/courses/"
@@ -4820,11 +4824,13 @@ class TestLessons(TestCase):
         self.user.delete()
         self.student.delete()
         self.teacher.delete()
-        self.quiz.delete()
         self.course.delete()
         self.learning_unit.delete()
+        self.learning_unit2.delete()
         self.learning_module.delete()
+        self.learning_module2.delete()
         self.lesson.delete()
+        self.lesson2.delete()
 
     def test_edit_lesson_denies_non_moderator(self):
         """ Student should not be allowed to edit lesson """
@@ -4908,6 +4914,17 @@ class TestLessons(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["state"], "lesson")
         self.assertEqual(response.context["current_unit"], self.learning_unit)
+
+        # Check unit module prerequisite completion status
+        response = self.client.get(
+            reverse('yaksh:show_lesson',
+                    kwargs={"lesson_id": self.lesson2.id,
+                            "module_id": self.learning_module2.id,
+                            "course_id": self.course.id}))
+        err_msg = "You have not completed the module previous to {0}".format(
+            self.learning_module2.name)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["msg"], err_msg)
 
     def test_show_all_lessons(self):
         """ Moderator should be able to see all created lessons"""
