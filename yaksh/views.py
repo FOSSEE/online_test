@@ -932,14 +932,14 @@ def add_course(request, course_id=None):
             raise Http404("You are not allowed to view this course")
     else:
         course = None
-
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     if request.method == 'POST':
         form = CourseForm(request.POST, instance=course)
         if form.is_valid():
             new_course = form.save(commit=False)
-            new_course.creator = user
+            if course_id is None:
+                new_course.creator = user
             new_course.save()
             return my_redirect('/exam/manage/courses')
         else:

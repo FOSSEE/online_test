@@ -1916,6 +1916,25 @@ class TestAddCourse(TestCase):
             timezone='UTC'
         )
 
+        # Create a teacher
+        self.teacher_plaintext_pass = 'demo_teacher'
+        self.teacher = User.objects.create_user(
+            username='demo_teacher',
+            password=self.teacher_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.teacher,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
         # Create Student
         self.student_plaintext_pass = 'demo_student'
         self.student = User.objects.create_user(
@@ -1928,9 +1947,12 @@ class TestAddCourse(TestCase):
 
         # Add to moderator group
         self.mod_group.user_set.add(self.user)
+        self.mod_group.user_set.add(self.teacher)
 
         self.course = Course.objects.create(name="Python Course",
             enrollment="Enroll Request", creator=self.user)
+
+        self.course.teachers.add(self.teacher)
 
         self.pre_req_quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0, tzone),
@@ -2018,6 +2040,33 @@ class TestAddCourse(TestCase):
         self.assertEqual(new_course.enrollment, 'open')
         self.assertEqual(new_course.active, True)
         self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/exam/manage/courses',
+                             target_status_code=301)
+
+    def test_add_course_teacher_cannot_be_creator(self):
+        """
+        Teacher editing the course should not become creator
+        """
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
+
+        response = self.client.post(reverse('yaksh:edit_course',
+            kwargs={"course_id": self.course.id}),
+            data={'name': 'Teacher_course',
+                'active': True,
+                'enrollment': 'open',
+                'start_enroll_time': '2016-01-10 09:00:15',
+                'end_enroll_time': '2016-01-15 09:00:15',
+            }
+        )
+        updated_course = Course.objects.get(id=self.course.id)
+        self.assertEqual(updated_course.name, 'Teacher_course')
+        self.assertEqual(updated_course.enrollment, 'open')
+        self.assertEqual(updated_course.active, True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(updated_course.creator, self.user)
         self.assertRedirects(response, '/exam/manage/courses',
                              target_status_code=301)
 
