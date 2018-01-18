@@ -1158,7 +1158,7 @@ def show_statistics(request, questionpaper_id, attempt_number=None,
                                            course_id):
         return my_redirect('/exam/manage/')
     question_stats = AnswerPaper.objects.get_question_statistics(
-        questionpaper_id, attempt_number
+        questionpaper_id, attempt_number, course_id
     )
     context = {'question_stats': question_stats, 'quiz': quiz,
                'questionpaper_id': questionpaper_id,
@@ -1532,9 +1532,9 @@ def download_quiz_csv(request, course_id, quiz_id):
 
     questions = question_paper.get_question_bank()
     answerpapers = AnswerPaper.objects.filter(question_paper=question_paper,
-            attempt_number=attempt_number)
+            attempt_number=attempt_number, course_id=course_id)
     if not answerpapers:
-        return monitor(request, quiz_id)
+        return monitor(request, quiz_id, course_id)
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="{0}-{1}-attempt{2}.csv"'.format(
             course.name.replace('.', ''),  quiz.description.replace('.', ''),

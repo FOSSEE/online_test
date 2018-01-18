@@ -1170,13 +1170,14 @@ class QuestionPaper(models.Model):
 
         return ans_paper
 
-    def _is_attempt_allowed(self, user):
+    def _is_attempt_allowed(self, user, course_id):
         attempts = AnswerPaper.objects.get_total_attempt(questionpaper=self,
-                                                         user=user)
+                                                         user=user,
+                                                         course_id=course_id)
         return attempts != self.quiz.attempts_allowed
 
     def can_attempt_now(self, user, course_id):
-        if self._is_attempt_allowed(user):
+        if self._is_attempt_allowed(user, course_id):
             last_attempt = AnswerPaper.objects.get_user_last_attempt(
                 user=user, questionpaper=self, course_id=course_id
             )
@@ -1254,10 +1255,11 @@ class QuestionSet(models.Model):
 
 ###############################################################################
 class AnswerPaperManager(models.Manager):
-    def get_all_questions(self, questionpaper_id, attempt_number,
+    def get_all_questions(self, questionpaper_id, attempt_number, course_id,
                           status='completed'):
         ''' Return a dict of question id as key and count as value'''
         papers = self.filter(question_paper_id=questionpaper_id,
+                             course_id=course_id,
                              attempt_number=attempt_number, status=status)
         all_questions = list()
         questions = list()
@@ -1268,9 +1270,10 @@ class AnswerPaperManager(models.Manager):
         return Counter(questions)
 
     def get_all_questions_answered(self, questionpaper_id, attempt_number,
-                                   status='completed'):
+                                   course_id, status='completed'):
         ''' Return a dict of answered question id as key and count as value'''
         papers = self.filter(question_paper_id=questionpaper_id,
+                             course_id=course_id,
                              attempt_number=attempt_number, status=status)
         questions_answered = list()
         for paper in papers:
@@ -1308,15 +1311,17 @@ class AnswerPaperManager(models.Manager):
         ).count()
 
     def get_question_statistics(self, questionpaper_id, attempt_number,
-                                status='completed'):
+                                course_id, status='completed'):
         ''' Return dict with question object as key and list as value
             The list contains two value, first the number of times a question
             was answered correctly, and second the number of times a question
             appeared in a quiz'''
         question_stats = {}
         questions_answered = self.get_all_questions_answered(questionpaper_id,
-                                                             attempt_number)
-        questions = self.get_all_questions(questionpaper_id, attempt_number)
+                                                             attempt_number,
+                                                             course_id)
+        questions = self.get_all_questions(questionpaper_id, attempt_number,
+                                           course_id)
         all_questions = Question.objects.filter(
                 id__in=set(questions),
                 active=True
@@ -1365,8 +1370,9 @@ class AnswerPaperManager(models.Manager):
     def get_user_answerpapers(self, user):
         return self.filter(user=user)
 
-    def get_total_attempt(self, questionpaper, user):
-        return self.filter(question_paper=questionpaper, user=user).count()
+    def get_total_attempt(self, questionpaper, user, course_id):
+        return self.filter(question_paper=questionpaper, user=user,
+                           course_id=course_id).count()
 
     def get_users_for_questionpaper(self, questionpaper_id, course_id):
         return self._get_answerpapers_for_quiz(questionpaper_id, course_id,
