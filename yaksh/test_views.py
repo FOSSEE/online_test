@@ -2138,6 +2138,11 @@ class TestCourseDetail(TestCase):
 
         self.user1_course = Course.objects.create(name="Python Course",
             enrollment="Enroll Request", creator=self.user1)
+        self.learning_module = LearningModule.objects.create(
+            name="test module", description="test description module",
+            html_data="test html description module", creator=self.user1,
+            order=1)
+        self.user1_course.learning_module.add(self.learning_module)
 
     def tearDown(self):
         self.client.logout()
@@ -2523,6 +2528,30 @@ class TestCourseDetail(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
                          'attachment; filename="sample_user_upload"')
+
+    def test_view_course_status(self):
+        """ Test to view course status """
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        # Denies student to view course status
+        response = self.client.get(reverse('yaksh:course_status',
+                                   kwargs={'course_id': self.user1_course.id}))
+        self.assertEqual(response.status_code, 404)
+
+        # Moderator Login
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:course_status',
+                                   kwargs={'course_id': self.user1_course.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['state'], "course_status")
+        self.assertEqual(response.context['course'], self.user1_course)
+        self.assertEqual(response.context['modules'][0], self.learning_module)
 
 
 class TestEnrollRequest(TestCase):

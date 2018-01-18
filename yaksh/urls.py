@@ -168,4 +168,6 @@ urlpatterns = [
         views.design_course, name="design_course"),
     url(r'^manage/courses/designcourse/(?P<course_id>\d+)/$',
         views.design_course, name="design_course"),
+    url(r'^manage/course_status/(?P<course_id>\d+)/$',
+        views.course_status, name="course_status"),
 ]
