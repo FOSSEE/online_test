@@ -2709,6 +2709,7 @@ def course_status(request, course_id):
 
 
 def _update_unit_status(course_id, user, unit):
+    """ Update course status with current unit """
     course_status = CourseStatus.objects.filter(
         user=user, course_id=course_id,
     )
