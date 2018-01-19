@@ -113,6 +113,7 @@ def tearDownModule():
     Lesson.objects.all().delete()
     LearningUnit.objects.all().delete()
     LearningModule.objects.all().delete()
+    AnswerPaper.objects.all().delete()
 
 
 ###############################################################################
@@ -848,7 +849,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         )
         self.qtn_paper_with_single_question.save()
 
-        all_questions = Question.objects.all()
+        all_questions = Question.objects.filter(user=self.user)
         self.questions = all_questions[0:3]
         self.start_time = timezone.now()
         self.end_time = self.start_time + timedelta(minutes=20)
