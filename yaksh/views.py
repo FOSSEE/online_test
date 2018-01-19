@@ -320,9 +320,7 @@ def add_quiz(request, quiz_id=None, course_id=None):
                 return my_redirect("/exam/manage/courses/")
 
     else:
-        quiz = Quiz.objects.get(id=quiz_id) if quiz_id else None
         form = QuizForm(instance=quiz)
-        context["quiz_id"] = quiz_id
         context["course_id"] = course_id
         context["quiz"] = quiz
     context["form"] = form
@@ -347,7 +345,7 @@ def add_exercise(request, quiz_id=None, course_id=None):
     if course_id:
         course = get_object_or_404(Course, pk=course_id)
         if not course.is_creator(user) and not course.is_teacher(user):
-            raise Http404('This quiz does not belong to you')
+            raise Http404('This Course does not belong to you')
 
     context = {}
     if request.method == "POST":
@@ -371,9 +369,8 @@ def add_exercise(request, quiz_id=None, course_id=None):
                 return my_redirect("/exam/manage/courses/")
 
     else:
-        quiz = Quiz.objects.get(id=quiz_id) if quiz_id else None
         form = ExerciseForm(instance=quiz)
-        context["quiz_id"] = quiz_id
+        context["exercise"] = quiz
         context["course_id"] = course_id
     context["form"] = form
     return my_render_to_response(

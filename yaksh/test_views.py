@@ -1230,6 +1230,7 @@ class TestAddQuiz(TestCase):
             kwargs={'quiz_id': self.exercise.id}),
             data={
                 'description': 'updated demo exercise',
+                'active': True
             }
         )
 
@@ -1257,6 +1258,7 @@ class TestAddQuiz(TestCase):
         response = self.client.post(reverse('yaksh:add_exercise'),
             data={
                 'description': "Demo Exercise",
+                'active': True
             }
         )
         quiz_list = Quiz.objects.all().order_by('-id')
