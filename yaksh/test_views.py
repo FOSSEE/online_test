@@ -4064,9 +4064,6 @@ class TestQuestionPaper(TestCase):
             name="Python Course",
             enrollment="Open Enrollment", creator=self.user)
 
-        # Add teacher to the course
-        self.course.teachers.add(self.teacher)
-
         self.quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
             end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
@@ -4475,12 +4472,31 @@ class TestQuestionPaper(TestCase):
                             "questionpaper_id": self.question_paper.id}))
         self.assertEqual(response.status_code, 404)
 
-        # Should allow course teacher to edit question paper
         self.client.login(
             username=self.teacher.username,
             password=self.teacher_plaintext_pass
         )
 
+        # Should not allow teacher to view question paper
+        response = self.client.get(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.quiz.id,
+                            "questionpaper_id": self.question_paper.id}))
+
+        self.assertEqual(response.status_code, 404)
+
+        # Should not allow teacher to view question paper
+        response = self.client.get(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.question_paper.id}))
+
+        self.assertEqual(response.status_code, 404)
+
+        # Should allow course teacher to view question paper
+        # Add teacher to the course
+        self.course.teachers.add(self.teacher)
         response = self.client.get(
             reverse('yaksh:designquestionpaper',
                     kwargs={"quiz_id": self.quiz.id,

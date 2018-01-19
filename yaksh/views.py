@@ -1305,7 +1305,7 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
     if course_id:
         course = get_object_or_404(Course, pk=course_id)
         if not course.is_creator(user) and not course.is_teacher(user):
-            raise Http404('This quiz does not belong to you')
+            raise Http404('This Course does not belong to you')
 
     filter_form = QuestionFilterForm(user=user)
     questions = None
