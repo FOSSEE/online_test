@@ -1230,6 +1230,7 @@ class TestAddQuiz(TestCase):
             kwargs={'quiz_id': self.exercise.id}),
             data={
                 'description': 'updated demo exercise',
+                'active': True
             }
         )
 
@@ -1257,6 +1258,7 @@ class TestAddQuiz(TestCase):
         response = self.client.post(reverse('yaksh:add_exercise'),
             data={
                 'description': "Demo Exercise",
+                'active': True
             }
         )
         quiz_list = Quiz.objects.all().order_by('-id')
@@ -1916,6 +1918,25 @@ class TestAddCourse(TestCase):
             timezone='UTC'
         )
 
+        # Create a teacher
+        self.teacher_plaintext_pass = 'demo_teacher'
+        self.teacher = User.objects.create_user(
+            username='demo_teacher',
+            password=self.teacher_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.teacher,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
         # Create Student
         self.student_plaintext_pass = 'demo_student'
         self.student = User.objects.create_user(
@@ -1928,9 +1949,12 @@ class TestAddCourse(TestCase):
 
         # Add to moderator group
         self.mod_group.user_set.add(self.user)
+        self.mod_group.user_set.add(self.teacher)
 
         self.course = Course.objects.create(name="Python Course",
             enrollment="Enroll Request", creator=self.user)
+
+        self.course.teachers.add(self.teacher)
 
         self.pre_req_quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0, tzone),
@@ -2018,6 +2042,33 @@ class TestAddCourse(TestCase):
         self.assertEqual(new_course.enrollment, 'open')
         self.assertEqual(new_course.active, True)
         self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/exam/manage/courses',
+                             target_status_code=301)
+
+    def test_add_course_teacher_cannot_be_creator(self):
+        """
+        Teacher editing the course should not become creator
+        """
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
+
+        response = self.client.post(reverse('yaksh:edit_course',
+            kwargs={"course_id": self.course.id}),
+            data={'name': 'Teacher_course',
+                'active': True,
+                'enrollment': 'open',
+                'start_enroll_time': '2016-01-10 09:00:15',
+                'end_enroll_time': '2016-01-15 09:00:15',
+            }
+        )
+        updated_course = Course.objects.get(id=self.course.id)
+        self.assertEqual(updated_course.name, 'Teacher_course')
+        self.assertEqual(updated_course.enrollment, 'open')
+        self.assertEqual(updated_course.active, True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(updated_course.creator, self.user)
         self.assertRedirects(response, '/exam/manage/courses',
                              target_status_code=301)
 
@@ -3989,8 +4040,27 @@ class TestQuestionPaper(TestCase):
             timezone='UTC'
         )
 
+        self.teacher_plaintext_pass = 'demo_teacher'
+        self.teacher = User.objects.create_user(
+            username='demo_teacher',
+            password=self.teacher_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.teacher,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
         # Add to moderator group
         self.mod_group.user_set.add(self.user)
+        self.mod_group.user_set.add(self.teacher)
 
         self.course = Course.objects.create(
             name="Python Course",
@@ -4002,6 +4072,15 @@ class TestQuestionPaper(TestCase):
             duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz', pass_criteria=40,
+            creator=self.user
+        )
+
+        self.demo_quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz 2', pass_criteria=40,
             creator=self.user
         )
 
@@ -4026,8 +4105,6 @@ class TestQuestionPaper(TestCase):
         )
         self.mcq_based_testcase.save()
 
-        ordered_questions = str(self.question_mcq.id)
-
         # Mcc Question
         self.question_mcc = Question.objects.create(
             summary="Test_mcc_question", description="Test MCC",
@@ -4041,8 +4118,6 @@ class TestQuestionPaper(TestCase):
         )
         self.mcc_based_testcase.save()
 
-        ordered_questions = ordered_questions + str(self.question_mcc.id)
-
         # Integer Question
         self.question_int = Question.objects.create(
             summary="Test_mcc_question", description="Test MCC",
@@ -4054,8 +4129,6 @@ class TestQuestionPaper(TestCase):
             type='integertestcase'
         )
         self.int_based_testcase.save()
-
-        ordered_questions = ordered_questions + str(self.question_int.id)
 
         # String Question
         self.question_str = Question.objects.create(
@@ -4083,17 +4156,19 @@ class TestQuestionPaper(TestCase):
         )
         self.float_based_testcase.save()
 
-        ordered_questions = ordered_questions + str(self.question_float.id)
-
-        questions_list = [self.question_mcq, self.question_mcc,
-                          self.question_int, self.question_str,
-                          self.question_float]
-
+        self.questions_list = [self.question_mcq, self.question_mcc,
+                               self.question_int, self.question_str,
+                               self.question_float]
+        questions_order = ",".join([
+            str(self.question_mcq.id), str(self.question_mcc.id),
+            str(self.question_int.id), str(self.question_str.id),
+            str(self.question_float.id)
+        ])
         self.question_paper = QuestionPaper.objects.create(
             quiz=self.quiz,
-            total_marks=5.0, fixed_question_order=ordered_questions
+            total_marks=5.0, fixed_question_order=questions_order
         )
-        self.question_paper.fixed_questions.add(*questions_list)
+        self.question_paper.fixed_questions.add(*self.questions_list)
         self.answerpaper = AnswerPaper.objects.create(
             user=self.user, question_paper=self.question_paper,
             attempt_number=1,
@@ -4102,12 +4177,14 @@ class TestQuestionPaper(TestCase):
             user_ip="127.0.0.1", status="inprogress", passed=False,
             percent=0, marks_obtained=0, course=self.course
         )
-        self.answerpaper.questions.add(*questions_list)
+        self.answerpaper.questions.add(*self.questions_list)
 
     def tearDown(self):
         self.client.logout()
         self.user.delete()
+        self.teacher.delete()
         self.quiz.delete()
+        self.demo_quiz.delete()
         self.course.delete()
         self.answerpaper.delete()
         self.question_mcq.delete()
@@ -4380,6 +4457,58 @@ class TestQuestionPaper(TestCase):
         # Then
         wrong_answer_paper = AnswerPaper.objects.get(id=self.answerpaper.id)
         self.assertEqual(wrong_answer_paper.marks_obtained, 0)
+
+    def test_design_questionpaper(self):
+        """ Test design Question Paper """
+
+        # Should fail if Question paper is not the one which is associated
+        # with a quiz
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        response = self.client.get(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.demo_quiz.id,
+                            "questionpaper_id": self.question_paper.id}))
+        self.assertEqual(response.status_code, 404)
+
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
+
+        # Should not allow teacher to view question paper
+        response = self.client.get(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.quiz.id,
+                            "questionpaper_id": self.question_paper.id}))
+
+        self.assertEqual(response.status_code, 404)
+
+        # Should not allow teacher to view question paper
+        response = self.client.get(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.question_paper.id}))
+
+        self.assertEqual(response.status_code, 404)
+
+        # Should allow course teacher to view question paper
+        # Add teacher to the course
+        self.course.teachers.add(self.teacher)
+        response = self.client.get(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.question_paper.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/design_questionpaper.html')
+        self.assertEqual(response.context['fixed_questions'],
+                         self.questions_list)
+        self.assertEqual(response.context['qpaper'], self.question_paper)
 
 
 class TestLearningModule(TestCase):

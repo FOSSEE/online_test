@@ -320,10 +320,9 @@ def add_quiz(request, quiz_id=None, course_id=None):
                 return my_redirect("/exam/manage/courses/")
 
     else:
-        quiz = Quiz.objects.get(id=quiz_id) if quiz_id else None
         form = QuizForm(instance=quiz)
-        context["quiz_id"] = quiz_id
         context["course_id"] = course_id
+        context["quiz"] = quiz
     context["form"] = form
     return my_render_to_response(
         'yaksh/add_quiz.html', context, context_instance=ci
@@ -346,7 +345,7 @@ def add_exercise(request, quiz_id=None, course_id=None):
     if course_id:
         course = get_object_or_404(Course, pk=course_id)
         if not course.is_creator(user) and not course.is_teacher(user):
-            raise Http404('This quiz does not belong to you')
+            raise Http404('This Course does not belong to you')
 
     context = {}
     if request.method == "POST":
@@ -370,9 +369,8 @@ def add_exercise(request, quiz_id=None, course_id=None):
                 return my_redirect("/exam/manage/courses/")
 
     else:
-        quiz = Quiz.objects.get(id=quiz_id) if quiz_id else None
         form = ExerciseForm(instance=quiz)
-        context["quiz_id"] = quiz_id
+        context["exercise"] = quiz
         context["course_id"] = course_id
     context["form"] = form
     return my_render_to_response(
@@ -931,14 +929,14 @@ def add_course(request, course_id=None):
             raise Http404("You are not allowed to view this course")
     else:
         course = None
-
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     if request.method == 'POST':
         form = CourseForm(request.POST, instance=course)
         if form.is_valid():
             new_course = form.save(commit=False)
-            new_course.creator = user
+            if course_id is None:
+                new_course.creator = user
             new_course.save()
             return my_redirect('/exam/manage/courses')
         else:
@@ -1157,7 +1155,7 @@ def show_statistics(request, questionpaper_id, attempt_number=None,
                                            course_id):
         return my_redirect('/exam/manage/')
     question_stats = AnswerPaper.objects.get_question_statistics(
-        questionpaper_id, attempt_number
+        questionpaper_id, attempt_number, course_id
     )
     context = {'question_stats': question_stats, 'quiz': quiz,
                'questionpaper_id': questionpaper_id,
@@ -1291,14 +1289,21 @@ def _remove_already_present(questionpaper_id, questions):
 
 @login_required
 @email_verified
-def design_questionpaper(request, quiz_id, questionpaper_id=None):
+def design_questionpaper(request, quiz_id, questionpaper_id=None,
+                         course_id=None):
     user = request.user
 
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    quiz = Quiz.objects.get(id=quiz_id)
-    if not quiz.creator == user:
-        raise Http404('This course does not belong to you')
+    if quiz_id:
+        quiz = get_object_or_404(Quiz, pk=quiz_id)
+        if quiz.creator != user and not course_id:
+            raise Http404('This quiz does not belong to you')
+    if course_id:
+        course = get_object_or_404(Course, pk=course_id)
+        if not course.is_creator(user) and not course.is_teacher(user):
+            raise Http404('This Course does not belong to you')
+
     filter_form = QuestionFilterForm(user=user)
     questions = None
     marks = None
@@ -1306,7 +1311,8 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None):
     if questionpaper_id is None:
         question_paper = QuestionPaper.objects.get_or_create(quiz_id=quiz_id)[0]
     else:
-        question_paper = get_object_or_404(QuestionPaper, id=questionpaper_id)
+        question_paper = get_object_or_404(QuestionPaper, id=questionpaper_id,
+                                           quiz_id=quiz_id)
     qpaper_form = QuestionPaperForm(instance=question_paper)
 
     if request.method == 'POST':
@@ -1523,9 +1529,9 @@ def download_quiz_csv(request, course_id, quiz_id):
 
     questions = question_paper.get_question_bank()
     answerpapers = AnswerPaper.objects.filter(question_paper=question_paper,
-            attempt_number=attempt_number)
+            attempt_number=attempt_number, course_id=course_id)
     if not answerpapers:
-        return monitor(request, quiz_id)
+        return monitor(request, quiz_id, course_id)
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="{0}-{1}-attempt{2}.csv"'.format(
             course.name.replace('.', ''),  quiz.description.replace('.', ''),
