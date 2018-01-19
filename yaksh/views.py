@@ -475,6 +475,16 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     learning_module = course.learning_module.get(id=module_id)
     learning_unit = learning_module.learning_unit.get(quiz=quest_paper.quiz.id)
 
+    # unit module prerequiste check
+    if learning_module.has_prerequisite():
+        if not learning_module.is_prerequisite_passed(user, course):
+            msg = "You have not completed the module previous to {0}".format(
+                learning_module.name)
+            return course_modules(request, course_id, msg)
+
+    # update course status with current unit
+    _update_unit_status(course_id, user, learning_unit)
+
     # is user enrolled in the course
     if not course.is_enrolled(user):
         msg = 'You are not enrolled in {0} course'.format(course.name)
@@ -2338,6 +2348,15 @@ def show_lesson(request, lesson_id, module_id, course_id):
     learn_module = course.learning_module.get(id=module_id)
     learn_unit = learn_module.learning_unit.get(lesson_id=lesson_id)
     learning_units = learn_module.get_learning_units()
+    if learn_module.has_prerequisite():
+        if not learn_module.is_prerequisite_passed(user, course):
+            msg = "You have not completed the module previous to {0}".format(
+                learn_module.name)
+            return view_module(request, module_id, course_id, msg)
+
+    # update course status with current unit
+    _update_unit_status(course_id, user, learn_unit)
+
     all_modules = course.get_learning_modules()
     if learn_unit.has_prerequisite():
         if not learn_unit.is_prerequisite_passed(user, learn_module, course):
@@ -2514,7 +2533,7 @@ def preview_html_text(request):
 
 @login_required
 @email_verified
-def get_next_unit(request, course_id, module_id, current_unit_id,
+def get_next_unit(request, course_id, module_id, current_unit_id=None,
                   first_unit=None):
     user = request.user
     course = Course.objects.prefetch_related("learning_module").get(
@@ -2523,8 +2542,14 @@ def get_next_unit(request, course_id, module_id, current_unit_id,
         raise Http404('You are not enrolled for this course!')
     learning_module = course.learning_module.prefetch_related(
         "learning_unit").get(id=module_id)
-    current_learning_unit = learning_module.learning_unit.get(
-        id=current_unit_id)
+
+    if current_unit_id:
+        current_learning_unit = learning_module.learning_unit.get(
+            id=current_unit_id)
+    else:
+        next_module = course.next_module(learning_module.id)
+        return my_redirect("/exam/quizzes/view_module/{0}/{1}".format(
+            next_module.id, course_id))
 
     if first_unit:
         next_unit = current_learning_unit
@@ -2553,9 +2578,6 @@ def get_next_unit(request, course_id, module_id, current_unit_id,
             return my_redirect("/exam/quizzes/view_module/{0}/{1}/".format(
                 next_module.id, course.id))
 
-    # make next available unit as current unit
-    course_status.current_unit = next_unit
-    course_status.save()
     if next_unit.type == "quiz":
         return my_redirect("/exam/start/{0}/{1}/{2}".format(
             next_unit.quiz.questionpaper_set.get().id, module_id, course_id))
@@ -2641,13 +2663,14 @@ def view_module(request, module_id, course_id, msg=None):
     all_modules = course.get_learning_modules()
     if learning_module.has_prerequisite():
         if not learning_module.is_prerequisite_passed(user, course):
-            msg = "You have not completed the previous learning module"
+            msg = "You have not completed the module previous to {0}".format(
+                learning_module.name)
             return course_modules(request, course_id, msg)
 
     learning_units = learning_module.get_learning_units()
     context['learning_units'] = learning_units
     context['learning_module'] = learning_module
-    context['first_unit'] = learning_units[0]
+    context['first_unit'] = learning_units.first()
     context['all_modules'] = all_modules
     context['user'] = user
     context['course'] = course
@@ -2689,3 +2712,19 @@ def course_status(request, course_id):
         'state': 'course_status', 'modules': course.get_learning_modules()
     }
     return my_render_to_response('yaksh/course_detail.html', context)
+
+
+def _update_unit_status(course_id, user, unit):
+    """ Update course status with current unit """
+    course_status = CourseStatus.objects.filter(
+        user=user, course_id=course_id,
+    )
+    if not course_status.exists():
+        course_status = CourseStatus.objects.create(
+            user=user, course_id=course_id
+        )
+    else:
+        course_status = course_status.first()
+    # make next available unit as current unit
+    course_status.current_unit = unit
+    course_status.save()
