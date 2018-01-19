@@ -126,8 +126,9 @@ function textareaformat()
 	document.getElementById('my').innerHTML = document.getElementById('id_description').value ;
 	document.getElementById('rend_solution').innerHTML = document.getElementById('id_solution').value ;
 
+    var question_type = document.getElementById('id_type').value
     if (document.getElementById('id_grade_assignment_upload').checked ||
-        document.getElementById('id_type').value == 'upload'){
+        question_type == 'upload'){
         $("#id_grade_assignment_upload").prop("disabled", false);
     }
     else{
@@ -140,6 +141,23 @@ function textareaformat()
         }
         else{
             $("#id_grade_assignment_upload").prop("disabled", true);
+        }
+   });
+
+    if (document.getElementById('id_shuffle_testcases').checked ||
+         question_type == "mcc" || question_type == "mcq"){
+        $("#id_shuffle_testcases").prop("disabled", false);
+    }
+    else{
+        $("#id_shuffle_testcases").prop("disabled", true);
+    }
+
+    $('#id_type').change(function() {
+        if ($(this).val() == "mcc" || $(this).val() == "mcq"){
+            $("#id_shuffle_testcases").prop("disabled", false);
+        }
+        else{
+            $("#id_shuffle_testcases").prop("disabled", true);
         }
    });
 }
