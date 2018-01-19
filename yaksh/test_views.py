@@ -4475,6 +4475,7 @@ class TestLearningModule(TestCase):
             check_prerequisite=False, creator=self.user)
         self.course.teachers.add(self.teacher)
         self.course.learning_module.add(self.learning_module)
+        self.course.learning_module.add(self.learning_module1)
 
         self.expected_url = "/exam/manage/courses/all_learning_module/"
 
@@ -4738,6 +4739,29 @@ class TestLearningModule(TestCase):
         self.assertEqual(response.context["state"], "lesson")
         self.assertEqual(response.context["current_unit"].id,
                          self.learning_unit1.id)
+
+        # Go to next module with empty module
+        response = self.client.get(
+            reverse('yaksh:next_unit',
+                    kwargs={"module_id": self.learning_module1.id,
+                            "course_id": self.course.id}),
+            follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["state"], "module")
+        self.assertEqual(response.context["learning_module"].id,
+                         self.learning_module.id)
+
+        # Go to next module from last unit of previous unit
+        response = self.client.get(
+            reverse('yaksh:next_unit',
+                    kwargs={"module_id": self.learning_module.id,
+                            "course_id": self.course.id,
+                            "current_unit_id": self.learning_unit1.id}),
+            follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["state"], "module")
+        self.assertEqual(response.context["learning_module"].id,
+                         self.learning_module1.id)
 
 
 class TestLessons(TestCase):
