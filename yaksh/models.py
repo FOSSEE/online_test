@@ -1161,7 +1161,7 @@ class QuestionPaper(models.Model):
         return all_questions
 
     def make_answerpaper(self, user, ip, attempt_num, course_id):
-        """Creates an  answer paper for the user to attempt the quiz"""
+        """Creates an answer paper for the user to attempt the quiz"""
         try:
             ans_paper = AnswerPaper.objects.get(user=user,
                                                 attempt_number=attempt_num,
@@ -1187,13 +1187,11 @@ class QuestionPaper(models.Model):
             ans_paper.save()
             ans_paper.questions_unanswered.add(*questions)
         except AnswerPaper.MultipleObjectsReturned:
-            ans_paper = AnswerPaper.objects.get(user=user,
-                                                attempt_number=attempt_num,
-                                                question_paper=self,
-                                                course_id=course_id
-                                                ).order_by('-id')
-            ans_paper = ans_paper[0]
-
+            ans_paper = AnswerPaper.objects.filter(user=user,
+                                                   attempt_number=attempt_num,
+                                                   question_paper=self,
+                                                   course_id=course_id
+                                                   ).order_by('id').last()
         return ans_paper
 
     def _is_attempt_allowed(self, user, course_id):
@@ -1502,6 +1500,9 @@ class AnswerPaper(models.Model):
     questions_order = models.TextField(blank=True, default='')
 
     objects = AnswerPaperManager()
+
+    class Meta:
+        unique_together = ('user', 'question_paper', 'attempt_number')
 
     def get_per_question_score(self, question_id):
         if question_id not in self.get_questions().values_list('id', flat=True):
