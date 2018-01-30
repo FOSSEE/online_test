@@ -1186,12 +1186,6 @@ class QuestionPaper(models.Model):
             ans_paper.questions_order = ",".join(question_ids)
             ans_paper.save()
             ans_paper.questions_unanswered.add(*questions)
-        except AnswerPaper.MultipleObjectsReturned:
-            ans_paper = AnswerPaper.objects.filter(user=user,
-                                                   attempt_number=attempt_num,
-                                                   question_paper=self,
-                                                   course_id=course_id
-                                                   ).order_by('id').last()
         return ans_paper
 
     def _is_attempt_allowed(self, user, course_id):
