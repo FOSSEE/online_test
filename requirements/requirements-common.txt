@@ -8,3 +8,5 @@ selenium==2.53.6
 coverage
 ruamel.yaml==0.15.23
 markdown==2.6.9
+jinja2==2.10
+pdfkit==0.6.1

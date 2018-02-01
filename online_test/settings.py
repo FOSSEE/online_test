@@ -42,6 +42,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'yaksh',
+    'certificates',
     'taggit',
     'social.apps.django_app.default',
     'grades',

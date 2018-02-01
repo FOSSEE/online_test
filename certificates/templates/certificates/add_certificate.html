@@ -1,0 +1,27 @@
+{% extends "manage.html" %}
+
+{% block subtitle %}Add Certificate{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question_quiz.css" type="text/css" />
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/jquery.datetimepicker.css" type="text/css" />
+{% endblock %}
+
+{% block content %}
+<form name=frm id=frm action="" method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <center>
+  <table class="table table-bordered">
+  {{ form.as_table }}
+  </table>
+  </center>
+
+  <center>
+  <button class="btn btn-primary" type="submit" id="submit" name="certificate">Save</button>
+  <a href="/exam/manage/courses" class="btn" role="button">Cancel</a>
+  {% if course_id %}
+  <a href="{% url 'certificates:preview_certificate' course_id %}" class="btn" role="button">Preview</a>
+  {% endif %}
+  </center>
+</form>
+{% endblock %}

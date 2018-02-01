@@ -1,4 +1,4 @@
 from online_test.settings import *
 
 
-MIGRATION_MODULES = {'yaksh': None}
+MIGRATION_MODULES = {'yaksh': None, 'certificates': None}

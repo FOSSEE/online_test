@@ -38,6 +38,7 @@ from django.conf import settings
 from django.forms.models import model_to_dict
 from grades.models import GradingSystem
 
+
 languages = (
         ("python", "Python"),
         ("bash", "Bash"),
@@ -113,6 +114,14 @@ def get_model_class(model):
 def get_upload_dir(instance, filename):
     return os.sep.join((
         'question_%s' % (instance.question.id), filename
+    ))
+
+
+def get_cert_template_dir(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = '{0}.{1}'.format('course_certificate_template', ext)
+    return os.sep.join((
+        'course_{0}'.format(instance.name.replace(" ", "_")), filename
     ))
 
 
@@ -767,8 +776,18 @@ class Course(models.Model):
     )
 
     grading_system = models.ForeignKey(GradingSystem, null=True, blank=True)
-
     objects = CourseManager()
+
+    def get_course_completion_status(self, user):
+        units = self.get_learning_units()
+        course_completion = False
+        for unit in units:
+            status = unit.get_completion_status(user, self)
+            if status == "inprogress" or status == "not attempted":
+                course_completion = False
+            else:
+                course_completion = True
+        return course_completion
 
     def _create_duplicate_instance(self, creator, course_name=None):
         new_course = self

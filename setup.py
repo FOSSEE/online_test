@@ -27,6 +27,9 @@ install_requires = [
     'six',
     'requests',
     'markdown==2.6.9',
+    'jinja2==2.10',
+    'pdfkit==0.6.1',
+    'mock==2.0.0'
 ]
 
 setup(

@@ -7,6 +7,7 @@ python:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y scilab
+  - sudo apt-get install wkhtmltopdf
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3 # give xvfb some time to start
@@ -23,7 +24,7 @@ script:
   - coverage run -p manage.py test -v 2 --settings online_test.test_settings yaksh
   - coverage run -p manage.py test -v 2 --settings online_test.test_settings grades
   - coverage run -p manage.py test -v 2 --settings online_test.test_settings yaksh.live_server_tests.load_test
-
+  - coverage run -p manage.py test -v 2 --settings online_test.test_settings certificates
 after_success:
   - coverage combine
   - coverage report

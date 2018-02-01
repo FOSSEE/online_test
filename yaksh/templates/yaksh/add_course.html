@@ -25,8 +25,13 @@
   </script>
   </center>
 
-  <center><button class="btn btn-success" type="submit" id="submit" name="questionpaper">Save</button>
-  <button class="btn btn-danger" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses");'>Cancel</button> </center>
+  <center>
+  <button class="btn btn-success" type="submit" id="submit" name="questionpaper">Save</button>
+  <button class="btn btn-danger" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses");'>Cancel</button>
+  {% if course_id %}
+    <a href="{{URL_ROOT}}/certificate/add/{{ course_id }}/" class="btn btn-info" role="button">Add Certificate</a>
+  {% endif %}
+  </center>
 </form>
 </div>
 {% endblock %}

@@ -1,6 +1,6 @@
 import unittest
-from django.contrib.auth.models import Group
-from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
+from django.contrib.auth.models import User, Group
+from yaksh.models import Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
