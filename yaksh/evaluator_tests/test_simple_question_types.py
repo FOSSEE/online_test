@@ -574,28 +574,3 @@ class MCQQuestionTestCases(unittest.TestCase):
 
         # Then
         self.assertNotEqual(order1, order2)
-
-    # def test_not_shuffle_test_cases(self):
-    #     # Given
-    #     self.question1.shuffle_testcases = False
-    #     self.question1.save()
-    #     answerpaper = self.question_paper.make_answerpaper(
-    #                                        user=self.user, ip=self.user_ip,
-    #                                        attempt_num=1, 
-    #                                        course_id=self.course.id
-    #                                        )
-
-    #     # Answerpaper for user 2
-    #     answerpaper2 = self.question_paper.make_answerpaper(
-    #                                         user=self.user2, ip=self.user_ip,
-    #                                         attempt_num=1,
-    #                                         course_id=self.course.id
-    #                                         )
-        
-    #     user_testcase = self.question1.get_ordered_test_cases(answerpaper)
-    #     order1 = [tc.id for tc in user_testcase]
-
-    #     user2_testcase = self.question1.get_ordered_test_cases(answerpaper2)
-    #     order2 = [tc.id for tc in user2_testcase]
-    #     print(order2, order1)
-    #     self.assertNotEqual(order1, order2)

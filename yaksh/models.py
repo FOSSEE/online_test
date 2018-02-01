@@ -936,13 +936,13 @@ class Question(models.Model):
 
     def get_ordered_test_cases(self, answerpaper):
         try:
-            order = TestcaseOrder.objects.get(answer_paper=answerpaper,
+            order = TestCaseOrder.objects.get(answer_paper=answerpaper,
                                               question = self
-                                              ).testcase_order.split(",")
+                                              ).order.split(",")
             return [self.get_test_cases(id=int(tc_id))[0]\
                     for tc_id in order
                     ]
-        except TestcaseOrder.DoesNotExist:
+        except TestCaseOrder.DoesNotExist:
             return self.get_test_cases()
 
     def get_maximum_test_case_weight(self, **kwargs):
@@ -1221,10 +1221,10 @@ class QuestionPaper(models.Model):
                 if question.shuffle_testcases:
                     random.shuffle(testcases)
                 testcases_ids = ",".join([str(tc.id) for tc in testcases])
-                testcases_order = TestcaseOrder.objects.create(
+                testcases_order = TestCaseOrder.objects.create(
                                     answer_paper=ans_paper,
                                     question=question,
-                                    testcase_order=testcases_ids)
+                                    order=testcases_ids)
             ans_paper.questions_order = ",".join(question_ids)
             ans_paper.save()
             ans_paper.questions_unanswered.add(*questions)
@@ -2008,16 +2008,16 @@ class FloatTestCase(TestCase):
 
 
 ##############################################################################
-class TestcaseOrder(models.Model):
+class TestCaseOrder(models.Model):
     """Testcase order contains a set of ordered test cases for a given question
         for each user.
     """
 
     # Answerpaper of the user.
-    answer_paper= models.ForeignKey(AnswerPaper,related_name="answer_paper")
+    answer_paper = models.ForeignKey(AnswerPaper, related_name="answer_paper")
 
     # Question in an answerpaper.
     question = models.ForeignKey(Question)
 
     #Order of the test case for a question.
-    testcase_order = models.TextField()
+    order = models.TextField()
