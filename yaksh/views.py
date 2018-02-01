@@ -56,6 +56,7 @@ from .settings import URL_ROOT
 from .file_utils import extract_files, is_csv
 from .send_emails import send_user_mail, generate_activation_key, send_bulk_mail
 from .decorators import email_verified, has_profile
+from certificate.formatters.utils import render_certificate_template, HTMLFormatter
 
 
 def my_redirect(url):
@@ -174,12 +175,27 @@ def quizlist_user(request, enrolled=None, msg=None):
         )
         title = 'All Courses'
 
-    context = {'user': user, 'courses': courses, 'title': title,
-               'msg': msg}
+    context = {
+        'user': user,
+        'courses': [(crs, crs.get_course_completion_status(user)) for crs in courses],
+        'title': title,
+        'msg': msg
+    }
 
     return my_render_to_response(
         "yaksh/quizzes_user.html", context, context_instance=ci
     )
+
+@login_required
+@has_profile
+@email_verified
+def view_certificate(request, course_id):
+    from django.http import HttpResponse
+    course = Course.objects.get(id=course_id)
+    user = request.user
+    html_content = course.create_certificate_html(user, course)
+    html_formatter = HTMLFormatter(html_content)
+    return HttpResponse(html_formatter.get_response())
 
 
 @login_required
@@ -942,7 +958,7 @@ def add_course(request, course_id=None):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     if request.method == 'POST':
-        form = CourseForm(request.POST, instance=course)
+        form = CourseForm(request.POST, request.FILES, instance=course)
         if form.is_valid():
             new_course = form.save(commit=False)
             if course_id is None:
