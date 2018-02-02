@@ -21,6 +21,7 @@
 <script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/clike/clike.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/shell/shell.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/mathjax/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-sortable.js"></script>
 <script>
 init_val = '{{ last_attempt|escape_quotes|safe }}';
 lang = "{{ question.language }}"
@@ -175,10 +176,12 @@ question_type = "{{ question.type }}"
                                 {% else %}
                                     <h5>(CASE SENSITIVE)</h5>
                                 {% endif %}
-
                              {% elif question.type == "float" %}
                              (FILL IN THE BLANKS WITH FLOAT ANSWER)
+                             {% elif question.type == "arrange" %}
+                            (ARRANGE THE OPTIONS IN CORRECT ORDER)
                              {% endif %}
+
                         </u>
                         <font class=pull-right>(Marks : {{ question.points }}) </font>
                       </h4>
@@ -251,6 +254,21 @@ question_type = "{{ question.type }}"
                      <input type=file id="assignment" name="assignment" multiple="">
                      <hr>
                      {% endif %}
+
+                     {% if question.type == "arrange" %}
+                     <input name="answer" type="hidden" id='arrange_order'/>
+                     <ol class="arrange">
+                     {% for test_case in test_cases %}
+                      <li id = {{test_case.id}}>{{test_case.options| safe }}</li>
+                     {% endfor %}
+                    </ol>
+                     <script type="text/javascript">
+                      var arrange = $("ol.arrange");
+                      var order_array = $(arrange).sortable(['serialize']);
+                     </script>
+                     {% endif %}
+
+
                      {% if question.type == "code" %}
                      <div class="row">
                          <div class="col-md-9">
@@ -269,6 +287,9 @@ question_type = "{{ question.type }}"
          <br><button class="btn btn-primary" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
          {% elif question.type == "upload" %}
          <br><button class="btn btn-primary" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
+         {% elif question.type == "arrange" %}
+         <br><button class="btn btn-primary" type="submit" name="check" id="check" onClick="return user_arranged_options();">Submit Answer</button>&nbsp;&nbsp;
+
 
          {% else %}
            {% if question in paper.get_questions_unanswered or quiz.is_exercise %}

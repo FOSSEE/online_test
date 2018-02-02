@@ -726,6 +726,9 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
 
         elif current_question.type == 'mcc':
             user_answer = request.POST.getlist('answer')
+        elif current_question.type == 'arrange':
+            user_answer_list = request.POST.get('answer').split(',')
+            user_answer = [int(ids) for ids in user_answer_list]
         elif current_question.type == 'upload':
             # if time-up at upload question then the form is submitted without
             # validation

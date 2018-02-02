@@ -54,6 +54,8 @@ question_types = (
         ("integer", "Answer in Integer"),
         ("string", "Answer in String"),
         ("float", "Answer in Float"),
+        ("arrange", "Arrange Options in Order"),
+
     )
 
 enrollment_methods = (
@@ -69,6 +71,7 @@ test_case_types = (
         ("integertestcase", "Integer Testcase"),
         ("stringtestcase", "String Testcase"),
         ("floattestcase", "Float Testcase"),
+        ("arrangetestcase", "Arrange Options Testcase"),
     )
 
 string_check_type = (
@@ -1791,6 +1794,13 @@ class AnswerPaper(models.Model):
                     result['success'] = True
                     result['error'] = ['Correct answer']
 
+            elif question.type == 'arrange':
+                tc_list = sorted([ids.id for ids in question.get_test_cases()])
+                if user_answer == tc_list:
+                    result['success'] = True
+                    result['error'] = ['Correct answer']
+
+
             elif question.type == 'code' or question.type == "upload":
                 user_dir = self.user.profile.get_user_dir()
                 url = '{0}:{1}'.format(SERVER_HOST_NAME, server_port)
@@ -2011,6 +2021,18 @@ class FloatTestCase(TestCase):
                 )
 
 
+class ArrangeTestCase(TestCase):
+    
+    options = models.TextField(default=None)
+
+    def get_field_value(self):
+        return {"test_case_type": "arrangetestcase",
+                "options": self.options}
+
+    def __str__(self):
+        return u'Arrange Testcase | Option: {0}'.format(self.options)
+
+
 ##############################################################################
 class TestCaseOrder(models.Model):
     """Testcase order contains a set of ordered test cases for a given question
@@ -2025,3 +2047,5 @@ class TestCaseOrder(models.Model):
 
     #Order of the test case for a question.
     order = models.TextField()
+
+
