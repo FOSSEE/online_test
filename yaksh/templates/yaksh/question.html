@@ -257,11 +257,14 @@ question_type = "{{ question.type }}"
 
                      {% if question.type == "arrange" %}
                      <input name="answer" type="hidden" id='arrange_order'/>
+                     <div class="list-group">
                      <ol class="arrange">
                      {% for test_case in test_cases %}
-                      <li id = {{test_case.id}}>{{test_case.options| safe }}</li>
+                      <li class="list-group-item" id={{test_case.id}}>{{test_case.options| safe }}</li>
                      {% endfor %}
-                    </ol>
+                      </ol>
+                    </div>
+
                      <script type="text/javascript">
                       var arrange = $("ol.arrange");
                       var order_array = $(arrange).sortable(['serialize']);

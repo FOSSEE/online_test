@@ -242,6 +242,8 @@ def add_question(request, question_id=None):
         if qform.is_valid():
             question = qform.save(commit=False)
             question.user = user
+            if question.type == "arrange":
+                question.shuffle_testcases = True
             question.save()
             # many-to-many field save function used to save the tags
             qform.save_m2m()
@@ -616,7 +618,7 @@ def show_question(request, question, paper, error_message=None, notification=Non
             if question.type == "code" else
             'You have already attempted this question'
         )
-    if question.type in ['mcc', 'mcq']:
+    if question.type in ['mcc', 'mcq', 'arrange']:
         test_cases = question.get_ordered_test_cases(paper)
     else:
         test_cases = question.get_test_cases()
