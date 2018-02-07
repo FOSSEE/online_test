@@ -1496,7 +1496,9 @@ class AnswerPaper(models.Model):
     objects = AnswerPaperManager()
 
     class Meta:
-        unique_together = ('user', 'question_paper', 'attempt_number')
+        unique_together = ('user', 'question_paper',
+                           'attempt_number', "course"
+                           )
 
     def get_per_question_score(self, question_id):
         if question_id not in self.get_questions().values_list('id', flat=True):

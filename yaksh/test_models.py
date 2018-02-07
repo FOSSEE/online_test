@@ -774,7 +774,8 @@ class AnswerPaperTestCases(unittest.TestCase):
             question_paper=self.question_paper,
             start_time=self.start_time,
             end_time=self.end_time,
-            user_ip=self.ip
+            user_ip=self.ip,
+            course=self.course
         )
         self.attempted_papers = AnswerPaper.objects.filter(
             question_paper=self.question_paper,
@@ -1321,7 +1322,8 @@ class AnswerPaperTestCases(unittest.TestCase):
                 question_paper=self.answerpaper.question_paper,
                 attempt_number=self.answerpaper.attempt_number,
                 start_time=self.answerpaper.start_time,
-                end_time=self.answerpaper.end_time
+                end_time=self.answerpaper.end_time,
+                course=self.answerpaper.course
                 )
 
 
