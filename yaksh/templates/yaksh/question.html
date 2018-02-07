@@ -256,6 +256,9 @@ question_type = "{{ question.type }}"
                      {% endif %}
 
                      {% if question.type == "arrange" %}
+                     {% if last_attempt %}
+                     {% get_arrange_user_answer last_attempt question as test_cases %}
+                     {% endif %}
                      <input name="answer" type="hidden" id='arrange_order'/>
                      <div class="list-group">
                      <ol class="arrange">

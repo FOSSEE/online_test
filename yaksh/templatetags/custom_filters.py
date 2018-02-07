@@ -71,7 +71,10 @@ def get_ordered_testcases(question, answerpaper):
 
 @register.simple_tag
 def get_arrange_user_answer(ans, question):
-    ans = str(ans)
+    if type(ans) == bytes:
+        ans = ans.decode("utf-8")
+    else:
+        ans = str(ans)
     ans_list = literal_eval(ans)
     testcase_list = []
     for answer_id in ans_list:
