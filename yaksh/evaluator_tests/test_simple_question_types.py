@@ -4,7 +4,7 @@ from django.utils import timezone
 import pytz
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, IntegerTestCase, FloatTestCase,\
-    StringTestCase, McqTestCase
+    StringTestCase, McqTestCase, ArrangeTestCase
 
 
 def setUpModule():
@@ -39,15 +39,17 @@ def setUpModule():
                                duration=30, active=True, attempts_allowed=1,
                                time_between_attempts=0, pass_criteria=0,
                                description='demo quiz 100',
-                               instructions="Demo Instructions"
+                               instructions="Demo Instructions",
+                               creator=user
                                )
     question_paper = QuestionPaper.objects.create(quiz=quiz,
                                                   total_marks=1.0)
 
     
 def tearDownModule():
-  User.objects.get(username="demo_user_100").delete()
-  User.objects.get(username="demo_user_101").delete()
+    User.objects.filter(username__in=["demo_user_100", "demo_user_101"])\
+                 .delete()
+
 
 class IntegerQuestionTestCases(unittest.TestCase):
     @classmethod
@@ -116,11 +118,9 @@ class IntegerQuestionTestCases(unittest.TestCase):
 
         # Regrade
          # Given
-        self.answer.correct = True
-        self.answer.marks = 1
-
-        self.answer.answer = 200
-        self.answer.save()
+        regrade_answer = Answer.objects.get(id=self.answer.id)
+        regrade_answer.answer = 200
+        regrade_answer.save()
 
         # When
         details = self.answerpaper.regrade(self.question1.id)
@@ -128,6 +128,7 @@ class IntegerQuestionTestCases(unittest.TestCase):
         # Then
         self.answer = self.answerpaper.answers.filter(question=self.question1
                                                       ).last()
+        self.assertEqual(self.answer, regrade_answer)
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 0)
         self.assertFalse(self.answer.correct)
@@ -153,11 +154,9 @@ class IntegerQuestionTestCases(unittest.TestCase):
 
         # Regrade
          # Given
-        self.answer.correct = True
-        self.answer.marks = 1
-
-        self.answer.answer = 25
-        self.answer.save()
+        regrade_answer = Answer.objects.get(id=self.answer.id)
+        regrade_answer.answer = 25
+        regrade_answer.save()
 
         # When
         details = self.answerpaper.regrade(self.question1.id)
@@ -165,6 +164,7 @@ class IntegerQuestionTestCases(unittest.TestCase):
         # Then
         self.answer = self.answerpaper.answers.filter(question=self.question1
                                                       ).last()
+        self.assertEqual(self.answer, regrade_answer)
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 1)
         self.assertTrue(self.answer.correct)
@@ -250,11 +250,9 @@ class StringQuestionTestCases(unittest.TestCase):
 
         # Regrade
          # Given
-        answer.correct = True
-        answer.marks = 1
-
-        answer.answer = "hello, mars!"
-        answer.save()
+        regrade_answer = Answer.objects.get(id=answer.id)
+        regrade_answer.answer = "hello, mars!"
+        regrade_answer.save()
 
         # When
         details = self.answerpaper.regrade(self.question1.id)
@@ -262,6 +260,7 @@ class StringQuestionTestCases(unittest.TestCase):
         # Then
         answer = self.answerpaper.answers.filter(question=self.question1)\
                                                .last()
+        self.assertEqual(answer, regrade_answer)
         self.assertTrue(details[0])
         self.assertEqual(answer.marks, 0)
         self.assertFalse(answer.correct)
@@ -284,11 +283,9 @@ class StringQuestionTestCases(unittest.TestCase):
 
         # Regrade
          # Given
-        answer.correct = True
-        answer.marks = 1
-
-        answer.answer = "hello, earth!"
-        answer.save()
+        regrade_answer = Answer.objects.get(id=answer.id)
+        regrade_answer.answer = "hello, earth!"
+        regrade_answer.save()
 
         # When
         details = self.answerpaper.regrade(self.question1.id)
@@ -296,6 +293,7 @@ class StringQuestionTestCases(unittest.TestCase):
         # Then
         answer = self.answerpaper.answers.filter(question=self.question1)\
                                                .last()
+        self.assertEqual(answer, regrade_answer)
         self.assertTrue(details[0])
         self.assertEqual(answer.marks, 1)
         self.assertTrue(answer.correct)
@@ -317,11 +315,9 @@ class StringQuestionTestCases(unittest.TestCase):
 
         # Regrade
          # Given
-        answer.correct = True
-        answer.marks = 1
-
-        answer.answer = "hello, earth!"
-        answer.save()
+        regrade_answer = Answer.objects.get(id=answer.id)
+        regrade_answer.answer = "hello, earth!"
+        regrade_answer.save()
 
         # When
         details = self.answerpaper.regrade(self.question2.id)
@@ -329,6 +325,7 @@ class StringQuestionTestCases(unittest.TestCase):
         # Then
         answer = self.answerpaper.answers.filter(question=self.question2)\
                                                .last()
+        self.assertEqual(answer, regrade_answer)
         self.assertTrue(details[0])
         self.assertEqual(answer.marks, 0)
         self.assertFalse(answer.correct)
@@ -351,11 +348,9 @@ class StringQuestionTestCases(unittest.TestCase):
 
         # Regrade
          # Given
-        answer.correct = True
-        answer.marks = 1
-
-        answer.answer = "Hello, EARTH!"
-        answer.save()
+        regrade_answer = Answer.objects.get(id=answer.id)
+        regrade_answer.answer = "Hello, EARTH!"
+        regrade_answer.save()
 
         # When
         details = self.answerpaper.regrade(self.question2.id)
@@ -363,6 +358,7 @@ class StringQuestionTestCases(unittest.TestCase):
         # Then
         answer = self.answerpaper.answers.filter(question=self.question2)\
                                                .last()
+        self.assertEqual(answer, regrade_answer)
         self.assertTrue(details[0])
         self.assertEqual(answer.marks, 1)
         self.assertTrue(answer.correct)
@@ -432,13 +428,11 @@ class FloatQuestionTestCases(unittest.TestCase):
         # Then
         self.assertTrue(result['success'])
 
-        # Regrade
+        # Regrade with wrong answer
          # Given
-        self.answer.correct = True
-        self.answer.marks = 1
-
-        self.answer.answer = 0.0
-        self.answer.save()
+        regrade_answer = Answer.objects.get(id=self.answer.id)
+        regrade_answer.answer = 0.0
+        regrade_answer.save()
 
         # When
         details = self.answerpaper.regrade(self.question1.id)
@@ -446,6 +440,7 @@ class FloatQuestionTestCases(unittest.TestCase):
         # Then
         self.answer = self.answerpaper.answers.filter(question=self.question1
                                                       ).last()
+        self.assertEqual(self.answer, regrade_answer)
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 0)
         self.assertFalse(self.answer.correct)
@@ -470,11 +465,9 @@ class FloatQuestionTestCases(unittest.TestCase):
 
         # Regrade
          # Given
-        self.answer.correct = True
-        self.answer.marks = 1
-
-        self.answer.answer = 99.9
-        self.answer.save()
+        regrade_answer = Answer.objects.get(id=self.answer.id)
+        regrade_answer.answer = 99.9
+        regrade_answer.save()
 
         # When
         details = self.answerpaper.regrade(self.question1.id)
@@ -482,6 +475,7 @@ class FloatQuestionTestCases(unittest.TestCase):
         # Then
         self.answer = self.answerpaper.answers.filter(question=self.question1
                                                       ).last()
+        self.assertEqual(self.answer, regrade_answer)
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 1)
         self.assertTrue(self.answer.correct)
@@ -586,4 +580,146 @@ class MCQQuestionTestCases(unittest.TestCase):
         # Then
         self.assertNotEqual(order1, order2)
         self.assertEqual(get_test_cases, not_ordered_testcase)
-        answerpaper3.delete()
+
+
+class ArrangeQuestionTestCases(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        # Creating Course
+        self.course = Course.objects.get(name="Python Course 100")
+        # Creating Quiz
+        self.quiz = Quiz.objects.get(description="demo quiz 100")
+        # Creating Question paper
+        self.question_paper = QuestionPaper.objects.get(quiz=self.quiz,
+                                                        total_marks=1.0)
+
+        #Creating User
+        self.user = User.objects.get(username='demo_user_100')
+        #Creating Question
+        self.question1 = Question.objects.create(summary='arrange1',
+                                                 points=1.0,
+                                                 user=self.user
+                                                 )
+        self.question1.language = 'python'
+        self.question1.type = "arrange"
+        self.question1.description = "Arrange the alphabets in ascending order"
+        self.question1.test_case_type = 'arrangetestcase'
+        self.question1.save()
+
+        #Creating answerpaper
+
+        self.answerpaper = AnswerPaper.objects.create(user=self.user,
+                                            user_ip='101.0.0.1',
+                                            start_time=timezone.now(),
+                                            question_paper=self.question_paper,
+                                            end_time=timezone.now()
+                                                     +timedelta(minutes=5),
+                                            attempt_number=1,
+                                            course=self.course
+                                             )
+        self.answerpaper.questions.add(self.question1)
+        self.answerpaper.save()
+        # For question
+        self.arrange_testcase_1 = ArrangeTestCase(question=self.question1,
+                                                  options="A",
+                                                  type = 'arrangetestcase',
+                                                  )
+        self.arrange_testcase_1.save()
+        self.testcase_1_id = self.arrange_testcase_1.id
+        self.arrange_testcase_2 = ArrangeTestCase(question=self.question1,
+                                                  options="B",
+                                                  type = 'arrangetestcase',
+                                                  )
+        self.arrange_testcase_2.save()
+        self.testcase_2_id = self.arrange_testcase_2.id
+        self.arrange_testcase_3 = ArrangeTestCase(question=self.question1,
+                                                  options="C",
+                                                  type = 'arrangetestcase',
+                                                  )
+        self.arrange_testcase_3.save()
+        self.testcase_3_id = self.arrange_testcase_3.id
+    @classmethod
+    def tearDownClass(self):
+      self.question1.delete()
+      self.answerpaper.delete()
+
+    def test_validate_regrade_arrange_correct_answer(self):
+        # Given
+        arrange_answer = [self.testcase_1_id,
+                          self.testcase_2_id,
+                          self.testcase_3_id,
+                          ]
+        self.answer = Answer(question=self.question1,
+                             answer=arrange_answer,
+                             )
+        self.answer.save()
+        self.answerpaper.answers.add(self.answer)
+
+        # When
+        json_data = None
+        result = self.answerpaper.validate_answer(arrange_answer,
+                                                  self.question1,
+                                                  json_data,
+                                                  )
+        # Then
+        self.assertTrue(result['success'])
+
+        # Regrade with wrong answer
+        # Given
+        regrade_answer = Answer.objects.get(id=self.answer.id)
+        regrade_answer.answer = [self.testcase_1_id,
+                                 self.testcase_3_id,
+                                 self.testcase_2_id,
+                                 ]
+        regrade_answer.save()
+
+        # When
+        details = self.answerpaper.regrade(self.question1.id)
+
+        # Then
+        self.answer = self.answerpaper.answers.filter(question=self.question1
+                                                      ).last()
+        self.assertEqual(self.answer, regrade_answer)
+        self.assertTrue(details[0])
+        self.assertEqual(self.answer.marks, 0)
+        self.assertFalse(self.answer.correct)
+
+    def test_validate_regrade_arrange_incorrect_answer(self):
+        # Given
+        arrange_answer = [self.testcase_1_id,
+                          self.testcase_3_id,
+                          self.testcase_2_id,
+                          ]
+        self.answer = Answer(question=self.question1,
+                             answer=arrange_answer,
+                             )
+        self.answer.save()
+        self.answerpaper.answers.add(self.answer)
+
+        # When
+        json_data = None
+        result = self.answerpaper.validate_answer(arrange_answer,
+                                                  self.question1, json_data
+                                                  )
+
+        # Then
+        self.assertFalse(result['success'])
+        # Regrade with wrong answer
+        # Given
+        regrade_answer = Answer.objects.get(id=self.answer.id)
+        regrade_answer.answer = [self.testcase_1_id,
+                                 self.testcase_2_id,
+                                 self.testcase_3_id,
+                                 ]
+        regrade_answer.save()
+
+        # When
+        details = self.answerpaper.regrade(self.question1.id)
+
+        # Then
+        self.answer = self.answerpaper.answers.filter(question=self.question1
+                                                      ).last()
+        self.assertEqual(self.answer, regrade_answer)
+        self.assertTrue(details[0])
+        self.assertEqual(self.answer.marks, 1)
+        self.assertTrue(self.answer.correct)

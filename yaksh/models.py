@@ -1822,13 +1822,21 @@ class AnswerPaper(models.Model):
         user_answer = self.answers.filter(question=question).last()
         if not user_answer:
             return False, msg + 'Did not answer.'
-        if question.type == 'mcc':
+        if question.type in ['mcc', 'arrange']:
             try:
-                answer = eval(user_answer.answer)
+                answer = literal_eval(user_answer.answer)
                 if type(answer) is not list:
-                    return False, msg + 'MCC answer not a list.'
+                    return (False,
+                            msg + '{0} answer not a list.'.format(
+                                                            question.type
+                                                            )
+                            )
             except Exception:
-                return False, msg + 'MCC answer submission error'
+                return (False,
+                        msg + '{0} answer submission error'.format(
+                                                             question.type
+                                                             )
+                        )
         else:
             answer = user_answer.answer
         json_data = question.consolidate_answer_data(answer) \
@@ -2048,4 +2056,4 @@ class TestCaseOrder(models.Model):
     #Order of the test case for a question.
     order = models.TextField()
 
-
+##############################################################################
