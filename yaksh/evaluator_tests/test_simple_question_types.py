@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
 from django.utils import timezone
+from textwrap import dedent
 import pytz
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, IntegerTestCase, FloatTestCase,\
@@ -667,16 +668,33 @@ class ArrangeQuestionTestCases(unittest.TestCase):
         # Regrade with wrong answer
         # Given
         regrade_answer = Answer.objects.get(id=self.answer.id)
+
+        # Try regrade with wrong data structure
+        # When
+        regrade_answer.answer = 1
+        regrade_answer.save()
+        details = self.answerpaper.regrade(self.question1.id)
+        err_msg = dedent("""\
+                          User: {0}; Quiz: {1}; Question: {2}.
+                          {3} answer not a list.""".format(
+                                                     self.user.username,
+                                                     self.quiz.description,
+                                                     self.question1.summary,
+                                                     self.question1.type
+                        )                                )
+        self.assertFalse(details[0])
+        self.assertEqual(details[1], err_msg)
+
+
+        # Try regrade with incorrect answer
+        # When
         regrade_answer.answer = [self.testcase_1_id,
                                  self.testcase_3_id,
                                  self.testcase_2_id,
                                  ]
         regrade_answer.save()
-
-        # When
-        details = self.answerpaper.regrade(self.question1.id)
-
         # Then
+        details = self.answerpaper.regrade(self.question1.id)
         self.answer = self.answerpaper.answers.filter(question=self.question1
                                                       ).last()
         self.assertEqual(self.answer, regrade_answer)
