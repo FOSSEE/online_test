@@ -554,6 +554,7 @@ class MCQQuestionTestCases(unittest.TestCase):
                                             attempt_num=1,
                                             course_id=self.course.id
                                             )
+
     @classmethod
     def tearDownClass(self):
       self.question1.delete()
@@ -580,8 +581,7 @@ class MCQQuestionTestCases(unittest.TestCase):
                               course_id=self.course.id
                               )
         not_ordered_testcase = self.question1.get_ordered_test_cases(
-                                              answerpaper3
-                                              )
+                                              answerpaper3                                              )
         get_test_cases = self.question1.get_test_cases()
         # Then
         self.assertNotEqual(order1, order2)
