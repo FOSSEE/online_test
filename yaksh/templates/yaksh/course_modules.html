@@ -17,6 +17,7 @@
         <center>{{ msg }}</center>
     </div>
 {% endif %}
+<b>Grade: {% if grade %} {{ grade }} {% else %} Will be available once the course is complete {% endif %}</b>
 {% if learning_modules %}
     {% for module in learning_modules %}
         <div class="row well">

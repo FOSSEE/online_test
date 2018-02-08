@@ -2710,6 +2710,12 @@ def course_modules(request, course_id, msg=None):
     learning_modules = course.get_learning_modules()
     context = {"course": course, "learning_modules": learning_modules,
                "user": user, "msg": msg}
+    course_status = CourseStatus.objects.filter(course=course, user=user)
+    if course_status.exists():
+        course_status = course_status.first()
+        if course_status.is_course_complete() and not course_status.grade:
+            course_status.calculate_total_marks()
+        context['grade'] = course_status.grade
     return my_render_to_response('yaksh/course_modules.html', context)
 
 

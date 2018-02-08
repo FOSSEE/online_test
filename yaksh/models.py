@@ -35,7 +35,7 @@ from yaksh.code_server import (
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from django.conf import settings
 from django.forms.models import model_to_dict
-
+from grades.models import GradingSystem
 
 languages = (
         ("python", "Python"),
@@ -311,7 +311,8 @@ class Quiz(models.Model):
     allow_skip = models.BooleanField("Allow students to skip questions",
                                      default=True)
 
-    weightage = models.FloatField(default=1.0)
+    weightage = models.FloatField(help_text='Will be considered as percentage',
+                                  default=100)
 
     is_exercise = models.BooleanField(default=False)
 
@@ -551,6 +552,8 @@ class Course(models.Model):
         null=True
     )
 
+    grading_system = models.ForeignKey(GradingSystem, null=True, blank=True)
+
     objects = CourseManager()
 
     def _create_duplicate_instance(self, creator, course_name=None):
@@ -737,6 +740,33 @@ class CourseStatus(models.Model):
     grade = models.CharField(max_length=255, null=True, blank=True)
     total_marks = models.FloatField(default=0.0)
 
+    def set_grade(self):
+        grade = self.course.grading_system.get_grade(self.total_marks)
+        self.grade = grade
+
+    def calculate_total_marks(self):
+        if self.is_course_complete():
+            quizzes = self.course.get_quizzes()
+            total_weightage = 0
+            sum = 0
+            for quiz in quizzes:
+                total_weightage += quiz.weightage
+                marks = AnswerPaper.objects.get_user_best_of_attempts_marks(
+                        quiz, self.user.id, self.course.id)
+                out_of = quiz.questionpaper_set.first().total_marks
+                sum += (marks/out_of)*quiz.weightage
+            self.total_marks = (sum/total_weightage)*100
+            self.set_grade()
+
+
+    def is_course_complete(self):
+        modules = self.course.get_learning_modules()
+        complete = False
+        for module in modules:
+            complete = module.get_status(self.user, self.course) == 'completed'
+            if not complete:
+                break
+        return complete
 
 ###############################################################################
 class ConcurrentUser(models.Model):

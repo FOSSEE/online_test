@@ -1,0 +1,17 @@
+<html>
+    <b>Default Grading System:</b>
+    <ul>
+    <li><a href="{% url 'grades:edit_grade' default_grading_system.id %}">{{ default_grading_system.name }}</a></li>
+    </ul>
+    <b> My grading System: </b>
+    {% if grading_systems %}
+        <ul>
+        {% for system in grading_systems %}
+                <li><a href="{% url 'grades:edit_grade' system.id %}">{{ system.name }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p> None. You can add one.</p>
+    {% endif %}
+    <a href="{% url 'grades:add_grade' %}"> Add a Grading System </a>
+</html>
