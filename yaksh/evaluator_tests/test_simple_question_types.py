@@ -554,6 +554,15 @@ class MCQQuestionTestCases(unittest.TestCase):
                                             attempt_num=1,
                                             course_id=self.course.id
                                             )
+        self.answerpaper3 = AnswerPaper.objects.create(
+                            user=self.user,
+                            question_paper=self.question_paper,
+                            course=self.course,
+                            attempt_number=self.answerpaper.attempt_number+1,
+                            start_time=timezone.now(),
+                            end_time=timezone.now()+timedelta(minutes=5),
+                            user_ip="127.0.0.1"
+                            )
 
     @classmethod
     def tearDownClass(self):
@@ -571,6 +580,10 @@ class MCQQuestionTestCases(unittest.TestCase):
                                         self.answerpaper2
                                         )
         order2 = [tc.id for tc in user2_testcase]
-
+        not_ordered_testcase = self.question1.get_ordered_test_cases(
+                                              self.answerpaper3
+                                              )
+        get_test_cases = self.question1.get_test_cases()
         # Then
         self.assertNotEqual(order1, order2)
+        self.assertEqual(get_test_cases, not_ordered_testcase)

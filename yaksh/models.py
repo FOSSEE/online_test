@@ -939,7 +939,7 @@ class Question(models.Model):
             order = TestCaseOrder.objects.get(answer_paper=answerpaper,
                                               question = self
                                               ).order.split(",")
-            return [self.get_test_cases(id=int(tc_id))[0]\
+            return [self.get_test_case(id=int(tc_id))
                     for tc_id in order
                     ]
         except TestCaseOrder.DoesNotExist:
