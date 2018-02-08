@@ -99,6 +99,7 @@ def setUpModule():
     course.students.add(course_user)
     course.save()
     LessonFile.objects.create(lesson=lesson)
+    CourseStatus.objects.create(course=course, user=course_user)
 
 
 def tearDownModule():
@@ -136,6 +137,8 @@ class LearningModuleTestCases(unittest.TestCase):
         self.quiz = Quiz.objects.get(description='demo quiz 1')
         self.lesson = Lesson.objects.get(name='L1')
         self.course = Course.objects.get(name='Python Course')
+        self.course_status = CourseStatus.objects.get(
+            course=self.course, user=self.student)
 
     def test_learning_module(self):
         self.assertEqual(self.learning_module.description, 'module one')
@@ -204,6 +207,29 @@ class LearningModuleTestCases(unittest.TestCase):
         # Then
         self.assertEqual(status, module_status)
 
+        # Module in progress
+
+        # Given
+        self.course_status.completed_units.add(self.learning_unit_one)
+        # When
+        status = self.learning_module.get_status(self.student, self.course)
+        # Then
+        self.assertEqual("inprogress", status)
+
+        # Module is completed
+
+        # Given
+        self.course_status.completed_units.add(self.learning_unit_two)
+        # When
+        status = self.learning_module.get_status(self.student, self.course)
+        # Then
+        self.assertEqual("completed", status)
+
+        # Module with no units
+        self.course.learning_module.add(self.learning_module_two)
+        status = self.learning_module_two.get_status(self.student, self.course)
+        self.assertEqual("no units", status)
+
     def test_module_completion_percent(self):
         # for module without learning units
         percent = self.learning_module_two.get_module_complete_percent(
@@ -212,17 +238,10 @@ class LearningModuleTestCases(unittest.TestCase):
         self.assertEqual(percent, 0)
 
         # for module with learning units
-        lesson = Lesson.objects.get(name='L1')
-        self.completed_unit = LearningUnit.objects.get(lesson=lesson)
-
-        course_status = CourseStatus.objects.create(
-            course=self.course, user=self.student)
-        course_status.completed_units.add(self.completed_unit)
-
         percent = self.learning_module.get_module_complete_percent(
             self.course, self.student
         )
-        self.assertEqual(percent, 50)
+        self.assertEqual(percent, 100)
 
 
 class LearningUnitTestCases(unittest.TestCase):
