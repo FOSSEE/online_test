@@ -23,8 +23,13 @@ select
 
 {% block content %}
 <input type=hidden id="url_root" value={{ URL_ROOT }}>
-<form action="{{ URL_ROOT }}/exam/manage/designquestionpaper/{{ qpaper.quiz.id }}/{{ qpaper.id }}/" method="POST" id="design_q">
-<input class ="btn primary small" type="submit" name="back" id="back" value="Cancel">
+{% if course_id %}
+    <form action="{{ URL_ROOT }}/exam/manage/designquestionpaper/{{ qpaper.quiz.id }}/{{ qpaper.id }}/{{course_id}}/" method="POST" id="design_q">
+    <a href="{{URL_ROOT}}/exam/manage/courses" class="btn btn-danger">Cancel</a>
+{% else %}
+    <form action="{{ URL_ROOT }}/exam/manage/designquestionpaper/{{ qpaper.quiz.id }}/{{ qpaper.id }}/" method="POST" id="design_q">
+    <a href="{{URL_ROOT}}/exam/manage/courses/all_quizzes" class="btn btn-danger">Cancel</a>
+{% endif %}
     {% csrf_token %}
     <input type=hidden name="is_active" id="is_active" value="{{ state }}">
 <center><b>Manual mode to design the {{lang}}  Question Paper</center><br>
