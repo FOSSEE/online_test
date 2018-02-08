@@ -242,8 +242,6 @@ def add_question(request, question_id=None):
         if qform.is_valid():
             question = qform.save(commit=False)
             question.user = user
-            if question.type == "arrange":
-                question.shuffle_testcases = True
             question.save()
             # many-to-many field save function used to save the tags
             qform.save_m2m()

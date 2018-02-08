@@ -36,8 +36,6 @@ question_types = (
     ("string", "Answer in String"),
     ("float", "Answer in Float"),
     ("arrange", "Arrange Options in Order"),
-
-
 )
 
 test_case_types = (

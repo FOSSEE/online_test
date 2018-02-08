@@ -602,7 +602,7 @@ class ArrangeQuestionTestCases(unittest.TestCase):
                                                  )
         self.question1.language = 'python'
         self.question1.type = "arrange"
-        self.question1.description = "Arrange the alphabets in ascending order"
+        self.question1.description = "Arrange alphabets in ascending order"
         self.question1.test_case_type = 'arrangetestcase'
         self.question1.save()
 

@@ -1221,8 +1221,8 @@ class QuestionPaper(models.Model):
             question_ids = []
             for question in questions:
                 question_ids.append(str(question.id))
-                if self.shuffle_testcases and \
-                    question.type in ["mcq", "mcc"]:
+                if (question.type == "arrange") or (self.shuffle_testcases
+                        and question.type in ["mcq", "mcc"]):
                     testcases = question.get_test_cases()
                     random.shuffle(testcases)
                     testcases_ids = ",".join([str(tc.id) for tc in testcases]
