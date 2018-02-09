@@ -140,6 +140,11 @@ class LearningModuleTestCases(unittest.TestCase):
         self.course_status = CourseStatus.objects.get(
             course=self.course, user=self.student)
 
+    def tearDown(self):
+        # Remove unit from course status completed units
+        self.course_status.completed_units.remove(self.learning_unit_one)
+        self.course_status.completed_units.remove(self.learning_unit_two)
+
     def test_learning_module(self):
         self.assertEqual(self.learning_module.description, 'module one')
         self.assertEqual(self.learning_module.creator, self.creator)
@@ -199,7 +204,7 @@ class LearningModuleTestCases(unittest.TestCase):
         # Then
         self.assertEqual(unit, next_unit)
 
-    def test_get_status(self):
+    def test_get_module_status(self):
         # Given
         module_status = 'not attempted'
         # When
@@ -238,6 +243,8 @@ class LearningModuleTestCases(unittest.TestCase):
         self.assertEqual(percent, 0)
 
         # for module with learning units
+        self.course_status.completed_units.add(self.learning_unit_one)
+        self.course_status.completed_units.add(self.learning_unit_two)
         percent = self.learning_module.get_module_complete_percent(
             self.course, self.student
         )

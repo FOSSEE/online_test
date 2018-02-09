@@ -2354,10 +2354,9 @@ def show_lesson(request, lesson_id, module_id, course_id):
     learn_unit = learn_module.learning_unit.get(lesson_id=lesson_id)
     learning_units = learn_module.get_learning_units()
 
-    # if learning module is active
     if not learn_module.active:
         return view_module(request, module_id, course_id)
-    # if lesson is active or not
+
     if not learn_unit.lesson.active:
         msg = "{0} is not active".format(learn_unit.lesson.name)
         return view_module(request, module_id, course_id, msg)
@@ -2674,7 +2673,6 @@ def view_module(request, module_id, course_id, msg=None):
         return course_modules(request, course_id, msg)
     learning_module = course.learning_module.get(id=module_id)
 
-    # Check if module is active or not
     if not learning_module.active:
         msg = "{0} is not active".format(learning_module.name)
         return course_modules(request, course_id, msg)

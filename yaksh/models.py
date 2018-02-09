@@ -456,8 +456,7 @@ class LearningModule(models.Model):
             "learning_unit").get(id=self.id)
         ordered_units = learning_module.learning_unit.order_by("order")
         status_list = [unit.get_completion_status(user, course)
-                       for unit in ordered_units
-                       if unit.has_prerequisite()]
+                       for unit in ordered_units]
 
         if not status_list:
             default_status = "no units"
