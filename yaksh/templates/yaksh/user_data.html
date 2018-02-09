@@ -127,7 +127,7 @@ User IP address: {{ paper.user_ip }}
 
         {% elif question.type == "arrange"%}
         <div class="well well-sm">
-          {% get_arrange_user_answer answers.0.answer question as tc_list %}
+          {% get_answer_for_arrange_options answers.0.answer question as tc_list %}
         {% for testcases in tc_list %}
          <li>{{ testcases.options.strip|safe }}</li>
         {% endfor %}

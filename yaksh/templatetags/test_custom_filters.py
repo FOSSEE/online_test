@@ -13,7 +13,7 @@ from yaksh.models import (User, Profile, Question, Quiz, QuestionPaper,
 
 from yaksh.templatetags.custom_filters import (completed, inprogress,
                                                get_ordered_testcases,
-                                               get_arrange_user_answer
+                                               get_answer_for_arrange_options
                                                )
 
 
@@ -78,15 +78,10 @@ class CustomFiltersTestCases(unittest.TestCase):
         self.question_paper.save()
         #Creating answerpaper
 
-        self.answerpaper = AnswerPaper.objects.create(user=self.user,
-                                          user_ip='101.0.0.1',
-                                          start_time=timezone.now(), 
-                                          question_paper=self.question_paper,
-                                          end_time=timezone.now()
-                                                    +timedelta(minutes=5),
-                                          attempt_number=1,
-                                          course=self.course
-                                          )
+        self.answerpaper = AnswerPaper.objects.get(user=self.user,
+                                      course=self.course,
+                                      question_paper=self.question_paper
+                                      )
         self.answerpaper.questions.add(self.question1)
         self.answerpaper.save()
         # For question 
@@ -126,15 +121,15 @@ class CustomFiltersTestCases(unittest.TestCase):
         self.assertEqual(inprogress(answerpaper), 0)
         self.assertEqual(completed(answerpaper), 1)
 
-    def test_get_arrange_user_answer(self):
+    def test_get_answer_for_arrange_options(self):
         arrange_ans = [self.arrange_testcase_3,
                        self.arrange_testcase_2,
                        self.arrange_testcase_1,
                        ]
         arrange_ans_id = [tc.id for tc in arrange_ans]
-        user_ans_order = get_arrange_user_answer(arrange_ans_id,
-                                                 self.question1
-                                                 )
+        user_ans_order = get_answer_for_arrange_options(arrange_ans_id,
+                                                        self.question1
+                                                        )
         self.assertSequenceEqual(arrange_ans, user_ans_order)
 
     def test_get_ordered_testcases(self):

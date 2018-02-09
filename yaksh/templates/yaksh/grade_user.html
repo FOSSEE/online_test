@@ -318,7 +318,7 @@ Status : <b style="color: red;"> Failed </b><br/>
 
         {% elif question.type == "arrange"%}
         <div class="well well-sm">
-          {% get_arrange_user_answer ans.answer.answer question as tc_list %}
+          {% get_answer_for_arrange_options ans.answer.answer question as tc_list %}
         {% for testcases in tc_list %}
          <li>{{ testcases.options.strip|safe }}</li>
         {% endfor %}

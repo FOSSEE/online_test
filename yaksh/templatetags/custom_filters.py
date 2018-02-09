@@ -70,7 +70,7 @@ def get_ordered_testcases(question, answerpaper):
 	return question.get_ordered_test_cases(answerpaper)
 
 @register.simple_tag
-def get_arrange_user_answer(ans, question):
+def get_answer_for_arrange_options(ans, question):
     if type(ans) == bytes:
         ans = ans.decode("utf-8")
     else:
