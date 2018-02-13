@@ -6,7 +6,8 @@ from grades.models import GradingSystem
 
 def setUpModule():
     user = User.objects.create_user(username='grades_user',
-                                         password='grades_user')
+                                    password='grades_user')
+
 
 def tearDownModule():
     User.objects.all().delete()
@@ -66,9 +67,9 @@ class AddGradingSystemTest(TestCase):
     def test_add_grades_post(self):
         # Given
         self.client.login(username='grades_user', password='grades_user')
-        data = {'name': ['new_sys'], 'description': ['About the grading system!'],
+        data = {'name': ['new_sys'], 'description': ['About grading system!'],
                 'graderange_set-MIN_NUM_FORMS': ['0'],
-                'graderange_set-TOTAL_FORMS': ['0'], 'can_be_used': ['on'],
+                'graderange_set-TOTAL_FORMS': ['0'],
                 'graderange_set-MAX_NUM_FORMS': ['1000'], 'add': ['Add'],
                 'graderange_set-INITIAL_FORMS': ['0']}
         # When
@@ -86,12 +87,11 @@ class AddGradingSystemTest(TestCase):
 
         # Given
         data = {'graderange_set-0-upper_limit': ['40'],
-                'graderange_set-0-order': ['0'],
                 'graderange_set-0-description': ['Fail'],
                 'graderange_set-0-lower_limit': ['0'],
                 'graderange_set-0-system': [''], 'name': ['new_sys'],
                 'graderange_set-MIN_NUM_FORMS': ['0'],
-                'graderange_set-TOTAL_FORMS': ['1'], 'can_be_used': ['on'],
+                'graderange_set-TOTAL_FORMS': ['1'],
                 'graderange_set-MAX_NUM_FORMS': ['1000'],
                 'graderange_set-0-id': [''],
                 'description': ['About the grading system!'],
@@ -103,4 +103,3 @@ class AddGradingSystemTest(TestCase):
         # Then
         ranges = grading_system.graderange_set.all()
         self.assertEqual(len(ranges), 1)
-

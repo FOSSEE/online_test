@@ -1664,6 +1664,10 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                 'comments_%d' % paper.question_paper.id, 'No comments')
             paper.save()
 
+        course_status = CourseStatus.objects.filter(course=course, user=user)
+        if course_status.exists():
+            course_status.first().set_grade()
+
     return my_render_to_response(
         'yaksh/grade_user.html', context, context_instance=ci
     )
@@ -1919,14 +1923,27 @@ def regrade(request, course_id, question_id=None, answerpaper_id=None,
         answerpaper = get_object_or_404(AnswerPaper, pk=answerpaper_id)
         for question in answerpaper.questions.all():
             details.append(answerpaper.regrade(question.id))
+            course_status = CourseStatus.objects.filter(user=answerpaper.user,
+                                                        course=answerpaper.course)
+            if course_status.exists():
+                course_status.first().set_grade()
     if questionpaper_id is not None and question_id is not None:
         answerpapers = AnswerPaper.objects.filter(questions=question_id,
                 question_paper_id=questionpaper_id, course_id=course_id)
         for answerpaper in answerpapers:
             details.append(answerpaper.regrade(question_id))
+            course_status = CourseStatus.objects.filter(user=answerpaper.user,
+                                                        course=answerpaper.course)
+            if course_status.exists():
+                course_status.first().set_grade()
     if answerpaper_id is not None and question_id is not None:
         answerpaper = get_object_or_404(AnswerPaper, pk=answerpaper_id)
         details.append(answerpaper.regrade(question_id))
+        course_status = CourseStatus.objects.filter(user=answerpaper.user,
+                                                    course=answerpaper.course)
+        if course_status.exists():
+            course_status.first().set_grade()
+
     return grader(request, extra_context={'details': details})
 
 
@@ -2713,9 +2730,9 @@ def course_modules(request, course_id, msg=None):
     course_status = CourseStatus.objects.filter(course=course, user=user)
     if course_status.exists():
         course_status = course_status.first()
-        if course_status.is_course_complete() and not course_status.grade:
-            course_status.calculate_total_marks()
-        context['grade'] = course_status.grade
+        if not course_status.grade:
+            course_status.set_grade()
+        context['grade'] = course_status.get_grade()
     return my_render_to_response('yaksh/course_modules.html', context)
 
 

@@ -738,13 +738,22 @@ class CourseStatus(models.Model):
     course = models.ForeignKey(Course)
     user = models.ForeignKey(User)
     grade = models.CharField(max_length=255, null=True, blank=True)
-    total_marks = models.FloatField(default=0.0)
+    percentage = models.FloatField(default=0.0)
+
+    def get_grade(self):
+        return self.grade
 
     def set_grade(self):
-        grade = self.course.grading_system.get_grade(self.total_marks)
-        self.grade = grade
+        if self.is_course_complete():
+            self.calculate_percentage()
+            if self.course.grading_system is None:
+                grading_system = GradingSystem.objects.get(name='default')
+            else:
+                grading_system = self.course.grading_system
+            grade = grading_system.get_grade(self.percentage)
+            self.grade = grade
 
-    def calculate_total_marks(self):
+    def calculate_percentage(self):
         if self.is_course_complete():
             quizzes = self.course.get_quizzes()
             total_weightage = 0
@@ -755,8 +764,7 @@ class CourseStatus(models.Model):
                         quiz, self.user.id, self.course.id)
                 out_of = quiz.questionpaper_set.first().total_marks
                 sum += (marks/out_of)*quiz.weightage
-            self.total_marks = (sum/total_weightage)*100
-            self.set_grade()
+            self.percentage = (sum/total_weightage)*100
 
 
     def is_course_complete(self):

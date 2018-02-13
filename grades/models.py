@@ -1,12 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-# Create your models here.
 
 class GradingSystem(models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(default='About the grading system!')
-    can_be_used = models.BooleanField(default=False)
     creator = models.ForeignKey(User, null=True, blank=True)
 
     def get_grade(self, marks):
@@ -42,7 +40,6 @@ class GradingSystem(models.Model):
 
 class GradeRange(models.Model):
     system = models.ForeignKey(GradingSystem)
-    order = models.IntegerField(default=0)
     lower_limit = models.FloatField()
     upper_limit = models.FloatField()
     grade = models.CharField(max_length=10)

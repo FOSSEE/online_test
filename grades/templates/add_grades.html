@@ -20,9 +20,11 @@
       </div>
       <hr>
       {% endfor %}
-
-  <input type="submit" id="add" name="add" value="Add">
-  <input type="submit" id="save" name="save" value="Save">
-
+  {% if not is_default %}
+      <input type="submit" id="add" name="add" value="Add">
+      <input type="submit" id="save" name="save" value="Save">
+  {% else %}
+    <p><b>Note: This is a default grading system. You cannot change this.</b></p>
+  {% endif %}
 </form>
 </html>
