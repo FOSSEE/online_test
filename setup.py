@@ -24,6 +24,7 @@ install_requires = [
     'invoke==0.21.0',
     'six',
     'requests',
+    'jinja2==2.10',
 ]
 
 setup(
