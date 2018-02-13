@@ -3,7 +3,7 @@ import unittest
 import os
 from textwrap import dedent
 
-from utils import render_certificate_template, CUR_DIR
+from .utils import render_certificate_template, CUR_DIR
 
 class TestRenderCertificateTemplate(unittest.TestCase):
     def setUp(self):
