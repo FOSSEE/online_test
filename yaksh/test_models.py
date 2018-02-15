@@ -449,9 +449,72 @@ class QuizTestCases(unittest.TestCase):
         self.course = Course.objects.get(name="Python Course")
         self.creator = User.objects.get(username="creator")
         self.teacher = User.objects.get(username="demo_user2")
+        self.student1 = User.objects.get(username='demo_user3')
+        self.student2 = User.objects.get(username='demo_user4')
         self.quiz1 = Quiz.objects.get(description='demo quiz 1')
         self.quiz2 = Quiz.objects.get(description='demo quiz 2')
+        self.quiz3 = Quiz.objects.create(
+            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            duration=30, active=True,
+            attempts_allowed=1, time_between_attempts=0,
+            description='demo quiz 3', pass_criteria=0,
+            instructions="Demo Instructions"
+        )
+        self.question_paper3 = QuestionPaper.objects.create(quiz=self.quiz3)
+        self.quiz4 = Quiz.objects.create(
+            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            duration=30, active=True,
+            attempts_allowed=1, time_between_attempts=0,
+            description='demo quiz 4', pass_criteria=0,
+            instructions="Demo Instructions"
+        )
+        self.answerpaper1 = AnswerPaper.objects.create(
+            user=self.student1,
+            question_paper=self.question_paper3,
+            course=self.course,
+            attempt_number=1,
+            start_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            end_time=datetime(2015, 10, 9, 10, 28, 15, 0, tzinfo=pytz.utc),
+            passed=True
+        )
+        self.answerpaper2 = AnswerPaper.objects.create(
+            user=self.student2,
+            question_paper=self.question_paper3,
+            course=self.course,
+            attempt_number=1,
+            start_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            end_time=datetime(2015, 10, 9, 10, 28, 15, 0, tzinfo=pytz.utc),
+            passed=False
+        )
         self.trial_course = Course.objects.create_trial_course(self.creator)
+
+    def tearDown(self):
+        self.answerpaper1.delete()
+        self.answerpaper2.delete()
+        self.trial_course.delete()
+        self.quiz3.delete()
+        self.quiz4.delete()
+        self.question_paper3.delete()
+
+    def test_get_total_students(self):
+        self.assertEqual(self.quiz3.get_total_students(self.course), 2)
+
+    def test_get_total_students_without_questionpaper(self):
+        self.assertEqual(self.quiz4.get_total_students(self.course), 0)
+
+    def test_get_passed_students(self):
+        self.assertEqual(self.quiz3.get_passed_students(self.course), 1)
+
+    def test_get_passed_students_without_questionpaper(self):
+        self.assertEqual(self.quiz4.get_passed_students(self.course), 0)
+
+    def test_get_failed_students(self):
+        self.assertEqual(self.quiz3.get_failed_students(self.course), 1)
+
+    def test_get_failed_students_without_questionpaper(self):
+        self.assertEqual(self.quiz4.get_failed_students(self.course), 0)
 
     def test_quiz(self):
         """ Test Quiz"""
@@ -528,7 +591,6 @@ class QuizTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(self.quiz1.view_answerpaper)
-
 
 
 ###############################################################################
