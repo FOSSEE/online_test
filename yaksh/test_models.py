@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 import pytz
 from django.contrib.auth.models import Group
+from django.db import IntegrityError
 from django.core.files import File
 from django.forms.models import model_to_dict
 from textwrap import dedent
@@ -835,7 +836,8 @@ class AnswerPaperTestCases(unittest.TestCase):
             question_paper=self.question_paper,
             start_time=self.start_time,
             end_time=self.end_time,
-            user_ip=self.ip
+            user_ip=self.ip,
+            course=self.course
         )
         self.attempted_papers = AnswerPaper.objects.filter(
             question_paper=self.question_paper,
@@ -1374,6 +1376,17 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.user2_answerpaper2.questions_unanswered.remove(*self.questions)
         self.assertEqual(self.user2_answerpaper2.current_question(),
                          self.question1)
+
+    def test_duplicate_attempt_answerpaper(self):
+        with self.assertRaises(IntegrityError):
+            new_answerpaper = AnswerPaper.objects.create(
+                user=self.answerpaper.user,
+                question_paper=self.answerpaper.question_paper,
+                attempt_number=self.answerpaper.attempt_number,
+                start_time=self.answerpaper.start_time,
+                end_time=self.answerpaper.end_time,
+                course=self.answerpaper.course
+                )
 
 
 ###############################################################################
