@@ -5079,6 +5079,30 @@ class TestLessons(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["msg"], err_msg)
 
+        # Check if lesson is active
+        self.lesson.active = False
+        self.lesson.save()
+        response = self.client.get(
+            reverse('yaksh:show_lesson',
+                    kwargs={"lesson_id": self.lesson.id,
+                            "module_id": self.learning_module.id,
+                            "course_id": self.course.id}))
+        err_msg = "{0} is not active".format(self.lesson.name)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["msg"], err_msg)
+
+        # Check if module is active
+        self.learning_module2.active = False
+        self.learning_module2.save()
+        response = self.client.get(
+            reverse('yaksh:show_lesson',
+                    kwargs={"lesson_id": self.lesson2.id,
+                            "module_id": self.learning_module2.id,
+                            "course_id": self.course.id}))
+        err_msg = "{0} is not active".format(self.learning_module2.name)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["msg"], err_msg)
+
     def test_show_all_lessons(self):
         """ Moderator should be able to see all created lessons"""
         self.client.login(

@@ -339,4 +339,4 @@ class LearningModuleForm(forms.ModelForm):
 
     class Meta:
         model = LearningModule
-        fields = ['name', 'description']
+        fields = ['name', 'description', 'active']

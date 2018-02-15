@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 
+{% block pagetitle %} <h2>Yaksh</h2> {% endblock %}
+
 {% block content %}
+<center>
 It seems that you have encountered an error
-Type of Error - {{ exception }}
+<br>
 Please contact your administrator
+<br><br>
+<div class="alert alert-danger">Error Message:- {{exception}}</div>
+</center>
 {% endblock %}

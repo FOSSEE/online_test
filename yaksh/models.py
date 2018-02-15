@@ -154,6 +154,9 @@ class Lesson(models.Model):
     # Creator of the lesson
     creator = models.ForeignKey(User)
 
+    # Activate/Deactivate Lesson
+    active = models.BooleanField(default=True)
+
     def __str__(self):
         return "{0}".format(self.name)
 
@@ -425,6 +428,7 @@ class LearningModule(models.Model):
     creator = models.ForeignKey(User, related_name="module_creator")
     check_prerequisite = models.BooleanField(default=True)
     html_data = models.TextField(null=True, blank=True)
+    active = models.BooleanField(default=True)
     is_trial = models.BooleanField(default=False)
 
     def get_quiz_units(self):
@@ -458,7 +462,7 @@ class LearningModule(models.Model):
         return ordered_units.get(id=ordered_units_ids[next_index])
 
     def get_status(self, user, course):
-        """ Get module status if it completed, inprogress or not attempted"""
+        """ Get module status if completed, inprogress or not attempted"""
         learning_module = course.learning_module.prefetch_related(
             "learning_unit").get(id=self.id)
         ordered_units = learning_module.learning_unit.order_by("order")
@@ -469,10 +473,10 @@ class LearningModule(models.Model):
             default_status = "no units"
         elif all([status == "completed" for status in status_list]):
             default_status = "completed"
-        elif "inprogress" in status_list:
-            default_status = "inprogress"
-        else:
+        elif all([status == "not attempted" for status in status_list]):
             default_status = "not attempted"
+        else:
+            default_status = "inprogress"
         return default_status
 
     def is_prerequisite_passed(self, user, course):

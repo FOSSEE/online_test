@@ -36,19 +36,20 @@ width="80" alt="YAKSH"></img>{% endblock %}
     {% if not module_id %}
         <br><center><h4>You may now close the browser.</h4></center><br>
     {% endif %}
-    <a href="{{URL_ROOT}}/exam/" id="home" class="btn btn-success"> Home </a>
     {% if module_id and not user == "moderator" %}
         {% if first_unit %}
-            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}/1" class="btn btn-info"> Next
+            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}/1" class="btn btn-info" id="Next"> Next
                 <span class="glyphicon glyphicon-chevron-right">
                 </span>
             </a>
         {% else %}
-            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}" class="btn btn-info"> Next
+            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}" class="btn btn-info" id="Next"> Next
                 <span class="glyphicon glyphicon-chevron-right">
                 </span>
             </a>
         {% endif %}
+    {% else %}
+        <a href="{{URL_ROOT}}/exam/" id="home" class="btn btn-success"> Home </a>
     {% endif %}
     </center>
 {% endblock content %}
