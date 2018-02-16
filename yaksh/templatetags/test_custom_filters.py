@@ -137,16 +137,16 @@ class CustomFiltersTestCases(unittest.TestCase):
                                                                "101.0.0.1",2,
                                                                self.course.id
                                                                )
-        tc = TestCaseOrder.objects.get(answer_paper=new_answerpaper,
-                                          question=self.question1
-                                          )
-        tc_list = [self.question1.get_test_case(id=ids)
-                     for ids in tc.order.split(",")
-                   ]
+        tc_order = TestCaseOrder.objects.get(answer_paper=new_answerpaper,
+                                             question=self.question1
+                                             )
+        testcases = [self.question1.get_test_case(id=ids)
+                     for ids in tc_order.order.split(",")
+                    ]
         
         ordered_testcases = get_ordered_testcases(self.question1,
                                                   new_answerpaper
                                                   )
-        self.assertSequenceEqual(tc_list, ordered_testcases)
+        self.assertSequenceEqual(testcases, ordered_testcases)
 
         new_answerpaper.delete()

@@ -54,7 +54,7 @@ question_types = (
         ("integer", "Answer in Integer"),
         ("string", "Answer in String"),
         ("float", "Answer in Float"),
-        ("arrange", "Arrange Options in Correct Order"),
+        ("arrange", "Arrange in Correct Order"),
 
     )
 
@@ -1795,8 +1795,10 @@ class AnswerPaper(models.Model):
                     result['error'] = ['Correct answer']
 
             elif question.type == 'arrange':
-                tc_list = sorted([tc.id for tc in question.get_test_cases()])
-                if user_answer == tc_list:
+                testcase_ids = sorted(
+                                  [tc.id for tc in question.get_test_cases()]
+                                  )
+                if user_answer == testcase_ids:
                     result['success'] = True
                     result['error'] = ['Correct answer']
 
