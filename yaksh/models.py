@@ -818,10 +818,6 @@ class Question(models.Model):
     #Solution for the question.
     solution = models.TextField(blank=True)
 
-    # Shuffle testcase order.
-    shuffle_testcases = models.BooleanField("Shuffle testcase for each user",
-                                             default=False
-                                            )
 
     def consolidate_answer_data(self, user_answer, user=None):
         question_data = {}
@@ -1151,6 +1147,11 @@ class QuestionPaper(models.Model):
     # Sequence or Order of fixed questions
     fixed_question_order = models.CharField(max_length=255, blank=True)
 
+    # Shuffle testcase order.
+    shuffle_testcases = models.BooleanField("Shuffle testcase for each user",
+                                             default=True
+                                            )
+
     objects = QuestionPaperManager()
 
     def get_question_bank(self):
@@ -1218,7 +1219,8 @@ class QuestionPaper(models.Model):
             for question in questions:
                 question_ids.append(str(question.id))
                 testcases = question.get_test_cases()
-                if question.shuffle_testcases:
+                if self.shuffle_testcases and \
+                    question.type in ["mcq", "mcc"]:
                     random.shuffle(testcases)
                 testcases_ids = ",".join([str(tc.id) for tc in testcases])
                 testcases_order = TestCaseOrder.objects.create(
