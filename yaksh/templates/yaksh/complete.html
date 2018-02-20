@@ -33,9 +33,6 @@ width="80" alt="YAKSH"></img>{% endblock %}
 	<center><h3>{{message}}</h3></center>
     <center>
     <br>
-    {% if not module_id %}
-        <br><center><h4>You may now close the browser.</h4></center><br>
-    {% endif %}
     <a href="{{URL_ROOT}}/exam/" id="home" class="btn btn-success"> Home </a>
     {% if module_id and not user == "moderator" %}
         {% if first_unit %}
