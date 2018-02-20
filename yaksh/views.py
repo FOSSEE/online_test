@@ -476,6 +476,10 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     learning_module = course.learning_module.get(id=module_id)
     learning_unit = learning_module.learning_unit.get(quiz=quest_paper.quiz.id)
 
+    # unit module active status
+    if not learning_module.active:
+        return view_module(request, module_id, course_id)
+
     # unit module prerequiste check
     if learning_module.has_prerequisite():
         if not learning_module.is_prerequisite_passed(user, course):
@@ -1393,7 +1397,8 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
         'questions': questions,
         'fixed_questions': fixed_questions,
         'state': state,
-        'random_sets': random_sets
+        'random_sets': random_sets,
+        'course_id': course_id
     }
     return my_render_to_response(
         'yaksh/design_questionpaper.html',
@@ -2358,6 +2363,13 @@ def show_lesson(request, lesson_id, module_id, course_id):
     learn_module = course.learning_module.get(id=module_id)
     learn_unit = learn_module.learning_unit.get(lesson_id=lesson_id)
     learning_units = learn_module.get_learning_units()
+
+    if not learn_module.active:
+        return view_module(request, module_id, course_id)
+
+    if not learn_unit.lesson.active:
+        msg = "{0} is not active".format(learn_unit.lesson.name)
+        return view_module(request, module_id, course_id, msg)
     if learn_module.has_prerequisite():
         if not learn_module.is_prerequisite_passed(user, course):
             msg = "You have not completed the module previous to {0}".format(
@@ -2670,6 +2682,10 @@ def view_module(request, module_id, course_id, msg=None):
         msg = "{0} is either expired or not active".format(course.name)
         return course_modules(request, course_id, msg)
     learning_module = course.learning_module.get(id=module_id)
+
+    if not learning_module.active:
+        msg = "{0} is not active".format(learning_module.name)
+        return course_modules(request, course_id, msg)
     all_modules = course.get_learning_modules()
     if learning_module.has_prerequisite():
         if not learning_module.is_prerequisite_passed(user, course):

@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 import pytz
 from django.contrib.auth.models import Group
+from django.db import IntegrityError
 from django.core.files import File
 from django.forms.models import model_to_dict
 from textwrap import dedent
@@ -99,6 +100,7 @@ def setUpModule():
     course.students.add(course_user)
     course.save()
     LessonFile.objects.create(lesson=lesson)
+    CourseStatus.objects.create(course=course, user=course_user)
 
 
 def tearDownModule():
@@ -136,6 +138,13 @@ class LearningModuleTestCases(unittest.TestCase):
         self.quiz = Quiz.objects.get(description='demo quiz 1')
         self.lesson = Lesson.objects.get(name='L1')
         self.course = Course.objects.get(name='Python Course')
+        self.course_status = CourseStatus.objects.get(
+            course=self.course, user=self.student)
+
+    def tearDown(self):
+        # Remove unit from course status completed units
+        self.course_status.completed_units.remove(self.learning_unit_one)
+        self.course_status.completed_units.remove(self.learning_unit_two)
 
     def test_learning_module(self):
         self.assertEqual(self.learning_module.description, 'module one')
@@ -196,13 +205,36 @@ class LearningModuleTestCases(unittest.TestCase):
         # Then
         self.assertEqual(unit, next_unit)
 
-    def test_get_status(self):
+    def test_get_module_status(self):
         # Given
         module_status = 'not attempted'
         # When
         status = self.learning_module.get_status(self.student, self.course)
         # Then
         self.assertEqual(status, module_status)
+
+        # Module in progress
+
+        # Given
+        self.course_status.completed_units.add(self.learning_unit_one)
+        # When
+        status = self.learning_module.get_status(self.student, self.course)
+        # Then
+        self.assertEqual("inprogress", status)
+
+        # Module is completed
+
+        # Given
+        self.course_status.completed_units.add(self.learning_unit_two)
+        # When
+        status = self.learning_module.get_status(self.student, self.course)
+        # Then
+        self.assertEqual("completed", status)
+
+        # Module with no units
+        self.course.learning_module.add(self.learning_module_two)
+        status = self.learning_module_two.get_status(self.student, self.course)
+        self.assertEqual("no units", status)
 
     def test_module_completion_percent(self):
         # for module without learning units
@@ -212,17 +244,12 @@ class LearningModuleTestCases(unittest.TestCase):
         self.assertEqual(percent, 0)
 
         # for module with learning units
-        lesson = Lesson.objects.get(name='L1')
-        self.completed_unit = LearningUnit.objects.get(lesson=lesson)
-
-        course_status = CourseStatus.objects.create(
-            course=self.course, user=self.student)
-        course_status.completed_units.add(self.completed_unit)
-
+        self.course_status.completed_units.add(self.learning_unit_one)
+        self.course_status.completed_units.add(self.learning_unit_two)
         percent = self.learning_module.get_module_complete_percent(
             self.course, self.student
         )
-        self.assertEqual(percent, 50)
+        self.assertEqual(percent, 100)
 
 
 class LearningUnitTestCases(unittest.TestCase):
@@ -449,9 +476,72 @@ class QuizTestCases(unittest.TestCase):
         self.course = Course.objects.get(name="Python Course")
         self.creator = User.objects.get(username="creator")
         self.teacher = User.objects.get(username="demo_user2")
+        self.student1 = User.objects.get(username='demo_user3')
+        self.student2 = User.objects.get(username='demo_user4')
         self.quiz1 = Quiz.objects.get(description='demo quiz 1')
         self.quiz2 = Quiz.objects.get(description='demo quiz 2')
+        self.quiz3 = Quiz.objects.create(
+            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            duration=30, active=True,
+            attempts_allowed=1, time_between_attempts=0,
+            description='demo quiz 3', pass_criteria=0,
+            instructions="Demo Instructions"
+        )
+        self.question_paper3 = QuestionPaper.objects.create(quiz=self.quiz3)
+        self.quiz4 = Quiz.objects.create(
+            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            duration=30, active=True,
+            attempts_allowed=1, time_between_attempts=0,
+            description='demo quiz 4', pass_criteria=0,
+            instructions="Demo Instructions"
+        )
+        self.answerpaper1 = AnswerPaper.objects.create(
+            user=self.student1,
+            question_paper=self.question_paper3,
+            course=self.course,
+            attempt_number=1,
+            start_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            end_time=datetime(2015, 10, 9, 10, 28, 15, 0, tzinfo=pytz.utc),
+            passed=True
+        )
+        self.answerpaper2 = AnswerPaper.objects.create(
+            user=self.student2,
+            question_paper=self.question_paper3,
+            course=self.course,
+            attempt_number=1,
+            start_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            end_time=datetime(2015, 10, 9, 10, 28, 15, 0, tzinfo=pytz.utc),
+            passed=False
+        )
         self.trial_course = Course.objects.create_trial_course(self.creator)
+
+    def tearDown(self):
+        self.answerpaper1.delete()
+        self.answerpaper2.delete()
+        self.trial_course.delete()
+        self.quiz3.delete()
+        self.quiz4.delete()
+        self.question_paper3.delete()
+
+    def test_get_total_students(self):
+        self.assertEqual(self.quiz3.get_total_students(self.course), 2)
+
+    def test_get_total_students_without_questionpaper(self):
+        self.assertEqual(self.quiz4.get_total_students(self.course), 0)
+
+    def test_get_passed_students(self):
+        self.assertEqual(self.quiz3.get_passed_students(self.course), 1)
+
+    def test_get_passed_students_without_questionpaper(self):
+        self.assertEqual(self.quiz4.get_passed_students(self.course), 0)
+
+    def test_get_failed_students(self):
+        self.assertEqual(self.quiz3.get_failed_students(self.course), 1)
+
+    def test_get_failed_students_without_questionpaper(self):
+        self.assertEqual(self.quiz4.get_failed_students(self.course), 0)
 
     def test_quiz(self):
         """ Test Quiz"""
@@ -528,7 +618,6 @@ class QuizTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(self.quiz1.view_answerpaper)
-
 
 
 ###############################################################################
@@ -773,7 +862,8 @@ class AnswerPaperTestCases(unittest.TestCase):
             question_paper=self.question_paper,
             start_time=self.start_time,
             end_time=self.end_time,
-            user_ip=self.ip
+            user_ip=self.ip,
+            course=self.course
         )
         self.attempted_papers = AnswerPaper.objects.filter(
             question_paper=self.question_paper,
@@ -1312,6 +1402,17 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.user2_answerpaper2.questions_unanswered.remove(*self.questions)
         self.assertEqual(self.user2_answerpaper2.current_question(),
                          self.question1)
+
+    def test_duplicate_attempt_answerpaper(self):
+        with self.assertRaises(IntegrityError):
+            new_answerpaper = AnswerPaper.objects.create(
+                user=self.answerpaper.user,
+                question_paper=self.answerpaper.question_paper,
+                attempt_number=self.answerpaper.attempt_number,
+                start_time=self.answerpaper.start_time,
+                end_time=self.answerpaper.end_time,
+                course=self.answerpaper.course
+                )
 
 
 ###############################################################################

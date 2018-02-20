@@ -412,6 +412,11 @@
             <ul class="list-group">
             <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{lesson.id}}/">
             {{ lesson.name }}</a>
+            {% if lesson.active %}
+                <span class="label label-success">Active</span>
+            {% else %}
+                <span class="label label-danger">Closed</span>
+            {% endif %}
             </ul>
         </td>
         {% endfor %} <!-- end for lessons -->
@@ -446,6 +451,11 @@
         <td>
             <a href="{{URL_ROOT}}/exam/manage/courses/add_module/{{module.id}}/">
             {{ module.name }}</a>
+            {% if module.active %}
+                <span class="label label-success">Active</span>
+            {% else %}
+                <span class="label label-danger">Closed</span>
+            {% endif %}
         </td>
         <td>
             <a href="{{URL_ROOT}}/exam/manage/courses/designmodule/{{module.id}}">

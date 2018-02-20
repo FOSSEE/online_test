@@ -78,7 +78,6 @@ string_check_type = (
 
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
-days_between_attempts = [(j, j) for j in range(401)]
 
 test_status = (
                 ('inprogress', 'Inprogress'),
@@ -154,6 +153,9 @@ class Lesson(models.Model):
 
     # Creator of the lesson
     creator = models.ForeignKey(User)
+
+    # Activate/Deactivate Lesson
+    active = models.BooleanField(default=True)
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -311,8 +313,8 @@ class Quiz(models.Model):
     # Number of attempts for the quiz
     attempts_allowed = models.IntegerField(default=1, choices=attempts)
 
-    time_between_attempts = models.IntegerField(
-        "Number of Days", choices=days_between_attempts
+    time_between_attempts = models.FloatField(
+        "Time Between Quiz Attempts in hours"
     )
 
     is_trial = models.BooleanField(default=False)
@@ -352,20 +354,32 @@ class Quiz(models.Model):
         return demo_quiz
 
     def get_total_students(self, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
         return AnswerPaper.objects.filter(
-                question_paper=self.questionpaper_set.get().id,
+                question_paper=qp,
                 course=course
             ).values_list("user", flat=True).distinct().count()
 
     def get_passed_students(self, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
         return AnswerPaper.objects.filter(
-                question_paper=self.questionpaper_set.get().id,
+                question_paper=qp,
                 course=course, passed=True
             ).values_list("user", flat=True).distinct().count()
 
     def get_failed_students(self, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
         return AnswerPaper.objects.filter(
-                question_paper=self.questionpaper_set.get().id,
+                question_paper=qp,
                 course=course, passed=False
             ).values_list("user", flat=True).distinct().count()
 
@@ -453,6 +467,7 @@ class LearningModule(models.Model):
     creator = models.ForeignKey(User, related_name="module_creator")
     check_prerequisite = models.BooleanField(default=True)
     html_data = models.TextField(null=True, blank=True)
+    active = models.BooleanField(default=True)
     is_trial = models.BooleanField(default=False)
 
     def get_quiz_units(self):
@@ -486,7 +501,7 @@ class LearningModule(models.Model):
         return ordered_units.get(id=ordered_units_ids[next_index])
 
     def get_status(self, user, course):
-        """ Get module status if it completed, inprogress or not attempted"""
+        """ Get module status if completed, inprogress or not attempted"""
         learning_module = course.learning_module.prefetch_related(
             "learning_unit").get(id=self.id)
         ordered_units = learning_module.learning_unit.order_by("order")
@@ -497,10 +512,10 @@ class LearningModule(models.Model):
             default_status = "no units"
         elif all([status == "completed" for status in status_list]):
             default_status = "completed"
-        elif "inprogress" in status_list:
-            default_status = "inprogress"
-        else:
+        elif all([status == "not attempted" for status in status_list]):
             default_status = "not attempted"
+        else:
+            default_status = "inprogress"
         return default_status
 
     def is_prerequisite_passed(self, user, course):
@@ -1221,7 +1236,7 @@ class QuestionPaper(models.Model):
         return all_questions
 
     def make_answerpaper(self, user, ip, attempt_num, course_id):
-        """Creates an  answer paper for the user to attempt the quiz"""
+        """Creates an answer paper for the user to attempt the quiz"""
         try:
             ans_paper = AnswerPaper.objects.get(user=user,
                                                 attempt_number=attempt_num,
@@ -1246,14 +1261,6 @@ class QuestionPaper(models.Model):
             ans_paper.questions_order = ",".join(question_ids)
             ans_paper.save()
             ans_paper.questions_unanswered.add(*questions)
-        except AnswerPaper.MultipleObjectsReturned:
-            ans_paper = AnswerPaper.objects.get(user=user,
-                                                attempt_number=attempt_num,
-                                                question_paper=self,
-                                                course_id=course_id
-                                                ).order_by('-id')
-            ans_paper = ans_paper[0]
-
         return ans_paper
 
     def _is_attempt_allowed(self, user, course_id):
@@ -1268,7 +1275,7 @@ class QuestionPaper(models.Model):
                 user=user, questionpaper=self, course_id=course_id
             )
             if last_attempt:
-                time_lag = (timezone.now() - last_attempt.start_time).days
+                time_lag = (timezone.now() - last_attempt.start_time).total_seconds() / 3600
                 return time_lag >= self.quiz.time_between_attempts
             else:
                 return True
@@ -1562,6 +1569,11 @@ class AnswerPaper(models.Model):
     questions_order = models.TextField(blank=True, default='')
 
     objects = AnswerPaperManager()
+
+    class Meta:
+        unique_together = ('user', 'question_paper',
+                           'attempt_number', "course"
+                           )
 
     def get_per_question_score(self, question_id):
         if question_id not in self.get_questions().values_list('id', flat=True):
