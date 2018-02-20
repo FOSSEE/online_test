@@ -390,8 +390,8 @@ def prof_manage(request, msg=None):
         return my_redirect('/exam/login')
     if not is_moderator(user):
         return my_redirect('/exam/')
-    courses = Course.objects.filter(creator=user, is_trial=False)
-
+    courses = Course.objects.filter(Q(creator=user) | Q(teachers=user),
+                                    is_trial=False)
     trial_paper = AnswerPaper.objects.filter(
         user=user, question_paper__quiz__is_trial=True,
         course__is_trial=True
@@ -399,17 +399,18 @@ def prof_manage(request, msg=None):
     if request.method == "POST":
         delete_paper = request.POST.getlist('delete_paper')
         for answerpaper_id in delete_paper:
-            answerpaper = AnswerPaper.objects.get(id=answerpaper_id)
-            qpaper = answerpaper.question_paper
-            answerpaper.course.remove_trial_modules()
-            answerpaper.course.delete()
-            if qpaper.quiz.is_trial:
-                qpaper.quiz.delete()
-            else:
-                if qpaper.answerpaper_set.count() == 1:
+            answerpaper = AnswerPaper.objects.filter(id=answerpaper_id)
+            if answerpaper.exists():
+                qpaper = answerpaper.first().question_paper
+                answerpaper.first().course.remove_trial_modules()
+                answerpaper.first().course.delete()
+                if qpaper.quiz.is_trial:
                     qpaper.quiz.delete()
                 else:
-                    answerpaper.delete()
+                    if qpaper.answerpaper_set.count() == 1:
+                        qpaper.quiz.delete()
+                    else:
+                        answerpaper.delete()
     context = {'user': user, 'courses': courses,
                'trial_paper': trial_paper, 'msg': msg
                }
@@ -2240,17 +2241,26 @@ def download_sample_csv(request):
 
 @login_required
 @email_verified
-def duplicate_course(request, course_id):
+def duplicate_course(request, copy_type, course_id):
     user = request.user
     course = Course.objects.get(id=course_id)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
     if course.is_teacher(user) or course.is_creator(user):
-        course.create_duplicate_course(user)
+        if copy_type == "copy":
+            # Link all the modules from current course to copied course
+            course.create_duplicate_course(user)
+        else:
+            # Create new entries of modules, lessons/quizzes
+            # from current course to copied course
+            course.create_shallow_copy(user)
     else:
-        msg = 'You do not have permissions to clone this course, please contact your '\
-            'instructor/administrator.'
+        msg = dedent(
+            '''\
+            You do not have permissions to clone {0} course, please contact
+            your instructor/administrator.'''.format(course.name)
+        )
         return complete(request, msg, attempt_num=None, questionpaper_id=None)
     return my_redirect('/exam/manage/courses/')
 

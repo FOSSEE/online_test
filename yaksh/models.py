@@ -161,6 +161,23 @@ class Lesson(models.Model):
     def get_files(self):
         return LessonFile.objects.filter(lesson=self)
 
+    def _create_lesson_copy(self, user):
+        lesson_files = self.get_files()
+        new_lesson = self
+        new_lesson.id = None
+        new_lesson.name = "Copy of {0}".format(self.name)
+        new_lesson.creator = user
+        new_lesson.save()
+        for _file in lesson_files:
+            file_name = os.path.basename(_file.file.name)
+            if os.path.exists(_file.file.path):
+                lesson_file = open(_file.file.path, "rb")
+                django_file = File(lesson_file)
+                lesson_file_obj = LessonFile()
+                lesson_file_obj.lesson = new_lesson
+                lesson_file_obj.file.save(file_name, django_file, save=True)
+        return new_lesson
+
 
 #############################################################################
 class LessonFile(models.Model):
@@ -352,6 +369,17 @@ class Quiz(models.Model):
                 course=course, passed=False
             ).values_list("user", flat=True).distinct().count()
 
+    def _create_quiz_copy(self, user):
+        question_papers = self.questionpaper_set.all()
+        new_quiz = self
+        new_quiz.id = None
+        new_quiz.description = "Copy of {0}".format(self.description)
+        new_quiz.creator = user
+        new_quiz.save()
+        for qp in question_papers:
+            qp._create_duplicate_questionpaper(new_quiz)
+        return new_quiz
+
     def __str__(self):
         desc = self.description or 'Quiz'
         return '%s: on %s for %d minutes' % (desc, self.start_date_time,
@@ -401,6 +429,17 @@ class LearningUnit(models.Model):
             else:
                 success = False
         return success
+
+    def _create_unit_copy(self, user):
+        if self.type == "quiz":
+            new_quiz = self.quiz._create_quiz_copy(user)
+            new_unit = LearningUnit.objects.create(
+                order=self.order, type="quiz", quiz=new_quiz)
+        else:
+            new_lesson = self.lesson._create_lesson_copy(user)
+            new_unit = LearningUnit.objects.create(
+                order=self.order, type="lesson", lesson=new_lesson)
+        return new_unit
 
 
 ###############################################################################
@@ -496,6 +535,18 @@ class LearningModule(models.Model):
             percent = round((count / len(units)) * 100)
         return percent
 
+    def _create_module_copy(self, user, module_name):
+        learning_units = self.learning_unit.order_by("order")
+        new_module = self
+        new_module.id = None
+        new_module.name = module_name
+        new_module.creator = user
+        new_module.save()
+        for unit in learning_units:
+            new_unit = unit._create_unit_copy(user)
+            new_module.learning_unit.add(new_unit)
+        return new_module
+
     def __str__(self):
         return self.name
 
@@ -555,6 +606,15 @@ class Course(models.Model):
         new_course.learning_module.add(*learning_modules)
 
         return new_course
+
+    def create_shallow_copy(self, user):
+        learning_modules = self.learning_module.order_by("order")
+        copy_course_name = "Copy Of {0}".format(self.name)
+        new_course = self._create_duplicate_instance(user, copy_course_name)
+        for module in learning_modules:
+            copy_module_name = "Copy of {0}".format(module.name)
+            new_module = module._create_module_copy(user, copy_module_name)
+            new_course.learning_module.add(new_module)
 
     def request(self, *users):
         self.requests.add(*users)
@@ -1129,8 +1189,8 @@ class QuestionPaper(models.Model):
         return questions
 
     def _create_duplicate_questionpaper(self, quiz):
-        new_questionpaper = QuestionPaper.objects.create(quiz=quiz,
-            shuffle_questions=self.shuffle_questions,
+        new_questionpaper = QuestionPaper.objects.create(
+            quiz=quiz, shuffle_questions=self.shuffle_questions,
             total_marks=self.total_marks,
             fixed_question_order=self.fixed_question_order
         )
