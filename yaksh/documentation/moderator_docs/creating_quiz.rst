@@ -4,41 +4,61 @@ Quizzes
 
 Quizzes are intrinsically associated with a course, hence to view and/or edit a quiz, we need to navigate to the courses page.
 
-In courses page click on **Add Quiz** button to create a new quiz.
+Clicking on Add/View Quizzes from courses page will open the page as shown below
 
+.. image:: ../images/view_quizzes.jpg
+
+This page shows all the quizzes and exercise created.
 
 Creating a Quiz
 ---------------	
+
+	Click on **Add New Quiz** button to add a quiz.
+
 	.. image:: ../images/add_quiz.jpg
 	
 	.. note :: It is important to have created or uploaded questions before creating a quiz. 
 
-	In courses click on **Add Quiz** button to add a quiz.
-	
-	* **Course** - Select a course from Course field. This field is mandatory.
 	* **Start Date and Time of quiz** - The date and time after which the quiz can be taken.
 	* **End Date and Time of quiz** - The date and time after which the quiz is deactivated and cannot be attempted.
 	* **Duration** - Duration of quiz to be written in minutes.
-	* **Active** - If the quiz is active or not.
+	* **Active** - Check the checkbox to activate/deactivate quiz.
 	* **Description** - Description or name of the quiz.
 	* **Passing Percentage** - Minimum percentage required to pass the test.
-	* **Prerequisite** - Set a prerequisite quiz to be passed before attempting the current quiz.
-	* **Language** - Programming language on which the quiz is based.
 	* **Attempts allowed** - Number of attempts that a student can take of the current quiz.
-	* **Number of Days** - Number of days between attempts.
+	* **Time Between Quiz Attempts in hours** - For a quiz with multiple attempts this value can be set so that student can attempt again after the specified time.
 	* **Instructions for students** - Additional instructions for students can be added. Some default instructions are already provided.
 	* **Allow student to view answer paper** - Click on this checkbox to allow student to view their answer paper.
+	* **Allow student to skip questions** - Click on this checkbox to allow/disallow student to skip questions for a quiz. Value defaults to allow skipping questions.
+	* **Weightage** - Every quiz will have weightage depending on which grades will be calculated.
 
 	Once a quiz parameters have been set click on **Save** button to save the quiz.
 
-To create a Question paper, Click on **Add** link located besides the created quiz in courses page.
+To create a Question paper, Click on **Add** link located besides the created quiz.
+
+Creating a Exercise
+-------------------	
+
+	Click on **Add New Exercise** button to add a exercise.
+
+	.. image:: ../images/add_exercise.jpg
+
+	Exercise is similar to quiz with a difference that exercise has infinite attempts and 
+	exercise time depends on per question time. It also does not allow a student to skip the question.
+
+	All the parameters are set by default only below parameters can be changed.
+
+	* **Description** - Description or name of the exercise.
+	* **Allow student to view answer paper** - Click on this checkbox to allow student to view their answer paper.
+	* **Active** - Select the checkbox to activate/deactivate exercise. Default value is active.
+
 
 Designing Question Paper
 ------------------------
 
 	.. image:: ../images/design_questionpaper.jpg
 
-	A quiz can have fixed as well as random questions. Fixed questions are those question that are bound to appear for every student taking the quiz. In random questions a pool of questions is given and number of questions to be picked from the pool is set. Hence for different students, different questions from the pool will appear.
+	A quiz/exercise can have fixed as well as random questions. Fixed questions are those question that are bound to appear for every student taking the quiz. In random questions a pool of questions is given and number of questions to be picked from the pool is set. Hence for different students, different questions from the pool will appear.
 
 	To add questions to a questionpaper
 
@@ -48,25 +68,17 @@ Designing Question Paper
 	* Click on save question paper to save it or preview question paper to preview it.
 
 
-Editing a Quiz
---------------
+Editing a Quiz/Exercise
+-----------------------
 
-	In Courses page, click on the quiz link to edit the quiz. Then change the parameters and click on design question paper to save it. This will redirect you to the moderator dashboard.
-
-	In edit quiz you can also attempt the quiz in two modes - 
-		* **God Mode** - In God mode you can attempt quiz without any time or eligibilty constraints.
-		* **User Mode** - In user mode you can attempt quiz the way normal users will attempt i.e.
-			
-			* Quiz will have the same duration as that of the original quiz.
-			* Quiz won't start if the course is inactive or the quiz time has expired.
-			* You will be notified about quiz prerequisites.(You can still attempt the quiz though)
+	Click on the quiz/exercise link to edit, change the parameters and click on Save.
 
 
 Editing a QuestionPaper
 -----------------------
 
 
-	Click on the Question Paper for a Quiz link besides Quiz in courses page and follow steps from Design Question Paper.
+	Click on the Question Paper for a <Quiz-name/Exercise-name> besides Quiz/Exercise and follow steps from Design Question Paper.
 
 	If the questions are already added to a Question Paper then they are shown in the 
 	**Fixed Questions currently in the paper** section.
