@@ -1871,7 +1871,7 @@ class TestCourses(TestCase):
         response = self.client.get(
             reverse('yaksh:duplicate_course',
                     kwargs={"course_id": self.user2_course.id,
-                            "copy_type": "copy"}),
+                            "copy_type": "shallow"}),
             follow=True
         )
         self.assertEqual(response.status_code, 404)
@@ -1886,7 +1886,7 @@ class TestCourses(TestCase):
         response = self.client.get(
             reverse('yaksh:duplicate_course',
                     kwargs={"course_id": self.user2_course.id,
-                            "copy_type": "copy"}),
+                            "copy_type": "shallow"}),
             follow=True
         )
         err_msg = "You do not have permissions"
@@ -1904,7 +1904,7 @@ class TestCourses(TestCase):
         response = self.client.get(
             reverse('yaksh:duplicate_course',
                     kwargs={"course_id": self.user2_course.id,
-                            "copy_type": "copy"}),
+                            "copy_type": "shallow"}),
             follow=True
         )
 
@@ -1937,7 +1937,7 @@ class TestCourses(TestCase):
         response = self.client.get(
             reverse('yaksh:duplicate_course',
                     kwargs={"course_id": self.user1_course.id,
-                            "copy_type": "clone"}),
+                            "copy_type": "deep"}),
             follow=True
         )
 

@@ -399,18 +399,18 @@ def prof_manage(request, msg=None):
     if request.method == "POST":
         delete_paper = request.POST.getlist('delete_paper')
         for answerpaper_id in delete_paper:
-            answerpaper = AnswerPaper.objects.filter(id=answerpaper_id)
-            if answerpaper.exists():
-                qpaper = answerpaper.first().question_paper
-                answerpaper.first().course.remove_trial_modules()
-                answerpaper.first().course.delete()
-                if qpaper.quiz.is_trial:
+            answerpaper = AnswerPaper.objects.get(id=answerpaper_id)
+            qpaper = answerpaper.question_paper
+            answerpaper.course.remove_trial_modules()
+            answerpaper.course.delete()
+            if qpaper.quiz.is_trial:
+                qpaper.quiz.delete()
+            else:
+                if qpaper.answerpaper_set.count() == 1:
                     qpaper.quiz.delete()
                 else:
-                    if qpaper.answerpaper_set.count() == 1:
-                        qpaper.quiz.delete()
-                    else:
-                        answerpaper.delete()
+                    answerpaper.delete()
+
     context = {'user': user, 'courses': courses,
                'trial_paper': trial_paper, 'msg': msg
                }
@@ -2253,7 +2253,7 @@ def duplicate_course(request, copy_type, course_id):
         raise Http404('You are not allowed to view this page!')
 
     if course.is_teacher(user) or course.is_creator(user):
-        if copy_type == "copy":
+        if copy_type == "shallow":
             # Link all the modules from current course to copied course
             course.create_duplicate_course(user)
         else:
