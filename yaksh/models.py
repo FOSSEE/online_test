@@ -35,6 +35,7 @@ from yaksh.code_server import (
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from django.conf import settings
 from django.forms.models import model_to_dict
+from certificate.formatters.utils import render_certificate_template
 
 
 languages = (
@@ -105,6 +106,13 @@ def get_model_class(model):
 def get_upload_dir(instance, filename):
     return os.sep.join((
         'question_%s' % (instance.question.id), filename
+    ))
+
+def get_cert_template_dir(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = '{0}.{1}'.format('course_certificate_template', ext)
+    return os.sep.join((
+        'course_{0}'.format(instance.name.replace(" ", "_")), filename
     ))
 
 def dict_to_yaml(dictionary):
@@ -551,7 +559,30 @@ class Course(models.Model):
         null=True
     )
 
+    certificate_template = models.FileField(upload_to=get_cert_template_dir, blank=True)
     objects = CourseManager()
+
+    def create_certificate_html(self, student, course):
+        course_status = CourseStatus.objects.filter(user=student, course=course)
+        context = {'student': student, 'course': course, 'course_status': course_status}
+        filepath = os.path.join(
+            settings.MEDIA_ROOT,
+            'course_{0}'.format(self.name.replace(" ", "_"))
+        )
+        filename = 'course_certificate_template.html'
+        template = os.path.join(filepath, filename)
+        return render_certificate_template(template, context)
+
+    def get_course_completion_status(self, user):
+        units = self.get_learning_units()
+        course_completion = False
+        for unit in units:
+            status = unit.get_completion_status(user, self)
+            if status == "inprogress" or status == "not attempted":
+                course_completion = False
+            else:
+                course_completion = True
+        return course_completion
 
     def _create_duplicate_instance(self, creator, course_name=None):
         new_course = self
