@@ -1,3 +1,5 @@
+.. _creating_lessons_modules:
+
 ===================
 Lessons and Modules
 ===================
@@ -5,11 +7,10 @@ Lessons and Modules
 Courses can have lessons and quizzes encapsulated using a module.
 
 	* **What is a lesson?**
-		A lesson can be any markdown text or an embedded video of a particular topic.
+		A lesson can be any markdown text with/or an embedded video of a particular topic.
 
 	* **What is a module?**
-		A module encapsulates lessons and quizzes. A module can have its own description 
-		as a markdown text or an embedded video.
+		A Module is a collection of lessons and courses clubbed together by similar idea/content. A module can have its own description as a markdown text with/or an embedded video.
 
 
 Setting up a Lesson
@@ -59,7 +60,7 @@ Setting up a Module
 Design a Module
 ---------------
 
-	To add lesson or quizzes to a module click on **Add Quizzes/Lessons for <module-name>**.
+	To add lessons or quizzes to a module click on **Add Quizzes/Lessons for <module-name>**.
 
 	.. image:: ../images/design_module.jpg
 

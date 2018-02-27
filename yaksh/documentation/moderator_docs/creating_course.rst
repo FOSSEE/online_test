@@ -3,9 +3,10 @@ Courses
 =======
 
 For students to take a quiz, it is imperative for the moderator to create a course first. 
-A course contains modules and module contains lessons and quizzes.
+A course can contain several modules and a module can contain several lessons and/or quizzes.
 
-To create modules, lessons and quizzes go to the Lessons and Modules, Quizzes section of the documentation.
+To create modules, lessons and quizzes go to the :doc:`creating_lessons_modules`
+and :doc:`creating_quiz` section of the documentation.
 
 Setting up a new course
 -----------------------
@@ -41,7 +42,7 @@ Features in Courses
      The following features are available for courses
 
         * **Course Name**
-            Clicking on course name link will display all the enrolled, rejected and requested students list. Moderator can accept or reject the student.
+            Click on course name link to view all the enrolled, rejected and requested students list. Moderator can accept or reject the student.
         * **Module Name**
             Click to edit a module added to the course
         * **Lesson or Quiz Name**
@@ -53,35 +54,34 @@ Features in Courses
                     
                     * Quiz will have the same duration as that of the original quiz.
                     * Quiz won't start if the course is inactive or the quiz time has expired.
-                    * You will be notified about quiz prerequisites.(You can still attempt the quiz though)
         * **Add Quizzes/Lessons for <module-name>**
-            Click to add/change/delete lessons or quizzes.
-        * **My Courses**
-            Clicking on this will show all the courses created by you.
-        * **Allotted courses**
-            Clicking on this will show all the courses allotted to you.
-        * **Add New Course**
-            Clicking on this will open course form to create new course.
-        * **Add/View Quizzes**
-            Click to view all the created quizzes and add new quizzes.
-        * **Add/View Lessons**
-            Click to view all the created lessons and add new lessons.
-        * **Add/View Modules**
-            Click to view all the created modules and add new modules.
+            Click to add/delete lessons or quizzes.
         * **Design Course**
-            Click to add/delete/change modules.
+            Click to add/delete modules of a course.
         * **Add Teacher**
-            Clicking on Add teacher can let you add teachers for the course. The teachers can edit and modify only the specific course that are allotted to them.
+            Click to add teachers for the course. The teachers can edit and modify only the specific course that are allotted to them.
         * **Clone Course**
-            This will create a clone of the course for the moderator.
+            Click to create a copy of a course along with its modules, lessons and quizzes.
         * **Teachers added to the course**
             This shows all the teachers added to a particular course.
         * **Download CSV for the entire course**
             This downloads the CSV file containing the performance of all students in every quiz for a given course.
         * **Edit Course**
-            Clicking on the edit course button will let you edit the details of an existing course.
+            Click to edit the details of an existing course.
         * **Deactivate/Activate Course**
-            Clicking on this will deactivate or activate the course.
+            Click to deactivate or activate the course.
+        * **My Courses**
+            Click to show all the courses created by you.
+        * **Allotted courses**
+            Click to view all the courses allotted to you.
+        * **Add New Course**
+            Click to open course form to create new course.
+        * **Add/View Quizzes**
+            Click to view all the quizzes created by you or add new quiz.
+        * **Add/View Lessons**
+            Click to view all the lessons created by you or add new lesson.
+        * **Add/View Modules**
+            Click to view all the modules created by you or add new module.
 
 
 Design a Course
@@ -93,18 +93,18 @@ Design a Course
 
     **Available Modules** contains all the modules that are not added to a course.
 
-    To add a module to the course select the checkbox beside every module and click **Add to course** button.
+    To add a module to the course select the checkbox besides the desired module to be added and click **Add to course** button.
 
-    **Choosen Modules** contains all the modules that are added to a course.
+    **Chosen Modules** contains all the modules that are added to a course.
 
     Following parameters can be changed while designing a course:
 
         **Order** - Order in which modules are shown to a student.
 
-            To change a module's order change the value in the textbox under **Order** column and click **Change order**.
+            To change a module's order change the value to a desired index/order in the textbox under **Order** column and click **Change order**.
 
         **Check Prerequisite** - Check if previous module is completed. Default value is **Yes**.
-            For e.g. A student has to first complete **Demo module** to attempt **Python Module** if the value is **Yes**.
+            For e.g., Assuming a course contains modules **Demo Module** and **Python module** in the given order; a student has to first complete **Demo module** to attempt **Python Module** if the value is **Yes**.
 
             **Currently** column shows the current value of **Check Prerequisite** which in this case is **Yes**.
 
@@ -112,9 +112,6 @@ Design a Course
 
     To remove a module from the course select the checkbox beside every module and click **Remove from course** button.
     
-
-
-
 
 Features in Course Details
 --------------------------
