@@ -2246,20 +2246,16 @@ def download_sample_csv(request):
 
 @login_required
 @email_verified
-def duplicate_course(request, copy_type, course_id):
+def duplicate_course(request, course_id):
     user = request.user
     course = Course.objects.get(id=course_id)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
     if course.is_teacher(user) or course.is_creator(user):
-        if copy_type == "shallow":
-            # Link all the modules from current course to copied course
-            course.create_duplicate_course(user)
-        else:
-            # Create new entries of modules, lessons/quizzes
-            # from current course to copied course
-            course.create_shallow_copy(user)
+        # Create new entries of modules, lessons/quizzes
+        # from current course to copied course
+        course.create_duplicate_course(user)
     else:
         msg = dedent(
             '''\

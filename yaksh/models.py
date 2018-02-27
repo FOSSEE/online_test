@@ -613,16 +613,6 @@ class Course(models.Model):
         return new_course
 
     def create_duplicate_course(self, user):
-        learning_modules = self.learning_module.all()
-
-        new_course_name = "Copy Of {0}".format(self.name)
-        new_course = self._create_duplicate_instance(user, new_course_name)
-
-        new_course.learning_module.add(*learning_modules)
-
-        return new_course
-
-    def create_shallow_copy(self, user):
         learning_modules = self.learning_module.order_by("order")
         copy_course_name = "Copy Of {0}".format(self.name)
         new_course = self._create_duplicate_instance(user, copy_course_name)

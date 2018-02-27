@@ -1870,8 +1870,7 @@ class TestCourses(TestCase):
 
         response = self.client.get(
             reverse('yaksh:duplicate_course',
-                    kwargs={"course_id": self.user2_course.id,
-                            "copy_type": "shallow"}),
+                    kwargs={"course_id": self.user2_course.id}),
             follow=True
         )
         self.assertEqual(response.status_code, 404)
@@ -1885,37 +1884,13 @@ class TestCourses(TestCase):
         # Denies teacher not added in the course
         response = self.client.get(
             reverse('yaksh:duplicate_course',
-                    kwargs={"course_id": self.user2_course.id,
-                            "copy_type": "shallow"}),
+                    kwargs={"course_id": self.user2_course.id}),
             follow=True
         )
         err_msg = "You do not have permissions"
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/complete.html")
         self.assertIn(err_msg, response.context['message'])
-
-        # Moderator/Course creator login
-        self.client.login(
-            username=self.user2.username,
-            password=self.user2_plaintext_pass
-        )
-
-        # Allows creator to duplicate the course
-        response = self.client.get(
-            reverse('yaksh:duplicate_course',
-                    kwargs={"course_id": self.user2_course.id,
-                            "copy_type": "shallow"}),
-            follow=True
-        )
-
-        self.assertEqual(response.status_code, 200)
-        courses = Course.objects.filter(
-            creator=self.user2).order_by("id")
-        self.assertEqual(courses.count(), 2)
-        self.assertEqual(courses.last().creator, self.user2)
-        self.assertEqual(courses.last().name, "Copy Of Java Course")
-        self.assertEqual(courses.last().get_learning_modules()[0].id,
-                         self.user2_course.get_learning_modules()[0].id)
 
         # Test clone/duplicate courses and create copies of modules and units
 
@@ -1936,8 +1911,7 @@ class TestCourses(TestCase):
         )
         response = self.client.get(
             reverse('yaksh:duplicate_course',
-                    kwargs={"course_id": self.user1_course.id,
-                            "copy_type": "deep"}),
+                    kwargs={"course_id": self.user1_course.id}),
             follow=True
         )
 
