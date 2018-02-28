@@ -722,6 +722,14 @@ class Course(models.Model):
             percent = round((count / len(modules)))
         return percent
 
+    def days_remain_to_start(self):
+        """ Get the days remaining for the start of the course """
+        if timezone.now() < self.start_enroll_time:
+            remaining_days = (self.start_enroll_time - timezone.now()).days + 1
+        else:
+            remaining_days = 0
+        return remaining_days
+
     def __str__(self):
         return self.name
 
