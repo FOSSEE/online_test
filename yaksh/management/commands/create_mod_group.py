@@ -1,8 +1,6 @@
 '''
-   This command adds moderator group with permissions to add, change and delete
+   This command creates a moderator group with permissions to add, change and delete
    the objects in the exam app.
-   We can modify this command to add more groups by providing arguments.
-   Arguments like group-name, app-name can be passed.
 '''
 
 # django imports
