@@ -136,10 +136,12 @@
                 <th>Sr No.</th>
                 <th>Students</th>
                 <th>Total</th>
+                <th>Grade</th>
                 <th colspan="{{modules|length}}">Modules</th>
                 </tr>
                 <tr>
                     <th scope="row"></th>
+                    <th></th>
                     <th></th>
                     <th></th>
                     {% if modules %}
@@ -170,6 +172,10 @@
                     <td>
                         {% course_completion_percent course student as c_percent %}
                         {{c_percent}} %
+                    </td>
+                    <td>
+                        {% course_grade course student as grade %}
+                        {{grade}}
                     </td>
                         {% if modules %}
                             {% for module in modules %}

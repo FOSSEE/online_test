@@ -62,3 +62,8 @@ def module_completion_percent(course, module, user):
 @register.simple_tag
 def course_completion_percent(course, user):
     return course.percent_completed(user)
+
+
+@register.simple_tag
+def course_grade(course, user):
+    return course.get_grade(user)

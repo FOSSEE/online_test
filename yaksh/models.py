@@ -725,6 +725,14 @@ class Course(models.Model):
             percent = round((count / len(modules)))
         return percent
 
+    def get_grade(self, user):
+        course_status = CourseStatus.objects.filter(course=self, user=user)
+        if course_status.exists():
+            grade = course_status.first().get_grade()
+        else:
+            grade = "NA"
+        return grade
+
     def __str__(self):
         return self.name
 
@@ -752,6 +760,7 @@ class CourseStatus(models.Model):
                 grading_system = self.course.grading_system
             grade = grading_system.get_grade(self.percentage)
             self.grade = grade
+            self.save()
 
     def calculate_percentage(self):
         if self.is_course_complete():
@@ -765,7 +774,7 @@ class CourseStatus(models.Model):
                 out_of = quiz.questionpaper_set.first().total_marks
                 sum += (marks/out_of)*quiz.weightage
             self.percentage = (sum/total_weightage)*100
-
+            self.save()
 
     def is_course_complete(self):
         modules = self.course.get_learning_modules()
@@ -775,6 +784,7 @@ class CourseStatus(models.Model):
             if not complete:
                 break
         return complete
+
 
 ###############################################################################
 class ConcurrentUser(models.Model):

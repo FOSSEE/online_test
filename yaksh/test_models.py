@@ -1896,3 +1896,6 @@ class CourseStatusTestCases(unittest.TestCase):
         self.course_status.set_grade()
         # Then
         self.assertEqual(self.course_status.get_grade(), 'B')
+
+        # Test get course grade after completion
+        self.assertEqual(self.course.get_grade(self.answerpaper1.user), 'B')
