@@ -32,6 +32,6 @@ class Command(BaseCommand):
                 raise CommandError('User "{0}" does not exist'.format(uname))
             if user in group.user_set.all():
                 self.stdout.write('User "{0}" is already a Moderator'.format(uname))
-                continue               
-            group.user_set.add(user)
-            self.stdout.write('Successfully added User "{0}" to Moderator group'.format(uname))
+            else:
+                group.user_set.add(user)
+                self.stdout.write('Successfully added User "{0}" to Moderator group'.format(uname))
