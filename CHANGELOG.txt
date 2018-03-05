@@ -2,6 +2,7 @@
 
 * Added a management command to add users to moderator group
 * Renamed add_group management command to create_mod_group
+* Deprecated multiple management commands: dump_user_data, load_exam, load_question_xml, results2csv
 
 === 0.7.0 (15-11-2017) ===
 
