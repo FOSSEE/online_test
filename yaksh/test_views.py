@@ -4040,6 +4040,24 @@ class TestQuestionPaper(TestCase):
             timezone='UTC'
         )
 
+        self.user2_plaintext_pass = 'demo2'
+        self.user2 = User.objects.create_user(
+            username='demo_user2',
+            password=self.user_plaintext_pass,
+            first_name='first_name2',
+            last_name='last_name2',
+            email='demo2@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user2,
+            roll_number=11,
+            institute='IIT',
+            department='Chemical',
+            position='Student',
+            timezone='UTC'
+        )
+
         self.teacher_plaintext_pass = 'demo_teacher'
         self.teacher = User.objects.create_user(
             username='demo_teacher',
@@ -4193,6 +4211,54 @@ class TestQuestionPaper(TestCase):
         self.question_paper.delete()
         self.learning_module.delete()
         self.learning_unit.delete()
+
+    def test_preview_questionpaper_correct(self):
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        # Should successfully preview question paper
+        response = self.client.get(
+            reverse('yaksh:preview_questionpaper',
+                    kwargs={"questionpaper_id": self.question_paper.id}
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/preview_questionpaper.html')
+        self.assertEqual(
+           response.context['questions'],
+           self.questions_list
+        )
+        self.assertEqual(response.context['paper'], self.question_paper)
+
+    def test_preview_questionpaper_without_moderator(self):
+        self.client.login(
+            username=self.user2.username,
+            password=self.user_plaintext_pass
+        )
+
+        # Should raise an HTTP 404 response
+        response = self.client.get(
+            reverse('yaksh:preview_questionpaper',
+                    kwargs={"questionpaper_id": self.question_paper.id}
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_preview_qustionpaper_without_quiz_owner(self):
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
+
+        # Should raise an HTTP 404 response
+        response = self.client.get(
+            reverse('yaksh:preview_questionpaper',
+                    kwargs={"questionpaper_id": self.question_paper.id}
+            )
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_mcq_attempt_right_after_wrong(self):
         """ Case:- Check if answerpaper and answer marks are updated after
