@@ -71,7 +71,7 @@ test_case_types = (
         ("integertestcase", "Integer Testcase"),
         ("stringtestcase", "String Testcase"),
         ("floattestcase", "Float Testcase"),
-        ("arrangetestcase", "Arrange Options Testcase"),
+        ("arrangetestcase", "Arrange Testcase"),
     )
 
 string_check_type = (

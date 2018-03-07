@@ -75,9 +75,9 @@ def get_answer_for_arrange_options(ans, question):
         ans = ans.decode("utf-8")
     else:
         ans = str(ans)
-    ans_list = literal_eval(ans)
-    testcase_list = []
-    for answer_id in ans_list:
+    answer = literal_eval(ans)
+    testcases = []
+    for answer_id in answer:
         tc = question.get_test_case(id=int(answer_id))
-        testcase_list.append(tc)
-    return testcase_list
+        testcases.append(tc)
+    return testcases

@@ -1379,13 +1379,13 @@ class AnswerPaperTestCases(unittest.TestCase):
             error_list = [json.loads(ans.error) for ans in answers_saved]
             if answers_saved:
                 self.assertEqual(len(answered[question]), len(answers_saved))
-                ans_list = []
-                err_list = []
+                ans = []
+                err = []
                 for val in answered[question]:
-                    ans_list.append(val.get('answer'))
-                    err_list.append(val.get('error_list'))
-                self.assertEqual(set(ans_list), set(answers_saved))
-                self.assertEqual(error_list, err_list)
+                    ans.append(val.get('answer'))
+                    err.append(val.get('error_list'))
+                self.assertEqual(set(ans), set(answers_saved))
+                self.assertEqual(error_list, err)
 
     def test_is_answer_correct(self):
         self.assertTrue(self.answerpaper.is_answer_correct(self.questions[0]))
