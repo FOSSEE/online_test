@@ -77,7 +77,7 @@ Design a Module
 			To change a unit's order change the value in the textbox under **Order** column and click **Change order**.
 
 		**Check Prerequisite** - Check if previous unit is completed. Default value is **Yes**.
-			For e.g. A student has to first complete **Yaksh Demo quiz** to attempt **Demo Lesson** if the value is **Yes**.
+			For e.g. A student has to first complete **Yaksh Demo quiz** to attempt **Demo Lesson** if the **Check Prerequisite** value for **Demo Lesson** is checked **Yes**.
 
 			**Currently** column shows the current value of **Check Prerequisite** which in this case is **Yes**.
 

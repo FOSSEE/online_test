@@ -48,7 +48,7 @@ Creating a Exercise
 	Exercise is similar to quiz with a difference that exercise has infinite attempts and 
 	infinite time. It also does not allow a student to skip the question.
 	Each question in an exercise can be timed i.e. time to solve a particular question.
-	Once the question time expires question solution is shown to the student.
+	Once the question time expires, question solution is shown to the student.
 
 	All the parameters are set by default only below parameters can be changed.
 

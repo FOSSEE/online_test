@@ -101,10 +101,10 @@ Design a Course
 
         **Order** - Order in which modules are shown to a student.
 
-            To change a module's order change the value to a desired index/order in the textbox under **Order** column and click **Change order**.
+            To change a module's order change the value to a desired order in the textbox under **Order** column and click **Change order**.
 
         **Check Prerequisite** - Check if previous module is completed. Default value is **Yes**.
-            For e.g., Assuming a course contains modules **Demo Module** and **Python module** in the given order; a student has to first complete **Demo module** to attempt **Python Module** if the value is **Yes**.
+            For e.g., Assuming a course contains modules **Demo Module** and **Python module** in the given order; a student has to first complete **Demo module** to attempt **Python Module** if the **Check Prerequisite** value for **Python Module** is checked **Yes**.
 
             **Currently** column shows the current value of **Check Prerequisite** which in this case is **Yes**.
 
