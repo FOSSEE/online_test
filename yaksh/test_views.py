@@ -4517,6 +4517,13 @@ class TestQuestionPaper(TestCase):
         )
         self.float_based_testcase.save()
 
+        # Question with tag
+        self.tagged_que = Question.objects.create(
+            summary="Test_tag_question", description="Test Tag",
+            points=1.0, language="python", type="float", user=self.teacher
+            )
+        self.tagged_que.tags.add("test_tag")
+
         self.questions_list = [self.question_mcq, self.question_mcc,
                                self.question_int, self.question_str,
                                self.question_float]
@@ -4919,6 +4926,8 @@ class TestQuestionPaper(TestCase):
                          self.questions_list)
         self.assertEqual(response.context['qpaper'], self.question_paper)
 
+        # Get questions using tags for question paper
+        search_tag = [tag for tag in self.tagged_que.tags.all()]
         response = self.client.post(
             reverse('yaksh:designquestionpaper',
                     kwargs={"quiz_id": self.quiz.id,
@@ -4927,7 +4936,9 @@ class TestQuestionPaper(TestCase):
             data={'random_questions': [self.random_que1.id,
                                        self.random_que2.id],
                   'marks': ['1.0'], 'question_type': ['code'],
-                  'add-random': ['']}
+                  'add-random': [''],
+                  'question_tags': search_tag
+                }
             )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/design_questionpaper.html')
@@ -4935,6 +4946,7 @@ class TestQuestionPaper(TestCase):
         added_random_ques = random_set.questions.all()
         self.assertIn(self.random_que1, added_random_ques)
         self.assertIn(self.random_que2, added_random_ques)
+        self.assertEqual(response.context["questions"][0], self.tagged_que)
 
 
 class TestLearningModule(TestCase):

@@ -68,8 +68,36 @@ select
         </div>
     </div> <!-- /.row -->
     <br><br>
-
+    {% csrf_token %}
     <div class="tab-pane active" id="fixed-questions">
+        <h4 style="padding-left: 20px;">Or</h4>
+        <!-- Search questions using tags -->
+        <h4 style="padding-left: 20px;">Search using Tags: </h4>
+        <div class="col-md-14">
+        <div class="input-group">
+            <span class="input-group-addon" id="basic-addon1">Search Questions </span>
+            <input type="text" id="question_tags" name="question_tags" class="form-control"
+             placeholder="Search using comma separated Tags">
+            <span class="input-group-btn">
+            <button class="btn btn-default" type="submit">Search</button>
+            </span>
+            <div class="col-md-6">
+            <select class="form-control" id="sel1" onchange="append_tag(this);">
+            {% if all_tags %}
+             <option value="" disabled selected>Available Tags</option>
+            {% for tag in all_tags %}
+            <option>
+                {{tag}}
+            </option>
+            {% endfor %}
+            {% else %}
+             <option value="" disabled selected>No Available Tags</option>
+            {% endif %}
+            </select>
+            </div>
+        </div>
+        </div>
+        <br><br>
         <div class="row">
             <div class="col-md-6">
                 <div id="fixed-available-wrapper">
@@ -116,7 +144,7 @@ select
         </div> <!-- /.row -->
         <br>
         <div class="pull-right">
-            <a class="btn" id="fixed-next">Next &gt;</a>
+            <a class="btn btn-primary" id="fixed-next">Next &gt;</a>
         </div>
     </div> <!-- /#fixed-questions -->
 
@@ -183,10 +211,10 @@ select
         </div> <!-- /.row -->
         <br>
         <div class="pull-left">
-            <a class="btn" id="random-prev">&lt; Previous</a>
+            <a class="btn btn-primary" id="random-prev">&lt; Previous</a>
         </div>
         <div class="pull-right">
-            <a class="btn" id="random-next">Next &gt;</a>
+            <a class="btn btn-primary" id="random-next">Next &gt;</a>
         </div>
    </div> <!-- /#random-questions -->
 
@@ -204,7 +232,7 @@ select
             <input class ="btn primary large" type="submit" name="save" id="save" value="Save question paper">
             <br>
             <div class="pull-left">
-                <a class="btn" id="finish-prev">&lt; Previous</a>
+                <a class="btn btn-primary" id="finish-prev">&lt; Previous</a>
             </div>
        </center>
     </div> <!-- /#finish -->
