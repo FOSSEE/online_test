@@ -63,9 +63,9 @@ No Courses to display
                 {% endif %}
             </div>
             <div class="col-md-4">
-                {% if course.days_remain_to_start != 0 %}
+                {% if course.days_before_start != 0 %}
                 <span class="label label-info" style="font-size: 15px">
-                    {{course.days_remain_to_start}} day(s) to start
+                    {{course.days_before_start}} day(s) to start
                 </span>
                 {% endif %}
             </div>
