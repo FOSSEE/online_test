@@ -1259,16 +1259,15 @@ def ajax_questions_filter(request):
     question_type = request.POST.get('question_type')
     marks = request.POST.get('marks')
     language = request.POST.get('language')
-
-    if question_type != "select":
+    if question_type:
         filter_dict['type'] = str(question_type)
 
-    if marks != "select":
+    if marks:
         filter_dict['points'] = marks
 
-    if language != "select":
+    if language:
         filter_dict['language'] = str(language)
-    questions = list(Question.objects.filter(**filter_dict))
+    questions = Question.objects.filter(**filter_dict)
 
     return my_render_to_response(
         'yaksh/ajax_question_filter.html', {'questions': questions}
@@ -1294,11 +1293,19 @@ def _remove_already_present(questionpaper_id, questions):
         return questions
     questionpaper = QuestionPaper.objects.get(pk=questionpaper_id)
     questions = questions.exclude(
-            id__in=questionpaper.fixed_questions.values_list('id', flat=True))
+        id__in=questionpaper.fixed_questions.values_list('id', flat=True))
     for random_set in questionpaper.random_questions.all():
         questions = questions.exclude(
-                id__in=random_set.questions.values_list('id', flat=True))
+            id__in=random_set.questions.values_list('id', flat=True))
     return questions
+
+
+def _get_questions_from_tags(question_tags, user):
+    search_tags = []
+    for tags in question_tags:
+        search_tags.extend(re.split('[; |, |\*|\n]', tags))
+    return Question.objects.filter(tags__name__in=search_tags,
+                                   user=user).distinct()
 
 
 @login_required
@@ -1306,7 +1313,9 @@ def _remove_already_present(questionpaper_id, questions):
 def design_questionpaper(request, quiz_id, questionpaper_id=None,
                          course_id=None):
     user = request.user
-
+    que_tags = Question.objects.filter(
+        active=True, user=user).values_list('tags', flat=True).distinct()
+    all_tags = Tag.objects.filter(id__in=que_tags)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     if quiz_id:
@@ -1323,7 +1332,8 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
     marks = None
     state = None
     if questionpaper_id is None:
-        question_paper = QuestionPaper.objects.get_or_create(quiz_id=quiz_id)[0]
+        question_paper = QuestionPaper.objects.get_or_create(
+            quiz_id=quiz_id)[0]
     else:
         question_paper = get_object_or_404(QuestionPaper, id=questionpaper_id,
                                            quiz_id=quiz_id)
@@ -1336,19 +1346,25 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
         question_type = request.POST.get('question_type', None)
         marks = request.POST.get('marks', None)
         state = request.POST.get('is_active', None)
+        tags = request.POST.get('question_tags', None)
 
         if 'add-fixed' in request.POST:
             question_ids = request.POST.get('checked_ques', None)
-            if question_paper.fixed_question_order:
-                ques_order = question_paper.fixed_question_order.split(",") +\
-                            question_ids.split(",")
-                questions_order = ",".join(ques_order)
-            else:
-                questions_order = question_ids
-            questions = Question.objects.filter(id__in=question_ids.split(','))
-            question_paper.fixed_question_order = questions_order
-            question_paper.save()
-            question_paper.fixed_questions.add(*questions)
+            if question_ids:
+                if question_paper.fixed_question_order:
+                    ques_order = (
+                        question_paper.fixed_question_order.split(",") +
+                        question_ids.split(",")
+                    )
+                    questions_order = ",".join(ques_order)
+                else:
+                    questions_order = question_ids
+                questions = Question.objects.filter(
+                    id__in=question_ids.split(',')
+                )
+                question_paper.fixed_question_order = questions_order
+                question_paper.save()
+                question_paper.fixed_questions.add(*questions)
 
         if 'remove-fixed' in request.POST:
             question_ids = request.POST.getlist('added-questions', None)
@@ -1367,7 +1383,8 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
             question_ids = request.POST.getlist('random_questions', None)
             num_of_questions = request.POST.get('num_of_questions', 1)
             if question_ids and marks:
-                random_set = QuestionSet(marks=marks, num_questions=num_of_questions)
+                random_set = QuestionSet(marks=marks,
+                                         num_questions=num_of_questions)
                 random_set.save()
                 for question in Question.objects.filter(id__in=question_ids):
                     random_set.questions.add(question)
@@ -1383,6 +1400,11 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
 
         if marks:
             questions = _get_questions(user, question_type, marks)
+        elif tags:
+            que_tags = request.POST.getlist('question_tags', None)
+            questions = _get_questions_from_tags(que_tags, user)
+
+        if questions:
             questions = _remove_already_present(questionpaper_id, questions)
 
         question_paper.update_total_marks()
@@ -1397,7 +1419,8 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
         'fixed_questions': fixed_questions,
         'state': state,
         'random_sets': random_sets,
-        'course_id': course_id
+        'course_id': course_id,
+        'all_tags': all_tags
     }
     return my_render_to_response(
         'yaksh/design_questionpaper.html',
@@ -1420,7 +1443,7 @@ def show_all_questions(request):
     questions = Question.objects.filter(user_id=user.id, active=True)
     form = QuestionFilterForm(user=user)
     user_tags = questions.values_list('tags', flat=True).distinct()
-    all_tags = Tag.objects.filter(id__in = user_tags)
+    all_tags = Tag.objects.filter(id__in=user_tags)
     upload_form = UploadFileForm()
     context['questions'] = questions
     context['all_tags'] = all_tags
@@ -1433,8 +1456,8 @@ def show_all_questions(request):
         if request.POST.get('delete') == 'delete':
             data = request.POST.getlist('question')
             if data is not None:
-                questions = Question.objects.filter(id__in=data, user_id=user.id,
-                                                    active=True)
+                questions = Question.objects.filter(
+                    id__in=data, user_id=user.id, active=True)
                 for question in questions:
                     question.active = False
                     question.save()
@@ -1466,7 +1489,8 @@ def show_all_questions(request):
                 response.write(zip_file.read())
                 return response
             else:
-                context['msg'] = "Please select atleast one question to download"
+                context['msg'] = """Please select atleast one
+                                    question to download"""
 
         if request.POST.get('test') == 'test':
             question_ids = request.POST.getlist("question")
@@ -1482,11 +1506,7 @@ def show_all_questions(request):
 
         if request.POST.get('question_tags'):
             question_tags = request.POST.getlist("question_tags")
-            search_tags = []
-            for tags in question_tags:
-                search_tags.extend(re.split('[; |, |\*|\n]',tags))
-            search_result = Question.objects.filter(tags__name__in=search_tags,
-                                                    user=user).distinct()
+            search_result = _get_questions_from_tags(question_tags, user)
             context['questions'] = search_result
 
     return my_render_to_response('yaksh/showquestions.html', context,

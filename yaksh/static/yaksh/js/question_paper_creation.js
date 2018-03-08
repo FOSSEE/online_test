@@ -61,3 +61,12 @@ $(document).ready(function(){
 });
 
 });//document
+function append_tag(tag){
+    var tag_name = document.getElementById("question_tags");
+    if (tag_name.value != null){
+        tag_name.value = tag.value+", "+tag_name.value;
+    }
+    else{
+        tag_name.value = tag.value;
+    }
+}
