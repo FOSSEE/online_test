@@ -2,5 +2,5 @@ pytest
 python-decouple
 six
 requests
-tornado
+tornado==4.5.3
 psutil
