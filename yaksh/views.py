@@ -535,8 +535,6 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
         )
     # allowed to start
     if not quest_paper.can_attempt_now(user, course_id)[0]:
-        # msg = "You cannot attempt {0} quiz more than {1} time(s)".format(
-        #     quest_paper.quiz.description, quest_paper.quiz.attempts_allowed)
         msg = quest_paper.can_attempt_now(user, course_id)[1]
         if is_moderator(user):
             return prof_manage(request, msg=msg)
