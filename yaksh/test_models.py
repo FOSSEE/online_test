@@ -1667,7 +1667,7 @@ class CourseTestCases(unittest.TestCase):
 
     def test_course_time_remaining_to_start(self):
         # check if course has 0 days left to start
-        self.assertEqual(self.course.days_remain_to_start(), 0)
+        self.assertEqual(self.course.days_before_start(), 0)
 
         # check if course has some days left to start
         course_time = self.course.start_enroll_time
@@ -1679,7 +1679,7 @@ class CourseTestCases(unittest.TestCase):
         updated_course = Course.objects.get(id=self.course.id)
         time_diff = updated_course.start_enroll_time - timezone.now()
         actual_days = time_diff.days + 1
-        self.assertEqual(updated_course.days_remain_to_start(), actual_days)
+        self.assertEqual(updated_course.days_before_start(), actual_days)
         self.course.start_enroll_time = course_time
         self.course.save()
 
