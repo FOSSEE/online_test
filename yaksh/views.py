@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext, Context, Template
+from django.template.loader import get_template, render_to_string
 from django.http import Http404
 from django.db.models import Sum, Max, Q, F
 from django.views.decorators.csrf import csrf_exempt
@@ -1886,7 +1887,7 @@ def create_demo_course(request):
     user = request.user
     ci = RequestContext(request)
     if not is_moderator(user):
-        raise("You are not allowed to view this page")
+        raise Http404("You are not allowed to view this page")
     demo_course = Course()
     success = demo_course.create_demo(user)
     if success:
@@ -2753,3 +2754,22 @@ def _update_unit_status(course_id, user, unit):
     # make next available unit as current unit
     course_status.current_unit = unit
     course_status.save()
+
+
+@login_required
+@email_verified
+def preview_questionpaper(request, questionpaper_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    paper = QuestionPaper.objects.get(id=questionpaper_id)
+    if not paper.quiz.creator == user:
+        raise Http404('This questionpaper does not belong to you')
+    context = {
+        'questions': paper._get_questions_for_answerpaper(),
+        'paper': paper,
+    }
+
+    return my_render_to_response(
+        'yaksh/preview_questionpaper.html', context
+    )

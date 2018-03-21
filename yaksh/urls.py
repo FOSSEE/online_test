@@ -172,4 +172,6 @@ urlpatterns = [
         views.design_course, name="design_course"),
     url(r'^manage/course_status/(?P<course_id>\d+)/$',
         views.course_status, name="course_status"),
+    url(r'^manage/preview_questionpaper/(?P<questionpaper_id>\d+)/$',
+        views.preview_questionpaper, name="preview_questionpaper"),
 ]
