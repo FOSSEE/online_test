@@ -1,7 +1,8 @@
 {% extends "manage.html" %}
 {% block main %}
 <html>
-<a href="{% url 'grades:grading_systems'%}" class="btn btn-primary"> Back to Grading Systems </a>
+<a href="{% url 'grades:grading_systems'%}" class="btn btn-danger"> Back to Grading Systems </a>
+<br><br>
 <p><b>Note: For grade range lower limit is inclusive and upper limit is exclusive</b></p>
 <br>
 {% if not system_id  %}
