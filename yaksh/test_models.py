@@ -209,10 +209,11 @@ class LearningModuleTestCases(unittest.TestCase):
         # Given
         module_status = 'not attempted'
         # When
+        self.learning_module.learning_unit.remove(self.learning_unit_two)
         status = self.learning_module.get_status(self.student, self.course)
         # Then
         self.assertEqual(status, module_status)
-
+        self.learning_module.learning_unit.add(self.learning_unit_two)
         # Module in progress
 
         # Given
@@ -706,6 +707,9 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.trial_course = Course.objects.create_trial_course(self.user)
         self.trial_quiz = Quiz.objects.create_trial_quiz(self.user)
 
+    @classmethod
+    def tearDownClass(self):
+        self.quiz.questionpaper_set.all().delete()
 
     def test_get_question_bank(self):
         # Given
@@ -991,9 +995,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.server_pool = server_pool
         self.server_thread = t = Thread(target=server_pool.run)
         t.start()
-    
+
     @classmethod
     def tearDownClass(self):
+        self.quiz.questionpaper_set.all().delete()
         self.server_pool.stop()
         self.server_thread.join()
         settings.code_evaluators['python']['standardtestcase'] = \
@@ -1650,7 +1655,7 @@ class CourseTestCases(unittest.TestCase):
             name="test_course", creator=self.creator, enrollment="open")
         percent = self.course.percent_completed(self.student1)
         self.assertEqual(percent, 0)
-
+        self.quiz1.questionpaper_set.all().delete()
         # for course with module but zero percent completed
         percent = self.course.percent_completed(self.student1)
         self.assertEqual(percent, 0)

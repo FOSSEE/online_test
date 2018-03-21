@@ -366,6 +366,20 @@ class Quiz(models.Model):
                 course=course, passed=False
             ).values_list("user", flat=True).distinct().count()
 
+    def get_answerpaper_status(self, user, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
+        ans_ppr = AnswerPaper.objects.filter(
+            user=user, course=course, question_paper=qp
+        )
+        if ans_ppr.exists():
+            status = "completed"
+        else:
+            status = "not attempted"
+        return status
+
     def __str__(self):
         desc = self.description or 'Quiz'
         return '%s: on %s for %d minutes' % (desc, self.start_date_time,
@@ -393,6 +407,8 @@ class LearningUnit(models.Model):
         if course_status.exists():
             if self in course_status.first().completed_units.all():
                 state = "completed"
+            elif self.type == "quiz":
+                state = self.quiz.get_answerpaper_status(user, course)
             elif course_status.first().current_unit == self:
                 state = "inprogress"
         return state
