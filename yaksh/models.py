@@ -815,7 +815,9 @@ class Question(models.Model):
 
     min_time =  models.IntegerField("time in minutes", default=0)
 
+    #Solution for the question.
     solution = models.TextField(blank=True)
+
 
     def consolidate_answer_data(self, user_answer, user=None):
         question_data = {}
@@ -927,6 +929,17 @@ class Question(models.Model):
             )
 
         return test_case
+
+    def get_ordered_test_cases(self, answerpaper):
+        try:
+            order = TestCaseOrder.objects.get(answer_paper=answerpaper,
+                                              question = self
+                                              ).order.split(",")
+            return [self.get_test_case(id=int(tc_id))
+                    for tc_id in order
+                    ]
+        except TestCaseOrder.DoesNotExist:
+            return self.get_test_cases()
 
     def get_maximum_test_case_weight(self, **kwargs):
         max_weight = 0.0
@@ -1134,6 +1147,11 @@ class QuestionPaper(models.Model):
     # Sequence or Order of fixed questions
     fixed_question_order = models.CharField(max_length=255, blank=True)
 
+    # Shuffle testcase order.
+    shuffle_testcases = models.BooleanField("Shuffle testcase for each user",
+                                             default=True
+                                            )
+
     objects = QuestionPaperManager()
 
     def get_question_bank(self):
@@ -1197,7 +1215,20 @@ class QuestionPaper(models.Model):
             ans_paper.save()
             questions = self._get_questions_for_answerpaper()
             ans_paper.questions.add(*questions)
-            question_ids = [str(que.id) for que in questions]
+            question_ids = []
+            for question in questions:
+                question_ids.append(str(question.id))
+                if self.shuffle_testcases and \
+                    question.type in ["mcq", "mcc"]:
+                    testcases = question.get_test_cases()
+                    random.shuffle(testcases)
+                    testcases_ids = ",".join([str(tc.id) for tc in testcases]
+                                             )
+                    testcases_order = TestCaseOrder.objects.create(
+                                    answer_paper=ans_paper,
+                                    question=question,
+                                    order=testcases_ids)
+
             ans_paper.questions_order = ",".join(question_ids)
             ans_paper.save()
             ans_paper.questions_unanswered.add(*questions)
@@ -1829,7 +1860,7 @@ class AnswerPaper(models.Model):
                .format(u.first_name, u.last_name, q.description)
 
 
-################################################################################
+##############################################################################
 class AssignmentUploadManager(models.Manager):
 
     def get_assignments(self, qp, que_id=None, user_id=None):
@@ -1851,7 +1882,7 @@ class AssignmentUploadManager(models.Manager):
         return assignment_files, file_name
 
 
-################################################################################
+##############################################################################
 class AssignmentUpload(models.Model):
     user = models.ForeignKey(User)
     assignmentQuestion = models.ForeignKey(Question)
@@ -1860,7 +1891,7 @@ class AssignmentUpload(models.Model):
     objects = AssignmentUploadManager()
 
 
-###############################################################################
+##############################################################################
 class TestCase(models.Model):
     question = models.ForeignKey(Question, blank=True, null=True)
     type = models.CharField(max_length=24, choices=test_case_types, null=True)
@@ -1978,3 +2009,19 @@ class FloatTestCase(TestCase):
         return u'Testcase | Correct: {0} | Error Margin: +or- {1}'.format(
                 self.correct, self.error_margin
                 )
+
+
+##############################################################################
+class TestCaseOrder(models.Model):
+    """Testcase order contains a set of ordered test cases for a given question
+        for each user.
+    """
+
+    # Answerpaper of the user.
+    answer_paper = models.ForeignKey(AnswerPaper, related_name="answer_paper")
+
+    # Question in an answerpaper.
+    question = models.ForeignKey(Question)
+
+    #Order of the test case for a question.
+    order = models.TextField()

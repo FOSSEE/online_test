@@ -308,7 +308,7 @@ class UploadFileForm(forms.Form):
 class QuestionPaperForm(forms.ModelForm):
     class Meta:
         model = QuestionPaper
-        fields = ['shuffle_questions']
+        fields = ['shuffle_questions', 'shuffle_testcases']
 
 
 class LessonForm(forms.ModelForm):
