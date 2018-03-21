@@ -85,10 +85,12 @@ class UserRegisterForm(forms.Form):
     department = forms.CharField(
         max_length=64, help_text='Department you work/study at')
     position = forms.CharField(
-        max_length=64, help_text='Student/Faculty/Researcher/Industry/etc.')
+        max_length=64,
+        help_text='Student/Faculty/Researcher/Industry/Fellowship/etc.')
     timezone = forms.ChoiceField(
         choices=[(tz, tz) for tz in pytz.common_timezones],
-        initial=pytz.utc)
+        help_text='Course timings are shown based on the selected timezone',
+        initial=pytz.country_timezones['IN'][0])
 
     def clean_username(self):
         u_name = self.cleaned_data["username"]
@@ -308,7 +310,7 @@ class UploadFileForm(forms.Form):
 class QuestionPaperForm(forms.ModelForm):
     class Meta:
         model = QuestionPaper
-        fields = ['shuffle_questions']
+        fields = ['shuffle_questions', 'shuffle_testcases']
 
 
 class LessonForm(forms.ModelForm):

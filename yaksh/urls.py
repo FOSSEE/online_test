@@ -86,8 +86,8 @@ urlpatterns = [
         views.show_statistics, name="show_statistics"),
     url(r'^manage/download_quiz_csv/(?P<course_id>\d+)/(?P<quiz_id>\d+)/$',
         views.download_quiz_csv, name="download_quiz_csv"),
-    url(r'^manage/duplicate_course/(?P<course_id>\d+)/$', views.duplicate_course,
-        name='duplicate_course'),
+    url(r'^manage/duplicate_course/(?P<course_id>\d+)/$',
+        views.duplicate_course, name='duplicate_course'),
     url(r'manage/courses/$', views.courses, name='courses'),
     url(r'manage/add_course/$', views.add_course, name='add_course'),
     url(r'manage/edit_course/(?P<course_id>\d+)$', views.add_course, name='edit_course'),
@@ -172,4 +172,6 @@ urlpatterns = [
         views.design_course, name="design_course"),
     url(r'^manage/course_status/(?P<course_id>\d+)/$',
         views.course_status, name="course_status"),
+    url(r'^manage/preview_questionpaper/(?P<questionpaper_id>\d+)/$',
+        views.preview_questionpaper, name="preview_questionpaper"),
 ]

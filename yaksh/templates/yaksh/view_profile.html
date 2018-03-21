@@ -31,6 +31,10 @@
     <th><label for="id_position"><h5>Position:</h5></label></th>
     <th><label for="id_position"><h5>{{ user.profile.position }}</h5></label></th>
   </tr>
+  <tr>
+    <th><label for="id_position"><h5>Timezone:</h5></label></th>
+    <th><label for="id_position"><h5>{{ user.profile.timezone }}</h5></label></th>
+  </tr>
   </table>
   <a class="btn btn-primary pull-right" href="{{ URL_ROOT }}/exam/editprofile/">Edit Profile</a>
 {% endblock %}
