@@ -20,6 +20,7 @@ from django.utils import timezone
 from django.core import mail
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.files import File
 
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
@@ -1668,13 +1669,38 @@ class TestCourses(TestCase):
             order=0, name="test module", description="module",
             check_prerequisite=False, creator=self.teacher)
 
-        self.user1_course = Course.objects.create(name="Python Course",
+        self.user1_course = Course.objects.create(
+            name="Python Course",
             enrollment="Enroll Request", creator=self.user1)
+
+        # Create Learning Module for Python Course
+        self.learning_module1 = LearningModule.objects.create(
+            order=0, name="demo module", description="module",
+            check_prerequisite=False, creator=self.user1)
+
+        self.quiz = Quiz.objects.create(
+            time_between_attempts=0, description='demo quiz',
+            creator=self.user1)
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz, total_marks=1.0)
+        self.lesson = Lesson.objects.create(
+            name="demo lesson", description="test description",
+            creator=self.user1)
+
+        self.lesson_unit = LearningUnit.objects.create(
+            order=1, type="lesson", lesson=self.lesson)
+        self.quiz_unit = LearningUnit.objects.create(
+            order=2, type="quiz", quiz=self.quiz)
+
+        # Add units to module
+        self.learning_module1.learning_unit.add(self.lesson_unit)
+        self.learning_module1.learning_unit.add(self.quiz_unit)
 
         # Add teacher to user1 course
         self.user1_course.teachers.add(self.teacher)
 
-        self.user2_course = Course.objects.create(name="Java Course",
+        self.user2_course = Course.objects.create(
+            name="Java Course",
             enrollment="Enroll Request", creator=self.user2)
         self.user2_course.learning_module.add(self.learning_module)
 
@@ -1683,10 +1709,7 @@ class TestCourses(TestCase):
         self.user1.delete()
         self.user2.delete()
         self.student.delete()
-        self.user1_course.delete()
-        self.user2_course.delete()
         self.teacher.delete()
-        self.learning_module.delete()
 
     def test_courses_denies_anonymous(self):
         """
@@ -1837,7 +1860,7 @@ class TestCourses(TestCase):
                          self.learning_module)
 
     def test_duplicate_course(self):
-        """ Test To clone/duplicate course """
+        """ Test To clone/duplicate course and link modules"""
 
         # Student Login
         self.client.login(
@@ -1869,27 +1892,64 @@ class TestCourses(TestCase):
         self.assertTemplateUsed(response, "yaksh/complete.html")
         self.assertIn(err_msg, response.context['message'])
 
-        # Moderator/Course creator login
-        self.client.login(
-            username=self.user2.username,
-            password=self.user2_plaintext_pass
-        )
+        # Test clone/duplicate courses and create copies of modules and units
 
-        # Allows creator to duplicate the course
+        # Teacher Login
+        # Given
+        # Add files to a lesson
+        lesson_file = SimpleUploadedFile("file1.txt", b"Test")
+        django_file = File(lesson_file)
+        lesson_file_obj = LessonFile()
+        lesson_file_obj.lesson = self.lesson
+        lesson_file_obj.file.save(lesson_file.name, django_file, save=True)
+
+        # Add module to Python Course
+        self.user1_course.learning_module.add(self.learning_module1)
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
         response = self.client.get(
             reverse('yaksh:duplicate_course',
-                    kwargs={"course_id": self.user2_course.id}),
+                    kwargs={"course_id": self.user1_course.id}),
             follow=True
         )
 
-        self.assertEqual(response.status_code, 200)
+        # When
         courses = Course.objects.filter(
-            creator=self.user2).order_by("id")
-        self.assertEqual(courses.count(), 2)
-        self.assertEqual(courses.last().creator, self.user2)
-        self.assertEqual(courses.last().name, "Copy Of Java Course")
-        self.assertEqual(courses.last().get_learning_modules()[0].id,
-                         self.user2_course.get_learning_modules()[0].id)
+            creator=self.teacher).order_by("id")
+        module = courses.last().get_learning_modules()[0]
+        units = module.get_learning_units()
+        cloned_lesson = units[0].lesson
+        cloned_quiz = units[1].quiz
+        expected_lesson_files = cloned_lesson.get_files()
+        actual_lesson_files = self.lesson.get_files()
+        cloned_qp = cloned_quiz.questionpaper_set.get()
+        self.all_files = LessonFile.objects.filter(
+            lesson_id__in=[self.lesson.id, cloned_lesson.id])
+
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(courses.last().creator, self.teacher)
+        self.assertEqual(courses.last().name, "Copy Of Python Course")
+        self.assertEqual(module.name, "Copy of demo module")
+        self.assertEqual(module.creator, self.teacher)
+        self.assertEqual(module.order, 0)
+        self.assertEqual(len(units), 2)
+        self.assertEqual(cloned_lesson.name, "Copy of demo lesson")
+        self.assertEqual(cloned_lesson.creator, self.teacher)
+        self.assertEqual(cloned_quiz.description, "Copy of demo quiz")
+        self.assertEqual(cloned_quiz.creator, self.teacher)
+        self.assertEqual(cloned_qp.__str__(),
+                         "Question Paper for Copy of demo quiz")
+        self.assertEqual(os.path.basename(expected_lesson_files[0].file.name),
+                         os.path.basename(actual_lesson_files[0].file.name))
+
+        for lesson_file in self.all_files:
+            file_path = lesson_file.file.path
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                shutil.rmtree(os.path.dirname(file_path))
 
 
 class TestAddCourse(TestCase):

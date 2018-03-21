@@ -4,6 +4,7 @@
 {% block script %}
 <script>
     $(document).ready(function(){
+        $('[data-toggle="tooltip"]').tooltip();
         $("#created_courses").toggle();
         $("#link_created_courses").click(function() {
             if ($("#allotted_courses").is(":visible")){
@@ -23,6 +24,14 @@
         });
     });
 </script>
+{% endblock %}
+{% block css %}
+<style>
+    .test + .tooltip.top > .tooltip-inner {
+      padding: 15px;
+      font-size: 12px;
+    }
+</style>
 {% endblock %}
 {% block content %}
 <div class="row">
@@ -99,7 +108,8 @@
         <br><br>
         <ul>
             <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course.id}}/">Design Course
+                <a href="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course.id}}/" data-toggle="tooltip" title="Add/Remove/Change course modules" data-placement="top">
+                    Design Course
                 </a>
             </li>
             <br>
@@ -123,7 +133,7 @@
             </li>
             <br>
             <li>
-                <a href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/">
+                <a class="test" href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/" data-toggle="tooltip" title="Creates Copy of selected Course as well as its Modules, Lessons/Quizzes" data-placement="top">
                 Clone Course</a>
             </li>
         </ul>
@@ -259,7 +269,7 @@
             </li>
             <br>
             <li>
-                <a href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/">
+                <a class="test" href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/" data-toggle="tooltip" title="Creates Copy of selected Course as well as its Modules, Lessons/Quizzes" data-placement="top">
                 Clone Course</a>
             </li>
         </ul>

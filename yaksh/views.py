@@ -390,8 +390,8 @@ def prof_manage(request, msg=None):
         return my_redirect('/exam/login')
     if not is_moderator(user):
         return my_redirect('/exam/')
-    courses = Course.objects.filter(creator=user, is_trial=False)
-
+    courses = Course.objects.filter(Q(creator=user) | Q(teachers=user),
+                                    is_trial=False)
     trial_paper = AnswerPaper.objects.filter(
         user=user, question_paper__quiz__is_trial=True,
         course__is_trial=True
@@ -410,6 +410,7 @@ def prof_manage(request, msg=None):
                     qpaper.quiz.delete()
                 else:
                     answerpaper.delete()
+
     context = {'user': user, 'courses': courses,
                'trial_paper': trial_paper, 'msg': msg
                }
@@ -2255,10 +2256,15 @@ def duplicate_course(request, course_id):
         raise Http404('You are not allowed to view this page!')
 
     if course.is_teacher(user) or course.is_creator(user):
+        # Create new entries of modules, lessons/quizzes
+        # from current course to copied course
         course.create_duplicate_course(user)
     else:
-        msg = 'You do not have permissions to clone this course, please contact your '\
-            'instructor/administrator.'
+        msg = dedent(
+            '''\
+            You do not have permissions to clone {0} course, please contact
+            your instructor/administrator.'''.format(course.name)
+        )
         return complete(request, msg, attempt_num=None, questionpaper_id=None)
     return my_redirect('/exam/manage/courses/')
 
