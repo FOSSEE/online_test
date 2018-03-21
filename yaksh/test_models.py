@@ -1676,6 +1676,24 @@ class CourseTestCases(unittest.TestCase):
         updated_percent = self.course.percent_completed(self.student1)
         self.assertEqual(updated_percent, 25)
 
+    def test_course_time_remaining_to_start(self):
+        # check if course has 0 days left to start
+        self.assertEqual(self.course.days_before_start(), 0)
+
+        # check if course has some days left to start
+        course_time = self.course.start_enroll_time
+        self.course.start_enroll_time = datetime(
+            2199, 12, 31, 10, 8, 15, 0,
+            tzinfo=pytz.utc
+        )
+        self.course.save()
+        updated_course = Course.objects.get(id=self.course.id)
+        time_diff = updated_course.start_enroll_time - timezone.now()
+        actual_days = time_diff.days + 1
+        self.assertEqual(updated_course.days_before_start(), actual_days)
+        self.course.start_enroll_time = course_time
+        self.course.save()
+
 
 ###############################################################################
 class TestCaseTestCases(unittest.TestCase):

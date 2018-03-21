@@ -39,25 +39,44 @@ No Courses to display
                 </b></h4>
             </div>
             <div class="col-md-4">
-                {% if not course.active %}
-                    <span class="label label-danger">Closed</span>
-                {% endif %}
                 {% if user in course.requests.all %} <span class="label label-warning">Request Pending </span>
                 {% elif user in course.rejected.all %}<span class="label label-danger">Request Rejected</span>
                 {% elif user in course.students.all %}<span class="label label-info">Enrolled</span>
                 {% else %}
-                    {% if course.is_active_enrollment %}
-                        {% if course.is_self_enroll %}
-                            <a class="btn btn-success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.id }}">Enroll</a>
+                    {% if course.active %}
+                        {% if course.is_active_enrollment %}
+                            {% if course.is_self_enroll %}
+                                <a class="btn btn-success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.id }}">Enroll</a>
+                            {% else %}
+                                <a class="btn btn-success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.id }}">Enroll</a>
+                            {% endif %}
                         {% else %}
-                            <a class="btn btn-success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.id }}">Enroll</a>
+                            <span class="label label-danger" style="font-size: 15px">
+                                Enrollment Closed
+                            </span>
                         {% endif %}
                     {% else %}
-                        <span class="label label-danger">Enrollment Closed</span>
+                        <span class="label label-danger" style="font-size: 15px">
+                            Course is not activated
+                        </span>
                     {% endif %}
                 {% endif %}
             </div>
+            <div class="col-md-4">
+                {% if course.days_before_start != 0 %}
+                <span class="label label-info" style="font-size: 15px">
+                    {{course.days_before_start}} day(s) to start
+                </span>
+                {% endif %}
+            </div>
         </div>
+        {% if course.is_active_enrollment %}
+            <div class="alert alert-info">
+                Start Date&nbsp;: {{course.start_enroll_time}}
+                <br>
+                End Date&nbsp;&nbsp;: {{course.end_enroll_time}}
+            </div>
+        {% endif %}
 
         {% if course.instructions %}
         <div class="row">
