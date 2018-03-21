@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext, Context, Template
+from django.template.loader import get_template, render_to_string
 from django.http import Http404
 from django.db.models import Sum, Max, Q, F
 from django.views.decorators.csrf import csrf_exempt
@@ -390,8 +391,8 @@ def prof_manage(request, msg=None):
         return my_redirect('/exam/login')
     if not is_moderator(user):
         return my_redirect('/exam/')
-    courses = Course.objects.filter(creator=user, is_trial=False)
-
+    courses = Course.objects.filter(Q(creator=user) | Q(teachers=user),
+                                    is_trial=False)
     trial_paper = AnswerPaper.objects.filter(
         user=user, question_paper__quiz__is_trial=True,
         course__is_trial=True
@@ -410,6 +411,7 @@ def prof_manage(request, msg=None):
                     qpaper.quiz.delete()
                 else:
                     answerpaper.delete()
+
     context = {'user': user, 'courses': courses,
                'trial_paper': trial_paper, 'msg': msg
                }
@@ -1888,7 +1890,7 @@ def create_demo_course(request):
     user = request.user
     ci = RequestContext(request)
     if not is_moderator(user):
-        raise("You are not allowed to view this page")
+        raise Http404("You are not allowed to view this page")
     demo_course = Course()
     success = demo_course.create_demo(user)
     if success:
@@ -2258,10 +2260,15 @@ def duplicate_course(request, course_id):
         raise Http404('You are not allowed to view this page!')
 
     if course.is_teacher(user) or course.is_creator(user):
+        # Create new entries of modules, lessons/quizzes
+        # from current course to copied course
         course.create_duplicate_course(user)
     else:
-        msg = 'You do not have permissions to clone this course, please contact your '\
-            'instructor/administrator.'
+        msg = dedent(
+            '''\
+            You do not have permissions to clone {0} course, please contact
+            your instructor/administrator.'''.format(course.name)
+        )
         return complete(request, msg, attempt_num=None, questionpaper_id=None)
     return my_redirect('/exam/manage/courses/')
 
@@ -2750,3 +2757,22 @@ def _update_unit_status(course_id, user, unit):
     # make next available unit as current unit
     course_status.current_unit = unit
     course_status.save()
+
+
+@login_required
+@email_verified
+def preview_questionpaper(request, questionpaper_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    paper = QuestionPaper.objects.get(id=questionpaper_id)
+    if not paper.quiz.creator == user:
+        raise Http404('This questionpaper does not belong to you')
+    context = {
+        'questions': paper._get_questions_for_answerpaper(),
+        'paper': paper,
+    }
+
+    return my_render_to_response(
+        'yaksh/preview_questionpaper.html', context
+    )
