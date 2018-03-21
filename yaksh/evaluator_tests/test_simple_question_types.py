@@ -741,3 +741,105 @@ class ArrangeQuestionTestCases(unittest.TestCase):
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 1)
         self.assertTrue(self.answer.correct)
+class MCQQuestionTestCases(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        #Creating User
+        self.user = User.objects.get(username='demo_user_100')
+        self.user2 = User.objects.get(username='demo_user_101')
+        self.user_ip = '127.0.0.1'
+
+        #Creating Course
+        self.course = Course.objects.get(name="Python Course 100")
+        # Creating Quiz
+        self.quiz = Quiz.objects.get(description="demo quiz 100")
+        # Creating Question paper
+        self.question_paper = QuestionPaper.objects.get(quiz=self.quiz)
+        self.question_paper.shuffle_testcases = True
+        self.question_paper.save()
+        #Creating Question
+        self.question1 = Question.objects.create(summary='mcq1', points=1,
+                                                 type='code', user=self.user,
+                                                 )
+        self.question1.language = 'python'
+        self.question1.type = "mcq"
+        self.question1.test_case_type = 'Mcqtestcase'
+        self.question1.description = 'Which option is Correct?'
+        self.question1.save()
+
+        # For questions
+        self.mcq_based_testcase_1 = McqTestCase(question=self.question1,
+                                                options="Correct",
+                                                correct=True,
+                                                type='mcqtestcase',
+                                                )
+        self.mcq_based_testcase_1.save()
+
+        self.mcq_based_testcase_2 = McqTestCase(question=self.question1,
+                                                options="Incorrect",
+                                                correct=False,
+                                                type='mcqtestcase',
+                                                )
+        self.mcq_based_testcase_2.save()
+
+        self.mcq_based_testcase_3 = McqTestCase(question=self.question1,
+                                                options="Incorrect",
+                                                correct=False,
+                                                type='mcqtestcase',
+                                                )
+        self.mcq_based_testcase_3.save()
+
+        self.mcq_based_testcase_4 = McqTestCase(question=self.question1,
+                                                options="Incorrect",
+                                                correct=False,
+                                                type='mcqtestcase',
+                                                )
+        self.mcq_based_testcase_4.save()
+
+        self.question_paper.fixed_questions.add(self.question1)
+
+        self.answerpaper = self.question_paper.make_answerpaper(
+                                           user=self.user, ip=self.user_ip,
+                                           attempt_num=1,
+                                           course_id=self.course.id
+                                           )
+
+        # Answerpaper for user 2
+        self.answerpaper2 = self.question_paper.make_answerpaper(
+                                            user=self.user2, ip=self.user_ip,
+                                            attempt_num=1,
+                                            course_id=self.course.id
+                                            )
+    @classmethod
+    def tearDownClass(self):
+      self.question1.delete()
+      self.answerpaper.delete()
+      self.answerpaper2.delete()
+
+    def test_shuffle_test_cases(self):
+        # Given
+        # When
+
+        user_testcase = self.question1.get_ordered_test_cases(
+                                        self.answerpaper
+                                        )
+        order1 = [tc.id for tc in user_testcase]
+        user2_testcase = self.question1.get_ordered_test_cases(
+                                        self.answerpaper2
+                                        )
+        order2 = [tc.id for tc in user2_testcase]
+        self.question_paper.shuffle_testcases = False
+        self.question_paper.save()
+        answerpaper3 = self.question_paper.make_answerpaper(
+                              user=self.user2, ip=self.user_ip,
+                              attempt_num=self.answerpaper.attempt_number+1,
+                              course_id=self.course.id
+                              )
+        not_ordered_testcase = self.question1.get_ordered_test_cases(
+                                              answerpaper3
+                                              )
+        get_test_cases = self.question1.get_test_cases()
+        # Then
+        self.assertNotEqual(order1, order2)
+        self.assertEqual(get_test_cases, not_ordered_testcase)
+        answerpaper3.delete()
