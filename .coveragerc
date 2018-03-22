@@ -17,6 +17,7 @@ omit =
      yaksh/pipeline/*
      yaksh/migrations/*
      yaksh/templatetags/__init__.py
+     yaksh/templatetags/test_custom_filters.py
      yaksh/middleware/__init__.py
      setup.py
      tasks.py

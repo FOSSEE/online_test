@@ -618,7 +618,7 @@ def show_question(request, question, paper, error_message=None, notification=Non
             if question.type == "code" else
             'You have already attempted this question'
         )
-    if question.type in ['mcc', 'mcq']:
+    if question.type in ['mcc', 'mcq', 'arrange']:
         test_cases = question.get_ordered_test_cases(paper)
     else:
         test_cases = question.get_test_cases()
@@ -728,6 +728,9 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
 
         elif current_question.type == 'mcc':
             user_answer = request.POST.getlist('answer')
+        elif current_question.type == 'arrange':
+            user_answer_ids = request.POST.get('answer').split(',')
+            user_answer = [int(ids) for ids in user_answer_ids]
         elif current_question.type == 'upload':
             # if time-up at upload question then the form is submitted without
             # validation
