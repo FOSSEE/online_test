@@ -54,6 +54,8 @@ question_types = (
         ("integer", "Answer in Integer"),
         ("string", "Answer in String"),
         ("float", "Answer in Float"),
+        ("arrange", "Arrange in Correct Order"),
+
     )
 
 enrollment_methods = (
@@ -69,6 +71,7 @@ test_case_types = (
         ("integertestcase", "Integer Testcase"),
         ("stringtestcase", "String Testcase"),
         ("floattestcase", "Float Testcase"),
+        ("arrangetestcase", "Arrange Testcase"),
     )
 
 string_check_type = (
@@ -1324,8 +1327,8 @@ class QuestionPaper(models.Model):
             question_ids = []
             for question in questions:
                 question_ids.append(str(question.id))
-                if self.shuffle_testcases and \
-                    question.type in ["mcq", "mcc"]:
+                if (question.type == "arrange") or (self.shuffle_testcases
+                        and question.type in ["mcq", "mcc"]):
                     testcases = question.get_test_cases()
                     random.shuffle(testcases)
                     testcases_ids = ",".join([str(tc.id) for tc in testcases]
@@ -1897,6 +1900,15 @@ class AnswerPaper(models.Model):
                     result['success'] = True
                     result['error'] = ['Correct answer']
 
+            elif question.type == 'arrange':
+                testcase_ids = sorted(
+                                  [tc.id for tc in question.get_test_cases()]
+                                  )
+                if user_answer == testcase_ids:
+                    result['success'] = True
+                    result['error'] = ['Correct answer']
+
+
             elif question.type == 'code' or question.type == "upload":
                 user_dir = self.user.profile.get_user_dir()
                 url = '{0}:{1}'.format(SERVER_HOST_NAME, server_port)
@@ -1918,13 +1930,21 @@ class AnswerPaper(models.Model):
         user_answer = self.answers.filter(question=question).last()
         if not user_answer:
             return False, msg + 'Did not answer.'
-        if question.type == 'mcc':
+        if question.type in ['mcc', 'arrange']:
             try:
-                answer = eval(user_answer.answer)
+                answer = literal_eval(user_answer.answer)
                 if type(answer) is not list:
-                    return False, msg + 'MCC answer not a list.'
+                    return (False,
+                            msg + '{0} answer not a list.'.format(
+                                                            question.type
+                                                            )
+                            )
             except Exception:
-                return False, msg + 'MCC answer submission error'
+                return (False,
+                        msg + '{0} answer submission error'.format(
+                                                             question.type
+                                                             )
+                        )
         else:
             answer = user_answer.answer
         json_data = question.consolidate_answer_data(answer) \
@@ -2117,6 +2137,18 @@ class FloatTestCase(TestCase):
                 )
 
 
+class ArrangeTestCase(TestCase):
+    
+    options = models.TextField(default=None)
+
+    def get_field_value(self):
+        return {"test_case_type": "arrangetestcase",
+                "options": self.options}
+
+    def __str__(self):
+        return u'Arrange Testcase | Option: {0}'.format(self.options)
+
+
 ##############################################################################
 class TestCaseOrder(models.Model):
     """Testcase order contains a set of ordered test cases for a given question
@@ -2131,3 +2163,6 @@ class TestCaseOrder(models.Model):
 
     #Order of the test case for a question.
     order = models.TextField()
+
+
+##############################################################################
