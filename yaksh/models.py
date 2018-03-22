@@ -163,6 +163,23 @@ class Lesson(models.Model):
     def get_files(self):
         return LessonFile.objects.filter(lesson=self)
 
+    def _create_lesson_copy(self, user):
+        lesson_files = self.get_files()
+        new_lesson = self
+        new_lesson.id = None
+        new_lesson.name = "Copy of {0}".format(self.name)
+        new_lesson.creator = user
+        new_lesson.save()
+        for _file in lesson_files:
+            file_name = os.path.basename(_file.file.name)
+            if os.path.exists(_file.file.path):
+                lesson_file = open(_file.file.path, "rb")
+                django_file = File(lesson_file)
+                lesson_file_obj = LessonFile()
+                lesson_file_obj.lesson = new_lesson
+                lesson_file_obj.file.save(file_name, django_file, save=True)
+        return new_lesson
+
 
 #############################################################################
 class LessonFile(models.Model):
@@ -367,6 +384,17 @@ class Quiz(models.Model):
                 course=course, passed=False
             ).values_list("user", flat=True).distinct().count()
 
+    def _create_quiz_copy(self, user):
+        question_papers = self.questionpaper_set.all()
+        new_quiz = self
+        new_quiz.id = None
+        new_quiz.description = "Copy of {0}".format(self.description)
+        new_quiz.creator = user
+        new_quiz.save()
+        for qp in question_papers:
+            qp._create_duplicate_questionpaper(new_quiz)
+        return new_quiz
+
     def __str__(self):
         desc = self.description or 'Quiz'
         return '%s: on %s for %d minutes' % (desc, self.start_date_time,
@@ -416,6 +444,17 @@ class LearningUnit(models.Model):
             else:
                 success = False
         return success
+
+    def _create_unit_copy(self, user):
+        if self.type == "quiz":
+            new_quiz = self.quiz._create_quiz_copy(user)
+            new_unit = LearningUnit.objects.create(
+                order=self.order, type="quiz", quiz=new_quiz)
+        else:
+            new_lesson = self.lesson._create_lesson_copy(user)
+            new_unit = LearningUnit.objects.create(
+                order=self.order, type="lesson", lesson=new_lesson)
+        return new_unit
 
 
 ###############################################################################
@@ -512,6 +551,18 @@ class LearningModule(models.Model):
             percent = round((count / len(units)) * 100)
         return percent
 
+    def _create_module_copy(self, user, module_name):
+        learning_units = self.learning_unit.order_by("order")
+        new_module = self
+        new_module.id = None
+        new_module.name = module_name
+        new_module.creator = user
+        new_module.save()
+        for unit in learning_units:
+            new_unit = unit._create_unit_copy(user)
+            new_module.learning_unit.add(new_unit)
+        return new_module
+
     def __str__(self):
         return self.name
 
@@ -565,14 +616,13 @@ class Course(models.Model):
         return new_course
 
     def create_duplicate_course(self, user):
-        learning_modules = self.learning_module.all()
-
-        new_course_name = "Copy Of {0}".format(self.name)
-        new_course = self._create_duplicate_instance(user, new_course_name)
-
-        new_course.learning_module.add(*learning_modules)
-
-        return new_course
+        learning_modules = self.learning_module.order_by("order")
+        copy_course_name = "Copy Of {0}".format(self.name)
+        new_course = self._create_duplicate_instance(user, copy_course_name)
+        for module in learning_modules:
+            copy_module_name = "Copy of {0}".format(module.name)
+            new_module = module._create_module_copy(user, copy_module_name)
+            new_course.learning_module.add(new_module)
 
     def request(self, *users):
         self.requests.add(*users)
@@ -733,6 +783,14 @@ class Course(models.Model):
             grade = "NA"
         return grade
 
+    def days_before_start(self):
+        """ Get the days remaining for the start of the course """
+        if timezone.now() < self.start_enroll_time:
+            remaining_days = (self.start_enroll_time - timezone.now()).days + 1
+        else:
+            remaining_days = 0
+        return remaining_days
+
     def __str__(self):
         return self.name
 
@@ -863,7 +921,9 @@ class Question(models.Model):
 
     min_time =  models.IntegerField("time in minutes", default=0)
 
+    #Solution for the question.
     solution = models.TextField(blank=True)
+
 
     def consolidate_answer_data(self, user_answer, user=None):
         question_data = {}
@@ -975,6 +1035,17 @@ class Question(models.Model):
             )
 
         return test_case
+
+    def get_ordered_test_cases(self, answerpaper):
+        try:
+            order = TestCaseOrder.objects.get(answer_paper=answerpaper,
+                                              question = self
+                                              ).order.split(",")
+            return [self.get_test_case(id=int(tc_id))
+                    for tc_id in order
+                    ]
+        except TestCaseOrder.DoesNotExist:
+            return self.get_test_cases()
 
     def get_maximum_test_case_weight(self, **kwargs):
         max_weight = 0.0
@@ -1182,6 +1253,11 @@ class QuestionPaper(models.Model):
     # Sequence or Order of fixed questions
     fixed_question_order = models.CharField(max_length=255, blank=True)
 
+    # Shuffle testcase order.
+    shuffle_testcases = models.BooleanField("Shuffle testcase for each user",
+                                             default=True
+                                            )
+
     objects = QuestionPaperManager()
 
     def get_question_bank(self):
@@ -1192,8 +1268,8 @@ class QuestionPaper(models.Model):
         return questions
 
     def _create_duplicate_questionpaper(self, quiz):
-        new_questionpaper = QuestionPaper.objects.create(quiz=quiz,
-            shuffle_questions=self.shuffle_questions,
+        new_questionpaper = QuestionPaper.objects.create(
+            quiz=quiz, shuffle_questions=self.shuffle_questions,
             total_marks=self.total_marks,
             fixed_question_order=self.fixed_question_order
         )
@@ -1245,7 +1321,20 @@ class QuestionPaper(models.Model):
             ans_paper.save()
             questions = self._get_questions_for_answerpaper()
             ans_paper.questions.add(*questions)
-            question_ids = [str(que.id) for que in questions]
+            question_ids = []
+            for question in questions:
+                question_ids.append(str(question.id))
+                if self.shuffle_testcases and \
+                    question.type in ["mcq", "mcc"]:
+                    testcases = question.get_test_cases()
+                    random.shuffle(testcases)
+                    testcases_ids = ",".join([str(tc.id) for tc in testcases]
+                                             )
+                    testcases_order = TestCaseOrder.objects.create(
+                                    answer_paper=ans_paper,
+                                    question=question,
+                                    order=testcases_ids)
+
             ans_paper.questions_order = ",".join(question_ids)
             ans_paper.save()
             ans_paper.questions_unanswered.add(*questions)
@@ -1877,7 +1966,7 @@ class AnswerPaper(models.Model):
                .format(u.first_name, u.last_name, q.description)
 
 
-################################################################################
+##############################################################################
 class AssignmentUploadManager(models.Manager):
 
     def get_assignments(self, qp, que_id=None, user_id=None):
@@ -1899,7 +1988,7 @@ class AssignmentUploadManager(models.Manager):
         return assignment_files, file_name
 
 
-################################################################################
+##############################################################################
 class AssignmentUpload(models.Model):
     user = models.ForeignKey(User)
     assignmentQuestion = models.ForeignKey(Question)
@@ -1908,7 +1997,7 @@ class AssignmentUpload(models.Model):
     objects = AssignmentUploadManager()
 
 
-###############################################################################
+##############################################################################
 class TestCase(models.Model):
     question = models.ForeignKey(Question, blank=True, null=True)
     type = models.CharField(max_length=24, choices=test_case_types, null=True)
@@ -2026,3 +2115,19 @@ class FloatTestCase(TestCase):
         return u'Testcase | Correct: {0} | Error Margin: +or- {1}'.format(
                 self.correct, self.error_margin
                 )
+
+
+##############################################################################
+class TestCaseOrder(models.Model):
+    """Testcase order contains a set of ordered test cases for a given question
+        for each user.
+    """
+
+    # Answerpaper of the user.
+    answer_paper = models.ForeignKey(AnswerPaper, related_name="answer_paper")
+
+    # Question in an answerpaper.
+    question = models.ForeignKey(Question)
+
+    #Order of the test case for a question.
+    order = models.TextField()

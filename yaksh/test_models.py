@@ -113,6 +113,7 @@ def tearDownModule():
     Lesson.objects.all().delete()
     LearningUnit.objects.all().delete()
     LearningModule.objects.all().delete()
+    AnswerPaper.objects.all().delete()
 
 
 ###############################################################################
@@ -625,8 +626,9 @@ class QuestionPaperTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.course = Course.objects.get(name="Python Course")
+        self.user= User.objects.get(username='creator')
         # All active questions
-        self.questions = Question.objects.filter(active=True)
+        self.questions = Question.objects.filter(active=True, user=self.user)
         self.quiz = Quiz.objects.get(description="demo quiz 1")
 
         # create question paper with only fixed questions
@@ -848,7 +850,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         )
         self.qtn_paper_with_single_question.save()
 
-        all_questions = Question.objects.all()
+        all_questions = Question.objects.filter(user=self.user).order_by("id")
         self.questions = all_questions[0:3]
         self.start_time = timezone.now()
         self.end_time = self.start_time + timedelta(minutes=20)
@@ -874,6 +876,9 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.answerpaper.attempt_number = already_attempted + 1
         self.answerpaper.save()
         self.answerpaper.questions.add(*self.questions)
+        self.answerpaper.questions_order = ",".join(
+                            [str(q.id) for q in self.questions]
+                            )
         self.answerpaper.questions_unanswered.add(*self.questions)
         self.answerpaper.save()
         # answers for the Answer Paper
@@ -928,17 +933,17 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         self.question1.language = 'python'
         self.question1.test_case_type = 'standardtestcase'
-        self.question1.summary = "Question1"
+        self.question1.summary = "Q1"
         self.question1.save()
         self.question2.language = 'python'
         self.question2.type = 'mcq'
         self.question2.test_case_type = 'mcqtestcase'
-        self.question2.summary = "Question2"
+        self.question2.summary = "Q2"
         self.question2.save()
         self.question3.language = 'python'
         self.question3.type = 'mcc'
         self.question3.test_case_type = 'mcqtestcase'
-        self.question3.summary = "Question3"
+        self.question3.summary = "Q3"
         self.question3.save()
         self.assertion_testcase = StandardTestCase(
             question=self.question1,
@@ -1097,7 +1102,8 @@ class AnswerPaperTestCases(unittest.TestCase):
         details = self.answerpaper.regrade(self.question3.id)
 
         # Then
-        self.answer = self.answerpaper.answers.filter(question=self.question3).last()
+        self.answer = self.answerpaper.answers.filter(
+                            question=self.question3).last()
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 0)
         self.assertFalse(self.answer.correct)
@@ -1237,9 +1243,9 @@ class AnswerPaperTestCases(unittest.TestCase):
         """ Test Answer Paper"""
         self.assertEqual(self.answerpaper.user.username, 'creator')
         self.assertEqual(self.answerpaper.user_ip, self.ip)
-        questions = self.answerpaper.get_questions()
+        questions = [q.id for q in self.answerpaper.get_questions()]
         num_questions = len(questions)
-        self.assertSequenceEqual(list(questions), list(self.questions))
+        self.assertEqual(set(questions), set([q.id for q in self.questions]))
         self.assertEqual(num_questions, 3)
         self.assertEqual(self.answerpaper.question_paper, self.question_paper)
         self.assertEqual(self.answerpaper.start_time, self.start_time)
@@ -1250,7 +1256,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(self.answerpaper.questions_left(), 3)
         # Test current_question() method of Answer Paper
         current_question = self.answerpaper.current_question()
-        self.assertEqual(current_question.summary, "Question1")
+        self.assertEqual(current_question.summary, "Q1")
         # Test completed_question() method of Answer Paper
 
         question = self.answerpaper.add_completed_question(self.question1.id)
@@ -1259,14 +1265,14 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Test next_question() method of Answer Paper
         current_question = self.answerpaper.current_question()
-        self.assertEqual(current_question.summary, "Question2")
+        self.assertEqual(current_question.summary, "Q2")
 
         # When
         next_question_id = self.answerpaper.next_question(current_question.id)
 
         # Then
         self.assertTrue(next_question_id is not None)
-        self.assertEqual(next_question_id.summary, "Question3")
+        self.assertEqual(next_question_id.summary, "Q3")
 
         # Given, here question is already answered
         current_question_id = self.question1.id
@@ -1276,7 +1282,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(next_question_id is not None)
-        self.assertEqual(next_question_id.summary, "Question2")
+        self.assertEqual(next_question_id.summary, "Q2")
 
         # Given, wrong question id
         current_question_id = 12
@@ -1286,7 +1292,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Then
         self.assertTrue(next_question_id is not None)
-        self.assertEqual(next_question_id.summary, "Question1")
+        self.assertEqual(next_question_id.summary, "Q1")
 
         # Given, last question in the list
         current_question_id = self.question3.id
@@ -1297,7 +1303,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Then
         self.assertTrue(next_question_id is not None)
 
-        self.assertEqual(next_question_id.summary, "Question1")
+        self.assertEqual(next_question_id.summary, "Q1")
 
         # Test get_questions_answered() method
         # When
@@ -1312,8 +1318,11 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # Then
         self.assertEqual(questions_unanswered.count(), 2)
-        self.assertSequenceEqual(questions_unanswered,
-                                 [self.questions[1], self.questions[2]])
+        self.assertEqual(set([q.id for q in questions_unanswered]),
+                                 set([self.questions[1].id,
+                                      self.questions[2].id]
+                                     )
+                        )
 
         # Test completed_question and next_question
         # When all questions are answered
@@ -1325,7 +1334,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Then
         self.assertEqual(self.answerpaper.questions_left(), 1)
         self.assertIsNotNone(current_question)
-        self.assertEqual(current_question.summary, "Question3")
+        self.assertEqual(current_question.summary, "Q3")
 
         # When
         current_question = self.answerpaper.add_completed_question(
@@ -1335,7 +1344,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Then
         self.assertEqual(self.answerpaper.questions_left(), 0)
         self.assertIsNotNone(current_question)
-        self.assertTrue(current_question == self.answerpaper.questions.all()[0])
+        self.assertTrue(current_question == self.answerpaper.get_all_ordered_questions()[0])
 
         # When
         next_question_id = self.answerpaper.next_question(current_question_id)
@@ -1426,7 +1435,9 @@ class CourseTestCases(unittest.TestCase):
         self.student2 = User.objects.get(username="demo_user3")
         self.quiz1 = Quiz.objects.get(description='demo quiz 1')
         self.quiz2 = Quiz.objects.get(description='demo quiz 2')
-        self.questions = Question.objects.filter(active=True)
+        self.questions = Question.objects.filter(active=True,
+                                                 user=self.creator
+                                                 )
         self.modules = LearningModule.objects.filter(creator=self.creator)
 
         # create courses with disabled enrollment
@@ -1664,6 +1675,24 @@ class CourseTestCases(unittest.TestCase):
         course_status.completed_units.add(self.completed_unit)
         updated_percent = self.course.percent_completed(self.student1)
         self.assertEqual(updated_percent, 25)
+
+    def test_course_time_remaining_to_start(self):
+        # check if course has 0 days left to start
+        self.assertEqual(self.course.days_before_start(), 0)
+
+        # check if course has some days left to start
+        course_time = self.course.start_enroll_time
+        self.course.start_enroll_time = datetime(
+            2199, 12, 31, 10, 8, 15, 0,
+            tzinfo=pytz.utc
+        )
+        self.course.save()
+        updated_course = Course.objects.get(id=self.course.id)
+        time_diff = updated_course.start_enroll_time - timezone.now()
+        actual_days = time_diff.days + 1
+        self.assertEqual(updated_course.days_before_start(), actual_days)
+        self.course.start_enroll_time = course_time
+        self.course.save()
 
 
 ###############################################################################
