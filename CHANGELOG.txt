@@ -1,8 +1,8 @@
 === 0.8.0 ===
 
-* Added a management command to add users to moderator group
-* Renamed add_group management command to create_mod_group
+* Refactored the add_group command to allow creation of moderator group and add users to moderator group and renamed to create_moderator
 * Deprecated multiple management commands: dump_user_data, load_exam, load_question_xml, results2csv
+* Changed the unit of time_between_attempts field within Quiz model from days to hours
 
 === 0.7.0 (15-11-2017) ===
 
