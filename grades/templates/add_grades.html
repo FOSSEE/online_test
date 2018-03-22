@@ -1,0 +1,35 @@
+{% extends "manage.html" %}
+{% block main %}
+<html>
+<a href="{% url 'grades:grading_systems'%}" class="btn btn-danger"> Back to Grading Systems </a>
+<br><br>
+<p><b>Note: For grade range lower limit is inclusive and upper limit is exclusive</b></p>
+<br>
+{% if not system_id  %}
+    <form action="{% url 'grades:add_grade' %}" method="POST">
+{% else %}
+    <form action="{% url 'grades:edit_grade' system_id %}" method="POST">
+{% endif %}
+    {% csrf_token %}
+    <table class="table">
+      {{ grade_form }}
+    </table>
+      {{ formset.management_form }}
+      <br>
+      <b><u>Grade Ranges</u></b>
+      <hr>
+      {% for form in formset %}
+      <div>
+            {{ form }}
+      </div>
+      <hr>
+      {% endfor %}
+  {% if not is_default %}
+      <input type="submit" id="add" name="add" value="Add" class="btn btn-info">
+      <input type="submit" id="save" name="save" value="Save" class="btn btn-success">
+  {% else %}
+    <p><b>Note: This is a default grading system. You cannot change this.</b></p>
+  {% endif %}
+</form>
+</html>
+{% endblock %}

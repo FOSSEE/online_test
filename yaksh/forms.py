@@ -282,7 +282,7 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ['name', 'enrollment', 'active', 'code', 'instructions',
-                  'start_enroll_time', 'end_enroll_time']
+                  'start_enroll_time', 'end_enroll_time', 'grading_system']
 
 
 class ProfileForm(forms.ModelForm):

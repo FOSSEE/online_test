@@ -1838,3 +1838,101 @@ class AssignmentUploadTestCases(unittest.TestCase):
         actual_file_name = self.quiz.description.replace(" ", "_")
         file_name = file_name.replace(" ", "_")
         self.assertIn(actual_file_name, file_name)
+
+
+class CourseStatusTestCases(unittest.TestCase):
+    def setUp(self):
+        user = User.objects.get(username='creator')
+        self.course = Course.objects.create(name="Demo Course", creator=user,
+                                            enrollment="Enroll Request")
+        self.module = LearningModule.objects.create(name='M1', creator=user,
+                                                    description='module one')
+        self.quiz1 = Quiz.objects.create(time_between_attempts=0, weightage=50,
+                                         description='qz1')
+        self.quiz2 = Quiz.objects.create(time_between_attempts=0, weightage=100,
+                                         description='qz2')
+        question = Question.objects.first()
+        self.qpaper1 = QuestionPaper.objects.create(quiz=self.quiz1)
+        self.qpaper2 = QuestionPaper.objects.create(quiz=self.quiz2)
+        self.qpaper1.fixed_questions.add(question)
+        self.qpaper2.fixed_questions.add(question)
+        self.qpaper1.update_total_marks()
+        self.qpaper2.update_total_marks()
+        self.qpaper1.save()
+        self.qpaper2.save()
+        self.unit_1_quiz = LearningUnit.objects.create(order=1, type='quiz',
+                                                       quiz=self.quiz1)
+        self.unit_2_quiz = LearningUnit.objects.create(order=2, type='quiz',
+                                                       quiz=self.quiz2)
+        self.module.learning_unit.add(self.unit_1_quiz)
+        self.module.learning_unit.add(self.unit_2_quiz)
+        self.module.save()
+        self.course.learning_module.add(self.module)
+        student = User.objects.get(username='course_user')
+        self.course.students.add(student)
+        self.course.save()
+
+        attempt = 1
+        ip = '127.0.0.1'
+        self.answerpaper1 = self.qpaper1.make_answerpaper(student, ip, attempt,
+                                                          self.course.id)
+        self.answerpaper2 = self.qpaper2.make_answerpaper(student, ip, attempt,
+                                                          self.course.id)
+
+        self.course_status = CourseStatus.objects.create(course=self.course,
+                                                         user=student)
+
+    def tearDown(self):
+        self.course_status.delete()
+        self.answerpaper1.delete()
+        self.answerpaper2.delete()
+        self.qpaper1.delete()
+        self.qpaper2.delete()
+        self.quiz1.delete()
+        self.quiz2.delete()
+        self.unit_1_quiz.delete()
+        self.unit_2_quiz.delete()
+        self.module.delete()
+        self.course.delete()
+
+    def test_course_is_complete(self):
+        # When
+        self.course_status.completed_units.add(self.unit_1_quiz)
+        # Then
+        self.assertFalse(self.course_status.is_course_complete())
+
+        # When
+        self.course_status.completed_units.add(self.unit_2_quiz)
+        # Then
+        self.assertTrue(self.course_status.is_course_complete())
+
+        # Given
+        self.answerpaper1.marks_obtained = 1
+        self.answerpaper1.save()
+        self.answerpaper2.marks_obtained = 0
+        self.answerpaper2.save()
+        # When
+        self.course_status.calculate_percentage()
+        # Then
+        self.assertEqual(round(self.course_status.percentage, 2), 33.33)
+        # When
+        self.course_status.set_grade()
+        # Then
+        self.assertEqual(self.course_status.get_grade(), 'F')
+
+        # Given
+        self.answerpaper1.marks_obtained = 0
+        self.answerpaper1.save()
+        self.answerpaper2.marks_obtained = 1
+        self.answerpaper2.save()
+        # When
+        self.course_status.calculate_percentage()
+        # Then
+        self.assertEqual(round(self.course_status.percentage, 2), 66.67)
+        # When
+        self.course_status.set_grade()
+        # Then
+        self.assertEqual(self.course_status.get_grade(), 'B')
+
+        # Test get course grade after completion
+        self.assertEqual(self.course.get_grade(self.answerpaper1.user), 'B')
