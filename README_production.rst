@@ -222,33 +222,3 @@ Follow these steps to deploy and run the Django Server, MySQL instance and Code 
        invoke remove
 
 12. You can use ``invoke --list`` to get a list of all the available commands
-
-
-.. _add-commands:
-
-######################################
-Additional commands available
-######################################
-
-We provide several convenient commands for you to use:
-
--  load\_exam : load questions and a quiz from a python file. See
-   docs/sample\_questions.py
-
--  load\_questions\_xml : load questions from XML file, see
-   docs/sample\_questions.xml use of this is deprecated in favor of
-   load\_exam.
-
--  results2csv : Dump the quiz results into a CSV file for further
-   processing.
-
--  dump\_user\_data : Dump out relevalt user data for either all users
-   or specified users.
-
-For more information on these do this:
-
-::
-
-        $ python manage.py help [command]
-
-where [command] is one of the above.
