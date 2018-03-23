@@ -1,8 +1,31 @@
-=== 0.8.0 ===
+=== 0.8.0 (Tentatively on 22-03-2018) ===
 
-* Added a management command to add users to moderator group
-* Renamed add_group management command to create_mod_group
-* Deprecated multiple management commands: dump_user_data, load_exam, load_question_xml, results2csv
+* Refactored the add_group command to allow creation of moderator group and add users to moderator group and renamed to create_moderator.
+* Deprecated multiple management commands: dump_user_data, load_exam, load_question_xml, results2csv.
+* Changed the unit of time_between_attempts field within Quiz model from days to hours.
+* Fixed assignment upload feature.
+* Error output is displayed using Ajax instead of reloading the entire page.
+* Added Mathjax to the repository.
+* Added Yaksh logo on the website.
+* Changed travis build distribution from precise (Ubuntu 12.04 LTS) to trusty (Ubuntu 14.04 LTS).
+* Fixed a bug that allowed creation of multiple answerpapers.
+* Added MCQ/MCC Shuffle testcases feature for question paper.
+* Added Arrange in Correct Order question type feature.
+* Added a feature to create a course with lessons, quizzes and exercises.
+* Fixed a bug where a oauth users' email is not verified
+* Added a feature to show per student course completion status.
+* Fixed a bug where a moderator could change question paper of other moderator.
+* Fixed a bug where a teacher could not access question paper for a course.
+* Fixed a bug where a teacher could become the course creator while editing a course.
+* Fixed a bug where a student could attempt a module even though the previous module was incomplete.
+* Added a feature where a moderator/teacher could activate or deactivate a lesson and learningmodule.
+* Updated clone course feature to create copy of course, lessons, quizzes and learning modules.
+* Changed Student dashboard to show the days remaining for a course to start.
+* Changed UI for student and moderator dashboard.
+* Updated documentation
+* Added a feature where a noderator can create exercises.
+* Added grading feature which allows a moderator to create a grading system and apply it for a course.
+
 
 === 0.7.0 (15-11-2017) ===
 
@@ -24,8 +47,8 @@
 * Added a Datetimepicker to edit course Page.
 * Added invoke script for quickstart and docker deployment.
 * Added the facility to send mails to all students enrolled in a course.
-* Fixed a bug that would cause issue during email activation key check
-* Added comprehensive tests for views.py
+* Fixed a bug that would cause issue during email activation key check.
+* Added comprehensive tests for views.py.
 * Fixed a bug that allowed moderators to set cyclic quiz prerequisites in a course.
 * Added a feature that redirects to edit profile page if user has no profile.
 * Fixed a bug that would allow enrolled students to attempt quizzes for deactivated courses.
@@ -48,7 +71,7 @@
 === 0.6.0 (11-05-2017) ===
 
 * Added a course code field that can be used to search a course.
-* Updated the documentation to describe the course code feature
+* Updated the documentation to describe the course code feature.
 * Fixed a bug that prevented redirection based on 'next' parameter after login.
 * Fixed a bug that littered residual system processes created by code evaluators.
 * Added the facility to allow moderators to see and download uploaded assignments.
@@ -71,4 +94,3 @@
 * Fixed a bug that displayed the elements of stdout testcase output as unicode.
 * Fixed a bug that prevented users from logging in using Google OAuth.
 * Added coverage reports to travis.yml.
-
