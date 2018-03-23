@@ -177,6 +177,13 @@ if (question_type == 'upload' || question_type == 'code') {
       global_editor.editor.setValue(init_val);
       global_editor.editor.clearHistory();
   }
-
-
 });
+function user_arranged_options(){
+    var temp_array = []
+    var add_array = document.getElementById("arrange_order");
+    var ans_array = order_array.children().get()
+                      var answer_is = $.each(ans_array, function( index, value ) {
+                      temp_array.push(value.id);
+                      });
+    add_array.value = temp_array
+}

@@ -35,9 +35,9 @@
     End time : {{ paper.end_time }} <br/>
     Percentage obtained: {{ paper.percent }}% <br/>
     {% if paper.passed %}
-    Status : <b style="color: red;"> Failed </b><br/>
-    {% else %}
     Status : <b style="color: green;"> Passed </b><br/>
+    {% else %}
+    Status : <b style="color: red;"> Failed </b><br/>
     {% endif %}
     </p>
 
@@ -67,11 +67,19 @@
                 {% endif %}
                 {% endfor %}
 
-            {% elif question.type == "integer" or "string" or "float" %}
+            {% elif question.type == "integer" or question.type == "string" or question.type == "float" %}
                 <h5> <u>Correct Answer:</u></h5>
                     {% for testcase in question.get_test_cases %}
                     <strong>{{ testcase.correct|safe }}</strong>
                     {% endfor %}
+
+            {% elif question.type == "arrange" %}
+              <h5> <u>Correct Order:</u></h5>
+              <div class="list-group">
+              {% for testcase in question.get_test_cases %}
+                    <li class="list-group-item"><strong>{{ testcase.options|safe }}</strong></li>
+              {% endfor %}
+              </div>
 
             {% else %}
                 <h5> <u>Test cases: </u></h5>
@@ -106,6 +114,13 @@
         {%if testcases.id|stringformat:"i" == answers.0.answer|safe %}
          <li>{{ testcases.options.strip|safe }}</li>
         {% endif %}
+        {% endfor %}
+        </div>
+        {% elif question.type == "arrange"%}
+        <div class="well well-sm">
+          {% get_answer_for_arrange_options answers.0.answer question as tc_list %}
+        {% for testcases in tc_list %}
+         <li>{{ testcases.options.strip|safe }}</li>
         {% endfor %}
         </div>
         {% elif question.type == "upload" and has_user_assignment %}

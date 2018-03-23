@@ -35,6 +35,7 @@ question_types = (
     ("integer", "Answer in Integer"),
     ("string", "Answer in String"),
     ("float", "Answer in Float"),
+    ("arrange", "Arrange in Correct Order"),
 )
 
 test_case_types = (
@@ -281,7 +282,7 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ['name', 'enrollment', 'active', 'code', 'instructions',
-                  'start_enroll_time', 'end_enroll_time']
+                  'start_enroll_time', 'end_enroll_time', 'grading_system']
 
 
 class ProfileForm(forms.ModelForm):

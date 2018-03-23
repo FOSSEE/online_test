@@ -35,7 +35,7 @@ from yaksh.code_server import (
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from django.conf import settings
 from django.forms.models import model_to_dict
-
+from grades.models import GradingSystem
 
 languages = (
         ("python", "Python"),
@@ -54,6 +54,8 @@ question_types = (
         ("integer", "Answer in Integer"),
         ("string", "Answer in String"),
         ("float", "Answer in Float"),
+        ("arrange", "Arrange in Correct Order"),
+
     )
 
 enrollment_methods = (
@@ -69,6 +71,7 @@ test_case_types = (
         ("integertestcase", "Integer Testcase"),
         ("stringtestcase", "String Testcase"),
         ("floattestcase", "Float Testcase"),
+        ("arrangetestcase", "Arrange Testcase"),
     )
 
 string_check_type = (
@@ -328,7 +331,8 @@ class Quiz(models.Model):
     allow_skip = models.BooleanField("Allow students to skip questions",
                                      default=True)
 
-    weightage = models.FloatField(default=1.0)
+    weightage = models.FloatField(help_text='Will be considered as percentage',
+                                  default=100)
 
     is_exercise = models.BooleanField(default=False)
 
@@ -602,6 +606,8 @@ class Course(models.Model):
         null=True
     )
 
+    grading_system = models.ForeignKey(GradingSystem, null=True, blank=True)
+
     objects = CourseManager()
 
     def _create_duplicate_instance(self, creator, course_name=None):
@@ -772,6 +778,14 @@ class Course(models.Model):
             percent = round((count / len(modules)))
         return percent
 
+    def get_grade(self, user):
+        course_status = CourseStatus.objects.filter(course=self, user=user)
+        if course_status.exists():
+            grade = course_status.first().get_grade()
+        else:
+            grade = "NA"
+        return grade
+
     def days_before_start(self):
         """ Get the days remaining for the start of the course """
         if timezone.now() < self.start_enroll_time:
@@ -793,7 +807,44 @@ class CourseStatus(models.Model):
     course = models.ForeignKey(Course)
     user = models.ForeignKey(User)
     grade = models.CharField(max_length=255, null=True, blank=True)
-    total_marks = models.FloatField(default=0.0)
+    percentage = models.FloatField(default=0.0)
+
+    def get_grade(self):
+        return self.grade
+
+    def set_grade(self):
+        if self.is_course_complete():
+            self.calculate_percentage()
+            if self.course.grading_system is None:
+                grading_system = GradingSystem.objects.get(name='default')
+            else:
+                grading_system = self.course.grading_system
+            grade = grading_system.get_grade(self.percentage)
+            self.grade = grade
+            self.save()
+
+    def calculate_percentage(self):
+        if self.is_course_complete():
+            quizzes = self.course.get_quizzes()
+            total_weightage = 0
+            sum = 0
+            for quiz in quizzes:
+                total_weightage += quiz.weightage
+                marks = AnswerPaper.objects.get_user_best_of_attempts_marks(
+                        quiz, self.user.id, self.course.id)
+                out_of = quiz.questionpaper_set.first().total_marks
+                sum += (marks/out_of)*quiz.weightage
+            self.percentage = (sum/total_weightage)*100
+            self.save()
+
+    def is_course_complete(self):
+        modules = self.course.get_learning_modules()
+        complete = False
+        for module in modules:
+            complete = module.get_status(self.user, self.course) == 'completed'
+            if not complete:
+                break
+        return complete
 
 
 ###############################################################################
@@ -1276,8 +1327,8 @@ class QuestionPaper(models.Model):
             question_ids = []
             for question in questions:
                 question_ids.append(str(question.id))
-                if self.shuffle_testcases and \
-                    question.type in ["mcq", "mcc"]:
+                if (question.type == "arrange") or (self.shuffle_testcases
+                        and question.type in ["mcq", "mcc"]):
                     testcases = question.get_test_cases()
                     random.shuffle(testcases)
                     testcases_ids = ",".join([str(tc.id) for tc in testcases]
@@ -1849,6 +1900,15 @@ class AnswerPaper(models.Model):
                     result['success'] = True
                     result['error'] = ['Correct answer']
 
+            elif question.type == 'arrange':
+                testcase_ids = sorted(
+                                  [tc.id for tc in question.get_test_cases()]
+                                  )
+                if user_answer == testcase_ids:
+                    result['success'] = True
+                    result['error'] = ['Correct answer']
+
+
             elif question.type == 'code' or question.type == "upload":
                 user_dir = self.user.profile.get_user_dir()
                 url = '{0}:{1}'.format(SERVER_HOST_NAME, server_port)
@@ -1870,13 +1930,21 @@ class AnswerPaper(models.Model):
         user_answer = self.answers.filter(question=question).last()
         if not user_answer:
             return False, msg + 'Did not answer.'
-        if question.type == 'mcc':
+        if question.type in ['mcc', 'arrange']:
             try:
-                answer = eval(user_answer.answer)
+                answer = literal_eval(user_answer.answer)
                 if type(answer) is not list:
-                    return False, msg + 'MCC answer not a list.'
+                    return (False,
+                            msg + '{0} answer not a list.'.format(
+                                                            question.type
+                                                            )
+                            )
             except Exception:
-                return False, msg + 'MCC answer submission error'
+                return (False,
+                        msg + '{0} answer submission error'.format(
+                                                             question.type
+                                                             )
+                        )
         else:
             answer = user_answer.answer
         json_data = question.consolidate_answer_data(answer) \
@@ -2069,6 +2137,18 @@ class FloatTestCase(TestCase):
                 )
 
 
+class ArrangeTestCase(TestCase):
+    
+    options = models.TextField(default=None)
+
+    def get_field_value(self):
+        return {"test_case_type": "arrangetestcase",
+                "options": self.options}
+
+    def __str__(self):
+        return u'Arrange Testcase | Option: {0}'.format(self.options)
+
+
 ##############################################################################
 class TestCaseOrder(models.Model):
     """Testcase order contains a set of ordered test cases for a given question
@@ -2083,3 +2163,6 @@ class TestCaseOrder(models.Model):
 
     #Order of the test case for a question.
     order = models.TextField()
+
+
+##############################################################################
