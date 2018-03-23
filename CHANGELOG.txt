@@ -1,4 +1,4 @@
-=== 0.8.0 (Tentatively on 22-03-2018) ===
+=== 0.8.0 (23-03-2018) ===
 
 * Refactored the add_group command to allow creation of moderator group and add users to moderator group and renamed to create_moderator.
 * Deprecated multiple management commands: dump_user_data, load_exam, load_question_xml, results2csv.
@@ -12,18 +12,16 @@
 * Added MCQ/MCC Shuffle testcases feature for question paper.
 * Added Arrange in Correct Order question type feature.
 * Added a feature to create a course with lessons, quizzes and exercises.
-* Fixed a bug where a oauth users' email is not verified
+* Fixed a bug where a oauth users' email is not verified.
 * Added a feature to show per student course completion status.
 * Fixed a bug where a moderator could change question paper of other moderator.
 * Fixed a bug where a teacher could not access question paper for a course.
 * Fixed a bug where a teacher could become the course creator while editing a course.
-* Fixed a bug where a student could attempt a module even though the previous module was incomplete.
-* Added a feature where a moderator/teacher could activate or deactivate a lesson and learningmodule.
 * Updated clone course feature to create copy of course, lessons, quizzes and learning modules.
 * Changed Student dashboard to show the days remaining for a course to start.
 * Changed UI for student and moderator dashboard.
 * Updated documentation
-* Added a feature where a noderator can create exercises.
+* Added a feature where a moderator can create exercises.
 * Added grading feature which allows a moderator to create a grading system and apply it for a course.
 
 
