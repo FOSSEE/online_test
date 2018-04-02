@@ -7,7 +7,7 @@ import csv
 from django.http import HttpResponse, JsonResponse
 from django.core.urlresolvers import reverse
 from django.contrib.auth import login, logout, authenticate
-from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.shortcuts import render_to_response, render, get_object_or_404, redirect
 from django.template import RequestContext, Context, Template
 from django.template.loader import get_template, render_to_string
 from django.http import Http404
@@ -65,14 +65,14 @@ def my_redirect(url):
     return redirect(URL_ROOT + url)
 
 
-def my_render_to_response(template, context=None, **kwargs):
+def my_render_to_response(request, template, context=None, **kwargs):
     """Overridden render_to_response.
     """
     if context is None:
         context = {'URL_ROOT': URL_ROOT}
     else:
         context['URL_ROOT'] = URL_ROOT
-    return render_to_response(template, context, **kwargs)
+    return render(request, template, context, **kwargs)
 
 
 def is_moderator(user):
@@ -129,21 +129,26 @@ def user_register(request):
                 success, msg = send_user_mail(user_email, key)
                 context = {'activation_msg': msg}
                 return my_render_to_response(
+                    request,
                     'yaksh/activation_status.html', context
                 )
             return index(request)
         else:
-            return my_render_to_response('yaksh/register.html', {'form': form})
+            return my_render_to_response(
+                request, 'yaksh/register.html', {'form': form}
+            )
     else:
         form = UserRegisterForm()
-        return my_render_to_response('yaksh/register.html', {'form': form})
+        return my_render_to_response(
+            request, 'yaksh/register.html', {'form': form}
+        )
 
 
 def user_logout(request):
     """Show a page to inform user that the quiz has been compeleted."""
     logout(request)
     context = {'message': "You have been logged out successfully"}
-    return my_render_to_response('yaksh/complete.html', context)
+    return my_render_to_response(request, 'yaksh/complete.html', context)
 
 
 @login_required
@@ -173,7 +178,7 @@ def quizlist_user(request, enrolled=None, msg=None):
     context = {'user': user, 'courses': courses, 'title': title,
                'msg': msg}
 
-    return my_render_to_response("yaksh/quizzes_user.html", context)
+    return my_render_to_response(request, "yaksh/quizzes_user.html", context)
 
 
 @login_required
@@ -183,7 +188,7 @@ def results_user(request):
     user = request.user
     papers = AnswerPaper.objects.get_user_answerpapers(user)
     context = {'papers': papers}
-    return my_render_to_response("yaksh/results_user.html", context)
+    return my_render_to_response(request, "yaksh/results_user.html", context)
 
 
 @login_required
@@ -250,7 +255,9 @@ def add_question(request, question_id=None):
                 'formsets': formsets,
                 'uploaded_files': uploaded_files
             }
-            return my_render_to_response("yaksh/add_question.html", context)
+            return my_render_to_response(
+                request, "yaksh/add_question.html", context
+            )
 
     qform = QuestionForm(instance=question)
     fileform = FileForm()
@@ -273,7 +280,9 @@ def add_question(request, question_id=None):
         )
     context = {'qform': qform, 'fileform': fileform, 'question': question,
                'formsets': formsets, 'uploaded_files': uploaded_files}
-    return my_render_to_response("yaksh/add_question.html", context)
+    return my_render_to_response(
+        request, "yaksh/add_question.html", context
+    )
 
 
 @login_required
@@ -312,7 +321,7 @@ def add_quiz(request, quiz_id=None, course_id=None):
         context["course_id"] = course_id
         context["quiz"] = quiz
     context["form"] = form
-    return my_render_to_response('yaksh/add_quiz.html', context)
+    return my_render_to_response(request, 'yaksh/add_quiz.html', context)
 
 
 @login_required
@@ -358,7 +367,7 @@ def add_exercise(request, quiz_id=None, course_id=None):
         context["exercise"] = quiz
         context["course_id"] = course_id
     context["form"] = form
-    return my_render_to_response('yaksh/add_exercise.html', context)
+    return my_render_to_response(request, 'yaksh/add_exercise.html', context)
 
 
 @login_required
@@ -396,7 +405,9 @@ def prof_manage(request, msg=None):
     context = {'user': user, 'courses': courses,
                'trial_paper': trial_paper, 'msg': msg
                }
-    return my_render_to_response('yaksh/moderator_dashboard.html', context)
+    return my_render_to_response(
+        request, 'yaksh/moderator_dashboard.html', context
+    )
 
 
 def user_login(request):
@@ -422,7 +433,7 @@ def user_login(request):
         form = UserLoginForm()
         context = {"form": form}
 
-    return my_render_to_response('yaksh/login.html', context)
+    return my_render_to_response(request, 'yaksh/login.html', context)
 
 
 @login_required
@@ -531,7 +542,7 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
         }
         if is_moderator(user):
             context["status"] = "moderator"
-        return my_render_to_response('yaksh/intro.html', context)
+        return my_render_to_response(request, 'yaksh/intro.html', context)
     else:
         ip = request.META['REMOTE_ADDR']
         if not hasattr(user, 'profile'):
@@ -623,7 +634,7 @@ def show_question(request, question, paper, error_message=None, notification=Non
         last_attempt = answers[0].answer
         if last_attempt:
             context['last_attempt'] = last_attempt.encode('unicode-escape')
-    return my_render_to_response('yaksh/question.html', context)
+    return my_render_to_response(request, 'yaksh/question.html', context)
 
 
 @login_required
@@ -877,7 +888,7 @@ def quit(request, reason=None, attempt_num=None, questionpaper_id=None,
                                     course_id=course_id)
     context = {'paper': paper, 'message': reason, 'course_id': course_id,
                'module_id': module_id}
-    return my_render_to_response('yaksh/quit.html', context)
+    return my_render_to_response(request, 'yaksh/quit.html', context)
 
 
 @login_required
@@ -890,7 +901,7 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None,
         message = reason or "An Unexpected Error occurred. Please contact your '\
             'instructor/administrator.'"
         context = {'message': message}
-        return my_render_to_response('yaksh/complete.html', context)
+        return my_render_to_response(request, 'yaksh/complete.html', context)
     else:
         q_paper = QuestionPaper.objects.get(id=questionpaper_id)
         paper = AnswerPaper.objects.get(
@@ -910,7 +921,7 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None,
                    'course_id': course_id, 'learning_unit': learning_unit}
         if is_moderator(user):
             context['user'] = "moderator"
-        return my_render_to_response('yaksh/complete.html', context)
+        return my_render_to_response(request, 'yaksh/complete.html', context)
 
 
 @login_required
@@ -935,12 +946,12 @@ def add_course(request, course_id=None):
             return my_redirect('/exam/manage/courses')
         else:
             return my_render_to_response(
-                'yaksh/add_course.html', {'form': form}
+                request, 'yaksh/add_course.html', {'form': form}
             )
     else:
         form = CourseForm(instance=course)
         return my_render_to_response(
-            'yaksh/add_course.html', {'form': form}
+            request, 'yaksh/add_course.html', {'form': form}
         )
 
 
@@ -989,7 +1000,7 @@ def courses(request):
         teachers=user, is_trial=False).order_by('-active', '-id')
     context = {'courses': courses, "allotted_courses": allotted_courses,
                "type": "courses"}
-    return my_render_to_response('yaksh/courses.html', context)
+    return my_render_to_response(request, 'yaksh/courses.html', context)
 
 
 @login_required
@@ -1004,7 +1015,9 @@ def course_detail(request, course_id):
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
 
-    return my_render_to_response('yaksh/course_detail.html', {'course': course})
+    return my_render_to_response(
+        request, 'yaksh/course_detail.html', {'course': course}
+    )
 
 
 @login_required
@@ -1032,7 +1045,7 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
         enroll_ids = [user_id]
     if not enroll_ids:
         return my_render_to_response(
-            'yaksh/course_detail.html', {'course': course}
+            request, 'yaksh/course_detail.html', {'course': course}
         )
     users = User.objects.filter(id__in=enroll_ids)
     course.enroll(was_rejected, *users)
@@ -1066,7 +1079,7 @@ def send_mail(request, course_id, user_id=None):
         'course': course, 'message': message,
         'state': 'mail'
     }
-    return my_render_to_response('yaksh/course_detail.html', context)
+    return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
 
 @login_required
@@ -1087,7 +1100,8 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
     if not reject_ids:
         message = "Please select atleast one User"
         return my_render_to_response(
-            'yaksh/course_detail.html', {'course': course, 'message': message},
+            request, 'yaksh/course_detail.html',
+            {'course': course, 'message': message},
         )
     users = User.objects.filter(id__in=reject_ids)
     course.reject(was_enrolled, *users)
@@ -1127,7 +1141,9 @@ def show_statistics(request, questionpaper_id, attempt_number=None,
         context = {'quiz': quiz, 'attempts': attempt_numbers,
                    'questionpaper_id': questionpaper_id,
                    'course_id': course_id}
-        return my_render_to_response('yaksh/statistics_question.html', context)
+        return my_render_to_response(
+            request, 'yaksh/statistics_question.html', context
+        )
     total_attempt = AnswerPaper.objects.get_count(questionpaper_id,
                                                   attempt_number,
                                                   course_id)
@@ -1141,7 +1157,9 @@ def show_statistics(request, questionpaper_id, attempt_number=None,
                'questionpaper_id': questionpaper_id,
                'attempts': attempt_numbers, 'total': total_attempt,
                'course_id': course_id}
-    return my_render_to_response('yaksh/statistics_question.html', context)
+    return my_render_to_response(
+        request, 'yaksh/statistics_question.html', context
+    )
 
 
 @login_required
@@ -1162,7 +1180,7 @@ def monitor(request, quiz_id=None, course_id=None):
             "papers": [], "course_details": course_details,
             "msg": "Monitor"
         }
-        return my_render_to_response('yaksh/monitor.html', context)
+        return my_render_to_response(request, 'yaksh/monitor.html', context)
     # quiz_id is not None.
     try:
         quiz = get_object_or_404(Quiz, id=quiz_id)
@@ -1208,7 +1226,7 @@ def monitor(request, quiz_id=None, course_id=None):
         "attempt_numbers": attempt_numbers,
         "course": course
     }
-    return my_render_to_response('yaksh/monitor.html', context)
+    return my_render_to_response(request, 'yaksh/monitor.html', context)
 
 
 @csrf_exempt
@@ -1232,7 +1250,7 @@ def ajax_questions_filter(request):
     questions = list(Question.objects.filter(**filter_dict))
 
     return my_render_to_response(
-        'yaksh/ajax_question_filter.html', {'questions': questions}
+        request, 'yaksh/ajax_question_filter.html', {'questions': questions}
     )
 
 
@@ -1360,7 +1378,9 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
         'random_sets': random_sets,
         'course_id': course_id
     }
-    return my_render_to_response('yaksh/design_questionpaper.html', context)
+    return my_render_to_response(
+        request, 'yaksh/design_questionpaper.html', context
+    )
 
 
 @login_required
@@ -1445,7 +1465,7 @@ def show_all_questions(request):
                                                     user=user).distinct()
             context['questions'] = search_result
 
-    return my_render_to_response('yaksh/showquestions.html', context)
+    return my_render_to_response(request, 'yaksh/showquestions.html', context)
 
 
 @login_required
@@ -1459,7 +1479,7 @@ def user_data(request, user_id, questionpaper_id=None, course_id=None):
     data = AnswerPaper.objects.get_user_data(user, questionpaper_id, course_id)
 
     context = {'data': data, 'course_id': course_id}
-    return my_render_to_response('yaksh/user_data.html', context)
+    return my_render_to_response(request, 'yaksh/user_data.html', context)
 
 
 def _expand_questions(questions, field_list):
@@ -1621,7 +1641,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
         if course_status.exists():
             course_status.first().set_grade()
 
-    return my_render_to_response('yaksh/grade_user.html', context)
+    return my_render_to_response(request, 'yaksh/grade_user.html', context)
 
 
 @login_required
@@ -1635,7 +1655,7 @@ def view_profile(request):
     else:
         template = 'user.html'
     context = {'template': template, 'user': user}
-    return my_render_to_response('yaksh/view_profile.html', context)
+    return my_render_to_response(request, 'yaksh/view_profile.html', context)
 
 
 @login_required
@@ -1663,14 +1683,18 @@ def edit_profile(request):
             form_data.user.last_name = request.POST['last_name']
             form_data.user.save()
             form_data.save()
-            return my_render_to_response('yaksh/profile_updated.html')
+            return my_render_to_response(request, 'yaksh/profile_updated.html')
         else:
             context['form'] = form
-            return my_render_to_response('yaksh/editprofile.html', context)
+            return my_render_to_response(
+                request, 'yaksh/editprofile.html', context
+            )
     else:
         form = ProfileForm(user=user, instance=profile)
         context['form'] = form
-        return my_render_to_response('yaksh/editprofile.html', context)
+        return my_render_to_response(
+            request, 'yaksh/editprofile.html', context
+        )
 
 
 @login_required
@@ -1704,7 +1728,7 @@ def search_teacher(request, course_id):
             )
             context['success'] = True
             context['teachers'] = teachers
-    return my_render_to_response('yaksh/addteacher.html', context)
+    return my_render_to_response(request, 'yaksh/addteacher.html', context)
 
 
 @login_required
@@ -1731,7 +1755,7 @@ def add_teacher(request, course_id):
         course.add_teachers(*teachers)
         context['status'] = True
         context['teachers_added'] = teachers
-    return my_render_to_response('yaksh/addteacher.html', context)
+    return my_render_to_response(request, 'yaksh/addteacher.html', context)
 
 
 @login_required
@@ -1811,7 +1835,9 @@ def view_answerpaper(request, questionpaper_id, course_id):
         ).exists()
         context = {'data': data, 'quiz': quiz,
                    "has_user_assignment": has_user_assignment}
-        return my_render_to_response('yaksh/view_answerpaper.html', context)
+        return my_render_to_response(
+            request, 'yaksh/view_answerpaper.html', context
+        )
     else:
         return my_redirect('/exam/quizzes/')
 
@@ -1843,7 +1869,7 @@ def grader(request, extra_context=None):
     context = {'courses': user_courses}
     if extra_context:
         context.update(extra_context)
-    return my_render_to_response('yaksh/regrade.html', context)
+    return my_render_to_response(request, 'yaksh/regrade.html', context)
 
 
 @login_required
@@ -1933,7 +1959,7 @@ def activate_user(request, key):
     if profile.is_email_verified:
         context['activation_msg'] = "Your account is already verified"
         return my_render_to_response(
-            'yaksh/activation_status.html', context
+            request, 'yaksh/activation_status.html', context
         )
 
     if timezone.now() > profile.key_expiry_time:
@@ -1946,7 +1972,9 @@ def activate_user(request, key):
         profile.is_email_verified = True
         profile.save()
         context['msg'] = "Your account is activated"
-    return my_render_to_response('yaksh/activation_status.html', context)
+    return my_render_to_response(
+        request, 'yaksh/activation_status.html', context
+    )
 
 
 def new_activation(request, email=None):
@@ -1959,7 +1987,9 @@ def new_activation(request, email=None):
     except MultipleObjectsReturned:
         context['email_err_msg'] = "Multiple entries found for this email"\
                                     "Please change your email"
-        return my_render_to_response('yaksh/activation_status.html', context)
+        return my_render_to_response(
+            request, 'yaksh/activation_status.html', context
+        )
     except ObjectDoesNotExist:
         context['success'] = False
         context['msg'] = "Your account is not verified. \
@@ -1982,7 +2012,9 @@ def new_activation(request, email=None):
     else:
         context['activation_msg'] = "Your account is already verified"
 
-    return my_render_to_response('yaksh/activation_status.html', context)
+    return my_render_to_response(
+        request, 'yaksh/activation_status.html', context
+    )
 
 
 def update_email(request):
@@ -1996,7 +2028,9 @@ def update_email(request):
         return new_activation(request, email)
     else:
         context['email_err_msg'] = "Please Update your email"
-        return my_render_to_response('yaksh/activation_status.html', context)
+        return my_render_to_response(
+            request, 'yaksh/activation_status.html', context
+        )
 
 
 @login_required
@@ -2043,29 +2077,35 @@ def upload_users(request, course_id):
     if request.method == 'POST':
         if 'csv_file' not in request.FILES:
             context['message'] = "Please upload a CSV file."
-            return my_render_to_response('yaksh/course_detail.html', context)
+            return my_render_to_response(
+                request, 'yaksh/course_detail.html', context
+            )
         csv_file = request.FILES['csv_file']
         is_csv_file, dialect = is_csv(csv_file)
         if not is_csv_file:
             context['message'] = "The file uploaded is not a CSV file."
-            return my_render_to_response('yaksh/course_detail.html', context)
+            return my_render_to_response(
+                request, 'yaksh/course_detail.html', context
+            )
         required_fields = ['firstname', 'lastname', 'email']
         try:
             reader = csv.DictReader(csv_file.read().decode('utf-8').splitlines(),
                                     dialect=dialect)
         except TypeError:
             context['message'] = "Bad CSV file"
-            return my_render_to_response('yaksh/course_detail.html', context)
+            return my_render_to_response(
+                request, 'yaksh/course_detail.html', context
+            )
         stripped_fieldnames = [field.strip().lower() for field in reader.fieldnames]
         for field in required_fields:
             if field not in stripped_fieldnames:
                 context['message'] = "The CSV file does not contain the required headers"
                 return my_render_to_response(
-                    'yaksh/course_detail.html', context
+                    request, 'yaksh/course_detail.html', context
                 )
         reader.fieldnames = stripped_fieldnames
         context['upload_details'] = _read_user_csv(reader, course)
-    return my_render_to_response('yaksh/course_detail.html', context)
+    return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
 
 def _read_user_csv(reader, course):
@@ -2275,7 +2315,7 @@ def edit_lesson(request, lesson_id=None, course_id=None):
     context['lesson_file_form'] = lesson_files_form
     context['lesson_files'] = lesson_files
     context['course_id'] = course_id
-    return my_render_to_response('yaksh/add_lesson.html', context)
+    return my_render_to_response(request, 'yaksh/add_lesson.html', context)
 
 
 @login_required
@@ -2316,7 +2356,7 @@ def show_lesson(request, lesson_id, module_id, course_id):
                'course': course, 'state': "lesson", "all_modules": all_modules,
                'learning_units': learning_units, "current_unit": learn_unit,
                'learning_module': learn_module}
-    return my_render_to_response('yaksh/show_video.html', context)
+    return my_render_to_response(request, 'yaksh/show_video.html', context)
 
 
 @login_required
@@ -2388,7 +2428,7 @@ def design_module(request, module_id, course_id=None):
     context['status'] = 'design'
     context['module_id'] = module_id
     context['course_id'] = course_id
-    return my_render_to_response('yaksh/add_module.html', context)
+    return my_render_to_response(request, 'yaksh/add_module.html', context)
 
 
 @login_required
@@ -2427,7 +2467,7 @@ def add_module(request, module_id=None, course_id=None):
     context['module_form'] = module_form
     context['course_id'] = course_id
     context['status'] = "add"
-    return my_render_to_response("yaksh/add_module.html", context)
+    return my_render_to_response(request, "yaksh/add_module.html", context)
 
 
 @login_required
@@ -2438,7 +2478,7 @@ def show_all_quizzes(request):
         raise Http404('You are not allowed to view this page!')
     quizzes = Quiz.objects.filter(creator=user, is_trial=False)
     context = {"quizzes": quizzes, "type": "quiz"}
-    return my_render_to_response('yaksh/courses.html', context)
+    return my_render_to_response(request, 'yaksh/courses.html', context)
 
 
 @login_required
@@ -2449,7 +2489,7 @@ def show_all_lessons(request):
         raise Http404('You are not allowed to view this page!')
     lessons = Lesson.objects.filter(creator=user)
     context = {"lessons": lessons, "type": "lesson"}
-    return my_render_to_response('yaksh/courses.html', context)
+    return my_render_to_response(request, 'yaksh/courses.html', context)
 
 
 @login_required
@@ -2461,7 +2501,7 @@ def show_all_modules(request):
     learning_modules = LearningModule.objects.filter(
         creator=user, is_trial=False)
     context = {"learning_modules": learning_modules, "type": "learning_module"}
-    return my_render_to_response('yaksh/courses.html', context)
+    return my_render_to_response(request, 'yaksh/courses.html', context)
 
 
 @login_required
@@ -2589,7 +2629,9 @@ def design_course(request, course_id):
     context['added_learning_modules'] = added_learning_modules
     context['learning_modules'] = learning_modules
     context['course_id'] = course_id
-    return my_render_to_response('yaksh/design_course_session.html', context)
+    return my_render_to_response(
+        request, 'yaksh/design_course_session.html', context
+    )
 
 
 @login_required
@@ -2624,7 +2666,7 @@ def view_module(request, module_id, course_id, msg=None):
     context['course'] = course
     context['state'] = "module"
     context['msg'] = msg
-    return my_render_to_response('yaksh/show_video.html', context)
+    return my_render_to_response(request, 'yaksh/show_video.html', context)
 
 
 @login_required
@@ -2648,7 +2690,7 @@ def course_modules(request, course_id, msg=None):
         if not course_status.grade:
             course_status.set_grade()
         context['grade'] = course_status.get_grade()
-    return my_render_to_response('yaksh/course_modules.html', context)
+    return my_render_to_response(request, 'yaksh/course_modules.html', context)
 
 
 @login_required
@@ -2665,7 +2707,7 @@ def course_status(request, course_id):
         'course': course, 'students': students,
         'state': 'course_status', 'modules': course.get_learning_modules()
     }
-    return my_render_to_response('yaksh/course_detail.html', context)
+    return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
 
 def _update_unit_status(course_id, user, unit):
@@ -2699,5 +2741,5 @@ def preview_questionpaper(request, questionpaper_id):
     }
 
     return my_render_to_response(
-        'yaksh/preview_questionpaper.html', context
+        request, 'yaksh/preview_questionpaper.html', context
     )
