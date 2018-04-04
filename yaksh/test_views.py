@@ -26,7 +26,7 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     AssignmentUpload, FileUpload, McqTestCase, IntegerTestCase, StringTestCase,\
     FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,\
-    LessonFile
+    LessonFile, CourseStatus
 from yaksh.decorators import user_has_profile
 
 
@@ -1856,8 +1856,9 @@ class TestCourses(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/course_modules.html")
         self.assertEqual(response.context['course'], self.user1_course)
-        self.assertEqual(response.context['learning_modules'][0],
-                         self.learning_module)
+        module, percent = response.context['modules'][0]
+        self.assertEqual(module, self.learning_module)
+        self.assertEqual(percent, 0.0)
 
     def test_duplicate_course(self):
         """ Test To clone/duplicate course and link modules"""
@@ -2198,13 +2199,20 @@ class TestCourseDetail(TestCase):
         self.mod_group.user_set.add(self.user1)
         self.mod_group.user_set.add(self.user2)
 
-        self.user1_course = Course.objects.create(name="Python Course",
-            enrollment="Enroll Request", creator=self.user1)
+        self.user1_course = Course.objects.create(
+            name="Python Course", enrollment="Enroll Request",
+            creator=self.user1)
         self.learning_module = LearningModule.objects.create(
             name="test module", description="test description module",
             html_data="test html description module", creator=self.user1,
             order=1)
         self.user1_course.learning_module.add(self.learning_module)
+        self.lesson = Lesson.objects.create(
+            name="test lesson", description="test description",
+            creator=self.user1)
+        self.learning_unit1 = LearningUnit.objects.create(
+            order=1, type="lesson", lesson=self.lesson)
+        self.learning_module.learning_unit.add(self.learning_unit1)
 
     def tearDown(self):
         self.client.logout()
@@ -2608,12 +2616,81 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
+        self.user1_course.students.add(self.student)
+
+        # Check student details when course is not started
         response = self.client.get(reverse('yaksh:course_status',
                                    kwargs={'course_id': self.user1_course.id}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['state'], "course_status")
         self.assertEqual(response.context['course'], self.user1_course)
-        self.assertEqual(response.context['modules'][0], self.learning_module)
+        student_details = response.context['student_details'][0]
+        student, grade, percent, current_unit = student_details
+        self.assertEqual(student.username, "demo_student")
+        self.assertEqual(grade, "NA")
+        self.assertEqual(percent, 0.0)
+        self.assertEqual(current_unit, "NA")
+
+        # Check student details when student starts the course
+        self.course_status = CourseStatus.objects.create(
+            course=self.user1_course, user=self.student)
+        response = self.client.get(reverse('yaksh:course_status',
+                                   kwargs={'course_id': self.user1_course.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['state'], "course_status")
+        self.assertEqual(response.context['course'], self.user1_course)
+        student_details = response.context['student_details'][0]
+        student, grade, percent, current_unit = student_details
+        self.assertEqual(student.username, "demo_student")
+        self.assertIsNone(grade)
+        self.assertEqual(percent, 0)
+        self.assertIsNone(current_unit)
+
+        self.user1_course.students.remove(self.student)
+
+    def test_course_status_per_user(self):
+        """ Test course status for a particular student"""
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        # Denies student to view course status
+        response = self.client.get(reverse('yaksh:get_user_data',
+                                   kwargs={'course_id': self.user1_course.id,
+                                           'student_id': self.student.id}))
+        err_msg = response.json()['user_data'].replace("\n", "").strip()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(err_msg, "You are not a moderator")
+
+        # Other Moderator Login
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:get_user_data',
+                                   kwargs={'course_id': self.user1_course.id,
+                                           'student_id': self.student.id}))
+        err_msg = response.json()['user_data'].replace("\n", "").strip()
+        actual_err = dedent("""\
+            You are neither course creator nor course teacher for {0}""".format(
+            self.user1_course.name))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(err_msg, actual_err)
+
+        # Actual course creator login
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.get(reverse('yaksh:get_user_data',
+                                   kwargs={'course_id': self.user1_course.id,
+                                           'student_id': self.student.id}))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()['user_data']
+        self.assertIn("Student_First_Name Student_Last_Name", data)
+        self.assertIn("Overall Course Progress", data)
+        self.assertIn("Per Module Progress", data)
 
 
 class TestEnrollRequest(TestCase):
