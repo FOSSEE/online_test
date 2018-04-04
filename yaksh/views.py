@@ -488,9 +488,6 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
                 learning_module.name)
             return course_modules(request, course_id, msg)
 
-    # update course status with current unit
-    _update_unit_status(course_id, user, learning_unit)
-
     # is user enrolled in the course
     if not course.is_enrolled(user):
         msg = 'You are not enrolled in {0} course'.format(course.name)
@@ -523,6 +520,9 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
                 return prof_manage(request, msg=msg)
             return view_module(request, module_id=module_id,
                                course_id=course_id, msg=msg)
+
+    # update course status with current unit
+    _update_unit_status(course_id, user, learning_unit)
 
     # if any previous attempt
     last_attempt = AnswerPaper.objects.get_user_last_attempt(
@@ -911,7 +911,7 @@ def quit(request, reason=None, attempt_num=None, questionpaper_id=None,
 @email_verified
 def complete(request, reason=None, attempt_num=None, questionpaper_id=None,
              course_id=None, module_id=None):
-    """Show a page to inform user that the quiz has been compeleted."""
+    """Show a page to inform user that the quiz has been completed."""
     user = request.user
     if questionpaper_id is None:
         message = reason or "An Unexpected Error occurred. Please contact your '\
@@ -2598,19 +2598,16 @@ def get_next_unit(request, course_id, module_id, current_unit_id=None,
     else:
         next_unit = learning_module.get_next_unit(current_learning_unit.id)
 
-    course_status = CourseStatus.objects.filter(
+    course_status, created = CourseStatus.objects.get_or_create(
         user=user, course_id=course_id,
     )
-    if not course_status.exists():
-        course_status = CourseStatus.objects.create(
-            user=user, course_id=course_id
-        )
-    else:
-        course_status = course_status.first()
 
     # Add learning unit to completed units list
     if not first_unit:
         course_status.completed_units.add(current_learning_unit.id)
+
+        # Update course completion percentage
+        _update_course_percent(course, user)
 
         # if last unit of current module go to next module
         is_last_unit = course.is_last_unit(learning_module,
@@ -2738,9 +2735,11 @@ def course_modules(request, course_id, msg=None):
         msg = "{0} is either expired or not active".format(course.name)
         return quizlist_user(request, msg=msg)
     learning_modules = course.get_learning_modules()
-    context = {"course": course, "learning_modules": learning_modules,
-               "user": user, "msg": msg}
+    context = {"course": course, "user": user, "msg": msg}
     course_status = CourseStatus.objects.filter(course=course, user=user)
+    context['course_percentage'] = course.get_completion_percent(user)
+    context['modules'] = [(module, module.get_module_complete_percent(course, user))
+                          for module in learning_modules]
     if course_status.exists():
         course_status = course_status.first()
         if not course_status.grade:
@@ -2759,26 +2758,33 @@ def course_status(request, course_id):
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
     students = course.get_only_students()
+    stud_details = [(student, course.get_grade(student),
+                     course.get_completion_percent(student),
+                     course.get_current_unit(student)) for student in students]
     context = {
-        'course': course, 'students': students,
-        'state': 'course_status', 'modules': course.get_learning_modules()
+        'course': course, 'student_details': stud_details,
+        'state': 'course_status'
     }
     return my_render_to_response('yaksh/course_detail.html', context)
 
 
 def _update_unit_status(course_id, user, unit):
     """ Update course status with current unit """
-    course_status = CourseStatus.objects.filter(
+    course_status, created = CourseStatus.objects.get_or_create(
         user=user, course_id=course_id,
     )
-    if not course_status.exists():
-        course_status = CourseStatus.objects.create(
-            user=user, course_id=course_id
-        )
-    else:
-        course_status = course_status.first()
     # make next available unit as current unit
     course_status.current_unit = unit
+    course_status.save()
+
+
+def _update_course_percent(course, user):
+    course_status, created = CourseStatus.objects.get_or_create(
+        user=user, course=course,
+    )
+    # Update course completion percent
+    modules = course.get_learning_modules()
+    course_status.percent_completed = course.percent_completed(user, modules)
     course_status.save()
 
 
@@ -2799,3 +2805,40 @@ def preview_questionpaper(request, questionpaper_id):
     return my_render_to_response(
         'yaksh/preview_questionpaper.html', context
     )
+
+
+@login_required
+@email_verified
+def get_user_data(request, course_id, student_id):
+    user = request.user
+    data = {}
+    response_kwargs = {}
+    response_kwargs['content_type'] = 'application/json'
+    course = Course.objects.get(id=course_id)
+    if not is_moderator(user):
+        data['msg'] = 'You are not a moderator'
+        data['status'] = False
+    elif not course.is_creator(user) and not course.is_teacher(user):
+        msg = 'You are neither course creator nor course teacher for {0}'.format(
+            course.name)
+        data['msg'] = msg
+        data['status'] = False
+    else:
+        student = User.objects.get(id=student_id)
+        data['status'] = True
+        modules = course.get_learning_modules()
+        module_percent = [(module, module.get_module_complete_percent(course, student))
+                          for module in modules]
+        data['modules'] = module_percent
+        _update_course_percent(course, student)
+        data['course_percentage'] = course.get_completion_percent(student)
+        data['student'] = student
+    template_path = os.path.join(
+        os.path.dirname(__file__), "templates", "yaksh", "user_status.html"
+        )
+    with open(template_path) as f:
+        template_data = f.read()
+        template = Template(template_data)
+        context = Context(data)
+        data = template.render(context)
+    return HttpResponse(json.dumps({"user_data": data}), **response_kwargs)

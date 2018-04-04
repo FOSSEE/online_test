@@ -551,7 +551,7 @@ class LearningModule(models.Model):
             status_list = [unit.get_completion_status(user, course)
                            for unit in units]
             count = status_list.count("completed")
-            percent = round((count / len(units)) * 100)
+            percent = round((count / units.count()) * 100)
         return percent
 
     def _create_module_copy(self, user, module_name):
@@ -767,15 +767,14 @@ class Course(models.Model):
             next_index = 0
         return modules.get(id=module_ids[next_index])
 
-    def percent_completed(self, user):
-        modules = self.get_learning_modules()
+    def percent_completed(self, user, modules):
         if not modules:
             percent = 0.0
         else:
             status_list = [module.get_module_complete_percent(self, user)
                            for module in modules]
             count = sum(status_list)
-            percent = round((count / len(modules)))
+            percent = round((count / modules.count()))
         return percent
 
     def get_grade(self, user):
@@ -786,6 +785,14 @@ class Course(models.Model):
             grade = "NA"
         return grade
 
+    def get_current_unit(self, user):
+        course_status = CourseStatus.objects.filter(course=self, user=user)
+        if course_status.exists():
+            unit = course_status.first().current_unit
+        else:
+            unit = "NA"
+        return unit
+
     def days_before_start(self):
         """ Get the days remaining for the start of the course """
         if timezone.now() < self.start_enroll_time:
@@ -793,6 +800,14 @@ class Course(models.Model):
         else:
             remaining_days = 0
         return remaining_days
+
+    def get_completion_percent(self, user):
+        course_status = CourseStatus.objects.filter(course=self, user=user)
+        if course_status.exists():
+            percentage = course_status.first().percent_completed
+        else:
+            percentage = 0
+        return percentage
 
     def __str__(self):
         return self.name
@@ -808,6 +823,7 @@ class CourseStatus(models.Model):
     user = models.ForeignKey(User)
     grade = models.CharField(max_length=255, null=True, blank=True)
     percentage = models.FloatField(default=0.0)
+    percent_completed = models.IntegerField(default=0)
 
     def get_grade(self):
         return self.grade
