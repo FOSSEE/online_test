@@ -42,7 +42,7 @@ $(function() {
         max_height: 200,
         height: 200
     });
-  });
+});
 
 $("#send_mail").click(function(){
     var subject = $("#subject").val();
@@ -66,79 +66,38 @@ $("#send_mail").click(function(){
     return status;
 });
 
-// Download course status as csv
-function exportTableToCSV($table, filename) {
-    var $headers = $table.find('tr:has(th)')
-        ,$rows = $table.find('tr:has(td)')
-
-        // Temporary delimiter characters unlikely to be typed by keyboard
-        // This is to avoid accidentally splitting the actual contents
-        ,tmpColDelim = String.fromCharCode(11) // vertical tab character
-        ,tmpRowDelim = String.fromCharCode(0) // null character
-
-        // actual delimiter characters for CSV format
-        ,colDelim = '","'
-        ,rowDelim = '"\r\n"';
-
-        // Grab text from table into CSV formatted string
-        var csv = '"';
-        csv += formatRows($headers.map(grabRow));
-        csv += rowDelim;
-        csv += formatRows($rows.map(grabRow)) + '"';
-
-        // Data URI
-        var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
-
-    // For IE (tested 10+)
-    if (window.navigator.msSaveOrOpenBlob) {
-        var blob = new Blob([decodeURIComponent(encodeURI(csv))], {
-            type: "text/csv;charset=utf-8;"
-        });
-        navigator.msSaveBlob(blob, filename);
-    } else {
-        $(this)
-            .attr({
-                'download': filename,'href': csvData
-        });
-    }
-
-    function formatRows(rows){
-        return rows.get().join(tmpRowDelim)
-            .split(tmpRowDelim).join(rowDelim)
-            .split(tmpColDelim).join(colDelim);
-    }
-    // Grab and format a row from the table
-    function grabRow(i,row){
-        var $row = $(row);
-        var $cols = $row.find('td'); 
-        if(!$cols.length) $cols = $row.find('th');
-
-        return $cols.map(grabCol)
-                    .get().join(tmpColDelim);
-    }
-    // Grab and format a column from the table 
-    function grabCol(j,col){
-        var $col = $(col),
-            $text = $col.text();
-
-        return $text.replace('"', '""').replace("View Unit Status", '').replace("View Units", ""); // escape double quotes
-
-    }
-}
-
-
-$("#export").click(function (event) {
-    var outputFile = $("#course_name").val().replace(" ", "_") + '.csv';
-
-    exportTableToCSV.apply(this, [$('#course_table'), outputFile]);
-});
 
 // Table sorter for course details
 $("table").tablesorter({});
 
+// Get user course completion status
+$('.user_data').click(function() {
+    var data = $(this).data('item-id');
+    course_id = data.split("+")[0];
+    student_id = data.split("+")[1];
+    var status_div = $("#show_status_"+course_id+"_"+student_id);
+    if(!status_div.is(":visible")){
+        var get_url = window.location.protocol + "//" + window.location.host +
+                  "/exam/manage/get_user_status/" + course_id + "/" + student_id;
+        $.ajax({
+            url: get_url,
+            timeout: 15000,
+            type: "GET",
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            success: function(data) {
+                    status_div.toggle();
+                    status_div.html(data.user_data);
+                },
+            error: function(jqXHR, textStatus) {
+                alert("Unable to get user data. Please Try again later.");
+            } 
+        });
+    } else {
+        status_div.toggle();
+    }
 });
 
-function view_status(unit){
-    title_list = $(unit).attr("title").split("/");
-    $(unit).attr("title", title_list.join("\n"));
-}
+$('[data-toggle="tooltip"]').tooltip();
+
+}); // end document ready

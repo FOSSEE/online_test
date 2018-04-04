@@ -11,7 +11,11 @@
 
 {% block main %}
 <div class="col-sm-3 col-md-2 sidebar">
-    <center><h4>{{course.name}}</h4></center>
+    <center>
+        <a href="{{URL_ROOT}}/exam/course_modules/{{course.id}}">
+            <h4>{{course.name}}</h4>
+        </a>
+    </center>
     <br>
     {% for module in all_modules %}
         {% if module.id == learning_module.id %}

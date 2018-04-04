@@ -3,6 +3,14 @@
 {% block pagetitle %}<img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_text.png"
 width="80" alt="YAKSH"></img>{% endblock %}
 {% block content %}
+{% if module_id and not user == "moderator" %}
+<center>
+    <div class="alert alert-info">
+        Note:- Please Click on the Next button to submit the quiz. Please do not close the browser
+        without clicking next.
+    </div>
+</center>
+{% endif %}
 {% csrf_token %}
     {% if paper.questions_answered.all or paper.questions_unanswered.all %}
 <center><table class="table table-bordered" >
