@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 import sys
 import traceback
-import os
-import re
-from os.path import join
-import importlib
 
 # Local imports
 from .file_utils import copy_files, delete_files
@@ -43,6 +39,7 @@ class PythonAssertionEvaluator(BaseEvaluator):
             submitted = compile(self.user_answer, '<string>', mode='exec')
             self.exec_scope = {}
             exec(submitted, self.exec_scope)
+            exec("from nose.tools import *", self.exec_scope)
             return self.exec_scope
 
     def check_code(self):
@@ -53,18 +50,19 @@ class PythonAssertionEvaluator(BaseEvaluator):
         --------
         Returns a tuple (success, error, test_case_weight)
 
-        success - Boolean, indicating if code was executed successfully, correctly
+        success - Boolean, indicating if code was executed successfully,
+        correctly
         weight - Float, indicating total weight of all successful test cases
         error - String, error message if success is false
 
-        returns (True, "Correct answer", 1.0) : If the student script passes all
-        test cases/have same output, when compared to the instructor script
+        returns (True, "Correct answer", 1.0) : If the student script passes
+        all test cases/have same output, when compared to the instructor script
 
         returns (False, error_msg, 0.0): If the student script fails a single
         test/have dissimilar output, when compared to the instructor script.
 
-        Returns (False, error_msg, 0.0): If mandatory arguments are not files or if
-        the required permissions are not given to the file(s).
+        Returns (False, error_msg, 0.0): If mandatory arguments are not files
+        or if the required permissions are not given to the file(s).
         """
         success = False
         mark_fraction = 0.0
