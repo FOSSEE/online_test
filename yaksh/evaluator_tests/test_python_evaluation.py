@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 import unittest
 import os
-import sys
 import tempfile
 import shutil
 from textwrap import dedent
@@ -26,13 +25,13 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.in_dir = tmp_in_dir_path
         self.test_case_data = [{"test_case_type": "standardtestcase",
                                 "test_case": 'assert(add(1,2)==3)',
-                                 'weight': 0.0},
+                                'weight': 0.0},
                                {"test_case_type": "standardtestcase",
                                 "test_case": 'assert(add(-1,2)==1)',
-                                 'weight': 0.0},
+                                'weight': 0.0},
                                {"test_case_type": "standardtestcase",
                                 "test_case":  'assert(add(-1,-2)==-3)',
-                                 'weight': 0.0},
+                                'weight': 0.0},
                                ]
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in"
@@ -46,14 +45,12 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
     def test_correct_answer(self):
         # Given
         user_answer = "def add(a,b):\n\treturn a + b"
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data,
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -66,14 +63,12 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
     def test_incorrect_answer(self):
         # Given
         user_answer = "def add(a,b):\n\treturn a - b"
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data,
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -85,12 +80,12 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         given_test_case_list = [tc["test_case"] for tc in self.test_case_data]
         for error in result.get("error"):
             self.assertEqual(error['exception'], 'AssertionError')
-            self.assertEqual(error['message'],
-                 "Expected answer from the test case did not match the output"
-                 )
+            self.assertEqual(
+                error['message'],
+                "Expected answer from the test case did not match the output"
+                )
         error_testcase_list = [tc['test_case'] for tc in result.get('error')]
         self.assertEqual(error_testcase_list, given_test_case_list)
-
 
     def test_partial_incorrect_answer(self):
         # Given
@@ -100,19 +95,17 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
                            'weight': 1.0},
                           {"test_case_type": "standardtestcase",
                            "test_case":  'assert(add(-1,-2)==-3)',
-                            'weight': 1.0},
+                           'weight': 1.0},
                           {"test_case_type": "standardtestcase",
                            "test_case": 'assert(add(1,2)==3)',
                            'weight': 2.0}
                           ]
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': True,
-                    'language': 'python'
-                    },
-                    'test_case_data': test_case_data,
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': True,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
                   }
 
         # When
@@ -126,22 +119,22 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         given_test_case_list.remove('assert(add(1,2)==3)')
         for error in result.get("error"):
             self.assertEqual(error['exception'], 'AssertionError')
-            self.assertEqual(error['message'],
-                 "Expected answer from the test case did not match the output"
-                 )
+            self.assertEqual(
+                error['message'],
+                "Expected answer from the test case did not match the output"
+                )
         error_testcase_list = [tc['test_case'] for tc in result.get('error')]
         self.assertEqual(error_testcase_list, given_test_case_list)
+
     def test_infinite_loop(self):
         # Given
         user_answer = "def add(a, b):\n\twhile True:\n\t\tpass"
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data,
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -168,14 +161,12 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
                             "SyntaxError",
                             "invalid syntax"
                             ]
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data,
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -201,14 +192,12 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
                             "IndentationError",
                             "indented block"
                             ]
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data,
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -220,9 +209,9 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.assertFalse(result.get("success"))
         self.assertEqual(5, len(err))
         for msg in indent_error_msg:
-            self.assert_correct_output(msg, 
-                                      result.get("error")[0]['traceback']
-                                      )
+            self.assert_correct_output(
+                msg, result.get("error")[0]['traceback']
+            )
 
     def test_name_error(self):
         # Given
@@ -234,15 +223,13 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
                           "defined"
                           ]
 
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data,
-                }
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data,
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -258,15 +245,13 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
             return add(3, 3)
         """)
         recursion_error_msg = "maximum recursion depth exceeded"
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data,
-                }
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data,
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -289,15 +274,13 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
                           "argument"
                           ]
 
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data,
-                }
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data,
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -323,15 +306,13 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
                            "base"
                            ]
 
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data,
-                }
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data,
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -356,15 +337,13 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
                     return f.read()[0]
             """)
 
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data,
-                }
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data,
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -390,24 +369,22 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
                             ]
 
         kwargs = {'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': test_case_data,
-                }
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
+                  }
 
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        err =  result.get("error")[0]['traceback']
+        err = result.get("error")[0]['traceback']
 
         # Then
         self.assertFalse(result.get("success"))
         for msg in syntax_error_msg:
             self.assert_correct_output(msg, err)
-
 
     def test_multiple_testcase_error(self):
         """ Tests the user answer with an correct test case
@@ -418,7 +395,8 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
                            "test_case": 'assert(palindrome("abba")==True)',
                            "weight": 0.0},
                           {"test_case_type": "standardtestcase",
-                           "test_case": 's="abbb"\nassert palindrome(S)==False',
+                           "test_case": 's="abbb"\n'
+                                        'assert palindrome(S)==False',
                            "weight": 0.0}
                           ]
         name_error_msg = ["Traceback",
@@ -426,15 +404,13 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
                           "NameError",
                           "name 'S' is not defined"
                           ]
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': test_case_data,
-                }
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -454,24 +430,46 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
                                 return type(a)
                             """)
         test_case_data = [{"test_case_type": "standardtestcase",
-                             "test_case": 'assert(strchar("hello")==str)',
-                             "weight": 0.0
-                            },]
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': test_case_data,
-                }
+                           "test_case": 'assert(strchar("hello")==str)',
+                           "weight": 0.0}]
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
+                  }
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
 
         # Then
         self.assertTrue(result.get("success"))
+
+    def test_incorrect_answer_with_nose_assert(self):
+        user_answer = dedent("""\
+                             def add(a, b):
+                                return a - b
+                            """)
+        test_case_data = [{"test_case_type": "standardtestcase",
+                           "test_case": 'assert_equal(add(1, 2), 3)',
+                           "weight": 0.0}]
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
+                  }
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertFalse(result.get("success"))
+        error = result.get("error")[0]
+        self.assertEqual(error['exception'], 'AssertionError')
+        self.assertEqual(error['message'], '-1 != 3')
 
 
 class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
@@ -501,13 +499,12 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                              """
                              )
         kwargs = {'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data
-                }
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -534,13 +531,12 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                              )
 
         kwargs = {'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data
-                }
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -551,11 +547,13 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
 
     def test_correct_answer_string(self):
         # Given
-        self.test_case_data = [{"test_case_type": "stdiobasedtestcase",
-                                "expected_input": ("the quick brown fox jumps over the lazy dog\nthe"),
-                                "expected_output": "2",
-                                "weight": 0.0
-                                }]
+        self.test_case_data = [{
+            "test_case_type": "stdiobasedtestcase",
+            "expected_input": ("the quick brown fox jumps over "
+                               "the lazy dog\nthe"),
+            "expected_output": "2",
+            "weight": 0.0
+            }]
         user_answer = dedent("""
                                 from six.moves import input
                                 a = str(input())
@@ -565,13 +563,12 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                              )
 
         kwargs = {'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data
-                }
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -594,13 +591,12 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                              """
                              )
         kwargs = {'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data
-                }
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -629,13 +625,12 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                              """
                              )
         kwargs = {'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data
-                }
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -646,24 +641,24 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
 
     def test_infinite_loop(self):
         # Given
-        self.test_case_data = [{"test_case_type": "stdiobasedtestcase",
-                            "expected_input": "1\n2",
-                            "expected_output": "3",
-                            "weight": 0.0
-                            }]
+        self.test_case_data = [{
+            "test_case_type": "stdiobasedtestcase",
+            "expected_input": "1\n2",
+            "expected_output": "3",
+            "weight": 0.0
+            }]
         timeout_msg = ("Code took more than {0} seconds to run. "
-                            "You probably have an infinite loop in"
-                            " your code.").format(SERVER_TIMEOUT)
+                       "You probably have an infinite loop in"
+                       " your code.").format(SERVER_TIMEOUT)
         user_answer = "while True:\n\tpass"
 
         kwargs = {'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': self.test_case_data
-                }
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': self.test_case_data
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -674,7 +669,6 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                                    result.get("error")[0]["message"]
                                    )
         self.assertFalse(result.get('success'))
-
 
     def test_unicode_literal_bug(self):
         # Given
@@ -687,15 +681,13 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                            "expected_output": "str",
                            "weight": 0.0
                            }]
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': test_case_data,
-                }
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
+                  }
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
@@ -733,19 +725,17 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
                             """
-                            )
+                           )
 
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code,"weight": 1.0
-                            }]
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': True,
-                    'language': 'python'
-                    },
-                    'test_case_data': test_case_data,
+                           "hook_code": hook_code, "weight": 1.0
+                           }]
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': True,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
                   }
 
         # When
@@ -768,20 +758,18 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
                             """
-                            )
+                           )
 
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code,"weight": 1.0
-                            }]
+                           "hook_code": hook_code, "weight": 1.0
+                           }]
 
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': test_case_data,
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
                   }
 
         # When
@@ -805,21 +793,19 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
                             """
-                            )
+                           )
 
         test_case_data = [{"test_case_type": "standardtestcase",
                            "test_case": assert_test_case, 'weight': 1.0},
                           {"test_case_type": "hooktestcase",
                            "hook_code": hook_code, 'weight': 1.0},
                           ]
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': True,
-                    'language': 'python'
-                    },
-                    'test_case_data': test_case_data,
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': True,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
                   }
 
         # When
@@ -842,7 +828,7 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
                                     success, err, mark_fraction = True, "", 0.5
                                 return success, err, mark_fraction
                             """
-                            )
+                             )
         hook_code_2 = dedent("""\
                             def check_answer(user_answer):
                                 success = False
@@ -853,22 +839,19 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
                             """
-                            )
-
+                             )
 
         test_case_data = [{"test_case_type": "hooktestcase",
                            "hook_code": hook_code_1, 'weight': 1.0},
                           {"test_case_type": "hooktestcase",
                            "hook_code": hook_code_2, 'weight': 1.0},
                           ]
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': True,
-                    'language': 'python'
-                    },
-                    'test_case_data': test_case_data,
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': True,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
                   }
 
         # When
@@ -892,19 +875,18 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
                             """
-                            )
-        test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code,"weight": 1.0
-                            }]
+                           )
 
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': test_case_data,
+        test_case_data = [{"test_case_type": "hooktestcase",
+                           "hook_code": hook_code, "weight": 1.0
+                           }]
+
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
                   }
 
         # When
@@ -931,19 +913,18 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
                             """
-                            )
+                           )
+
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code,"weight": 1.0
-                            }]
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'assign_files': [(self.tmp_file, False)],
-                    'partial_grading': False,
-                    'language': 'python'
-                    },
-                    'test_case_data': test_case_data,
+                           "hook_code": hook_code, "weight": 1.0
+                           }]
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'assign_files': [(self.tmp_file, False)],
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
                   }
 
         # When
