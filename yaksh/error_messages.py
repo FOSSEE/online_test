@@ -4,7 +4,8 @@ except ImportError:
     from itertools import izip_longest as zip_longest
 
 
-def prettify_exceptions(exception, message, traceback=None, testcase=None):
+def prettify_exceptions(exception, message, traceback=None,
+                        testcase=None, line_no=None):
     err = {"type": "assertion",
            "exception": exception,
            "traceback": traceback,
@@ -22,6 +23,7 @@ def prettify_exceptions(exception, message, traceback=None, testcase=None):
             err["message"] = value
         err["traceback"] = None
     err["test_case"] = testcase
+    err["line_no"] = line_no
     return err
 
 

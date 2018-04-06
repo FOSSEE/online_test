@@ -148,14 +148,15 @@ class Grader(object):
             error.append(
                 prettify_exceptions("TimeoutException", self.timeout_msg)
                 )
-        except Exception:
+        except Exception as e:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
+            line_no = e.lineno
             if len(tb_list) > 2:
                 del tb_list[1:3]
             error.append(
                 prettify_exceptions(
-                    exc_type.__name__, str(exc_value), "".join(tb_list)
+                    exc_type.__name__, str(exc_value), "".join(tb_list), line_no=line_no
                     )
                 )
         finally:

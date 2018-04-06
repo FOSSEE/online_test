@@ -934,5 +934,6 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertTrue(result.get('success'))
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -74,12 +74,14 @@ class PythonAssertionEvaluator(BaseEvaluator):
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
+            line_no = traceback.extract_tb(exc_tb)[-1][1]
             if len(tb_list) > 2:
                 del tb_list[1:3]
             err = prettify_exceptions(exc_type.__name__,
                                       str(exc_value),
                                       "".join(tb_list),
-                                      self.test_case
+                                      self.test_case,
+                                      line_no
                                       )
         else:
             success = True
