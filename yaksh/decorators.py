@@ -1,4 +1,4 @@
-from django.shortcuts import render, render_to_response, redirect
+from django.shortcuts import render, redirect
 from django.conf import settings
 from django.template import RequestContext
 

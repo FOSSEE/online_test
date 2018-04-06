@@ -7,7 +7,7 @@ import csv
 from django.http import HttpResponse, JsonResponse
 from django.core.urlresolvers import reverse
 from django.contrib.auth import login, logout, authenticate
-from django.shortcuts import render_to_response, render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.template import RequestContext, Context, Template
 from django.template.loader import get_template, render_to_string
 from django.http import Http404
