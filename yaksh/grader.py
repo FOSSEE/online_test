@@ -131,10 +131,9 @@ class Grader(object):
         # Add a new signal handler for the execution of this code.
         prev_handler = create_signal_handler()
         success = False
+        test_case_success_status = [False]
         if len(test_case_instances) != 0:
             test_case_success_status = [False] * len(test_case_instances)
-        else:
-            test_case_success_status = [False]
         error = []
         weight = 0.0
 

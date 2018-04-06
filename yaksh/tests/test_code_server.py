@@ -125,6 +125,21 @@ class TestCodeServer(unittest.TestCase):
         data = json.loads(result.get('result'))
         self.assertFalse(data['success'])
 
+        # With correct answer and test case
+        testdata["metadata"]["user_answer"] = 'def f(): return 2'
+        testdata["test_case_data"] = [{'test_case': 'assert f() == 2',
+                                        'test_case_type': 'standardtestcase',
+                                        'weight': 0.0
+                                        }
+                                       ]
+        # When
+        submit(self.url, '0', json.dumps(testdata), '')
+        result = get_result(self.url, '0', block=True)
+
+        # Then
+        data = json.loads(result.get('result'))
+        self.assertTrue(data['success'])
+
     def test_multiple_simultaneous_hits(self):
         # Given
         results = Queue()
