@@ -156,7 +156,8 @@ class Grader(object):
                 del tb_list[1:3]
             error.append(
                 prettify_exceptions(
-                    exc_type.__name__, str(exc_value), "".join(tb_list), line_no=line_no
+                    exc_type.__name__, str(exc_value), "".join(tb_list),
+                    line_no=line_no
                     )
                 )
         finally:

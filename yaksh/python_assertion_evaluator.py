@@ -39,7 +39,6 @@ class PythonAssertionEvaluator(BaseEvaluator):
             submitted = compile(self.user_answer, '<string>', mode='exec')
             self.exec_scope = {}
             exec(submitted, self.exec_scope)
-            exec("from nose.tools import *", self.exec_scope)
             return self.exec_scope
 
     def check_code(self):
@@ -67,6 +66,7 @@ class PythonAssertionEvaluator(BaseEvaluator):
         success = False
         mark_fraction = 0.0
         try:
+            exec("from nose.tools import *", self.exec_scope)
             _tests = compile(self.test_case, '<string>', mode='exec')
             exec(_tests, self.exec_scope)
         except TimeoutException:
