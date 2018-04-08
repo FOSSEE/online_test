@@ -42,8 +42,7 @@ from yaksh.models import (
     HookTestCase, IntegerTestCase, McqTestCase, Profile,
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
-    get_model_class, FIXTURES_DIR_PATH, Lesson, LessonFile,
-    LearningUnit, LearningModule,
+    get_model_class, Lesson, LessonFile, LearningUnit, LearningModule,
     CourseStatus
 )
 from yaksh.forms import (
@@ -52,8 +51,8 @@ from yaksh.forms import (
     UploadFileForm, get_object_form, FileForm, QuestionPaperForm, LessonForm,
     LessonFileForm, LearningModuleForm, ExerciseForm
 )
-from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME 
-from .settings import URL_ROOT
+from yaksh.code_server_settings import SERVER_POOL_PORT, SERVER_HOST_NAME
+from .settings import URL_ROOT, FIXTURES_DIR_PATH
 from .file_utils import extract_files, is_csv
 from .send_emails import send_user_mail, generate_activation_key, send_bulk_mail
 from .decorators import email_verified, has_profile

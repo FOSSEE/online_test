@@ -32,8 +32,8 @@ from .file_utils import extract_files, delete_files
 from yaksh.code_server import (
     submit, get_result as get_result_from_code_server
 )
-from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
-from django.conf import settings
+from yaksh.settings import OUTPUT_DIR, FIXTURES_DIR_PATH
+from yaksh.code_server_settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from django.forms.models import model_to_dict
 from grades.models import GradingSystem
 
@@ -86,8 +86,6 @@ test_status = (
                 ('inprogress', 'Inprogress'),
                 ('completed', 'Completed'),
               )
-
-FIXTURES_DIR_PATH = os.path.join(settings.BASE_DIR, 'yaksh', 'fixtures')
 
 
 def get_assignment_dir(instance, filename):
@@ -873,7 +871,7 @@ class Profile(models.Model):
     def get_user_dir(self):
         """Return the output directory for the user."""
 
-        user_dir = join(settings.OUTPUT_DIR, str(self.user.username))
+        user_dir = join(OUTPUT_DIR, str(self.user.username))
         if not exists(user_dir):
             os.makedirs(user_dir)
             os.chmod(user_dir, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)

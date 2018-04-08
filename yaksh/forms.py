@@ -5,7 +5,7 @@ from yaksh.models import (
 )
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from django.conf import settings
+from yaksh import settings
 from django.utils import timezone
 from textwrap import dedent
 try:

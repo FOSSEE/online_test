@@ -8,7 +8,7 @@ from textwrap import dedent
 
 # Local import
 from yaksh.grader import Grader
-from yaksh.settings import SERVER_TIMEOUT
+from yaksh.code_server_settings import SERVER_TIMEOUT
 
 
 class EvaluatorBaseTest(unittest.TestCase):

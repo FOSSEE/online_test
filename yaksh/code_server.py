@@ -28,7 +28,7 @@ from tornado.web import Application, RequestHandler
 from six.moves import urllib
 
 # Local imports
-from .settings import N_CODE_SERVERS, SERVER_POOL_PORT
+from .code_server_settings import N_CODE_SERVERS, SERVER_POOL_PORT
 from .grader import Grader
 
 

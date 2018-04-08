@@ -11,6 +11,7 @@ import os
 
 # Django imports
 from django.utils.crypto import get_random_string
+from yaksh.settings import YAKSH_MEDIA_ROOT
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, send_mail
 from django.core.files.storage import default_storage
@@ -73,7 +74,7 @@ def send_bulk_mail(subject, email_body, recipients, attachments):
                 path = default_storage.save('attachments/'+file.name,
                                             ContentFile(file.read())
                                             )
-                msg.attach_file(os.sep.join((settings.MEDIA_ROOT, path)),
+                msg.attach_file(os.sep.join((YAKSH_MEDIA_ROOT, path)),
                                 mimetype="text/html"
                                 )
                 default_storage.delete(path)

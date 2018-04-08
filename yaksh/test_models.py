@@ -21,7 +21,7 @@ import os
 import shutil
 import tempfile
 from threading import Thread
-from yaksh import settings
+from yaksh import code_server_settings as server_settings
 
 def setUpModule():
     # create user profile
@@ -989,7 +989,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.user2_answerpaper2 = self.question_paper.make_answerpaper(
             self.user2, self.ip, 1, self.course.id
         )
-        settings.code_evaluators['python']['standardtestcase'] = \
+        server_settings.code_evaluators['python']['standardtestcase'] = \
             "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
         self.SERVER_POOL_PORT = 4000
         server_pool = ServerPool(n=1, pool_port=self.SERVER_POOL_PORT)
@@ -1001,7 +1001,7 @@ class AnswerPaperTestCases(unittest.TestCase):
     def tearDownClass(self):
         self.server_pool.stop()
         self.server_thread.join()
-        settings.code_evaluators['python']['standardtestcase'] = \
+        server_settings.code_evaluators['python']['standardtestcase'] = \
             "python_assertion_evaluator.PythonAssertionEvaluator"
 
     def test_get_per_question_score(self):

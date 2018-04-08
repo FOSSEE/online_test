@@ -3,7 +3,7 @@ import unittest
 import os
 from yaksh import python_assertion_evaluator
 from yaksh.language_registry import _LanguageRegistry, get_registry
-from yaksh.settings import SERVER_TIMEOUT, code_evaluators
+from yaksh.code_server_settings import SERVER_TIMEOUT, code_evaluators
 
 
 class RegistryTestCase(unittest.TestCase):

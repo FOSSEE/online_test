@@ -18,14 +18,14 @@ from django.test import TestCase
 from django.test import Client
 from django.utils import timezone
 from django.core import mail
-from django.conf import settings
+from yaksh import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files import File
 
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     AssignmentUpload, FileUpload, McqTestCase, IntegerTestCase, StringTestCase,\
-    FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,\
+    FloatTestCase, LearningModule, LearningUnit, Lesson,\
     LessonFile
 from yaksh.decorators import user_has_profile
 
@@ -922,7 +922,7 @@ class TestDownloadAssignment(TestCase):
         self.learning_module.delete()
         self.learning_unit.delete()
         dir_name = self.quiz.description.replace(" ", "_")
-        file_path = os.sep.join((settings.MEDIA_ROOT, dir_name))
+        file_path = os.sep.join((settings.YAKSH_MEDIA_ROOT, dir_name))
         if os.path.exists(file_path):
             shutil.rmtree(file_path)
 
@@ -2219,7 +2219,7 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "users_correct.csv")
+        csv_file_path = os.path.join(settings.FIXTURES_DIR_PATH, "users_correct.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
 
@@ -2242,7 +2242,7 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+        csv_file_path = os.path.join(settings.FIXTURES_DIR_PATH,
                                      "users_add_update_reject.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
@@ -2269,7 +2269,7 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "demo_questions.zip")
+        csv_file_path = os.path.join(settings.FIXTURES_DIR_PATH, "demo_questions.zip")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
         message = "The file uploaded is not a CSV file."
@@ -2293,7 +2293,7 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "users_some_headers_missing.csv")
+        csv_file_path = os.path.join(settings.FIXTURES_DIR_PATH, "users_some_headers_missing.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
         message = "The CSV file does not contain the required headers"
@@ -2317,7 +2317,7 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "users_with_no_values.csv")
+        csv_file_path = os.path.join(settings.FIXTURES_DIR_PATH, "users_with_no_values.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
 
@@ -2352,7 +2352,7 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "users_some_values_missing.csv")
+        csv_file_path = os.path.join(settings.FIXTURES_DIR_PATH, "users_some_values_missing.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
 
@@ -3829,7 +3829,7 @@ class TestShowQuestions(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        ques_file = os.path.join(FIXTURES_DIR_PATH, "demo_questions.zip")
+        ques_file = os.path.join(settings.FIXTURES_DIR_PATH, "demo_questions.zip")
         f = open(ques_file, 'rb')
         questions_file = SimpleUploadedFile(ques_file, f.read(), 
                                             content_type="application/zip")

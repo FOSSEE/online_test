@@ -4,7 +4,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 # Local imports
 from yaksh.models import User, Profile, Course
 from yaksh.code_server import ServerPool
-from yaksh import settings
+from yaksh import code_server_settings as server_settings
 from .selenium_test import SeleniumTest
 
 
@@ -13,14 +13,15 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
     def setUpClass(cls):
         super(YakshSeleniumTests, cls).setUpClass()
         # setup a demo code server
-        settings.code_evaluators['python']['standardtestcase'] = \
+        server_settings.code_evaluators['python']['standardtestcase'] = \
             "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
-        settings.code_evaluators['c']['standardtestcase'] = \
+        server_settings.code_evaluators['c']['standardtestcase'] = \
             "yaksh.cpp_code_evaluator.CppCodeEvaluator"
-        settings.code_evaluators['bash']['standardtestcase'] = \
+        server_settings.code_evaluators['bash']['standardtestcase'] = \
             "yaksh.bash_code_evaluator.BashCodeEvaluator"
         code_server_pool = ServerPool(
-            n=settings.N_CODE_SERVERS, pool_port=settings.SERVER_POOL_PORT
+            n=server_settings.N_CODE_SERVERS,
+            pool_port=server_settings.SERVER_POOL_PORT
         )
         cls.code_server_pool = code_server_pool
         cls.code_server_thread = t = Thread(target=code_server_pool.run)

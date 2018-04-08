@@ -19,7 +19,7 @@ except ImportError:
     from xmlrpc.server import SimpleXMLRPCServer
 
 # Local imports
-from .settings import SERVER_TIMEOUT
+from .code_server_settings import SERVER_TIMEOUT
 from .language_registry import create_evaluator_instance
 from .error_messages import prettify_exceptions
 

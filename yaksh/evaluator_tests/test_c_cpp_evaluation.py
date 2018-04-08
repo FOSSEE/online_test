@@ -11,7 +11,7 @@ from yaksh.grader import Grader
 from yaksh.cpp_code_evaluator import CppCodeEvaluator
 from yaksh.cpp_stdio_evaluator import CppStdIOEvaluator
 from yaksh.evaluator_tests.test_python_evaluation import EvaluatorBaseTest
-from yaksh.settings import SERVER_TIMEOUT
+from yaksh.code_server_settings import SERVER_TIMEOUT
 
 
 class CAssertionEvaluationTestCases(EvaluatorBaseTest):

@@ -9,7 +9,7 @@ from yaksh.grader import Grader
 from yaksh.bash_code_evaluator import BashCodeEvaluator
 from yaksh.bash_stdio_evaluator import BashStdIOEvaluator
 from yaksh.evaluator_tests.test_python_evaluation import EvaluatorBaseTest
-from yaksh.settings import SERVER_TIMEOUT
+from yaksh.code_server_settings import SERVER_TIMEOUT
 from textwrap import dedent
 
 

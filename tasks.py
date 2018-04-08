@@ -8,7 +8,7 @@ from distutils.file_util import copy_file
 import invoke
 from invoke import task
 
-from yaksh.settings import SERVER_POOL_PORT
+from yaksh.code_server_settings import SERVER_POOL_PORT
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 TARGET_CONTAINER_NAME = 'yaksh_code_server'

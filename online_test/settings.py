@@ -14,11 +14,6 @@ from decouple import config
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-# The directory where user data can be saved.  This directory will be
-# world-writable and all user code will be written and saved here by the
-# code server with each user having their own sub-directory.
-OUTPUT_DIR = os.path.join(BASE_DIR, "yaksh_data", "output")
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
@@ -144,9 +139,6 @@ REPLY_EMAIL = 'your_reply_email'
 # For example https://127.0.0.1:8000 or 127.0.0.1:8000
 PRODUCTION_URL = 'your_project_url'
 
-# Set this variable to <False> once the project is in production.
-# If this variable is kept <True> in production, email will not be verified.
-IS_DEVELOPMENT = True
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 

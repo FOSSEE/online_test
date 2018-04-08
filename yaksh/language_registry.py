@@ -4,7 +4,7 @@ import json
 import six  
 
 # Local imports
-from .settings import code_evaluators
+from .code_server_settings import code_evaluators
 
 registry = None
     

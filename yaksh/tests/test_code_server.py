@@ -9,14 +9,14 @@ import unittest
 from six.moves import urllib
 
 from yaksh.code_server import ServerPool, SERVER_POOL_PORT, submit, get_result
-from yaksh import settings
+from yaksh import code_server_settings as server_settings
 
 
 class TestCodeServer(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        settings.code_evaluators['python']['standardtestcase'] = \
+        server_settings.code_evaluators['python']['standardtestcase'] = \
             "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
         server_pool = ServerPool(n=5, pool_port=SERVER_POOL_PORT)
         cls.server_pool = server_pool
@@ -27,7 +27,7 @@ class TestCodeServer(unittest.TestCase):
     def tearDownClass(cls):
         cls.server_pool.stop()
         cls.server_thread.join()
-        settings.code_evaluators['python']['standardtestcase'] = \
+        server_settings.code_evaluators['python']['standardtestcase'] = \
             "python_assertion_evaluator.PythonAssertionEvaluator"
 
     def setUp(self):
