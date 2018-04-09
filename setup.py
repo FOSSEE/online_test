@@ -19,13 +19,15 @@ install_requires = [
     'django-taggit==0.18.1',
     'pytz==2016.4',
     'python-social-auth==0.2.19',
-    'tornado',
+    'tornado==4.4.2',
     'psutil',
     'ruamel.yaml==0.15.23',
     'invoke==0.21.0',
     'six',
     'requests',
     'markdown==2.6.9',
+    'python-decouple==3.1',
+    'invoke==0.21.0',
 ]
 
 setup(
