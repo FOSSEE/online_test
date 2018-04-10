@@ -390,9 +390,9 @@ class Quiz(models.Model):
             qp = None
         ans_ppr = AnswerPaper.objects.filter(
             user=user, course=course, question_paper=qp
-        )
+        ).order_by("-attempt_number")
         if ans_ppr.exists():
-            status = "completed"
+            status = ans_ppr.first().status
         else:
             status = "not attempted"
         return status
