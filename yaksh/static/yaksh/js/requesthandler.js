@@ -75,20 +75,22 @@ function response_handler(method_type, content_type, data, uid){
           var error_output = document.getElementById("error_panel");
           error_output.innerHTML = res.error;
           focus_on_error(error_output);
-          err_lineno = $("#err_lineno").val();
-          if(marker){
-            marker.clear();
-          }
-          if(err_lineno){
-            var lineno = parseInt(err_lineno) - 1;
-            var editor = global_editor.editor;
-            var line_length = editor.getLine(lineno).length;
-            marker = editor.markText({line: lineno, ch: 0}, {line: lineno, ch: line_length},
-                                     {className: "activeline", clearOnEnter:true});
-            }
-          else{
+          if(global_editor.editor){
+            err_lineno = $("#err_lineno").val();
             if(marker){
               marker.clear();
+            }
+            if(err_lineno){
+              var lineno = parseInt(err_lineno) - 1;
+              var editor = global_editor.editor;
+              var line_length = editor.getLine(lineno).length;
+              marker = editor.markText({line: lineno, ch: 0}, {line: lineno, ch: line_length},
+                                       {className: "activeline", clearOnEnter:true});
+              }
+            else{
+              if(marker){
+                marker.clear();
+              }
             }
           }
         }

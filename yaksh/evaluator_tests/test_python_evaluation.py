@@ -317,12 +317,15 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-        err = result.get("error")[0]['traceback']
+        errors = result.get("error")
 
         # Then
         self.assertFalse(result.get("success"))
         for msg in value_error_msg:
-            self.assert_correct_output(msg, err)
+            self.assert_correct_output(msg, errors[0]['traceback'])
+        for index, error in enumerate(errors):
+            self.assertEqual(error['test_case'],
+                             self.test_case_data[index]['test_case'])
 
     def test_file_based_assert(self):
         # Given
@@ -693,6 +696,31 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
         # Then
         self.assertTrue(result.get("success"))
+
+    def test_get_error_lineno(self):
+        user_answer = dedent("""\
+                             print(1/0)
+                            """)
+        test_case_data = [{"test_case_type": "stdiobasedtestcase",
+                           "expected_input": "",
+                           "expected_output": "1",
+                           "weight": 0.0
+                           }]
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
+                  }
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+        # Then
+        self.assertFalse(result.get("success"))
+        error = result.get("error")[0]
+        self.assertEqual(error['line_no'], 1)
+        self.assertEqual(error['exception'], "ZeroDivisionError")
 
 
 class PythonHookEvaluationTestCases(EvaluatorBaseTest):

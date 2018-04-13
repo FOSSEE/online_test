@@ -151,7 +151,10 @@ class Grader(object):
         except Exception as e:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
-            line_no = e.lineno
+            try:
+                line_no = e.lineno
+            except AttributeError:
+                line_no = traceback.extract_tb(exc_tb)[-1][1]
             if len(tb_list) > 2:
                 del tb_list[1:3]
             error.append(
