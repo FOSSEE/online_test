@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import os
 import re
+from textwrap import dedent
 
 from django.db import models
 from django.conf import settings
@@ -9,6 +10,36 @@ from django.utils.text import get_valid_filename
 from certificates.formatters.utils import HTMLFormatter, PDFFormatter, render_certificate_template
 from certificates.settings import CERTIFICATE_STATIC_ROOT, CERTIFICATE_FILE_NAME
 from yaksh.models import Course, CourseStatus
+
+DEFAULT_HTML = dedent("""
+    <!-- Sample Certificate Template -->
+
+    <!-- Set the HTML to landscape mode-->
+    <style type="text/css" media="print">
+        @page { 
+            size: landscape;
+        }
+        body { 
+            writing-mode: tb-rl;
+        }
+    </style>
+    <!-- Define the body for your certificate -->
+    <body>
+    <!-- You can ether define the CSS inline as shown here OR design your own CSS file and upload it separately in the Static Files field -->
+        <div style="width:800px; height:600px; padding:20px; text-align:center; border: 10px solid #787878">
+        <div style="width:750px; height:550px; padding:20px; text-align:center; border: 5px solid #787878">
+               <span style="font-size:50px; font-weight:bold">Certificate of Completion</span>
+               <br><br>
+               <span style="font-size:25px"><i>This is to certify that</i></span>
+               <br><br>
+               <span style="font-size:30px"><b>{{ student.name }}</b></span><br/><br/>
+               <span style="font-size:25px"><i>has completed the course</i></span> <br/><br/>
+               <span style="font-size:30px">{{ course.name }}</span> <br/><br/>
+               <span style="font-size:20px">with score of <b>{{ course_status.grade }}</b></span> <br/><br/><br/><br/>
+        </div>
+        </div>
+    </body>
+    """)
 
 def get_valid_directory_name(s):
     s = str(s).lower().strip().replace(' ', '_')
@@ -34,7 +65,7 @@ def get_cert_template_dir(instance):
 
 class Certificate(models.Model):
     course = models.OneToOneField(Course)
-    html = models.TextField()
+    html = models.TextField(default=DEFAULT_HTML)
     active = models.BooleanField(default=True)
     static_files = models.FileField(upload_to=get_cert_template_dir, blank=True)
 

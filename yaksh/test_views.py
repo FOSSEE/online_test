@@ -423,7 +423,7 @@ class TestStudentDashboard(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
         self.assertEqual(response.context['title'], 'All Courses')
-        self.assertEqual(response.context['courses'][0], (self.course, False))
+        self.assertEqual(response.context['courses'][0], self.course)
 
     def test_student_dashboard_enrolled_courses_get(self):
         """
@@ -442,7 +442,7 @@ class TestStudentDashboard(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
         self.assertEqual(response.context['title'], 'Enrolled Courses')
-        self.assertEqual(response.context['courses'][0], (self.course, False))
+        self.assertEqual(response.context['courses'][0], self.course)
 
     def test_student_dashboard_hidden_courses_post(self):
         """
@@ -459,7 +459,7 @@ class TestStudentDashboard(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
         self.assertEqual(response.context['title'], 'Search')
-        self.assertEqual(response.context['courses'][0], (self.hidden_course, False))
+        self.assertEqual(response.context['courses'][0], self.hidden_course)
 
 
 class TestMonitor(TestCase):
