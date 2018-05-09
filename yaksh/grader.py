@@ -1,22 +1,12 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
 import sys
-import pwd
 import os
-import stat
 import contextlib
-from os.path import isdir, dirname, abspath, join, isfile, exists
+from os.path import dirname, abspath
 import signal
 import traceback
-from multiprocessing import Process, Queue
-import subprocess
-import re
 
-try:
-    from SimpleXMLRPCServer import SimpleXMLRPCServer
-except ImportError:
-    # The above import will not work on Python-3.x.
-    from xmlrpc.server import SimpleXMLRPCServer
 
 # Local imports
 from .settings import SERVER_TIMEOUT
@@ -26,10 +16,12 @@ from .error_messages import prettify_exceptions
 MY_DIR = abspath(dirname(__file__))
 registry = None
 
+
 # Raised when the code times-out.
 # c.f. http://pguides.net/python/timeout-a-function
 class TimeoutException(Exception):
     pass
+
 
 @contextlib.contextmanager
 def change_dir(path):
@@ -74,7 +66,6 @@ class Grader(object):
               'have an infinite loop in your code.' % SERVER_TIMEOUT
         self.timeout_msg = msg
         self.in_dir = in_dir if in_dir else MY_DIR
-
 
     def evaluate(self, kwargs):
         """Evaluates given code with the test cases based on
@@ -122,7 +113,6 @@ class Grader(object):
             test_case_instances.append(test_case_instance)
         return test_case_instances
 
-
     def safe_evaluate(self, test_case_instances):
         """
         Handles code evaluation along with compilation, signal handling
@@ -157,20 +147,24 @@ class Grader(object):
                 test_case_instance.teardown()
 
         except TimeoutException:
-            error.append(prettify_exceptions("TimeoutException",
-                                             self.timeout_msg
-                                             )
-                         )
-        except Exception:
+            error.append(
+                prettify_exceptions("TimeoutException", self.timeout_msg)
+                )
+        except Exception as e:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
+            try:
+                line_no = e.lineno
+            except AttributeError:
+                line_no = traceback.extract_tb(exc_tb)[-1][1]
             if len(tb_list) > 2:
                 del tb_list[1:3]
-            error.append(prettify_exceptions(exc_type.__name__,
-                                         str(exc_value),
-                                         "".join(tb_list),
-                                         )
-                         )
+            error.append(
+                prettify_exceptions(
+                    exc_type.__name__, str(exc_value), "".join(tb_list),
+                    line_no=line_no
+                    )
+                )
         finally:
             # Set back any original signal handler.
             set_original_signal_handler(prev_handler)
