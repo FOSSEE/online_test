@@ -1,4 +1,4 @@
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render, redirect
 from django.conf import settings
 from django.template import RequestContext
 
@@ -20,15 +20,13 @@ def has_profile(func):
     def _wrapped_view(request, *args, **kwargs):
         if user_has_profile(request.user):
             return func(request, *args, **kwargs)
-        ci = RequestContext(request)
         if request.user.groups.filter(name='moderator').exists():
             template = 'manage.html'
         else:
             template = 'user.html'
         form = ProfileForm(user=request.user, instance=None)
         context = {'template': template, 'form': form}
-        return render_to_response('yaksh/editprofile.html', context,
-                                    context_instance=ci)
+        return render(request, 'yaksh/editprofile.html', context)
     return _wrapped_view
 
 
@@ -40,7 +38,6 @@ def email_verified(func):
     """
 
     def is_email_verified(request, *args, **kwargs):
-        ci = RequestContext(request)
         user = request.user
         context = {}
         if not settings.IS_DEVELOPMENT:
@@ -49,7 +46,8 @@ def email_verified(func):
                     context['success'] = False
                     context['msg'] = "Your account is not verified. \
                                         Please verify your account"
-                    return render_to_response('yaksh/activation_status.html',
-                                                context, context_instance=ci)
+                    return render(
+                        request, 'yaksh/activation_status.html', context
+                    )
         return func(request, *args, **kwargs)
     return is_email_verified
