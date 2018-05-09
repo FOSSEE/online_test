@@ -630,6 +630,15 @@ class QuestionPaperTestCases(unittest.TestCase):
         # All active questions
         self.questions = Question.objects.filter(active=True, user=self.user)
         self.quiz = Quiz.objects.get(description="demo quiz 1")
+        self.quiz_with_time_between_attempts = Quiz.objects.create(
+            description="demo quiz with time between attempts",
+            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            duration=30, active=True,
+            attempts_allowed=3, time_between_attempts=1.0,
+            pass_criteria=0,
+            instructions="Demo Instructions"
+        )
 
         # create question paper with only fixed questions
         self.question_paper_fixed_questions = QuestionPaper.objects.create(
@@ -653,6 +662,12 @@ class QuestionPaperTestCases(unittest.TestCase):
 
         # create question paper
         self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+            total_marks=0.0,
+            shuffle_questions=True
+        )
+
+        self.question_paper_with_time_between_attempts = QuestionPaper.objects.create(
+            quiz=self.quiz_with_time_between_attempts,
             total_marks=0.0,
             shuffle_questions=True
         )
@@ -784,8 +799,10 @@ class QuestionPaperTestCases(unittest.TestCase):
         answerpaper.passed = True
         answerpaper.save()
         # test can_attempt_now(self):
-        self.assertFalse(self.question_paper.can_attempt_now(self.user,
-                                                             self.course.id))
+        result = (False, u'You cannot attempt demo quiz 1 quiz more than 1 time(s)')
+        self.assertEquals(
+            self.question_paper.can_attempt_now(self.user, self.course.id), result
+        )
         # trying to create an answerpaper with same parameters passed.
         answerpaper2 = self.question_paper.make_answerpaper(self.user, self.ip,
                                                             attempt_num,
@@ -793,6 +810,46 @@ class QuestionPaperTestCases(unittest.TestCase):
         # check if make_answerpaper returned an object instead of creating one.
         self.assertEqual(answerpaper, answerpaper2)
 
+
+    def test_time_between_attempt(self):
+        """ Test make_answerpaper() method of Question Paper"""
+        already_attempted = self.attempted_papers.count()
+        attempt_num = 1
+
+        self.first_start_time = timezone.now()
+        self.first_end_time = self.first_start_time + timedelta(minutes=20)
+        self.second_start_time = self.first_start_time + timedelta(minutes=30)
+        self.second_end_time = self.second_start_time + timedelta(minutes=20)
+
+        # create answerpaper
+        self.first_answerpaper = AnswerPaper(
+            user=self.user,
+            question_paper=self.question_paper_with_time_between_attempts,
+            start_time=self.first_start_time,
+            end_time=self.first_end_time,
+            user_ip=self.ip,
+            course=self.course,
+            attempt_number=attempt_num
+        )
+        self.first_answerpaper.passed = True
+        self.first_answerpaper.save()
+
+        self.second_answerpaper = AnswerPaper(
+            user=self.user,
+            question_paper=self.question_paper_with_time_between_attempts,
+            start_time=self.second_start_time,
+            end_time=self.second_end_time,
+            user_ip=self.ip,
+            course=self.course,
+            attempt_number=attempt_num + 1
+        )
+        self.second_answerpaper.passed = True
+        self.second_answerpaper.save()
+
+        result = (False, u'You cannot start the next attempt for this quiz before 1.0 hour(s)')
+        self.assertEquals(
+            self.question_paper_with_time_between_attempts.can_attempt_now(self.user, self.course.id), result
+        )
 
 
     def test_create_trial_paper_to_test_quiz(self):

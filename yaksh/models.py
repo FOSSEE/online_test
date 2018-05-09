@@ -317,7 +317,7 @@ class Quiz(models.Model):
     attempts_allowed = models.IntegerField(default=1, choices=attempts)
 
     time_between_attempts = models.FloatField(
-        "Time Between Quiz Attempts in hours"
+        "Time Between Quiz Attempts in hours", default=0.0
     )
 
     is_trial = models.BooleanField(default=False)
@@ -1356,11 +1356,18 @@ class QuestionPaper(models.Model):
             )
             if last_attempt:
                 time_lag = (timezone.now() - last_attempt.start_time).total_seconds() / 3600
-                return time_lag >= self.quiz.time_between_attempts
+                can_attempt = time_lag >= self.quiz.time_between_attempts
+                msg = "You cannot start the next attempt for this quiz before {0} hour(s)".format(
+                    self.quiz.time_between_attempts
+                ) if not can_attempt else None
+                return can_attempt, msg
             else:
-                return True
+                return True, None
         else:
-            return False
+            msg = "You cannot attempt {0} quiz more than {1} time(s)".format(
+                self.quiz.description, self.quiz.attempts_allowed
+            )
+            return False, msg
 
     def create_demo_quiz_ppr(self, demo_quiz, user):
         question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
