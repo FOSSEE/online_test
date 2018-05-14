@@ -65,7 +65,7 @@ def send_bulk_mail(subject, email_body, recipients, attachments):
     try:
         text_msg = ""
         msg = EmailMultiAlternatives(subject, text_msg, settings.SENDER_EMAIL,
-                                    recipients
+                                    [settings.SENDER_EMAIL], bcc=recipients
                                     )
         msg.attach_alternative(email_body, "text/html")
         if attachments:

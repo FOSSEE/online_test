@@ -2556,7 +2556,7 @@ class TestCourseDetail(TestCase):
         attachment_file = mail.outbox[0].attachments[0][0]
         subject = mail.outbox[0].subject
         body = mail.outbox[0].alternatives[0][0]
-        recipients = mail.outbox[0].recipients()
+        recipients = mail.outbox[0].bcc
         self.assertEqual(attachment_file, "file.txt")
         self.assertEqual(subject, "test_bulk_mail")
         self.assertEqual(body, "Test_Mail")
