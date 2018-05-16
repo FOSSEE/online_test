@@ -467,7 +467,7 @@ class TestMonitor(TestCase):
             password=self.user_plaintext_pass,
             first_name='first_name',
             last_name='last_name',
-            email='demo@test.com'
+            email='demo@test.com',
         )
 
         Profile.objects.create(
@@ -476,7 +476,8 @@ class TestMonitor(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -661,7 +662,8 @@ class TestGradeUser(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -877,7 +879,8 @@ class TestDownloadAssignment(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group
@@ -1052,7 +1055,8 @@ class TestAddQuiz(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -1354,7 +1358,8 @@ class TestAddTeacher(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -1668,7 +1673,8 @@ class TestCourses(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -1686,7 +1692,8 @@ class TestCourses(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -1714,6 +1721,16 @@ class TestCourses(TestCase):
             first_name='teacher_first_name',
             last_name='teacher_last_name',
             email='demo_teacher@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.teacher,
+            roll_number=10,
+            institute='IIT',
+            department='Aeronautical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group
@@ -2087,7 +2104,8 @@ class TestAddCourse(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create a teacher
@@ -2106,7 +2124,8 @@ class TestAddCourse(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -2266,7 +2285,8 @@ class TestCourseDetail(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -2849,7 +2869,8 @@ class TestEnrollRequest(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -2867,7 +2888,8 @@ class TestEnrollRequest(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -3118,7 +3140,8 @@ class TestSelfEnroll(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -3136,7 +3159,8 @@ class TestSelfEnroll(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -3228,7 +3252,8 @@ class TestGrader(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -3246,7 +3271,8 @@ class TestGrader(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -3553,7 +3579,8 @@ class TestModeratorDashboard(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.mod_no_profile_plaintext_pass = 'demo2'
@@ -3801,7 +3828,7 @@ class TestUserLogin(TestCase):
         self.assertTemplateUsed(response, "yaksh/activation_status.html")
 
 
-class TestDownloadcsv(TestCase):
+class TestDownloadCsv(TestCase):
     def setUp(self):
         self.client = Client()
         tzone = pytz.timezone("utc")
@@ -3841,7 +3868,8 @@ class TestDownloadcsv(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
         self.mod_group.user_set.add(self.user)
         self.course = Course.objects.create(
@@ -4036,7 +4064,8 @@ class TestShowQuestions(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
         self.mod_group.user_set.add(self.user)
         self.question = Question.objects.create(
@@ -4352,7 +4381,8 @@ class TestShowStatistics(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -4514,7 +4544,8 @@ class TestQuestionPaper(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.student_plaintext_pass = 'demo'
@@ -4568,7 +4599,8 @@ class TestQuestionPaper(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group
@@ -5262,7 +5294,8 @@ class TestLearningModule(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create a student
@@ -5282,7 +5315,17 @@ class TestLearningModule(TestCase):
             password=self.teacher_plaintext_pass,
             first_name='first_name',
             last_name='last_name',
-            email='demo@student.com'
+            email='demo@teacher.com',
+        )
+
+        Profile.objects.create(
+            user=self.teacher,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group
@@ -5643,7 +5686,8 @@ class TestLessons(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create a student
@@ -5656,6 +5700,15 @@ class TestLessons(TestCase):
             email='demo@student.com'
         )
 
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='student',
+            timezone='UTC'
+        )
+
         # Create a teacher to add to the course
         self.teacher_plaintext_pass = 'demo_teacher'
         self.teacher = User.objects.create_user(
@@ -5664,6 +5717,16 @@ class TestLessons(TestCase):
             first_name='first_name',
             last_name='last_name',
             email='demo@student.com'
+        )
+
+        Profile.objects.create(
+            user=self.teacher,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group

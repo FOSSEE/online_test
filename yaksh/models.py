@@ -8,7 +8,7 @@ from ruamel.yaml.comments import CommentedMap
 from random import sample
 from collections import Counter
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
 from django.utils import timezone
@@ -982,6 +982,7 @@ class Profile(models.Model):
     institute = models.CharField(max_length=128)
     department = models.CharField(max_length=64)
     position = models.CharField(max_length=64)
+    is_moderator = models.BooleanField(default=False)
     timezone = models.CharField(
         max_length=64,
         default=pytz.utc.zone,
@@ -999,6 +1000,15 @@ class Profile(models.Model):
             os.makedirs(user_dir)
             os.chmod(user_dir, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         return user_dir
+
+    def _add_to_moderator_group(self, group_name='moderator'):
+        if self.is_moderator:
+            group = Group.objects.get(name=group_name)
+            self.user.groups.add(group)
+
+    def save(self, *args, **kwargs):
+        super(Profile, self).save(*args, **kwargs)
+        self._add_to_moderator_group()
 
     def __str__(self):
         return '%s' % (self.user.get_full_name())
