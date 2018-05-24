@@ -13,6 +13,7 @@ class ProfileAdmin(admin.ModelAdmin):
     search_fields = ['user__first_name', 'user__last_name', 'user__username',
                      "roll_number", "institute", "department"]
 
+
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Question)
 admin.site.register(TestCase)

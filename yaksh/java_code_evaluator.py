@@ -158,7 +158,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                             err = err + "\n" + e.split(":", 1)[1]
                         else:
                             err = err + "\n" + e
-                except:
+                except Exception:
                         err = err + "\n" + main_err
         else:
             err = "Compilation Error:"
@@ -169,7 +169,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                         err = err + "\n" + e.split(":", 1)[1]
                     else:
                         err = err + "\n" + e
-            except:
+            except Exception:
                 err = err + "\n" + stdnt_stderr
 
         return success, err, mark_fraction

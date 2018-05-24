@@ -1,30 +1,20 @@
-import random
-import string
 import os
-from datetime import datetime, timedelta
-import collections
 import csv
 from django.http import HttpResponse, JsonResponse
-from django.core.urlresolvers import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
-from django.template import RequestContext, Context, Template
-from django.template.loader import get_template, render_to_string
+from django.template import Context, Template
 from django.http import Http404
-from django.db.models import Sum, Max, Q, F
+from django.db.models import Max, Q, F
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.forms.models import inlineformset_factory
 from django.utils import timezone
-from django.core.validators import URLValidator
 from django.core.exceptions import (
-    MultipleObjectsReturned, ObjectDoesNotExist, ValidationError
+    MultipleObjectsReturned, ObjectDoesNotExist
 )
-from django.conf import settings
-import pytz
 from taggit.models import Tag
-from itertools import chain
 import json
 import six
 from textwrap import dedent
@@ -88,6 +78,7 @@ def add_to_group(users):
     for user in users:
         if not is_moderator(user):
             user.groups.add(group)
+
 
 CSV_FIELDS = ['name', 'username', 'roll_number', 'institute', 'department',
               'questions', 'marks_obtained', 'out_of', 'percentage', 'status']

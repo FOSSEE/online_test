@@ -151,7 +151,7 @@ class CppCodeEvaluator(BaseEvaluator):
                             err = "{0} \n {1}".format(err, e.split(":", 1)[1])
                         else:
                             err = "{0} \n {1}".format(err, e)
-                except:
+                except Exception:
                         err = "{0} \n {1}".format(err, main_err)
         else:
             err = "Compilation Error:"
@@ -162,7 +162,7 @@ class CppCodeEvaluator(BaseEvaluator):
                         err = "{0} \n {1}".format(err, e.split(":", 1)[1])
                     else:
                         err = "{0} \n {1}".format(err, e)
-            except:
+            except Exception:
                 err = "{0} \n {1}".format(err, stdnt_stderr)
 
         return success, err, mark_fraction

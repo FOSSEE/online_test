@@ -37,5 +37,6 @@ class RegistryTestCase(unittest.TestCase):
     def tearDown(self):
         self.registry_object = None
 
+
 if __name__ == '__main__':
     unittest.main()
