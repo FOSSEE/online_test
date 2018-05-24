@@ -8,7 +8,6 @@ except ImportError:
     from io import BytesIO as string_io
 import zipfile
 import shutil
-from textwrap import dedent
 from markdown import Markdown
 
 from django.contrib.auth.models import Group
@@ -22,11 +21,13 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files import File
 
-from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
-    QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
-    AssignmentUpload, FileUpload, McqTestCase, IntegerTestCase, StringTestCase,\
-    FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,\
-    LessonFile, CourseStatus
+
+from yaksh.models import (
+    User, Profile, Question, Quiz, QuestionPaper, AnswerPaper, Answer, Course,
+    AssignmentUpload, McqTestCase, IntegerTestCase, StringTestCase,
+    FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,
+    LessonFile
+)
 from yaksh.decorators import user_has_profile
 
 
@@ -38,21 +39,23 @@ class TestUserRegistration(TestCase):
         self.registered_user.delete()
 
     def test_register_user_post(self):
-        response = self.client.post(reverse('yaksh:register'),
-                data={'username': 'register_user',
-                      'email':'register_user@mail.com', 'password': 'reg_user',
-                      'confirm_password': 'reg_user', 'first_name': 'user1_f_name',
-                      'last_name': 'user1_l_name', 'roll_number': '1',
-                      'institute': 'demo_institute', 'department': 'demo_dept',
-                      'position': 'student', 'timezone': pytz.utc.zone
-                      }
+        self.client.post(
+            reverse('yaksh:register'),
+            data={'username': 'register_user',
+                  'email': 'register_user@mail.com', 'password': 'reg_user',
+                  'confirm_password': 'reg_user', 'first_name': 'user1_f_name',
+                  'last_name': 'user1_l_name', 'roll_number': '1',
+                  'institute': 'demo_institute', 'department': 'demo_dept',
+                  'position': 'student', 'timezone': pytz.utc.zone
+                  }
             )
         self.registered_user = User.objects.get(username='register_user')
         self.assertEqual(self.registered_user.email, 'register_user@mail.com')
         self.assertEqual(self.registered_user.first_name, 'user1_f_name')
         self.assertEqual(self.registered_user.last_name, 'user1_l_name')
         self.assertEqual(self.registered_user.profile.roll_number, '1')
-        self.assertEqual(self.registered_user.profile.institute, 'demo_institute')
+        self.assertEqual(self.registered_user.profile.institute,
+                         'demo_institute')
         self.assertEqual(self.registered_user.profile.department, 'demo_dept')
         self.assertEqual(self.registered_user.profile.position, 'student')
         self.assertEqual(self.registered_user.profile.timezone, 'UTC')
@@ -94,7 +97,6 @@ class TestProfile(TestCase):
         self.user1.delete()
         self.user2.delete()
 
-
     def test_user_has_profile_for_user_without_profile(self):
         """
         If no profile exists for user passed as argument return False
@@ -108,7 +110,6 @@ class TestProfile(TestCase):
         """
         has_profile_status = user_has_profile(self.user2)
         self.assertTrue(has_profile_status)
-
 
     def test_view_profile_denies_anonymous(self):
         """
@@ -150,15 +151,16 @@ class TestProfile(TestCase):
             username=self.user2.username,
             password=self.user2_plaintext_pass
         )
-        post_response = self.client.post(reverse('yaksh:new_activation'),
-                data={'email':self.user2.email}
+        post_response = self.client.post(
+                reverse('yaksh:new_activation'),
+                data={'email': self.user2.email}
             )
         subject = mail.outbox[0].subject.replace(" ", "_")
         activation_key = mail.outbox[0].body.split("\n")[2].split("/")[-1]
-        get_response = self.client.get(reverse('yaksh:activate',
-                                           kwargs={'key': activation_key}),
-                                   follow=True
-                                   )
+        get_response = self.client.get(
+            reverse('yaksh:activate', kwargs={'key': activation_key}),
+            follow=True
+            )
         updated_profile_user = User.objects.get(id=self.user2.id)
         updated_profile = Profile.objects.get(user=updated_profile_user)
         self.assertEqual(post_response.status_code, 200)
@@ -175,7 +177,8 @@ class TestProfile(TestCase):
             username=self.user2.username,
             password=self.user2_plaintext_pass
         )
-        response = self.client.post(reverse('yaksh:edit_profile'),
+        response = self.client.post(
+            reverse('yaksh:edit_profile'),
             data={
                 'user': self.user2,
                 'first_name': 'new_first_name',
@@ -207,7 +210,8 @@ class TestProfile(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.post(reverse('yaksh:edit_profile'),
+        response = self.client.post(
+            reverse('yaksh:edit_profile'),
             data={
                 'user': self.user1,
                 'first_name': 'new_first_name',
@@ -275,10 +279,11 @@ class TestProfile(TestCase):
             username=self.user2.username,
             password=self.user2_plaintext_pass
         )
-        response = self.client.post(reverse('yaksh:update_email'),
+        response = self.client.post(
+            reverse('yaksh:update_email'),
             data={
                 'username': self.user2.username,
-                'email':"demo_user2@mail.com"
+                'email': "demo_user2@mail.com"
             }
         )
         updated_user = User.objects.get(id=self.user2.id)
@@ -339,12 +344,15 @@ class TestStudentDashboard(TestCase):
             timezone='UTC'
         )
 
-        self.course = Course.objects.create(name="Python Course",
-            enrollment="Enroll Request", creator=self.user)
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user
+            )
 
-        self.hidden_course = Course.objects.create(name="Hidden Course",
-            enrollment="Enroll Request", creator=self.user, code="hide",
-            hidden=True)
+        self.hidden_course = Course.objects.create(
+            name="Hidden Course", enrollment="Enroll Request",
+            creator=self.user, code="hide", hidden=True
+            )
 
     def tearDown(self):
         self.client.logout()
@@ -388,7 +396,7 @@ class TestStudentDashboard(TestCase):
 
     def test_student_dashboard_all_courses_get(self):
         """
-            Check student dashboard for all non hidden courses 
+            Check student dashboard for all non hidden courses
         """
         self.client.login(
             username=self.student.username,
@@ -404,7 +412,7 @@ class TestStudentDashboard(TestCase):
 
     def test_student_dashboard_enrolled_courses_get(self):
         """
-            Check student dashboard for all courses in which student is 
+            Check student dashboard for all courses in which student is
             enrolled
         """
         self.client.login(
@@ -413,7 +421,7 @@ class TestStudentDashboard(TestCase):
         )
         self.course.students.add(self.student)
         response = self.client.get(reverse('yaksh:quizlist_user',
-                                    kwargs={'enrolled': "enrolled"}),
+                                           kwargs={'enrolled': "enrolled"}),
                                    follow=True
                                    )
         self.assertEqual(response.status_code, 200)
@@ -431,8 +439,8 @@ class TestStudentDashboard(TestCase):
             password=self.student_plaintext_pass
         )
         response = self.client.post(reverse('yaksh:quizlist_user'),
-                                   data={'course_code': 'hide'}
-                                   )
+                                    data={'course_code': 'hide'}
+                                    )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
         self.assertEqual(response.context['title'], 'Search')
@@ -486,8 +494,10 @@ class TestMonitor(TestCase):
         # Add to moderator group
         self.mod_group.user_set.add(self.user)
 
-        self.course = Course.objects.create(name="Python Course",
-            enrollment="Open Enrollment", creator=self.user)
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Open Enrollment", creator=self.user
+            )
 
         self.quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
@@ -510,13 +520,16 @@ class TestMonitor(TestCase):
             points=1.0, language="python", type="code", user=self.user
             )
 
-        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz,
             total_marks=1.0, fixed_question_order=str(self.question)
             )
         self.question_paper.fixed_questions.add(self.question)
         user_answer = "def add(a, b)\n\treturn a+b"
-        self.new_answer = Answer(question=self.question, answer=user_answer,
-                            correct=True, error=json.dumps([]))
+        self.new_answer = Answer(
+            question=self.question, answer=user_answer,
+            correct=True, error=json.dumps([])
+            )
         self.new_answer.save()
         self.answerpaper = AnswerPaper.objects.create(
             user=self.student, question_paper=self.question_paper,
@@ -579,17 +592,19 @@ class TestMonitor(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:monitor', 
-                                            kwargs={'quiz_id': self.quiz.id,
-                                                    'course_id': self.course.id}),
-                                   follow=True
-                                   )
+        response = self.client.get(
+            reverse('yaksh:monitor',
+                    kwargs={'quiz_id': self.quiz.id,
+                            'course_id': self.course.id}),
+            follow=True
+            )
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/monitor.html")
         self.assertEqual(response.context['msg'], "Quiz Results")
         self.assertEqual(response.context['papers'][0], self.answerpaper)
-        self.assertEqual(response.context['latest_attempts'][0], self.answerpaper)
+        self.assertEqual(response.context['latest_attempts'][0],
+                         self.answerpaper)
 
     def test_get_quiz_user_data(self):
         """
@@ -599,19 +614,23 @@ class TestMonitor(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:user_data',
-                                kwargs={'user_id':self.student.id,
-                                    'questionpaper_id': self.question_paper.id,
-                                    'course_id': self.course.id}),
-                                follow=True
-                                )
+        response = self.client.get(
+            reverse('yaksh:user_data',
+                    kwargs={'user_id': self.student.id,
+                            'questionpaper_id': self.question_paper.id,
+                            'course_id': self.course.id}),
+            follow=True
+            )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/user_data.html')
-        self.assertEqual(response.context['data']['papers'][0], self.answerpaper)
-        self.assertEqual(response.context['data']['profile'], self.student.profile)
+        self.assertEqual(response.context['data']['papers'][0],
+                         self.answerpaper)
+        self.assertEqual(response.context['data']['profile'],
+                         self.student.profile)
         self.assertEqual(response.context['data']['user'], self.student)
         self.assertEqual(response.context['data']['questionpaperid'],
-                            str(self.question_paper.id))
+                         str(self.question_paper.id))
+
 
 class TestGradeUser(TestCase):
     def setUp(self):
@@ -660,7 +679,8 @@ class TestGradeUser(TestCase):
         # Add to moderator group
         self.mod_group.user_set.add(self.user)
 
-        self.course = Course.objects.create(name="Python Course",
+        self.course = Course.objects.create(
+            name="Python Course",
             enrollment="Open Enrollment", creator=self.user)
 
         self.quiz = Quiz.objects.create(
@@ -684,13 +704,16 @@ class TestGradeUser(TestCase):
             points=1.0, language="python", type="code", user=self.user
             )
 
-        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz,
             total_marks=1.0, fixed_question_order=str(self.question.id)
             )
         self.question_paper.fixed_questions.add(self.question)
         user_answer = "def add(a, b)\n\treturn a+b"
-        self.new_answer = Answer(question=self.question, answer=user_answer,
-                            correct=True, error=json.dumps([]), marks=0.5)
+        self.new_answer = Answer(
+            question=self.question, answer=user_answer,
+            correct=True, error=json.dumps([]), marks=0.5
+            )
         self.new_answer.save()
         self.answerpaper = AnswerPaper.objects.create(
             user=self.student, question_paper=self.question_paper,
@@ -753,15 +776,16 @@ class TestGradeUser(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:grade_user', 
-                                            kwargs={"quiz_id": self.quiz.id,
-                                            'course_id': self.course.id}),
-                                   follow=True
-                                   )
+        response = self.client.get(
+            reverse('yaksh:grade_user',
+                    kwargs={"quiz_id": self.quiz.id,
+                            'course_id': self.course.id}),
+            follow=True
+            )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/grade_user.html")
         self.assertEqual(response.context['users'][0]['user__first_name'],
-                        self.student.first_name)
+                         self.student.first_name)
         self.assertEqual(response.context['quiz'], self.quiz)
         self.assertFalse(response.context['has_quiz_assignments'])
 
@@ -773,12 +797,13 @@ class TestGradeUser(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:grade_user', 
-                                            kwargs={"quiz_id": self.quiz.id,
-                                                    "course_id": self.course.id,
-                                                    "user_id": self.student.id}),
-                                   follow=True
-                                   )
+        response = self.client.get(
+            reverse('yaksh:grade_user',
+                    kwargs={"quiz_id": self.quiz.id,
+                            "course_id": self.course.id,
+                            "user_id": self.student.id}),
+            follow=True
+            )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/grade_user.html")
         self.assertFalse(response.context['has_user_assignments'])
@@ -794,25 +819,28 @@ class TestGradeUser(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        self.client.get(reverse('yaksh:grade_user', 
+        self.client.get(reverse('yaksh:grade_user',
                                 kwargs={"quiz_id": self.quiz.id,
                                         "course_id": self.course.id,
                                         "user_id": self.student.id}),
-                                follow=True
-                                )
+                        follow=True
+                        )
         question_marks = "q{0}_marks".format(self.question.id)
-        response = self.client.post(reverse('yaksh:grade_user', 
-                                    kwargs={"quiz_id": self.quiz.id,
-                                        "user_id": self.student.id,
-                                        "course_id": self.course.id,
-                                        "attempt_number": self.answerpaper.attempt_number}),
-                                    data={question_marks: 1.0}
-                                    )
+        response = self.client.post(
+            reverse(
+                'yaksh:grade_user',
+                kwargs={"quiz_id": self.quiz.id,
+                        "user_id": self.student.id,
+                        "course_id": self.course.id,
+                        "attempt_number": self.answerpaper.attempt_number}
+                ),
+            data={question_marks: 1.0}
+            )
 
-        updated_ans_paper = AnswerPaper.objects.get(user=self.student,
-                                question_paper=self.question_paper,
-                                attempt_number=self.answerpaper.attempt_number
-                                )
+        updated_ans_paper = AnswerPaper.objects.get(
+            user=self.student, question_paper=self.question_paper,
+            attempt_number=self.answerpaper.attempt_number
+            )
         updated_ans = Answer.objects.get(question=self.question)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/grade_user.html")
@@ -867,8 +895,10 @@ class TestDownloadAssignment(TestCase):
             email='demo_student2@test.com'
         )
 
-        self.course = Course.objects.create(name="Python Course",
-            enrollment="Enroll Request", creator=self.user)
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user
+            )
 
         self.quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
@@ -890,7 +920,8 @@ class TestDownloadAssignment(TestCase):
             points=1.0, language="python", type="upload", user=self.user
             )
 
-        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz,
             total_marks=1.0, fixed_question_order=str(self.question.id)
             )
         self.question_paper.fixed_questions.add(self.question)
@@ -898,16 +929,14 @@ class TestDownloadAssignment(TestCase):
         # create assignment file
         assignment_file1 = SimpleUploadedFile("file1.txt", b"Test")
         assignment_file2 = SimpleUploadedFile("file2.txt", b"Test")
-        assignment_file3 = SimpleUploadedFile("file3.txt", b"Test")
-        self.assignment1 = AssignmentUpload.objects.create(user=self.student1,
-            assignmentQuestion=self.question,
-            assignmentFile=assignment_file1,
-            question_paper=self.question_paper
+        SimpleUploadedFile("file3.txt", b"Test")
+        self.assignment1 = AssignmentUpload.objects.create(
+            user=self.student1, assignmentQuestion=self.question,
+            assignmentFile=assignment_file1, question_paper=self.question_paper
             )
-        self.assignment2 = AssignmentUpload.objects.create(user=self.student2,
-            assignmentQuestion=self.question,
-            assignmentFile=assignment_file2,
-            question_paper=self.question_paper
+        self.assignment2 = AssignmentUpload.objects.create(
+            user=self.student2, assignmentQuestion=self.question,
+            assignmentFile=assignment_file2, question_paper=self.question_paper
             )
 
     def tearDown(self):
@@ -935,7 +964,7 @@ class TestDownloadAssignment(TestCase):
             password=self.student1_plaintext_pass
         )
         response = self.client.get(reverse('yaksh:download_quiz_assignment',
-                                            kwargs={'quiz_id': self.quiz.id}),
+                                           kwargs={'quiz_id': self.quiz.id}),
                                    follow=True
                                    )
         self.assertEqual(response.status_code, 404)
@@ -956,7 +985,7 @@ class TestDownloadAssignment(TestCase):
         file_name = file_name.replace(" ", "_")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
-                        "attachment; filename={0}".format(file_name))
+                         "attachment; filename={0}".format(file_name))
         zip_file = string_io(response.content)
         zipped_file = zipfile.ZipFile(zip_file, 'r')
         self.assertIsNone(zipped_file.testzip())
@@ -973,18 +1002,19 @@ class TestDownloadAssignment(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:download_user_assignment',
-                                        kwargs={'quiz_id': self.quiz.id,
-                                                'question_id': self.question.id,
-                                                'user_id': self.student2.id   
-                                                }),
-                                        follow=True
-                                   )
+        response = self.client.get(
+            reverse('yaksh:download_user_assignment',
+                    kwargs={'quiz_id': self.quiz.id,
+                            'question_id': self.question.id,
+                            'user_id': self.student2.id
+                            }),
+            follow=True
+            )
         file_name = "{0}.zip".format(self.student2.get_full_name())
         file_name = file_name.replace(" ", "_")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
-                        "attachment; filename={0}".format(file_name))
+                         "attachment; filename={0}".format(file_name))
         zip_file = string_io(response.content)
         zipped_file = zipfile.ZipFile(zip_file, 'r')
         self.assertIsNone(zipped_file.testzip())
@@ -1031,8 +1061,10 @@ class TestAddQuiz(TestCase):
         # Add to moderator group
         self.mod_group.user_set.add(self.user)
 
-        self.course = Course.objects.create(name="Python Course",
-            enrollment="Enroll Request", creator=self.user)
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user
+            )
 
         self.quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
@@ -1076,7 +1108,6 @@ class TestAddQuiz(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
-        course_id = self.course.id
         response = self.client.get(reverse('yaksh:add_quiz'),
                                    follow=True
                                    )
@@ -1105,8 +1136,9 @@ class TestAddQuiz(TestCase):
             password=self.user_plaintext_pass
         )
         tzone = pytz.timezone('UTC')
-        response = self.client.post(reverse('yaksh:edit_quiz',
-            kwargs={'quiz_id': self.quiz.id}),
+        response = self.client.post(
+            reverse('yaksh:edit_quiz',
+                    kwargs={'quiz_id': self.quiz.id}),
             data={
                 'start_date_time': '2016-01-10 09:00:15',
                 'end_date_time': '2016-01-15 09:00:15',
@@ -1122,10 +1154,12 @@ class TestAddQuiz(TestCase):
         )
 
         updated_quiz = Quiz.objects.get(id=self.quiz.id)
-        self.assertEqual(updated_quiz.start_date_time,
+        self.assertEqual(
+            updated_quiz.start_date_time,
             datetime(2016, 1, 10, 9, 0, 15, 0, tzone)
         )
-        self.assertEqual(updated_quiz.end_date_time,
+        self.assertEqual(
+            updated_quiz.end_date_time,
             datetime(2016, 1, 15, 9, 0, 15, 0, tzone)
         )
         self.assertEqual(updated_quiz.duration, 30)
@@ -1148,7 +1182,8 @@ class TestAddQuiz(TestCase):
         )
 
         tzone = pytz.timezone('UTC')
-        response = self.client.post(reverse('yaksh:add_quiz'),
+        response = self.client.post(
+            reverse('yaksh:add_quiz'),
             data={
                 'start_date_time': '2016-01-10 09:00:15',
                 'end_date_time': '2016-01-15 09:00:15',
@@ -1164,10 +1199,12 @@ class TestAddQuiz(TestCase):
         )
         quiz_list = Quiz.objects.all().order_by('-id')
         new_quiz = quiz_list[0]
-        self.assertEqual(new_quiz.start_date_time,
+        self.assertEqual(
+            new_quiz.start_date_time,
             datetime(2016, 1, 10, 9, 0, 15, 0, tzone)
         )
-        self.assertEqual(new_quiz.end_date_time,
+        self.assertEqual(
+            new_quiz.end_date_time,
             datetime(2016, 1, 15, 9, 0, 15, 0, tzone)
         )
         self.assertEqual(new_quiz.duration, 50)
@@ -1198,7 +1235,6 @@ class TestAddQuiz(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
-        course_id = self.course.id
         response = self.client.get(reverse('yaksh:add_exercise'),
                                    follow=True
                                    )
@@ -1226,9 +1262,9 @@ class TestAddQuiz(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        tzone = pytz.timezone('UTC')
-        response = self.client.post(reverse('yaksh:edit_exercise',
-            kwargs={'quiz_id': self.exercise.id}),
+        response = self.client.post(
+            reverse('yaksh:edit_exercise',
+                    kwargs={'quiz_id': self.exercise.id}),
             data={
                 'description': 'updated demo exercise',
                 'active': True
@@ -1254,9 +1290,8 @@ class TestAddQuiz(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-
-        tzone = pytz.timezone('UTC')
-        response = self.client.post(reverse('yaksh:add_exercise'),
+        response = self.client.post(
+            reverse('yaksh:add_exercise'),
             data={
                 'description': "Demo Exercise",
                 'active': True
@@ -1328,8 +1363,10 @@ class TestAddTeacher(TestCase):
         # Add to moderator group
         self.mod_group.user_set.add(self.user)
 
-        self.course = Course.objects.create(name="Python Course",
-            enrollment="Enroll Request", creator=self.user)
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user
+            )
 
         self.pre_req_quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 2, 1, 5, 8, 15, 0, tzone),
@@ -1361,13 +1398,16 @@ class TestAddTeacher(TestCase):
         """
         If not logged in redirect to login page
         """
-        response = self.client.get(reverse('yaksh:add_teacher',
-                kwargs={'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:add_teacher',
+                    kwargs={'course_id': self.course.id}
+                    ),
             follow=True
         )
-        redirect_destination = ('/exam/login/?next=/exam'
-            '/manage/addteacher/{0}/'.format(self.course.id))
+        redirect_destination = (
+            '/exam/login/?next=/exam/manage/addteacher/{0}/'.format(
+                self.course.id)
+            )
         self.assertRedirects(response, redirect_destination)
 
     def test_add_teacher_denies_non_moderator(self):
@@ -1379,9 +1419,10 @@ class TestAddTeacher(TestCase):
             password=self.student_plaintext_pass
         )
 
-        response = self.client.get(reverse('yaksh:add_teacher',
-                kwargs={'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:add_teacher',
+                    kwargs={'course_id': self.course.id}
+                    ),
             follow=True
         )
         self.assertEqual(response.status_code, 404)
@@ -1394,9 +1435,10 @@ class TestAddTeacher(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:add_teacher',
-                kwargs={'course_id': self.course.id}
-            )
+        response = self.client.get(
+            reverse('yaksh:add_teacher',
+                    kwargs={'course_id': self.course.id}
+                    )
         )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/addteacher.html')
@@ -1422,7 +1464,7 @@ class TestAddTeacher(TestCase):
                 email='demo{}@test.com'.format(i)
             )
 
-            teacher_profile = Profile.objects.create(
+            Profile.objects.create(
                 user=teacher,
                 roll_number='T{}'.format(i),
                 institute='IIT',
@@ -1432,9 +1474,10 @@ class TestAddTeacher(TestCase):
             )
             teacher_id_list.append(teacher.id)
 
-        response = self.client.post(reverse('yaksh:add_teacher',
-                kwargs={'course_id': self.course.id}
-            ),
+        response = self.client.post(
+            reverse('yaksh:add_teacher',
+                    kwargs={'course_id': self.course.id}
+                    ),
             data={'check': teacher_id_list}
         )
 
@@ -1486,7 +1529,8 @@ class TestRemoveTeacher(TestCase):
         # Add to moderator group
         self.mod_group.user_set.add(self.user)
 
-        self.course = Course.objects.create(name="Python Course",
+        self.course = Course.objects.create(
+            name="Python Course",
             enrollment="Enroll Request", creator=self.user)
 
         self.pre_req_quiz = Quiz.objects.create(
@@ -1506,6 +1550,7 @@ class TestRemoveTeacher(TestCase):
             description='demo quiz', pass_criteria=40,
             creator=self.user
         )
+
     def tearDown(self):
         self.client.logout()
         self.user.delete()
@@ -1518,13 +1563,16 @@ class TestRemoveTeacher(TestCase):
         """
         If not logged in redirect to login page
         """
-        response = self.client.get(reverse('yaksh:remove_teacher',
-                kwargs={'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:remove_teacher',
+                    kwargs={'course_id': self.course.id}
+                    ),
             follow=True
         )
-        redirect_destination = ('/exam/login/?next=/exam'
-            '/manage/remove_teachers/{0}/'.format(self.course.id))
+        redirect_destination = (
+            '/exam/login/?next=/exam/manage/remove_teachers/{0}/'.format(
+                self.course.id)
+            )
         self.assertRedirects(response, redirect_destination)
 
     def test_remove_teacher_denies_non_moderator(self):
@@ -1536,9 +1584,10 @@ class TestRemoveTeacher(TestCase):
             password=self.student_plaintext_pass
         )
 
-        response = self.client.get(reverse('yaksh:remove_teacher',
-                kwargs={'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:remove_teacher',
+                    kwargs={'course_id': self.course.id}
+                    ),
             follow=True
         )
         self.assertEqual(response.status_code, 404)
@@ -1562,7 +1611,7 @@ class TestRemoveTeacher(TestCase):
                 email='remove_teacher{}@test.com'.format(i)
             )
 
-            teacher_profile = Profile.objects.create(
+            Profile.objects.create(
                 user=teacher,
                 roll_number='RT{}'.format(i),
                 institute='IIT',
@@ -1573,16 +1622,17 @@ class TestRemoveTeacher(TestCase):
             teacher_id_list.append(teacher.id)
             self.course.teachers.add(teacher)
 
-        response = self.client.post(reverse('yaksh:remove_teacher',
-                kwargs={'course_id': self.course.id}
-            ),
+        response = self.client.post(
+            reverse('yaksh:remove_teacher',
+                    kwargs={'course_id': self.course.id}
+                    ),
             data={'remove': teacher_id_list}
         )
 
         self.assertEqual(response.status_code, 302)
         redirect_destination = '/exam/manage/courses'
-        self.assertRedirects(response, redirect_destination,
-            status_code=302,
+        self.assertRedirects(
+            response, redirect_destination, status_code=302,
             target_status_code=301
         )
         for t_id in teacher_id_list:
@@ -1715,11 +1765,8 @@ class TestCourses(TestCase):
         """
         If not logged in redirect to login page
         """
-        response = self.client.get(reverse('yaksh:courses'),
-            follow=True
-        )
-        redirect_destination = ('/exam/login/?next=/exam'
-            '/manage/courses/')
+        response = self.client.get(reverse('yaksh:courses'), follow=True)
+        redirect_destination = ('/exam/login/?next=/exam/manage/courses/')
         self.assertRedirects(response, redirect_destination)
 
     def test_courses_denies_non_moderator(self):
@@ -1731,9 +1778,7 @@ class TestCourses(TestCase):
             password=self.student_plaintext_pass
         )
 
-        response = self.client.get(reverse('yaksh:courses'),
-            follow=True
-        )
+        response = self.client.get(reverse('yaksh:courses'), follow=True)
         self.assertEqual(response.status_code, 404)
 
     def test_courses_get(self):
@@ -1744,9 +1789,7 @@ class TestCourses(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:courses'),
-            follow=True
-        )
+        response = self.client.get(reverse('yaksh:courses'), follow=True)
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/courses.html')
@@ -2012,7 +2055,8 @@ class TestAddCourse(TestCase):
         self.mod_group.user_set.add(self.user)
         self.mod_group.user_set.add(self.teacher)
 
-        self.course = Course.objects.create(name="Python Course",
+        self.course = Course.objects.create(
+            name="Python Course",
             enrollment="Enroll Request", creator=self.user)
 
         self.course.teachers.add(self.teacher)
@@ -2050,8 +2094,7 @@ class TestAddCourse(TestCase):
         response = self.client.get(reverse('yaksh:add_course'),
                                    follow=True
                                    )
-        redirect_destination = ('/exam/login/?next=/'
-            'exam/manage/add_course/')
+        redirect_destination = ('/exam/login/?next=/exam/manage/add_course/')
         self.assertRedirects(response, redirect_destination)
 
     def test_add_course_denies_non_moderator(self):
@@ -2062,10 +2105,7 @@ class TestAddCourse(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
-        course_id = self.course.id
-        response = self.client.get(reverse('yaksh:add_course'),
-                                   follow=True
-                                   )
+        response = self.client.get(reverse('yaksh:add_course'), follow=True)
         self.assertEqual(response.status_code, 404)
 
     def test_add_course_get(self):
@@ -2090,13 +2130,14 @@ class TestAddCourse(TestCase):
             password=self.user_plaintext_pass
         )
 
-        response = self.client.post(reverse('yaksh:add_course'),
+        response = self.client.post(
+            reverse('yaksh:add_course'),
             data={'name': 'new_demo_course_1',
-                'active': True,
-                'enrollment': 'open',
-                'start_enroll_time': '2016-01-10 09:00:15',
-                'end_enroll_time': '2016-01-15 09:00:15',
-            }
+                  'active': True,
+                  'enrollment': 'open',
+                  'start_enroll_time': '2016-01-10 09:00:15',
+                  'end_enroll_time': '2016-01-15 09:00:15',
+                  }
         )
         new_course = Course.objects.latest('created_on')
         self.assertEqual(new_course.name, 'new_demo_course_1')
@@ -2115,14 +2156,15 @@ class TestAddCourse(TestCase):
             password=self.teacher_plaintext_pass
         )
 
-        response = self.client.post(reverse('yaksh:edit_course',
-            kwargs={"course_id": self.course.id}),
+        response = self.client.post(
+            reverse('yaksh:edit_course',
+                    kwargs={"course_id": self.course.id}),
             data={'name': 'Teacher_course',
-                'active': True,
-                'enrollment': 'open',
-                'start_enroll_time': '2016-01-10 09:00:15',
-                'end_enroll_time': '2016-01-15 09:00:15',
-            }
+                  'active': True,
+                  'enrollment': 'open',
+                  'start_enroll_time': '2016-01-10 09:00:15',
+                  'end_enroll_time': '2016-01-15 09:00:15',
+                  }
         )
         updated_course = Course.objects.get(id=self.course.id)
         self.assertEqual(updated_course.name, 'Teacher_course')
@@ -2200,8 +2242,9 @@ class TestCourseDetail(TestCase):
         self.mod_group.user_set.add(self.user2)
 
         self.user1_course = Course.objects.create(
-            name="Python Course", enrollment="Enroll Request",
-            creator=self.user1)
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user1
+            )
         self.learning_module = LearningModule.objects.create(
             name="test module", description="test description module",
             html_data="test html description module", creator=self.user1,
@@ -2232,9 +2275,10 @@ class TestCourseDetail(TestCase):
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
 
         # When
-        response = self.client.post(reverse('yaksh:upload_users',
-                                    kwargs={'course_id': self.user1_course.id}),
-                                    data={'csv_file': upload_file})
+        response = self.client.post(
+            reverse('yaksh:upload_users',
+                    kwargs={'course_id': self.user1_course.id}),
+            data={'csv_file': upload_file})
         csv_file.close()
 
         # Then
@@ -2256,9 +2300,10 @@ class TestCourseDetail(TestCase):
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
 
         # When
-        response = self.client.post(reverse('yaksh:upload_users',
-                                    kwargs={'course_id': self.user1_course.id}),
-                                    data={'csv_file': upload_file})
+        response = self.client.post(
+            reverse('yaksh:upload_users',
+                    kwargs={'course_id': self.user1_course.id}),
+            data={'csv_file': upload_file})
         csv_file.close()
 
         # Then
@@ -2283,9 +2328,10 @@ class TestCourseDetail(TestCase):
         message = "The file uploaded is not a CSV file."
 
         # When
-        response = self.client.post(reverse('yaksh:upload_users',
-                                            kwargs={'course_id': self.user1_course.id}),
-                                            data={'csv_file': upload_file})
+        response = self.client.post(
+            reverse('yaksh:upload_users',
+                    kwargs={'course_id': self.user1_course.id}),
+            data={'csv_file': upload_file})
         csv_file.close()
 
         # Then
@@ -2301,15 +2347,17 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "users_some_headers_missing.csv")
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     "users_some_headers_missing.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
         message = "The CSV file does not contain the required headers"
 
         # When
-        response = self.client.post(reverse('yaksh:upload_users',
-                                            kwargs={'course_id': self.user1_course.id}),
-                                            data={'csv_file': upload_file})
+        response = self.client.post(
+            reverse('yaksh:upload_users',
+                    kwargs={'course_id': self.user1_course.id}),
+            data={'csv_file': upload_file})
         csv_file.close()
 
         # Then
@@ -2325,21 +2373,24 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "users_with_no_values.csv")
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     "users_with_no_values.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
 
         # When
-        response = self.client.post(reverse('yaksh:upload_users',
-                                            kwargs={'course_id': self.user1_course.id}),
-                                            data={'csv_file': upload_file})
+        response = self.client.post(
+            reverse('yaksh:upload_users',
+                    kwargs={'course_id': self.user1_course.id}),
+            data={'csv_file': upload_file})
         csv_file.close()
 
         # Then
         self.assertEqual(response.status_code, 200)
         self.assertIn('upload_details', response.context)
         self.assertNotIn('message', response.context)
-        self.assertIn("No rows in the CSV file", response.context['upload_details'])
+        self.assertIn("No rows in the CSV file",
+                      response.context['upload_details'])
         self.assertTemplateUsed(response, 'yaksh/course_detail.html')
 
     def test_upload_users_csv_with_missing_values(self):
@@ -2360,14 +2411,17 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "users_some_values_missing.csv")
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     "users_some_values_missing.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
 
         # When
-        response = self.client.post(reverse('yaksh:upload_users',
-                                    kwargs={'course_id': self.user1_course.id}),
-                                    data={'csv_file': upload_file})
+        response = self.client.post(
+            reverse('yaksh:upload_users',
+                    kwargs={'course_id': self.user1_course.id}),
+            data={'csv_file': upload_file}
+            )
         csv_file.close()
 
         # Then
@@ -2382,13 +2436,16 @@ class TestCourseDetail(TestCase):
         """
         If not logged in redirect to login page
         """
-        response = self.client.get(reverse('yaksh:course_detail',
-                kwargs={'course_id': self.user1_course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:course_detail',
+                    kwargs={'course_id': self.user1_course.id}
+                    ),
             follow=True
         )
-        redirect_destination = ('/exam/login/?next=/exam/'
-            'manage/course_detail/{0}/'.format(self.user1_course.id))
+        redirect_destination = (
+            '/exam/login/?next=/exam/manage/course_detail/{0}/'.format(
+                self.user1_course.id)
+            )
         self.assertRedirects(response, redirect_destination)
 
     def test_course_detail_denies_non_moderator(self):
@@ -2400,9 +2457,10 @@ class TestCourseDetail(TestCase):
             password=self.student_plaintext_pass
         )
 
-        response = self.client.get(reverse('yaksh:course_detail',
-                kwargs={'course_id': self.user1_course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:course_detail',
+                    kwargs={'course_id': self.user1_course.id}
+                    ),
             follow=True
         )
         self.assertEqual(response.status_code, 404)
@@ -2415,9 +2473,10 @@ class TestCourseDetail(TestCase):
             username=self.user2.username,
             password=self.user2_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:course_detail',
-                kwargs={'course_id': self.user1_course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:course_detail',
+                    kwargs={'course_id': self.user1_course.id}
+                    ),
             follow=True
         )
         self.assertEqual(response.status_code, 404)
@@ -2430,9 +2489,10 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:course_detail',
-                kwargs={'course_id': self.user1_course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:course_detail',
+                    kwargs={'course_id': self.user1_course.id}
+                    ),
             follow=True
         )
         self.assertEqual(self.user1_course, response.context['course'])
@@ -2447,7 +2507,8 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:enroll_user',
+        response = self.client.get(
+            reverse('yaksh:enroll_user',
                     kwargs={'course_id': self.user1_course.id,
                             'user_id': self.student.id})
                     )
@@ -2463,10 +2524,11 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.post(reverse('yaksh:enroll_users',
+        response = self.client.post(
+            reverse('yaksh:enroll_users',
                     kwargs={'course_id': self.user1_course.id}),
-                    data={'check': self.student1.id}
-                    )
+            data={'check': self.student1.id}
+            )
         enrolled_student = self.user1_course.students.all()
         self.assertEqual(response.status_code, 200)
         self.assertSequenceEqual([self.student1], enrolled_student)
@@ -2479,7 +2541,8 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:reject_user',
+        response = self.client.get(
+            reverse('yaksh:reject_user',
                     kwargs={'course_id': self.user1_course.id,
                             'user_id': self.student.id})
                     )
@@ -2495,10 +2558,11 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.post(reverse('yaksh:reject_users',
+        response = self.client.post(
+            reverse('yaksh:reject_users',
                     kwargs={'course_id': self.user1_course.id}),
-                    data={'check': self.student1.id}
-                    )
+            data={'check': self.student1.id}
+            )
         enrolled_student = self.user1_course.rejected.all()
         self.assertEqual(response.status_code, 200)
         self.assertSequenceEqual([self.student1], enrolled_student)
@@ -2508,9 +2572,10 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.post(reverse('yaksh:toggle_course_status',
+        response = self.client.post(
+            reverse('yaksh:toggle_course_status',
                     kwargs={'course_id': self.user1_course.id})
-                        )
+            )
         self.assertEqual(response.status_code, 302)
         course = Course.objects.get(name="Python Course")
         self.assertFalse(course.active)
@@ -2750,8 +2815,10 @@ class TestEnrollRequest(TestCase):
         self.mod_group.user_set.add(self.user1)
         self.mod_group.user_set.add(self.user2)
 
-        self.course = Course.objects.create(name="Python Course",
-            enrollment="Enroll Request", creator=self.user1)
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user1
+            )
 
     def tearDown(self):
         self.client.logout()
@@ -2764,13 +2831,16 @@ class TestEnrollRequest(TestCase):
         """
         If not logged in redirect to login page
         """
-        response = self.client.get(reverse('yaksh:enroll_request',
-                kwargs={'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:enroll_request',
+                    kwargs={'course_id': self.course.id}
+                    ),
             follow=True
         )
-        redirect_destination = ('/exam/login/?next=/exam'
-            '/enroll_request/{}/'.format(self.course.id))
+        redirect_destination = (
+            '/exam/login/?next=/exam/enroll_request/{}/'.format(
+                self.course.id)
+            )
         self.assertRedirects(response, redirect_destination)
 
     def test_enroll_request_get_for_student(self):
@@ -2779,9 +2849,10 @@ class TestEnrollRequest(TestCase):
             password=self.student_plaintext_pass
         )
 
-        response = self.client.get(reverse('yaksh:enroll_request',
-                kwargs={'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:enroll_request',
+                    kwargs={'course_id': self.course.id}
+                    ),
             follow=True
         )
         self.assertRedirects(response, '/exam/quizzes/')
@@ -2792,9 +2863,10 @@ class TestEnrollRequest(TestCase):
             password=self.user2_plaintext_pass
         )
 
-        response = self.client.get(reverse('yaksh:enroll_request',
-                kwargs={'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:enroll_request',
+                    kwargs={'course_id': self.course.id}
+                    ),
             follow=True
         )
         self.assertRedirects(response, '/exam/manage/courses/')
@@ -2816,26 +2888,31 @@ class TestViewAnswerPaper(TestCase):
 
         self.user1 = User.objects.get(username="demo_user1")
 
-        self.course = Course.objects.create(name="Python Course",
-                                       enrollment="Enroll Request",
-                                       creator=self.user1)
+        self.course = Course.objects.create(
+            name="Python Course", enrollment="Enroll Request",
+            creator=self.user1
+            )
 
-        self.question = Question.objects.create(summary='Dummy', points=1,
-                                               type='code', user=self.user1)
+        self.question = Question.objects.create(
+            summary='Dummy', points=1,
+            type='code', user=self.user1
+            )
 
         self.quiz = Quiz.objects.create(time_between_attempts=0,
                                         description='demo quiz')
         self.user3 = User.objects.get(username="demo_user3")
-        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
-            total_marks=1.0)
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz, total_marks=1.0
+            )
         self.question_paper.fixed_questions.add(self.question)
         self.question_paper.save()
 
-        self.ans_paper = AnswerPaper.objects.create(user=self.user3,
-                attempt_number=1, question_paper=self.question_paper,
-                start_time=timezone.now(), user_ip='101.0.0.1',
-                end_time=timezone.now()+timezone.timedelta(minutes=20),
-                course=self.course)
+        self.ans_paper = AnswerPaper.objects.create(
+            user=self.user3, attempt_number=1,
+            question_paper=self.question_paper, start_time=timezone.now(),
+            user_ip='101.0.0.1', course=self.course,
+            end_time=timezone.now()+timezone.timedelta(minutes=20)
+            )
 
     def tearDown(self):
         User.objects.all().delete()
@@ -2847,15 +2924,17 @@ class TestViewAnswerPaper(TestCase):
 
     def test_anonymous_user(self):
         # Given, user not logged in
-        redirect_destination = ('/exam/login/?next=/exam'
-            '/view_answerpaper/{0}/{1}'.format(
-                self.question_paper.id, self.course.id))
+        redirect_destination = (
+            '/exam/login/?next=/exam/view_answerpaper/{0}/{1}'.format(
+                self.question_paper.id, self.course.id)
+            )
 
         # When
-        response = self.client.get(reverse('yaksh:view_answerpaper',
-                kwargs={'questionpaper_id': self.question_paper.id,
-                        'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:view_answerpaper',
+                    kwargs={'questionpaper_id': self.question_paper.id,
+                            'course_id': self.course.id}
+                    ),
             follow=True
         )
 
@@ -2875,10 +2954,11 @@ class TestViewAnswerPaper(TestCase):
         )
 
         # When
-        response = self.client.get(reverse('yaksh:view_answerpaper',
-                kwargs={'questionpaper_id': self.question_paper.id,
-                        'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:view_answerpaper',
+                    kwargs={'questionpaper_id': self.question_paper.id,
+                            'course_id': self.course.id}
+                    ),
             follow=True
         )
 
@@ -2890,7 +2970,6 @@ class TestViewAnswerPaper(TestCase):
         user3 = User.objects.get(username="demo_user3")
         self.course.students.add(user3)
         self.course.save()
-        answerpaper = AnswerPaper.objects.get(pk=self.ans_paper.id)
         self.quiz.view_answerpaper = True
         self.quiz.save()
         self.client.login(
@@ -2899,10 +2978,11 @@ class TestViewAnswerPaper(TestCase):
         )
 
         # When
-        response = self.client.get(reverse('yaksh:view_answerpaper',
-                kwargs={'questionpaper_id': self.question_paper.id,
-                        'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:view_answerpaper',
+                    kwargs={'questionpaper_id': self.question_paper.id,
+                            'course_id': self.course.id}
+                    ),
             follow=True
         )
 
@@ -2912,18 +2992,17 @@ class TestViewAnswerPaper(TestCase):
         self.assertTrue('quiz' in response.context)
         self.assertTemplateUsed(response, 'yaksh/view_answerpaper.html')
 
-
         # When, wrong question paper id
-        response = self.client.get(reverse('yaksh:view_answerpaper',
-                kwargs={'questionpaper_id': 190,
-                        'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:view_answerpaper',
+                    kwargs={'questionpaper_id': 190,
+                            'course_id': self.course.id}
+                    ),
             follow=True
         )
 
         # Then
         self.assertEqual(response.status_code, 404)
-
 
     def test_view_when_not_enrolled(self):
         # Given, user tries to view when not enrolled in the course
@@ -2938,10 +3017,11 @@ class TestViewAnswerPaper(TestCase):
         self.quiz.save()
 
         # When
-        response = self.client.get(reverse('yaksh:view_answerpaper',
-                kwargs={'questionpaper_id': self.question_paper.id,
-                        'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:view_answerpaper',
+                    kwargs={'questionpaper_id': self.question_paper.id,
+                            'course_id': self.course.id}
+                    ),
             follow=True
         )
 
@@ -3004,8 +3084,10 @@ class TestSelfEnroll(TestCase):
         self.mod_group.user_set.add(self.user1)
         self.mod_group.user_set.add(self.user2)
 
-        self.course = Course.objects.create(name="Python Course",
-            enrollment="Enroll Request", creator=self.user1)
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user1
+            )
 
     def tearDown(self):
         self.client.logout()
@@ -3015,13 +3097,15 @@ class TestSelfEnroll(TestCase):
         self.course.delete()
 
     def test_self_enroll_denies_anonymous(self):
-        response = self.client.get(reverse('yaksh:self_enroll',
-                kwargs={'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:self_enroll',
+                    kwargs={'course_id': self.course.id}
+                    ),
             follow=True
         )
-        redirect_destination = ('/exam/login/?next=/exam'
-            '/self_enroll/{}/'.format(self.course.id))
+        redirect_destination = (
+            '/exam/login/?next=/exam/self_enroll/{}/'.format(self.course.id)
+            )
         self.assertRedirects(response, redirect_destination)
 
     def test_enroll_request_get_for_student(self):
@@ -3030,9 +3114,10 @@ class TestSelfEnroll(TestCase):
             password=self.student_plaintext_pass
         )
 
-        response = self.client.get(reverse('yaksh:self_enroll',
-                kwargs={'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:self_enroll',
+                    kwargs={'course_id': self.course.id}
+                    ),
             follow=True
         )
         self.assertRedirects(response, '/exam/quizzes/')
@@ -3043,9 +3128,10 @@ class TestSelfEnroll(TestCase):
             password=self.user2_plaintext_pass
         )
 
-        response = self.client.get(reverse('yaksh:self_enroll',
-                kwargs={'course_id': self.course.id}
-            ),
+        response = self.client.get(
+            reverse('yaksh:self_enroll',
+                    kwargs={'course_id': self.course.id}
+                    ),
             follow=True
         )
         self.assertRedirects(response, '/exam/manage/')
@@ -3108,25 +3194,30 @@ class TestGrader(TestCase):
         self.mod_group.user_set.add(self.user1)
         self.mod_group.user_set.add(self.user2)
 
-        self.course = Course.objects.create(name="Python Course",
-            enrollment="Enroll Request", creator=self.user1)
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user1
+            )
 
-        self.question = Question.objects.create(summary='Dummy', points=1,
-                                               type='code', user=self.user1)
+        self.question = Question.objects.create(
+            summary='Dummy', points=1, type='code', user=self.user1
+            )
 
         self.quiz = Quiz.objects.create(time_between_attempts=0,
                                         description='demo quiz')
 
-        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
-            total_marks=1.0)
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz, total_marks=1.0
+            )
         self.question_paper.fixed_questions.add(self.question)
         self.question_paper.save()
 
-        self.answerpaper = AnswerPaper.objects.create(user=self.user2,
-                attempt_number=1, question_paper=self.question_paper,
-                start_time=timezone.now(), user_ip='101.0.0.1',
-                end_time=timezone.now()+timezone.timedelta(minutes=20),
-                course=self.course)
+        self.answerpaper = AnswerPaper.objects.create(
+            user=self.user2, attempt_number=1,
+            question_paper=self.question_paper, start_time=timezone.now(),
+            user_ip='101.0.0.1', course=self.course,
+            end_time=timezone.now()+timezone.timedelta(minutes=20),
+            )
 
     def tearDown(self):
         User.objects.all().delete()
@@ -3146,7 +3237,6 @@ class TestGrader(TestCase):
         # Then
         self.assertRedirects(response, redirect_destination)
 
-
     def test_grader_denies_students(self):
         # Given
         self.client.login(
@@ -3160,24 +3250,25 @@ class TestGrader(TestCase):
         # Then
         self.assertEqual(response.status_code, 404)
 
-
     def test_regrade_denies_anonymous(self):
         # Given
-        redirect_destination = dedent('''\
-            /exam/login/?next=/exam/manage/regrade/answerpaper/{}/{}/{}/'''.format(
+        url = "/exam/login/?next=/exam/manage/regrade/answerpaper"
+        redirect_destination = (
+            url + "/{}/{}/{}/".format(
                 self.course.id, self.question.id, self.answerpaper.id)
             )
 
         # When
-        response = self.client.get(reverse('yaksh:regrade',
-            kwargs={'course_id': self.course.id,
-                'question_id': self.question.id,
-                'answerpaper_id': self.answerpaper.id}),
-            follow=True)
+        response = self.client.get(
+            reverse('yaksh:regrade',
+                    kwargs={'course_id': self.course.id,
+                            'question_id': self.question.id,
+                            'answerpaper_id': self.answerpaper.id}),
+            follow=True
+            )
 
         # Then
         self.assertRedirects(response, redirect_destination)
-
 
     def test_regrade_denies_students(self):
         # Given
@@ -3187,15 +3278,16 @@ class TestGrader(TestCase):
         )
 
         # When
-        response = self.client.get(reverse('yaksh:regrade',
-                kwargs={'course_id': self.course.id,
-                    'question_id': self.question.id,
-                    'answerpaper_id': self.answerpaper.id}),
-                follow=True)
+        response = self.client.get(
+            reverse('yaksh:regrade',
+                    kwargs={'course_id': self.course.id,
+                            'question_id': self.question.id,
+                            'answerpaper_id': self.answerpaper.id}),
+            follow=True
+            )
 
         # Then
         self.assertEqual(response.status_code, 404)
-
 
     def test_grader_by_moderator(self):
         # Given
@@ -3205,14 +3297,12 @@ class TestGrader(TestCase):
         )
 
         # When
-        response = self.client.get(reverse('yaksh:grader'),
-                follow=True)
+        response = self.client.get(reverse('yaksh:grader'), follow=True)
 
         # Then
         self.assertEqual(response.status_code, 200)
         self.assertTrue('courses' in response.context)
         self.assertTemplateUsed(response, 'yaksh/regrade.html')
-
 
     def test_regrade_by_moderator(self):
         # Given
@@ -3222,10 +3312,11 @@ class TestGrader(TestCase):
         )
 
         # When
-        response = self.client.get(reverse('yaksh:regrade',
-            kwargs={'course_id': self.course.id,
-                'question_id': self.question.id,
-                'answerpaper_id': self.answerpaper.id}),
+        response = self.client.get(
+            reverse('yaksh:regrade',
+                    kwargs={'course_id': self.course.id,
+                            'question_id': self.question.id,
+                            'answerpaper_id': self.answerpaper.id}),
             follow=True)
 
         # Then
@@ -3234,7 +3325,6 @@ class TestGrader(TestCase):
         self.assertTrue('details' in response.context)
         self.assertTemplateUsed(response, 'yaksh/regrade.html')
 
-
     def test_regrade_denies_moderator_not_in_course(self):
         # Given
         self.client.login(
@@ -3242,15 +3332,19 @@ class TestGrader(TestCase):
             password=self.user2_plaintext_pass
         )
 
+        self.mod_group.user_set.remove(self.user2)
         # When
-        response = self.client.get(reverse('yaksh:regrade',
-            kwargs={'course_id': self.course.id,
-                'question_id': self.question.id,
-                'answerpaper_id': self.answerpaper.id}),
+        response = self.client.get(
+            reverse('yaksh:regrade',
+                    kwargs={'course_id': self.course.id,
+                            'question_id': self.question.id,
+                            'answerpaper_id': self.answerpaper.id}),
             follow=True)
 
         # Then
         self.assertEqual(response.status_code, 404)
+        self.mod_group.user_set.add(self.user2)
+
 
 class TestPasswordReset(TestCase):
     def setUp(self):
@@ -3281,7 +3375,8 @@ class TestPasswordReset(TestCase):
         POST request to password_reset view should return a valid response
         """
         # When
-        response = self.client.post(reverse('password_reset'),
+        response = self.client.post(
+            reverse('password_reset'),
             data={
                 'email': self.user1.email,
             }
@@ -3303,7 +3398,8 @@ class TestPasswordReset(TestCase):
         )
 
         # When
-        response = self.client.post(reverse('password_change'),
+        response = self.client.post(
+            reverse('password_change'),
             data={
                 'old_password': self.user1_plaintext_pass,
                 'new_password1': 'new_demo1_pass',
@@ -3312,7 +3408,8 @@ class TestPasswordReset(TestCase):
         )
 
         # Then
-        self.assertIsNotNone(authenticate(username='demo_user1', password='new_demo1_pass'))
+        self.assertIsNotNone(authenticate(username='demo_user1',
+                                          password='new_demo1_pass'))
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, '/exam/reset/password_change/done/')
 
@@ -3373,8 +3470,10 @@ class TestModeratorDashboard(TestCase):
         )
 
         self.mod_group.user_set.add(self.user)
-        self.course = Course.objects.create(name="Python Course",
-            enrollment="Enroll Request", creator=self.user)
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user
+            )
 
         self.quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
@@ -3390,15 +3489,18 @@ class TestModeratorDashboard(TestCase):
             points=1.0, language="python", type="code", user=self.user
             )
 
-        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz,
             total_marks=1.0, fixed_question_order=str(self.question.id)
             )
         self.question_paper.fixed_questions.add(self.question)
 
         # student answerpaper
         user_answer = "def add(a, b)\n\treturn a+b"
-        self.new_answer = Answer(question=self.question, answer=user_answer,
-                            correct=True, error=json.dumps([]), marks=0.5)
+        self.new_answer = Answer(
+            question=self.question, answer=user_answer,
+            correct=True, error=json.dumps([]), marks=0.5
+            )
         self.new_answer.save()
         self.answerpaper = AnswerPaper.objects.create(
             user=self.student, question_paper=self.question_paper,
@@ -3413,8 +3515,10 @@ class TestModeratorDashboard(TestCase):
         self.answerpaper.questions.add(self.question)
 
         # moderator trial answerpaper
-        self.trial_course = Course.objects.create(name="Trial Course",
-            enrollment="Enroll Request", creator=self.user, is_trial=True)
+        self.trial_course = Course.objects.create(
+            name="Trial Course",
+            enrollment="Enroll Request", creator=self.user, is_trial=True
+            )
         self.trial_quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
             end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
@@ -3430,8 +3534,10 @@ class TestModeratorDashboard(TestCase):
             )
         self.trial_question_paper.fixed_questions.add(self.question)
 
-        self.new_answer1 = Answer(question=self.question, answer=user_answer,
-                            correct=True, error=json.dumps([]), marks=0.5)
+        self.new_answer1 = Answer(
+            question=self.question, answer=user_answer,
+            correct=True, error=json.dumps([]), marks=0.5
+            )
         self.new_answer1.save()
         self.trial_answerpaper = AnswerPaper.objects.create(
             user=self.user, question_paper=self.trial_question_paper,
@@ -3499,12 +3605,11 @@ class TestModeratorDashboard(TestCase):
             password=self.user_plaintext_pass
         )
 
-        response = self.client.get(reverse('yaksh:manage'),
-                                    follow=True
-                                    )
+        response = self.client.get(reverse('yaksh:manage'), follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/moderator_dashboard.html")
-        self.assertEqual(response.context['trial_paper'][0], self.trial_answerpaper)
+        self.assertEqual(response.context['trial_paper'][0],
+                         self.trial_answerpaper)
         self.assertEqual(response.context['courses'][0], self.course)
 
     def test_moderator_dashboard_delete_trial_papers(self):
@@ -3515,16 +3620,17 @@ class TestModeratorDashboard(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        self.course.is_trial=True
+        self.course.is_trial = True
         self.course.save()
-        response = self.client.post(reverse('yaksh:manage'),
-                                    data={'delete_paper': [self.trial_answerpaper.id]}
-                                    )
+        response = self.client.post(
+            reverse('yaksh:manage'),
+            data={'delete_paper': [self.trial_answerpaper.id]}
+            )
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/moderator_dashboard.html")
         updated_answerpaper = AnswerPaper.objects.filter(user=self.user)
-        updated_quiz =  Quiz.objects.filter(
+        updated_quiz = Quiz.objects.filter(
                         description=self.trial_question_paper.quiz.description
                         )
         updated_course = Course.objects.filter(
@@ -3532,6 +3638,7 @@ class TestModeratorDashboard(TestCase):
         self.assertSequenceEqual(updated_answerpaper, [])
         self.assertSequenceEqual(updated_quiz, [])
         self.assertSequenceEqual(updated_course, [])
+
 
 class TestUserLogin(TestCase):
     def setUp(self):
@@ -3565,10 +3672,11 @@ class TestUserLogin(TestCase):
         """
             Check if user is successfully logged in
         """
-        response = self.client.post(reverse('yaksh:login'),
-                                    data={'username': self.user1.username,
-                                          'password': self.user1_plaintext_pass}
-                                    )
+        response = self.client.post(
+            reverse('yaksh:login'),
+            data={'username': self.user1.username,
+                  'password': self.user1_plaintext_pass}
+            )
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, '/exam/quizzes/')
 
@@ -3588,10 +3696,11 @@ class TestUserLogin(TestCase):
             Check email verified decorator to check for user login
         """
         settings.IS_DEVELOPMENT = False
-        response = self.client.post(reverse('yaksh:login'),
-                                    data={'username': self.user1.username,
-                                          'password': self.user1_plaintext_pass}
-                                    )
+        response = self.client.post(
+            reverse('yaksh:login'),
+            data={'username': self.user1.username,
+                  'password': self.user1_plaintext_pass}
+            )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/activation_status.html")
 
@@ -3639,8 +3748,10 @@ class TestDownloadcsv(TestCase):
             timezone='UTC'
         )
         self.mod_group.user_set.add(self.user)
-        self.course = Course.objects.create(name="Python Course",
-            enrollment="Enroll Request", creator=self.user)
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user
+            )
         self.course.students.add(self.student)
 
         self.quiz = Quiz.objects.create(
@@ -3657,15 +3768,18 @@ class TestDownloadcsv(TestCase):
             points=1.0, language="python", type="code", user=self.user
             )
 
-        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz,
             total_marks=1.0, fixed_question_order=str(self.question.id)
             )
         self.question_paper.fixed_questions.add(self.question)
 
         # student answerpaper
         user_answer = "def add(a, b)\n\treturn a+b"
-        self.new_answer = Answer(question=self.question, answer=user_answer,
-                            correct=True, error=json.dumps([]), marks=0.5)
+        self.new_answer = Answer(
+            question=self.question, answer=user_answer,
+            correct=True, error=json.dumps([]), marks=0.5
+            )
         self.new_answer.save()
         self.answerpaper = AnswerPaper.objects.create(
             user=self.student, question_paper=self.question_paper,
@@ -3754,14 +3868,15 @@ class TestDownloadcsv(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:download_course_csv',
-                                           kwargs={'course_id': self.course.id}),
-                                   follow=True
-                                   )
+        response = self.client.get(
+            reverse('yaksh:download_course_csv',
+                    kwargs={'course_id': self.course.id}),
+            follow=True
+            )
         file_name = "{0}.csv".format(self.course.name.lower())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
-                        'attachment; filename="{0}"'.format(file_name))
+                         'attachment; filename="{0}"'.format(file_name))
 
     def test_download_quiz_csv(self):
         """
@@ -3771,23 +3886,24 @@ class TestDownloadcsv(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:download_quiz_csv',
-                            kwargs={"course_id": self.course.id,
-                                           "quiz_id": self.quiz.id}),
-
-                            follow=True
-                            )
-        file_name = "{0}-{1}-attempt{2}.csv".format(self.course.name.replace('.', ''),
-                self.quiz.description.replace('.', ''), 1)
+        response = self.client.get(
+            reverse('yaksh:download_quiz_csv',
+                    kwargs={"course_id": self.course.id,
+                            "quiz_id": self.quiz.id}),
+            follow=True
+            )
+        file_name = "{0}-{1}-attempt{2}.csv".format(
+            self.course.name.replace('.', ''),
+            self.quiz.description.replace('.', ''), 1
+            )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
-                        'attachment; filename="{0}"'.format(file_name))
+                         'attachment; filename="{0}"'.format(file_name))
 
 
 class TestShowQuestions(TestCase):
     def setUp(self):
         self.client = Client()
-        tzone = pytz.timezone("utc")
         self.mod_group = Group.objects.create(name='moderator')
         # student
         self.student_plaintext_pass = 'student'
@@ -3859,9 +3975,9 @@ class TestShowQuestions(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:show_questions'),
-                                follow=True
-                                )
+        response = self.client.get(
+            reverse('yaksh:show_questions'), follow=True
+            )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
         self.assertEqual(response.context['questions'][0], self.question)
@@ -3874,14 +3990,15 @@ class TestShowQuestions(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.post(reverse('yaksh:show_questions'),
-                                data={'question': [self.question.id],
-                                      'download': 'download'}
-                                )
+        response = self.client.post(
+            reverse('yaksh:show_questions'),
+            data={'question': [self.question.id],
+                  'download': 'download'}
+            )
         file_name = "{0}_questions.zip".format(self.user)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
-                        "attachment; filename={0}".format(file_name))
+                         "attachment; filename={0}".format(file_name))
         zip_file = string_io(response.content)
         zipped_file = zipfile.ZipFile(zip_file, 'r')
         self.assertIsNone(zipped_file.testzip())
@@ -3889,14 +4006,14 @@ class TestShowQuestions(TestCase):
         zip_file.close()
         zipped_file.close()
 
-        response = self.client.post(reverse('yaksh:show_questions'),
-                                data={'question': [],
-                                      'download': 'download'}
-                                )
+        response = self.client.post(
+            reverse('yaksh:show_questions'),
+            data={'question': [],
+                  'download': 'download'}
+            )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
         self.assertIn("download", response.context['msg'])
-
 
     def test_upload_questions(self):
         """
@@ -3908,30 +4025,32 @@ class TestShowQuestions(TestCase):
         )
         ques_file = os.path.join(FIXTURES_DIR_PATH, "demo_questions.zip")
         f = open(ques_file, 'rb')
-        questions_file = SimpleUploadedFile(ques_file, f.read(), 
+        questions_file = SimpleUploadedFile(ques_file, f.read(),
                                             content_type="application/zip")
-        response = self.client.post(reverse('yaksh:show_questions'),
-                                data={'file': questions_file,
-                                      'upload': 'upload'}
-                                )
+        response = self.client.post(
+            reverse('yaksh:show_questions'),
+            data={'file': questions_file,
+                  'upload': 'upload'}
+            )
         summaries = ['Roots of quadratic equation', 'Print Output',
                      'Adding decimals', 'For Loop over String',
                      'Hello World in File', 'Extract columns from files',
                      'Check Palindrome', 'Add 3 numbers', 'Reverse a string'
                      ]
 
-        uploaded_ques = Question.objects.filter(active=True,
-                                            summary__in=summaries,
-                                            user=self.user).count()
+        uploaded_ques = Question.objects.filter(
+            active=True, summary__in=summaries,
+            user=self.user).count()
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
         self.assertEqual(uploaded_ques, 9)
         f.close()
         dummy_file = SimpleUploadedFile("test.txt", b"test")
-        response = self.client.post(reverse('yaksh:show_questions'),
-                                data={'file': dummy_file,
-                                      'upload': 'upload'}
-                                )
+        response = self.client.post(
+            reverse('yaksh:show_questions'),
+            data={'file': dummy_file,
+                  'upload': 'upload'}
+            )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
         self.assertIn("ZIP file", response.context['message'])
@@ -3944,10 +4063,11 @@ class TestShowQuestions(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.post(reverse('yaksh:show_questions'),
-                                data={'question': [self.question.id],
-                                      'test': 'test'}
-                                )
+        response = self.client.post(
+            reverse('yaksh:show_questions'),
+            data={'question': [self.question.id],
+                  'test': 'test'}
+            )
         trial_que_paper = QuestionPaper.objects.get(
                                             quiz__description="trial_questions"
                                             )
@@ -3961,18 +4081,19 @@ class TestShowQuestions(TestCase):
 
     def test_ajax_questions_filter(self):
         """
-            Check for filter questions based type, marks and 
+            Check for filter questions based type, marks and
             language of a question
         """
         self.client.login(
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.post(reverse('yaksh:questions_filter'),
-                                data={'question_type': 'mcq',
-                                        'marks': '1.0', 'language': 'python' 
-                                        }
-                                )
+        response = self.client.post(
+            reverse('yaksh:questions_filter'),
+            data={'question_type': 'mcq',
+                  'marks': '1.0', 'language': 'python'
+                  }
+            )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/ajax_question_filter.html')
         self.assertEqual(response.context['questions'][0], self.question1)
@@ -4046,8 +4167,10 @@ class TestShowStatistics(TestCase):
         # Add to moderator group
         self.mod_group.user_set.add(self.user)
 
-        self.course = Course.objects.create(name="Python Course",
-            enrollment="Open Enrollment", creator=self.user)
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Open Enrollment", creator=self.user
+            )
 
         self.quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
@@ -4063,13 +4186,16 @@ class TestShowStatistics(TestCase):
             points=1.0, language="python", type="code", user=self.user
             )
 
-        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz,
             total_marks=1.0, fixed_question_order=str(self.question)
             )
         self.question_paper.fixed_questions.add(self.question)
         user_answer = "def add(a, b)\n\treturn a+b"
-        self.new_answer = Answer(question=self.question, answer=user_answer,
-                            correct=True, error=json.dumps([]))
+        self.new_answer = Answer(
+            question=self.question, answer=user_answer,
+            correct=True, error=json.dumps([])
+            )
         self.new_answer.save()
         self.answerpaper = AnswerPaper.objects.create(
             user=self.student, question_paper=self.question_paper,
@@ -4102,11 +4228,12 @@ class TestShowStatistics(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:show_statistics',
-                                   kwargs={"questionpaper_id": self.question_paper.id,
-                                           "course_id": self.course.id}),
-                                   follow=True
-                                   )
+        response = self.client.get(
+            reverse('yaksh:show_statistics',
+                    kwargs={"questionpaper_id": self.question_paper.id,
+                            "course_id": self.course.id}),
+            follow=True
+            )
         self.assertEqual(response.status_code, 404)
 
     def test_show_statistics_for_student(self):
@@ -4117,18 +4244,19 @@ class TestShowStatistics(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:show_statistics',
-                            kwargs={'questionpaper_id': self.question_paper.id,
-                                    "course_id": self.course.id}),
-                            follow=True
-                            )
+        response = self.client.get(
+            reverse('yaksh:show_statistics',
+                    kwargs={'questionpaper_id': self.question_paper.id,
+                            "course_id": self.course.id}),
+            follow=True
+            )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/statistics_question.html')
         self.assertEqual(response.context['quiz'], self.quiz)
         self.assertEqual(response.context['attempts'][0],
-                        self.answerpaper.attempt_number)
+                         self.answerpaper.attempt_number)
         self.assertEqual(response.context['questionpaper_id'],
-                        str(self.question_paper.id))
+                         str(self.question_paper.id))
 
     def test_show_statistics_for_student_per_attempt(self):
         """
@@ -4138,16 +4266,18 @@ class TestShowStatistics(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:show_statistics',
+        response = self.client.get(
+            reverse('yaksh:show_statistics',
                     kwargs={'questionpaper_id': self.question_paper.id,
                             'attempt_number': self.answerpaper.attempt_number,
                             "course_id": self.course.id}),
-                    follow=True
-                    )
+            follow=True
+            )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/statistics_question.html')
-        self.assertSequenceEqual(response.context['question_stats'][self.question],
-                                [1, 1])
+        self.assertSequenceEqual(
+            response.context['question_stats'][self.question], [1, 1]
+            )
         self.assertEqual(response.context['attempts'][0], 1)
         self.assertEqual(response.context['total'], 1)
 
@@ -4359,8 +4489,8 @@ class TestQuestionPaper(TestCase):
         response = self.client.get(
             reverse('yaksh:preview_questionpaper',
                     kwargs={"questionpaper_id": self.question_paper.id}
+                    )
             )
-        )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/preview_questionpaper.html')
         self.assertEqual(
@@ -4379,8 +4509,8 @@ class TestQuestionPaper(TestCase):
         response = self.client.get(
             reverse('yaksh:preview_questionpaper',
                     kwargs={"questionpaper_id": self.question_paper.id}
+                    )
             )
-        )
         self.assertEqual(response.status_code, 404)
 
     def test_preview_qustionpaper_without_quiz_owner(self):
@@ -4393,8 +4523,8 @@ class TestQuestionPaper(TestCase):
         response = self.client.get(
             reverse('yaksh:preview_questionpaper',
                     kwargs={"questionpaper_id": self.question_paper.id}
+                    )
             )
-        )
         self.assertEqual(response.status_code, 404)
 
     def test_mcq_attempt_right_after_wrong(self):

@@ -4,6 +4,7 @@ import zipfile
 import tempfile
 import csv
 
+
 def copy_files(file_paths):
     """ Copy Files to current directory, takes
     tuple with file paths and extract status"""
@@ -65,4 +66,3 @@ def is_csv(document):
     except (csv.Error, UnicodeDecodeError):
         return False, None
     return True, dialect
-

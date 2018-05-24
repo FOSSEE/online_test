@@ -4,7 +4,7 @@ from django.utils import timezone
 from textwrap import dedent
 import pytz
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
-    QuestionSet, AnswerPaper, Answer, Course, IntegerTestCase, FloatTestCase,\
+    AnswerPaper, Answer, Course, IntegerTestCase, FloatTestCase,\
     StringTestCase, McqTestCase, ArrangeTestCase
 
 
@@ -19,34 +19,30 @@ def setUpModule():
                            institute='IIT', department='Aerospace',
                            position='Student')
     # Create User 2
-    user2 = User.objects.create_user(username='demo_user_101',
-                                    password='demo',
-                                    email='demo@test.com')
+    user2 = User.objects.create_user(
+      username='demo_user_101', password='demo',
+      email='demo@test.com')
 
     Profile.objects.create(user=user2, roll_number=2,
                            institute='IIT', department='Aerospace',
                            position='Student')
-    
+
     # Create a course
-    course = Course.objects.create(name="Python Course 100",
-                                   enrollment="Enroll Request", creator=user)
+    Course.objects.create(name="Python Course 100",
+                          enrollment="Enroll Request", creator=user)
 
-    quiz = Quiz.objects.create(start_date_time=datetime\
-                                               (2015, 10, 9, 10, 8, 15, 0,
-                                                tzinfo=pytz.utc),
-                               end_date_time=datetime\
-                                              (2199, 10, 9, 10, 8, 15, 0,
-                                                tzinfo=pytz.utc),
-                               duration=30, active=True, attempts_allowed=1,
-                               time_between_attempts=0, pass_criteria=0,
-                               description='demo quiz 100',
-                               instructions="Demo Instructions",
-                               creator=user
-                               )
-    question_paper = QuestionPaper.objects.create(quiz=quiz,
-                                                  total_marks=1.0)
+    quiz = Quiz.objects.create(
+        start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+        end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+        duration=30, active=True, attempts_allowed=1,
+        time_between_attempts=0, pass_criteria=0,
+        description='demo quiz 100',
+        instructions="Demo Instructions",
+        creator=user
+        )
+    QuestionPaper.objects.create(quiz=quiz, total_marks=1.0)
 
-    
+
 def tearDownModule():
     User.objects.filter(username__in=["demo_user_100", "demo_user_101"])\
                  .delete()
@@ -62,10 +58,10 @@ class IntegerQuestionTestCases(unittest.TestCase):
         # Creating Question paper
         self.question_paper = QuestionPaper.objects.get(quiz=self.quiz)
 
-        #Creating User
+        # Creating User
         self.user = User.objects.get(username='demo_user_100')
 
-        #Creating Question
+        # Creating Question
         self.question1 = Question.objects.create(summary='int1', points=1,
                                                  type='code', user=self.user)
         self.question1.language = 'python'
@@ -74,30 +70,26 @@ class IntegerQuestionTestCases(unittest.TestCase):
         self.question1.description = 'sum of 12+13?'
         self.question1.save()
 
-        #Creating answerpaper
+        # Creating answerpaper
 
-        self.answerpaper = AnswerPaper.objects.create(user=self.user,
-                                            user_ip='101.0.0.1',
-                                            start_time=timezone.now(), 
-                                            question_paper=self.question_paper,
-                                            end_time=timezone.now()
-                                                     +timedelta(minutes=5),
-                                            attempt_number=1,
-                                            course=self.course
-                                             )
+        self.answerpaper = AnswerPaper.objects.create(
+            user=self.user, user_ip='101.0.0.1', start_time=timezone.now(),
+            question_paper=self.question_paper, course=self.course,
+            end_time=timezone.now()+timedelta(minutes=5), attempt_number=1
+            )
         self.answerpaper.questions.add(self.question1)
         self.answerpaper.save()
-        # For question 
+        # For question
         self.integer_based_testcase = IntegerTestCase(question=self.question1,
                                                       correct=25,
-                                                      type = 'integertestcase',
+                                                      type='integertestcase',
                                                       )
         self.integer_based_testcase.save()
 
     @classmethod
     def tearDownClass(self):
-      self.question1.delete()
-      self.answerpaper.delete()
+        self.question1.delete()
+        self.answerpaper.delete()
 
     def test_validate_regrade_integer_correct_answer(self):
         # Given
@@ -118,7 +110,7 @@ class IntegerQuestionTestCases(unittest.TestCase):
         self.assertTrue(result['success'])
 
         # Regrade
-         # Given
+        # Given
         regrade_answer = Answer.objects.get(id=self.answer.id)
         regrade_answer.answer = 200
         regrade_answer.save()
@@ -133,7 +125,6 @@ class IntegerQuestionTestCases(unittest.TestCase):
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 0)
         self.assertFalse(self.answer.correct)
-
 
     def test_validate_regrade_integer_incorrect_answer(self):
         # Given
@@ -154,7 +145,7 @@ class IntegerQuestionTestCases(unittest.TestCase):
         self.assertFalse(result['success'])
 
         # Regrade
-         # Given
+        # Given
         regrade_answer = Answer.objects.get(id=self.answer.id)
         regrade_answer.answer = 25
         regrade_answer.save()
@@ -180,9 +171,9 @@ class StringQuestionTestCases(unittest.TestCase):
         self.quiz = Quiz.objects.get(description="demo quiz 100")
         # Creating Question paper
         self.question_paper = QuestionPaper.objects.get(quiz=self.quiz)
-        #Creating User
+        # Creating User
         self.user = User.objects.get(username='demo_user_100')
-        #Creating Question
+        # Creating Question
         self.question1 = Question.objects.create(summary='str1', points=1,
                                                  type='code', user=self.user)
         self.question1.language = 'python'
@@ -199,45 +190,41 @@ class StringQuestionTestCases(unittest.TestCase):
         self.question2.description = 'Write Hello, EARTH!'
         self.question2.save()
 
-        #Creating answerpaper
-        
-        self.answerpaper = AnswerPaper.objects.create(user=self.user,
-                                            user_ip='101.0.0.1',
-                                            start_time=timezone.now(), 
-                                            question_paper=self.question_paper,
-                                            end_time=timezone.now()
-                                                     +timedelta(minutes=5),
-                                            attempt_number=1,
-                                            course=self.course
-                                             )
+        # Creating answerpaper
+
+        self.answerpaper = AnswerPaper.objects.create(
+            user=self.user, user_ip='101.0.0.1', start_time=timezone.now(),
+            question_paper=self.question_paper, course=self.course,
+            end_time=timezone.now()+timedelta(minutes=5), attempt_number=1
+            )
         self.answerpaper.questions.add(*[self.question1, self.question2])
         self.answerpaper.save()
 
-        # For question 
+        # For question
         self.lower_string_testcase = StringTestCase(question=self.question1,
                                                     correct="Hello, EARTH!",
                                                     string_check="lower",
-                                                    type = 'stringtestcase',
+                                                    type='stringtestcase',
                                                     )
         self.lower_string_testcase.save()
 
         self.exact_string_testcase = StringTestCase(question=self.question2,
                                                     correct="Hello, EARTH!",
                                                     string_check="exact",
-                                                    type = 'stringtestcase',
+                                                    type='stringtestcase',
                                                     )
         self.exact_string_testcase.save()
 
     @classmethod
     def tearDownClass(self):
-      self.question1.delete()
-      self.question2.delete()
-      self.answerpaper.delete()
+        self.question1.delete()
+        self.question2.delete()
+        self.answerpaper.delete()
 
     def test_validate_regrade_case_insensitive_string_correct_answer(self):
         # Given
         string_answer = "hello, earth!"
-        answer = Answer(question=self.question1,answer=string_answer)
+        answer = Answer(question=self.question1, answer=string_answer)
         answer.save()
         self.answerpaper.answers.add(answer)
 
@@ -250,7 +237,7 @@ class StringQuestionTestCases(unittest.TestCase):
         self.assertTrue(result['success'])
 
         # Regrade
-         # Given
+        # Given
         regrade_answer = Answer.objects.get(id=answer.id)
         regrade_answer.answer = "hello, mars!"
         regrade_answer.save()
@@ -259,8 +246,8 @@ class StringQuestionTestCases(unittest.TestCase):
         details = self.answerpaper.regrade(self.question1.id)
 
         # Then
-        answer = self.answerpaper.answers.filter(question=self.question1)\
-                                               .last()
+        answer = self.answerpaper.answers.filter(
+            question=self.question1).last()
         self.assertEqual(answer, regrade_answer)
         self.assertTrue(details[0])
         self.assertEqual(answer.marks, 0)
@@ -269,7 +256,7 @@ class StringQuestionTestCases(unittest.TestCase):
     def test_validate_regrade_case_insensitive_string_incorrect_answer(self):
         # Given
         string_answer = "hello, mars!"
-        answer = Answer(question=self.question1,answer=string_answer)
+        answer = Answer(question=self.question1, answer=string_answer)
         answer.save()
         self.answerpaper.answers.add(answer)
 
@@ -283,7 +270,7 @@ class StringQuestionTestCases(unittest.TestCase):
         self.assertFalse(result['success'])
 
         # Regrade
-         # Given
+        # Given
         regrade_answer = Answer.objects.get(id=answer.id)
         regrade_answer.answer = "hello, earth!"
         regrade_answer.save()
@@ -292,8 +279,8 @@ class StringQuestionTestCases(unittest.TestCase):
         details = self.answerpaper.regrade(self.question1.id)
 
         # Then
-        answer = self.answerpaper.answers.filter(question=self.question1)\
-                                               .last()
+        answer = self.answerpaper.answers.filter(
+            question=self.question1).last()
         self.assertEqual(answer, regrade_answer)
         self.assertTrue(details[0])
         self.assertEqual(answer.marks, 1)
@@ -302,7 +289,7 @@ class StringQuestionTestCases(unittest.TestCase):
     def test_validate_regrade_case_sensitive_string_correct_answer(self):
         # Given
         string_answer = "Hello, EARTH!"
-        answer = Answer(question=self.question2,answer=string_answer)
+        answer = Answer(question=self.question2, answer=string_answer)
         answer.save()
         self.answerpaper.answers.add(answer)
 
@@ -315,7 +302,7 @@ class StringQuestionTestCases(unittest.TestCase):
         self.assertTrue(result['success'])
 
         # Regrade
-         # Given
+        # Given
         regrade_answer = Answer.objects.get(id=answer.id)
         regrade_answer.answer = "hello, earth!"
         regrade_answer.save()
@@ -324,8 +311,8 @@ class StringQuestionTestCases(unittest.TestCase):
         details = self.answerpaper.regrade(self.question2.id)
 
         # Then
-        answer = self.answerpaper.answers.filter(question=self.question2)\
-                                               .last()
+        answer = self.answerpaper.answers.filter(
+            question=self.question2).last()
         self.assertEqual(answer, regrade_answer)
         self.assertTrue(details[0])
         self.assertEqual(answer.marks, 0)
@@ -334,7 +321,7 @@ class StringQuestionTestCases(unittest.TestCase):
     def test_case_sensitive_string_incorrect_answer(self):
         # Given
         string_answer = "hello, earth!"
-        answer = Answer(question=self.question2,answer=string_answer)
+        answer = Answer(question=self.question2, answer=string_answer)
         answer.save()
         self.answerpaper.answers.add(answer)
 
@@ -348,7 +335,7 @@ class StringQuestionTestCases(unittest.TestCase):
         self.assertFalse(result['success'])
 
         # Regrade
-         # Given
+        # Given
         regrade_answer = Answer.objects.get(id=answer.id)
         regrade_answer.answer = "Hello, EARTH!"
         regrade_answer.save()
@@ -357,8 +344,8 @@ class StringQuestionTestCases(unittest.TestCase):
         details = self.answerpaper.regrade(self.question2.id)
 
         # Then
-        answer = self.answerpaper.answers.filter(question=self.question2)\
-                                               .last()
+        answer = self.answerpaper.answers.filter(
+            question=self.question2).last()
         self.assertEqual(answer, regrade_answer)
         self.assertTrue(details[0])
         self.assertEqual(answer.marks, 1)
@@ -375,9 +362,9 @@ class FloatQuestionTestCases(unittest.TestCase):
         # Creating Question paper
         self.question_paper = QuestionPaper.objects.get(quiz=self.quiz)
 
-        #Creating User
+        # Creating User
         self.user = User.objects.get(username='demo_user_100')
-        #Creating Question
+        # Creating Question
         self.question1 = Question.objects.create(summary='flt1', points=1,
                                                  type='code', user=self.user)
         self.question1.language = 'python'
@@ -385,31 +372,28 @@ class FloatQuestionTestCases(unittest.TestCase):
         self.question1.test_case_type = 'floattestcase'
         self.question1.save()
 
-        #Creating answerpaper
-        
-        self.answerpaper = AnswerPaper.objects.create(user=self.user,
-                                            user_ip='101.0.0.1',
-                                            start_time=timezone.now(), 
-                                            question_paper=self.question_paper,
-                                            end_time=timezone.now()
-                                                     +timedelta(minutes=5),
-                                            attempt_number=1,
-                                            course=self.course
-                                             )
+        # Creating answerpaper
+
+        self.answerpaper = AnswerPaper.objects.create(
+            user=self.user, user_ip='101.0.0.1', start_time=timezone.now(),
+            question_paper=self.question_paper, course=self.course,
+            end_time=timezone.now()+timedelta(minutes=5), attempt_number=1,
+            )
+
         self.answerpaper.questions.add(self.question1)
         self.answerpaper.save()
-        # For question 
+        # For question
         self.float_based_testcase = FloatTestCase(question=self.question1,
                                                   correct=100,
                                                   error_margin=0.1,
-                                                  type = 'floattestcase',
+                                                  type='floattestcase',
                                                   )
         self.float_based_testcase.save()
 
     @classmethod
     def tearDownClass(self):
-      self.question1.delete()
-      self.answerpaper.delete()
+        self.question1.delete()
+        self.answerpaper.delete()
 
     def test_validate_regrade_float_correct_answer(self):
         # Given
@@ -430,7 +414,7 @@ class FloatQuestionTestCases(unittest.TestCase):
         self.assertTrue(result['success'])
 
         # Regrade with wrong answer
-         # Given
+        # Given
         regrade_answer = Answer.objects.get(id=self.answer.id)
         regrade_answer.answer = 0.0
         regrade_answer.save()
@@ -465,7 +449,7 @@ class FloatQuestionTestCases(unittest.TestCase):
         self.assertFalse(result['success'])
 
         # Regrade
-         # Given
+        # Given
         regrade_answer = Answer.objects.get(id=self.answer.id)
         regrade_answer.answer = 99.9
         regrade_answer.save()
@@ -480,15 +464,17 @@ class FloatQuestionTestCases(unittest.TestCase):
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 1)
         self.assertTrue(self.answer.correct)
+
+
 class MCQQuestionTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        #Creating User
+        # Creating User
         self.user = User.objects.get(username='demo_user_100')
         self.user2 = User.objects.get(username='demo_user_101')
         self.user_ip = '127.0.0.1'
 
-        #Creating Course
+        # Creating Course
         self.course = Course.objects.get(name="Python Course 100")
         # Creating Quiz
         self.quiz = Quiz.objects.get(description="demo quiz 100")
@@ -496,7 +482,7 @@ class MCQQuestionTestCases(unittest.TestCase):
         self.question_paper = QuestionPaper.objects.get(quiz=self.quiz)
         self.question_paper.shuffle_testcases = True
         self.question_paper.save()
-        #Creating Question
+        # Creating Question
         self.question1 = Question.objects.create(summary='mcq1', points=1,
                                                  type='code', user=self.user,
                                                  )
@@ -552,9 +538,9 @@ class MCQQuestionTestCases(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-      self.question1.delete()
-      self.answerpaper.delete()
-      self.answerpaper2.delete()
+        self.question1.delete()
+        self.answerpaper.delete()
+        self.answerpaper2.delete()
 
     def test_shuffle_test_cases(self):
         # Given
@@ -576,7 +562,8 @@ class MCQQuestionTestCases(unittest.TestCase):
                               course_id=self.course.id
                               )
         not_ordered_testcase = self.question1.get_ordered_test_cases(
-                                              answerpaper3                                              )
+                                              answerpaper3
+                                              )
         get_test_cases = self.question1.get_test_cases()
         # Then
         self.assertNotEqual(order1, order2)
@@ -594,9 +581,9 @@ class ArrangeQuestionTestCases(unittest.TestCase):
         self.question_paper = QuestionPaper.objects.get(quiz=self.quiz,
                                                         total_marks=1.0)
 
-        #Creating User
+        # Creating User
         self.user = User.objects.get(username='demo_user_100')
-        #Creating Question
+        # Creating Question
         self.question1 = Question.objects.create(summary='arrange1',
                                                  points=1.0,
                                                  user=self.user
@@ -607,42 +594,39 @@ class ArrangeQuestionTestCases(unittest.TestCase):
         self.question1.test_case_type = 'arrangetestcase'
         self.question1.save()
 
-        #Creating answerpaper
+        # Creating answerpaper
 
-        self.answerpaper = AnswerPaper.objects.create(user=self.user,
-                                            user_ip='101.0.0.1',
-                                            start_time=timezone.now(),
-                                            question_paper=self.question_paper,
-                                            end_time=timezone.now()
-                                                     +timedelta(minutes=5),
-                                            attempt_number=1,
-                                            course=self.course
-                                             )
+        self.answerpaper = AnswerPaper.objects.create(
+            user=self.user, user_ip='101.0.0.1', course=self.course,
+            start_time=timezone.now(), question_paper=self.question_paper,
+            end_time=timezone.now()+timedelta(minutes=5), attempt_number=1
+            )
         self.answerpaper.questions.add(self.question1)
         self.answerpaper.save()
         # For question
         self.arrange_testcase_1 = ArrangeTestCase(question=self.question1,
                                                   options="A",
-                                                  type = 'arrangetestcase',
+                                                  type='arrangetestcase',
                                                   )
         self.arrange_testcase_1.save()
         self.testcase_1_id = self.arrange_testcase_1.id
         self.arrange_testcase_2 = ArrangeTestCase(question=self.question1,
                                                   options="B",
-                                                  type = 'arrangetestcase',
+                                                  type='arrangetestcase',
                                                   )
         self.arrange_testcase_2.save()
         self.testcase_2_id = self.arrange_testcase_2.id
         self.arrange_testcase_3 = ArrangeTestCase(question=self.question1,
                                                   options="C",
-                                                  type = 'arrangetestcase',
+                                                  type='arrangetestcase',
                                                   )
         self.arrange_testcase_3.save()
         self.testcase_3_id = self.arrange_testcase_3.id
+
     @classmethod
     def tearDownClass(self):
-      self.question1.delete()
-      self.answerpaper.delete()
+        self.question1.delete()
+        self.answerpaper.delete()
 
     def test_validate_regrade_arrange_correct_answer(self):
         # Given
@@ -681,10 +665,9 @@ class ArrangeQuestionTestCases(unittest.TestCase):
                                                      self.quiz.description,
                                                      self.question1.summary,
                                                      self.question1.type
-                        )                                )
+                        ))
         self.assertFalse(details[0])
         self.assertEqual(details[1], err_msg)
-
 
         # Try regrade with incorrect answer
         # When
@@ -741,15 +724,17 @@ class ArrangeQuestionTestCases(unittest.TestCase):
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 1)
         self.assertTrue(self.answer.correct)
-class MCQQuestionTestCases(unittest.TestCase):
+
+
+class MCQShuffleTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        #Creating User
+        # Creating User
         self.user = User.objects.get(username='demo_user_100')
         self.user2 = User.objects.get(username='demo_user_101')
         self.user_ip = '127.0.0.1'
 
-        #Creating Course
+        # Creating Course
         self.course = Course.objects.get(name="Python Course 100")
         # Creating Quiz
         self.quiz = Quiz.objects.get(description="demo quiz 100")
@@ -757,7 +742,7 @@ class MCQQuestionTestCases(unittest.TestCase):
         self.question_paper = QuestionPaper.objects.get(quiz=self.quiz)
         self.question_paper.shuffle_testcases = True
         self.question_paper.save()
-        #Creating Question
+        # Creating Question
         self.question1 = Question.objects.create(summary='mcq1', points=1,
                                                  type='code', user=self.user,
                                                  )
@@ -810,11 +795,12 @@ class MCQQuestionTestCases(unittest.TestCase):
                                             attempt_num=1,
                                             course_id=self.course.id
                                             )
+
     @classmethod
     def tearDownClass(self):
-      self.question1.delete()
-      self.answerpaper.delete()
-      self.answerpaper2.delete()
+        self.question1.delete()
+        self.answerpaper.delete()
+        self.answerpaper2.delete()
 
     def test_shuffle_test_cases(self):
         # Given

@@ -3,11 +3,9 @@ import unittest
 import os
 import shutil
 import tempfile
-from psutil import Process, pid_exists
+from psutil import Process
 # Local Imports
 from yaksh.grader import Grader
-from yaksh.bash_code_evaluator import BashCodeEvaluator
-from yaksh.bash_stdio_evaluator import BashStdIOEvaluator
 from yaksh.evaluator_tests.test_python_evaluation import EvaluatorBaseTest
 from yaksh.settings import SERVER_TIMEOUT
 from textwrap import dedent
@@ -25,15 +23,15 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.tc_data_args = "1 2\n2 1"
         self.test_case_data = [
             {"test_case": self.tc_data,
-                "test_case_args": self.tc_data_args,
-                "test_case_type": "standardtestcase",
-                "weight": 0.0
-            }
+             "test_case_args": self.tc_data_args,
+             "test_case_type": "standardtestcase",
+             "weight": 0.0
+             }
         ]
         self.in_dir = tempfile.mkdtemp()
         self.timeout_msg = ("Code took more than {0} seconds to run. "
-            "You probably have an infinite loop in your"
-            " code.").format(SERVER_TIMEOUT)
+                            "You probably have an infinite loop in your"
+                            " code.").format(SERVER_TIMEOUT)
         self.file_paths = None
 
     def tearDown(self):
@@ -43,16 +41,14 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
     def test_correct_answer(self):
         # Given
         user_answer = ("#!/bin/bash\n[[ $# -eq 2 ]]"
-            " && echo $(( $1 + $2 )) && exit $(( $1 + $2 ))"
-        )
-        kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'bash'
-                    },
-                    'test_case_data': self.test_case_data,
+                       " && echo $(( $1 + $2 )) && exit $(( $1 + $2 ))"
+                       )
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'bash'
+                  }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -65,15 +61,14 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
     def test_error(self):
         # Given
         user_answer = ("#!/bin/bash\n[[ $# -eq 2 ]] "
-            "&& echo $(( $1 - $2 )) && exit $(( $1 - $2 ))")
+                       "&& echo $(( $1 - $2 )) && exit $(( $1 - $2 ))")
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'bash'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -87,15 +82,14 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
     def test_infinite_loop(self):
         # Given
         user_answer = ("#!/bin/bash\nwhile [ 1 ] ;"
-            " do echo "" > /dev/null ; done")
+                       " do echo "" > /dev/null ; done")
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'bash'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -120,22 +114,19 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
             cat $1
             """)
         self.tc_data_args = "test.txt"
-        self.test_case_data = [
-            {"test_case": self.tc_data,
-                "test_case_args": self.tc_data_args,
-                "test_case_type": "standardtestcase",
-                "weight": 0.0
-            }
-        ]
+        self.test_case_data = [{
+            "test_case": self.tc_data,
+            "test_case_args": self.tc_data_args,
+            "test_case_type": "standardtestcase",
+            "weight": 0.0
+        }]
         user_answer = ("#!/bin/bash\ncat $1")
-        kwargs = {
-                  'metadata': {
+        kwargs = {'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'bash'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -145,6 +136,7 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertTrue(result.get("success"))
 
+
 class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
         self.in_dir = tempfile.mkdtemp()
@@ -152,7 +144,6 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
                             "You probably have an infinite loop in your"
                             " code.").format(SERVER_TIMEOUT)
         self.file_paths = None
-
 
     def test_correct_answer(self):
         # Given
@@ -162,7 +153,8 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
                              echo -n `expr $A + $B`
                              """
                              )
-        test_case_data = [{'expected_output': '11',
+        test_case_data = [{
+            'expected_output': '11',
             'expected_input': '5\n6',
             'test_case_type': 'stdiobasedtestcase',
             'weight': 0.0
@@ -173,8 +165,7 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'bash'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -190,14 +181,14 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
                                  COUNTER=0
                                  while [  $COUNTER -lt 3 ]; do
                                      echo -n "${arr[$COUNTER]}"
-                                     let COUNTER=COUNTER+1 
+                                     let COUNTER=COUNTER+1
                                  done
                             """
                              )
         test_case_data = [{'expected_output': '1 2 3\n4 5 6\n7 8 9\n',
-                            'expected_input': '1,2,3\n4,5,6\n7,8,9',
-                            'test_case_type': 'stdiobasedtestcase',
-                            'weight': 0.0
+                           'expected_input': '1,2,3\n4,5,6\n7,8,9',
+                           'test_case_type': 'stdiobasedtestcase',
+                           'weight': 0.0
                            }]
         kwargs = {
                   'metadata': {
@@ -205,8 +196,7 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'bash'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -224,7 +214,8 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
                              echo -n `expr $A - $B`
                              """
                              )
-        test_case_data = [{'expected_output': '11',
+        test_case_data = [{
+            'expected_output': '11',
             'expected_input': '5\n6',
             'test_case_type': 'stdiobasedtestcase',
             'weight': 0.0
@@ -235,8 +226,7 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'bash'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -266,8 +256,7 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'bash'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -286,8 +275,8 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
             f.write('2'.encode('ascii'))
         self.in_dir = tempfile.mkdtemp()
         self.timeout_msg = ("Code took more than {0} seconds to run. "
-            "You probably have an infinite loop in your"
-            " code.").format(SERVER_TIMEOUT)
+                            "You probably have an infinite loop in your"
+                            " code.").format(SERVER_TIMEOUT)
         self.file_paths = None
 
     def tearDown(self):
@@ -306,28 +295,26 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                                 success = False
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
-                                proc = subprocess.Popen(user_answer, shell=True,
-                                                        stdout=subprocess.PIPE,
-                                                        stderr=subprocess.PIPE
-                                                        )
+                                proc = subprocess.Popen(
+                                    user_answer, shell=True,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE
+                                    )
                                 stdout,stderr = proc.communicate()
                                 if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-                            )
+                            """)
 
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code,"weight": 1.0
-                            }]
+                           "hook_code": hook_code, "weight": 1.0}]
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'bash'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -349,20 +336,18 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                                 success = False
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
-                                proc = subprocess.Popen(user_answer, shell=True,
-                                                        stdout=subprocess.PIPE,
-                                                        stderr=subprocess.PIPE
-                                                        )
+                                proc = subprocess.Popen(
+                                    user_answer, shell=True,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE
+                                    )
                                 stdout,stderr = proc.communicate()
                                 if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-                            )
-        
+                            """)
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code,"weight": 1.0
-                            }]
+                           "hook_code": hook_code, "weight": 1.0}]
 
         kwargs = {
                   'metadata': {
@@ -370,8 +355,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'bash'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -381,7 +365,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertFalse(result.get('success'))
         self.assert_correct_output('Incorrect Answer', result.get('error'))
-    
+
     def test_assert_with_hook(self):
         # Given
         user_answer = ("#!/bin/bash\n[[ $# -eq 2 ]]"
@@ -393,7 +377,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
             """)
 
         assert_test_case_args = "1 2\n2 1"
-        
+
         hook_code = dedent("""\
                             def check_answer(user_answer):
                                 success = False
@@ -402,13 +386,11 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                                 if "echo $(( $1 + $2 ))" in user_answer:
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-                            )
-
+                            """)
 
         test_case_data = [{"test_case_type": "standardtestcase",
                            "test_case": assert_test_case,
-                           "test_case_args":assert_test_case_args,
+                           "test_case_args": assert_test_case_args,
                            'weight': 1.0
                            },
                           {"test_case_type": "hooktestcase",
@@ -420,8 +402,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': True,
                     'language': 'bash'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -438,7 +419,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                              echo -n Hello, world!
                              """
                              )
-        
+
         hook_code_1 = dedent("""\
                             def check_answer(user_answer):
                                 success = False
@@ -447,8 +428,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                                 if "echo -n Hello, world!" in user_answer:
                                     success, err, mark_fraction = True, "", 0.5
                                 return success, err, mark_fraction
-                            """
-                            )
+                            """)
         hook_code_2 = dedent("""\
                     def check_answer(user_answer):
                         import subprocess
@@ -465,9 +445,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                         if stdout.decode('utf-8') == "Hello, world!":
                             success, err, mark_fraction = True, "", 1.0
                         return success, err, mark_fraction
-                    """
-                    )
-
+                    """)
 
         test_case_data = [{"test_case_type": "hooktestcase",
                            "hook_code": hook_code_1, 'weight': 1.0},
@@ -480,8 +458,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': True,
                     'language': 'bash'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -491,7 +468,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertTrue(result.get('success'))
         self.assertEqual(result.get("weight"), 1.5)
-        
+
     def test_infinite_loop(self):
         # Given
         user_answer = ("#!/bin/bash\nwhile [ 1 ] ;"
@@ -503,21 +480,19 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                                 success = False
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
-                                proc = subprocess.Popen(user_answer, shell=True,
-                                                        stdout=subprocess.PIPE,
-                                                        stderr=subprocess.PIPE
-                                                        )
+                                proc = subprocess.Popen(
+                                    user_answer, shell=True,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE
+                                    )
                                 stdout,stderr = proc.communicate()
                                 if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-            )
+                            """)
 
-        
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code,"weight": 1.0
-                            }]
+                           "hook_code": hook_code, "weight": 1.0}]
 
         kwargs = {
                   'metadata': {
@@ -525,8 +500,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'bash'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When

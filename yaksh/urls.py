@@ -9,7 +9,8 @@ urlpatterns = [
     url(r'^activate/(?P<key>.+)$', views.activate_user, name="activate"),
     url(r'^new_activation/$', views.new_activation, name='new_activation'),
     url(r'^quizzes/$', views.quizlist_user, name='quizlist_user'),
-    url(r'^quizzes/(?P<enrolled>\w+)/$', views.quizlist_user, name='quizlist_user'),
+    url(r'^quizzes/(?P<enrolled>\w+)/$', views.quizlist_user,
+        name='quizlist_user'),
     url(r'^results/$', views.results_user),
     url(r'^start/(?P<questionpaper_id>\d+)/(?P<module_id>\d+)/(?P<course_id>\d+)/$',
         views.start),
@@ -19,7 +20,7 @@ urlpatterns = [
         views.quit),
     url(r'^complete/$', views.complete),
     url(r'^complete/(?P<attempt_num>\d+)/(?P<module_id>\d+)/(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$',\
-            views.complete),
+        views.complete),
     url(r'^register/$', views.user_register, name="register"),
     url(r'^(?P<q_id>\d+)/check/$', views.check, name="check"),
     url(r'^get_result/(?P<uid>\d+)/(?P<course_id>\d+)/(?P<module_id>\d+)/$',
