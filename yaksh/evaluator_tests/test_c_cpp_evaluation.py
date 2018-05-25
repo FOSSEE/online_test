@@ -215,6 +215,71 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertTrue(result.get('success'))
 
+    def test_incorrect_testcase(self):
+        # Given
+        self.tc_data = dedent("""
+            #include <stdio.h>
+            #include <stdlib.h>
+
+            extern int add(int, int);
+
+            template <class T>
+
+            void check(T expect, T result)
+            {
+                if (expect == result)
+                {
+                printf("Correct: Expected %d got %d ",expect,result);
+                }
+                else
+                {
+                printf("Incorrect: Expected %d got %d ",expect,result);
+                exit (1);
+               }
+            }
+
+            int main(void)
+            {
+                int result;
+                result = add(0,0);
+                printf("Input submitted to the function: 0, 0");
+                check(0, result);
+                result = add(2,3);
+                printf("Input submitted to the function: 2 3");
+                check(5,result)
+                printf("All Correct");
+                return 0;
+            }
+            """)
+        user_answer = dedent("""\
+                        int add(int a, int b)
+                        {
+                        return a+b;
+                        }""")
+        self.test_case_data = [{"test_case": self.tc_data,
+                                "test_case_type": "standardtestcase",
+                                "weight": 0.0
+                                }]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'cpp'
+                    }, 'test_case_data': self.test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        err = result.get('error')[0]
+        lines_of_error = len(err.splitlines())
+        self.assertFalse(result.get('success'))
+        self.assertTrue(lines_of_error > 1)
+        self.assertIn("Test case Error", err)
+
 
 class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):

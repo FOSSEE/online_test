@@ -356,6 +356,23 @@ class QuestionTestCases(unittest.TestCase):
         self.yaml_questions_data_with_missing_fields = yaml.safe_dump_all(
                 questions_data_with_missing_fields
                 )
+        self.bad_yaml_question_data = '''[{
+            "active": True, "points": 1.0, "description" "factorial of a no",
+            "language": "Python", "type": "Code",
+            "testcase": self.test_case_upload_data,
+            "summary": "bad yaml"
+            }]'''
+
+        self.test_case_without_type = [{"test_case": "assert fact(3)==6",
+                                        "test_case_args": "",
+                                        "weight": 1.0
+                                        }]
+        self.yaml_question_data_without_test_case_type = yaml.safe_dump_all([{
+            "active": True, "points": 1.0, "description": "factorial of a no",
+            "language": "Python", "type": "Code",
+            "testcase": self.test_case_without_type,
+            "summary": "bad yaml"
+            }])
 
     def tearDown(self):
         shutil.rmtree(self.load_tmp_path)
@@ -459,6 +476,23 @@ class QuestionTestCases(unittest.TestCase):
                          )
         tags = question_data.tags.all().values_list("name", flat=True)
         self.assertListEqual(list(tags), [])
+
+    def test_load_questions_with_bad_yaml(self):
+        """
+            Test if yaml file is parsed correctly
+        """
+        question = Question()
+        msg = question.load_questions(
+            self.bad_yaml_question_data,
+            self.user1
+            )
+        self.assertIn("Error Parsing Yaml", msg)
+
+        msg = question.load_questions(
+            self.yaml_question_data_without_test_case_type,
+            self.user1
+            )
+        self.assertEqual(msg, "Unable to parse test case data")
 
 
 ###############################################################################

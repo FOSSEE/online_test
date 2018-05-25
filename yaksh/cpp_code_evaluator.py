@@ -129,7 +129,6 @@ class CppCodeEvaluator(BaseEvaluator):
         if stdnt_stderr == '':
             proc, main_out, main_err = self.compiled_test_code
             main_err = self._remove_null_substitute_char(main_err)
-
             if main_err == '':
                 ret = self._run_command([self.ref_output_path],
                                         stdin=None,
@@ -143,7 +142,7 @@ class CppCodeEvaluator(BaseEvaluator):
                 else:
                     err = "{0} \n {1}".format(stdout, stderr)
             else:
-                err = "Error:"
+                err = "Test case Error:"
                 try:
                     error_lines = main_err.splitlines()
                     for e in error_lines:

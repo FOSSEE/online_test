@@ -1036,7 +1036,7 @@ class Question(models.Model):
                         new_test_case.save()
 
                     except Exception:
-                        msg = "File not correct."
+                        msg = "Unable to parse test case data"
         except Exception as exc_msg:
             msg = "Error Parsing Yaml: {0}".format(exc_msg)
         return msg

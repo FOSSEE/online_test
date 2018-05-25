@@ -150,7 +150,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                 else:
                     err = stdout + "\n" + stderr
             else:
-                err = "Error:"
+                err = "Test case Error:"
                 try:
                     error_lines = main_err.splitlines()
                     for e in error_lines:

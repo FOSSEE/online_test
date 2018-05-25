@@ -241,6 +241,63 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertTrue(result.get("success"))
 
+    def test_incorrect_testcase(self):
+        # Given
+        self.tc_data = dedent("""
+            class main
+            {
+                public static <E> void check(E expect, E result)
+                {
+                    if(result.equals(expect))
+                    {
+                        System.out.println("Correct:Output expected "+expect+
+                                            "and got "+result);
+                    }
+                else
+                {
+                    System.out.println("Incorrect:Output expected "+expect+
+                                        "but got "+result);
+                    System.exit(1);
+                }
+                }
+                public static void main(String arg[])
+                {
+                   Test t = new Test();
+                   int result, input, output;
+                   input = 0; output = 0;
+                   result = t.square_num(input);
+                   System.out.println("Input submitted to the function: "+
+                                    input);
+                   check(output, result)
+                }
+            }
+            """)
+        user_answer = ("class Test {\n\tint square_num(int a) "
+                       "{\n\treturn a;\n\t}\n}")
+        self.test_case_data = [{"test_case": self.tc_data,
+                                "test_case_type": "standardtestcase",
+                                "weight": 0.0
+                                }]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'java'
+                    }, 'test_case_data': self.test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        err = result.get('error')[0]
+        lines_of_error = len(err.splitlines())
+        self.assertFalse(result.get('success'))
+        self.assertTrue(lines_of_error > 1)
+        self.assertIn("Test case Error", err)
+
 
 class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
