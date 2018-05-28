@@ -3,7 +3,7 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus
-from yaksh.code_server import(
+from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
 import json
