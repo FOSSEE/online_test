@@ -2774,8 +2774,7 @@ def _update_unit_status(course_id, user, unit):
         user=user, course_id=course_id,
     )
     # make next available unit as current unit
-    course_status.current_unit = unit
-    course_status.save()
+    course_status.set_current_unit(unit)
 
 
 def _update_course_percent(course, user):

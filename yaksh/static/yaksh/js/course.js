@@ -81,7 +81,7 @@ $('.user_data').click(function() {
                   "/exam/manage/get_user_status/" + course_id + "/" + student_id;
         $.ajax({
             url: get_url,
-            timeout: 15000,
+            timeout: 8000,
             type: "GET",
             dataType: "json",
             contentType: 'application/json; charset=utf-8',

@@ -2629,7 +2629,7 @@ class TestCourseDetail(TestCase):
         self.assertEqual(student.username, "demo_student")
         self.assertEqual(grade, "NA")
         self.assertEqual(percent, 0.0)
-        self.assertEqual(current_unit, "NA")
+        self.assertIsNone(current_unit)
 
         # Check student details when student starts the course
         self.course_status = CourseStatus.objects.create(

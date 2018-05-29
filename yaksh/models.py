@@ -788,10 +788,7 @@ class Course(models.Model):
     def get_current_unit(self, user):
         course_status = CourseStatus.objects.filter(course=self, user=user)
         if course_status.exists():
-            unit = course_status.first().current_unit
-        else:
-            unit = "NA"
-        return unit
+            return course_status.first().current_unit
 
     def days_before_start(self):
         """ Get the days remaining for the start of the course """
@@ -861,6 +858,10 @@ class CourseStatus(models.Model):
             if not complete:
                 break
         return complete
+
+    def set_current_unit(self, unit):
+        self.current_unit = unit
+        self.save()
 
 
 ###############################################################################

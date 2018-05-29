@@ -163,14 +163,14 @@
                         </div>
                     </td>
                     <td>
-                        {% if unit != "NA" %}
+                        {% if unit %}
                             {% if unit.type == 'quiz' %}
                                 {{unit.quiz.description}}
                             {% else %}
                                 {{unit.lesson.name}}
                             {% endif %}
                         {% else %}
-                            {{unit}}
+                            NA
                         {% endif%}
                     </td>
                     <td>
