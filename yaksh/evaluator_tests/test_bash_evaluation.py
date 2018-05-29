@@ -58,6 +58,58 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertTrue(result.get('success'))
 
+    def test_correct_answer_without_test_case_args(self):
+        # Given
+        user_answer = "echo 'hello'"
+        tc_data = "echo 'hello'"
+        self.test_case_data = [
+            {"test_case": tc_data,
+             "test_case_args": "",
+             "test_case_type": "standardtestcase",
+             "weight": 0.0
+             }
+        ]
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'bash'
+                  }, 'test_case_data': self.test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertTrue(result.get('success'))
+
+    def test_incorrect_answer_without_test_case_args(self):
+        # Given
+        user_answer = "echo 'hello'"
+        tc_data = "echo 'hello world'"
+        self.test_case_data = [
+            {"test_case": tc_data,
+             "test_case_args": "",
+             "test_case_type": "standardtestcase",
+             "weight": 0.0
+             }
+        ]
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'bash'
+                  }, 'test_case_data': self.test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertFalse(result.get('success'))
+
     def test_error(self):
         # Given
         user_answer = ("#!/bin/bash\n[[ $# -eq 2 ]] "
