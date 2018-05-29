@@ -169,6 +169,14 @@ class TestProfile(TestCase):
         self.assertEqual(updated_profile.is_email_verified, True)
         self.assertTemplateUsed(get_response, 'yaksh/activation_status.html')
 
+        post_response = self.client.post(
+                reverse('yaksh:new_activation'),
+                data={'email': 'user@mail.com'}
+            )
+        self.assertEqual(post_response.status_code, 200)
+        self.assertFalse(post_response.context['success'])
+        self.assertTemplateUsed(get_response, 'yaksh/activation_status.html')
+
     def test_edit_profile_post(self):
         """
         POST request to edit_profile view should update the user's profile
@@ -3325,6 +3333,33 @@ class TestGrader(TestCase):
         self.assertTrue('details' in response.context)
         self.assertTemplateUsed(response, 'yaksh/regrade.html')
 
+        # When
+        response = self.client.get(
+            reverse('yaksh:regrade',
+                    kwargs={'course_id': self.course.id,
+                            'answerpaper_id': self.answerpaper.id}),
+            follow=True)
+
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('courses' in response.context)
+        self.assertTrue('details' in response.context)
+        self.assertTemplateUsed(response, 'yaksh/regrade.html')
+
+        # When
+        response = self.client.get(
+            reverse('yaksh:regrade',
+                    kwargs={'course_id': self.course.id,
+                            'question_id': self.question.id,
+                            'questionpaper_id': self.question_paper.id}),
+            follow=True)
+
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('courses' in response.context)
+        self.assertTrue('details' in response.context)
+        self.assertTemplateUsed(response, 'yaksh/regrade.html')
+
     def test_regrade_denies_moderator_not_in_course(self):
         # Given
         self.client.login(
@@ -4119,6 +4154,37 @@ class TestShowQuestions(TestCase):
         self.assertEqual(response.get('Content-Disposition'),
                          'attachment; filename="questions_dump.yaml"')
 
+    def test_delete_questions(self):
+        """ Test to check if questions are set to not active when deleted """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.post(
+            reverse('yaksh:show_questions'),
+            data={'question': [self.question.id],
+                  'delete': 'delete'}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/showquestions.html')
+        updated_que = Question.objects.get(id=self.question.id)
+        self.assertFalse(updated_que.active)
+
+    def test_search_tags(self):
+        """ Test to check if questions are obtained with tags """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        self.question.tags.add('code')
+        response = self.client.post(
+            reverse('yaksh:show_questions'),
+            data={'question_tags': ['code']}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/showquestions.html')
+        self.assertEqual(response.context['questions'][0], self.question)
+
 
 class TestShowStatistics(TestCase):
     def setUp(self):
@@ -4376,6 +4442,16 @@ class TestQuestionPaper(TestCase):
             check_prerequisite=False, creator=self.user)
         self.learning_module.learning_unit.add(self.learning_unit.id)
         self.course.learning_module.add(self.learning_module)
+
+        # Questions for random set
+        self.random_que1 = Question.objects.create(
+            summary="Random 1", description="Test Random 1",
+            points=1.0, language="python", type="code", user=self.user
+        )
+        self.random_que2 = Question.objects.create(
+            summary="Random 2", description="Test Random 2",
+            points=1.0, language="python", type="code", user=self.user
+        )
 
         # Mcq Question
         self.question_mcq = Question.objects.create(
@@ -4842,6 +4918,23 @@ class TestQuestionPaper(TestCase):
         self.assertEqual(response.context['fixed_questions'],
                          self.questions_list)
         self.assertEqual(response.context['qpaper'], self.question_paper)
+
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.question_paper.id}),
+            data={'random_questions': [self.random_que1.id,
+                                       self.random_que2.id],
+                  'marks': ['1.0'], 'question_type': ['code'],
+                  'add-random': ['']}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/design_questionpaper.html')
+        random_set = response.context['random_sets'][0]
+        added_random_ques = random_set.questions.all()
+        self.assertIn(self.random_que1, added_random_ques)
+        self.assertIn(self.random_que2, added_random_ques)
 
 
 class TestLearningModule(TestCase):

@@ -28,18 +28,15 @@ import re
 # Local imports.
 from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.models import (
-    Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, FloatTestCase,
-    HookTestCase, IntegerTestCase, McqTestCase, Profile,
-    QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
-    StdIOBasedTestCase, StringTestCase, TestCase, User,
-    get_model_class, FIXTURES_DIR_PATH, Lesson, LessonFile,
-    LearningUnit, LearningModule,
+    Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, Profile,
+    QuestionPaper, QuestionSet, Quiz, Question, TestCase, User,
+    FIXTURES_DIR_PATH, Lesson, LessonFile, LearningUnit, LearningModule,
     CourseStatus
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
-    RandomQuestionForm, QuestionFilterForm, CourseForm, ProfileForm,
-    UploadFileForm, get_object_form, FileForm, QuestionPaperForm, LessonForm,
+    QuestionFilterForm, CourseForm, ProfileForm,
+    UploadFileForm, FileForm, QuestionPaperForm, LessonForm,
     LessonFileForm, LearningModuleForm, ExerciseForm
 )
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
@@ -113,7 +110,6 @@ def user_register(request):
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            data = form.cleaned_data
             u_name, pwd, user_email, key = form.save()
             new_user = authenticate(username=u_name, password=pwd)
             login(request, new_user)
@@ -558,7 +554,6 @@ def show_question(request, question, paper, error_message=None,
                   notification=None, course_id=None, module_id=None,
                   previous_question=None):
     """Show a question if possible."""
-    user = request.user
     quiz = paper.question_paper.quiz
     quiz_type = 'Exam'
     can_skip = False
@@ -635,7 +630,6 @@ def show_question(request, question, paper, error_message=None,
 @email_verified
 def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None,
          course_id=None, module_id=None):
-    user = request.user
     paper = get_object_or_404(
         AnswerPaper, user=request.user, attempt_number=attempt_num,
         question_paper=questionpaper_id, course_id=course_id
@@ -1310,13 +1304,11 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
     qpaper_form = QuestionPaperForm(instance=question_paper)
 
     if request.method == 'POST':
-
         filter_form = QuestionFilterForm(request.POST, user=user)
         qpaper_form = QuestionPaperForm(request.POST, instance=question_paper)
         question_type = request.POST.get('question_type', None)
         marks = request.POST.get('marks', None)
         state = request.POST.get('is_active', None)
-
         if 'add-fixed' in request.POST:
             question_ids = request.POST.get('checked_ques', None)
             if question_paper.fixed_question_order:
@@ -1350,8 +1342,8 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
                 random_set = QuestionSet(marks=marks,
                                          num_questions=num_of_questions)
                 random_set.save()
-                for question in Question.objects.filter(id__in=question_ids):
-                    random_set.questions.add(question)
+                random_ques = Question.objects.filter(id__in=question_ids)
+                random_set.questions.add(*random_ques)
                 question_paper.random_questions.add(random_set)
 
         if 'remove-random' in request.POST:
@@ -2011,7 +2003,9 @@ def new_activation(request, email=None):
         context['success'] = False
         context['msg'] = "Your account is not verified. \
                             Please verify your account"
-        return render_to_response('yaksh/activation_status.html', context)
+        return my_render_to_response(
+            request, 'yaksh/activation_status.html', context
+            )
 
     if not user.profile.is_email_verified:
         user.profile.activation_key = generate_activation_key(user.username)
