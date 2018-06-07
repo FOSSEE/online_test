@@ -21,7 +21,6 @@ from django.core.validators import URLValidator
 from django.core.exceptions import (
     MultipleObjectsReturned, ObjectDoesNotExist, ValidationError
 )
-from django.conf import settings
 import pytz
 from taggit.models import Tag
 from itertools import chain

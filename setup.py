@@ -27,7 +27,6 @@ install_requires = [
     'requests',
     'markdown==2.6.9',
     'python-decouple==3.1',
-    'invoke==0.21.0',
 ]
 
 setup(
@@ -41,7 +40,7 @@ setup(
     license='BSD License',
     entry_points={
             'console_scripts': [
-                'yaksh = yaksh.scripts.cli:main',
+                'yaksh = yaksh.code_server:main',
             ],
     },
     description='A django app to conduct online programming tests.',
