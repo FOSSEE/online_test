@@ -174,4 +174,6 @@ urlpatterns = [
         views.course_status, name="course_status"),
     url(r'^manage/preview_questionpaper/(?P<questionpaper_id>\d+)/$',
         views.preview_questionpaper, name="preview_questionpaper"),
+    url(r'^manage/get_user_status/(?P<course_id>\d+)/(?P<student_id>\d+)/$',
+        views.get_user_data, name="get_user_data")
 ]

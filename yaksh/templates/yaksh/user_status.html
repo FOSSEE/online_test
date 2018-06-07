@@ -1,0 +1,44 @@
+{% if status %}
+    <strong>Student Name: {{student.get_full_name|title}}</strong>
+    <br>
+    <strong>Overall Course Progress:</strong>
+    <div class="progress">
+        {% if course_percentage <= 50 %}
+            <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="40"
+            aria-valuemin="0" aria-valuemax="100" style="width:{{course_percentage}}%">
+        {% elif course_percentage <= 75 %}
+            <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="40"
+            aria-valuemin="0" aria-valuemax="100" style="width:{{course_percentage}}%">
+        {% else %}
+            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40"
+            aria-valuemin="0" aria-valuemax="100" style="width:{{course_percentage}}%">
+        {% endif %}
+        <b style="color: black;">{{course_percentage}}% Completed</b>
+        </div>
+    </div>
+    <br>
+    <strong>Per Module Progress:</strong>
+    <br>
+    <table class="table">
+        {% for module, percent in modules %}
+            <tr>
+                <td width="30%">{{ module.name }}</td>
+                <td>
+                    <div class="progress">
+                        {% if percent <= 50 %}
+                        <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                        {% elif percent <= 75 %}
+                        <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                        {% else %}
+                        <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                        {% endif %}
+                        <b style="color: black;">{{percent}}% Completed</b>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    {{ msg }}
+{% endif %}

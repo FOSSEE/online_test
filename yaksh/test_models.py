@@ -1729,11 +1729,12 @@ class CourseTestCases(unittest.TestCase):
         # for course with no modules
         self.no_module_course = Course.objects.create(
             name="test_course", creator=self.creator, enrollment="open")
-        percent = self.course.percent_completed(self.student1)
+        modules = self.course.get_learning_modules()
+        percent = self.course.percent_completed(self.student1, modules)
         self.assertEqual(percent, 0)
         self.quiz1.questionpaper_set.all().delete()
         # for course with module but zero percent completed
-        percent = self.course.percent_completed(self.student1)
+        percent = self.course.percent_completed(self.student1, modules)
         self.assertEqual(percent, 0)
 
         # Add completed unit to course status and check percent
@@ -1743,7 +1744,7 @@ class CourseTestCases(unittest.TestCase):
         course_status = CourseStatus.objects.create(
             course=self.course, user=self.student1)
         course_status.completed_units.add(self.completed_unit)
-        updated_percent = self.course.percent_completed(self.student1)
+        updated_percent = self.course.percent_completed(self.student1, modules)
         self.assertEqual(updated_percent, 25)
 
     def test_course_time_remaining_to_start(self):
