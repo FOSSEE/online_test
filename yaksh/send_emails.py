@@ -6,7 +6,6 @@ except ImportError:
 from string import digits, punctuation
 import hashlib
 from textwrap import dedent
-import smtplib
 import os
 
 # Django imports
@@ -61,18 +60,20 @@ def send_user_mail(user_mail, key):
 
     return success, msg
 
+
 def send_bulk_mail(subject, email_body, recipients, attachments):
     try:
         text_msg = ""
         msg = EmailMultiAlternatives(subject, text_msg, settings.SENDER_EMAIL,
-                                    [settings.SENDER_EMAIL], bcc=recipients
-                                    )
+                                     [settings.SENDER_EMAIL], bcc=recipients
+                                     )
         msg.attach_alternative(email_body, "text/html")
         if attachments:
             for file in attachments:
-                path = default_storage.save('attachments/'+file.name,
-                                            ContentFile(file.read())
-                                            )
+                path = default_storage.save(
+                    os.path.join('attachments', file.name),
+                    ContentFile(file.read())
+                )
                 msg.attach_file(os.sep.join((settings.MEDIA_ROOT, path)),
                                 mimetype="text/html"
                                 )
