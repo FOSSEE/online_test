@@ -70,9 +70,10 @@ def send_bulk_mail(subject, email_body, recipients, attachments):
         msg.attach_alternative(email_body, "text/html")
         if attachments:
             for file in attachments:
-                path = default_storage.save('attachments/'+file.name,
-                                            ContentFile(file.read())
-                                            )
+                path = default_storage.save(
+                    os.path.join('attachments', file.name),
+                    ContentFile(file.read())
+                )
                 msg.attach_file(os.sep.join((settings.MEDIA_ROOT, path)),
                                 mimetype="text/html"
                                 )
