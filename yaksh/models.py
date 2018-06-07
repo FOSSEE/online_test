@@ -387,6 +387,20 @@ class Quiz(models.Model):
                 course=course, passed=False
             ).values_list("user", flat=True).distinct().count()
 
+    def get_answerpaper_status(self, user, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
+        ans_ppr = AnswerPaper.objects.filter(
+            user=user, course=course, question_paper=qp
+        ).order_by("-attempt_number")
+        if ans_ppr.exists():
+            status = ans_ppr.first().status
+        else:
+            status = "not attempted"
+        return status
+
     def _create_quiz_copy(self, user):
         question_papers = self.questionpaper_set.all()
         new_quiz = self
@@ -425,6 +439,8 @@ class LearningUnit(models.Model):
         if course_status.exists():
             if self in course_status.first().completed_units.all():
                 state = "completed"
+            elif self.type == "quiz":
+                state = self.quiz.get_answerpaper_status(user, course)
             elif course_status.first().current_unit == self:
                 state = "inprogress"
         return state
