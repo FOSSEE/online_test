@@ -2698,8 +2698,10 @@ def course_modules(request, course_id, msg=None):
     context = {"course": course, "user": user, "msg": msg}
     course_status = CourseStatus.objects.filter(course=course, user=user)
     context['course_percentage'] = course.get_completion_percent(user)
-    context['modules'] = [(module, module.get_module_complete_percent(course, user))
-                          for module in learning_modules]
+    context['modules'] = [
+        (module, module.get_module_complete_percent(course, user))
+        for module in learning_modules
+        ]
     if course_status.exists():
         course_status = course_status.first()
         if not course_status.grade:
@@ -2778,16 +2780,21 @@ def get_user_data(request, course_id, student_id):
         data['msg'] = 'You are not a moderator'
         data['status'] = False
     elif not course.is_creator(user) and not course.is_teacher(user):
-        msg = 'You are neither course creator nor course teacher for {0}'.format(
-            course.name)
+        msg = dedent(
+            """\
+            You are neither course creator nor course teacher for {0}
+            """.format(course.name)
+            )
         data['msg'] = msg
         data['status'] = False
     else:
         student = User.objects.get(id=student_id)
         data['status'] = True
         modules = course.get_learning_modules()
-        module_percent = [(module, module.get_module_complete_percent(course, student))
-                          for module in modules]
+        module_percent = [
+            (module, module.get_module_complete_percent(course, student))
+            for module in modules
+            ]
         data['modules'] = module_percent
         _update_course_percent(course, student)
         data['course_percentage'] = course.get_completion_percent(student)

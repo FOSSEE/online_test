@@ -9,7 +9,6 @@ except ImportError:
 import zipfile
 import shutil
 from markdown import Markdown
-
 from django.contrib.auth.models import Group
 from django.contrib.auth import authenticate
 from django.core.urlresolvers import reverse
@@ -26,7 +25,7 @@ from yaksh.models import (
     User, Profile, Question, Quiz, QuestionPaper, AnswerPaper, Answer, Course,
     AssignmentUpload, McqTestCase, IntegerTestCase, StringTestCase,
     FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,
-    LessonFile
+    LessonFile, CourseStatus
 )
 from yaksh.decorators import user_has_profile
 
@@ -2744,10 +2743,11 @@ class TestCourseDetail(TestCase):
         response = self.client.get(reverse('yaksh:get_user_data',
                                    kwargs={'course_id': self.user1_course.id,
                                            'student_id': self.student.id}))
-        err_msg = response.json()['user_data'].replace("\n", "").strip()
-        actual_err = dedent("""\
-            You are neither course creator nor course teacher for {0}""".format(
-            self.user1_course.name))
+        err_msg = response.json()['user_data'].strip()
+        actual_err = ('You are neither course creator '
+                      'nor course teacher for {0}'.format(
+                        self.user1_course.name)
+                      )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(err_msg, actual_err)
 
