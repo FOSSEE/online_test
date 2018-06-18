@@ -1,0 +1,395 @@
+{% extends "manage.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/monthpicker.css"></script>
+
+<div id="selector-holder">	
+	<ul id="report-menu" class="nav nav-tabs selector" label="report">
+	  <li value="1" class="inactive default"><a href="#">Report 1</a></li>
+	  <li value="2" class="inactive"> <a href="#">Report 2</a></li>
+	</ul>
+
+	<div id="sla-data-range" class="mrp-container">
+	  	<span class="mrp-icon"><i class="fa fa-calendar"></i></span>
+	  	<div class="mrp-monthdisplay">
+		    <span class="mrp-lowerMonth"></span>
+		    <span class="mrp-to"> to </span>
+		    <span class="mrp-upperMonth"></span>
+	  	</div>
+	</div>
+	  	
+	<div>
+	  	<br>
+	  	<div id="wise-menu" class="btn-group selector display" role="group" label="wise" style="display:none">
+		  	<button type="button" class="btn btn-primary inactive default" value="statewise">State</button>
+		  	<button type="button" class="btn btn-primary inactive" value="institutewise">Institute</button>
+		</div>
+
+	  	<div id="group-menu" class="btn-group selector display" role="group" label="group" style="display:none">
+	  		<button type="button" class="btn btn-primary inactive" value="Self">Self</button>
+	  		<button type="button" class="btn btn-primary inactive" value="Instructor">Instructor</button>
+	  		<button type="button" class="btn btn-primary inactive default" value="All">All</button>
+		</div>
+		<br>
+	</div>
+
+	<div>
+		<br>
+		<div id="level-menu" class="btn-group selector display" role="group" label="level" style="display:none">
+			  <button type="button" class="btn btn-primary inactive" value="Basic">Basic</button>
+			  <button type="button" class="btn btn-primary inactive" value="Intermediate">Intermediate</button>
+			  <button type="button" class="btn btn-primary inactive" value="Advanced">Advanced</button>
+		</div>
+		
+		<div id="catt-menu" class="btn-group selector display" role="group" label='catt' style="display:none">
+				<button type="button" class="btn btn-primary inactive default" value="grade">Grade</button>
+				<button type="button" class="btn btn-primary inactive" value="user_gender">Gender</button>
+				<button type="button" class="btn btn-primary inactive" value="user_age_group">Age</button>
+				<button type="button" class="btn btn-primary inactive" value="user_position">Position</button>
+		</div>
+	</div>
+</div>
+
+<div id="data-holder">
+
+	<div id="table" class="display" style="display:none"></div>
+
+	<div id="viz" class="display" style="display:none">
+		<div id="plot"></div>
+	</div>
+
+	<div id="back" class="display" style="display:none">
+		<br>
+		<button id="back-btn" type="button" class="btn btn-primary">Back</button>
+		<br>
+	</div>
+
+	<div id="msg" class="display" style="display:none">
+		<br>
+		<p> No Data Found! </p>
+		<br>
+	</div>
+</div>
+
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/monthpicker.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script> // tabel total script
+ 	$.fn.add_total = function(){
+		
+		var totals = [];
+
+		var rows = $(this).find('tbody tr');
+		//console.log(rows);
+		rows.each(function(){
+			var cells = $(this).find('td');
+			//console.log(cells)
+			cells.each(function(i){
+				if(i>0){
+					value = parseInt($(this).text());
+					if(!totals[i]){
+						totals[i] = 0;
+					}  
+					totals[i] += value;
+				}
+			});
+		});
+
+		var total_row = '<th>Total</th>';
+
+		$.each(totals, function(i, val){
+			if(i>0){
+				total_row += '<th>' + val + '</th>';
+			}
+		});
+
+		$(this).append('<tbody><tr style="background-color:grey">' + total_row + '</tr></tbody>' );
+	}
+</script>
+<script>
+	
+	var DATA;
+	var VALS = {};
+	var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+
+	function get_data(){
+		var data = {
+			start_date : startDate,
+			end_date : endDate
+		}
+
+		console.log(data); 
+
+		$.ajax({
+			url: 'http://localhost:8000/analysis/final_summary_data/',
+			type: "post",
+			data: JSON.stringify(data),
+			dataType: 'json',
+			async : false,
+			success: function(data){
+				console.log(data);
+				DATA = data;
+			}
+  		});
+	}
+
+	function display_coursewise_data(){
+		
+		$('.display').hide();
+		$('#group-menu').show();
+		$('#table').show();
+
+		DISPDATA = DATA['coursewise'][[VALS['group']]];
+
+		var heading = '<tr><th>Level</th><th>Enrolled</th><th>A+</th><th>A</th><th>Passed</th></tr>';
+		var rows = '';
+
+		$.each(DISPDATA, function(key, val){
+			rows += '<tr><td onclick=select_level("' + key + '")><a>' + key + '</a></td><td>' + DISPDATA[key]['Enrolled'] + '</td><td>' + DISPDATA[key]['A+'] + '</td><td>' + DISPDATA[key]['A']+ '</td><td>' + DISPDATA[key]['Passed'] + '</td></td>';
+		});
+		var table = "<table id='result-table' class='tablesorter table table-striped'><thead>" + heading + "</thead><tbody>" + rows + "</tbody></table>";
+		$('#table').html(table);
+		$('#result-table').add_total();
+		$("#result-table").tablesorter();
+		
+	}
+
+	function select_level(key){
+		VALS['level'] = key;
+		var levels = $('#level-menu').find('button');
+		levels.each(function(){
+			if($(this).val()== key){
+				$(this).removeClass("inactive").addClass("active");
+			}else{
+				$(this).removeClass("active").addClass("inactive");
+			}
+		});
+		VALS['coursewise_page'] = 2;
+		display();
+	}
+
+	function display_coursewise_viz(){
+		
+		$('.display').hide();
+		$('#group-menu').show();
+		$('#level-menu').show();
+		$('#catt-menu').show();
+		$('#viz').show();
+		$('#back').show();
+
+		VIZDATA = DATA['coursewise'][VALS['group']][VALS['level']][VALS['catt']];
+	
+		var years = [];
+		var i = 0; 
+		$.each(VIZDATA, function(key,_){
+			years.push(key);
+		});
+		
+		var names;
+		var traces = [];
+		$.each(years, function(_, year){
+			months = [];
+			for(i=0; i<12; i++){
+				months.push(MONTHS[i] + ' ' + year);
+			}
+			var month_data = [];
+			$.each(MONTHS, function(i, month){
+				if(VIZDATA[year][month]){ 
+					month_data[i] = Object.values(VIZDATA[year][month]);
+					if(!names){
+						names = Object.keys(VIZDATA[year][month]);
+					}
+				}
+			});
+
+			var year_trace = []
+			$.each(names, function(i, val){
+				console.log(name);
+				var month_trace = {};
+				var counts = []
+				month_trace['name'] = val;
+				month_trace['type'] = 'bar';
+				month_trace['x'] = months;
+
+				for(j=0; j < months.length; j++){
+					if(month_data[j])
+						counts[j] = month_data[j][i];
+					else 
+						counts[j] = 0;
+				}
+
+				month_trace['y'] = counts;
+				year_trace.push(month_trace)
+			});
+			traces = $.merge(traces, year_trace);
+		});
+
+		var layout = {barmode: 'group'};
+		Plotly.newPlot('plot', traces, layout);
+	}
+
+	function display_statewise_viz(){
+		
+		$('.display').hide();
+		$('#wise-menu').show();
+		$('#group-menu').show();
+		$('#viz').show();
+
+		var data = [
+		  {
+		    x: Object.keys(DATA['statewise'][VALS['group']]),
+		    y: Object.values(DATA['statewise'][VALS['group']]),
+		    type: 'bar'
+		  }
+		];
+		Plotly.newPlot('plot', data);
+	}
+
+	function display_institutewise_data(){
+		$('.display').hide();
+		$('#wise-menu').show();
+		$('#group-menu').show();
+		$('#table').show();
+
+		DISPDATA = DATA['institutewise'][VALS['group']];
+
+		var heading = '<tr><th>Institute</th><th>Enrolled</th><th>Passed</th></tr>';
+		var rows = '';
+
+		$.each(DISPDATA, function(key, val){
+			rows += '<tr><td onclick=select_institue("' + key + '")><a>' + key + '</a></td><td>' + DISPDATA[key]['Enrolled'] + '</td><td>' +  DISPDATA[key]['Passed'] + '</td></td>';
+		});
+		var table = "<table id='result-table' class='tablesorter table table-striped'><thead>" + heading + "</thead><tbody>" + rows + "</tbody></table>";
+		$('#table').html(table);
+		$('#result-table').add_total();
+		$("#result-table").tablesorter();
+	}
+
+	function select_institue(key){
+		VALS['institute'] = key;
+		VALS['institutewise_page'] = 2;
+		display();
+	}
+
+	function display_institut_percourse_data(){
+		
+		$('.display').hide();
+		$('#wise-menu').show();
+		$('#group-menu').show();
+		$('#table').show();
+		$('#back').show();
+
+		DISPDATA = jQuery.extend(true, {}, DATA['institutewise'][VALS['group']][VALS['institute']]);
+
+		delete DISPDATA['Enrolled'];
+		delete DISPDATA['Passed'];  
+
+		console.log(DISPDATA)
+
+		var heading = '<tr><th>Institute</th><th>Enrolled</th><th>Passed</th></tr>';
+		var rows = '';
+
+		$.each(DISPDATA, function(key, val){
+			rows += '<tr><td>' + key + '</td><td>' + DISPDATA[key]['Enrolled'] + '</td><td>' +  DISPDATA[key]['Passed'] + '</td></td>';
+		});
+		var table = "<table id='result-table' class='tablesorter table table-striped'><thead>" + heading + "</thead><tbody>" + rows + "</tbody></table>";
+		$('#table').html(table);
+		$('#result-table').add_total();
+		$("#result-table").tablesorter();
+	}
+
+	$('.inactive').on('click', function(){
+		var selected = $(this);
+		var parent = selected.parent();
+		
+		var label = parent.attr('label');
+		VALS[label] = selected.val();
+
+		var options = parent.children();
+		options.each(function(){
+			if($(this).val() == selected.val()){
+				$(this).removeClass("inactive").addClass("active"); 
+			}else{
+				$(this).removeClass("active").addClass("inactive");
+			}
+		});
+		//console.log(VALS);
+		display();
+	});
+
+	function display(){
+		if(jQuery.isEmptyObject(DATA)){
+			$('.display').hide();
+			$('#msg').show();
+		}else{
+			if(VALS['report'] == 1){
+				if(VALS['coursewise_page'] == 1){
+					display_coursewise_data();
+				}else{
+					display_coursewise_viz();
+				}
+			}else{
+				if(VALS['wise'] == "statewise"){
+					display_statewise_viz();
+				}else{
+					if(VALS['institutewise_page']==1 || jQuery.isEmptyObject(VALS['institute'])){
+						display_institutewise_data();
+					}else{
+						display_institut_percourse_data();
+					}
+				}
+			}
+		}
+	}
+
+	$('#back-btn').on('click', function(){
+		if(VALS['report'] == 1){
+			VALS['coursewise_page'] = 1;	
+		}else{
+			VALS['institutewise_page'] = 1;
+		}
+		display();
+	});
+
+	$(function(){
+		
+		$('.default').each(function(){
+			//console.log($(this));
+			$(this).removeClass("inactive").addClass("active");
+			var label = $(this).parent().attr('label');
+			VALS[label] = $(this).val();
+		});
+
+
+		/*
+		var group_default = $('#group-menu').find('.default');
+		group_default.removeClass("inactive").addClass("active");
+		VALS['group'] = group_default.val();
+
+		var report_default = $('#report-menu').find('.default');
+		report_default.removeClass("inactive").addClass("active");
+		VALS['report'] = report_default.val();
+		
+		var wise_default = $('#wise-menu').find('.default');
+		wise_default.removeClass("inactive").addClass("active");
+		VALS['wise'] = wise_default.val();
+
+		var catt_default = $('#catt-menu').find('.default');
+		catt_default.removeClass("inactive").addClass("active");
+		VALS['catt'] = catt_default.val();
+		*/
+
+		VALS['coursewise_page'] = 1;
+		VALS['institutewise_page'] = 1;	
+		get_data();
+		display();
+	});
+
+	$(document).on('click','#apply', function(){
+		get_data();
+		display();
+	});
+
+</script>
+{% endblock %}
+

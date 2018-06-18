@@ -45,6 +45,7 @@ INSTALLED_APPS = (
     'taggit',
     'social.apps.django_app.default',
     'grades',
+    'analysis',
 )
 
 MIDDLEWARE_CLASSES = (
