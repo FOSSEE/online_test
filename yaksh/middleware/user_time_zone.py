@@ -9,7 +9,7 @@ class TimezoneMiddleware(object):
     def process_request(self, request):
         user = request.user
         user_tz = 'Asia/Kolkata'
-        if hasattr(user, 'profile'):
-            if user.profile.timezone:
-                user_tz = user.profile.timezone
+        if hasattr(user, 'yaksh_profile'):
+            if user.yaksh_profile.timezone:
+                user_tz = user.yaksh_profile.timezone
         timezone.activate(pytz.timezone(user_tz))

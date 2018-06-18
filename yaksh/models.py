@@ -854,7 +854,7 @@ class ConcurrentUser(models.Model):
 ###############################################################################
 class Profile(models.Model):
     """Profile for a user to store roll number and other details."""
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, related_name='yaksh_profile')
     roll_number = models.CharField(max_length=20)
     institute = models.CharField(max_length=128)
     department = models.CharField(max_length=64)
@@ -912,7 +912,7 @@ class Question(models.Model):
     snippet = models.TextField(blank=True)
 
     # user for particular question
-    user = models.ForeignKey(User, related_name="user")
+    user = models.ForeignKey(User, related_name="created_question")
 
     # Does this question allow partial grading
     partial_grading = models.BooleanField(default=False)
@@ -1569,7 +1569,7 @@ class AnswerPaperManager(models.Manager):
                 course_id=course_id
             ).order_by("-attempt_number")
         data = {}
-        profile = user.profile if hasattr(user, 'profile') else None
+        profile = user.yaksh_profile if hasattr(user, 'yaksh_profile') else None
         data['user'] = user
         data['profile'] = profile
         data['papers'] = papers
@@ -1908,7 +1908,7 @@ class AnswerPaper(models.Model):
 
 
             elif question.type == 'code' or question.type == "upload":
-                user_dir = self.user.profile.get_user_dir()
+                user_dir = self.user.yaksh_profile.get_user_dir()
                 url = '{0}:{1}'.format(SERVER_HOST_NAME, server_port)
                 submit(url, uid, json_data, user_dir)
                 result = {'uid': uid, 'status': 'running'}

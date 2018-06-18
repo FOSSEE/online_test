@@ -1,4 +1,4 @@
-{% extends "manage.html" %}
+{% extends "yaksh/manage.html" %}
 {% load custom_filters %}
 
 {% block title %} Grade User {% endblock %}
@@ -72,12 +72,12 @@ $(document).ready(function()
 
 <p> <h3> <center> Showing paper for {{data.user.get_full_name.title}} </center></h3>
 <p><b>Name:</b> {{ data.user.get_full_name.title }}
-{% if data.profile %}
+{% if data.yaksh_profile %}
 
-<p><b> Roll number:</b> {{ data.profile.roll_number }}
-<p><b>Position: </b> {{ data.profile.position }}
-<p><b>Department: </b>{{ data.profile.department }} 
-<p><b>Institute: </b>{{ data.profile.institute }}
+<p><b> Roll number:</b> {{ data.yaksh_profile.roll_number }}
+<p><b>Position: </b> {{ data.yaksh_profile.position }}
+<p><b>Department: </b>{{ data.yaksh_profile.department }}
+<p><b>Institute: </b>{{ data.yaksh_profile.institute }}
 {% endif %}
 
 {% if data.papers %}

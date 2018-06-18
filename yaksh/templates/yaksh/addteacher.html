@@ -1,4 +1,4 @@
-{% extends "manage.html" %}
+{% extends "yaksh/manage.html" %}
 
 {% block title %} Add teacher {% endblock title %}
 {% block subtitle %} {{ course.name }} {% endblock %}
@@ -44,9 +44,9 @@
 				<td>{{ teacher.first_name }}</td>
 				<td>{{ teacher.last_name }}</td>
 				<td>{{ teacher.email }}</td>
-				<td>{{ teacher.profile.institute }}</td>
-				<td>{{ teacher.profile.department }}</td>
-				<td>{{ teacher.profile.position }}</td>
+				<td>{{ teacher.yaksh_profile.institute }}</td>
+				<td>{{ teacher.yaksh_profile.department }}</td>
+				<td>{{ teacher.yaksh_profile.position }}</td>
 				</tr>
 				{% endif %}
 			{% endfor %}

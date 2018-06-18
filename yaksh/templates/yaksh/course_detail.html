@@ -1,4 +1,4 @@
-{% extends "manage.html" %}
+{% extends "yaksh/manage.html" %}
 {% load custom_filters %}
 {% block title %} Course Details {% endblock title %}
 
@@ -106,9 +106,9 @@
                         <td>{{ forloop.counter }}.</td>
                         <td> {{ enrolled.get_full_name|title }} </td>
                         <td> {{enrolled.email}}</td>
-                        <td> {{enrolled.profile.roll_number}}</td>
-                        <td> {{enrolled.profile.institute}}</td>
-                        <td> {{enrolled.profile.department}}</td>
+                        <td> {{enrolled.yaksh_profile.roll_number}}</td>
+                        <td> {{enrolled.yaksh_profile.institute}}</td>
+                        <td> {{enrolled.yaksh_profile.department}}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -222,9 +222,9 @@
                         <td>{{ forloop.counter }}.</td>
                         <td>{{request.get_full_name}}</td>
                         <td> {{request.email}}</td>
-                        <td> {{request.profile.roll_number}}</td>
-                        <td> {{request.profile.institute}}</td>
-                        <td> {{request.profile.department}}</td>
+                        <td> {{request.yaksh_profile.roll_number}}</td>
+                        <td> {{request.yaksh_profile.institute}}</td>
+                        <td> {{request.yaksh_profile.department}}</td>
                         <td>
                             <a class="btn btn-success"
                             href="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/{{ request.id }}/">
@@ -268,9 +268,9 @@
                         <td>{{ forloop.counter }}.</td>
                         <td> {{ enrolled.get_full_name|title }} </td>
                         <td> {{enrolled.email}}</td>
-                        <td> {{enrolled.profile.roll_number}}</td>
-                        <td> {{enrolled.profile.institute}}</td>
-                        <td> {{enrolled.profile.department}}</td>
+                        <td> {{enrolled.yaksh_profile.roll_number}}</td>
+                        <td> {{enrolled.yaksh_profile.institute}}</td>
+                        <td> {{enrolled.yaksh_profile.department}}</td>
                         <td><a class="btn btn-danger"
                         href="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/{{ enrolled.id }}/">
                         Reject </a>
@@ -311,9 +311,9 @@
                             <td>{{ forloop.counter }}.</td>
                             <td>{{rejected.get_full_name|title}}</td>
                             <td> {{rejected.email}}</td>
-                            <td> {{rejected.profile.roll_number}}</td>
-                            <td> {{rejected.profile.institute}}</td>
-                            <td> {{rejected.profile.department}}</td>
+                            <td> {{rejected.yaksh_profile.roll_number}}</td>
+                            <td> {{rejected.yaksh_profile.institute}}</td>
+                            <td> {{rejected.yaksh_profile.department}}</td>
                             <td>
                                 <a class="btn btn-success"
                                 href="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/{{ rejected.id }}/">

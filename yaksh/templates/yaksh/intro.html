@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "yaksh/base.html" %}
 
 {% block pagetitle %} OnlineTest Instructions and Rules
 <h3> Important instructions & rules </h3>
@@ -50,6 +50,6 @@
 {% endblock content %}
 {% if user %}
   {% block info %}
-  <h5>{{user.get_full_name|title}}({{user.profile.roll_number}}) Logged in as {{user.username}}</h5>
+  <h5>{{user.get_full_name|title}}({{user.yaksh_profile.roll_number}}) Logged in as {{user.username}}</h5>
   {% endblock %}
 {% endif %}

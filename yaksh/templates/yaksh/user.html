@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "yaksh/base.html" %}
 {% block css%}
     <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
 {% endblock %}
@@ -39,6 +39,6 @@
 {% endblock %}
 {% if user %}
   {% block info %}
-  <h5><b>{{user.get_full_name|title}}</b> with Roll no. <b>{{user.profile.roll_number}}</b> is logged in as <b>{{user.username}}</b></h5>
+  <h5><b>{{user.get_full_name|title}}</b> with Roll no. <b>{{user.yaksh_profile.roll_number}}</b> is logged in as <b>{{user.username}}</b></h5>
   {% endblock %}
 {% endif %}

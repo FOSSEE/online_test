@@ -1,4 +1,4 @@
-{% extends "manage.html" %}
+{% extends "yaksh/manage.html" %}
 {% load custom_filters %}
 
 {% block pagetitle %} Data for user {{ data.user.get_full_name.title }} {% endblock pagetitle %}
@@ -15,11 +15,11 @@
 <p> 
 Name: {{ data.user.get_full_name.title }} <br/>
 Username: {{ data.user.username }} <br/>
-{% if data.profile %}
-Roll number: {{ data.profile.roll_number }} <br/>
-Position: {{ data.profile.position }} <br/>
-Department: {{ data.profile.department }} <br/>
-Institute: {{ data.profile.institute }} <br/>
+{% if data.yaksh_profile %}
+Roll number: {{ data.yaksh_profile.roll_number }} <br/>
+Position: {{ data.yaksh_profile.position }} <br/>
+Department: {{ data.yaksh_profile.department }} <br/>
+Institute: {{ data.yaksh_profile.institute }} <br/>
 {% endif %}
 Email: {{ data.user.email }} <br/>
 Date joined: {{ data.user.date_joined }} <br/>

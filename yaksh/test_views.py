@@ -51,11 +51,11 @@ class TestUserRegistration(TestCase):
         self.assertEqual(self.registered_user.email, 'register_user@mail.com')
         self.assertEqual(self.registered_user.first_name, 'user1_f_name')
         self.assertEqual(self.registered_user.last_name, 'user1_l_name')
-        self.assertEqual(self.registered_user.profile.roll_number, '1')
-        self.assertEqual(self.registered_user.profile.institute, 'demo_institute')
-        self.assertEqual(self.registered_user.profile.department, 'demo_dept')
-        self.assertEqual(self.registered_user.profile.position, 'student')
-        self.assertEqual(self.registered_user.profile.timezone, 'UTC')
+        self.assertEqual(self.registered_user.yaksh_profile.roll_number, '1')
+        self.assertEqual(self.registered_user.yaksh_profile.institute, 'demo_institute')
+        self.assertEqual(self.registered_user.yaksh_profile.department, 'demo_dept')
+        self.assertEqual(self.registered_user.yaksh_profile.position, 'student')
+        self.assertEqual(self.registered_user.yaksh_profile.timezone, 'UTC')
 
 
 class TestProfile(TestCase):
@@ -608,7 +608,7 @@ class TestMonitor(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/user_data.html')
         self.assertEqual(response.context['data']['papers'][0], self.answerpaper)
-        self.assertEqual(response.context['data']['profile'], self.student.profile)
+        self.assertEqual(response.context['data']['profile'], self.student.yaksh_profile)
         self.assertEqual(response.context['data']['user'], self.student)
         self.assertEqual(response.context['data']['questionpaperid'],
                             str(self.question_paper.id))
@@ -1163,7 +1163,7 @@ class TestAddQuiz(TestCase):
             }
         )
         quiz_list = Quiz.objects.all().order_by('-id')
-        new_quiz = quiz_list[0]
+        new_quiz = quiz_list.get(description='new demo quiz')
         self.assertEqual(new_quiz.start_date_time,
             datetime(2016, 1, 10, 9, 0, 15, 0, tzone)
         )

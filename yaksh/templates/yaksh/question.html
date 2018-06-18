@@ -1,4 +1,4 @@
-{% extends "exam.html" %}
+{% extends "yaksh/exam.html" %}
 {% load custom_filters %}
 
 {% block pagetitle %} {{ paper.question_paper.quiz.description }} {% endblock pagetitle %}
@@ -359,6 +359,6 @@ question_type = "{{ question.type }}"
 {% endblock main %}
 {% if user %}
   {% block info %}
-  <h5>{{user.get_full_name|title}}({{user.profile.roll_number}}) Logged in as {{user.username}}</h5>
+  <h5>{{user.get_full_name|title}}({{user.yaksh_profile.roll_number}}) Logged in as {{user.username}}</h5>
   {% endblock %}
 {% endif %}

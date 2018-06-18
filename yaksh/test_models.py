@@ -24,7 +24,7 @@ from threading import Thread
 from yaksh import code_server_settings as server_settings
 
 def setUpModule():
-    # create user profile
+    # create user.yaksh_profile
     user = User.objects.create_user(username='creator',
                                     password='demo',
                                     email='demo@test.com')
@@ -279,7 +279,7 @@ class ProfileTestCases(unittest.TestCase):
         self.user2 = User.objects.get(username='demo_user3')
 
     def test_user_profile(self):
-        """ Test user profile"""
+        """ Test user.yaksh_profile"""
         self.assertEqual(self.user1.username, 'creator')
         self.assertEqual(self.profile.user.username, 'creator')
         self.assertEqual(int(self.profile.roll_number), 1)
@@ -840,7 +840,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.ip = '101.0.0.1'
         self.user = User.objects.get(username='creator')
         self.user2 = User.objects.get(username='demo_user2')
-        self.profile = self.user.profile
+        self.profile = self.user.yaksh_profile
         self.quiz = Quiz.objects.get(description='demo quiz 1')
         self.question_paper = QuestionPaper(quiz=self.quiz, total_marks=3)
         self.question_paper.save()

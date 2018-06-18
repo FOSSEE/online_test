@@ -2,7 +2,7 @@ from yaksh.models import Profile
 
 
 def save_profile(backend, user, response, *args, **kwargs):
-    if not hasattr(user, 'profile'):
+    if not hasattr(user, 'yaksh_profile'):
         profile = Profile.objects.create(user=user)
         profile.roll_number = profile.id
     else:

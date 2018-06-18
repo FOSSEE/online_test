@@ -1,4 +1,4 @@
-{% extends "manage.html" %}
+{% extends "yaksh/manage.html" %}
 {% load custom_filters %}
 {% block pagetitle %} Moderator's Dashboard {% endblock pagetitle %}
 
@@ -99,6 +99,6 @@
 {% endblock %}
 {% if user %}
   {% block info %}
-  <h5>{{user.get_full_name|title}}({{user.profile.roll_number}}) Logged in as {{user.username}}</h5>
+  <h5>{{user.get_full_name|title}}({{user.yaksh_profile.roll_number}}) Logged in as {{user.username}}</h5>
   {% endblock %}
 {% endif %}

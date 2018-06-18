@@ -1,4 +1,4 @@
-{% extends "manage.html" %}
+{% extends "yaksh/manage.html" %}
 {% load custom_filters %}
 {% block title %} Monitor {% endblock %}
 {% block pagetitle %} {{ msg }} {% endblock pagetitle %}
@@ -99,8 +99,8 @@ $(document).ready(function()
     <tr> 
         <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.id}}/{{paper.question_paper.id}}/{{course.id}}">{{ paper.user.get_full_name.title }}</a> </td>
         <td> {{ paper.user.username }} </td>
-        <td> {{ paper.user.profile.roll_number }} </td>
-        <td> {{ paper.user.profile.institute }} </td>
+        <td> {{ paper.user.yaksh_profile.roll_number }} </td>
+        <td> {{ paper.user.yaksh_profile.institute }} </td>
         <td> {{ paper.get_answered_str }} </td>
         <td> {{ paper.marks_obtained }} </td>
         <td> {{ paper.answers.count }} </td>
