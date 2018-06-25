@@ -83,6 +83,7 @@ class PythonAssertionEvaluator(BaseEvaluator):
                                       self.test_case,
                                       line_no
                                       )
+        
         else:
             success = True
             err = None

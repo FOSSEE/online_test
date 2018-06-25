@@ -67,3 +67,10 @@ class BaseEvaluator(object):
         os.chmod(fname, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR |
                  stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP | stat.S_IROTH |
                  stat.S_IWOTH | stat.S_IXOTH)
+
+    def write_to_submit_code_file1(self, file_path, user_answer,test_case):
+        """ Write the code (`answer`) to a file"""
+        submit_f = open(file_path, 'w')
+        submit_f.write(user_answer.lstrip())
+        submit_f.write(test_case.lstrip())
+        submit_f.close()

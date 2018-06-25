@@ -163,5 +163,4 @@ class CppCodeEvaluator(BaseEvaluator):
                         err = "{0} \n {1}".format(err, e)
             except Exception:
                 err = "{0} \n {1}".format(err, stdnt_stderr)
-
         return success, err, mark_fraction
