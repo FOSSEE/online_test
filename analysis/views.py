@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from yaksh.models import *
 import json
@@ -213,6 +213,8 @@ def get_data(start_date, end_date):
 	return final
 
 @csrf_exempt
+@login_required
+@email_verified
 def final_summary_data(request):
 
 	user = request.user
@@ -228,8 +230,8 @@ def final_summary_data(request):
 	end_date = datetime.strptime(str(end_date), '%Y%m')
 	end_date = end_date.replace(day = calendar.monthrange(end_date.year, end_date.month)[1])
 
-	print(start_date)
-	print(end_date)
+	#print(start_date)
+	#print(end_date)
 
 	final = get_data(start_date, end_date)
 
