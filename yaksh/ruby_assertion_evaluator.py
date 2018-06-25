@@ -27,7 +27,6 @@ class rubyCodeEvaluator(BaseEvaluator):
         self.test_case = test_case_data.get('test_case')
         self.weight = test_case_data.get('weight')
 
-
     def teardown(self):
         # Delete the created file.
         if os.path.exists(self.submit_code_path):
@@ -35,16 +34,16 @@ class rubyCodeEvaluator(BaseEvaluator):
         if self.files:
             delete_files(self.files)
 
-
     def compile_code(self):
         self.submit_code_path = self.create_submit_code_file('submit.rb')
-        self.write_to_submit_code_file1(self.submit_code_path,self.user_answer,self.test_case)
+        self.append_submit_code_files(self.submit_code_path, self.user_answer, self.test_case)
         self.process = self._run_command(
                 'ruby {0}'.format(self.submit_code_path),
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
+
     def check_code(self):
         """ Function validates student code using instructor code as
         reference.The first argument ref_code_path, is the path to
@@ -66,7 +65,7 @@ class rubyCodeEvaluator(BaseEvaluator):
         """
         success = False
         mark_fraction = 0.0
-        proc, stdnt_out, stdnt_stderr=self.process
+        proc, stdnt_out, stdnt_stderr = self.process
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
         if stdnt_stderr == '':
             if proc.returncode == 0:

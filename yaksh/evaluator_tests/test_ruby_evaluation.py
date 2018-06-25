@@ -12,13 +12,14 @@ from yaksh.ruby_stdio_evaluator import RubyStdIOEvaluator
 from yaksh.evaluator_tests.test_python_evaluation import EvaluatorBaseTest
 from yaksh.settings import SERVER_TIMEOUT
 
+
 class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
     def setUp(self):
-        self.f_path = os.path.join(tempfile.gettempdir(),"test.txt")
+        self.f_path = os.path.join(tempfile.gettempdir(), "test.txt")
         with open(self.f_path, 'wb') as f:
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
-        self.tc_data=dedent("""
+        self.tc_data = dedent("""
         class AssertionError < StandardError
         end
 
@@ -28,18 +29,18 @@ class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
           end
         end
 """)
-        self.test_case_data = [{"test_case": '{0}\n{1}'.format(self.tc_data,'assert{add(1,2)==3}'),
+        self.test_case_data = [{"test_case": '{0}\n{1}'.format(self.tc_data, 'assert{add(1,2)==3}'),
                                 "test_case_type": "standardtestcase",
                                 "weight": 0.0
                                 },
-                                {"test_case": '{0}\n{1}'.format(self.tc_data,'assert{add(-1,2)==1}'),
+                                {"test_case": '{0}\n{1}'.format(self.tc_data, 'assert{add(-1,2)==1}'),
                                 "test_case_type": "standardtestcase",
                                 "weight": 0.0
                                 },
-                                {"test_case": '{0}\n{1}'.format(self.tc_data,'assert{add(-2,1)==-1}'),
+                                {"test_case": '{0}\n{1}'.format(self.tc_data, 'assert{add(-2,1)==-1}'),
                                 "test_case_type": "standardtestcase",
                                 "weight": 0.0
-                                },]
+                                }, ]
         self.in_dir = tmp_in_dir_path
         self.timeout_msg = ("Code took more than {0} seconds to run. "
             "You probably have an infinite loop in your"
@@ -50,12 +51,12 @@ class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
         os.remove(self.f_path)
         shutil.rmtree(self.in_dir)
 
-
     def test_correct_answer(self):
         # Given
         user_answer = "\ndef add(a,b)\n\treturn a+b\nend\n"
         kwargs = {
-                  'metadata': {
+                  'metadata': 
+                    {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
@@ -90,7 +91,7 @@ class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-         
+
         lines_of_error = len(result.get('error')[0].splitlines())
         self.assertFalse(result.get('success'))
         self.assert_correct_output("Error", result.get('error'))
@@ -112,7 +113,7 @@ class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         self.assertFalse(result.get('success'))
-    
+
     def test_infinite_loop(self):
         # Given
         user_answer = "\ndef add(a, b)\n\twhile true\n\tend\nend\n"
@@ -137,7 +138,6 @@ class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
         if parent_proc:
             children_procs = Process(parent_proc[0].pid)
             self.assertFalse(any(children_procs.children(recursive=True)))
-
 
     def test_syntax_error(self):
         # Given
@@ -192,7 +192,7 @@ class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
         self.assertFalse(result.get('success'))
-    
+
     def test_recursion_error(self):
         # Given
         user_answer = dedent("""
@@ -213,10 +213,9 @@ class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
         # Then
-        err="maximum recursion depth exceeded"
+        err = "maximum recursion depth exceeded"
         self.assertFalse(result.get("success"))
         self.assert_correct_output(recursion_error_msg, err)
-
 
     def test_type_error(self):
         # Given
@@ -248,7 +247,7 @@ class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
         self.assertFalse(result.get('success'))
         self.assert_correct_output("Error", result.get('error'))
         self.assertTrue(lines_of_error > 1)
-        
+
 
 class RubyStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
@@ -314,7 +313,7 @@ class RubyStdIOEvaluationTestCases(EvaluatorBaseTest):
         # Then
         lines_of_error = len(result.get('error')[0].get('error_line_numbers'))
         result_error = result.get('error')[0].get('error_msg')
-        print(lines_of_error,result_error)
+        print(lines_of_error, result_error)
         self.assertFalse(result.get('success'))
         self.assert_correct_output("Incorrect", result_error)
         self.assertTrue(lines_of_error > 0)
@@ -403,7 +402,6 @@ class RubyStdIOEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertTrue(result.get('success'))
 
-
     def test_array_input(self):
         # Given
         self.test_case_data = [{'expected_output': '561',
@@ -437,7 +435,6 @@ class RubyStdIOEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertTrue(result.get('success'))
-
 
     def test_rb_string_input(self):
         # Given

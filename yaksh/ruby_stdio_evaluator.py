@@ -41,15 +41,13 @@ class RubyStdIOEvaluator(StdIOEvaluator):
         self.expected_output = test_case_data.get('expected_output')
         self.weight = test_case_data.get('weight')
 
-
     def teardown(self):
         os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
 
-
     def compile_code(self):
-        self.submit_code_path=self.create_submit_code_file('submit.rb')
+        self.submit_code_path = self.create_submit_code_file('submit.rb')
         self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
 
         if self.expected_input:
@@ -60,7 +58,7 @@ class RubyStdIOEvaluator(StdIOEvaluator):
             sys.stdin = input_buffer
 
         with redirect_stdout() as output_buffer:
-            self.proc=subprocess.Popen('ruby {0}'.format(self.submit_code_path),
+            self.proc = subprocess.Popen('ruby {0}'.format(self.submit_code_path),
                                         shell=True,
                                         stdin=subprocess.PIPE,
                                         stdout=subprocess.PIPE,
@@ -69,9 +67,9 @@ class RubyStdIOEvaluator(StdIOEvaluator):
                                         )
 
     def check_code(self):
-        success=False
+        success = False
         err = ''
-        mark_fraction=0.0
+        mark_fraction = 0.0
         success, err = self.evaluate_stdio(self.user_answer, 
                                           self.proc, self.expected_input, 
                                           self.expected_output)
