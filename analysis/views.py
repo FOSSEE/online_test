@@ -10,8 +10,14 @@ import calendar
 from collections import defaultdict
 
 ############################main##################################
-
+@login_required
+@email_verified
 def final_summary(request):
+
+	user = request.user
+	if not user.is_authenticated() or not is_moderator(user):
+		raise Http404('You are not allowed to view this page!')
+
 	return render(request, 'final_summary.html')
 
 PASS_GRADES = ['A+', 'A', 'B+', 'B', 'C']
@@ -204,6 +210,10 @@ def get_data(start_date, end_date):
 
 @csrf_exempt
 def final_summary_data(request):
+
+	user = request.user
+	if not user.is_authenticated() or not is_moderator(user):
+		return HttpResponse('Not allowed')
 
 	received = json.loads(request.body)
 
