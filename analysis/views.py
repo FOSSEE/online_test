@@ -8,6 +8,10 @@ import pandas as pd
 import numpy as np
 import calendar
 from collections import defaultdict
+from django.contrib.auth.decorators import login_required
+from yaksh.decorators import email_verified, has_profile
+from yaksh.views import is_moderator
+
 
 ############################main##################################
 @login_required
@@ -213,7 +217,7 @@ def final_summary_data(request):
 
 	user = request.user
 	if not user.is_authenticated() or not is_moderator(user):
-		return HttpResponse('Not allowed')
+		return HttpResponse('You are not allowed to access this data!')
 
 	received = json.loads(request.body)
 
