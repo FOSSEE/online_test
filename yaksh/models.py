@@ -211,12 +211,12 @@ class Lesson(models.Model):
         if self.video_file:
             video_file = os.sep.join((sub_folder_name, os.path.basename(
                         self.video_file.name)))
-            zip_file.write(self.video_file.path, video_file)
+            zip_file.writestr(video_file, self.video_file.read())
         for lesson_file in lesson_files:
             if os.path.exists(lesson_file.file.path):
                 filename = os.sep.join((sub_folder_name, os.path.basename(
                     lesson_file.file.name)))
-                zip_file.write(lesson_file.file.path, filename)
+                zip_file.writestr(filename, lesson_file.file.read())
         unit_file_path = os.sep.join((
             path, "templates", "yaksh", "unit.html"
             ))
@@ -229,7 +229,7 @@ class Lesson(models.Model):
 #############################################################################
 class LessonFile(models.Model):
     lesson = models.ForeignKey(Lesson, related_name="lesson")
-    file = models.FileField(upload_to=get_file_dir)
+    file = models.FileField(upload_to=get_file_dir, default=None)
 
     def remove(self):
         if os.path.exists(self.file.path):
@@ -883,16 +883,19 @@ class Course(models.Model):
     def is_student(self, user):
         return user in self.students.all()
 
-    def create_zip(self, zip_file, path):
-        course_name = self.name.replace(" ", "_")
-        modules = self.get_learning_modules()
-        file_path = os.sep.join((path, "templates", "yaksh", "index.html"))
-        write_static_files_to_zip(zip_file, course_name, path)
-        course_data = {"course": self, "modules": modules}
-        write_templates_to_zip(zip_file, file_path, course_data,
-                               "index", course_name)
-        for module in modules:
-            module._add_module_to_zip(self, zip_file, path)
+    def create_zip(self, path):
+        zip_file_name = string_io()
+        with zipfile.ZipFile(zip_file_name, "a") as zip_file:
+            course_name = self.name.replace(" ", "_")
+            modules = self.get_learning_modules()
+            file_path = os.sep.join((path, "templates", "yaksh", "index.html"))
+            write_static_files_to_zip(zip_file, course_name, path)
+            course_data = {"course": self, "modules": modules}
+            write_templates_to_zip(zip_file, file_path, course_data,
+                                   "index", course_name)
+            for module in modules:
+                module._add_module_to_zip(self, zip_file, path)
+        return zip_file_name
 
     def has_lessons(self):
         modules = self.get_learning_modules()

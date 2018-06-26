@@ -80,8 +80,11 @@ def write_static_files_to_zip(zipfile, course_name, current_dir):
         folder_path = os.sep.join((current_dir, "static", "yaksh", folder))
         for file in static_files[folder]:
             file_path = os.sep.join((folder_path, file))
-            zipfile.write(file_path, os.sep.join((course_name, "static",
-                                                  folder, file)))
+            with open(file_path, "rb") as f:
+                zipfile.writestr(
+                    os.sep.join((course_name, "static", folder, file)),
+                    f.read()
+                    )
 
 
 def write_templates_to_zip(zipfile, template_path, data, filename, filepath):
@@ -91,4 +94,4 @@ def write_templates_to_zip(zipfile, template_path, data, filename, filepath):
         context = Context(data)
         render = template.render(context)
         zipfile.writestr(os.sep.join((filepath, "{0}.html".format(filename))),
-                         render)
+                         str(render))
