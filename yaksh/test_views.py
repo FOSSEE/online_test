@@ -2002,6 +2002,54 @@ class TestCourses(TestCase):
                 os.remove(file_path)
                 shutil.rmtree(os.path.dirname(file_path))
 
+    def test_download_course_offline(self):
+        """ Test to download course with lessons offline"""
+
+        # Student fails to download course if not enrolled in that course
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:download_course',
+                    kwargs={"course_id": self.user1_course.id}),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 404)
+
+        # Teacher/Moderator should be able to download course
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
+
+        # Should not allow to download if the course doesn't have lessons
+        self.user1_course.learning_module.add(self.learning_module)
+        response = self.client.get(
+            reverse('yaksh:download_course',
+                    kwargs={"course_id": self.user1_course.id}),
+            follow=True
+        )
+        self.user1_course.learning_module.remove(self.learning_module)
+        self.assertEqual(response.status_code, 404)
+        lesson_file = SimpleUploadedFile("file1.txt", b"Test")
+        django_file = File(lesson_file)
+        lesson_file_obj = LessonFile()
+        lesson_file_obj.lesson = self.lesson
+        lesson_file_obj.file.save(lesson_file.name, django_file, save=True)
+        self.user1_course.learning_module.add(self.learning_module1)
+        response = self.client.get(
+            reverse('yaksh:download_course',
+                    kwargs={"course_id": self.user1_course.id}),
+            follow=True
+        )
+        course_name = self.user1_course.name.replace(" ", "_")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-Disposition'),
+                         'attachment; filename={0}.zip'.format(course_name)
+                         )
+        self.user1_course.learning_module.remove(self.learning_module1)
+
 
 class TestAddCourse(TestCase):
     def setUp(self):
@@ -5444,6 +5492,7 @@ class TestLessons(TestCase):
             password=self.teacher_plaintext_pass
         )
         dummy_file = SimpleUploadedFile("test.txt", b"test")
+        video_file = SimpleUploadedFile("test.mp4", b"test")
         response = self.client.post(
             reverse('yaksh:edit_lesson',
                     kwargs={"lesson_id": self.lesson.id,
@@ -5451,6 +5500,7 @@ class TestLessons(TestCase):
             data={"name": "updated lesson",
                   "description": "updated description",
                   "Lesson_files": dummy_file,
+                  "video_file": video_file,
                   "Save": "Save"}
             )
 
@@ -5462,6 +5512,8 @@ class TestLessons(TestCase):
         self.assertEqual(updated_lesson.creator, self.user)
         self.assertEqual(updated_lesson.html_data,
                          Markdown().convert("updated description"))
+        self.assertEqual(os.path.basename(updated_lesson.video_file.name),
+                         "test.mp4")
         lesson_files = LessonFile.objects.filter(
             lesson=self.lesson).first()
         self.assertIn("test.txt", lesson_files.file.name)
@@ -5480,6 +5532,7 @@ class TestLessons(TestCase):
             lesson=self.lesson).exists()
         self.assertFalse(lesson_file_exists)
         self.assertFalse(os.path.exists(lesson_file_path))
+        updated_lesson.remove_file()
 
     def test_show_lesson(self):
         """ Student should be able to view lessons """
