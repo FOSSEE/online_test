@@ -26,7 +26,10 @@ import zipfile
 import tempfile
 from textwrap import dedent
 from ast import literal_eval
-from .file_utils import extract_files, delete_files
+from .file_utils import (
+    extract_files, delete_files, write_templates_to_zip,
+    write_static_files_to_zip
+)
 from yaksh.code_server import (
     submit, get_result as get_result_from_code_server
 )
@@ -124,7 +127,10 @@ def dict_to_yaml(dictionary):
 
 
 def get_file_dir(instance, filename):
-    upload_dir = instance.lesson.name.replace(" ", "_")
+    if isinstance(instance, LessonFile):
+        upload_dir = instance.lesson.name.replace(" ", "_")
+    else:
+        upload_dir = instance.name.replace(" ", "_")
     return os.sep.join((upload_dir, filename))
 
 
@@ -159,6 +165,11 @@ class Lesson(models.Model):
     # Activate/Deactivate Lesson
     active = models.BooleanField(default=True)
 
+    # A video file
+    video_file = models.FileField(upload_to=get_file_dir, default=None,
+                                  null=True, blank=True
+                                  )
+
     def __str__(self):
         return "{0}".format(self.name)
 
@@ -181,6 +192,37 @@ class Lesson(models.Model):
                 lesson_file_obj.lesson = new_lesson
                 lesson_file_obj.file.save(file_name, django_file, save=True)
         return new_lesson
+
+    def remove_file(self):
+        if self.video_file:
+            file_path = self.video_file.path
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+    def _add_lesson_to_zip(self, module, course, zip_file, path):
+        lesson_name = self.name.replace(" ", "_")
+        course_name = course.name.replace(" ", "_")
+        module_name = module.name.replace(" ", "_")
+        sub_folder_name = os.sep.join((
+            course_name, module_name, lesson_name
+            ))
+        lesson_files = self.get_files()
+        if self.video_file:
+            video_file = os.sep.join((sub_folder_name, os.path.basename(
+                        self.video_file.name)))
+            zip_file.write(self.video_file.path, video_file)
+        for lesson_file in lesson_files:
+            if os.path.exists(lesson_file.file.path):
+                filename = os.sep.join((sub_folder_name, os.path.basename(
+                    lesson_file.file.name)))
+                zip_file.write(lesson_file.file.path, filename)
+        unit_file_path = os.sep.join((
+            path, "templates", "yaksh", "unit.html"
+            ))
+        lesson_data = {"course": course, "module": module,
+                       "lesson": self, "lesson_files": lesson_files}
+        write_templates_to_zip(zip_file, unit_file_path, lesson_data,
+                               lesson_name, sub_folder_name)
 
 
 #############################################################################
@@ -491,6 +533,10 @@ class LearningModule(models.Model):
         return [unit.quiz for unit in self.learning_unit.filter(
                 type="quiz")]
 
+    def get_lesson_units(self):
+        return [unit.lesson for unit in self.learning_unit.filter(
+                type="lesson").order_by("order")]
+
     def get_learning_units(self):
         return self.learning_unit.order_by("order")
 
@@ -578,6 +624,20 @@ class LearningModule(models.Model):
             new_unit = unit._create_unit_copy(user)
             new_module.learning_unit.add(new_unit)
         return new_module
+
+    def _add_module_to_zip(self, course, zip_file, path):
+        module_name = self.name.replace(" ", "_")
+        course_name = course.name.replace(" ", "_")
+        folder_name = os.sep.join((course_name, module_name))
+        lessons = self.get_lesson_units()
+        for lesson in lessons:
+            lesson._add_lesson_to_zip(self, course, zip_file, path)
+        module_file_path = os.sep.join((
+            path, "templates", "yaksh", "module.html"
+            ))
+        module_data = {"course": course, "module": self, "lessons": lessons}
+        write_templates_to_zip(zip_file, module_file_path, module_data,
+                               module_name, folder_name)
 
     def __str__(self):
         return self.name
@@ -818,6 +878,29 @@ class Course(models.Model):
         else:
             percentage = 0
         return percentage
+
+    def is_student(self, user):
+        return user in self.students.all()
+
+    def create_zip(self, zip_file, path):
+        course_name = self.name.replace(" ", "_")
+        modules = self.get_learning_modules()
+        file_path = os.sep.join((path, "templates", "yaksh", "index.html"))
+        write_static_files_to_zip(zip_file, course_name, path)
+        course_data = {"course": self, "modules": modules}
+        write_templates_to_zip(zip_file, file_path, course_data,
+                               "index", course_name)
+        for module in modules:
+            module._add_module_to_zip(self, zip_file, path)
+
+    def has_lessons(self):
+        modules = self.get_learning_modules()
+        status = False
+        for module in modules:
+            if module.get_lesson_units():
+                status = True
+                break
+        return status
 
     def __str__(self):
         return self.name
