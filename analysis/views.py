@@ -13,7 +13,9 @@ from yaksh.decorators import email_verified, has_profile
 from yaksh.views import is_moderator
 
 
-############################main##################################
+############################moderator side report##################################
+
+#main function that generates view
 @login_required
 @email_verified
 def final_summary(request):
@@ -212,6 +214,7 @@ def get_data(start_date, end_date):
 
 	return final
 
+#function that returns the required data in json format
 @csrf_exempt
 @login_required
 @email_verified
@@ -237,4 +240,17 @@ def final_summary_data(request):
 
 	#return HttpResponse();
 	return HttpResponse(json.dumps(final), content_type='application/json')
+#################################################################################
+
+##################################student side report############################
+
+@login_required
+@email_verified
+def view_quiz_stats(request, course_id, question_paper_id):
+	user = request.user
+	questionpaper = QuestionPaper.objects.get(id=question_paper_id)
+	quiz_stats, que_stats = questionpaper.get_quiz_stats(user, course_id)
+	#print(que_stats)
+	return render(request, 'view_quiz_stats.html', {'quiz_stats' : quiz_stats, 'que_stats' : que_stats})
+
 #################################################################################

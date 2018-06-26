@@ -74,7 +74,8 @@
 <script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/monthpicker.js"></script>
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-<script> // tabel total script
+<script> 
+	// tabel total script
  	$.fn.add_total = function(){
 		
 		var totals = [];
@@ -112,6 +113,7 @@
 	var VALS = {};
 	var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
 
+	//get data from server
 	function get_data(){
 		var data = {
 			start_date : startDate,
@@ -121,7 +123,7 @@
 		console.log(data); 
 
 		$.ajax({
-			url: 'http://localhost:8000/analysis/final_summary_data/',
+			url: '{{ URL_ROOT }}/analysis/final_summary_data/',
 			type: "post",
 			data: JSON.stringify(data),
 			dataType: 'json',
@@ -131,7 +133,6 @@
 				DATA = data;
 			}
   		});
-	}
 
 	function display_coursewise_data(){
 		
@@ -298,6 +299,8 @@
 		$("#result-table").tablesorter();
 	}
 
+	//to select an incative button of the group and make it active 
+	//and others inactive
 	$('.inactive').on('click', function(){
 		var selected = $(this);
 		var parent = selected.parent();
@@ -313,10 +316,10 @@
 				$(this).removeClass("active").addClass("inactive");
 			}
 		});
-		//console.log(VALS);
 		display();
 	});
 
+	//display data as per the current selection values
 	function display(){
 		if(jQuery.isEmptyObject(DATA)){
 			$('.display').hide();
@@ -342,6 +345,7 @@
 		}
 	}
 
+	//back button
 	$('#back-btn').on('click', function(){
 		if(VALS['report'] == 1){
 			VALS['coursewise_page'] = 1;	
@@ -353,6 +357,7 @@
 
 	$(function(){
 		
+		//make defaults active and set vals
 		$('.default').each(function(){
 			//console.log($(this));
 			$(this).removeClass("inactive").addClass("active");
@@ -360,31 +365,13 @@
 			VALS[label] = $(this).val();
 		});
 
-
-		/*
-		var group_default = $('#group-menu').find('.default');
-		group_default.removeClass("inactive").addClass("active");
-		VALS['group'] = group_default.val();
-
-		var report_default = $('#report-menu').find('.default');
-		report_default.removeClass("inactive").addClass("active");
-		VALS['report'] = report_default.val();
-		
-		var wise_default = $('#wise-menu').find('.default');
-		wise_default.removeClass("inactive").addClass("active");
-		VALS['wise'] = wise_default.val();
-
-		var catt_default = $('#catt-menu').find('.default');
-		catt_default.removeClass("inactive").addClass("active");
-		VALS['catt'] = catt_default.val();
-		*/
-
 		VALS['coursewise_page'] = 1;
 		VALS['institutewise_page'] = 1;	
 		get_data();
 		display();
 	});
 
+	//get data and display on applying date filter
 	$(document).on('click','#apply', function(){
 		get_data();
 		display();
@@ -392,4 +379,3 @@
 
 </script>
 {% endblock %}
-

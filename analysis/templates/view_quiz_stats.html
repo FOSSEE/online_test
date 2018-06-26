@@ -1,0 +1,154 @@
+{% extends "user.html" %}
+{% load custom_filters %}
+{% block script %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+<script type="text/javascript" src="{{URL_ROOT}}/static/yaksh/js/jquery.canvasjs.min.js"></script>
+{% endblock script %}
+
+{% block main %}
+
+<div id="legends" style="position:fixed ; bottom:40px ; right:20px" hidden>
+	<leg style="color:#4F75BD"> &#9899;</leg> Logical
+	<br>
+	<leg style="color:#CB3F47"> &#9899;</leg> Syntax
+</div>
+
+<h2>Quiz Stats</h2>
+<hr>
+<div class='data'>
+	<center><div class="plot" id="quiz-stats-plot"></div><center>
+	<p id="total" hidden>{{ quiz_stats.2 }}</p>
+</div>
+
+<h2>Question Stats</h2>
+<hr>
+<table style="width:100%"><tbody style="width:100%">
+{%	for que_data in que_stats%}
+	{% for que,stats in que_data.items %}
+		{% if stats %}
+		<tr class="data" style="width:100%">
+			<td style="width:50% ; font-size: 18px">
+				<p>{{ que.summary }}</p>
+				<p id="total" hidden>{{ stats.2 }}</p>
+			</td>
+			<td style="width:50%">
+				<center><div class='plot' id="{{ que.id }}" style="width:400px; height: 100px"></div><center>
+			</td>
+		<tr>
+
+		{% if stats.2 > 0 %}
+		<script>
+			//ploting per question status
+			$("#{{que.id}}").CanvasJSChart({ 
+				title: { 
+				}, 
+				data: [{ 
+							type: "stackedBar100",  
+							dataPoints: [{ label: "Errors", y: {{stats.0}}, catt:"Logical" }] 
+						}, 
+						{ 
+							type: "stackedBar100", 
+							dataPoints: [{ label: "Errors", y: {{stats.1}}, catt:"Syntax" }] 
+						}],
+			    toolTip: {
+			      content: "{catt} : {y} (#percent%)"
+			    },
+			  	axisY:{
+		          	gridThickness: 0,
+				    tickLength: 0,
+				    lineThickness: 0,
+				    labelFormatter: function(){
+				      return " ";
+				    }
+			  	},
+			  	axisX:{
+		          	gridThickness: 0,
+				    tickLength: 0,
+				    lineThickness: 0,
+				    labelFormatter: function(){
+				      return " ";
+				    }
+			  	},
+			}); 
+		</script>
+		{% endif %}
+		{% endif %}
+	{% endfor %}
+{% endfor %}
+</tbody></table>
+
+<script>
+
+	//function to add total and remove watermarks
+	$.fn.add_total_and_remove_watermark = function(){
+			canvas = $(this).find('.canvasjs-chart-canvas')[0];
+			total = $(this).find('#total').text();
+			if(total > 0){
+				var ctx = canvas.getContext("2d");
+				ctx.font = "18px Arial";
+				ctx.fillStyle = "#5b5b5b";
+				if($(canvas).parent().parent().attr("id") == "quiz-stats-plot"){
+					ctx.fillText('Total Errors: ' + ' ' + total, canvas.width - 168, canvas.height/2);
+				}
+				else{
+					ctx.fillText('Total Errors: ' + ' ' + total, canvas.width/2 - 58, 15);	
+				}
+				ctx.beginPath();
+				ctx.rect(0, canvas.height-15, canvas.width, 15);
+				ctx.fillStyle = "white";
+				ctx.fill();
+			}else{
+				$(this).css('height', '100px')
+				$(this).find('.plot').css({'height':'auto', 'color': '#5b5b5b' , 'font-size': '18px'});
+				$(this).find('.plot').text('Total Errors : 0');
+			}
+	} 
+
+	//plotting quiz errors pie chart
+	if({{quiz_stats.2}} > 0){
+		$("#legends").show();
+		$("#quiz-stats-plot").parent().parent().css('margin-bottom', '450px')
+		$("#quiz-stats-plot").CanvasJSChart({
+			title:{
+				text: ""
+			},
+			data: [
+			{
+				type: "pie",
+				showInLegend: false,
+				legendText: "{name}",
+				indexLabelFormatter: function(e) {
+			      if (e.dataPoint.y === 0)
+			        return "";
+			      else
+			        return CanvasJS.formatNumber(e.percent) + "%";
+			    },
+				indexLabelPlacement: "inside",
+				dataPoints: [
+					{ y: {{quiz_stats.0}}, name: "Logical"},
+					{ y: {{quiz_stats.1}}, name: "Syntax" },
+				]
+			}],
+		    toolTip: {
+			      content: "{name} : {y} (#percent%)"
+		    },
+		    legend:{
+				horizontalAlign: "right",
+				verticalAlign: "top",
+			},	
+		});
+	}
+
+	$(function(){
+		//hide credits
+		$('.canvasjs-chart-credit').hide();
+
+		var data = $('.data');
+		data.each(function(){
+			$(this).add_total_and_remove_watermark();
+		});
+	})
+</script>
+
+{% endblock %}

@@ -403,6 +403,17 @@ class Quiz(models.Model):
         return '%s: on %s for %d minutes' % (desc, self.start_date_time,
                                              self.duration)
 
+    #################################skt########################################
+    
+    #check if the quiz has code questions
+
+    def has_code_questions(self):
+        questionpaper = self.questionpaper_set.get()
+        questions = questionpaper.get_question_bank()
+        return len([question for question in questions if question.type == 'code']) > 0
+
+    ############################################################################
+
 
 ##########################################################################
 class LearningUnit(models.Model):
@@ -1129,6 +1140,35 @@ class Question(models.Model):
     def __str__(self):
         return self.summary
 
+    ####################skt##################################
+
+    #function to get pqrticular question stats
+
+    def get_que_stats(self, answerpapers):
+    
+        if self.type != 'code':
+            return []
+
+        answers = Answer.objects.filter(answerpaper__in = answerpapers, question = self)
+
+        total_errors = 0
+        logical_errors = 0
+        syntax_errors = 0
+
+        for answer in answers:
+            errors = json.loads(answer.error)
+            if errors:
+                total_errors += 1
+                if errors[0]['type'] == 'stdio' or errors[0]['exception'] == 'AssertionError':
+                    logical_errors += 1
+                else:
+                    syntax_errors += 1
+
+        return logical_errors, syntax_errors, total_errors
+        #return 0, 0, 0
+
+    #########################################################
+
 
 ###############################################################################
 class FileUpload(models.Model):
@@ -1411,6 +1451,35 @@ class QuestionPaper(models.Model):
 
     def __str__(self):
         return "Question Paper for " + self.quiz.description
+
+    #####################################skt#############################
+
+    #function to get quiz stats based on every question stats 
+
+    def get_quiz_stats(self, user, course_id):
+    
+        answerpapers = AnswerPaper.objects.filter(question_paper_id=self.id, course_id=course_id, user=user)
+        quiz_attempts = answerpapers.count()
+
+        que_stats = []
+        
+        #logic, syntax, total
+        quiz_stats = [0, 0, 0]
+    
+        questions = self.get_question_bank()
+
+        for question in questions:
+            vals = question.get_que_stats(answerpapers)
+            if vals:
+                logical_errors, syntax_errors, total_errors = vals
+                que_stats.append({question : [logical_errors, syntax_errors, total_errors]})
+                quiz_stats[0] += logical_errors
+                quiz_stats[1] += syntax_errors
+                quiz_stats[2] += total_errors
+            
+        return quiz_stats, que_stats
+
+    ########################################################################
 
 
 ###############################################################################
