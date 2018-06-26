@@ -325,7 +325,19 @@ class LessonForm(forms.ModelForm):
 
     class Meta:
         model = Lesson
-        exclude = ['completed_lessons', 'creator', 'html_data']
+        exclude = ['creator', 'html_data']
+
+    def clean_video_file(self):
+        file = self.cleaned_data.get("video_file")
+        if file:
+            extension = file.name.split(".")[-1]
+            actual_extension = ["mp4", "ogv"]
+            if extension not in actual_extension:
+                raise forms.ValidationError(
+                    "Please upload video files in {0} format".format(
+                        ", ".join(actual_extension))
+                    )
+        return file
 
 
 class LessonFileForm(forms.Form):

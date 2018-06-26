@@ -2315,9 +2315,16 @@ def edit_lesson(request, lesson_id=None, course_id=None):
     context = {}
     if request.method == "POST":
         if "Save" in request.POST:
-            lesson_form = LessonForm(request.POST, instance=lesson)
+            lesson_form = LessonForm(request.POST, request.FILES,
+                                     instance=lesson)
             lesson_file_form = LessonFileForm(request.POST, request.FILES)
             lessonfiles = request.FILES.getlist('Lesson_files')
+            clear = request.POST.get("video_file-clear")
+            video_file = request.FILES.get("video_file")
+            if (clear or video_file) and lesson:
+                # Remove previous video file if new file is uploaded or
+                # if clear is selected
+                lesson.remove_file()
             if lesson_form.is_valid():
                 if lesson is None:
                     lesson_form.instance.creator = user
@@ -2332,6 +2339,7 @@ def edit_lesson(request, lesson_id=None, course_id=None):
                 return my_redirect(redirect_url)
             else:
                 context['lesson_form'] = lesson_form
+                context['error'] = lesson_form["video_file"].errors
                 context['lesson_file_form'] = lesson_file_form
 
         if 'Delete' in request.POST:
@@ -2826,3 +2834,30 @@ def get_user_data(request, course_id, student_id):
         context = Context(data)
         data = template.render(context)
     return HttpResponse(json.dumps({"user_data": data}), **response_kwargs)
+
+
+@login_required
+@email_verified
+def download_course(request, course_id):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    if (not course.is_creator(user) and not course.is_teacher(user) and not
+            course.is_student(user)):
+        raise Http404("You are not allowed to download {0} course".format(
+            course.name))
+    if not course.has_lessons():
+        raise Http404("{0} course does not have any lessons".format(
+            course.name))
+    file_name = string_io()
+    current_dir = os.path.dirname(__file__)
+    course_name = course.name.replace(" ", "_")
+    zip_file = zipfile.ZipFile(file_name, "w")
+    course.create_zip(zip_file, current_dir)
+    zip_file.close()
+    file_name.seek(0)
+    response = HttpResponse(content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename={0}.zip'.format(
+                                            course_name
+                                            )
+    response.write(file_name.read())
+    return response

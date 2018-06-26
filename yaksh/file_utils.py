@@ -3,6 +3,7 @@ import os
 import zipfile
 import tempfile
 import csv
+from django.template import Context, Template
 
 
 def copy_files(file_paths):
@@ -66,3 +67,28 @@ def is_csv(document):
     except (csv.Error, UnicodeDecodeError):
         return False, None
     return True, dialect
+
+
+def write_static_files_to_zip(zipfile, course_name, current_dir):
+    relative_folders = ["css", "js", "images"]
+    static_files = {"js": ["bootstrap.js", "bootstrap.min.js",
+                           "jquery-1.9.1.min.js", "video.js"],
+                    "css": ["bootstrap.css", "bootstrap.min.css",
+                            "video-js.css"],
+                    "images": ["yaksh_banner.png"]}
+    for folder in relative_folders:
+        folder_path = os.sep.join((current_dir, "static", "yaksh", folder))
+        for file in static_files[folder]:
+            file_path = os.sep.join((folder_path, file))
+            zipfile.write(file_path, os.sep.join((course_name, "static",
+                                                  folder, file)))
+
+
+def write_templates_to_zip(zipfile, template_path, data, filename, filepath):
+    with open(template_path) as f:
+        template_data = f.read()
+        template = Template(template_data)
+        context = Context(data)
+        render = template.render(context)
+        zipfile.writestr(os.sep.join((filepath, "{0}.html".format(filename))),
+                         render)
