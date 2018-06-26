@@ -1743,6 +1743,10 @@ class TestCourses(TestCase):
         self.lesson = Lesson.objects.create(
             name="demo lesson", description="test description",
             creator=self.user1)
+        lesson_file = SimpleUploadedFile("file1.mp4", b"Test")
+        django_file = File(lesson_file)
+        self.lesson.video_file.save(lesson_file.name, django_file,
+                                    save=True)
 
         self.lesson_unit = LearningUnit.objects.create(
             order=1, type="lesson", lesson=self.lesson)

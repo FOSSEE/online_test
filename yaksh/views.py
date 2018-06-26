@@ -2830,16 +2830,13 @@ def download_course(request, course_id):
     if not course.has_lessons():
         raise Http404("{0} course does not have any lessons".format(
             course.name))
-    file_name = string_io()
     current_dir = os.path.dirname(__file__)
     course_name = course.name.replace(" ", "_")
-    zip_file = zipfile.ZipFile(file_name, "w")
-    course.create_zip(zip_file, current_dir)
-    zip_file.close()
-    file_name.seek(0)
+    zip_file = course.create_zip(current_dir)
+    zip_file.seek(0)
     response = HttpResponse(content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename={0}.zip'.format(
                                             course_name
                                             )
-    response.write(file_name.read())
+    response.write(zip_file.read())
     return response
