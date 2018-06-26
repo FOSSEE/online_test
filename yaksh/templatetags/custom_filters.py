@@ -82,3 +82,8 @@ def get_answer_for_arrange_options(ans, question):
         tc = question.get_test_case(id=int(answer_id))
         testcases.append(tc)
     return testcases
+
+
+@register.filter(name='replace_spaces')
+def replace_spaces(name):
+    return name.replace(" ", "_")
