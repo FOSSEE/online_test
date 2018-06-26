@@ -1,0 +1,16 @@
+<div id="questions">
+    {% if questions %}
+    <h5 class="highlight"><input type="checkbox" id="checkall" class="ignore"> Select All </h5>
+    {% endif %}
+    <ul class="inputs-list">
+
+       {% for question in questions %}
+            <li>
+                <label>
+                    <input type="checkbox" name="question" data-qid="{{question.id}}" value=
+                    "{{question.id}}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{ question }}</a><br>
+                </label>
+             </li>
+        {% endfor %}
+    </ul>
+</div>

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+<!DOCTYPE html>
+{% block title %} Profile {% endblock %}
+
+{% block script %}
+<script>
+    window.setTimeout(function(){ location.href="{{ URL_ROOT }}/exam/" }, 2000);
+</script>
+{% endblock script %}
+{% block content %}
+<h3>Your Profile is changed {{ user.first_name }}</h3>
+<h3>Redirecting...</h3>
+{% endblock content %}

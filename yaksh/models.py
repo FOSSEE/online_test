@@ -33,6 +33,7 @@ from yaksh.code_server import (
     submit, get_result as get_result_from_code_server
 )
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
+from online_test.settings import CODE_TEMPLATES
 from django.conf import settings
 from django.forms.models import model_to_dict
 from grades.models import GradingSystem
@@ -58,6 +59,24 @@ question_types = (
 
     )
 
+operator_choices={
+    ("==","=="),
+    ("!=","!=")
+}
+
+operator_choices1=(
+    ("==","==")
+    )
+
+output_type=(
+    ("int","int"),
+    ("float","float"),
+    ("double","double"),
+    ("char","char"),
+    ("void","void")
+    )
+
+
 enrollment_methods = (
     ("default", "Enroll Request"),
     ("open", "Open Enrollment"),
@@ -72,6 +91,7 @@ test_case_types = (
         ("stringtestcase", "String Testcase"),
         ("floattestcase", "Float Testcase"),
         ("arrangetestcase", "Arrange Testcase"),
+        ("easystandardtestcase","Easy Standard Testcase"),
     )
 
 string_check_type = (
@@ -88,6 +108,8 @@ test_status = (
               )
 
 FIXTURES_DIR_PATH = os.path.join(settings.BASE_DIR, 'yaksh', 'fixtures')
+
+
 
 
 def get_assignment_dir(instance, filename):
@@ -928,6 +950,13 @@ class Question(models.Model):
     solution = models.TextField(blank=True)
 
 
+    def clean(self):
+        lang=self.language
+        if lang=="python":
+            f=EasyStandardTestCase()
+            
+
+
     def consolidate_answer_data(self, user_answer, user=None):
         question_data = {}
         metadata = {}
@@ -1025,6 +1054,41 @@ class Question(models.Model):
             tc_list.extend(test_case)
         return tc_list
 
+    def save_test_case(self):
+        q=Question.objects.get(id=self.id)
+        etc=q.testcase_set.filter(type="easystandardtestcase",easystandardtestcase__test_case="")
+        print (etc)
+        if etc:
+            print (etc.first().easystandardtestcase.function_name)
+            easy = etc.first().easystandardtestcase
+            easy_id=EasyStandardTestCase.objects.get(testcase_ptr=etc.first().id)
+            if (self.language=="python"):
+                op=easy_id.operator
+                easy_id.test_case='assert ' + easy_id.function_name + '(' + easy_id.input_vals + ')' + op + easy_id.output_vals
+                print (easy_id.test_case)
+                easy_id.save()
+                e = EasyStandardTestCase.objects.filter(testcase_ptr=easy.id)
+                print ("After saving test case", e.first())
+
+            elif(self.language=="c" or self.language=="cpp"):
+                typevar=easy_id.typeof_var
+                path=CODE_TEMPLATES +'template_c.c'
+                #/home/amitpeshwani/Desktop/Yaksh/online_test/yaksh/template_c.c
+                with open(path,"r") as myfile :
+                    data=myfile.read() 
+                easy_id.test_case=data.format(easy_id.function_name,typevar,easy_id.input_vals,easy_id.output_vals,'{','}',easy_id.typeof_output)
+                easy_id.save()
+                
+
+            elif(self.language=="java"):
+                print("savetestcase2---------------")
+                typevar=easy_id.typeof_var
+                path=CODE_TEMPLATES +'template_java.java'
+                with open(path,"r") as myfile :
+                    data=myfile.read()
+                easy_id.test_case=data.format(easy_id.function_name,easy_id.input_vals,easy_id.output_vals,'{','}')
+                easy_id.save()
+
     def get_test_case(self, **kwargs):
         for tc in self.testcase_set.all():
             test_case_type = tc.type
@@ -1038,6 +1102,7 @@ class Question(models.Model):
             )
 
         return test_case
+
 
     def get_ordered_test_cases(self, answerpaper):
         try:
@@ -2026,7 +2091,7 @@ class AssignmentUpload(models.Model):
 
 ##############################################################################
 class TestCase(models.Model):
-    question = models.ForeignKey(Question, blank=True, null=True)
+    question = models.ForeignKey(Question, blank=True, null=True,on_delete=models.CASCADE)
     type = models.CharField(max_length=24, choices=test_case_types, null=True)
 
 
@@ -2043,6 +2108,38 @@ class StandardTestCase(TestCase):
 
     def __str__(self):
         return u'Standard TestCase | Test Case: {0}'.format(self.test_case)
+
+
+class EasyStandardTestCase(TestCase):
+    function_name=models.TextField()
+    typeof_var=models.CharField(max_length=50, null=True, blank=True)
+    operator=models.CharField(max_length=24,choices=operator_choices)
+    input_vals=models.CharField(max_length=50)
+    output_vals=models.CharField(max_length=24)
+    typeof_output=models.CharField(max_length=50,choices=output_type,blank=True,null=True)
+    test_case = models.TextField(blank=True)
+    weight = models.FloatField(default=1.0)
+
+    def get_field_value(self):
+        return {
+            "test_case_type":"easystandardtestcase",
+            "test_case":self.test_case,
+            "function_name":self.function_name,
+            "typeof_var":self.typeof_var,
+            "operator":self.operator,
+            "input_vals":self.input_vals,
+            "output_vals":self.output_vals,
+            "typeof_output":self.typeof_output,
+            "weight": self.weight
+        }
+
+
+    # @staticmethod
+    # def save_test_case(id_list):
+    #     return EasyStandardTestCase.objects.filter(id__in=id_list)
+
+    def __str__(self):
+        return u'Easy Standard TestCase | Test Case: {0}'.format(self.test_case)
 
 
 class StdIOBasedTestCase(TestCase):

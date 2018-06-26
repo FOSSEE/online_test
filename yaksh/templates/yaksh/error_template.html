@@ -11,7 +11,22 @@
       <div class="panel-body">
       <div class="well well-sm">
       {% if not error.type %}
-        <pre><code> {{error|safe}} </code></pre>
+        {% if error.input_data %}
+         <table class="table table-bordered" width="100%" id='assertion'>
+          <col width="30%">
+             
+            <tr>
+              <td><b>Given Arguments:</b><td>{{error.input_data}}</td></td>
+            </tr>
+            <tr>
+              <td><b>Expected Output:</b><td>{{error.output_data}}</td></td>
+            </tr>
+            </table>
+
+        {% else %}
+          <pre><code> {{error|safe}} </code></pre>
+        {% endif %}
+
 
       {% elif error.type == 'assertion' %}
 
@@ -23,7 +38,27 @@
           </strong></code></pre>
         {% endif %}
         <p> <b>The following error took place: </b></p>
-        <table class="table table-bordered" width="100%" id='assertion'>
+        {% if error.input_data %}
+          <table class="table table-bordered" width="100%" id='assertion'>
+          <col width="30%">
+             
+            <tr>
+              <td><b>Given Arguments:</b><td>{{error.input_data}}</td></td>
+            </tr>
+            <tr>
+              <td><b>Expected Output:</b><td>{{error.output_data}}</td></td>
+            </tr>
+            <tr>
+              {% if error.traceback %}
+              <input type="hidden" id="err_lineno" value="{{error.line_no}}">
+              <td><b>Full Traceback: </b></td>
+              <td><pre>{{error.traceback}}</pre></td>
+              {% endif %}
+            </tr>
+          </table>
+
+        {% else %}
+          <table class="table table-bordered" width="100%" id='assertion'>
         <col width="30%">
             <tr class = "active">
               <td><b>Exception Name: </b></td>
@@ -40,6 +75,7 @@
             {% endif %}
           </tr>
         </table>
+        {% endif  %}
 
       {% elif error.type == 'stdio' %}
 

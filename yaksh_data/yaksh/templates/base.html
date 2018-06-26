@@ -1,0 +1,70 @@
+<!doctype html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9" lang=""> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang=""> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>
+    {% block title %}
+    {% endblock %}
+    </title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/font-awesome.css" type="text/css" />
+  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/sticky-footer.css" type="text/css" />
+  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
+  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/ontop.css" type="text/css" />
+
+
+  {% block meta %}
+  <meta charset="utf-8">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  {% endblock %}
+
+  {% block css %}
+  {% endblock %}
+  <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js"></script>
+  <script src="{{ URL_ROOT }}/static/yaksh/js/bootstrap.min.js"></script>
+  {% block script %}
+  {% endblock %}
+</head>
+
+<body {% block onload %} {% endblock %}>
+  <div id="ontop">
+    <div id="state">
+        Checking...
+    </div>
+  </div>
+  {% block nav %}
+  {% endblock %}
+  <div class="container">
+     <div class="content">
+         <div class="header">
+             <h3><center>{% block pagetitle %}{% endblock pagetitle %}</center></h2>
+         </div>
+	       {% block content %}
+	       {% endblock %}
+     </div>
+     </div>
+     <div class="container">
+     <footer class="footer" id="footer_div">
+      <div class="logged_user_info" align="center" >
+            {% block info %}
+            {% endblock %}
+      </div>
+     <div class="container">
+         <p align="center">Developed by FOSSEE group, IIT Bombay</p>
+     </div>
+     </footer>
+   </div>
+
+</body>
+</html>
+

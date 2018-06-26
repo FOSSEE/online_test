@@ -1,0 +1,50 @@
+[
+  {
+    "snippet": "", 
+    "testcase": [
+      {
+        "test_case": "assert is_palindrome(\"hello\") == False"
+      }, 
+      {
+        "test_case": "assert is_palindrome(\"nitin\") == True"
+      }
+    ], 
+    "points": 3.0, 
+    "test_case_type": "standardtestcase", 
+    "description": "Write a function <code>is_palindrome(arg)</code> which will take one string argument. Return true if the argument is palindrome & false otherwise.\r\n<br><br>\r\nFor Example:\r\n<br>\r\n<code>is_palindrome(\"Hello\")</code> should return <code>False</code>\r\n<br>\r\n<br><br>", 
+    "language": "python", 
+    "active": true, 
+    "type": "code", 
+    "summary": "Python, check palindrome (Code)"
+  }, 
+  {
+    "snippet": "#!/bin/bash", 
+    "testcase": [
+      {
+        "test_case": "bash_files/sample.sh, bash_files/sample.args"
+      }
+    ], 
+    "points": 1.0, 
+    "test_case_type": "standardtestcase", 
+    "description": "Write a bash script that takes exactly two arguments and returns the sum of the numbers", 
+    "language": "bash", 
+    "active": true, 
+    "type": "code", 
+    "summary": "Bash Question Concatenate Files(Code)"
+  }, 
+  {
+    "snippet": "", 
+    "testcase": [
+      {
+        "test_case": "c_cpp_files/main2.c"
+      }
+    ], 
+    "points": 1.0, 
+    "test_case_type": "standardtestcase", 
+    "description": "Write a program to add 3 nos", 
+    "language": "c", 
+    "active": true, 
+    "type": "code", 
+    "summary": "selenium test"
+  }
+]

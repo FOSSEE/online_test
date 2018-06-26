@@ -13,6 +13,8 @@ from decouple import config
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.dirname(BASE_DIR))
+CODE_TEMPLATES=os.path.join(PROJECT_ROOT, 'online_test/code_templates/')
 
 # The directory where user data can be saved.  This directory will be
 # world-writable and all user code will be written and saved here by the
@@ -45,6 +47,7 @@ INSTALLED_APPS = (
     'taggit',
     'social.apps.django_app.default',
     'grades',
+    'easy_standardtestcase',
 )
 
 MIDDLEWARE_CLASSES = (

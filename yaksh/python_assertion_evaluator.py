@@ -23,6 +23,8 @@ class PythonAssertionEvaluator(BaseEvaluator):
 
         # Set test case data values
         self.test_case = test_case_data.get('test_case')
+        self.input_data=test_case_data.get('input_vals')
+        self.output_data=test_case_data.get('output_vals')
         self.weight = test_case_data.get('weight')
 
     def teardown(self):
@@ -36,7 +38,11 @@ class PythonAssertionEvaluator(BaseEvaluator):
         if self.exec_scope:
             return None
         else:
+            print ("before python assertion")
             submitted = compile(self.user_answer, '<string>', mode='exec')
+            aa=self.user_answer
+            # print ("submitted------",submitted.code)
+            print ("after python assertion")
             self.exec_scope = {}
             exec(submitted, self.exec_scope)
             return self.exec_scope
@@ -74,6 +80,7 @@ class PythonAssertionEvaluator(BaseEvaluator):
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
+            print ("testing",tb_list)
             line_no = traceback.extract_tb(exc_tb)[-1][1]
             if len(tb_list) > 2:
                 del tb_list[1:3]
@@ -81,6 +88,8 @@ class PythonAssertionEvaluator(BaseEvaluator):
                                       str(exc_value),
                                       "".join(tb_list),
                                       self.test_case,
+                                      self.input_data,
+                                      self.output_data,
                                       line_no
                                       )
         else:

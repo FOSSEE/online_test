@@ -59,6 +59,7 @@ class PythonStdIOEvaluator(BaseEvaluator):
 
     def check_code(self):
         mark_fraction = self.weight
+        print ("py stdio check_code")
         success, err = compare_outputs(self.expected_output,
                                        self.output_value,
                                        self.expected_input

@@ -88,8 +88,10 @@ class Grader(object):
 
         A tuple: (success, error, weight).
         """
+        print ("Grader -----evaluate")
         self.setup()
         test_case_instances = self.get_evaluator_objects(kwargs)
+        print ("test_case_instances")
         with change_dir(self.in_dir):
             success, error, weight = self.safe_evaluate(test_case_instances)
         self.teardown()
@@ -105,10 +107,13 @@ class Grader(object):
 
     def get_evaluator_objects(self, kwargs):
         metadata = kwargs.get('metadata')
+        print ("metadata-----",metadata)
         test_case_data = kwargs.get('test_case_data')
+        print ("test_case_data",test_case_data)
         test_case_instances = []
 
         for test_case in test_case_data:
+            print ("get_evaluator_objects------create_evaluator-------grader")
             test_case_instance = create_evaluator_instance(metadata, test_case)
             test_case_instances.append(test_case_instance)
         return test_case_instances

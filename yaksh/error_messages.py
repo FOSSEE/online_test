@@ -5,23 +5,29 @@ except ImportError:
 
 
 def prettify_exceptions(exception, message, traceback=None,
-                        testcase=None, line_no=None):
+                        testcase=None,input_data=None,output_data=None, line_no=None):
     err = {"type": "assertion",
            "exception": exception,
            "traceback": traceback,
-           "message": message
+           "input_data":input_data,
+           "message": message,
+           "output_data":output_data
            }
     if exception == 'RuntimeError' or exception == 'RecursionError':
         err["traceback"] = None
 
     if exception == 'AssertionError':
-        value = ("Expected answer from the" +
-                 " test case did not match the output")
+        if input_data:
+            value=("Expected Input ("+input_data+") , Expected Output ("+output_data+")")
+        else:
+            value = "Expected answer from the test case did not match the output"
+        
         if message:
             err["message"] = message
         else:
             err["message"] = value
         err["traceback"] = None
+    
     err["test_case"] = testcase
     err["line_no"] = line_no
     return err

@@ -22,6 +22,7 @@ from django.core.exceptions import (
     MultipleObjectsReturned, ObjectDoesNotExist, ValidationError
 )
 from django.conf import settings
+from django.forms import fields
 import pytz
 from taggit.models import Tag
 from itertools import chain
@@ -30,6 +31,9 @@ import six
 from textwrap import dedent
 import zipfile
 from markdown import Markdown
+from online_test.settings import CODE_TEMPLATES
+from .template_python import template_python
+from .template_c import template_c
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -40,11 +44,11 @@ from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, FloatTestCase,
     HookTestCase, IntegerTestCase, McqTestCase, Profile,
-    QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
+    QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,EasyStandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, Lesson, LessonFile,
     LearningUnit, LearningModule,
-    CourseStatus
+    CourseStatus 
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -57,7 +61,46 @@ from .settings import URL_ROOT
 from .file_utils import extract_files, is_csv
 from .send_emails import send_user_mail, generate_activation_key, send_bulk_mail
 from .decorators import email_verified, has_profile
+from django.db import models
 
+
+test_case_types1 = (
+        ("standardtestcase", "Standard Testcase"),
+        ("stdiobasedtestcase", "StdIO Based Testcase"),
+        ("hooktestcase", "Hook Testcase"),
+        ("easystandardtestcase","Easy Standard Testcase"),
+    )
+
+code_testcase={
+    "easystandardtestcase":EasyStandardTestCase,
+    "standardtestcase":StandardTestCase,
+    "hooktestcase":HookTestCase,
+    "stdiobasedtestcase":StdIOBasedTestCase
+}
+
+code_testcase1={
+    "standardtestcase":StandardTestCase,
+    "hooktestcase":HookTestCase,
+    "stdiobasedtestcase":StdIOBasedTestCase
+}
+
+operator_choices_py={
+    ("==","=="),
+    ("!=","!="),
+    (">=",">="),
+    ("<=","<="),
+    (">",">"),
+    ("<","<")
+}
+
+operator_choices_c={
+    ("==","=="),
+    ("!=","!="),
+    (">=",">="),
+    ("<=","<="),
+    (">",">"),
+    ("<","<")
+}
 
 def my_redirect(url):
     """An overridden redirect to deal with URL_ROOT-ing. See settings.py
@@ -195,13 +238,21 @@ def results_user(request):
 @email_verified
 def add_question(request, question_id=None):
     user = request.user
+    
     test_case_type = None
+    if not is_moderator(user):
+        raise Http404("You cannot access this page")
 
     if question_id is None:
-        question = Question(user=user)
-        question.save()
+        question = None
     else:
         question = Question.objects.get(id=question_id)
+
+    # if question_id is None:
+    #     question = Question(user=user)
+    #     question.save()
+    # else:
+    #     question = Question.objects.get(id=question_id)
 
     if request.method == "POST" and 'delete_files' in request.POST:
         remove_files_id = request.POST.getlist('clear')
@@ -209,6 +260,8 @@ def add_question(request, question_id=None):
             files = FileUpload.objects.filter(id__in=remove_files_id)
             for file in files:
                 file.remove()
+
+    
 
     if request.method == 'POST':
         qform = QuestionForm(request.POST, instance=question)
@@ -227,62 +280,190 @@ def add_question(request, question_id=None):
             files = FileUpload.objects.filter(id__in=hide_files_id)
             for file in files:
                 file.toggle_hide_status()
+        # formsets = []
+        
+        # q=Question.objects.get(id=question_id1)
+        # testcase_set_obj=q.testcase_set.values_list("type",flat=True)
+        # for x in testcase_set_obj:
+        #     print ("testcase_set_obj1",x)
+
+        # for y in q.get_test_cases():
+        #     print ("testcase_set_obj2",y)
         formsets = []
-        for testcase in TestCase.__subclasses__():
-            formset = inlineformset_factory(Question, testcase, extra=0,
-                                            fields='__all__')
-            formsets.append(formset(
-                request.POST, request.FILES, instance=question
+        lang=qform.data["language"]
+        q_type=qform.data["type"]
+
+        if (q_type=="code" and (lang=="python" or lang=="c" or lang=="cpp" or lang=="java")):
+            def formfield_callback(field):
+                if isinstance(field, models.CharField) and field.name == 'operator':
+                    if lang=="python":
+                        return fields.ChoiceField(choices=operator_choices_py)
+                    elif lang=="c" or lang=="cpp":
+                        return fields.ChoiceField(choices=operator_choices_c)
+                return field.formfield( )
+            
+            for testcase in code_testcase:
+                # formset = inlineformset_factory(Question, testcase, extra=0,
+                #                                 fields='__all__')
+                # print ("first for--------",formset)
+                if lang=="python" and code_testcase[testcase].__name__.lower() == "easystandardtestcase" :
+                    # print (qform.fields['type'].choices)
+                    formset = inlineformset_factory(Question, code_testcase[testcase], extra=0,
+                        fields=('function_name','operator','input_vals','output_vals', 'type'),formfield_callback=formfield_callback)
+                    # print ("easy==================",EasyStandardTestCaseFormFormSet.fields['operator'].choices)
+
+                elif ((lang=="c" or lang=="cpp" or lang=="java") and code_testcase[testcase].__name__.lower()=="easystandardtestcase" ):
+                    formset = inlineformset_factory(Question,code_testcase[testcase],extra=0,
+                        fields=('function_name','operator','typeof_var','input_vals','output_vals', 'typeof_output','type'),formfield_callback=formfield_callback)
+                else:
+                    formset = inlineformset_factory(Question, code_testcase[testcase], extra=0,
+                                                fields='__all__')
+
+
+
+                formsets.append(formset(
+                    request.POST, request.FILES, instance=question
+                    )
                 )
-            )
+
+        elif (q_type=="code" and (lang=="bash" or lang=="scilab")):
+            for testcase in code_testcase1:
+                formset=inlineformset_factory(Question,code_testcase1[testcase],extra=0,fields='__all__')
+
+                formsets.append(formset(request.POST,request.FILES,instance=question))
+
+
+        else:
+            for testcase in TestCase.__subclasses__():
+                # formset = inlineformset_factory(Question, testcase, extra=0,
+                #                                 fields='__all__')
+                # print ("first for--------",formset)
+                if lang=="python" and testcase.__name__.lower() == "easystandardtestcase" :
+                    formset = inlineformset_factory(Question, testcase, extra=0,
+                        fields=('function_name','operator','input_vals','output_vals', 'type'))
+
+                elif ((lang=="c" or lang=="cpp" or lang=="java") and testcase.__name__.lower()=="easystandardtestcase" ):
+                    formset = inlineformset_factory(Question,testcase,extra=0,
+                        fields=('function_name','typeof_var','input_vals','output_vals','typeof_output', 'type'))
+                else:
+                    formset = inlineformset_factory(Question, testcase, extra=0,
+                                                fields='__all__')
+
+                formsets.append(formset(
+                    request.POST, request.FILES, instance=question
+                    )
+                )
+
+            # cd=form.cleaned_data
+            # print ("========",cd)
+
         files = request.FILES.getlist('file_field')
-        uploaded_files = FileUpload.objects.filter(question_id=question.id)
+        uploaded_files = FileUpload.objects.filter(question_id=question_id)
         if qform.is_valid():
             question = qform.save(commit=False)
             question.user = user
+            # lang=qform.data["language"]
+            # print (   "--------------------",lang)
+
             question.save()
+            print("------------",question)
             # many-to-many field save function used to save the tags
             qform.save_m2m()
             for formset in formsets:
                 if formset.is_valid():
+                    # question = formset.cleaned_data['question']
                     formset.save()
+                else:
+                    print("else formset=======", formset, formset.errors)
+            
+            question.save_test_case()
+                    
             test_case_type = request.POST.get('case_type', None)
+            # print ("testcasetype=========",test_case_type)
         else:
             context = {
                 'qform': qform,
+                'question': question,
                 'fileform': fileform,
                 'question': question,
                 'formsets': formsets,
-                'uploaded_files': uploaded_files
+                'uploaded_files': uploaded_files,
             }
+
+
             return my_render_to_response(
                 request, "yaksh/add_question.html", context
             )
 
     qform = QuestionForm(instance=question)
     fileform = FileForm()
-    uploaded_files = FileUpload.objects.filter(question_id=question.id)
+    uploaded_files = FileUpload.objects.filter(question_id=question_id)
     formsets = []
+    lang=qform.instance.language
+    
+
+    
     for testcase in TestCase.__subclasses__():
+        def formfield_callback(field):
+            if isinstance(field, models.CharField) and field.name == 'operator':
+                    if lang=="python":
+                        return fields.ChoiceField(choices=operator_choices_py)
+                    elif lang=="c" or lang=="cpp":
+                        return fields.ChoiceField(choices=operator_choices_c)
+            return field.formfield( )
         if test_case_type == testcase.__name__.lower():
-            formset = inlineformset_factory(
-                Question, testcase, extra=1, fields='__all__'
-            )
+            # print("test_case_type", test_case_type, lang)
+            if (test_case_type=="easystandardtestcase"):      #changes here 1           
+                if lang=="python":
+                    print ("python ---------------------")
+                    formset=inlineformset_factory(
+                        Question,EasyStandardTestCase,extra=1,fields=('type','function_name','operator','input_vals','output_vals'),formfield_callback=formfield_callback
+                        )
+                    #,widget={'type':forms.ChoiceField(choices=test_case_types1)}
+                elif lang=='c' or lang=='cpp' or lang=='java':
+                    formset=inlineformset_factory(Question,testcase,
+                        extra=1,fields=('type','function_name','operator','typeof_var','input_vals','output_vals','typeof_output'),formfield_callback=formfield_callback)
+            else:
+                # print ("first else")    
+                print ("first else========================")
+                formset = inlineformset_factory(
+                    Question, testcase, extra=1, fields='__all__'
+                )
         else:
-            formset = inlineformset_factory(
-                Question, testcase, extra=0, fields='__all__'
-            )
+            if lang=="python" and testcase.__name__.lower() == "easystandardtestcase":
+                print ("second else================")
+                formset=inlineformset_factory(
+                    Question,testcase,extra=0,fields=('type','function_name','operator','input_vals','output_vals'),formfield_callback=formfield_callback
+                    )
+            elif ((lang=="c" or lang=="cpp" or lang=="java") and testcase.__name__.lower()=="easystandardtestcase") :
+                formset=inlineformset_factory(
+                    Question,testcase,extra=0,fields=('type','function_name','operator','typeof_var','input_vals','output_vals','typeof_output'),formfield_callback=formfield_callback
+                    )
+            else:
+                print ("third else==================")
+                formset = inlineformset_factory(
+                    Question, testcase, extra=0, fields='__all__'
+                )
+
         formsets.append(
             formset(
                 instance=question,
                 initial=[{'type': test_case_type}]
             )
         )
+
+
     context = {'qform': qform, 'fileform': fileform, 'question': question,
-               'formsets': formsets, 'uploaded_files': uploaded_files}
+               'formsets': formsets, 
+               # 'uploaded_files': uploaded_files
+               }
+    
+
+
     return my_render_to_response(
         request, "yaksh/add_question.html", context
     )
+    
 
 
 @login_required

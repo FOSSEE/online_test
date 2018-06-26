@@ -29,6 +29,8 @@ class CppCodeEvaluator(BaseEvaluator):
 
         # Set test case data values
         self.test_case = test_case_data.get('test_case')
+        self.input_data=test_case_data.get('input_vals')
+        self.output_data=test_case_data.get('output_vals')
         self.weight = test_case_data.get('weight')
 
     def teardown(self):
@@ -141,7 +143,15 @@ class CppCodeEvaluator(BaseEvaluator):
                     success, err = True, None
                     mark_fraction = 1.0 if self.partial_grading else 0.0
                 else:
-                    err = "{0} \n {1}".format(stdout, stderr)
+                    # err = "{0} \n {1}".format(stdout, stderr)
+                    # print ("stdout====",stdout)
+                    # print ("stderr====",stderr)
+                    if self.input_data:
+                        err={"input_data":self.input_data,
+                             "output_data":self.output_data}
+                    else:
+                        
+                        err = "{0} \n {1}".format(stdout, stderr)
             else:
                 err = "Error:"
                 try:

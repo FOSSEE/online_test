@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block css%}
+    <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
+{% endblock %}
+{% block nav %}
+    <nav class="navbar navbar-fixed-top navbar-inverse">
+      <div class="container">
+        <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                  <span class="icon-bar"></span>
+                  <span class="icon-bar"></span>
+                  <span class="icon-bar"></span>
+              </button>
+          <a class="navbar-brand navbar-left" href="{{ URL_ROOT }}/exam/">
+            <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH" style="margin-top: -3px; margin-left:-15px">
+            </img>
+          </a>
+        </div>
+        <div class= "collapse navbar-collapse" id="navbar">
+          <ul class="nav navbar-nav navbar-right">
+              <li><a href="{{ URL_ROOT }}/exam/quizzes/enrolled/"> Enrolled Courses </a></li>
+              <li><a href="{{ URL_ROOT }}/exam/reset/changepassword"> Change Password </a></li>
+              <li><a href="{{ URL_ROOT }}/exam/viewprofile"> {{ user.get_full_name.title }} </a></li>
+              <li><a href="{{URL_ROOT}}/exam/logout/" id="logout">Logout</a></li>
+          </ul>
+        </div><!-- /.navbar -->
+      </div><!-- /.container -->
+    </nav><!-- /.navbar -->
+{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-sm-8 col-sm-offset-3 col-md-9 col-md-offset-2 main">
+    <div class="row">
+        {% block main %}
+        {% endblock %}
+    </div>
+    </div>
+</div>
+{% endblock %}
+{% if user %}
+  {% block info %}
+  <h5><b>{{user.get_full_name|title}}</b> with Roll no. <b>{{user.profile.roll_number}}</b> is logged in as <b>{{user.username}}</b></h5>
+  {% endblock %}
+{% endif %}

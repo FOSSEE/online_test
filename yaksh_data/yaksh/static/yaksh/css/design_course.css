@@ -1,0 +1,17 @@
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: normal;
+  line-height: 18px;
+  color: #404040;
+}
+
+#available-lesson-quiz .col-md-8 > div{
+    background: #f5f5f5;
+    border: 1px solid #333333;
+    overflow-y: scroll;
+    height: 300px;
+}
+#available-lesson-quiz .available-list > div{
+  height: 300px;
+}

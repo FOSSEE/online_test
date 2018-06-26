@@ -165,6 +165,7 @@ class JavaCodeEvaluator(BaseEvaluator):
             err = "Compilation Error:"
             try:
                 error_lines = stdnt_stderr.splitlines()
+                print ("e===========",error_lines)
                 for e in error_lines:
                     if ':' in e:
                         err = err + "\n" + e.split(":", 1)[1]
