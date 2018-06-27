@@ -63,6 +63,10 @@ enrollment_methods = (
     ("open", "Open Enrollment"),
     )
 
+#############################skt######################
+course_levels = ['Basic', 'Advanced', 'Intermediate']
+######################################################
+
 test_case_types = (
         ("standardtestcase", "Standard Testcase"),
         ("stdiobasedtestcase", "StdIO Based Testcase"),
@@ -600,6 +604,13 @@ class Course(models.Model):
     learning_module = models.ManyToManyField(LearningModule,
                                              related_name='learning_module')
 
+    #################################skt###########################
+    level = models.CharField(max_length=32, 
+                            choices=[(course_level, course_level) for course_level in course_levels],
+                            default='Basic')
+    ##############################################################
+
+
     # The start date of the course enrollment.
     start_enroll_time = models.DateTimeField(
         "Start Date and Time for enrollment of course",
@@ -883,9 +894,9 @@ class Profile(models.Model):
 
     #############################skt#########################
 
-    state = models.CharField(max_length=128)
-    age = models.IntegerField()
-    gender = models.CharField(max_length=32)
+    state = models.CharField(max_length=128, default='Unknown')
+    age = models.IntegerField(default=0)
+    gender = models.CharField(max_length=32, default='Unknown')
 
     ###########################################################
 

@@ -187,7 +187,7 @@ class UserRegisterForm(forms.Form):
         new_profile.gender = cleaned_data["gender"]
 
         ######################################
-        
+
         if settings.IS_DEVELOPMENT:
             new_profile.is_email_verified = True
         else:
@@ -325,7 +325,7 @@ class CourseForm(forms.ModelForm):
 
     class Meta:
         model = Course
-        fields = ['name', 'enrollment', 'active', 'code', 'instructions',
+        fields = ['name', 'level', 'enrollment', 'active', 'code', 'instructions',
                   'start_enroll_time', 'end_enroll_time', 'grading_system']
 
 
