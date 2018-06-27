@@ -881,6 +881,14 @@ class Profile(models.Model):
     activation_key = models.CharField(max_length=255, blank=True, null=True)
     key_expiry_time = models.DateTimeField(blank=True, null=True)
 
+    #############################skt#########################
+
+    state = models.CharField(max_length=128)
+    age = models.IntegerField()
+    gender = models.CharField(max_length=32)
+
+    ###########################################################
+
     def get_user_dir(self):
         """Return the output directory for the user."""
 

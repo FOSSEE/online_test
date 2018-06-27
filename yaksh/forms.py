@@ -48,6 +48,20 @@ test_case_types = (
     ("floattestcase", "Float Testcase"),
 )
 
+################################skt##################################
+position_list = ["Faculty", "School Student", "Graduate Student", 
+                "Postgraduate Student", "Industry Professional", 
+                "Research Scholar"]
+
+state_list = ["Andra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", 
+            "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh",
+            "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Madya Pradesh",
+            "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Orissa",
+            "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Tripura", "Uttaranchal",
+            "Uttar Pradesh", "West Bengal"]
+
+#####################################################################
+
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
 
@@ -92,6 +106,27 @@ class UserRegisterForm(forms.Form):
         choices=[(tz, tz) for tz in pytz.common_timezones],
         help_text='Course timings are shown based on the selected timezone',
         initial=pytz.country_timezones['IN'][0])
+
+    ##################skt############################
+    position = forms.ChoiceField(
+        choices = [(position, position) for position in position_list],
+        initial = 'Graduate Student')
+
+    state = forms.ChoiceField(
+        choices = [(state, state) for state in state_list]
+        )
+
+    age = forms.IntegerField()
+
+    gender = forms.ChoiceField(
+        choices = (
+                        ('Male', 'Male'),
+                        ('Female', 'Female'),
+                        ('Transgender', 'Transgender')
+                    )
+        )
+
+    ###################################################
 
     def clean_username(self):
         u_name = self.cleaned_data["username"]
@@ -144,6 +179,15 @@ class UserRegisterForm(forms.Form):
         new_profile.department = cleaned_data["department"]
         new_profile.position = cleaned_data["position"]
         new_profile.timezone = cleaned_data["timezone"]
+
+        ###############skt#####################
+
+        new_profile.state = cleaned_data["state"]
+        new_profile.age = cleaned_data["age"]
+        new_profile.gender = cleaned_data["gender"]
+
+        ######################################
+        
         if settings.IS_DEVELOPMENT:
             new_profile.is_email_verified = True
         else:

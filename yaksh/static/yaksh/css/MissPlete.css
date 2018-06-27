@@ -1,0 +1,28 @@
+.miss-plete {
+  position: relative;
+  width: 90%;
+}
+
+.miss-plete > ul {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+  border: 1px solid rgba(0,0,0,.3);
+  background-color: white;
+
+}
+
+.miss-plete > ul > li {
+  padding: .2em;
+}
+
+.miss-plete > ul > li.highlight {
+  cursor: pointer;
+  background-color: #ffe3b0;
+}
+
+.miss-plete > ul > li span {
+  color: #777;
+}

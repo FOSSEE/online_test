@@ -133,15 +133,29 @@ def user_register(request):
                     'yaksh/activation_status.html', context
                 )
             return index(request)
+               
+    #########################skt##############################
+
         else:
+            colleges_list = json.load(open('analysis/colleges.json'))
+
+            print(colleges_list[0])
+
             return my_render_to_response(
-                request, 'yaksh/register.html', {'form': form}
+                request, 'yaksh/register.html', {'form': form, 'colleges_list': colleges_list}
             )
     else:
         form = UserRegisterForm()
+        
+        colleges_list = json.load(open('analysis/colleges.json'))
+
+        print(colleges_list[0])
+
         return my_render_to_response(
-            request, 'yaksh/register.html', {'form': form}
+            request, 'yaksh/register.html', {'form': form, 'colleges_list': colleges_list}
         )
+
+    #########################skt##############################
 
 
 def user_logout(request):
