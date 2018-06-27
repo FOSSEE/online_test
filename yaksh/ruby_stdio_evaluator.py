@@ -57,14 +57,14 @@ class RubyStdIOEvaluator(StdIOEvaluator):
             input_buffer.seek(0)
             sys.stdin = input_buffer
 
-        with redirect_stdout() as output_buffer:
-            self.proc = subprocess.Popen('ruby {0}'.format(self.submit_code_path),
-                                        shell=True,
-                                        stdin=subprocess.PIPE,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE,
-                                        preexec_fn=os.setpgrp
-                                        )
+        # with redirect_stdout() as output_buffer:
+        self.proc = subprocess.Popen('ruby {0}'.format(self.submit_code_path),
+                                    shell=True,
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    preexec_fn=os.setpgrp
+                                    )
 
     def check_code(self):
         success = False
