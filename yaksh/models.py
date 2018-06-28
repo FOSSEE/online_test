@@ -65,6 +65,22 @@ enrollment_methods = (
 
 #############################skt######################
 course_levels = ['Basic', 'Advanced', 'Intermediate']
+
+position_list = ["Faculty", "School Student", "Graduate Student", 
+                "Postgraduate Student", "Industry Professional", 
+                "Research Scholar"]
+
+state_list = ["Andra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", 
+            "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh",
+            "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Madya Pradesh",
+            "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Orissa",
+            "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Tripura", "Uttaranchal",
+            "Uttar Pradesh", "West Bengal"]
+
+#####################################################################
+
+
+
 ######################################################
 
 test_case_types = (
@@ -882,7 +898,7 @@ class Profile(models.Model):
     roll_number = models.CharField(max_length=20)
     institute = models.CharField(max_length=128)
     department = models.CharField(max_length=64)
-    position = models.CharField(max_length=64)
+    
     timezone = models.CharField(
         max_length=64,
         default=pytz.utc.zone,
@@ -894,10 +910,18 @@ class Profile(models.Model):
 
     #############################skt#########################
 
-    state = models.CharField(max_length=128, default='Unknown')
-    age = models.IntegerField(default=0)
-    gender = models.CharField(max_length=32, default='Unknown')
+    position = models.CharField(max_length=64, choices = [(position, position) for position in position_list])
 
+    state = models.CharField(max_length=128, default='Unknown', choices = [(state, state) for state in state_list])
+    age = models.IntegerField(default=0)
+    gender = models.CharField(max_length=32,
+                                default='Unknown',
+                                choices = (
+                                                ('Male', 'Male'),
+                                                ('Female', 'Female'),
+                                                ('Transgender', 'Transgender')
+                                            )
+                                )
     ###########################################################
 
     def get_user_dir(self):

@@ -1,7 +1,7 @@
 from django import forms
 from yaksh.models import (
     get_model_class, Profile, Quiz, Question, Course, QuestionPaper, Lesson,
-    LearningModule
+    LearningModule, position_list, state_list
 )
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -47,20 +47,6 @@ test_case_types = (
     ("stringtestcase", "String Testcase"),
     ("floattestcase", "Float Testcase"),
 )
-
-################################skt##################################
-position_list = ["Faculty", "School Student", "Graduate Student", 
-                "Postgraduate Student", "Industry Professional", 
-                "Research Scholar"]
-
-state_list = ["Andra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", 
-            "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh",
-            "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Madya Pradesh",
-            "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Orissa",
-            "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Tripura", "Uttaranchal",
-            "Uttar Pradesh", "West Bengal"]
-
-#####################################################################
 
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
@@ -337,10 +323,15 @@ class CourseForm(forms.ModelForm):
 class ProfileForm(forms.ModelForm):
     """ profile form for students and moderators """
 
+    ############################skt#############################
+
     class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'institute',
-                  'department', 'roll_number', 'position', 'timezone']
+        fields = ['first_name', 'last_name', 'age', 'gender', 
+                    'roll_number', 'institute', 'department',
+                    'position', 'state', 'timezone']
+
+    ###############################################################
 
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
