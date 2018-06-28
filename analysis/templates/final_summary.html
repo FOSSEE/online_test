@@ -52,10 +52,16 @@
 
 <div id="data-holder">
 
-	<div id="table" class="display" style="display:none"></div>
+	<div id="table" class="display display-data" style="display:none"></div>
 
-	<div id="viz" class="display" style="display:none">
+	<div id="viz" class="display display-data" style="display:none">
 		<div id="plot"></div>
+	</div>
+
+	<div id="msg" class="display" style="display:none">
+		<br>
+		<p> No Data Found! </p>
+		<br>
 	</div>
 
 	<div id="back" class="display" style="display:none">
@@ -64,11 +70,6 @@
 		<br>
 	</div>
 
-	<div id="msg" class="display" style="display:none">
-		<br>
-		<p> No Data Found! </p>
-		<br>
-	</div>
 </div>
 
 <script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
@@ -109,7 +110,7 @@
 </script>
 <script>
 	
-	var DATA;
+	var DATA, DISPDATA, VIZDATA;
 	var VALS = {};
 	var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
 
@@ -120,7 +121,7 @@
 			end_date : endDate
 		}
 
-		console.log(data); 
+		//console.log(data); 
 
 		$.ajax({
 			url: '{{ URL_ROOT }}/analysis/final_summary_data/',
@@ -129,7 +130,7 @@
 			dataType: 'json',
 			async : false,
 			success: function(data){
-				console.log(data);
+				//console.log(data);
 				DATA = data;
 			}
   		});
@@ -142,6 +143,11 @@
 		$('#table').show();
 
 		DISPDATA = DATA['coursewise'][[VALS['group']]];
+
+		if(!DISPDATA){
+			no_data_msg();
+			return;
+		}
 
 		var heading = '<tr><th>Level</th><th>Enrolled</th><th>A+</th><th>A</th><th>Passed</th></tr>';
 		var rows = '';
@@ -181,6 +187,11 @@
 
 		VIZDATA = DATA['coursewise'][VALS['group']][VALS['level']][VALS['catt']];
 	
+		if(!VIZDATA){
+			no_data_msg();
+			return;
+		}
+
 		var years = [];
 		var i = 0; 
 		$.each(VIZDATA, function(key,_){
@@ -206,7 +217,6 @@
 
 			var year_trace = []
 			$.each(names, function(i, val){
-				console.log(name);
 				var month_trace = {};
 				var counts = []
 				month_trace['name'] = val;
@@ -226,7 +236,13 @@
 			traces = $.merge(traces, year_trace);
 		});
 
-		var layout = {barmode: 'group'};
+		var layout = {
+			barmode: 'group',
+			yaxis : {
+				title : 'Student Count'
+			}
+		}
+
 		Plotly.newPlot('plot', traces, layout);
 	}
 
@@ -237,14 +253,29 @@
 		$('#group-menu').show();
 		$('#viz').show();
 
+		VIZDATA = DATA['statewise'][VALS['group']];
+
+		if(!VIZDATA){
+			no_data_msg();
+			return;
+		}
+
 		var data = [
 		  {
-		    x: Object.keys(DATA['statewise'][VALS['group']]),
-		    y: Object.values(DATA['statewise'][VALS['group']]),
-		    type: 'bar'
+		    x: Object.keys(VIZDATA),
+		    y: Object.values(VIZDATA),
+		    type: 'bar',
 		  }
 		];
-		Plotly.newPlot('plot', data);
+
+
+		var layout = {
+			yaxis : {
+				title : 'Student Count'
+			}
+		}
+
+		Plotly.newPlot('plot', data, layout);
 	}
 
 	function display_institutewise_data(){
@@ -254,6 +285,11 @@
 		$('#table').show();
 
 		DISPDATA = DATA['institutewise'][VALS['group']];
+
+		if(!DISPDATA){
+			no_data_msg();
+			return;
+		};
 
 		var heading = '<tr><th>Institute</th><th>Enrolled</th><th>Passed</th></tr>';
 		var rows = '';
@@ -273,7 +309,7 @@
 		display();
 	}
 
-	function display_institut_percourse_data(){
+	function display_institute_percourse_data(){
 		
 		$('.display').hide();
 		$('#wise-menu').show();
@@ -281,14 +317,22 @@
 		$('#table').show();
 		$('#back').show();
 
+		
+		DISPDATA = DATA['institutewise'][VALS['group']];
+
+		if(!DISPDATA){
+			no_data_msg();
+			return;
+		}
+
 		DISPDATA = jQuery.extend(true, {}, DATA['institutewise'][VALS['group']][VALS['institute']]);
 
 		delete DISPDATA['Enrolled'];
 		delete DISPDATA['Passed'];  
 
-		console.log(DISPDATA)
+		//console.log(DISPDATA)
 
-		var heading = '<tr><th>Institute</th><th>Enrolled</th><th>Passed</th></tr>';
+		var heading = '<tr><th>Course</th><th>Enrolled</th><th>Passed</th></tr>';
 		var rows = '';
 
 		$.each(DISPDATA, function(key, val){
@@ -322,6 +366,7 @@
 
 	//display data as per the current selection values
 	function display(){
+
 		if(jQuery.isEmptyObject(DATA)){
 			$('.display').hide();
 			$('#msg').show();
@@ -339,11 +384,16 @@
 					if(VALS['institutewise_page']==1 || jQuery.isEmptyObject(VALS['institute'])){
 						display_institutewise_data();
 					}else{
-						display_institut_percourse_data();
+						display_institute_percourse_data();
 					}
 				}
 			}
 		}
+	}
+
+	function no_data_msg(){
+		$('.display-data').hide();
+		$('#msg').show();
 	}
 
 	//back button

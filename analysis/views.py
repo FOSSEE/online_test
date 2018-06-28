@@ -43,7 +43,8 @@ def make_group(data, catt):
             group[row['course_group']][row['course_tag']][catt][row['year']][row['month']][row[catt]] = row['count']
             
     
-    grouped_all = data.groupby(['course_tag', 'year', 'month', catt])[catt].agg(['count']).reset_index()
+    grouped_all = data.pivot_table(columns=['course_tag', 'year', 'month'], index = catt, values='course_id',aggfunc='count', fill_value=0).unstack().reset_index().rename(columns={0:'count'})
+    #grouped_all = data.groupby(['course_tag', 'year', 'month', catt])[catt].agg(['count']).reset_index()
     for index, row in grouped_all.iterrows():
             group['All'][row['course_tag']][catt][row['year']][row['month']][row[catt]] = row['count']
     

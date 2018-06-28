@@ -85,6 +85,8 @@ class UserRegisterForm(forms.Form):
     It has the various fields and functions required to register
     a new user to the system"""
 
+    ##################skt############################
+
     username = forms.CharField(max_length=30, help_text='Letters, digits,\
                 period and underscores only.')
     email = forms.EmailField()
@@ -93,28 +95,6 @@ class UserRegisterForm(forms.Form):
         max_length=30, widget=forms.PasswordInput())
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
-    roll_number = forms.CharField(
-        max_length=30, help_text="Use a dummy if you don't have one.")
-    institute = forms.CharField(
-        max_length=128, help_text='Institute/Organization')
-    department = forms.CharField(
-        max_length=64, help_text='Department you work/study at')
-    position = forms.CharField(
-        max_length=64,
-        help_text='Student/Faculty/Researcher/Industry/Fellowship/etc.')
-    timezone = forms.ChoiceField(
-        choices=[(tz, tz) for tz in pytz.common_timezones],
-        help_text='Course timings are shown based on the selected timezone',
-        initial=pytz.country_timezones['IN'][0])
-
-    ##################skt############################
-    position = forms.ChoiceField(
-        choices = [(position, position) for position in position_list],
-        initial = 'Graduate Student')
-
-    state = forms.ChoiceField(
-        choices = [(state, state) for state in state_list]
-        )
 
     age = forms.IntegerField()
 
@@ -125,6 +105,27 @@ class UserRegisterForm(forms.Form):
                         ('Transgender', 'Transgender')
                     )
         )
+
+    roll_number = forms.CharField(
+        max_length=30, help_text="Use a dummy if you don't have one.")
+    institute = forms.CharField(
+        max_length=128, help_text='Institute/Organization')
+    department = forms.CharField(
+        max_length=64, help_text='Department you work/study at')
+
+    position = forms.ChoiceField(
+        choices = [(position, position) for position in position_list],
+        initial = 'Graduate Student')
+
+    state = forms.ChoiceField(
+        choices = [(state, state) for state in state_list]
+        )
+
+    timezone = forms.ChoiceField(
+        choices=[(tz, tz) for tz in pytz.common_timezones],
+        help_text='Course timings are shown based on the selected timezone',
+        initial=pytz.country_timezones['IN'][0])
+
 
     ###################################################
 
@@ -325,8 +326,12 @@ class CourseForm(forms.ModelForm):
 
     class Meta:
         model = Course
+
+    ####################################skt###################################
         fields = ['name', 'level', 'enrollment', 'active', 'code', 'instructions',
                   'start_enroll_time', 'end_enroll_time', 'grading_system']
+
+    ##########################################################################
 
 
 class ProfileForm(forms.ModelForm):
