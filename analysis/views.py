@@ -1,6 +1,5 @@
-from django.shortcuts import render
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, Http404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from yaksh.models import *
 import json
@@ -11,6 +10,7 @@ from collections import defaultdict
 from django.contrib.auth.decorators import login_required
 from yaksh.decorators import email_verified, has_profile
 from yaksh.views import is_moderator
+from yaksh.settings import URL_ROOT
 
 
 ############################moderator side report##################################
@@ -249,9 +249,13 @@ def final_summary_data(request):
 @email_verified
 def view_quiz_stats(request, course_id, question_paper_id):
 	user = request.user
+	course = Course.objects.get(id=course_id)
 	questionpaper = QuestionPaper.objects.get(id=question_paper_id)
 	quiz_stats, que_stats = questionpaper.get_quiz_stats(user, course_id)
 	#print(que_stats)
-	return render(request, 'view_quiz_stats.html', {'quiz_stats' : quiz_stats, 'que_stats' : que_stats})
+	if questionpaper.quiz.has_code_questions() and user in course.students.all():
+		return render(request, 'view_quiz_stats.html', {'quiz_stats' : quiz_stats, 'que_stats' : que_stats})
+	else:
+		return HttpResponseRedirect(URL_ROOT + '/exam/quizzes/')
 
 #################################################################################
