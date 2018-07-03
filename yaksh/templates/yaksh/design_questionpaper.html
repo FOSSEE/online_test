@@ -220,10 +220,14 @@ select
 
     <div class="tab-pane" id="finish">
         <center>
-            <h5>Almost finished creating your question paper</h5>
+            <h5><u>Almost finished creating your question paper</u></h5>
             <label style="float: none;">
                 {{ qpaper_form.shuffle_questions }}
-                <span>Auto shuffle.</span>
+                <span>Shuffle questions' order for each student</span>
+            </label> <br><br>
+            <label style="float: none;">
+                {{ qpaper_form.shuffle_testcases }}
+                <span>Shuffle MCQ/MCC options for each student</span>
             </label> <br><br>
             <input class ="btn primary large" type="submit" name="save" id="save" value="Save question paper">
             <br>

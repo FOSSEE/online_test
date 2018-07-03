@@ -1,5 +1,6 @@
 from django import template
 from django.template.defaultfilters import stringfilter
+from ast import literal_eval
 import os
 try:
     from itertools import zip_longest
@@ -62,3 +63,22 @@ def module_completion_percent(course, module, user):
 @register.simple_tag
 def course_completion_percent(course, user):
     return course.percent_completed(user)
+
+
+@register.simple_tag
+def get_ordered_testcases(question, answerpaper):
+    return question.get_ordered_test_cases(answerpaper)
+
+
+@register.simple_tag
+def get_answer_for_arrange_options(ans, question):
+    if type(ans) == bytes:
+        ans = ans.decode("utf-8")
+    else:
+        ans = str(ans)
+    answer = literal_eval(ans)
+    testcases = []
+    for answer_id in answer:
+        tc = question.get_test_case(id=int(answer_id))
+        testcases.append(tc)
+    return testcases

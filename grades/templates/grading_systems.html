@@ -1,0 +1,74 @@
+{% extends "manage.html" %}
+{% block main %}
+<html>
+    <a href="{% url 'grades:add_grade' %}" class="btn btn-primary"> Add a Grading System </a>
+    <a href="{% url 'yaksh:courses' %}" class="btn btn-danger"> Back to Courses </a>
+    <br><br>
+    <b> Available Grading Systems: </b>
+    <table class="table">
+        <tr>
+            <th>Grading System</th>
+            <th>Grading Ranges</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="{% url 'grades:edit_grade' default_grading_system.id %}">
+            {{ default_grading_system.name }}</a> (<b>Default Grading System</b>)
+            </td>
+            <td>
+                <table class="table">
+                    <tr>
+                        <th>Lower Limit</th>
+                        <th>Upper Limit</th>
+                        <th>Grade</th>
+                        <th>Description</th>
+                    </tr>
+                    {% for range in default_grading_system.graderange_set.all %}
+                        <tr>
+                            <td>{{range.lower_limit}}</td>
+                            <td>{{range.upper_limit}}</td>
+                            <td>{{range.grade}}</td>
+                            {% if range.description %}
+                                <td>{{range.description}}</td>
+                            {% else %}
+                                <td>------</td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+        {% if grading_systems %}
+        {% for system in grading_systems %}
+            <tr>
+            <td>
+            <a href="{% url 'grades:edit_grade' system.id %}">{{ system.name }}</a>
+            </td>
+            <td>
+                <table class="table">
+                    <tr>
+                        <th>Lower Limit</th>
+                        <th>Upper Limit</th>
+                        <th>Grade</th>
+                        <th>Description</th>
+                    </tr>
+                    {% for range in system.graderange_set.all %}
+                        <tr>
+                            <td>{{range.lower_limit}}</td>
+                            <td>{{range.upper_limit}}</td>
+                            <td>{{range.grade}}</td>
+                            {% if range.description %}
+                                <td>{{range.description}}</td>
+                            {% else %}
+                                <td>------</td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </table>
+            </td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+</html>
+{% endblock %}

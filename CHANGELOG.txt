@@ -1,3 +1,46 @@
+=== 0.8.1 (18-06-2018) ===
+
+* Fixed a bug where quiz completion shows inprogress even after completing.
+* Changed send bulk mail to add recipients to BCC list instead of TO list.
+* Changed course status feature to view student progress more easily and quickly.
+* Changed student course dashboard to view completion percentage per module and
+  overall course.
+* Added support for nose asserts for python assertion based evaluation.
+* Added a new feature to show error line number in student code for python
+  based questions only.
+* Replaced django render_to_response function with render function in views.
+* Upgraded Django version from 1.9.5 to 1.10.
+* Fixed pep8 for the code base.
+* Fixed a bug that allows answer to be true if there are no test cases to a code
+  question.
+
+=== 0.8.0 (23-03-2018) ===
+
+* Refactored the add_group command to allow creation of moderator group and add users to moderator group and renamed to create_moderator.
+* Deprecated multiple management commands: dump_user_data, load_exam, load_question_xml, results2csv.
+* Changed the unit of time_between_attempts field within Quiz model from days to hours.
+* Fixed assignment upload feature.
+* Error output is displayed using Ajax instead of reloading the entire page.
+* Added Mathjax to the repository.
+* Added Yaksh logo on the website.
+* Changed travis build distribution from precise (Ubuntu 12.04 LTS) to trusty (Ubuntu 14.04 LTS).
+* Fixed a bug that allowed creation of multiple answerpapers.
+* Added MCQ/MCC Shuffle testcases feature for question paper.
+* Added Arrange in Correct Order question type feature.
+* Added a feature to create a course with lessons, quizzes and exercises.
+* Fixed a bug where a oauth users' email is not verified.
+* Added a feature to show per student course completion status.
+* Fixed a bug where a moderator could change question paper of other moderator.
+* Fixed a bug where a teacher could not access question paper for a course.
+* Fixed a bug where a teacher could become the course creator while editing a course.
+* Updated clone course feature to create copy of course, lessons, quizzes and learning modules.
+* Changed Student dashboard to show the days remaining for a course to start.
+* Changed UI for student and moderator dashboard.
+* Updated documentation
+* Added a feature where a moderator can create exercises.
+* Added grading feature which allows a moderator to create a grading system and apply it for a course.
+
+
 === 0.7.0 (15-11-2017) ===
 
 * Simplified Standard I/O type question error output.
@@ -18,8 +61,8 @@
 * Added a Datetimepicker to edit course Page.
 * Added invoke script for quickstart and docker deployment.
 * Added the facility to send mails to all students enrolled in a course.
-* Fixed a bug that would cause issue during email activation key check
-* Added comprehensive tests for views.py
+* Fixed a bug that would cause issue during email activation key check.
+* Added comprehensive tests for views.py.
 * Fixed a bug that allowed moderators to set cyclic quiz prerequisites in a course.
 * Added a feature that redirects to edit profile page if user has no profile.
 * Fixed a bug that would allow enrolled students to attempt quizzes for deactivated courses.
@@ -42,7 +85,7 @@
 === 0.6.0 (11-05-2017) ===
 
 * Added a course code field that can be used to search a course.
-* Updated the documentation to describe the course code feature
+* Updated the documentation to describe the course code feature.
 * Fixed a bug that prevented redirection based on 'next' parameter after login.
 * Fixed a bug that littered residual system processes created by code evaluators.
 * Added the facility to allow moderators to see and download uploaded assignments.
@@ -65,4 +108,3 @@
 * Fixed a bug that displayed the elements of stdout testcase output as unicode.
 * Fixed a bug that prevented users from logging in using Google OAuth.
 * Added coverage reports to travis.yml.
-

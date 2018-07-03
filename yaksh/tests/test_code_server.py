@@ -106,6 +106,39 @@ class TestCodeServer(unittest.TestCase):
         self.assertFalse(data['success'])
         self.assertTrue('AssertionError' in data['error'][0]['exception'])
 
+    def test_question_with_no_testcases(self):
+        # Given
+        testdata = {
+            'metadata': {
+                'user_answer': 'def f(): return 1',
+                'language': 'python',
+                'partial_grading': False
+            },
+            'test_case_data': []
+        }
+
+        # When
+        submit(self.url, '0', json.dumps(testdata), '')
+        result = get_result(self.url, '0', block=True)
+
+        # Then
+        data = json.loads(result.get('result'))
+        self.assertFalse(data['success'])
+
+        # With correct answer and test case
+        testdata["metadata"]["user_answer"] = 'def f(): return 2'
+        testdata["test_case_data"] = [{'test_case': 'assert f() == 2',
+                                       'test_case_type': 'standardtestcase',
+                                       'weight': 0.0
+                                       }]
+        # When
+        submit(self.url, '0', json.dumps(testdata), '')
+        result = get_result(self.url, '0', block=True)
+
+        # Then
+        data = json.loads(result.get('result'))
+        self.assertTrue(data['success'])
+
     def test_multiple_simultaneous_hits(self):
         # Given
         results = Queue()

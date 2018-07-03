@@ -17,103 +17,118 @@
         <center>{{ msg }}</center>
     </div>
 {% endif %}
-{% if learning_modules %}
-    {% for module in learning_modules %}
-        <div class="row well">
+<b>Grade: {% if grade %} {{ grade }} {% else %} Will be available once the course is complete {% endif %}</b>
+{% if modules %}
+    <br><br>
+    <strong>Overall Course Progress</strong>
+    <div class="progress">
+        {% if course_percentage <= 50 %}
+            <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="40"
+            aria-valuemin="0" aria-valuemax="100" style="width:{{course_percentage}}%">
+        {% elif course_percentage <= 75 %}
+            <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="40"
+            aria-valuemin="0" aria-valuemax="100" style="width:{{course_percentage}}%">
+        {% else %}
+            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40"
+            aria-valuemin="0" aria-valuemax="100" style="width:{{course_percentage}}%">
+        {% endif %}
+        <b style="color: black;">{{course_percentage}}% Completed</b>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel panel-body">
             <table class="table">
-                <tr>
-                <td>
-                <a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}">
-                {{module.name|title}}</a>
-                </td>
-                <td>
-                <span class="glyphicon glyphicon-chevron-down" id="learning_units{{module.id}}{{course.id}}_down">
-                </span>
-                <span class="glyphicon glyphicon-chevron-up" id="learning_units{{module.id}}{{course.id}}_up" style="display: none;"></span>
-                <a data-toggle="collapse" data-target="#learning_units{{module.id}}{{course.id}}" onclick="view_unit('learning_units{{module.id}}{{course.id}}');">
-                View Lessons/Quizzes/Exercises</a>
-                </td>
-                <td>
-                {% get_module_status user module course as module_status %}
-                Status:
-                {% if module_status == "completed" %}
-                <span class="label label-success">
-                    {{module_status|title}}
-                </span>
-                {% elif module_status == "inprogress" %}
-                <span class="label label-info">
-                    {{module_status|title}}
-                </span>
-                {% else %}
-                <span class="label label-warning">
-                    {{module_status|title}}
-                </span>
-                {% endif %}
-                </td>
-                </tr>
+                {% for module, percent in modules %}
+                    <tr>
+                        <td width="25%">
+                            <a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}">
+                            {{module.name|title}}</a>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-chevron-down" id="learning_units{{module.id}}{{course.id}}_down">
+                            </span>
+                            <span class="glyphicon glyphicon-chevron-up" id="learning_units{{module.id}}{{course.id}}_up" style="display: none;">
+                            </span>
+                            <a data-toggle="collapse" data-target="#learning_units{{module.id}}{{course.id}}" onclick="view_unit('learning_units{{module.id}}{{course.id}}');">
+                            View Lessons/Quizzes/Exercises</a>
+                            <div id="learning_units{{module.id}}{{course.id}}" class="collapse">
+                                <table class="table table-bordered">
+                                <tr>
+                                    <th>Lesson/Quiz/Exercise</th>
+                                    <th>Status</th>
+                                    <th>Type</th>
+                                    <th>View AnswerPaper</th>
+                                </tr>
+                                {% for unit in module.get_learning_units %}
+                                <tr>
+                                    <td>
+                                    {% if unit.type == "quiz" %}
+                                        {{unit.quiz.description}}
+                                    {% else %}
+                                        {{unit.lesson.name}}
+                                    {% endif %}
+                                    </td>
+                                    <td>
+                                    {% get_unit_status course module unit user as status %}
+                                    {% if status == "completed" %}
+                                        <span class="label label-success">{{status|title}}
+                                        </span>
+                                    {% elif status == "inprogress" %}
+                                        <span class="label label-info">{{status|title}}
+                                        </span>
+                                    {% else %}
+                                        <span class="label label-warning">{{status|title}}
+                                        </span>
+                                    {% endif %}
+                                    </td>
+                                    <td>
+                                    {% if unit.type == "quiz" %}
+                                        {% if unit.quiz.is_exercise %}
+                                            Exercise
+                                        {% else %}
+                                            Quiz
+                                        {% endif %}
+                                    {% else %}
+                                        Lesson
+                                    {% endif %}
+                                    </td>
+                                    <td>
+                                    {% if unit.type == "quiz" %}
+                                        {% if unit.quiz.view_answerpaper %}
+                                            <a href="{{ URL_ROOT }}/exam/view_answerpaper/{{ unit.quiz.questionpaper_set.get.id }}/{{course.id}}">
+                                            <i class="fa fa-eye" aria-hidden="true"></i> Can View </a>
+                                        {% else %}
+                                            <a>
+                                            <i class="fa fa-eye-slash" aria-hidden="true">
+                                            </i> Cannot view now </a>
+                                        {% endif %}
+                                    {% else %}
+                                        ------
+                                    {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                </table>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="progress">
+                                {% if percent <= 50 %}
+                                <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                {% elif percent <= 75 %}
+                                <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                {% else %}
+                                <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                {% endif %}
+                                <b style="color: black;">{{percent}}% Completed</b>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
             </table>
         </div>
-        <div id="learning_units{{module.id}}{{course.id}}" class="collapse">
-        <table class="table">
-            <tr>
-            <th>Lesson/Quiz/Exercise</th>
-            <th>Status</th>
-            <th>Type</th>
-            <th>View AnswerPaper</th>
-            </tr>
-            {% for unit in module.get_learning_units %}
-            <tr>
-            <ul class="inputs-list">
-                <td>
-                {% if unit.type == "quiz" %}
-                    {{unit.quiz.description}}
-                {% else %}
-                    {{unit.lesson.name}}
-                {% endif %}
-                </td>
-                <td>
-                {% get_unit_status course module unit user as status %}
-                {% if status == "completed" %}
-                    <span class="label label-success">{{status|title}}
-                    </span>
-                {% elif status == "inprogress" %}
-                    <span class="label label-info">{{status|title}}
-                    </span>
-                {% else %}
-                    <span class="label label-warning">{{status|title}}
-                    </span>
-                {% endif %}
-                </td>
-                <td>
-                {% if unit.type == "quiz" %}
-                    {% if unit.quiz.is_exercise %}
-                        Exercise
-                    {% else %}
-                        Quiz
-                    {% endif %}
-                {% else %}
-                    Lesson
-                {% endif %}
-                </td>
-                <td>
-                {% if unit.type == "quiz" %}
-                    {% if unit.quiz.view_answerpaper %}
-                        <a href="{{ URL_ROOT }}/exam/view_answerpaper/{{ unit.quiz.questionpaper_set.get.id }}/{{course.id}}"><i class="fa fa-eye" aria-hidden="true"></i> Can View </a>
-                    {% else %}
-                        <a>
-                        <i class="fa fa-eye-slash" aria-hidden="true">
-                        </i> Cannot view now </a>
-                    {% endif %}
-                {% else %}
-                    ------
-                {% endif %}
-                </td>
-            </ul>
-            </tr>
-            {% endfor %}
-        </table>
-        </div>
-    {% endfor %}
+    </div>
 {% else %}
     <h3> No lectures found </h3>
 {% endif %}

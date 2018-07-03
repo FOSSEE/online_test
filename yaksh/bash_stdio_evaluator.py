@@ -4,7 +4,7 @@ import subprocess
 import os
 from os.path import isfile
 
-#local imports
+# local imports
 from .stdio_evaluator import StdIOEvaluator
 from .file_utils import copy_files, delete_files
 
@@ -22,7 +22,7 @@ class BashStdIOEvaluator(StdIOEvaluator):
         # Set test case data values
         self.expected_input = test_case_data.get('expected_input')
         self.expected_output = test_case_data.get('expected_output')
-        self.weight = test_case_data.get('weight') 
+        self.weight = test_case_data.get('weight')
 
     def teardown(self):
         os.remove(self.submit_code_path)
@@ -36,7 +36,6 @@ class BashStdIOEvaluator(StdIOEvaluator):
         if not isfile(self.submit_code_path):
             msg = "No file at %s or Incorrect path" % self.submit_code_path
             return False, msg
-        user_code_directory = os.getcwd() + '/'
         self.user_answer = self.user_answer.replace("\r", "")
         self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
 

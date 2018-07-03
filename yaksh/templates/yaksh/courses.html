@@ -4,6 +4,7 @@
 {% block script %}
 <script>
     $(document).ready(function(){
+        $('[data-toggle="tooltip"]').tooltip();
         $("#created_courses").toggle();
         $("#link_created_courses").click(function() {
             if ($("#allotted_courses").is(":visible")){
@@ -23,6 +24,14 @@
         });
     });
 </script>
+{% endblock %}
+{% block css %}
+<style>
+    .test + .tooltip.top > .tooltip-inner {
+      padding: 15px;
+      font-size: 12px;
+    }
+</style>
 {% endblock %}
 {% block content %}
 <div class="row">
@@ -46,6 +55,10 @@
             <li>
                 <a href="{{URL_ROOT}}/exam/manage/courses/all_learning_module">
                 Add/View Modules</a>
+            </li>
+            <li>
+                <a href="{% url 'grades:grading_systems'%}"> 
+                Add/View Grading Systems </a>
             </li>
         </ul>
     </div>
@@ -99,7 +112,8 @@
         <br><br>
         <ul>
             <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course.id}}/">Design Course
+                <a href="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course.id}}/" data-toggle="tooltip" title="Add/Remove/Change course modules" data-placement="top">
+                    Design Course
                 </a>
             </li>
             <br>
@@ -123,7 +137,7 @@
             </li>
             <br>
             <li>
-                <a href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/">
+                <a class="test" href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/" data-toggle="tooltip" title="Creates Copy of selected Course as well as its Modules, Lessons/Quizzes" data-placement="top">
                 Clone Course</a>
             </li>
         </ul>
@@ -259,7 +273,7 @@
             </li>
             <br>
             <li>
-                <a href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/">
+                <a class="test" href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/" data-toggle="tooltip" title="Creates Copy of selected Course as well as its Modules, Lessons/Quizzes" data-placement="top">
                 Clone Course</a>
             </li>
         </ul>
@@ -358,6 +372,9 @@
             {% if quiz.questionpaper_set.get %}
                 <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/">
                 Question Paper for {{ quiz.description }}</a>
+                <a href="{{URL_ROOT}}/exam/manage/preview_questionpaper/{{quiz.questionpaper_set.get.id}}" class="btn btn-primary active btn-xs" target="_blank">
+                        View
+                </a>
                 <br>
             {% else %}
                 <p>No Question Paper 

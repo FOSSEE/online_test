@@ -6,6 +6,7 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
+
 def get_version():
     import os
     data = {}
@@ -14,7 +15,7 @@ def get_version():
     return data.get('__version__')
 
 install_requires = [
-    'django==1.9.5',
+    'django==1.10',
     'django-taggit==0.18.1',
     'pytz==2016.4',
     'python-social-auth==0.2.19',
@@ -24,6 +25,7 @@ install_requires = [
     'invoke==0.21.0',
     'six',
     'requests',
+    'markdown==2.6.9',
 ]
 
 setup(

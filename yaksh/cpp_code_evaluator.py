@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
-import traceback
-import pwd
 import os
-from os.path import join, isfile
+from os.path import isfile
 import subprocess
 
 # Local imports
@@ -51,12 +49,13 @@ class CppCodeEvaluator(BaseEvaluator):
         return user_output_path, ref_output_path
 
     def get_commands(self, clean_ref_code_path, user_output_path,
-                                 ref_output_path):
-        compile_command = 'g++  {0} -c -o {1}'.format(self.submit_code_path,
-                                                 user_output_path)
-        compile_main = 'g++ {0} {1} -o {2}'.format(clean_ref_code_path,
-                                                user_output_path,
-                                                ref_output_path)
+                     ref_output_path):
+        compile_command = 'g++  {0} -c -o {1}'.format(
+            self.submit_code_path, user_output_path)
+        compile_main = 'g++ {0} {1} -o {2}'.format(
+            clean_ref_code_path, user_output_path,
+            ref_output_path
+            )
         return compile_command, compile_main
 
     def compile_code(self):
@@ -65,7 +64,8 @@ class CppCodeEvaluator(BaseEvaluator):
         else:
             self.submit_code_path = self.create_submit_code_file('submit.c')
             self.test_code_path = self.create_submit_code_file('main.c')
-            self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
+            self.write_to_submit_code_file(self.submit_code_path,
+                                           self.user_answer)
             self.write_to_submit_code_file(self.test_code_path, self.test_case)
             clean_ref_code_path = self.test_code_path
             if self.file_paths:
@@ -129,13 +129,12 @@ class CppCodeEvaluator(BaseEvaluator):
         if stdnt_stderr == '':
             proc, main_out, main_err = self.compiled_test_code
             main_err = self._remove_null_substitute_char(main_err)
-
             if main_err == '':
                 ret = self._run_command([self.ref_output_path],
-                    stdin=None,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE
-                )
+                                        stdin=None,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE
+                                        )
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
                     success, err = True, None
@@ -143,7 +142,7 @@ class CppCodeEvaluator(BaseEvaluator):
                 else:
                     err = "{0} \n {1}".format(stdout, stderr)
             else:
-                err = "Error:"
+                err = "Test case Error:"
                 try:
                     error_lines = main_err.splitlines()
                     for e in error_lines:
@@ -151,7 +150,7 @@ class CppCodeEvaluator(BaseEvaluator):
                             err = "{0} \n {1}".format(err, e.split(":", 1)[1])
                         else:
                             err = "{0} \n {1}".format(err, e)
-                except:
+                except Exception:
                         err = "{0} \n {1}".format(err, main_err)
         else:
             err = "Compilation Error:"
@@ -162,7 +161,7 @@ class CppCodeEvaluator(BaseEvaluator):
                         err = "{0} \n {1}".format(err, e.split(":", 1)[1])
                     else:
                         err = "{0} \n {1}".format(err, e)
-            except:
+            except Exception:
                 err = "{0} \n {1}".format(err, stdnt_stderr)
 
         return success, err, mark_fraction

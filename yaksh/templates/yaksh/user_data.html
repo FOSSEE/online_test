@@ -74,13 +74,19 @@ User IP address: {{ paper.user_ip }}
                         {% endif %}
                     {% endfor %}
 
-            {% elif question.type == "integer" or question.type == "string"
-               or question.type == "float" %}
+            {% elif question.type == "integer" or question.type == "string" or question.type == "float" %}
                 <h5> <u>Correct Answer:</u></h5>
                     {% for testcase in question.get_test_cases %}
                     <strong>{{ testcase.correct|safe }}</strong>
                     {% endfor %}
 
+            {% elif question.type == "arrange" %}
+              <h5> <u>Correct Order:</u></h5>
+              <div class="list-group" >
+              {% for testcase in question.get_test_cases %}
+                    <li class="list-group-item"><strong>{{ testcase.options|safe }}</strong></li>
+              {% endfor %}
+              </div>
 
             {% else %}
                 <h5> <u>Test cases: </u></h5>
@@ -100,6 +106,7 @@ User IP address: {{ paper.user_ip }}
         {% endif %}
             <div class="panel-body">
                 <h5><u>Student answer:</u></h5>
+
         {% if question.type == "mcc"%}
         <div class="well well-sm">
         {% for testcases in question.get_test_cases %}
@@ -108,6 +115,7 @@ User IP address: {{ paper.user_ip }}
         {% endif %}
         {% endfor %}
         </div>
+
         {% elif question.type == "mcq"%}
         <div class="well well-sm">
         {% for testcases in question.get_test_cases %}
@@ -116,6 +124,15 @@ User IP address: {{ paper.user_ip }}
         {% endif %}
         {% endfor %}
         </div>
+
+        {% elif question.type == "arrange"%}
+        <div class="well well-sm">
+          {% get_answer_for_arrange_options answers.0.answer question as tc_list %}
+        {% for testcases in tc_list %}
+         <li>{{ testcases.options.strip|safe }}</li>
+        {% endfor %}
+        </div>
+
         {%else%}
                  <div class="well well-sm">
                  {{ answers.0.answer|safe }}
