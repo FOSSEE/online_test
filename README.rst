@@ -151,12 +151,25 @@ Short instructions
             url(r'^grades/', include('grades.urls', namespace='grades', app_name='grades')),
         ]
 
-5. You can create a moderator using the following command;
+5. You can create a moderator using the following command:
 
    ::
+
         $ python manage.py create_moderator <username>
 
-6. Visit ``http://localhost:8000/exam``
+6. You need to run the following command, for yaksh to do evaluation:
+
+   ::
+
+        $ sudo python -m yaksh.code_server
+
+Note: If you are using a python virtualenv then run the above command as following:
+
+    ::
+
+        $ sudo <path-to-your-created-virtualenv>/bin/python -m yaksh.code_server
+
+7. Visit ``http://localhost:8000/exam``
 
 History
 =======

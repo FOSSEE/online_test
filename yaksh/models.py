@@ -1603,7 +1603,9 @@ class AnswerPaperManager(models.Manager):
                 course_id=course_id
             ).order_by("-attempt_number")
         data = {}
-        profile = user.yaksh_profile if hasattr(user, 'yaksh_profile') else None
+        profile = None
+        if hasattr(user, 'yaksh_profile'):
+            profile = user.yaksh_profile
         data['user'] = user
         data['profile'] = profile
         data['papers'] = papers

@@ -2278,7 +2278,8 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(settings.FIXTURES_DIR_PATH, "users_correct.csv")
+        csv_file_path = os.path.join(settings.FIXTURES_DIR_PATH,
+                                     "users_correct.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
 
@@ -2330,7 +2331,8 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        csv_file_path = os.path.join(settings.FIXTURES_DIR_PATH, "demo_questions.zip")
+        csv_file_path = os.path.join(settings.FIXTURES_DIR_PATH,
+                                     "demo_questions.zip")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
         message = "The file uploaded is not a CSV file."
