@@ -5,8 +5,7 @@ from grades.models import GradingSystem
 
 
 def setUpModule():
-    user = User.objects.create_user(username='grades_user',
-                                    password='grades_user')
+    User.objects.create_user(username='grades_user', password='grades_user')
 
 
 def tearDownModule():
@@ -73,7 +72,7 @@ class AddGradingSystemTest(TestCase):
                 'graderange_set-MAX_NUM_FORMS': ['1000'], 'add': ['Add'],
                 'graderange_set-INITIAL_FORMS': ['0']}
         # When
-        response = self.client.post(reverse('grades:add_grade'), data)
+        self.client.post(reverse('grades:add_grade'), data)
         # Then
         grading_systems = GradingSystem.objects.filter(name='new_sys')
         self.assertEqual(len(grading_systems), 1)
@@ -98,8 +97,8 @@ class AddGradingSystemTest(TestCase):
                 'graderange_set-0-grade': ['F'],
                 'graderange_set-INITIAL_FORMS': ['0'], 'save': ['Save']}
         # When
-        response = self.client.post(reverse('grades:edit_grade',
-                                    kwargs={'system_id': 2}), data)
+        self.client.post(reverse('grades:edit_grade',
+                                 kwargs={'system_id': 2}), data)
         # Then
         ranges = grading_system.graderange_set.all()
         self.assertEqual(len(ranges), 1)

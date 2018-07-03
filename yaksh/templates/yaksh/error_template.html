@@ -3,7 +3,6 @@
 {% endblock %}
 
 {% load custom_filters %}
-
 {% if error_message %}
     {% for error in error_message %}
 
@@ -35,6 +34,7 @@
           </tr>
           <tr>
             {% if error.traceback %}
+            <input type="hidden" id="err_lineno" value="{{error.line_no}}">
             <td><b>Full Traceback: </b></td>
             <td><pre>{{error.traceback}}</pre></td>
             {% endif %}

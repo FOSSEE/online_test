@@ -75,6 +75,24 @@ function response_handler(method_type, content_type, data, uid){
           var error_output = document.getElementById("error_panel");
           error_output.innerHTML = res.error;
           focus_on_error(error_output);
+          if(global_editor.editor){
+            err_lineno = $("#err_lineno").val();
+            if(marker){
+              marker.clear();
+            }
+            if(err_lineno){
+              var lineno = parseInt(err_lineno) - 1;
+              var editor = global_editor.editor;
+              var line_length = editor.getLine(lineno).length;
+              marker = editor.markText({line: lineno, ch: 0}, {line: lineno, ch: line_length},
+                                       {className: "activeline", clearOnEnter:true});
+              }
+            else{
+              if(marker){
+                marker.clear();
+              }
+            }
+          }
         }
     } else {
         reset_values();
@@ -125,6 +143,8 @@ function ajax_check_code(url, method_type, data_type, data, uid)
 
 var global_editor = {};
 var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+var err_lineno;
+var marker;
 $(document).ready(function(){
   if(is_exercise == "True" && can_skip == "False"){
       setTimeout(function() {show_solution();}, delay_time*1000);
@@ -148,6 +168,7 @@ $(document).ready(function(){
       mode: mode_dict[lang],
       gutter: true,
       lineNumbers: true,
+      styleSelectedText: true,
       onChange: function (instance, changes) {
           render();
       }

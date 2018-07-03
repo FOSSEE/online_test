@@ -3,6 +3,13 @@
 {% block pagetitle %}<img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_text.png"
 width="80" alt="YAKSH"></img>{% endblock %}
 {% block content %}
+{% if module_id and not paper.question_paper.quiz.is_trial %}
+<center>
+    <div class="alert alert-info">
+        Note:- Please Click on the Next button to submit the quiz. Please do not close the browser without clicking Next.
+    </div>
+</center>
+{% endif %}
 {% csrf_token %}
     {% if paper.questions_answered.all or paper.questions_unanswered.all %}
 <center><table class="table table-bordered" >
@@ -33,7 +40,7 @@ width="80" alt="YAKSH"></img>{% endblock %}
 	<center><h3>{{message}}</h3></center>
     <center>
     <br>
-    {% if module_id and not user == "moderator" %}
+    {% if module_id and not paper.question_paper.quiz.is_trial %}
         {% if first_unit %}
             <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}/1" class="btn btn-info" id="Next"> Next
                 <span class="glyphicon glyphicon-chevron-right">

@@ -6,11 +6,11 @@ import tempfile
 from psutil import Process
 from textwrap import dedent
 
-#Local Import
+# Local Import
 from yaksh import grader as gd
 from yaksh.grader import Grader
-from yaksh.scilab_code_evaluator import ScilabCodeEvaluator
 from yaksh.evaluator_tests.test_python_evaluation import EvaluatorBaseTest
+
 
 class ScilabEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
@@ -54,7 +54,7 @@ class ScilabEvaluationTestCases(EvaluatorBaseTest):
         self.file_paths = None
         gd.SERVER_TIMEOUT = 9
         self.timeout_msg = ("Code took more than {0} seconds to run. "
-                            "You probably have an infinite loop" 
+                            "You probably have an infinite loop"
                             " in your code.").format(gd.SERVER_TIMEOUT)
 
     def tearDown(self):
@@ -63,15 +63,14 @@ class ScilabEvaluationTestCases(EvaluatorBaseTest):
 
     def test_correct_answer(self):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
-                        "\n\tc=a+b;\nendfunction")
+                       "\n\tc=a+b;\nendfunction")
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'scilab'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         grader = Grader(self.in_dir)
@@ -81,15 +80,14 @@ class ScilabEvaluationTestCases(EvaluatorBaseTest):
 
     def test_error(self):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
-                        "\n\tc=a+b;\ndis(\tendfunction")
+                       "\n\tc=a+b;\ndis(\tendfunction")
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'scilab'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         grader = Grader(self.in_dir)
@@ -98,18 +96,16 @@ class ScilabEvaluationTestCases(EvaluatorBaseTest):
         self.assertFalse(result.get("success"))
         self.assert_correct_output('error', result.get("error"))
 
-
     def test_incorrect_answer(self):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
-                        "\n\tc=a-b;\nendfunction")
+                       "\n\tc=a-b;\nendfunction")
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'scilab'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         grader = Grader(self.in_dir)
@@ -122,15 +118,14 @@ class ScilabEvaluationTestCases(EvaluatorBaseTest):
 
     def test_infinite_loop(self):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
-                        "\n\tc=a;\nwhile(1==1)\nend\nendfunction")
+                       "\n\tc=a;\nwhile(1==1)\nend\nendfunction")
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'scilab'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         grader = Grader(self.in_dir)

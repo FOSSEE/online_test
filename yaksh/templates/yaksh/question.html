@@ -11,6 +11,10 @@
     .CodeMirror{
         border-style: groove;
     }
+    .activeline {
+        background: #FBC2C4 !important;
+        color: #8a1f11 !important;
+      }
 </style>
 {% endblock %}
 
@@ -221,7 +225,7 @@ question_type = "{{ question.type }}"
 
                      {% if question.type == "integer" %}
                      Enter Integer:<br/>
-                     <input autofocus name="answer" type="number" id="integer" value={{ last_attempt|safe }} />
+                     <input autofocus name="answer" type="number" id="integer" value="{{ last_attempt|safe }}" />
                      <br/><br/>
                      {% endif %}
 
@@ -233,7 +237,7 @@ question_type = "{{ question.type }}"
 
                      {% if question.type == "float" %}
                      Enter Decimal Value :<br/>
-                     <input autofocus name="answer" type="number" step="any" id="float" value={{ last_attempt|safe }} />
+                     <input autofocus name="answer" type="number" step="any" id="float" value="{{ last_attempt|safe }}" />
                      <br/><br/>
                      {% endif %}
 

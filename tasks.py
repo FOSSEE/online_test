@@ -22,25 +22,31 @@ def create_dir(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
+
 def remove_check_file(path):
     if os.path.isfile(path):
         os.remove(path)
+
 
 def remove_dir(path):
     if os.path.isdir(path):
         shutil.rmtree(path)
 
+
 def run_as(os_name):
-    if os_name.startswith('linux') or os_name == 'darwin' or os_name.startswith('freebsd'):
+    if (os_name.startswith('linux') or os_name == 'darwin' or
+            os_name.startswith('freebsd')):
         return 'sudo'
-    else: # For os_name = 'Win32'
+    else:  # For os_name = 'Win32'
         return None
+
 
 def get_cmd(run_as_cmd, base_cmd):
     if run_as_cmd:
         return '{0} {1}'.format(run_as_cmd, base_cmd)
     else:
         return base_cmd
+
 
 @task
 def setupdb(ctx):
@@ -49,21 +55,25 @@ def setupdb(ctx):
     ctx.run("python manage.py migrate")
     print("** Done! Migrations complete **")
 
+
 @task
 def loadfixtures(ctx):
     print("** Loading fixtures into database **")
     ctx.run("python manage.py loaddata demo_fixtures.json")
     print("** Done! Loaded fixtures into database **")
 
+
 @task(setupdb, loadfixtures)
 def serve(ctx):
     print("** Running the Django web server. Press Ctrl-C to Exit **")
     ctx.run("python manage.py runserver")
 
+
 @task
 def clean(ctx):
     print("** Discarding database **")
     remove_check_file(os.path.join(SCRIPT_DIR, 'db.sqlite3'))
+
 
 @task
 def getimage(ctx, image=SRC_IMAGE_NAME):
@@ -74,16 +84,21 @@ def getimage(ctx, image=SRC_IMAGE_NAME):
         ctx.run(cmd, hide=True)
     except invoke.exceptions.Failure:
         print("The docker image {0} does not exist locally".format(image))
-        print("\n** Pulling latest image <{0}> from docker hub **".format(image))
+        print("\n** Pulling latest image <{0}> from docker hub **".format(
+            image)
+        )
         base_cmd = "docker pull {0}".format(image)
         run_as_cmd = run_as(OS_NAME)
         cmd = get_cmd(run_as_cmd, base_cmd)
         ctx.run(cmd)
-        print("\n** Done! Successfully pulled latest image <{0}> **".format(image))
+        print("\n** Done! Successfully pulled latest image <{0}> **".format(
+            image)
+        )
+
 
 @task
 def start(ctx, ports=SERVER_POOL_PORT, image=SRC_IMAGE_NAME, unsafe=False,
-    version=3):
+          version=3):
     if unsafe:
         with ctx.cd(SCRIPT_DIR):
             print("** Initializing local code server **")
@@ -94,15 +109,16 @@ def start(ctx, ports=SERVER_POOL_PORT, image=SRC_IMAGE_NAME, unsafe=False,
             cmd = get_cmd(run_as_cmd, base_cmd)
             ctx.run(cmd)
     else:
-        cmd_params = {'ports': ports,
-            'image': SRC_IMAGE_NAME,
+        cmd_params = {
+            'ports': ports, 'image': SRC_IMAGE_NAME,
             'name': TARGET_CONTAINER_NAME,
             'vol_mount': os.path.join(SCRIPT_DIR, 'yaksh_data'),
             'command': 'sh {0}'.format(
-                os.path.join(SCRIPT_DIR,
-                'yaksh_data', 'yaksh', 'scripts', 'yaksh_script.sh')
-            )
-        }
+                os.path.join(
+                    SCRIPT_DIR,
+                    'yaksh_data', 'yaksh', 'scripts', 'yaksh_script.sh')
+                )
+            }
 
         remove_check_file(CHECK_FILE_PATH)
         getimage(ctx, image=SRC_IMAGE_NAME)
@@ -117,7 +133,8 @@ def start(ctx, ports=SERVER_POOL_PORT, image=SRC_IMAGE_NAME, unsafe=False,
         )
 
         copy_file(
-            os.path.join(SCRIPT_DIR, 'requirements', 'requirements-codeserver.txt'),
+            os.path.join(SCRIPT_DIR, 'requirements',
+                         'requirements-codeserver.txt'),
             os.path.join(SCRIPT_DIR, 'yaksh_data')
         )
 
@@ -132,7 +149,8 @@ def start(ctx, ports=SERVER_POOL_PORT, image=SRC_IMAGE_NAME, unsafe=False,
         ctx.run(cmd)
 
         while not os.path.isfile(CHECK_FILE_PATH):
-            print("** Checking code server status. Press Ctrl-C to exit **\r", end="")
+            print("** Checking code server status. Press Ctrl-C to exit **\r",
+                  end="")
         print("\n** Code server is up and running successfully **")
 
 
@@ -145,19 +163,22 @@ def stop(ctx, container=TARGET_CONTAINER_NAME, hide=True):
 
     remove_check_file(CHECK_FILE_PATH)
     if result.stdout:
-        print ("** Stopping the docker container <{0}> **".format(container))
+        print("** Stopping the docker container <{0}> **".format(container))
         base_stop_cmd = "docker stop {0}".format(container)
         cmd = get_cmd(run_as_cmd, base_stop_cmd)
         ctx.run(cmd)
-        print ("** Done! Stopped the docker container <{0}> **".format(container))
+        print("** Done! Stopped the docker container <{0}> **".format(
+              container))
 
-        print ("** Discarding the docker container <{0}> **".format(container))
+        print("** Discarding the docker container <{0}> **".format(container))
         base_rm_cmd = "docker rm {0}".format(container)
         cmd = get_cmd(run_as_cmd, base_rm_cmd)
         ctx.run(cmd)
-        print ("** Done! Discarded the docker container <{0}> **".format(container))
+        print("** Done! Discarded the docker container <{0}> **".format(
+            container))
     else:
         print("** Docker container <{0}> not found **".format(container))
+
 
 # Docker compose based deployment
 @task
@@ -171,15 +192,16 @@ def build(ctx):
 
     base_build_cmd = "docker-compose build --no-cache"
     cmd = get_cmd(run_as_cmd, base_build_cmd)
-    print ("** Building docker images **")
+    print("** Building docker images **")
     ctx.run(cmd)
-    print ("** Done! Built the docker images **")
+    print("** Done! Built the docker images **")
 
     base_build_cmd = "docker pull mariadb:10.2 "
     cmd = get_cmd(run_as_cmd, base_build_cmd)
-    print ("** Pulling maria-db base image **")
+    print("** Pulling maria-db base image **")
     ctx.run(cmd)
-    print ("** Done! Pulled maria-db base image **")
+    print("** Done! Pulled maria-db base image **")
+
 
 @task
 def begin(ctx):
@@ -188,7 +210,8 @@ def begin(ctx):
     run_as_cmd = run_as(OS_NAME)
     cmd = get_cmd(run_as_cmd, base_cmd)
     ctx.run(cmd)
-    print ("** Done! Initialized the docker containers **")
+    print("** Done! Initialized the docker containers **")
+
 
 @task
 def deploy(ctx, fixtures=False, static=True):
@@ -215,37 +238,42 @@ def deploy(ctx, fixtures=False, static=True):
         print("** Done! Loaded fixtures into database **")
 
     if static:
-        base_static_cmd = "docker exec -i yaksh_django python3 manage.py collectstatic"
+        base_static_cmd = "docker exec -i yaksh_django " \
+            "python3 manage.py collectstatic"
         cmd = get_cmd(run_as_cmd, base_static_cmd)
-        print ("** Setting up static assets **")
+        print("** Setting up static assets **")
         ctx.run(cmd)
-        print ("** Done! Set up static assets **")
+        print("** Done! Set up static assets **")
+
 
 @task
 def status(ctx):
     run_as_cmd = run_as(OS_NAME)
     base_cmd = "docker-compose ps"
     cmd = get_cmd(run_as_cmd, base_cmd)
-    print ("** Fetching container status **")
+    print("** Fetching container status **")
     ctx.run(cmd)
+
 
 @task
 def halt(ctx):
     run_as_cmd = run_as(OS_NAME)
     base_cmd = "docker-compose stop"
     cmd = get_cmd(run_as_cmd, base_cmd)
-    print ("** Stopping containers **")
+    print("** Stopping containers **")
     ctx.run(cmd)
-    print ("** Done! Stopped containers **")
+    print("** Done! Stopped containers **")
+
 
 @task
 def restart(ctx):
     run_as_cmd = run_as(OS_NAME)
     base_cmd = "docker-compose restart"
     cmd = get_cmd(run_as_cmd, base_cmd)
-    print ("** Restarting containers **")
+    print("** Restarting containers **")
     ctx.run(cmd)
-    print ("** Done! Restarted containers **")
+    print("** Done! Restarted containers **")
+
 
 @task(halt)
 def remove(ctx):
@@ -253,7 +281,7 @@ def remove(ctx):
     base_cmd = "docker-compose rm --force"
     cmd = get_cmd(run_as_cmd, base_cmd)
     sql_dir = os.path.join(SCRIPT_DIR, 'docker', 'mysql')
-    print ("** Removing containers **")
+    print("** Removing containers **")
     remove_dir(sql_dir)
     ctx.run(cmd)
-    print ("** Done! Removed containers **")
+    print("** Done! Removed containers **")

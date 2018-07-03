@@ -15,7 +15,7 @@ def get_version():
     return data.get('__version__')
 
 install_requires = [
-    'django==1.9.5',
+    'django==1.10',
     'django-taggit==0.18.1',
     'pytz==2016.4',
     'python-social-auth==0.2.19',

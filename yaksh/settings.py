@@ -26,4 +26,3 @@ FIXTURES_DIR_PATH = os.path.join(YAKSH_BASE_DIR, 'yaksh', 'fixtures')
 # reason set this to the root you have to serve at.  In the above example
 # host.org/foo/exam set URL_ROOT='/foo'
 URL_ROOT = config('URL_ROOT', default='', cast=str)
-

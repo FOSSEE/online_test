@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
-import traceback
-import pwd
 import os
-from os.path import join, isfile
-from os.path import isdir, dirname, abspath, join, isfile, exists
+from os.path import abspath, exists
 import subprocess
 import stat
 import signal
 
 
 # Local imports
-from .grader import MY_DIR, TimeoutException
+from .grader import TimeoutException
+
 
 class BaseEvaluator(object):
-    """Base Evaluator class containing generic attributes and callable methods"""
+    """Base Evaluator class containing generic attributes
+        and callable methods"""
 
     def __init__(self):
         pass
@@ -31,7 +30,8 @@ class BaseEvaluator(object):
         stdout and stderr.
         """
         try:
-            proc = subprocess.Popen(cmd_args,preexec_fn=os.setpgrp, *args, **kw)
+            proc = subprocess.Popen(cmd_args,
+                                    preexec_fn=os.setpgrp, *args, **kw)
             stdout, stderr = proc.communicate()
         except TimeoutException:
             # Runaway code, so kill it.
@@ -64,6 +64,6 @@ class BaseEvaluator(object):
         submit_f.close()
 
     def _set_file_as_executable(self, fname):
-        os.chmod(fname,  stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
-                 | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
-                 | stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH)
+        os.chmod(fname, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR |
+                 stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP | stat.S_IROTH |
+                 stat.S_IWOTH | stat.S_IXOTH)

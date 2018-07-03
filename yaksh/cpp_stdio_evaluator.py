@@ -4,7 +4,7 @@ import subprocess
 import os
 from os.path import isfile
 
-#Local imports
+# Local imports
 from .stdio_evaluator import StdIOEvaluator
 from .file_utils import copy_files, delete_files
 
@@ -22,12 +22,17 @@ class CppStdIOEvaluator(StdIOEvaluator):
         # Set test case data values
         self.expected_input = test_case_data.get('expected_input')
         self.expected_output = test_case_data.get('expected_output')
-        self.weight = test_case_data.get('weight') 
+        self.weight = test_case_data.get('weight')
 
     def teardown(self):
-        os.remove(self.submit_code_path)
+        if os.path.exists(self.submit_code_path):
+            os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
+        if os.path.exists(self.ref_output_path):
+            os.remove(self.ref_output_path)
+        if os.path.exists(self.user_output_path):
+            os.remove(self.user_output_path)
 
     def set_file_paths(self):
         user_output_path = os.getcwd() + '/output_file'
@@ -44,7 +49,7 @@ class CppStdIOEvaluator(StdIOEvaluator):
     def compile_code(self):
         self.submit_code_path = self.create_submit_code_file('submit.c')
         if self.file_paths:
-            self.files = copy_files(file_paths)
+            self.files = copy_files(self.file_paths)
         if not isfile(self.submit_code_path):
             msg = "No file at %s or Incorrect path" % self.submit_code_path
             return False, msg
@@ -77,31 +82,17 @@ class CppStdIOEvaluator(StdIOEvaluator):
         if stdnt_stderr == '':
             proc, main_out, main_err = self.compiled_test_code
             main_err = self._remove_null_substitute_char(main_err)
-            if main_err == '':
-                proc = subprocess.Popen("./executable",
-                                        shell=True,
-                                        stdin=subprocess.PIPE,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE,
-                                        preexec_fn=os.setpgrp
-                                        )
-                success, err = self.evaluate_stdio(self.user_answer, proc,
-                                                   self.expected_input,
-                                                   self.expected_output
-                                                   )
-                os.remove(self.ref_output_path)
-            else:
-                err = "Error:"
-                try:
-                    error_lines = main_err.splitlines()
-                    for e in error_lines:
-                        if ':' in e:
-                            err = err + "\n" + e.split(":", 1)[1]
-                        else:
-                            err = err + "\n" + e
-                except:
-                        err = err + "\n" + main_err
-            os.remove(self.user_output_path)
+            proc = subprocess.Popen("./executable",
+                                    shell=True,
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    preexec_fn=os.setpgrp
+                                    )
+            success, err = self.evaluate_stdio(self.user_answer, proc,
+                                               self.expected_input,
+                                               self.expected_output
+                                               )
         else:
             err = "Compilation Error:"
             try:
@@ -111,7 +102,7 @@ class CppStdIOEvaluator(StdIOEvaluator):
                         err = err + "\n" + e.split(":", 1)[1]
                     else:
                         err = err + "\n" + e
-            except:
+            except Exception:
                 err = err + "\n" + stdnt_stderr
         mark_fraction = 1.0 if self.partial_grading and success else 0.0
         return success, err, mark_fraction

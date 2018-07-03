@@ -8,8 +8,6 @@ from psutil import Process
 
 # Local import
 from yaksh.grader import Grader
-from yaksh.cpp_code_evaluator import CppCodeEvaluator
-from yaksh.cpp_stdio_evaluator import CppStdIOEvaluator
 from yaksh.evaluator_tests.test_python_evaluation import EvaluatorBaseTest
 from yaksh.code_server_settings import SERVER_TIMEOUT
 
@@ -60,8 +58,8 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                                 }]
         self.in_dir = tmp_in_dir_path
         self.timeout_msg = ("Code took more than {0} seconds to run. "
-            "You probably have an infinite loop in your"
-            " code.").format(SERVER_TIMEOUT)
+                            "You probably have an infinite loop in your"
+                            " code.").format(SERVER_TIMEOUT)
         self.file_paths = None
 
     def tearDown(self):
@@ -77,8 +75,7 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -97,8 +94,7 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -120,8 +116,7 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -141,8 +136,7 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -211,8 +205,7 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -221,6 +214,71 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertTrue(result.get('success'))
+
+    def test_incorrect_testcase(self):
+        # Given
+        self.tc_data = dedent("""
+            #include <stdio.h>
+            #include <stdlib.h>
+
+            extern int add(int, int);
+
+            template <class T>
+
+            void check(T expect, T result)
+            {
+                if (expect == result)
+                {
+                printf("Correct: Expected %d got %d ",expect,result);
+                }
+                else
+                {
+                printf("Incorrect: Expected %d got %d ",expect,result);
+                exit (1);
+               }
+            }
+
+            int main(void)
+            {
+                int result;
+                result = add(0,0);
+                printf("Input submitted to the function: 0, 0");
+                check(0, result);
+                result = add(2,3);
+                printf("Input submitted to the function: 2 3");
+                check(5,result)
+                printf("All Correct");
+                return 0;
+            }
+            """)
+        user_answer = dedent("""\
+                        int add(int a, int b)
+                        {
+                        return a+b;
+                        }""")
+        self.test_case_data = [{"test_case": self.tc_data,
+                                "test_case_type": "standardtestcase",
+                                "weight": 0.0
+                                }]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'cpp'
+                    }, 'test_case_data': self.test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        err = result.get('error')[0]
+        lines_of_error = len(err.splitlines())
+        self.assertFalse(result.get('success'))
+        self.assertTrue(lines_of_error > 1)
+        self.assertIn("Test case Error", err)
 
 
 class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
@@ -254,8 +312,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -287,8 +344,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -318,8 +374,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -343,8 +398,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -372,8 +426,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -398,8 +451,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -434,8 +486,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -461,8 +512,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -495,8 +545,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -527,8 +576,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -553,8 +601,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -583,8 +630,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -610,8 +656,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -644,8 +689,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -654,6 +698,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertTrue(result.get('success'))
+
 
 class CppHookEvaluationTestCases(EvaluatorBaseTest):
 
@@ -664,8 +709,8 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
         tmp_in_dir_path = tempfile.mkdtemp()
         self.in_dir = tmp_in_dir_path
         self.timeout_msg = ("Code took more than {0} seconds to run. "
-            "You probably have an infinite loop in your"
-            " code.").format(SERVER_TIMEOUT)
+                            "You probably have an infinite loop in your"
+                            " code.").format(SERVER_TIMEOUT)
         self.file_paths = None
 
     def tearDown(self):
@@ -703,20 +748,17 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-                            )
+                            """)
 
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code,"weight": 1.0
-                            }]
+                           "hook_code": hook_code, "weight": 1.0}]
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -744,11 +786,11 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
                                 def _run_command(cmd):
-                                    proc = subprocess.Popen("{}".format(cmd),
-                                                            shell=True,
-                                                            stdout=subprocess.PIPE,
-                                                            stderr=subprocess.PIPE
-                                                            )
+                                    proc = subprocess.Popen(
+                                        "{}".format(cmd), shell=True,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE
+                                        )
                                     stdout,stderr = proc.communicate()
                                     return stdout,stderr
                                 cmds = ["gcc Test.c", "./a.out"]
@@ -757,20 +799,17 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-                            )
+                            """)
 
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code,"weight": 1.0
-                            }]
+                           "hook_code": hook_code, "weight": 1.0}]
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -780,46 +819,47 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertFalse(result.get('success'))
         self.assert_correct_output('Incorrect Answer', result.get('error'))
-    
+
     def test_assert_with_hook(self):
         # Given
         user_answer = "int add(int a, int b)\n{return a+b;}"
 
-
         assert_test_case = dedent("""\
-                                  #include <stdio.h>
-                                  #include <stdlib.h>
+                          #include <stdio.h>
+                          #include <stdlib.h>
 
-                                  extern int add(int, int);
+                          extern int add(int, int);
 
-                                  template <class T>
+                          template <class T>
 
-                                  void check(T expect, T result)
-                                  {
-                                      if (expect == result)
-                                      {
-                                      printf("Correct: Expected %d got %d ",expect,result);
-                                      }
-                                      else
-                                      {
-                                      printf("Incorrect: Expected %d got %d ",expect,result);
-                                      exit (1);
-                                     }
-                                  }
+                          void check(T expect, T result)
+                          {
+                              if (expect == result)
+                              {
+                              printf("Correct: Expected %d got %d ",
+                                    expect,result);
+                              }
+                              else
+                              {
+                              printf("Incorrect: Expected %d got %d ",
+                                    expect,result);
+                              exit (1);
+                             }
+                          }
 
-                                  int main(void)
-                                  {
-                                      int result;
-                                      result = add(0,0);
-                                          printf("Input submitted to the function: 0, 0");
-                                      check(0, result);
-                                      result = add(2,3);
-                                          printf("Input submitted to the function: 2 3");
-                                      check(5,result);
-                                      printf("All Correct");
-                                      return 0;
-                                  }
-                                  """)
+                          int main(void)
+                          {
+                              int result;
+                              result = add(0,0);
+                                  printf("Input submitted 0, 0");
+                              check(0, result);
+                              result = add(2,3);
+                                  printf("Input submitted 2 3");
+                              check(5,result);
+                              printf("All Correct");
+                              return 0;
+                          }
+                          """)
 
         hook_code = dedent("""\
                             def check_answer(user_answer):
@@ -829,9 +869,7 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 if "return a+b;" in user_answer:
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-                            )
-
+                            """)
 
         test_case_data = [{"test_case_type": "standardtestcase",
                            "test_case": assert_test_case,
@@ -846,8 +884,7 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': True,
                     'language': 'cpp'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -867,7 +904,7 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 printf("Hello, world!");
                               }
                               """)
-        
+
         hook_code_1 = dedent("""\
                             def check_answer(user_answer):
                                 with open("Test.c", "w+") as f:
@@ -877,11 +914,11 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
                                 def _run_command(cmd):
-                                    proc = subprocess.Popen("{}".format(cmd),
-                                                            shell=True,
-                                                            stdout=subprocess.PIPE,
-                                                            stderr=subprocess.PIPE
-                                                            )
+                                    proc = subprocess.Popen(
+                                        "{}".format(cmd), shell=True,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE
+                                    )
                                     stdout,stderr = proc.communicate()
                                     return stdout,stderr
                                 cmds = ["gcc Test.c", "./a.out"]
@@ -890,8 +927,8 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-                            )
+                            """)
+
         hook_code_2 = dedent("""\
                             def check_answer(user_answer):
                                 success = False
@@ -900,10 +937,7 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 if 'printf("Hello, world!");' in user_answer:
                                     success, err, mark_fraction = True, "", 0.5
                                 return success, err, mark_fraction
-                            """
-                            )
-
-
+                            """)
 
         test_case_data = [{"test_case_type": "hooktestcase",
                            "hook_code": hook_code_1, 'weight': 1.0},
@@ -916,8 +950,7 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': True,
                     'language': 'cpp'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -927,7 +960,7 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertTrue(result.get('success'))
         self.assertEqual(result.get("weight"), 1.5)
-        
+
     def test_infinite_loop(self):
         # Given
         user_answer = dedent("""\
@@ -937,7 +970,7 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                              printf("abc");}
                              }""")
 
-        hook_code= dedent("""\
+        hook_code = dedent("""\
                             def check_answer(user_answer):
                                 with open("Test.c", "w+") as f:
                                     f.write(user_answer)
@@ -946,11 +979,11 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
                                 def _run_command(cmd):
-                                    proc = subprocess.Popen("{}".format(cmd),
-                                                            shell=True,
-                                                            stdout=subprocess.PIPE,
-                                                            stderr=subprocess.PIPE
-                                                            )
+                                    proc = subprocess.Popen(
+                                        "{}".format(cmd), shell=True,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE
+                                    )
                                     stdout,stderr = proc.communicate()
                                     return stdout,stderr
                                 cmds = ["gcc Test.c", "./a.out"]
@@ -959,12 +992,10 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                                 if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-                            )
-        
+                            """)
+
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code,"weight": 1.0
-                            }]
+                           "hook_code": hook_code, "weight": 1.0}]
 
         kwargs = {
                   'metadata': {
@@ -972,8 +1003,7 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
