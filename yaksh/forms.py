@@ -259,6 +259,7 @@ class QuestionFilterForm(forms.Form):
         self.fields['marks'] = forms.FloatField(
             widget=forms.Select(choices=points_options)
         )
+        self.fields['marks'].required = False
     language = forms.CharField(
         max_length=8, widget=forms.Select(choices=languages))
     question_type = forms.CharField(
