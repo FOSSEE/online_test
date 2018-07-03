@@ -38,6 +38,7 @@ class rubyCodeEvaluator(BaseEvaluator):
         self.submit_code_path = self.create_submit_code_file('submit.rb')
         submit_f = open(self.submit_code_path, 'w')
         submit_f.write(self.user_answer.lstrip())
+        submit_f.write('\n')
         submit_f.write(self.test_case.lstrip())
         submit_f.close()
         self.process = self._run_command(

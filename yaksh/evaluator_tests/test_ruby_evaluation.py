@@ -73,11 +73,7 @@ class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
 
     def test_incorrect_answer(self):
         # Given
-        user_answer = dedent("""
-        def add(a, b)
-          return a-b
-        end
-        """)
+        user_answer = "\ndef add(a,b)\n\treturn a-b\nend\n"
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -313,7 +309,6 @@ class RubyStdIOEvaluationTestCases(EvaluatorBaseTest):
         # Then
         lines_of_error = len(result.get('error')[0].get('error_line_numbers'))
         result_error = result.get('error')[0].get('error_msg')
-        print(lines_of_error, result_error)
         self.assertFalse(result.get('success'))
         self.assert_correct_output("Incorrect", result_error)
         self.assertTrue(lines_of_error > 0)
