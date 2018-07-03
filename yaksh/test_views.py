@@ -53,9 +53,11 @@ class TestUserRegistration(TestCase):
         self.assertEqual(self.registered_user.last_name, 'user1_l_name')
         self.assertEqual(self.registered_user.yaksh_profile.roll_number, '1')
         self.assertEqual(self.registered_user.yaksh_profile.institute,
-                        'demo_institute')
-        self.assertEqual(self.registered_user.yaksh_profile.department, 'demo_dept')
-        self.assertEqual(self.registered_user.yaksh_profile.position, 'student')
+                         'demo_institute')
+        self.assertEqual(self.registered_user.yaksh_profile.department,
+                         'demo_dept')
+        self.assertEqual(self.registered_user.yaksh_profile.position,
+                         'student')
         self.assertEqual(self.registered_user.yaksh_profile.timezone, 'UTC')
 
 
@@ -4057,7 +4059,8 @@ class TestShowQuestions(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        ques_file = os.path.join(settings.FIXTURES_DIR_PATH, "demo_questions.zip")
+        ques_file = os.path.join(settings.FIXTURES_DIR_PATH,
+                                 "demo_questions.zip")
         f = open(ques_file, 'rb')
         questions_file = SimpleUploadedFile(ques_file, f.read(),
                                             content_type="application/zip")

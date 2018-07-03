@@ -6,7 +6,7 @@ Yaksh
 To get an overview of the Yaksh interface please refer to the user documentation at `Yaksh Docs <http://yaksh.readthedocs.io>`_
 
 
-This is a Quickstart guide to help users setup a trial instance. If you wish to deploy Yaksh in a production environment here is a `Production Deployment Guide <https://github.com/FOSSEE/online\_test/blob/master/README\_production.rst>`_
+This is a Quickstart guide to help users setup a trial instance. If you wish to deploy Yaksh in a production environment here is a `Production Deployment Guide <https://github.com/FOSSEE/online_test/blob/master/README_production.rst>`_
 
 Introduction
 ^^^^^^^^^^^^
@@ -39,8 +39,11 @@ Pre-Requisites
 2. Ensure `pip <https://pip.pypa.io/en/latest/installing.html>`__ is
    installed.
 
-Installation
-^^^^^^^^^^^^
+You can install Yaksh as a project or an app.
+------------------------------------------------
+
+1. Yaksh Installation as a Project
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Install yaksh
 
@@ -118,6 +121,43 @@ Short instructions
 
    -  Admin - Username: admin \| Password: admin
 
+2. Yaksh Installation as a django-app
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. pip install git+https://github.com/FOSSEE/online_test
+
+2. Add following apps to the INSTALLED_APPS in the project settings:
+    - yaksh
+    - taggit
+    - grades
+    - social.apps.django_app.default
+
+3. On terminal, run the migrate command:
+
+   ::
+
+       $ python manage.py migrate
+
+4. Add following in the project urls.py
+
+   ::
+
+        from django.conf.urls import url, include
+
+        urlpattern += [
+            url(r'^exam/', include('yaksh.urls', namespace='yaksh', app_name='yaksh')),
+            url(r'^exam/reset/', include('yaksh.urls_password_reset')),
+            url(r'^', include('social.apps.django_app.urls', namespace='social')),
+            url(r'^grades/', include('grades.urls', namespace='grades', app_name='grades')),
+        ]
+
+5. You can create a moderator using the following command;
+
+   ::
+        $ python manage.py create_moderator <username>
+
+6. Visit ``http://localhost:8000/exam``
+
 History
 =======
 
@@ -166,3 +206,4 @@ Copyright (c) 2011-2017 `FOSSEE <https://fossee.in>`_
     :target: https://badge.fury.io/gh/fossee%2Fonline_test
 .. |Coverage Status| image:: https://codecov.io/gh/fossee/online_test/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/fossee/online_test
+
