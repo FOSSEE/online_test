@@ -25,6 +25,7 @@ class PythonAssertionEvaluator(BaseEvaluator):
         self.test_case = test_case_data.get('test_case')
         self.input_data=test_case_data.get('input_vals')
         self.output_data=test_case_data.get('output_vals')
+        self.function_name=test_case_data.get('function_name')
         self.weight = test_case_data.get('weight')
 
     def teardown(self):
@@ -90,6 +91,7 @@ class PythonAssertionEvaluator(BaseEvaluator):
                                       self.test_case,
                                       self.input_data,
                                       self.output_data,
+                                      self.function_name,
                                       line_no
                                       )
         else:

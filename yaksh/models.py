@@ -59,14 +59,15 @@ question_types = (
 
     )
 
-operator_choices={
+operator_choices=(
     ("==","=="),
-    ("!=","!=")
-}
+    ("!=","!="),
+    (">=",">="),
+    ("<=","<="),
+    (">",">"),
+    ("<","<")
+)
 
-operator_choices1=(
-    ("==","==")
-    )
 
 output_type=(
     ("int","int"),
@@ -950,13 +951,6 @@ class Question(models.Model):
     solution = models.TextField(blank=True)
 
 
-    def clean(self):
-        lang=self.language
-        if lang=="python":
-            f=EasyStandardTestCase()
-            
-
-
     def consolidate_answer_data(self, user_answer, user=None):
         question_data = {}
         metadata = {}
@@ -1057,18 +1051,14 @@ class Question(models.Model):
     def save_test_case(self):
         q=Question.objects.get(id=self.id)
         etc=q.testcase_set.filter(type="easystandardtestcase",easystandardtestcase__test_case="")
-        print (etc)
         if etc:
-            print (etc.first().easystandardtestcase.function_name)
             easy = etc.first().easystandardtestcase
             easy_id=EasyStandardTestCase.objects.get(testcase_ptr=etc.first().id)
             if (self.language=="python"):
                 op=easy_id.operator
                 easy_id.test_case='assert ' + easy_id.function_name + '(' + easy_id.input_vals + ')' + op + easy_id.output_vals
-                print (easy_id.test_case)
                 easy_id.save()
                 e = EasyStandardTestCase.objects.filter(testcase_ptr=easy.id)
-                print ("After saving test case", e.first())
 
             elif(self.language=="c" or self.language=="cpp"):
                 typevar=easy_id.typeof_var
@@ -1076,17 +1066,17 @@ class Question(models.Model):
                 #/home/amitpeshwani/Desktop/Yaksh/online_test/yaksh/template_c.c
                 with open(path,"r") as myfile :
                     data=myfile.read() 
-                easy_id.test_case=data.format(easy_id.function_name,typevar,easy_id.input_vals,easy_id.output_vals,'{','}',easy_id.typeof_output)
+                easy_id.test_case=data.format(easy_id.function_name,typevar,easy_id.input_vals,easy_id.output_vals,'{','}',easy_id.typeof_output,easy_id.operator)
                 easy_id.save()
                 
 
             elif(self.language=="java"):
-                print("savetestcase2---------------")
                 typevar=easy_id.typeof_var
                 path=CODE_TEMPLATES +'template_java.java'
                 with open(path,"r") as myfile :
                     data=myfile.read()
-                easy_id.test_case=data.format(easy_id.function_name,easy_id.input_vals,easy_id.output_vals,'{','}')
+                # easy_id.test_case=data.format(easy_id.function_name,easy_id.input_vals,easy_id.output_vals,'{','}')
+                easy_id.test_case=data.format(easy_id.function_name,easy_id.input_vals,easy_id.output_vals,easy_id.typeof_output,'{','}',easy_id.operator)
                 easy_id.save()
 
     def get_test_case(self, **kwargs):
@@ -2111,12 +2101,12 @@ class StandardTestCase(TestCase):
 
 
 class EasyStandardTestCase(TestCase):
-    function_name=models.TextField()
-    typeof_var=models.CharField(max_length=50, null=True, blank=True)
+    function_name=models.CharField(max_length=124)
+    typeof_var=models.CharField("Argument Type",max_length=50, null=True, blank=True,help_text=' Eg: int,int ')
     operator=models.CharField(max_length=24,choices=operator_choices)
-    input_vals=models.CharField(max_length=50)
-    output_vals=models.CharField(max_length=24)
-    typeof_output=models.CharField(max_length=50,choices=output_type,blank=True,null=True)
+    input_vals=models.CharField("Argument",max_length=50,help_text="Comma seperated values passed to function")
+    output_vals=models.CharField("Output Values",max_length=24,help_text="Value returned by function")
+    typeof_output=models.CharField("Output Type",max_length=50,help_text="Type of value returned by function")
     test_case = models.TextField(blank=True)
     weight = models.FloatField(default=1.0)
 

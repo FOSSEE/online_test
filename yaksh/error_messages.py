@@ -5,13 +5,14 @@ except ImportError:
 
 
 def prettify_exceptions(exception, message, traceback=None,
-                        testcase=None,input_data=None,output_data=None, line_no=None):
+                        testcase=None,input_data=None,output_data=None,function_name=None, line_no=None):
     err = {"type": "assertion",
            "exception": exception,
            "traceback": traceback,
            "input_data":input_data,
            "message": message,
-           "output_data":output_data
+           "output_data":output_data,
+           "function_name":function_name
            }
     if exception == 'RuntimeError' or exception == 'RecursionError':
         err["traceback"] = None

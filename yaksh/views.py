@@ -84,23 +84,23 @@ code_testcase1={
     "stdiobasedtestcase":StdIOBasedTestCase
 }
 
-operator_choices_py={
+operator_choices_py=(
     ("==","=="),
     ("!=","!="),
     (">=",">="),
     ("<=","<="),
     (">",">"),
     ("<","<")
-}
+)
 
-operator_choices_c={
+operator_choices_c=(
     ("==","=="),
     ("!=","!="),
     (">=",">="),
     ("<=","<="),
     (">",">"),
     ("<","<")
-}
+)
 
 def my_redirect(url):
     """An overridden redirect to deal with URL_ROOT-ing. See settings.py
@@ -292,6 +292,7 @@ def add_question(request, question_id=None):
         formsets = []
         lang=qform.data["language"]
         q_type=qform.data["type"]
+        
 
         if (q_type=="code" and (lang=="python" or lang=="c" or lang=="cpp" or lang=="java")):
             def formfield_callback(field):
@@ -354,6 +355,9 @@ def add_question(request, question_id=None):
                     )
                 )
 
+        # for formset in formsets:
+        #     print ("-----",formset.as_table())
+
             # cd=form.cleaned_data
             # print ("========",cd)
 
@@ -366,7 +370,7 @@ def add_question(request, question_id=None):
             # print (   "--------------------",lang)
 
             question.save()
-            print("------------",question)
+            # print("------------",question)
             # many-to-many field save function used to save the tags
             qform.save_m2m()
             for formset in formsets:
@@ -374,7 +378,8 @@ def add_question(request, question_id=None):
                     # question = formset.cleaned_data['question']
                     formset.save()
                 else:
-                    print("else formset=======", formset, formset.errors)
+                    pass
+                    # print("else formset=======", formset, formset.errors)
             
             question.save_test_case()
                     
@@ -415,23 +420,21 @@ def add_question(request, question_id=None):
             # print("test_case_type", test_case_type, lang)
             if (test_case_type=="easystandardtestcase"):      #changes here 1           
                 if lang=="python":
-                    print ("python ---------------------")
+                    # print ("python ---------------------")
                     formset=inlineformset_factory(
                         Question,EasyStandardTestCase,extra=1,fields=('type','function_name','operator','input_vals','output_vals'),formfield_callback=formfield_callback
                         )
-                    #,widget={'type':forms.ChoiceField(choices=test_case_types1)}
+                    
                 elif lang=='c' or lang=='cpp' or lang=='java':
                     formset=inlineformset_factory(Question,testcase,
                         extra=1,fields=('type','function_name','operator','typeof_var','input_vals','output_vals','typeof_output'),formfield_callback=formfield_callback)
             else:
-                # print ("first else")    
-                print ("first else========================")
                 formset = inlineformset_factory(
                     Question, testcase, extra=1, fields='__all__'
                 )
         else:
             if lang=="python" and testcase.__name__.lower() == "easystandardtestcase":
-                print ("second else================")
+                
                 formset=inlineformset_factory(
                     Question,testcase,extra=0,fields=('type','function_name','operator','input_vals','output_vals'),formfield_callback=formfield_callback
                     )
@@ -440,7 +443,6 @@ def add_question(request, question_id=None):
                     Question,testcase,extra=0,fields=('type','function_name','operator','typeof_var','input_vals','output_vals','typeof_output'),formfield_callback=formfield_callback
                     )
             else:
-                print ("third else==================")
                 formset = inlineformset_factory(
                     Question, testcase, extra=0, fields='__all__'
                 )
@@ -453,11 +455,13 @@ def add_question(request, question_id=None):
         )
 
 
+
     context = {'qform': qform, 'fileform': fileform, 'question': question,
                'formsets': formsets, 
                # 'uploaded_files': uploaded_files
                }
-    
+
+
 
 
     return my_render_to_response(

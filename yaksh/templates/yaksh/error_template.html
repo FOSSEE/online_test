@@ -12,7 +12,7 @@
       <div class="well well-sm">
       {% if not error.type %}
         {% if error.input_data %}
-         <table class="table table-bordered" width="100%" id='assertion'>
+         <!-- <table class="table table-bordered" width="100%" id='assertion'>
           <col width="30%">
              
             <tr>
@@ -21,7 +21,39 @@
             <tr>
               <td><b>Expected Output:</b><td>{{error.output_data}}</td></td>
             </tr>
-            </table>
+            </table> -->
+
+          <strong>You did not pass the Test Case</strong>
+          
+          <!-- <table class="table table-bordered" width="100%" id='assertion'>
+            <tr>
+              <td><b>Input</b></td><td>({{error.input_data}})</td>
+            </tr>
+            <tr>
+              <td><b>Your Output</b></td><td>{{error.stdout}}</td>>
+            </tr>
+            <tr>
+              <td><b>Expected Output</b></td><td>{{error.output_data}}</td>
+            </tr>
+          </table>> -->
+          <br><br>
+          <table class="table table-bordered" width="100%" id='assertion'><strong>Called Function</strong> 
+            <tr><td>{{error.function_name}}({{error.input_data}})</td>
+              
+            </tr>
+          </table>
+          <br>
+          <table class="table table-bordered" width="100%" id='assertion'><strong>Arguments Passed to the Function</strong> 
+            <tr><td>{{error.input_data}}</td>
+              
+            </tr>
+          </table>
+          <br>
+          <table class="table table-bordered" width="100%" id='assertion'><strong>Expected Output</strong> 
+            <tr><td>{{error.output_data}}</td>
+              
+            </tr>
+          </table>
 
         {% else %}
           <pre><code> {{error|safe}} </code></pre>
@@ -30,16 +62,16 @@
 
       {% elif error.type == 'assertion' %}
 
-        {% if error.test_case %}
+        <!-- {% if error.test_case %}
           <strong> We tried your code with the following test case:</strong>
           <br/></br>
           <pre><code><strong style="color:#d9534f">
           {{error.test_case}}
           </strong></code></pre>
         {% endif %}
-        <p> <b>The following error took place: </b></p>
+        <p> <b>The following error took place: </b></p> -->
         {% if error.input_data %}
-          <table class="table table-bordered" width="100%" id='assertion'>
+          <!-- <table class="table table-bordered" width="100%" id='assertion'>
           <col width="30%">
              
             <tr>
@@ -54,6 +86,37 @@
               <td><b>Full Traceback: </b></td>
               <td><pre>{{error.traceback}}</pre></td>
               {% endif %}
+            </tr>
+          </table> -->
+          <strong>You did not pass the Test Case</strong>
+          
+          <!-- <table class="table table-bordered" width="100%" id='assertion'>
+            <tr>
+              <td><b>Input</b></td><td>({{error.input_data}})</td>
+            </tr>
+            <tr>
+              <td><b>Your Output</b></td><td>{{error.stdout}}</td>>
+            </tr>
+            <tr>
+              <td><b>Expected Output</b></td><td>{{error.output_data}}</td>
+            </tr>
+          </table>> -->
+          <br><br>
+          <table class="table table-bordered" width="100%" id='assertion'><strong>Called Function</strong> 
+            <tr><td>{{error.function_name}}({{error.input_data}})</td>
+              
+            </tr>
+          </table>
+          <br>
+          <table class="table table-bordered" width="100%" id='assertion'><strong>Arguments Passed to the Function</strong> 
+            <tr><td>{{error.input_data}}</td>
+              
+            </tr>
+          </table>
+          <br>
+          <table class="table table-bordered" width="100%" id='assertion'><strong>Expected Output</strong> 
+            <tr><td>{{error.output_data}}</td>
+              
             </tr>
           </table>
 

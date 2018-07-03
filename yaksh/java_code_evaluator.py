@@ -28,6 +28,9 @@ class JavaCodeEvaluator(BaseEvaluator):
         self.partial_grading = metadata.get('partial_grading')
         # Set test case data values
         self.test_case = test_case_data.get('test_case')
+        self.input_data=test_case_data.get('input_vals')
+        self.output_data=test_case_data.get('output_vals')
+        self.function_name=test_case_data.get('function_name')
         self.weight = test_case_data.get('weight')
 
     def teardown(self):
@@ -84,14 +87,18 @@ class JavaCodeEvaluator(BaseEvaluator):
             self.ref_output_path = self.set_file_paths(user_code_directory,
                 ref_file_name
             )
+
             compile_command, self.compile_main = self.get_commands(
                 clean_ref_code_path,
                 user_code_directory
             )
-            self.run_command_args = "java -cp {0} {1}".format(
+
+            self.run_command_args = "java -ea -cp  {0} {1} ".format(
                 user_code_directory,
                 ref_file_name
             )
+    
+
 
             self.compiled_user_answer = self._run_command(compile_command,
                 shell=True,
@@ -149,7 +156,16 @@ class JavaCodeEvaluator(BaseEvaluator):
                     success, err = True, None
                     mark_fraction = 1.0 if self.partial_grading else 0.0
                 else:
-                    err = stdout + "\n" + stderr
+                    # print ("=========asserterror============")
+                    # err = stdout + "\n" + stderr
+                    if self.input_data:
+                        err={"input_data":self.input_data,
+                             "output_data":self.output_data,
+                             "function_name":self.function_name}
+                        
+                    else:
+                        
+                        err = "{0} \n {1}".format(stdout, stderr)
             else:
                 err = "Error:"
                 try:

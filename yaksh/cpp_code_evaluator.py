@@ -31,6 +31,7 @@ class CppCodeEvaluator(BaseEvaluator):
         self.test_case = test_case_data.get('test_case')
         self.input_data=test_case_data.get('input_vals')
         self.output_data=test_case_data.get('output_vals')
+        self.function_name=test_case_data.get('function_name')
         self.weight = test_case_data.get('weight')
 
     def teardown(self):
@@ -148,7 +149,9 @@ class CppCodeEvaluator(BaseEvaluator):
                     # print ("stderr====",stderr)
                     if self.input_data:
                         err={"input_data":self.input_data,
-                             "output_data":self.output_data}
+                             "output_data":self.output_data,
+                             "function_name":self.function_name}
+                        
                     else:
                         
                         err = "{0} \n {1}".format(stdout, stderr)
