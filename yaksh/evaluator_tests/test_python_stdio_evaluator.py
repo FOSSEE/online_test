@@ -1,5 +1,6 @@
 from yaksh.error_messages import compare_outputs
 
+
 def test_compare_outputs():
     exp = "5\n5\n"
     given = "5\n5\n"
@@ -26,8 +27,8 @@ def test_compare_outputs():
     success, msg = compare_outputs(given, exp)
     error_msg = msg.get('error_msg')
     assert not success
-    m = ("Incorrect Answer: We had expected 1 number of lines. "
-          + "We got 2 number of lines.")
+    m = ("Incorrect Answer: We had expected 1 number of lines. " +
+         "We got 2 number of lines.")
     assert m == error_msg
 
     exp = "5\n5\n"

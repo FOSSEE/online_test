@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
-import traceback
-import pwd
 import os
-from os.path import join, isfile
+from os.path import isfile
 import subprocess
-import importlib
 
 # Local imports
 from .base_evaluator import BaseEvaluator
@@ -65,8 +62,8 @@ class JavaCodeEvaluator(BaseEvaluator):
             # create student code and moderator code file
             self.submit_code_path = self.create_submit_code_file('Test.java')
             self.test_code_path = self.create_submit_code_file('main.java')
-            self.write_to_submit_code_file(self.submit_code_path,
-                    self.user_answer
+            self.write_to_submit_code_file(
+                self.submit_code_path, self.user_answer
                 )
             self.write_to_submit_code_file(self.test_code_path, self.test_case)
             clean_ref_code_path = self.test_code_path
@@ -81,11 +78,11 @@ class JavaCodeEvaluator(BaseEvaluator):
 
             user_code_directory = os.getcwd() + '/'
             ref_file_name = (clean_ref_code_path.split('/')[-1]).split('.')[0]
-            self.user_output_path = self.set_file_paths(user_code_directory, 
-                'Test'
+            self.user_output_path = self.set_file_paths(
+                user_code_directory, 'Test'
             )
-            self.ref_output_path = self.set_file_paths(user_code_directory,
-                ref_file_name
+            self.ref_output_path = self.set_file_paths(
+                user_code_directory, ref_file_name
             )
 
             compile_command, self.compile_main = self.get_commands(
@@ -100,13 +97,15 @@ class JavaCodeEvaluator(BaseEvaluator):
     
 
 
-            self.compiled_user_answer = self._run_command(compile_command,
+            self.compiled_user_answer = self._run_command(
+                compile_command,
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
 
-            self.compiled_test_code = self._run_command(self.compile_main,
+            self.compiled_test_code = self._run_command(
+                self.compile_main,
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
@@ -148,9 +147,9 @@ class JavaCodeEvaluator(BaseEvaluator):
 
             if main_err == '':
                 ret = self._run_command(self.run_command_args, shell=True,
-                                         stdin=None,
-                                         stdout=subprocess.PIPE,
-                                         stderr=subprocess.PIPE)
+                                        stdin=None,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
                 proc, stdout, stderr = ret
                 if proc.returncode == 0:
                     success, err = True, None
@@ -167,7 +166,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                         
                         err = "{0} \n {1}".format(stdout, stderr)
             else:
-                err = "Error:"
+                err = "Test case Error:"
                 try:
                     error_lines = main_err.splitlines()
                     for e in error_lines:
@@ -175,7 +174,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                             err = err + "\n" + e.split(":", 1)[1]
                         else:
                             err = err + "\n" + e
-                except:
+                except Exception:
                         err = err + "\n" + main_err
         else:
             err = "Compilation Error:"
@@ -187,7 +186,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                         err = err + "\n" + e.split(":", 1)[1]
                     else:
                         err = err + "\n" + e
-            except:
+            except Exception:
                 err = err + "\n" + stdnt_stderr
 
         return success, err, mark_fraction

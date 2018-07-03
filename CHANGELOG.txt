@@ -1,3 +1,19 @@
+=== 0.8.1 (18-06-2018) ===
+
+* Fixed a bug where quiz completion shows inprogress even after completing.
+* Changed send bulk mail to add recipients to BCC list instead of TO list.
+* Changed course status feature to view student progress more easily and quickly.
+* Changed student course dashboard to view completion percentage per module and
+  overall course.
+* Added support for nose asserts for python assertion based evaluation.
+* Added a new feature to show error line number in student code for python
+  based questions only.
+* Replaced django render_to_response function with render function in views.
+* Upgraded Django version from 1.9.5 to 1.10.
+* Fixed pep8 for the code base.
+* Fixed a bug that allows answer to be true if there are no test cases to a code
+  question.
+
 === 0.8.0 (23-03-2018) ===
 
 * Refactored the add_group command to allow creation of moderator group and add users to moderator group and renamed to create_moderator.

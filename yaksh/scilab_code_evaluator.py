@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
-import traceback
 import os
-from os.path import join, isfile
 import subprocess
 import re
-import importlib
 
 # Local imports
 from .base_evaluator import BaseEvaluator
@@ -41,8 +38,7 @@ class ScilabCodeEvaluator(BaseEvaluator):
         self.test_code_path = self.create_submit_code_file('main.sci')
         if self.file_paths:
             self.files = copy_files(self.file_paths)
-        ref_code_path = self.test_case
-        clean_ref_path, clean_test_case_path = self.test_code_path, None
+        clean_ref_path = self.test_code_path
         self.user_answer, terminate_commands = \
             self._remove_scilab_exit(self.user_answer.lstrip())
 
@@ -61,12 +57,10 @@ class ScilabCodeEvaluator(BaseEvaluator):
             clean_ref_path
         )
         cmd += ' | scilab-cli -nb'
-        ret = self._run_command(cmd,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        proc, stdout, stderr = ret 
+        ret = self._run_command(cmd, shell=True, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE
+                                )
+        proc, stdout, stderr = ret
 
         # Get only the error.
         stderr = self._get_error(stdout)
@@ -117,4 +111,3 @@ class ScilabCodeEvaluator(BaseEvaluator):
             if l.strip():
                 strip_out = strip_out+"\n"+l.strip()
         return strip_out
-

@@ -74,11 +74,14 @@ DATABASES = {
         'ENGINE': 'django.db.backends.{0}'.format(
             config('DB_ENGINE', default='sqlite3')
         ),
-        'NAME': config('DB_NAME', default=os.path.join(BASE_DIR, 'db.sqlite3')),
+        'NAME': config('DB_NAME',
+                       default=os.path.join(BASE_DIR, 'db.sqlite3')
+                       ),
         # The following settings are not used with sqlite3:
         'USER': config('DB_USER', default=''),
         'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default='localhost'), # Empty for localhost through domain sockets or '1$
+        # Empty for localhost through domain sockets or '1$
+        'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default=''),
     },
 }
@@ -111,7 +114,7 @@ MEDIA_URL = "/data/"
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "yaksh_data", "data")
 
-STATIC_ROOT='yaksh/static/'
+STATIC_ROOT = 'yaksh/static/'
 
 # Set this varable to <True> if smtp-server is not allowing to send email.
 EMAIL_USE_TLS = False

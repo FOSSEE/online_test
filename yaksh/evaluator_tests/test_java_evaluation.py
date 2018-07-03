@@ -4,15 +4,12 @@ import os
 import shutil
 import tempfile
 from textwrap import dedent
-from psutil import Process, pid_exists
-import time
+from psutil import Process
 
 
 # Local Import
 from yaksh import grader as gd
 from yaksh.grader import Grader
-from yaksh.java_code_evaluator import JavaCodeEvaluator
-from yaksh.java_stdio_evaluator import JavaStdIOEvaluator
 from yaksh.evaluator_tests.test_python_evaluation import EvaluatorBaseTest
 
 
@@ -29,11 +26,13 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
                 {
                     if(result.equals(expect))
                     {
-                        System.out.println("Correct:Output expected "+expect+" and got "+result);
+                        System.out.println("Correct:Output expected "+expect+
+                                            "and got "+result);
                     }
                 else
                 {
-                    System.out.println("Incorrect:Output expected "+expect+" but got "+result);
+                    System.out.println("Incorrect:Output expected "+expect+
+                                        "but got "+result);
                     System.exit(1);
                 }
                 }
@@ -43,15 +42,18 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
                    int result, input, output;
                    input = 0; output = 0;
                    result = t.square_num(input);
-                   System.out.println("Input submitted to the function: "+input);
+                   System.out.println("Input submitted to the function: "+
+                                    input);
                    check(output, result);
                    input = 5; output = 25;
                    result = t.square_num(input);
-                   System.out.println("Input submitted to the function: "+input);
+                   System.out.println("Input submitted to the function: "+
+                                    input);
                    check(output, result);
                    input = 6; output = 36;
                    result = t.square_num(input);
-                   System.out.println("Input submitted to the function: "+input);
+                   System.out.println("Input submitted to the function: "+
+                                    input);
                    check(output, result);
                 }
             }
@@ -59,17 +61,16 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         self.test_case_data = [
             {"test_case": self.tc_data,
-            "test_case_type": "standardtestcase",
-            "weight": 0.0
-            }
+             "test_case_type": "standardtestcase",
+             "weight": 0.0
+             }
         ]
         self.in_dir = tmp_in_dir_path
         self.file_paths = None
         gd.SERVER_TIMEOUT = 9
         self.timeout_msg = ("Code took more than {0} seconds to run. "
-            "You probably have an infinite loop in"
-            " your code.").format(gd.SERVER_TIMEOUT)
-
+                            "You probably have an infinite loop in"
+                            " your code.").format(gd.SERVER_TIMEOUT)
 
     def tearDown(self):
         gd.SERVER_TIMEOUT = 4
@@ -78,15 +79,15 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
 
     def test_correct_answer(self):
         # Given
-        user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a;\n\t}\n}"
+        user_answer = ("class Test {\n\tint square_num(int a)"
+                       " {\n\treturn a*a;\n\t}\n}")
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -98,15 +99,15 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
 
     def test_incorrect_answer(self):
         # Given
-        user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a;\n\t}\n}"
+        user_answer = ("class Test {\n\tint square_num(int a) "
+                       "{\n\treturn a;\n\t}\n}")
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -122,15 +123,14 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
 
     def test_error(self):
         # Given
-        user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a"
+        user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a}"
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -143,15 +143,15 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
 
     def test_infinite_loop(self):
         # Given
-        user_answer = "class Test {\n\tint square_num(int a) {\n\t\twhile(0==0){\n\t\t}\n\t}\n}"
+        user_answer = ("class Test {\n\tint square_num(int a)"
+                       " {\n\t\twhile(0==0){\n\t\t}\n\t}\n}")
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -178,11 +178,13 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
                 {
                     if(result.equals(expect))
                     {
-                        System.out.println("Correct:Output expected "+expect+" and got "+result);
+                        System.out.println("Correct:Output expected "+expect+
+                                            " and got "+result);
                     }
                 else
                 {
-                    System.out.println("Incorrect:Output expected "+expect+" but got "+result);
+                    System.out.println("Incorrect:Output expected "+expect+
+                                        " but got "+result);
                     System.exit(1);
                 }
                 }
@@ -201,9 +203,9 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
             """)
         self.test_case_data = [
             {"test_case": self.tc_data,
-            "test_case_type": "standardtestcase",
-            "weight": 0.0
-            }
+             "test_case_type": "standardtestcase",
+             "weight": 0.0
+             }
         ]
         user_answer = dedent("""
             import java.io.BufferedReader;
@@ -229,8 +231,7 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -239,6 +240,64 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertTrue(result.get("success"))
+
+    def test_incorrect_testcase(self):
+        # Given
+        self.tc_data = dedent("""
+            class main
+            {
+                public static <E> void check(E expect, E result)
+                {
+                    if(result.equals(expect))
+                    {
+                        System.out.println("Correct:Output expected "+expect+
+                                            "and got "+result);
+                    }
+                else
+                {
+                    System.out.println("Incorrect:Output expected "+expect+
+                                        "but got "+result);
+                    System.exit(1);
+                }
+                }
+                public static void main(String arg[])
+                {
+                   Test t = new Test();
+                   int result, input, output;
+                   input = 0; output = 0;
+                   result = t.square_num(input);
+                   System.out.println("Input submitted to the function: "+
+                                    input);
+                   check(output, result)
+                }
+            }
+            """)
+        user_answer = ("class Test {\n\tint square_num(int a) "
+                       "{\n\treturn a;\n\t}\n}")
+        self.test_case_data = [{"test_case": self.tc_data,
+                                "test_case_type": "standardtestcase",
+                                "weight": 0.0
+                                }]
+        kwargs = {
+                  'metadata': {
+                    'user_answer': user_answer,
+                    'file_paths': self.file_paths,
+                    'partial_grading': False,
+                    'language': 'java'
+                    }, 'test_case_data': self.test_case_data,
+                  }
+
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        err = result.get('error')[0]
+        lines_of_error = len(err.splitlines())
+        self.assertFalse(result.get('success'))
+        self.assertTrue(lines_of_error > 1)
+        self.assertIn("Test case Error", err)
+
 
 class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
@@ -251,7 +310,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                                 'expected_input': '5\n6',
                                 'test_case_type': 'stdiobasedtestcase',
                                 'weight': 0.0
-                            }]
+                                }]
         self.file_paths = None
         gd.SERVER_TIMEOUT = 9
         self.timeout_msg = ("Code took more than {0} seconds to run. "
@@ -280,8 +339,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -314,8 +372,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -342,8 +399,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -370,8 +426,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -397,8 +452,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -420,7 +474,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
         self.test_case_data = [{'expected_output': '11',
                                 'test_case_type': 'stdiobasedtestcase',
                                 'weight': 0.0
-                               }]
+                                }]
         user_answer = dedent("""
         class Test
         {public static void main(String[] args){
@@ -434,8 +488,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -451,7 +504,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                                 'expected_input': 'Hello\nWorld',
                                 'test_case_type': 'stdiobasedtestcase',
                                 'weight': 0.0
-                               }]
+                                }]
         user_answer = dedent("""
         import java.util.Scanner;
         class Test
@@ -467,8 +520,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -485,7 +537,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                                 'expected_input': '',
                                 'test_case_type': 'stdiobasedtestcase',
                                 'weight': 0.0
-                               }]
+                                }]
         user_answer = dedent("""
             import java.io.BufferedReader;
             import java.io.FileReader;
@@ -510,8 +562,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': self.test_case_data,
+                    }, 'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -533,8 +584,8 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
         self.file_paths = None
         gd.SERVER_TIMEOUT = 9
         self.timeout_msg = ("Code took more than {0} seconds to run. "
-            "You probably have an infinite loop in"
-            " your code.").format(gd.SERVER_TIMEOUT)
+                            "You probably have an infinite loop in"
+                            " your code.").format(gd.SERVER_TIMEOUT)
 
     def tearDown(self):
         gd.SERVER_TIMEOUT = 4
@@ -558,11 +609,11 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
                                 def _run_command(cmd):
-                                    proc = subprocess.Popen("{}".format(cmd),
-                                                            shell=True,
-                                                            stdout=subprocess.PIPE,
-                                                            stderr=subprocess.PIPE
-                                                            )
+                                    proc = subprocess.Popen(
+                                        "{}".format(cmd), shell=True,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE
+                                        )
                                     stdout,stderr = proc.communicate()
                                     return stdout,stderr
                                 cmds = ["javac Test.java", "java Test"]
@@ -571,20 +622,18 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                                 if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-                            )
+                            """)
 
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code,"weight": 1.0
-                            }]
+                           "hook_code": hook_code, "weight": 1.0
+                           }]
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -624,20 +673,18 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                                 if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-                            )
+                            """)
 
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code,"weight": 1.0
-                            }]
+                           "hook_code": hook_code, "weight": 1.0
+                           }]
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -647,10 +694,11 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertFalse(result.get('success'))
         self.assert_correct_output('Incorrect Answer', result.get('error'))
-    
+
     def test_assert_with_hook(self):
         # Given
-        user_answer = "class Test {\n\tint square_num(int a) {\n\treturn a*a;\n\t}\n}"
+        user_answer = ("class Test {\n\tint square_num(int a)"
+                       " {\n\treturn a*a;\n\t}\n}")
         assert_test_case = dedent("""
             class main
             {
@@ -658,11 +706,13 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                 {
                     if(result.equals(expect))
                     {
-                        System.out.println("Correct:Output expected "+expect+" and got "+result);
+                        System.out.println("Correct:Output expected "+expect+
+                                            " and got "+result);
                     }
                 else
                 {
-                    System.out.println("Incorrect:Output expected "+expect+" but got "+result);
+                    System.out.println("Incorrect:Output expected "+expect+
+                                        " but got "+result);
                     System.exit(1);
                 }
                 }
@@ -672,20 +722,23 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                    int result, input, output;
                    input = 0; output = 0;
                    result = t.square_num(input);
-                   System.out.println("Input submitted to the function: "+input);
+                   System.out.println("Input submitted to the function: "+
+                                        input);
                    check(output, result);
                    input = 5; output = 25;
                    result = t.square_num(input);
-                   System.out.println("Input submitted to the function: "+input);
+                   System.out.println("Input submitted to the function: "+
+                                        input);
                    check(output, result);
                    input = 6; output = 36;
                    result = t.square_num(input);
-                   System.out.println("Input submitted to the function: "+input);
+                   System.out.println("Input submitted to the function: "+
+                                        input);
                    check(output, result);
                 }
             }
             """)
-        
+
         hook_code = dedent("""\
                             def check_answer(user_answer):
                                 success = False
@@ -694,9 +747,7 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                                 if "return a*a" in user_answer:
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-                            )
-
+                            """)
 
         test_case_data = [{"test_case_type": "standardtestcase",
                            "test_case": assert_test_case,
@@ -711,8 +762,7 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': True,
                     'language': 'java'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -731,7 +781,7 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                              System.out.print("Hello, world!");
                              }}
                              """)
-        
+
         hook_code_1 = dedent("""\
                             def check_answer(user_answer):
                                 with open("Test.java", "w+") as f:
@@ -741,11 +791,11 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
                                 def _run_command(cmd):
-                                    proc = subprocess.Popen("{}".format(cmd),
-                                                            shell=True,
-                                                            stdout=subprocess.PIPE,
-                                                            stderr=subprocess.PIPE
-                                                            )
+                                    proc = subprocess.Popen(
+                                        "{}".format(cmd), shell=True,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE
+                                        )
                                     stdout,stderr = proc.communicate()
                                     return stdout,stderr
                                 cmds = ["javac Test.java", "java Test"]
@@ -754,20 +804,18 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                                 if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-                            )
+                            """)
 
         hook_code_2 = dedent("""\
                              def check_answer(user_answer):
                                 success = False
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
-                                if 'System.out.print("Hello, world!");' in user_answer:
+                                if ('System.out.print("Hello, world!");' in
+                                    user_answer):
                                     success, err, mark_fraction = True, "", 0.5
                                 return success, err, mark_fraction
-                            """
-                            )
-
+                            """)
 
         test_case_data = [{"test_case_type": "hooktestcase",
                            "hook_code": hook_code_1, 'weight': 1.0},
@@ -780,8 +828,7 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': True,
                     'language': 'java'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -791,7 +838,7 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
         # Then
         self.assertTrue(result.get('success'))
         self.assertEqual(result.get("weight"), 1.5)
-        
+
     def test_infinite_loop(self):
         # Given
         user_answer = dedent("""\
@@ -811,11 +858,11 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                                 err = "Incorrect Answer"
                                 mark_fraction = 0.0
                                 def _run_command(cmd):
-                                    proc = subprocess.Popen("{}".format(cmd),
-                                                            shell=True,
-                                                            stdout=subprocess.PIPE,
-                                                            stderr=subprocess.PIPE
-                                                            )
+                                    proc = subprocess.Popen(
+                                        "{}".format(cmd), shell=True,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE
+                                        )
                                     stdout,stderr = proc.communicate()
                                     return stdout,stderr
                                 cmds = ["javac Test.java", "java Test"]
@@ -824,13 +871,11 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                                 if stdout.decode("utf-8") == "Hello, world!":
                                     success, err, mark_fraction = True, "", 1.0
                                 return success, err, mark_fraction
-                            """
-                            )
+                            """)
 
-        
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code,"weight": 1.0
-                            }]
+                           "hook_code": hook_code, "weight": 1.0
+                           }]
 
         kwargs = {
                   'metadata': {
@@ -838,8 +883,7 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'java'
-                    },
-                    'test_case_data': test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When

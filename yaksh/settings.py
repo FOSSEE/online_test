@@ -12,8 +12,8 @@ N_CODE_SERVERS = config('N_CODE_SERVERS', default=5, cast=int)
 # service is running.  It should be > 1024 and less < 65535 though.
 SERVER_POOL_PORT = config('SERVER_POOL_PORT', default=55555, cast=int)
 
+# Server host name
 SERVER_HOST_NAME = config('SERVER_HOST_NAME', default='http://localhost')
-#'localhost'
 
 # Timeout for the code to run in seconds.  This is an integer!
 SERVER_TIMEOUT = config('SERVER_TIMEOUT', default=4, cast=int)
@@ -25,11 +25,15 @@ SERVER_TIMEOUT = config('SERVER_TIMEOUT', default=4, cast=int)
 URL_ROOT = ''
 
 code_evaluators = {
-    "python": {"standardtestcase": "yaksh.python_assertion_evaluator.PythonAssertionEvaluator",
-               "stdiobasedtestcase": "yaksh.python_stdio_evaluator.PythonStdIOEvaluator",
-               "hooktestcase": "yaksh.hook_evaluator.HookEvaluator",
-               "easystandardtestcase":"yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
-               },
+    "python": {
+      "standardtestcase":
+      "yaksh.python_assertion_evaluator.PythonAssertionEvaluator",
+      "stdiobasedtestcase":
+      "yaksh.python_stdio_evaluator.PythonStdIOEvaluator",
+      "hooktestcase": "yaksh.hook_evaluator.HookEvaluator",
+      "easystandardtestcase":
+      "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
+      },
     "c": {"standardtestcase": "yaksh.cpp_code_evaluator.CppCodeEvaluator",
           "stdiobasedtestcase": "yaksh.cpp_stdio_evaluator.CppStdIOEvaluator",
           "hooktestcase": "yaksh.hook_evaluator.HookEvaluator",
@@ -41,15 +45,19 @@ code_evaluators = {
             "easystandardtestcase":"yaksh.cpp_code_evaluator.CppCodeEvaluator"
             },
     "java": {"standardtestcase": "yaksh.java_code_evaluator.JavaCodeEvaluator",
-             "stdiobasedtestcase": "yaksh.java_stdio_evaluator.JavaStdIOEvaluator",
+             "stdiobasedtestcase":
+             "yaksh.java_stdio_evaluator.JavaStdIOEvaluator",
              "hooktestcase": "yaksh.hook_evaluator.HookEvaluator",
-             "easystandardtestcase":"yaksh.java_code_evaluator.JavaCodeEvaluator"
+             "easystandardtestcase":
+             "yaksh.java_code_evaluator.JavaCodeEvaluator"
              },
     "bash": {"standardtestcase": "yaksh.bash_code_evaluator.BashCodeEvaluator",
-             "stdiobasedtestcase": "yaksh.bash_stdio_evaluator.BashStdIOEvaluator",
+             "stdiobasedtestcase":
+             "yaksh.bash_stdio_evaluator.BashStdIOEvaluator",
              "hooktestcase": "yaksh.hook_evaluator.HookEvaluator"
              },
-    "scilab": {"standardtestcase": "yaksh.scilab_code_evaluator.ScilabCodeEvaluator",
-               "hooktestcase": "yaksh.hook_evaluator.HookEvaluator"
-               },
+    "scilab": {
+        "standardtestcase": "yaksh.scilab_code_evaluator.ScilabCodeEvaluator",
+        "hooktestcase": "yaksh.hook_evaluator.HookEvaluator"
+        },
 }

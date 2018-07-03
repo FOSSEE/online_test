@@ -57,15 +57,15 @@ def compare_outputs(expected_output, user_output, given_input=None):
     err_line_numbers = _get_incorrect_user_lines(exp_lines, given_lines)
     msg["error_line_numbers"] = err_line_numbers
     if ng != ne:
-        msg["error_msg"] = ("Incorrect Answer: "
-                            + "We had expected {} number of lines. ".format(ne)
-                            + "We got {} number of lines.".format(ng)
+        msg["error_msg"] = ("Incorrect Answer: " +
+                            "We had expected {} number of lines. ".format(ne) +
+                            "We got {} number of lines.".format(ng)
                             )
         return False, msg
     else:
         if err_line_numbers:
-            msg["error_msg"] = ("Incorrect Answer: "
-                                + "Line number(s) {0} did not match."
+            msg["error_msg"] = ("Incorrect Answer: " +
+                                "Line number(s) {0} did not match."
                                 .format(", ".join(
                                     map(str, [x+1 for x in err_line_numbers])
                                 )))

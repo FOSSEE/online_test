@@ -14,7 +14,7 @@ urlpatterns = [
     url(r'^exam/reset/', include('yaksh.urls_password_reset')),
     url(r'^', include('social.apps.django_app.urls', namespace='social')),
     url(r'^grades/', include('grades.urls', namespace='grades', app_name='grades')),
-
-    url(r'^testcase/', include('easy_standardtestcase.urls',namespace='easy_standardtestcase',app_name='easy_standardtestcase')),
+    url(r'^grades/', include('grades.urls', namespace='grades',
+                             app_name='grades')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
