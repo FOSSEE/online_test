@@ -7,6 +7,7 @@ import subprocess
 # Local imports
 from .file_utils import copy_files, delete_files
 from .base_evaluator import BaseEvaluator
+from .grader import CompilationError, TestCaseError
 
 
 class CppCodeEvaluator(BaseEvaluator):
@@ -141,6 +142,7 @@ class CppCodeEvaluator(BaseEvaluator):
                     mark_fraction = 1.0 if self.partial_grading else 0.0
                 else:
                     err = "{0} \n {1}".format(stdout, stderr)
+                    raise AssertionError(err)
             else:
                 err = "Test case Error:"
                 try:
@@ -152,6 +154,7 @@ class CppCodeEvaluator(BaseEvaluator):
                             err = "{0} \n {1}".format(err, e)
                 except Exception:
                         err = "{0} \n {1}".format(err, main_err)
+                raise TestCaseError(err)
         else:
             err = "Compilation Error:"
             try:
@@ -163,4 +166,7 @@ class CppCodeEvaluator(BaseEvaluator):
                         err = "{0} \n {1}".format(err, e)
             except Exception:
                 err = "{0} \n {1}".format(err, stdnt_stderr)
+
+            raise CompilationError(err)
+
         return success, err, mark_fraction

@@ -100,12 +100,12 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-
+        errors = result.get('error')
         # Then
-        lines_of_error = len(result.get('error')[0].splitlines())
         self.assertFalse(result.get('success'))
-        self.assert_correct_output("Incorrect:", result.get('error'))
-        self.assertTrue(lines_of_error > 1)
+        for error in errors:
+            self.assertEqual(error['exception'], 'AssertionError')
+
 
     def test_compilation_error(self):
         # Given
@@ -122,10 +122,12 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
+        errors = result.get('error')
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assert_correct_output("Compilation Error", result.get("error"))
+        for error in errors:
+            self.assertEqual(error['exception'], 'CompilationError')
 
     def test_infinite_loop(self):
         # Given
@@ -272,14 +274,12 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
+        errors = result.get("error")
 
         # Then
-        err = result.get('error')[0]
-        lines_of_error = len(err.splitlines())
         self.assertFalse(result.get('success'))
-        self.assertTrue(lines_of_error > 1)
-        self.assertIn("Test case Error", err)
-
+        for error in errors:
+            self.assertEqual(error['exception'], 'TestCaseError')
 
 class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
@@ -432,10 +432,13 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
+        errors = result.get('error')
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assert_correct_output("Compilation Error", result.get("error"))
+        for error in errors:
+            self.assertEqual(error['exception'], 'CompilationError')
+
 
     def test_infinite_loop(self):
         # Given
@@ -636,10 +639,12 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
+        errors = result.get('error')
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assert_correct_output("Compilation Error", result.get("error"))
+        for error in errors:
+            self.assertEqual(error['exception'], 'CompilationError')
 
     def test_cpp_infinite_loop(self):
         # Given
