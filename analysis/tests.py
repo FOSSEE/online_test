@@ -118,7 +118,6 @@ class StudentAnalysisTest(TestCase):
 		create_student_profile(self)
 		create_teacher_profile(self)
 
-	def create_course(self):
 		self.course = Course.objects.create(
 						name='demo_course', 
 						enrollment="open", 
@@ -174,8 +173,6 @@ class StudentAnalysisTest(TestCase):
 		Student cannot view stats without enrollment, hence redirects
 		"""
 
-		self.create_course()
-		
 		login = client.login(username=self.user_student.username, password=self.user_student_pass)
 		response = client.get(reverse('analysis:view_quiz_stats', 
 										kwargs={'question_paper_id': self.question_paper.id,
@@ -188,7 +185,6 @@ class StudentAnalysisTest(TestCase):
 		stats not required if no code questions,
 		hence redirects 
 		"""
-		self.create_course()
 		self.course.students.add(self.user_student)
 
 		login = client.login(username=self.user_student.username, password=self.user_student_pass)
@@ -202,7 +198,6 @@ class StudentAnalysisTest(TestCase):
 		"""
 		successful as quiz has code question 
 		"""
-		self.create_course()
 		self.course.students.add(self.user_student)
 		self.add_question('code')
 		self.add_answer()
@@ -275,58 +270,46 @@ class RegistrationFormTest(TestCase):
 							  }
 							)
 
-		try:
-			registered_user = User.objects.get(username='demo_user')
-		except:
-			registered_user = None
-
-		self.assertEqual(registered_user, None)
+		registered_user = User.objects.filter(username='demo_user').exists()
+		self.assertFalse(registered_user)
 
 	def test_undefined_gender_value(self):
-			"""
-			as we have predefined values for gender, 
-			enter something else would not create user
-			"""
-			client.post(reverse('yaksh:register'),
-								data={'username': 'demo_user',
-								  'email':'demo@demo.com', 'password': 'demo_pass',
-								  'confirm_password': 'demo_pass', 'first_name': 'demo_fname',
-								  'last_name': 'demo_lname', 'roll_number': '777',
-								  'institute': 'demo_institute', 'department': 'demo_dept',
-								  'position': 'Graduate Student', 'timezone': pytz.utc.zone,
-								  'age': 18, 'gender': 'Something', 'state': 'Gujarat'
-								  }
-								)
+		"""
+		as we have predefined values for gender, 
+		enter something else would not create user
+		"""
+		client.post(reverse('yaksh:register'),
+							data={'username': 'demo_user',
+							  'email':'demo@demo.com', 'password': 'demo_pass',
+							  'confirm_password': 'demo_pass', 'first_name': 'demo_fname',
+							  'last_name': 'demo_lname', 'roll_number': '777',
+							  'institute': 'demo_institute', 'department': 'demo_dept',
+							  'position': 'Graduate Student', 'timezone': pytz.utc.zone,
+							  'age': 18, 'gender': 'Something', 'state': 'Gujarat'
+							  }
+							)
 
-			try:
-				registered_user = User.objects.get(username='demo_user')
-			except:
-				registered_user = None
-
-			self.assertEqual(registered_user, None)
+		registered_user = User.objects.filter(username='demo_user').exists()
+		self.assertFalse(registered_user)
 
 	def test_undefined_state_value(self):
-			"""
-			as we have predefined values for state, 
-			enter something else would not create user
-			"""
-			client.post(reverse('yaksh:register'),
-								data={'username': 'demo_user',
-								  'email':'demo@demo.com', 'password': 'demo_pass',
-								  'confirm_password': 'demo_pass', 'first_name': 'demo_fname',
-								  'last_name': 'demo_lname', 'roll_number': '777',
-								  'institute': 'demo_institute', 'department': 'demo_dept',
-								  'position': 'Graduate Student', 'timezone': pytz.utc.zone,
-								  'age': 18, 'gender': 'Male', 'state': 'Something'
-								  }
-								)
+		"""
+		as we have predefined values for state, 
+		enter something else would not create user
+		"""
+		client.post(reverse('yaksh:register'),
+							data={'username': 'demo_user',
+							  'email':'demo@demo.com', 'password': 'demo_pass',
+							  'confirm_password': 'demo_pass', 'first_name': 'demo_fname',
+							  'last_name': 'demo_lname', 'roll_number': '777',
+							  'institute': 'demo_institute', 'department': 'demo_dept',
+							  'position': 'Graduate Student', 'timezone': pytz.utc.zone,
+							  'age': 18, 'gender': 'Male', 'state': 'Something'
+							  }
+							)
 
-			try:
-				registered_user = User.objects.get(username='demo_user')
-			except:
-				registered_user = None
-
-			self.assertEqual(registered_user, None)
+		registered_user = User.objects.filter(username='demo_user').exists()
+		self.assertFalse(registered_user)
 
 	def test_undefined_position_value(self):
 		"""
@@ -343,13 +326,9 @@ class RegistrationFormTest(TestCase):
 							  'age': 18, 'gender': 'Male', 'state': 'Gujarat'
 							  }
 							)
-
-		try:
-			registered_user = User.objects.get(username='demo_user')
-		except:
-			registered_user = None
-
-		self.assertEqual(registered_user, None) 
+	
+		registered_user = User.objects.filter(username='demo_user').exists()
+		self.assertFalse(registered_user)
 
 	def tearDown(self):
 		User.objects.all().delete()
@@ -359,7 +338,6 @@ class CourseFormTest(TestCase):
 	def setUp(self):
 		create_teacher_profile(self)
 		
-
 	def test_course_creation_success(self):
 		"""
 		test if course can be created after addition 
@@ -401,12 +379,8 @@ class CourseFormTest(TestCase):
                   	}
                   )
 
-		try:
-			created_course = Course.objects.get(name='demo_course')
-		except:
-			created_course = None
-
-		self.assertEqual(created_course, None)
+		created_course = Course.objects.filter(name='demo_course').exists()
+		self.assertFalse(created_course)
 
 	def tearDown(self):
 		User.objects.all().delete()
