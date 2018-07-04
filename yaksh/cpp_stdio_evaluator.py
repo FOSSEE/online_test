@@ -7,7 +7,7 @@ from os.path import isfile
 # Local imports
 from .stdio_evaluator import StdIOEvaluator
 from .file_utils import copy_files, delete_files
-
+from .grader import CompilationError
 
 class CppStdIOEvaluator(StdIOEvaluator):
     """Evaluates C StdIO based code"""
@@ -104,5 +104,6 @@ class CppStdIOEvaluator(StdIOEvaluator):
                         err = err + "\n" + e
             except Exception:
                 err = err + "\n" + stdnt_stderr
+            raise CompilationError(err)
         mark_fraction = 1.0 if self.partial_grading and success else 0.0
         return success, err, mark_fraction
