@@ -106,7 +106,6 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
         for error in errors:
             self.assertEqual(error['exception'], 'AssertionError')
 
-
     def test_compilation_error(self):
         # Given
         user_answer = "int add(int a, int b)\n{return a+b}"
@@ -281,6 +280,7 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
         for error in errors:
             self.assertEqual(error['exception'], 'TestCaseError')
 
+
 class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
         self.test_case_data = [{'expected_output': '11',
@@ -438,7 +438,6 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
         self.assertFalse(result.get("success"))
         for error in errors:
             self.assertEqual(error['exception'], 'CompilationError')
-
 
     def test_infinite_loop(self):
         # Given

@@ -9,6 +9,7 @@ from .stdio_evaluator import StdIOEvaluator
 from .file_utils import copy_files, delete_files
 from .grader import CompilationError
 
+
 class CppStdIOEvaluator(StdIOEvaluator):
     """Evaluates C StdIO based code"""
     def __init__(self, metadata, test_case_data):

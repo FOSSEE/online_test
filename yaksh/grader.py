@@ -30,6 +30,7 @@ class CompilationError(Exception):
 class TestCaseError(Exception):
     pass
 
+
 @contextlib.contextmanager
 def change_dir(path):
     cur_dir = abspath(dirname(MY_DIR))
