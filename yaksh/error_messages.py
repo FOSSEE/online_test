@@ -11,7 +11,7 @@ def prettify_exceptions(exception, message, traceback=None,
            "traceback": traceback,
            "message": message
            }
-    ignore_traceback = ['RuntimeError','RecursionError',
+    ignore_traceback = ['RuntimeError', 'RecursionError',
                         "CompilationError", "TestCaseError"
                         ]
     if exception in ignore_traceback:
