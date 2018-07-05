@@ -14,11 +14,11 @@
 {% endblock %}
 {% block onload %} onload="javascript:test();"  {% endblock %}
 {% block content %}
-
+<div class="yakshwell container">
 <form name=frm id=frm action="" method="post" >
   {% csrf_token %}
   <center>
-  <table class="span1 table">
+  <table class="span1 table table-responsive-sm">
   {{ form.as_table }}
   </table>
   <script type="text/javascript">
@@ -28,10 +28,10 @@
   <br/><br/>
   </center>
 
-  <center><button class="btn" type="submit" id="submit" name="questionpaper"> Save
+  <center><button class="btn btn-success" type="submit" id="submit" name="questionpaper"> Save
   </button>
 
-  <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button> </center>
+  <button class="btn btn-danger" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button> </center>
   
 </form>
 <br>
@@ -40,12 +40,12 @@
     <center>
     <h4>You can check the quiz by attempting it in the following modes:</h4>
       <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/{{course_id}}" class="btn btn-primary">View Question Paper</a>
-      <button class="btn" type="button" name="button" onClick='usermode("{{URL_ROOT}}/exam/manage/usermode/{{quiz.id}}/{{course_id}}/");'>User Mode</button>
+      <button class="btn btn-outline-info" type="button" name="button" onClick='usermode("{{URL_ROOT}}/exam/manage/usermode/{{quiz.id}}/{{course_id}}/");'>User Mode</button>
 
-      <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/godmode/{{quiz.id}}/{{course_id}}/");'>
+      <button class="btn btn-outline-info" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/godmode/{{quiz.id}}/{{course_id}}/");'>
       God Mode</button>
     <a data-toggle="collapse" data-target="#help">
-    <span class="glyphicon glyphicon-info-sign">Help</span></a>
+    <span class=" text-info"><i class="fa fa-info-circle"></i> Help</span></a>
     <div id="help" class="collapse">
     <br/>
     <ul>
@@ -65,4 +65,5 @@
     width: 550px;
    }
 </style>
+</div>
 {% endblock %}

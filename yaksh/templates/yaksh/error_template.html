@@ -1,15 +1,13 @@
-{% block css%}
-    <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
-{% endblock %}
 
 {% load custom_filters %}
 {% if error_message %}
+<div class="container-fluid row justify-content-center">
     {% for error in error_message %}
-
-      <div class="panel panel-danger">
-      <div class="panel-heading">Error No. {{ forloop.counter }}</div>
-      <div class="panel-body">
-      <div class="well well-sm">
+<div class="col-md-10 yakshwell">
+      <div class="card ">
+      <div class="card-header alert-danger">Error No. {{ forloop.counter }}</div>
+       <div class="card-body ">
+      <div class="">
       {% if not error.type %}
         <pre><code> {{error|safe}} </code></pre>
 
@@ -18,16 +16,16 @@
         {% if error.test_case %}
           <strong> We tried your code with the following test case:</strong>
           <br/></br>
-          <pre><code><strong style="color:#d9534f">
+          <pre><code><strong class="text-danger">
           {{error.test_case}}
           </strong></code></pre>
         {% endif %}
         <p> <b>The following error took place: </b></p>
-        <table class="table table-bordered" width="100%" id='assertion'>
+        <table class="table  table-borderless border border-danger table-responsive-sm" width="100%" id='assertion'>
         <col width="30%">
-            <tr class = "active">
+            <tr class = "bg-light">
               <td><b>Exception Name: </b></td>
-              <td><span style="color: #d9534f">{{error.exception}}</span></td>
+              <td><span class="text-danger">{{error.exception}}</span></td>
           </tr>
           <tr>
             <td><b>Exception Message: </b></td><td>{{error.message}}</td>
@@ -44,16 +42,16 @@
       {% elif error.type == 'stdio' %}
 
         {% if error.given_input %}
-         <table class="table table-bordered">
+         <table class="table table-borderless table-responsive-sm">
           <col width="30%">
-            <tr class = "active">
+            <tr class = "bg-light">
             <td> For given Input value(s):</td>
             <td>{{error.given_input}}</td>
             </tr>
          </table>
        {% endif %}
 
-        <table class="table table-bordered" width="100%" id="stdio">
+        <table class="table table-borderless table-responsive-sm" width="100%" id="stdio">
           <col width="10%">
           <col width="40%">
           <col width="40%">
@@ -69,16 +67,16 @@
           <td>{{expected|default:""}} </td>
           <td>{{user|default:""}}</td>
           {% if forloop.counter0 in error.error_line_numbers or not expected or not user %}
-          <td><span class ="glyphicon glyphicon-remove text-warning"/></td>
+          <td><span class ="fa fa-times text-warning"/></td>
           {% else %}
-          <td><span class ="glyphicon glyphicon-ok text-success"/></td>
+          <td><span class ="fa fa-check text-success"/></td>
           {% endif %}
           </tr>
           {% endfor %}
           </table>
-          <table width="100%" class='table table-bordered'>
+          <table width="100%" class="table table-borderless table-responsive-sm">
           <col width="10">
-          <tr class = "danger">
+          <tr class = "bg-light">
           <td><b>Error:</b></td>
            <td>{{error.error_msg}}</td>
            </tr>
@@ -87,5 +85,7 @@
         </div>
       </div>
       </div>
+    </div>
       {% endfor %}
+</div>
 {% endif %}

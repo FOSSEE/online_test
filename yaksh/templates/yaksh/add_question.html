@@ -14,9 +14,10 @@
 {% block onload %} onload='javascript:textareaformat();' {% endblock %}
 
 {% block content %}
+<div class="yakshwell container">
 <form action="{{ URL_ROOT }}/exam/manage/addquestion/{{ question.id }}/" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
   {% csrf_token %}
-  <center><table class="table">
+  <center><table class="table table-responsive-sm">
   <tr><td>Summary: <td>{{ qform.summary }}{{ qform.summary.errors }}
   <tr><td> Language: <td> {{qform.language}}{{qform.language.errors}}
   <tr><td> Type: <td> {{ qform.type }}{{qform.type.errors}}
@@ -67,9 +68,10 @@
       <option value="arrangetestcase">Arrange options </option>
   </select></p>
   <center>
-    <button class="btn" type="submit" name="save_question">Save</button>
-    <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Back to Questions</button>
-    <button class="btn" type="submit" name="delete_files">Delete Selected Files</button>
+    <button class="btn btn-success" type="submit" name="save_question">Save</button>
+    <button class="btn btn-info" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/questions/");'>Back to Questions</button>
+    <button class="btn btn-danger" type="submit" name="delete_files">Delete Selected Files</button>
   </center>
 </form>
+</div>
 {% endblock %}

@@ -9,7 +9,7 @@
 {% endblock script %}
 
 {% block main %}
-
+<div class="yakshwell container">
 {% if not data.papers %}
     {% if quiz.is_exercise %}
     <p><b> You have not attempted the Exercise {{ quiz.description }} </b></p>
@@ -27,7 +27,8 @@
         <h2> Quiz: {{ paper.question_paper.quiz.description }} </h2>
     {% endif %}
 
-    <p>
+    <div class="card">
+      <div class="card-body">
     Attempt Number: {{ paper.attempt_number }}<br/>
     Questions correctly answered: {{ paper.get_answered_str }} <br/>
     Marks obtained: {{ paper.marks_obtained }} <br/>
@@ -39,19 +40,20 @@
     {% else %}
     Status : <b style="color: red;"> Failed </b><br/>
     {% endif %}
-    </p>
+    </div>
+  </div>
 
     {% if paper.answers.count %}
     <h3> Answerpaper: </h3>
     {% for question, answers in paper.get_question_answers.items %}
 
-    <div class="panel panel-info">
-        <div class="panel-heading">
+    <div class="card">
+        <div class="card-heading yakshlabel">
             <strong> Details: {{forloop.counter}}. {{ question.summary }} 
             <span class="marks pull-right"> Mark(s): {{ question.points }} </span>
             </strong>
         </div>
-        <div class="panel-body">
+        <div class="card-body">
             <h5><u>Question:</u></h5> <strong>{{ question.description|safe }}</strong>
             {% if question.type == "mcq" or question.type == "mcc" %}
                 <h5> <u>Choices:</u></h5>
@@ -60,7 +62,7 @@
                 {% if testcase.correct %}
                    <br/>
                    <strong>{{ forloop.counter }}. {{ testcase.options|safe }}</strong>
-                   <span class="label label-success"> Correct</span>
+                   <span class="alert alert-success"> Correct</span>
                 {% else %}
                 <br/><strong>
                 {{ forloop.counter }}. {{ testcase.options|safe }}</strong>
@@ -92,49 +94,57 @@
     </div>
     {% if question.type != "code" %}
         {% if "Correct answer" in answers.0.error_list %}
-            <div class="panel panel-success">
+            <div class="card alert-success">
         {% else %}
-            <div class="panel panel-danger">
+            <div class="card card-danger">
         {% endif %}
-            <div class="panel-heading">
+            <div class="card-heading">
                 <strong>{{ answers.0.error_list.0 }}</strong>
             </div>
-            <div class="panel-body">
+            <div class="card-body">
             {% if question.type == "mcc"%}
-        <div class="well well-sm">
+        <div class="card">
+          <div class="card-body">
         {% for testcases in question.get_test_cases %}
         {%if testcases.id|stringformat:"i" in answers.0.answer|safe %}
          <li>{{ testcases.options.strip|safe }}</li>
         {% endif %}
         {% endfor %}
         </div>
+      </div>
         {% elif question.type == "mcq"%}
-        <div class="well well-sm">
+        <div class="card">
+          <div class="card-body">
         {% for testcases in question.get_test_cases %}
         {%if testcases.id|stringformat:"i" == answers.0.answer|safe %}
          <li>{{ testcases.options.strip|safe }}</li>
         {% endif %}
         {% endfor %}
         </div>
+      </div>
         {% elif question.type == "arrange"%}
-        <div class="well well-sm">
+        <div class="card">
+          <div class="card-body">
           {% get_answer_for_arrange_options answers.0.answer question as tc_list %}
         {% for testcases in tc_list %}
          <li>{{ testcases.options.strip|safe }}</li>
         {% endfor %}
         </div>
+      </div>
         {% elif question.type == "upload" and has_user_assignment %}
                 <a href="{{URL_ROOT}}/exam/download/user_assignment/{{question.id}}/{{data.user.id}}/{{paper.question_paper.quiz.id}}">
-                <div class="well well-sm">
-                <div class="panel">
+                <div class="card">
+                <div class="card-body">
                 Assignment File for {{ data.user.get_full_name.title }}
                 </div></a>
                 </div>
         {% else %}
                 <h5><u>Student answer:</u></h5>
-                <div class="well well-sm">
+                <div class="card">
+                  <div class="card-body">
                  {{ answers.0.answer|safe }}
                  </div>
+               </div>
         {% endif %}
             </div>
             </div>
@@ -143,13 +153,13 @@
     {% for answer in answers %}
     {% if not answer.skipped %}
     {% if answer.answer.correct %}
-            <div class="panel panel-success">
-            <div class="panel-heading">
+            <div class="card">
+            <div class="card-heading alert-success">
             <strong>Correct Answer</strong>
             </div>
         {% else %}
-            <div class="panel panel-danger">
-            <div class="panel-heading">
+            <div class="card ">
+            <div class="card-heading alert-danger">
               <strong>Incorrect Answer</strong>
             </div>
         {% endif %}
@@ -158,17 +168,18 @@
             {% for error in err %}
             
       {% if error.type == 'stdio' %}
-        <div class = "well well-sm">
+        <div class = "card">
+          <div class="card-body">
         {% if error.given_input %}
-       <table class="table table-bordered">
+       <table class="table table-bordered table-responsive-sm">
         <col width="30%">
-          <tr class = "active">
+          <tr class = "table-active">
           <td> For given Input value(s):</td>
           <td>{{error.given_input}}</td>
           </tr>
        </table>
        {% endif %}
-        <table class="table table-bordered" width="100%" id="output" style="table-layout: fixed">
+        <table class="table table-bordered table-responsive-sm" width="100%" id="output" style="table-layout: fixed">
           <col width="10%">
           <col width="40%">
           <col width="40%">
@@ -184,21 +195,22 @@
           <td>{{expected|default:""}} </td>
           <td>{{user|default:""}}</td>
           {% if forloop.counter0 in error.error_line_numbers or not expected or not user %}
-          <td><span class ="glyphicon glyphicon-remove text-warning"/></td>
+          <td><span class ="fa fa-times text-warning"/></td>
           {% else %}
-          <td><span class ="glyphicon glyphicon-ok text-success"/></td>
+          <td><span class ="fa fa-check text-success"/></td>
           {% endif %}
           </tr>
           {% endfor %}
           </table>
-          <table width="100%" class='table table-bordered'>
+          <table width="100%" class="table table-bordered table-responsive-sm">
           <col width="10">
-          <tr class = "danger">
+          <tr class = "table-danger">
           <td><b>Error:</b></td>
            <td>{{error.error_msg}}</td>
            </tr>
           </table>
         </div>
+      </div>
         {% elif error.type == 'assertion' %}
             {% if error.test_case %}
       <strong> We tried you code with the following test case:</strong><br/></br>
@@ -206,7 +218,7 @@
             {% endif %}
           <p> <b>The following error took place: </b></p>
           <div class="well well-sm">
-        <table class="table table-bordered" width="100%" style="table-layout: fixed">
+        <table class="table table-bordered table-responsive-sm" width="100%" style="table-layout: fixed">
           <col width="30%">
             <tr class = "active">
             <td><b>Exception Name: </b></td>
@@ -248,4 +260,5 @@
     {% endfor %} {# for paper in data.papers #}
 
 {% endif %} {# if not data.papers #}
+</div>
 {% endblock %}

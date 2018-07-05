@@ -11,16 +11,18 @@ List of Users
 
 
 {% block manage %}
-<center><table style="text-align:left;" class=table-class border=3>
+<div class="yakshwell container">
+<center><table style="text-align:left;" class="table table-responsive-sm" style="border=3">
 <th>Username
 <th>First Name
 <th>Last Name
 <th>Quiz Description
 {% for papers in question %}
-<tr><td><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{ papers.user.username }}">{{ papers.user.username }}</a><br>
+<tr class="yakshgreen"><td><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{ papers.user.username }}">{{ papers.user.username }}</a><br>
     <td >{{ papers.user.first_name.title }}
     <td>{{ papers.user.last_name.title }}
     <td>{{ papers.question_paper.quiz.description }}
 {% endfor %}
 </table></center>
+</div>
 {% endblock %}

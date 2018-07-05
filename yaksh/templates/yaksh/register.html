@@ -1,19 +1,63 @@
 {% extends "base.html" %}
 
+{% block nav %}
+<div class="container-fluid yakshnav">
+<nav class="navbar fixed-top navbar-expand-lg yakshheading yakshnav">
+  <div class="container">
+    <button class="navbar-toggler navbar-dark" type="button" data-toggle="collapse" data-target="#myNavbar" aria-controls="myNavbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon" style="color: white"></span>
+    </button>
+    <a class="navbar-brand" href="{{ URL_ROOT }}/exam/">
+    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH" style="margin-top: -3px; margin-left:-15px">
+    </img>
+    </a>    
+    <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav nav-pills ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/">LOGIN INSTEAD?</a></li>
+        </ul>
+    </div>
+  </div>
+</nav>
+</div>
+{% endblock %}
 
-{% block pagetitle %} Online Test Registration {% endblock %}
+{% block pagetitle %}<p class="yakshred"> Online Test Registration </p>{% endblock %}
 
 {% block content %}
-
+<div class="container-fluid row justify-content-center">
+<div class="col-md-10">
 <form action="" method="post">
     {% csrf_token %}
-    <h3> Please fill in the following details:</h3>
+    <h5> Please fill in the following details:</h5>
     <center>
-        <table class="table">
+        <table class="table table-responsive-sm">
     {{ form.as_table }}
     </table></center>
-    <center><button class="btn btn-primary" type="submit">Register</button>&nbsp;&nbsp;
+    <center class="yakshwell"><button class="btn btn-success" type="submit">Register</button>&nbsp;&nbsp;
     <a href="{{URL_ROOT}}/exam" class="btn btn-danger">Cancel</a></center>
 </form>
-
+</div>
+</div>
+<br><br><br>
 {% endblock content %}
+
+{% block footer %}
+  <!--footer-->   
+  <footer class="container-fluid yakshfooter text-center" id="contact">
+       {% block info %}
+       {% endblock %}
+       Developed by FOSSEE team, IIT Bombay
+       <hr style="background-color: white"> 
+       <nav class="nav nav-pills nav-fill col-lg-12"> 
+
+            <li class="nav-item">
+                <a class = "btn btn-social-icon btn-github nav-link" href ="https://github.com/fossee/online_test"">Fork us at:
+                <span class="fa fa-github" style="font-size:20px;"></span>
+                </a>
+            </li>
+                <li class="nav-item"><span class="nav-link"> Email : info@fossee.in</span></li>
+                <li class="nav-item"><a href="#" class="nav-link">FOSSEE website</a></li>
+            </nav>
+  </footer>
+  <!--footer end-->
+{% endblock %}

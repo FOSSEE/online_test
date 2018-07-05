@@ -28,136 +28,151 @@ $(document).ready(function()
 {% endblock %}
 
 {% block content %}
+<div class="container">
+    <div class="yakshwell">
+        {# ############################################################### #}
+        {# This is rendered when we are just viewing exam/monitor #}
 
-{# ############################################################### #}
-{# This is rendered when we are just viewing exam/monitor #}
+        {% if course_details %}
+        <div class="table-wrapper-2">
+            <table id="course-details" class="table table-bordered table-responsive-sm">
+            <tr class="table-info">
+            <th>Courses</th>
+            <th> Quizzes </th>
+            </tr>
 
-{% if course_details %}
-    <table id="course-details" class="table table-bordered">
-    <tr>
-    <th>Courses</th>
-    <th> Quizzes </th>
-    </tr>
+            {% for course in course_details %}
+            <tr>
+            <td><ul class="list-group">{{course.name}} </td>
 
-    {% for course in course_details %}
-    <tr>
-    <td><ul class="list-group">{{course.name}} </td>
-
-    {% if course.get_quizzes %}
-    <td>
-    {% for quiz in course.get_quizzes %}
-     <li class="list-group-item"><a href = "{{URL_ROOT}}/exam/manage/monitor/{{quiz.id}}/{{course.id}}/">
-     {{quiz.description}}
-     </a></li>
-    {% endfor %}
-    </td>
-    {% else %}
-    <td> No quiz</td>
-    {% endif %}
-    </ul></tr>
-    {% endfor %}
-    </table>
-{% endif %}
-
-{# ############################################################### #}
-{# This is rendered when we are just viewing exam/monitor/quiz_num #}
-{% if msg != "Monitor" %}
-{% if quiz %}
-{% if papers %}
-<p>Course Name: {{ course.name }}</p>
-<p>Quiz Name: {{ quiz.description }}</p>
-<p>Number of papers: {{ papers|length }} </p>
-{% completed papers as completed_papers %}
- {# template tag used to get the count of completed papers #}
- <p>Papers completed: <b> {{ completed_papers }} </b></p>
-
-{% inprogress papers as inprogress_papers %}
- {# template tag used to get the count of inprogress papers #}
- <p>Papers in progress:<b>  {{ inprogress_papers }} </b></p>
-
-<p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{papers.0.question_paper.id}}/{{course.id}}">Question Statisitics</a></p>
-<p>
-   <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#csvModal">
-       Download CSV <span class="glyphicon glyphicon-save"></span>
-   </button></p>
-<table id="result-table" class="tablesorter table table table-striped">
-    <thead>
-    <tr>
-    <th> Name </th>
-    <th> Username </th>
-    <th> Roll number </th>  
-    <th> Institute </th>
-    <th> Questions answered </th> 
-    <th> Marks obtained </th>
-    <th> Attempts </th>
-    <th> Time Remaining </th>
-    <th> Status </th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for paper in latest_attempts %}
-    <tr> 
-        <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.id}}/{{paper.question_paper.id}}/{{course.id}}">{{ paper.user.get_full_name.title }}</a> </td>
-        <td> {{ paper.user.username }} </td>
-        <td> {{ paper.user.profile.roll_number }} </td>
-        <td> {{ paper.user.profile.institute }} </td>
-        <td> {{ paper.get_answered_str }} </td>
-        <td> {{ paper.marks_obtained }} </td>
-        <td> {{ paper.answers.count }} </td>
-        <td id="time_left{{forloop.counter0}}"> {{ paper.time_left }} </td>
-        <td>{{ paper.status }}</td>
-        </div>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p> No answer papers found for {{ quiz.description }}</p>
-{% endif %} {# if papers #}
-{% else %}
-<h4>No Quiz Found</h4>
-{% endif %}
-{% endif %}
-
-<!-- CSV Modal -->
-<div class="modal fade" id="csvModal" role="dialog">
-    <div class="modal-dialog">
-
-    <!-- Modal content-->
-    <div class="modal-content">
-    <div class="modal-header">
-      <button type="button" class="close" data-dismiss="modal">&times;</button>
-      <h3 class="modal-title">Uncheck unwanted columns</h3>
-    </div>
-    <form action="{{URL_ROOT}}/exam/manage/download_quiz_csv/{{ course.id }}/{{ quiz.id }}/" method="post">
-        {% csrf_token %}
-    <div class="modal-body">
-        {% for field in csv_fields %}
-        <div class="form-check form-check-inline">
-          <label class="form-check-label">
-              <input class="form-check-input" name="csv_fields" type="checkbox" value="{{ field }}" checked> {{ field }}
-          </label>
-        </div>
-        {% endfor %}
-        <b>Select Attempt Number: Default latest attempt</b>
-        <select class="form-control" name = "attempt_number">
-            {%for attempt_number in attempt_numbers %}
-            {% if forloop.last %}
-            <option value="{{ attempt_number }}" selected>{{ attempt_number }} (Latest)</option>
-            {% else %}
-            <option value = "{{ attempt_number }}"> {{ attempt_number }}</option>
-            {% endif %}
+            {% if course.get_quizzes %}
+            <td>
+            {% for quiz in course.get_quizzes %}
+             <li class="list-group-item"><a href = "{{URL_ROOT}}/exam/manage/monitor/{{quiz.id}}/{{course.id}}/">
+             {{quiz.description}}
+             </a></li>
             {% endfor %}
-        </select>
-    </div>
-    <div class="modal-footer">
-      <button type="submit" class="btn btn-primary"> Download <span class="glyphicon glyphicon-save"></span></button>
-      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-    </div>
-    </form>
-    </div>
+            </td>
+            {% else %}
+            <td> No quiz</td>
+            {% endif %}
+            </ul></tr>
+            {% endfor %}
+            </table>
+        </div>
+        {% endif %}
+
+        {# ############################################################### #}
+        {# This is rendered when we are just viewing exam/monitor/quiz_num #}
+        {% if msg != "Monitor" %}
+        {% if quiz %}
+        {% if papers %}
+        <div class="row">
+        <div class="card col-md-4">
+            <div class="row">
+                <div class="col"><b>Course Name:<br>Quiz Name:<br>Number of papers:<br>Papers completed:<br>Papers in progress:</b>
+                </div>
+                <div class="col">                
+                     {{ course.name }}<br>
+                     {{ quiz.description }}<br>
+                    {{ papers|length }}<br>
+                    {% completed papers as completed_papers %}
+                     {# template tag used to get the count of completed papers #}
+                      <b class="yakshred"> {{ completed_papers }} </b><br>
+                    {% inprogress papers as inprogress_papers %}
+                     {# template tag used to get the count of inprogress papers #}
+                     <b class="yakshred">  {{ inprogress_papers }} </b>
+                </div>
+            </div>
+         </div>
+         <div class="col">
+                <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{papers.0.question_paper.id}}/{{course.id}}" class="btn btn-primary">Question Statisitics</a></p>
+                <p>
+                   <button type="button" class="btn btn-info" data-toggle="modal" data-target="#csvModal">
+                       Download CSV <span class="fa fa-download"></span>
+                   </button></p>
+         </div>
+         <div class="yakshwell container-fluid">
+            <div class="table-wrapper-2">
+            <table id="result-table" class="tablesorter table  table-striped table-responsive-sm">
+                <thead>
+                <tr class="table-info">
+                <th> Name </th>
+                <th> Username </th>
+                <th> Roll number </th>  
+                <th> Institute </th>
+                <th> Questions answered </th> 
+                <th> Marks obtained </th>
+                <th> Attempts </th>
+                <th> Time Remaining </th>
+                <th> Status </th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for paper in latest_attempts %}
+                <tr> 
+                    <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.id}}/{{paper.question_paper.id}}/{{course.id}}"><i class="fa fa-circle fa-sm"></i> {{ paper.user.get_full_name.title }}</a> </td>
+                    <td> {{ paper.user.username }} </td>
+                    <td> {{ paper.user.profile.roll_number }} </td>
+                    <td> {{ paper.user.profile.institute }} </td>
+                    <td> {{ paper.get_answered_str }} </td>
+                    <td> {{ paper.marks_obtained }} </td>
+                    <td> {{ paper.answers.count }} </td>
+                    <td id="time_left{{forloop.counter0}}"> {{ paper.time_left }} </td>
+                    <td>{{ paper.status }}</td>
+                    </div>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+            {% else %}
+            <p> No answer papers found for {{ quiz.description }}</p>
+            {% endif %} {# if papers #}
+            {% else %}
+            <h4>No Quiz Found</h4>
+            {% endif %}
+            {% endif %}
+        </div>
+        <!-- CSV Modal -->
+        <div class="modal fade" id="csvModal" role="dialog">
+            <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+              <h3 class="modal-title">Uncheck unwanted columns</h3>
+            </div>
+            <form action="{{URL_ROOT}}/exam/manage/download_quiz_csv/{{ course.id }}/{{ quiz.id }}/" method="post">
+                {% csrf_token %}
+            <div class="modal-body">
+                {% for field in csv_fields %}
+                <div class="form-check form-check-inline">
+                  <label class="form-check-label">
+                      <input class="form-check-input" name="csv_fields" type="checkbox" value="{{ field }}" checked> {{ field }}
+                  </label>
+                </div>
+                {% endfor %}
+                <b>Select Attempt Number: Default latest attempt</b>
+                <select class="form-control" name = "attempt_number">
+                    {%for attempt_number in attempt_numbers %}
+                    {% if forloop.last %}
+                    <option value="{{ attempt_number }}" selected>{{ attempt_number }} (Latest)</option>
+                    {% else %}
+                    <option value = "{{ attempt_number }}"> {{ attempt_number }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary"> Download <span class="glyphicon glyphicon-save"></span></button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+            </form>
+            </div>
+            </div>
+        </div>
     </div>
 </div>
-
-
 {% endblock %}

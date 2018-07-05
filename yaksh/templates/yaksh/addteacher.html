@@ -8,14 +8,15 @@
 {% endblock %}
 
 {% block content %}
+<div class="yakshwell container">
 <center><h3>Add Teachers for this course</h3><br></center>
 <center><h3>Search teacher with username, firstname, lastname, email</h3><br></center>
 <div align="center">
 		<form action="{{ URL_ROOT }}/exam/manage/searchteacher/{{ course.id }}/" method="post">
 		{% csrf_token %}
 		Search Teacher: <input type="text" name="uname" style="height: 25px; padding: 0px"><br><br>
-		<center><button class="btn" type="submit">Search</button>
-		<button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses");'>Cancel</button> </center></form>
+		<center><button class="btn btn-info" type="submit">Search</button>
+		<button class="btn btn-danger" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses");'>Cancel</button> </center></form>
 </div>
 <br><br>
 
@@ -27,7 +28,7 @@
 	{% else %}
 		<center><b><u>Search Results</u></b></center><br>
 		<center><b>Search results does not include teachers already added</b></center><br>
-		<table class="table table-striped">
+		<table class="table table-striped table-responsive-sm">
             <th></th>
             <th>Username</th>
 			<th>First Name</th>
@@ -38,7 +39,7 @@
             <th>Position</th>
 			{% for teacher in teachers %}
 				{% if teacher not in course.get_teachers %}
-				<tr>
+				<tr class="yakshgreen">
 				<td><input type="checkbox" name="check" value="{{ teacher.id }}"></td>
 				<td>{{ teacher.username }}</td>
 				<td>{{ teacher.first_name }}</td>
@@ -52,7 +53,7 @@
 			{% endfor %}
 		</table>
 	</br>
-		<button class="btn" type="submit">Add Selected</button>
+		<button class="btn btn-success" type="submit">Add Selected</button>
 	{% endif %}
 {% endif %}
 </form>
@@ -75,4 +76,5 @@
     </div>
 </div>
 {% endif %}
+</div>
 {% endblock %}

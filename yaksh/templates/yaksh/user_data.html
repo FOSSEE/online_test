@@ -10,9 +10,10 @@
 <script src="{{ URL_ROOT }}/static/yaksh/js/mathjax/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 
 {% endblock %}
-
+<div class="yakshwell container">
 <form action="" method="post">
-<p> 
+  <div class="card col-md-4">
+<p class="card-body"> 
 Name: {{ data.user.get_full_name.title }} <br/>
 Username: {{ data.user.username }} <br/>
 {% if data.profile %}
@@ -25,9 +26,9 @@ Email: {{ data.user.email }} <br/>
 Date joined: {{ data.user.date_joined }} <br/>
 Last login: {{ data.user.last_login }} 
 </p>
-
+</div>
 {% if data.papers %}
-<p><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{data.papers.0.question_paper.quiz.id}}/{{ data.user.id }}/{{course_id}}/">
+<p class="text-center"><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{data.papers.0.question_paper.quiz.id}}/{{ data.user.id }}/{{course_id}}/"  class="btn btn-info ">
     Grade/correct paper</a>
 </p>
 
@@ -155,7 +156,7 @@ User IP address: {{ paper.user_ip }}
             {% if error.type == 'stdio' %}
         <div class = "well well-sm">
         {% if error.given_input %}
-       <table class="table table-bordered">
+       <table class="table table-bordered table-responsive-sm">
         <col width="30%">
           <tr class = "active">
           <td> For given Input value(s):</td>
@@ -163,7 +164,7 @@ User IP address: {{ paper.user_ip }}
           </tr>
        </table>
        {% endif %}
-        <table class="table table-bordered" width="100%" id="output" style="table-layout: fixed">
+        <table class="table table-bordered table-responsive-sm" width="100%" id="output" style="table-layout: fixed">
           <col width="10%">
           <col width="40%">
           <col width="40%">
@@ -186,7 +187,7 @@ User IP address: {{ paper.user_ip }}
           </tr>
           {% endfor %}
           </table>
-          <table width="100%" class='table table-bordered'>
+          <table width="100%" class="table table-bordered table-responsive-sm">
           <col width="10">
           <tr class = "danger">
           <td><b>Error:</b></td>
@@ -201,7 +202,7 @@ User IP address: {{ paper.user_ip }}
             {% endif %}
           <p> <b>The following error took place: </b></p>
           <div class="well well-sm">
-        <table class="table table-bordered" width="100%" style="table-layout: fixed">
+        <table class="table table-bordered table-responsive-sm" width="100%" style="table-layout: fixed">
           <col width="30%">
             <tr class = "active">
             <td><b>Exception Name: </b></td>
@@ -265,5 +266,6 @@ User IP address: {{ paper.user_ip }}
 <a href="{{URL_ROOT}}/exam/manage/monitor/{{paper.question_paper.id}}/">Monitor quiz</a>
 {% endwith %}
 {% endif %}
+</div>
 
 {% endblock %}
