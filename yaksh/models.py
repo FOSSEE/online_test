@@ -1001,14 +1001,16 @@ class Profile(models.Model):
             os.chmod(user_dir, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         return user_dir
 
-    def _add_to_moderator_group(self, group_name='moderator'):
+    def _toggle_moderator_group(self, group_name='moderator'):
+        group = Group.objects.get(name=group_name)
         if self.is_moderator:
-            group = Group.objects.get(name=group_name)
             self.user.groups.add(group)
+        else:
+            self.user.groups.remove(group)
 
     def save(self, *args, **kwargs):
+        self._toggle_moderator_group()
         super(Profile, self).save(*args, **kwargs)
-        self._add_to_moderator_group()
 
     def __str__(self):
         return '%s' % (self.user.get_full_name())

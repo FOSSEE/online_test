@@ -66,7 +66,7 @@ def my_render_to_response(request, template, context=None, **kwargs):
 def is_moderator(user,  group_name='moderator'):
     """Check if the user is having moderator rights"""
     try:
-        group = Group.objects.get(name='moderator')
+        group = Group.objects.get(name=group_name)
         return user.profile.is_moderator and user in group.user_set.all()
     except Profile.DoesNotExist:
         return False
@@ -172,8 +172,10 @@ def quizlist_user(request, enrolled=None, msg=None):
         )
         title = 'All Courses'
 
-    context = {'user': user, 'courses': courses, 'title': title,
-               'msg': msg}
+    context = {
+        'user': user, 'courses': courses,
+        'title': title, 'msg': msg
+    }
 
     return my_render_to_response(request, "yaksh/quizzes_user.html", context)
 
