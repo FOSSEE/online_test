@@ -8,7 +8,10 @@
 
 {% block content %}
 
-<center><h4>List of quizzes! Click on the given links to have a look at answer papers for a quiz.</h4></center>
+<center><h4 class="pull-left">List of quizzes! Click on the given links to have a look at answer papers for a quiz.</h4></center>
+<a href="{{URL_ROOT}}/exam/quizzes" class="btn btn-primary pull-right">
+  Switch To Student
+</a>
 <table class="table table-bordered">
     <th>Courses</th>
     <th>Quizzes</th>

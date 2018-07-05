@@ -7,6 +7,13 @@
             <center>{{ msg }}</center>
         </div>
     {% endif %}
+    {% if is_moderator %}
+        <div class="row">
+            <a href="{{URL_ROOT}}/exam/" class="btn btn-primary pull-right" style="margin-top: 20px; margin-bottom: 20px;">
+              Switch To Moderator
+            </a>
+        </div>
+    {% endif %}
     {% if 'Enrolled Courses' not in title%}
         <div class="row well">
             <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" class="form-search form-horizontal">
