@@ -86,3 +86,7 @@ def get_answer_for_arrange_options(ans, question):
         tc = question.get_test_case(id=int(answer_id))
         testcases.append(tc)
     return testcases
+
+@register.simple_tag
+def get_questions_by_type(all_questions, question_type):
+    return [question for question in all_questions if question.type == question_type]

@@ -44,7 +44,7 @@ from yaksh.models import (
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, Lesson, LessonFile,
     LearningUnit, LearningModule,
-    CourseStatus
+    CourseStatus, question_types
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -612,6 +612,7 @@ def show_question(request, question, paper, error_message=None, notification=Non
     course = Course.objects.get(id=course_id)
     module = course.learning_module.get(id=module_id)
     all_modules = course.get_learning_modules()
+    all_question_types = [types[0] for types in question_types]
     context = {
         'question': question,
         'paper': paper,
@@ -626,7 +627,8 @@ def show_question(request, question, paper, error_message=None, notification=Non
         'can_skip': can_skip,
         'delay_time': delay_time,
         'quiz_type': quiz_type,
-        'all_modules': all_modules
+        'all_modules': all_modules,
+        "question_types": all_question_types
     }
     answers = paper.get_previous_answers(question)
     if answers:
