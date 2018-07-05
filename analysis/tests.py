@@ -346,7 +346,7 @@ class CourseFormTest(TestCase):
 
 		self.client.login(username=self.user_teacher.username, password=self.user_teacher_pass)
 		self.client.post(reverse('yaksh:add_course'),
-					data={'name': 'demo_course',
+					data={'name': 'demo_course', 'group': 'Self', 
 					  'level':'Basic', 'enrollment': 'open', 'active': True, 
 					  'code': 'demo_code', 'instructions' : 'demo_instruct',
 					  'start_enroll_time': '2018-06-29 13:49:00', 
@@ -358,6 +358,7 @@ class CourseFormTest(TestCase):
 
 		self.assertEqual(created_course.name, 'demo_course')
 		self.assertEqual(created_course.level, 'Basic')
+		self.assertEqual(created_course.group, 'Self')
 		self.assertEqual(created_course.enrollment, 'open')
 		self.assertEqual(created_course.active, True)
 		self.assertEqual(created_course.code, 'demo_code')
@@ -371,8 +372,27 @@ class CourseFormTest(TestCase):
 
 		self.client.login(username=self.user_teacher.username, password=self.user_teacher_pass)
 		self.client.post(reverse('yaksh:add_course'),
-					data={'name': 'demo_course',
+					data={'name': 'demo_course', 'group': 'Self',
 					  'level':'Something', 'enrollment': 'open', 'active': True, 
+					  'code': 'demo_code', 'instructions' : 'demo_instruct',
+					  'start_enroll_time': '2018-06-29 13:49:00', 
+					  'end_enroll_time' : '2019-06-29 13:49:00',
+                  	}
+                  )
+
+		created_course = Course.objects.filter(name='demo_course').exists()
+		self.assertFalse(created_course)
+
+	def test_undefined_group_value(self):
+		"""
+		as we have predefined values for level, 
+		enter something else would not create user
+		"""
+
+		self.client.login(username=self.user_teacher.username, password=self.user_teacher_pass)
+		self.client.post(reverse('yaksh:add_course'),
+					data={'name': 'demo_course', 'group': 'Something',
+					  'level': 'Basic', 'enrollment': 'open', 'active': True, 
 					  'code': 'demo_code', 'instructions' : 'demo_instruct',
 					  'start_enroll_time': '2018-06-29 13:49:00', 
 					  'end_enroll_time' : '2019-06-29 13:49:00',

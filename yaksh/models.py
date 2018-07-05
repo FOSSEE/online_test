@@ -66,6 +66,8 @@ enrollment_methods = (
 #############################skt######################
 course_levels = ['Basic', 'Advanced', 'Intermediate']
 
+course_groups = ['Self', 'Instructor']
+
 position_list = ["Faculty", "School Student", "Graduate Student", 
                 "Postgraduate Student", "Industry Professional", 
                 "Research Scholar"]
@@ -624,6 +626,10 @@ class Course(models.Model):
     level = models.CharField(max_length=32, 
                             choices=[(course_level, course_level) for course_level in course_levels],
                             default='Basic')
+
+    group = models.CharField(max_length=32, 
+                        choices=[(course_group, course_group) for course_group in course_groups],
+                        default='Unknown')
     ##############################################################
 
 

@@ -314,7 +314,7 @@ class CourseForm(forms.ModelForm):
         model = Course
 
     ####################################skt###################################
-        fields = ['name', 'level', 'enrollment', 'active', 'code', 'instructions',
+        fields = ['name', 'group', 'level', 'enrollment', 'active', 'code', 'instructions',
                   'start_enroll_time', 'end_enroll_time', 'grading_system']
 
     ##########################################################################
