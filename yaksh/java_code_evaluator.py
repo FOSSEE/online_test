@@ -155,8 +155,6 @@ class JavaCodeEvaluator(BaseEvaluator):
                     success, err = True, None
                     mark_fraction = 1.0 if self.partial_grading else 0.0
                 else:
-                    # print ("=========asserterror============")
-                    # err = stdout + "\n" + stderr
                     if self.input_data:
                         err={"input_data":self.input_data,
                              "output_data":self.output_data,
@@ -180,7 +178,6 @@ class JavaCodeEvaluator(BaseEvaluator):
             err = "Compilation Error:"
             try:
                 error_lines = stdnt_stderr.splitlines()
-                print ("e===========",error_lines)
                 for e in error_lines:
                     if ':' in e:
                         err = err + "\n" + e.split(":", 1)[1]

@@ -11,6 +11,7 @@ from .base_evaluator import BaseEvaluator
 
 class CppCodeEvaluator(BaseEvaluator):
     """Tests the C code obtained from Code Server"""
+
     def __init__(self, metadata, test_case_data):
         self.files = []
         self.compiled_user_answer = None
@@ -27,9 +28,9 @@ class CppCodeEvaluator(BaseEvaluator):
 
         # Set test case data values
         self.test_case = test_case_data.get('test_case')
-        self.input_data=test_case_data.get('input_vals')
-        self.output_data=test_case_data.get('output_vals')
-        self.function_name=test_case_data.get('function_name')
+        self.input_data = test_case_data.get('input_vals')
+        self.output_data = test_case_data.get('output_vals')
+        self.function_name = test_case_data.get('function_name')
         self.weight = test_case_data.get('weight')
 
     def teardown(self):
@@ -58,7 +59,7 @@ class CppCodeEvaluator(BaseEvaluator):
         compile_main = 'g++ {0} {1} -o {2}'.format(
             clean_ref_code_path, user_output_path,
             ref_output_path
-            )
+        )
         return compile_command, compile_main
 
     def compile_code(self):
@@ -143,16 +144,13 @@ class CppCodeEvaluator(BaseEvaluator):
                     success, err = True, None
                     mark_fraction = 1.0 if self.partial_grading else 0.0
                 else:
-                    # err = "{0} \n {1}".format(stdout, stderr)
-                    # print ("stdout====",stdout)
-                    # print ("stderr====",stderr)
                     if self.input_data:
-                        err={"input_data":self.input_data,
-                             "output_data":self.output_data,
-                             "function_name":self.function_name}
-                        
+                        err = {"input_data": self.input_data,
+                               "output_data": self.output_data,
+                               "function_name": self.function_name}
+
                     else:
-                        
+
                         err = "{0} \n {1}".format(stdout, stderr)
             else:
                 err = "Test case Error:"
@@ -164,7 +162,7 @@ class CppCodeEvaluator(BaseEvaluator):
                         else:
                             err = "{0} \n {1}".format(err, e)
                 except Exception:
-                        err = "{0} \n {1}".format(err, main_err)
+                    err = "{0} \n {1}".format(err, main_err)
         else:
             err = "Compilation Error:"
             try:

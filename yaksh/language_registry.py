@@ -21,7 +21,6 @@ def create_evaluator_instance(metadata, test_case):
     cls = registry.get_class(metadata.get('language'),
                              test_case.get('test_case_type'))
     instance = cls(metadata, test_case)
-    print ("create_evaluator_instance",instance)
     return instance
 
 
@@ -34,7 +33,6 @@ class _LanguageRegistry(object):
     # Public Protocol ##########
     def get_class(self, language, test_case_type):
         """ Get the code evaluator class for the given language """
-        print ("_LanguageRegistry-------get_class")
         if not self._register.get(language):
             self._register[language] = code_evaluators.get(language)
         test_case_register = self._register[language]

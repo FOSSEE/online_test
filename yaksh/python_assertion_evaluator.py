@@ -39,11 +39,8 @@ class PythonAssertionEvaluator(BaseEvaluator):
         if self.exec_scope:
             return None
         else:
-            print ("before python assertion")
             submitted = compile(self.user_answer, '<string>', mode='exec')
             aa=self.user_answer
-            # print ("submitted------",submitted.code)
-            print ("after python assertion")
             self.exec_scope = {}
             exec(submitted, self.exec_scope)
             return self.exec_scope
@@ -81,7 +78,6 @@ class PythonAssertionEvaluator(BaseEvaluator):
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
-            print ("testing",tb_list)
             line_no = traceback.extract_tb(exc_tb)[-1][1]
             if len(tb_list) > 2:
                 del tb_list[1:3]
