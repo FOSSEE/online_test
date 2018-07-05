@@ -12,7 +12,7 @@
 {% block content %}
 {% if module_id and not paper.question_paper.quiz.is_trial %}
 <center>
-    <div class="alert alert-info">
+    <div class="alert alert-info col-md-8 animated flash">
         Note:- Please Click on the Next button to submit the quiz. Please do not close the browser without clicking Next.
     </div>
 </center>
@@ -20,9 +20,6 @@
 {% csrf_token %}
     {% if paper.questions_answered.all or paper.questions_unanswered.all %}
         <center>
-        <div class="alert alert-info col-md-8 animated flash">
-         Note:- Please Click on the Next button to submit the quiz. Please do not close the browser without clicking Next. 
-        </div>
         <div class="col-md-8 yakshwell">
             <h3>Submission Status</h3>
             <table class="table table-bordered table-responsive-sm" >

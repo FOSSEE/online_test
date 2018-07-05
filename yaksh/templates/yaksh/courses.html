@@ -5,7 +5,6 @@
 <script>
     $(document).ready(function(){
         $('[data-toggle="tooltip"]').tooltip();
-        $("#created_courses").toggle();
         $("#link_created_courses").click(function() {
             if ($("#allotted_courses").is(":visible")){
                 $("#allotted_courses").toggle();
@@ -433,7 +432,7 @@
 
             <!-- Show all learning modules -->
                 <div class="col-md-offset-2 main">
-            <div id="all_lessons">
+            <div id="all_modules">
             {% if type == "learning_module" %}
                 <a href="{{URL_ROOT}}/exam/manage/courses/add_module/" class="btn btn-primary">
                 Add new Module</a>
