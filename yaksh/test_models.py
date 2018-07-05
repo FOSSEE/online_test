@@ -3,18 +3,16 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus
-from yaksh.code_server import(ServerPool,
-                              get_result as get_result_from_code_server
-                              )
+from yaksh.code_server import (
+    ServerPool, get_result as get_result_from_code_server
+    )
 import json
 import ruamel.yaml as yaml
 from datetime import datetime, timedelta
 from django.utils import timezone
 import pytz
-from django.contrib.auth.models import Group
 from django.db import IntegrityError
 from django.core.files import File
-from django.forms.models import model_to_dict
 from textwrap import dedent
 import zipfile
 import os
@@ -22,6 +20,7 @@ import shutil
 import tempfile
 from threading import Thread
 from yaksh import settings
+
 
 def setUpModule():
     # create user profile
@@ -39,13 +38,11 @@ def setUpModule():
     Profile.objects.create(user=student, roll_number=3, institute='IIT',
                            department='Chemical', position='Student')
 
-    user4 = User.objects.create_user(username='demo_user4',
-        password='demo',
-        email='demo4@test.com'
+    user4 = User.objects.create_user(
+        username='demo_user4', password='demo', email='demo4@test.com'
     )
     Profile.objects.create(user=user4, roll_number=4, institute='IIT',
                            department='Chemical', position='Student')
-
 
     # create a course
     course = Course.objects.create(name="Python Course",
@@ -53,17 +50,17 @@ def setUpModule():
 
     # create 20 questions
     for i in range(1, 21):
-        Question.objects.create(summary='Q%d' % (i), points=1, type='code', user=user)
+        Question.objects.create(summary='Q%d' % (i), points=1,
+                                type='code', user=user)
 
     # create a quiz
-    quiz = Quiz.objects.create(start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0,
-                                                        tzinfo=pytz.utc),
-                        end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0,
-                                               tzinfo=pytz.utc),
-                        duration=30, active=True,
-                        attempts_allowed=1, time_between_attempts=0,
-                        description='demo quiz 1', pass_criteria=0,
-                        instructions="Demo Instructions")
+    quiz = Quiz.objects.create(
+        start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+        end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+        duration=30, active=True,
+        attempts_allowed=1, time_between_attempts=0,
+        description='demo quiz 1', pass_criteria=0,
+        instructions="Demo Instructions")
 
     Quiz.objects.create(start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0,
                                                  tzinfo=pytz.utc),
@@ -78,13 +75,12 @@ def setUpModule():
         f.write('2'.encode('ascii'))
 
     # Learing module
-    learning_module_one = LearningModule.objects.create(name='LM1',
-                                                        description='module one',
-                                                        creator=user)
-    learning_module_two = LearningModule.objects.create(name='LM2',
-                                                        description='module two',
-                                                        creator=user,
-                                                        order=1)
+    learning_module_one = LearningModule.objects.create(
+        name='LM1', description='module one', creator=user
+        )
+    learning_module_two = LearningModule.objects.create(
+        name='LM2', description='module two', creator=user, order=1
+        )
     lesson = Lesson.objects.create(name='L1', description='Video Lesson',
                                    creator=user)
     learning_unit_lesson = LearningUnit.objects.create(order=1, lesson=lesson,
@@ -210,10 +206,11 @@ class LearningModuleTestCases(unittest.TestCase):
         # Given
         module_status = 'not attempted'
         # When
+        self.learning_module.learning_unit.remove(self.learning_unit_two)
         status = self.learning_module.get_status(self.student, self.course)
         # Then
         self.assertEqual(status, module_status)
-
+        self.learning_module.learning_unit.add(self.learning_unit_two)
         # Module in progress
 
         # Given
@@ -287,30 +284,23 @@ class ProfileTestCases(unittest.TestCase):
         self.assertEqual(self.profile.department, 'Chemical')
         self.assertEqual(self.profile.position, 'Student')
 
+
 ###############################################################################
 class QuestionTestCases(unittest.TestCase):
     def setUp(self):
         # Single question details
         self.user1 = User.objects.get(username="creator")
         self.user2 = User.objects.get(username="demo_user2")
-        self.question1 = Question.objects.create(summary='Demo Python 1',
-            language='Python',
-            type='Code',
-            active=True,
-            description='Write a function',
-            points=1.0,
-            snippet='def myfunc()',
-            user=self.user1
+        self.question1 = Question.objects.create(
+            summary='Demo Python 1', language='Python', type='Code',
+            active=True, description='Write a function', points=1.0,
+            snippet='def myfunc()', user=self.user1
         )
 
-        self.question2 = Question.objects.create(summary='Yaml Json',
-            language='python',
-            type='code',
-            active=True,
-            description='factorial of a no',
-            points=2.0,
-            snippet='def fact()',
-            user=self.user2
+        self.question2 = Question.objects.create(
+            summary='Yaml Json', language='python', type='code',
+            active=True, description='factorial of a no', points=2.0,
+            snippet='def fact()', user=self.user2
         )
 
         # create a temp directory and add files for loading questions test
@@ -325,26 +315,28 @@ class QuestionTestCases(unittest.TestCase):
         file2 = os.path.join(self.dump_tmp_path, "test.txt")
         upload_file = open(file2, "r")
         django_file = File(upload_file)
-        file = FileUpload.objects.create(file=django_file,
-                                         question=self.question2
-                                         )
+        FileUpload.objects.create(file=django_file,
+                                  question=self.question2
+                                  )
 
         self.question1.tags.add('python', 'function')
-        self.assertion_testcase = StandardTestCase(question=self.question1,
+        self.assertion_testcase = StandardTestCase(
+            question=self.question1,
             test_case='assert myfunc(12, 13) == 15',
             type='standardtestcase'
         )
-        self.upload_test_case = StandardTestCase(question=self.question2,
+        self.upload_test_case = StandardTestCase(
+            question=self.question2,
             test_case='assert fact(3) == 6',
             type='standardtestcase'
         )
         self.upload_test_case.save()
         self.user_answer = "demo_answer"
         self.test_case_upload_data = [{"test_case": "assert fact(3)==6",
-                                        "test_case_type": "standardtestcase",
-                                        "test_case_args": "",
-                                        "weight": 1.0
-                                        }]
+                                       "test_case_type": "standardtestcase",
+                                       "test_case_args": "",
+                                       "weight": 1.0
+                                       }]
         questions_data = [{"snippet": "def fact()", "active": True,
                            "points": 1.0,
                            "description": "factorial of a no",
@@ -354,20 +346,33 @@ class QuestionTestCases(unittest.TestCase):
                            "summary": "Yaml Demo",
                            "tags": ['yaml_demo']
                            }]
-        questions_data_with_missing_fields = [{"active": True,
-                                               "points": 1.0,
-                                               "description":\
-                                                "factorial of a no",
-                                               "language": "Python",
-                                               "type": "Code",
-                                               "testcase":\
-                                                self.test_case_upload_data,
-                                               "summary": "Yaml Demo 2"
-                                               }]
+        questions_data_with_missing_fields = [{
+            "active": True, "points": 1.0, "description": "factorial of a no",
+            "language": "Python", "type": "Code",
+            "testcase": self.test_case_upload_data,
+            "summary": "Yaml Demo 2"
+            }]
         self.yaml_questions_data = yaml.safe_dump_all(questions_data)
         self.yaml_questions_data_with_missing_fields = yaml.safe_dump_all(
                 questions_data_with_missing_fields
                 )
+        self.bad_yaml_question_data = '''[{
+            "active": True, "points": 1.0, "description" "factorial of a no",
+            "language": "Python", "type": "Code",
+            "testcase": self.test_case_upload_data,
+            "summary": "bad yaml"
+            }]'''
+
+        self.test_case_without_type = [{"test_case": "assert fact(3)==6",
+                                        "test_case_args": "",
+                                        "weight": 1.0
+                                        }]
+        self.yaml_question_data_without_test_case_type = yaml.safe_dump_all([{
+            "active": True, "points": 1.0, "description": "factorial of a no",
+            "language": "Python", "type": "Code",
+            "testcase": self.test_case_without_type,
+            "summary": "bad yaml"
+            }])
 
     def tearDown(self):
         shutil.rmtree(self.load_tmp_path)
@@ -418,8 +423,9 @@ class QuestionTestCases(unittest.TestCase):
                 self.assertTrue(self.question2.active)
                 self.assertEqual(self.question2.snippet, q['snippet'])
                 self.assertEqual(os.path.basename(que_file.file.path),
-                                                  q['files'][0][0])
-                self.assertEqual([case.get_field_value() for case in test_case],
+                                 q['files'][0][0])
+                self.assertEqual([case.get_field_value()
+                                  for case in test_case],
                                  q['testcase']
                                  )
         for file in zip_file.namelist():
@@ -428,7 +434,7 @@ class QuestionTestCases(unittest.TestCase):
     def test_load_questions_with_all_fields(self):
         """ Test load questions into database from Yaml """
         question = Question()
-        result = question.load_questions(self.yaml_questions_data, self.user1)
+        question.load_questions(self.yaml_questions_data, self.user1)
         question_data = Question.objects.get(summary="Yaml Demo")
         file = FileUpload.objects.get(question=question_data)
         test_case = question_data.get_test_cases()
@@ -438,7 +444,7 @@ class QuestionTestCases(unittest.TestCase):
         self.assertEqual(question_data.description, 'factorial of a no')
         self.assertEqual(question_data.points, 1.0)
         self.assertTrue(question_data.active)
-        tags = question_data.tags.all().values_list("name",flat=True)
+        tags = question_data.tags.all().values_list("name", flat=True)
         self.assertListEqual(list(tags), ['yaml_demo'])
         self.assertEqual(question_data.snippet, 'def fact()')
         self.assertEqual(os.path.basename(file.file.path), "test.txt")
@@ -450,26 +456,44 @@ class QuestionTestCases(unittest.TestCase):
         """ Test load questions into database from Yaml with
             missing fields like files, snippet and tags. """
         question = Question()
-        result = question.load_questions(
-                            self.yaml_questions_data_with_missing_fields,
-                            self.user1
-                            )
+        question.load_questions(
+            self.yaml_questions_data_with_missing_fields,
+            self.user1
+            )
         question_data = Question.objects.get(summary="Yaml Demo 2")
         file = FileUpload.objects.filter(question=question_data)
         test_case = question_data.get_test_cases()
-        self.assertEqual(question_data.summary,'Yaml Demo 2')
-        self.assertEqual(question_data.language,'Python')
+        self.assertEqual(question_data.summary, 'Yaml Demo 2')
+        self.assertEqual(question_data.language, 'Python')
         self.assertEqual(question_data.type, 'Code')
-        self.assertEqual(question_data.description,'factorial of a no')
+        self.assertEqual(question_data.description, 'factorial of a no')
         self.assertEqual(question_data.points, 1.0)
         self.assertTrue(question_data.active)
-        self.assertEqual(question_data.snippet,'')
-        self.assertListEqual(list(file),[])
+        self.assertEqual(question_data.snippet, '')
+        self.assertListEqual(list(file), [])
         self.assertEqual([case.get_field_value() for case in test_case],
                          self.test_case_upload_data
                          )
-        tags = question_data.tags.all().values_list("name",flat=True)
+        tags = question_data.tags.all().values_list("name", flat=True)
         self.assertListEqual(list(tags), [])
+
+    def test_load_questions_with_bad_yaml(self):
+        """
+            Test if yaml file is parsed correctly
+        """
+        question = Question()
+        msg = question.load_questions(
+            self.bad_yaml_question_data,
+            self.user1
+            )
+        self.assertIn("Error Parsing Yaml", msg)
+
+        msg = question.load_questions(
+            self.yaml_question_data_without_test_case_type,
+            self.user1
+            )
+        self.assertEqual(msg, "Unable to parse test case data")
+
 
 ###############################################################################
 class QuizTestCases(unittest.TestCase):
@@ -482,7 +506,8 @@ class QuizTestCases(unittest.TestCase):
         self.quiz1 = Quiz.objects.get(description='demo quiz 1')
         self.quiz2 = Quiz.objects.get(description='demo quiz 2')
         self.quiz3 = Quiz.objects.create(
-            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0,
+                                     tzinfo=pytz.utc),
             end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
             duration=30, active=True,
             attempts_allowed=1, time_between_attempts=0,
@@ -491,7 +516,8 @@ class QuizTestCases(unittest.TestCase):
         )
         self.question_paper3 = QuestionPaper.objects.create(quiz=self.quiz3)
         self.quiz4 = Quiz.objects.create(
-            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0,
+                                     tzinfo=pytz.utc),
             end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
             duration=30, active=True,
             attempts_allowed=1, time_between_attempts=0,
@@ -626,13 +652,14 @@ class QuestionPaperTestCases(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.course = Course.objects.get(name="Python Course")
-        self.user= User.objects.get(username='creator')
+        self.user = User.objects.get(username='creator')
         # All active questions
         self.questions = Question.objects.filter(active=True, user=self.user)
         self.quiz = Quiz.objects.get(description="demo quiz 1")
         self.quiz_with_time_between_attempts = Quiz.objects.create(
             description="demo quiz with time between attempts",
-            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0,
+                                     tzinfo=pytz.utc),
             end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
             duration=30, active=True,
             attempts_allowed=3, time_between_attempts=1.0,
@@ -644,15 +671,20 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.question_paper_fixed_questions = QuestionPaper.objects.create(
                 quiz=self.quiz)
         self.question_paper_fixed_questions.fixed_questions.add(
-                self.questions.get(summary='Q11'), self.questions.get(summary='Q10'))
+                self.questions.get(summary='Q11'),
+                self.questions.get(summary='Q10')
+                )
 
         # create question paper with only random questions
         self.question_paper_random_questions = QuestionPaper.objects.create(
                 quiz=self.quiz)
-        self.question_set_random = QuestionSet.objects.create(marks=2,
-            num_questions=2)
-        self.question_set_random.questions.add(self.questions.get(summary='Q13'),
-                self.questions.get(summary='Q5'), self.questions.get(summary='Q7'))
+        self.question_set_random = QuestionSet.objects.create(
+            marks=2, num_questions=2
+            )
+        self.question_set_random.questions.add(
+            self.questions.get(summary='Q13'),
+            self.questions.get(summary='Q5'), self.questions.get(summary='Q7')
+            )
         self.question_paper_random_questions.random_questions.add(
                 self.question_set_random)
 
@@ -661,49 +693,47 @@ class QuestionPaperTestCases(unittest.TestCase):
                 quiz=self.quiz)
 
         # create question paper
-        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz,
-            total_marks=0.0,
-            shuffle_questions=True
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz, total_marks=0.0, shuffle_questions=True
         )
 
-        self.question_paper_with_time_between_attempts = QuestionPaper.objects.create(
-            quiz=self.quiz_with_time_between_attempts,
-            total_marks=0.0,
-            shuffle_questions=True
-        )
+        self.question_paper_with_time_between_attempts = \
+            QuestionPaper.objects.create(
+                quiz=self.quiz_with_time_between_attempts,
+                total_marks=0.0,
+                shuffle_questions=True
+            )
 
         self.question_paper.fixed_question_order = "{0}, {1}".format(
                 self.questions[3].id, self.questions[5].id
                 )
         # add fixed set of questions to the question paper
-        self.question_paper.fixed_questions.add(self.questions[3],
-                self.questions[5]
-                )
+        self.question_paper.fixed_questions.add(
+            self.questions[3], self.questions[5]
+            )
         # create two QuestionSet for random questions
         # QuestionSet 1
-        self.question_set_1 = QuestionSet.objects.create(marks=2,
-            num_questions=2
+        self.question_set_1 = QuestionSet.objects.create(
+            marks=2, num_questions=2
         )
 
         # add pool of questions for random sampling
-        self.question_set_1.questions.add(self.questions[6],
-            self.questions[7],
-            self.questions[8],
-            self.questions[9]
+        self.question_set_1.questions.add(
+            self.questions[6], self.questions[7],
+            self.questions[8], self.questions[9]
         )
         # add question set 1 to random questions in Question Paper
         self.question_paper.random_questions.add(self.question_set_1)
 
         # QuestionSet 2
-        self.question_set_2 = QuestionSet.objects.create(marks=3,
-            num_questions=3
+        self.question_set_2 = QuestionSet.objects.create(
+            marks=3, num_questions=3
         )
 
         # add pool of questions
-        self.question_set_2.questions.add(self.questions[11],
-            self.questions[12],
-            self.questions[13],
-            self.questions[14]
+        self.question_set_2.questions.add(
+            self.questions[11], self.questions[12],
+            self.questions[13], self.questions[14]
         )
         # add question set 2
         self.question_paper.random_questions.add(self.question_set_2)
@@ -723,6 +753,9 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.trial_course = Course.objects.create_trial_course(self.user)
         self.trial_quiz = Quiz.objects.create_trial_quiz(self.user)
 
+    @classmethod
+    def tearDownClass(self):
+        self.quiz.questionpaper_set.all().delete()
 
     def test_get_question_bank(self):
         # Given
@@ -734,10 +767,11 @@ class QuestionPaperTestCases(unittest.TestCase):
         self.assertSequenceEqual(questions, question_bank)
 
         # Given
-        summaries = ['Q13','Q5','Q7']
+        summaries = ['Q13', 'Q5', 'Q7']
         questions = list(Question.objects.filter(summary__in=summaries))
         # When
-        question_bank = self.question_paper_random_questions.get_question_bank()
+        question_bank = \
+            self.question_paper_random_questions.get_question_bank()
         # Then
         self.assertSequenceEqual(questions, question_bank)
 
@@ -752,8 +786,8 @@ class QuestionPaperTestCases(unittest.TestCase):
         """ Test question paper"""
         self.assertEqual(self.question_paper.quiz.description, 'demo quiz 1')
         self.assertSequenceEqual(self.question_paper.fixed_questions.all(),
-                [self.questions[3], self.questions[5]]
-                )
+                                 [self.questions[3], self.questions[5]]
+                                 )
         self.assertTrue(self.question_paper.shuffle_questions)
 
     def test_update_total_marks(self):
@@ -766,8 +800,8 @@ class QuestionPaperTestCases(unittest.TestCase):
         """ Test get_random_questions() method of Question Paper"""
         random_questions_set_1 = self.question_set_1.get_random_questions()
         random_questions_set_2 = self.question_set_2.get_random_questions()
-        total_random_questions = len(random_questions_set_1 + \
-            random_questions_set_2)
+        total_random_questions = len(random_questions_set_1 +
+                                     random_questions_set_2)
         self.assertEqual(total_random_questions, 5)
 
         # To check whether random questions are from random_question_set
@@ -799,21 +833,21 @@ class QuestionPaperTestCases(unittest.TestCase):
         answerpaper.passed = True
         answerpaper.save()
         # test can_attempt_now(self):
-        result = (False, u'You cannot attempt demo quiz 1 quiz more than 1 time(s)')
+        result = (False,
+                  u'You cannot attempt demo quiz 1 quiz more than 1 time(s)')
         self.assertEquals(
-            self.question_paper.can_attempt_now(self.user, self.course.id), result
+            self.question_paper.can_attempt_now(self.user, self.course.id),
+            result
         )
         # trying to create an answerpaper with same parameters passed.
-        answerpaper2 = self.question_paper.make_answerpaper(self.user, self.ip,
-                                                            attempt_num,
-                                                            self.course.id)
+        answerpaper2 = self.question_paper.make_answerpaper(
+            self.user, self.ip, attempt_num, self.course.id
+            )
         # check if make_answerpaper returned an object instead of creating one.
         self.assertEqual(answerpaper, answerpaper2)
 
-
     def test_time_between_attempt(self):
         """ Test make_answerpaper() method of Question Paper"""
-        already_attempted = self.attempted_papers.count()
         attempt_num = 1
 
         self.first_start_time = timezone.now()
@@ -845,26 +879,28 @@ class QuestionPaperTestCases(unittest.TestCase):
         )
         self.second_answerpaper.passed = True
         self.second_answerpaper.save()
-
-        result = (False, u'You cannot start the next attempt for this quiz before 1.0 hour(s)')
+        msg = u'You cannot start the next attempt ' +\
+            'for this quiz before1.0 hour(s)'
+        result = (False, msg)
         self.assertEquals(
-            self.question_paper_with_time_between_attempts.can_attempt_now(self.user, self.course.id), result
+            self.question_paper_with_time_between_attempts.can_attempt_now(
+                self.user, self.course.id), result
         )
-
 
     def test_create_trial_paper_to_test_quiz(self):
         qu_list = [str(self.questions_list[0]), str(self.questions_list[1])]
-        trial_paper = QuestionPaper.objects.create_trial_paper_to_test_quiz\
-                                            (self.trial_quiz,
-                                             self.quiz.id
-                                             )
+        trial_paper = \
+            QuestionPaper.objects.create_trial_paper_to_test_quiz(
+                self.trial_quiz, self.quiz.id
+                )
         trial_paper.random_questions.add(self.question_set_1)
         trial_paper.random_questions.add(self.question_set_2)
         trial_paper.fixed_question_order = ",".join(qu_list)
         self.assertEqual(trial_paper.quiz, self.trial_quiz)
-        self.assertSequenceEqual(trial_paper.get_ordered_questions(),
-                         self.question_paper.get_ordered_questions()
-                         )
+        self.assertSequenceEqual(
+            trial_paper.get_ordered_questions(),
+            self.question_paper.get_ordered_questions()
+            )
         trial_paper_ran = [q_set.id for q_set in
                            trial_paper.random_questions.all()]
         qp_ran = [q_set.id for q_set in
@@ -874,10 +910,10 @@ class QuestionPaperTestCases(unittest.TestCase):
 
     def test_create_trial_paper_to_test_questions(self):
         qu_list = [str(self.questions_list[0]), str(self.questions_list[1])]
-        trial_paper = QuestionPaper.objects.\
-                         create_trial_paper_to_test_questions(
-                                self.trial_quiz, qu_list
-                                )
+        trial_paper = \
+            QuestionPaper.objects.create_trial_paper_to_test_questions(
+                self.trial_quiz, qu_list
+            )
         self.assertEqual(trial_paper.quiz, self.trial_quiz)
         fixed_q = self.question_paper.fixed_questions.values_list(
             'id', flat=True)
@@ -917,7 +953,8 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.question4 = all_questions[3]
 
         # create answerpaper
-        self.answerpaper = AnswerPaper(user=self.user,
+        self.answerpaper = AnswerPaper(
+            user=self.user,
             question_paper=self.question_paper,
             start_time=self.start_time,
             end_time=self.end_time,
@@ -939,12 +976,14 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.answerpaper.questions_unanswered.add(*self.questions)
         self.answerpaper.save()
         # answers for the Answer Paper
-        self.answer_right = Answer(question=self.question1,
+        self.answer_right = Answer(
+            question=self.question1,
             answer="Demo answer",
             correct=True, marks=1,
             error=json.dumps([])
         )
-        self.answer_wrong = Answer(question=self.question2,
+        self.answer_wrong = Answer(
+            question=self.question2,
             answer="My answer",
             correct=False,
             marks=0,
@@ -962,7 +1001,8 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.answerpaper.answers.add(self.answer1)
 
         # create an answerpaper with only one question
-        self.answerpaper_single_question = AnswerPaper(user=self.user,
+        self.answerpaper_single_question = AnswerPaper(
+            user=self.user,
             question_paper=self.question_paper,
             start_time=self.start_time,
             end_time=self.end_time,
@@ -977,10 +1017,13 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.answerpaper_single_question.attempt_number = already_attempted + 1
         self.answerpaper_single_question.save()
         self.answerpaper_single_question.questions.add(self.question4)
-        self.answerpaper_single_question.questions_unanswered.add(self.question4)
+        self.answerpaper_single_question.questions_unanswered.add(
+            self.question4
+            )
         self.answerpaper_single_question.save()
         # answers for the Answer Paper
-        self.single_answer = Answer(question=self.question4,
+        self.single_answer = Answer(
+            question=self.question4,
             answer="Demo answer",
             correct=True, marks=1,
             error=json.dumps([])
@@ -1005,23 +1048,23 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertion_testcase = StandardTestCase(
             question=self.question1,
             test_case='assert add(1, 3) == 4',
-            type = 'standardtestcase'
+            type='standardtestcase'
 
         )
         self.assertion_testcase.save()
         self.mcq_based_testcase = McqTestCase(
-            options = 'a',
+            options='a',
             question=self.question2,
-            correct = True,
-            type = 'mcqtestcase'
+            correct=True,
+            type='mcqtestcase'
 
         )
         self.mcq_based_testcase.save()
         self.mcc_based_testcase = McqTestCase(
             question=self.question3,
-            options = 'a',
-            correct = True,
-            type = 'mcqtestcase'
+            options='a',
+            correct=True,
+            type='mcqtestcase'
         )
         self.mcc_based_testcase.save()
 
@@ -1053,9 +1096,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.server_pool = server_pool
         self.server_thread = t = Thread(target=server_pool.run)
         t.start()
-    
+
     @classmethod
     def tearDownClass(self):
+        self.quiz.questionpaper_set.all().delete()
         self.server_pool.stop()
         self.server_thread.join()
         settings.code_evaluators['python']['standardtestcase'] = \
@@ -1066,7 +1110,9 @@ class AnswerPaperTestCases(unittest.TestCase):
         question_id = self.question4.id
         expected_score = 1
         # When
-        score = self.answerpaper_single_question.get_per_question_score(question_id)
+        score = self.answerpaper_single_question.get_per_question_score(
+            question_id
+            )
         # Then
         self.assertEqual(score, expected_score)
 
@@ -1093,10 +1139,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Before questions are answered
         self.assertEqual(self.answerpaper_single_question.questions_left(), 1)
 
-        current_question = self.answerpaper_single_question.add_completed_question(
-            self.question4.id
-        )
-
+        current_question = \
+            self.answerpaper_single_question.add_completed_question(
+                self.question4.id
+            )
 
         # Then
         self.assertEqual(
@@ -1118,9 +1164,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(next_question.summary, "Q4")
 
         # When
-        current_question = self.answerpaper_single_question.get_current_question(
-            self.answerpaper_single_question.questions.all()
-        )
+        current_question = \
+            self.answerpaper_single_question.get_current_question(
+                self.answerpaper_single_question.questions.all()
+            )
 
         # Then
         self.assertEqual(self.answerpaper_single_question.questions_left(), 0)
@@ -1168,7 +1215,6 @@ class AnswerPaperTestCases(unittest.TestCase):
     def test_validate_and_regrade_code_correct_answer(self):
         # Given
         # Start code server
-        
         user_answer = dedent("""\
                                 def add(a,b):
                                     return a+b
@@ -1181,9 +1227,9 @@ class AnswerPaperTestCases(unittest.TestCase):
         user = self.answerpaper.user
 
         # When
-        json_data = self.question1.consolidate_answer_data(user_answer,
-                                                          user
-                                                          )
+        json_data = self.question1.consolidate_answer_data(
+            user_answer, user
+            )
         get_result = self.answerpaper.validate_answer(user_answer,
                                                       self.question1,
                                                       json_data,
@@ -1191,7 +1237,7 @@ class AnswerPaperTestCases(unittest.TestCase):
                                                       self.SERVER_POOL_PORT
                                                       )
         url = 'http://localhost:%s' % self.SERVER_POOL_PORT
-        check_result = get_result_from_code_server(url,get_result['uid'],
+        check_result = get_result_from_code_server(url, get_result['uid'],
                                                    block=True
                                                    )
         result = json.loads(check_result.get('result'))
@@ -1227,7 +1273,8 @@ class AnswerPaperTestCases(unittest.TestCase):
     def test_validate_and_regrade_mcq_correct_answer(self):
         # Given
         mcq_answer = str(self.mcq_based_testcase.id)
-        self.answer = Answer(question=self.question2,
+        self.answer = Answer(
+            question=self.question2,
             answer=mcq_answer,
         )
         self.answer.save()
@@ -1255,7 +1302,8 @@ class AnswerPaperTestCases(unittest.TestCase):
         details = self.answerpaper.regrade(self.question2.id)
 
         # Then
-        self.answer = self.answerpaper.answers.filter(question=self.question2).last()
+        self.answer = self.answerpaper.answers.filter(
+            question=self.question2).last()
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 0)
         self.assertFalse(self.answer.correct)
@@ -1263,7 +1311,8 @@ class AnswerPaperTestCases(unittest.TestCase):
     def test_mcq_incorrect_answer(self):
         # Given
         mcq_answer = 'b'
-        self.answer = Answer(question=self.question2,
+        self.answer = Answer(
+            question=self.question2,
             answer=mcq_answer,
         )
         self.answer.save()
@@ -1376,10 +1425,8 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Then
         self.assertEqual(questions_unanswered.count(), 2)
         self.assertEqual(set([q.id for q in questions_unanswered]),
-                                 set([self.questions[1].id,
-                                      self.questions[2].id]
-                                     )
-                        )
+                         set([self.questions[1].id, self.questions[2].id])
+                         )
 
         # Test completed_question and next_question
         # When all questions are answered
@@ -1401,7 +1448,9 @@ class AnswerPaperTestCases(unittest.TestCase):
         # Then
         self.assertEqual(self.answerpaper.questions_left(), 0)
         self.assertIsNotNone(current_question)
-        self.assertTrue(current_question == self.answerpaper.get_all_ordered_questions()[0])
+        self.assertTrue(
+            current_question == self.answerpaper.get_all_ordered_questions()[0]
+            )
 
         # When
         next_question_id = self.answerpaper.next_question(current_question_id)
@@ -1425,7 +1474,7 @@ class AnswerPaperTestCases(unittest.TestCase):
     def test_set_end_time(self):
         current_time = timezone.now()
         self.answerpaper.set_end_time(current_time)
-        self.assertEqual(self.answerpaper.end_time,current_time)
+        self.assertEqual(self.answerpaper.end_time, current_time)
 
     def test_get_question_answer(self):
         """ Test get_question_answer() method of Answer Paper"""
@@ -1479,7 +1528,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
     def test_duplicate_attempt_answerpaper(self):
         with self.assertRaises(IntegrityError):
-            new_answerpaper = AnswerPaper.objects.create(
+            AnswerPaper.objects.create(
                 user=self.answerpaper.user,
                 question_paper=self.answerpaper.question_paper,
                 attempt_number=self.answerpaper.attempt_number,
@@ -1511,22 +1560,22 @@ class CourseTestCases(unittest.TestCase):
             enrollment="Enroll Request",
             creator=self.creator,
             start_enroll_time=datetime(2015, 10, 9, 10, 8, 15, 0,
-                tzinfo=pytz.utc
-            ),
+                                       tzinfo=pytz.utc
+                                       ),
             end_enroll_time=datetime(2015, 11, 9, 10, 8, 15, 0,
-               tzinfo=pytz.utc
-            ),
+                                     tzinfo=pytz.utc
+                                     ),
         )
         self.open_course = Course.objects.create(
             name="Open Course With Enrollment Disabled",
             enrollment="Open Course",
             creator=self.creator,
             start_enroll_time=datetime(2015, 10, 9, 10, 8, 15, 0,
-                tzinfo=pytz.utc
-            ),
+                                       tzinfo=pytz.utc
+                                       ),
             end_enroll_time=datetime(2015, 11, 9, 10, 8, 15, 0,
-               tzinfo=pytz.utc
-            ),
+                                     tzinfo=pytz.utc
+                                     ),
         )
 
         # create a course that will be cloned
@@ -1535,20 +1584,20 @@ class CourseTestCases(unittest.TestCase):
             enrollment="Open Course",
             creator=self.creator,
             start_enroll_time=datetime(2015, 10, 9, 10, 8, 15, 0,
-                tzinfo=pytz.utc
-            ),
+                                       tzinfo=pytz.utc
+                                       ),
             end_enroll_time=datetime(2015, 11, 9, 10, 8, 15, 0,
-               tzinfo=pytz.utc
-            ),
+                                     tzinfo=pytz.utc
+                                     ),
         )
 
         self.template_quiz = Quiz.objects.create(
             start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0,
-                tzinfo=pytz.utc
-            ),
+                                     tzinfo=pytz.utc
+                                     ),
             end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0,
-                tzinfo=pytz.utc
-            ),
+                                   tzinfo=pytz.utc
+                                   ),
             duration=30,
             active=False,
             attempts_allowed=-1,
@@ -1564,13 +1613,13 @@ class CourseTestCases(unittest.TestCase):
             shuffle_questions=True
         )
 
-        self.template_question_paper.fixed_questions.add(self.questions[1],
-            self.questions[2],
-            self.questions[3]
+        self.template_question_paper.fixed_questions.add(
+            self.questions[1], self.questions[2], self.questions[3]
         )
 
         self.template_quiz2 = Quiz.objects.create(
-            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+            start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0,
+                                     tzinfo=pytz.utc),
             end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
             duration=30,
             active=True,
@@ -1586,9 +1635,8 @@ class CourseTestCases(unittest.TestCase):
             shuffle_questions=True
         )
 
-        self.template_question_paper2.fixed_questions.add(self.questions[1],
-            self.questions[2],
-            self.questions[3]
+        self.template_question_paper2.fixed_questions.add(
+            self.questions[1], self.questions[2], self.questions[3]
         )
 
     def test_get_learning_modules(self):
@@ -1684,7 +1732,7 @@ class CourseTestCases(unittest.TestCase):
         """ Test to add teachers to a course"""
         self.course.add_teachers(self.student1, self.student2)
         self.assertSequenceEqual(self.course.get_teachers(),
-                                     [self.student1, self.student2])
+                                 [self.student1, self.student2])
 
     def test_remove_teachers(self):
         """ Test to remove teachers from a course"""
@@ -1724,11 +1772,12 @@ class CourseTestCases(unittest.TestCase):
         # for course with no modules
         self.no_module_course = Course.objects.create(
             name="test_course", creator=self.creator, enrollment="open")
-        percent = self.course.percent_completed(self.student1)
+        modules = self.course.get_learning_modules()
+        percent = self.course.percent_completed(self.student1, modules)
         self.assertEqual(percent, 0)
-
+        self.quiz1.questionpaper_set.all().delete()
         # for course with module but zero percent completed
-        percent = self.course.percent_completed(self.student1)
+        percent = self.course.percent_completed(self.student1, modules)
         self.assertEqual(percent, 0)
 
         # Add completed unit to course status and check percent
@@ -1738,7 +1787,7 @@ class CourseTestCases(unittest.TestCase):
         course_status = CourseStatus.objects.create(
             course=self.course, user=self.student1)
         course_status.completed_units.add(self.completed_unit)
-        updated_percent = self.course.percent_completed(self.student1)
+        updated_percent = self.course.percent_completed(self.student1, modules)
         self.assertEqual(updated_percent, 25)
 
     def test_course_time_remaining_to_start(self):
@@ -1764,23 +1813,15 @@ class CourseTestCases(unittest.TestCase):
 class TestCaseTestCases(unittest.TestCase):
     def setUp(self):
         self.user = User.objects.get(username="creator")
-        self.question1 = Question(summary='Demo question 1',
-            language='Python',
-            type='Code',
-            active=True,
-            description='Write a function',
-            points=1.0,
-            user=self.user,
-            snippet='def myfunc()'
+        self.question1 = Question(
+            summary='Demo question 1', language='Python',
+            type='Code', active=True, description='Write a function',
+            points=1.0, user=self.user, snippet='def myfunc()'
         )
-        self.question2 = Question(summary='Demo question 2',
-             language='Python',
-             type='Code',
-             active=True,
-             description='Write to standard output',
-             points=1.0,
-             user=self.user,
-             snippet='def myfunc()'
+        self.question2 = Question(
+            summary='Demo question 2', language='Python',
+            type='Code', active=True, description='Write to standard output',
+            points=1.0, user=self.user, snippet='def myfunc()'
         )
         self.question1.save()
         self.question2.save()
@@ -1797,30 +1838,31 @@ class TestCaseTestCases(unittest.TestCase):
         )
         self.assertion_testcase.save()
         self.stdout_based_testcase.save()
-        answer_data = {'metadata': { 'user_answer': 'demo_answer',
-                        'language': 'python',
-                        'partial_grading': False
-                        },
-                    'test_case_data': [{'test_case': 'assert myfunc(12, 13) == 15',
+        answer_data = {'metadata': {'user_answer': 'demo_answer',
+                                    'language': 'python',
+                                    'partial_grading': False
+                                    },
+                       'test_case_data': [
+                       {'test_case': 'assert myfunc(12, 13) == 15',
                         'test_case_type': 'standardtestcase',
                         'test_case_args': "",
                         'weight': 1.0
                         }]
-                    }
+                       }
         self.answer_data_json = json.dumps(answer_data)
 
     def test_assertion_testcase(self):
         """ Test question """
         self.assertEqual(self.assertion_testcase.question, self.question1)
         self.assertEqual(self.assertion_testcase.test_case,
-                             'assert myfunc(12, 13) == 15')
+                         'assert myfunc(12, 13) == 15')
 
     def test_stdout_based_testcase(self):
         """ Test question """
         self.assertEqual(self.stdout_based_testcase.question, self.question2)
         self.assertEqual(self.stdout_based_testcase.expected_output,
-            'Hello World'
-        )
+                         'Hello World'
+                         )
 
     def test_consolidate_answer_data(self):
         """ Test consolidate answer data model method """
@@ -1829,8 +1871,10 @@ class TestCaseTestCases(unittest.TestCase):
         )
         actual_data = json.loads(result)
         exp_data = json.loads(self.answer_data_json)
-        self.assertEqual(actual_data['metadata']['user_answer'], exp_data['metadata']['user_answer'])
-        self.assertEqual(actual_data['test_case_data'], exp_data['test_case_data'])
+        self.assertEqual(actual_data['metadata']['user_answer'],
+                         exp_data['metadata']['user_answer'])
+        self.assertEqual(actual_data['test_case_data'],
+                         exp_data['test_case_data'])
 
 
 class AssignmentUploadTestCases(unittest.TestCase):
@@ -1845,30 +1889,26 @@ class AssignmentUploadTestCases(unittest.TestCase):
         self.user2.save()
         self.quiz = Quiz.objects.get(description="demo quiz 1")
 
-        self.questionpaper = QuestionPaper.objects.create(quiz=self.quiz,
-            total_marks=0.0,
-            shuffle_questions=True
+        self.questionpaper = QuestionPaper.objects.create(
+            quiz=self.quiz, total_marks=0.0, shuffle_questions=True
         )
-        self.question = Question.objects.create(summary='Assignment',
-            language='Python',
-            type='upload',
-            active=True,
-            description='Upload a file',
-            points=1.0,
-            snippet='',
+        self.question = Question.objects.create(
+            summary='Assignment', language='Python', type='upload',
+            active=True, description='Upload a file', points=1.0, snippet='',
             user=self.user1
         )
-        self.questionpaper.fixed_question_order = "{0}".format(self.question.id)
+        self.questionpaper.fixed_question_order = "{0}".format(
+            self.question.id)
         self.questionpaper.fixed_questions.add(self.question)
         file_path1 = os.path.join(tempfile.gettempdir(), "upload1.txt")
         file_path2 = os.path.join(tempfile.gettempdir(), "upload2.txt")
-        self.assignment1 = AssignmentUpload.objects.create(user=self.user1,
-            assignmentQuestion=self.question, assignmentFile=file_path1,
-            question_paper=self.questionpaper
+        self.assignment1 = AssignmentUpload.objects.create(
+            user=self.user1, assignmentQuestion=self.question,
+            assignmentFile=file_path1, question_paper=self.questionpaper
             )
-        self.assignment2 = AssignmentUpload.objects.create(user=self.user2,
-            assignmentQuestion=self.question, assignmentFile=file_path2,
-            question_paper=self.questionpaper
+        self.assignment2 = AssignmentUpload.objects.create(
+            user=self.user2, assignmentQuestion=self.question,
+            assignmentFile=file_path2, question_paper=self.questionpaper
             )
 
     def test_get_assignments_for_user_files(self):
@@ -1906,8 +1946,9 @@ class CourseStatusTestCases(unittest.TestCase):
                                                     description='module one')
         self.quiz1 = Quiz.objects.create(time_between_attempts=0, weightage=50,
                                          description='qz1')
-        self.quiz2 = Quiz.objects.create(time_between_attempts=0, weightage=100,
-                                         description='qz2')
+        self.quiz2 = Quiz.objects.create(
+            time_between_attempts=0, weightage=100, description='qz2'
+            )
         question = Question.objects.first()
         self.qpaper1 = QuestionPaper.objects.create(quiz=self.quiz1)
         self.qpaper2 = QuestionPaper.objects.create(quiz=self.quiz2)

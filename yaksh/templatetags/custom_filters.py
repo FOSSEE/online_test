@@ -66,13 +66,9 @@ def course_completion_percent(course, user):
 
 
 @register.simple_tag
-def course_grade(course, user):
-    return course.get_grade(user)
-
-
-@register.simple_tag
 def get_ordered_testcases(question, answerpaper):
     return question.get_ordered_test_cases(answerpaper)
+
 
 @register.simple_tag
 def get_answer_for_arrange_options(ans, question):

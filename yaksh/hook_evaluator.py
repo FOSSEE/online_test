@@ -40,18 +40,19 @@ class HookEvaluator(BaseEvaluator):
         --------
         Returns a tuple (success, error, test_case_weight)
 
-        success - Boolean, indicating if code was executed successfully, correctly
+        success - Boolean, indicating if code was executed successfully,
+        correctly
         mark_fraction - Float, indicating fraction of the weight to a test case
         error - String, error message if success is false
 
-        returns (True, "Correct answer", 1.0) : If the student script passes all
-        test cases/have same output, when compared to the instructor script
+        returns (True, "Correct answer", 1.0) : If the student script passes
+        all test cases/have same output, when compared to the instructor script
 
         returns (False, error_msg, 0.0): If the student script fails a single
         test/have dissimilar output, when compared to the instructor script.
 
-        Returns (False, error_msg, 0.0): If mandatory arguments are not files or if
-        the required permissions are not given to the file(s).
+        Returns (False, error_msg, 0.0): If mandatory arguments are not files
+        or if the required permissions are not given to the file(s).
         """
         if self.file_paths:
             self.files = copy_files(self.file_paths)
@@ -84,8 +85,8 @@ class HookEvaluator(BaseEvaluator):
                 del tb_list[1:3]
             err = prettify_exceptions(exc_type.__name__,
                                       str(exc_value),
-                                      "Error in Hook Code:\n"
-                                        + "".join(tb_list)
+                                      "Error in Hook Code:\n" + "".join(
+                                        tb_list)
                                       )
 
         return success, err, mark_fraction

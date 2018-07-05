@@ -1,5 +1,5 @@
 from django.test import TestCase
-from grades.models import GradingSystem, GradeRange
+from grades.models import GradingSystem
 
 
 class GradingSystemTestCase(TestCase):

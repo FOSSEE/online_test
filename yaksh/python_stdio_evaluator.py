@@ -21,6 +21,7 @@ def redirect_stdout():
     finally:
         sys.stdout = old_target  # restore to the previous value
 
+
 class PythonStdIOEvaluator(BaseEvaluator):
     """Tests the Python code obtained from Code Server"""
     def __init__(self, metadata, test_case_data):

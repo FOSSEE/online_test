@@ -19,8 +19,6 @@ except ImportError:
     from io import BytesIO as string_io
 import pytz
 import os
-import sys
-import traceback
 import stat
 from os.path import join, exists
 import shutil
@@ -92,10 +90,10 @@ FIXTURES_DIR_PATH = os.path.join(settings.BASE_DIR, 'yaksh', 'fixtures')
 
 def get_assignment_dir(instance, filename):
     upload_dir = instance.question_paper.quiz.description.replace(" ", "_")
-    return os.sep.join((
-        upload_dir, instance.user.username, str(instance.assignmentQuestion.id),
-        filename
-    ))
+    return os.sep.join((upload_dir, instance.user.username,
+                        str(instance.assignmentQuestion.id),
+                        filename
+                        ))
 
 
 def get_model_class(model):
@@ -110,13 +108,14 @@ def get_upload_dir(instance, filename):
         'question_%s' % (instance.question.id), filename
     ))
 
+
 def dict_to_yaml(dictionary):
-    for k,v in dictionary.items():
+    for k, v in dictionary.items():
         if isinstance(v, list):
-            for  nested_v in v:
+            for nested_v in v:
                 if isinstance(nested_v, dict):
                     dict_to_yaml(nested_v)
-        elif v and isinstance(v,str):
+        elif v and isinstance(v, str):
             dictionary[k] = PreservedScalarString(v)
     return ruamel.yaml.round_trip_dump(dictionary, explicit_start=True,
                                        default_flow_style=False,
@@ -204,12 +203,10 @@ class QuizManager(models.Manager):
 
     def create_trial_quiz(self, user):
         """Creates a trial quiz for testing questions"""
-        trial_quiz = self.create(duration=1000,
-                                 description="trial_questions",
-                                 is_trial=True,
-                                 time_between_attempts=0,
-                                 creator=user
-                                )
+        trial_quiz = self.create(
+            duration=1000, description="trial_questions",
+            is_trial=True, time_between_attempts=0, creator=user
+            )
         return trial_quiz
 
     def create_trial_from_quiz(self, original_quiz_id, user, godmode,
@@ -387,6 +384,20 @@ class Quiz(models.Model):
                 course=course, passed=False
             ).values_list("user", flat=True).distinct().count()
 
+    def get_answerpaper_status(self, user, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
+        ans_ppr = AnswerPaper.objects.filter(
+            user=user, course=course, question_paper=qp
+        ).order_by("-attempt_number")
+        if ans_ppr.exists():
+            status = ans_ppr.first().status
+        else:
+            status = "not attempted"
+        return status
+
     def _create_quiz_copy(self, user):
         question_papers = self.questionpaper_set.all()
         new_quiz = self
@@ -425,6 +436,8 @@ class LearningUnit(models.Model):
         if course_status.exists():
             if self in course_status.first().completed_units.all():
                 state = "completed"
+            elif self.type == "quiz":
+                state = self.quiz.get_answerpaper_status(user, course)
             elif course_status.first().current_unit == self:
                 state = "inprogress"
         return state
@@ -551,7 +564,7 @@ class LearningModule(models.Model):
             status_list = [unit.get_completion_status(user, course)
                            for unit in units]
             count = status_list.count("completed")
-            percent = round((count / len(units)) * 100)
+            percent = round((count / units.count()) * 100)
         return percent
 
     def _create_module_copy(self, user, module_name):
@@ -767,15 +780,14 @@ class Course(models.Model):
             next_index = 0
         return modules.get(id=module_ids[next_index])
 
-    def percent_completed(self, user):
-        modules = self.get_learning_modules()
+    def percent_completed(self, user, modules):
         if not modules:
             percent = 0.0
         else:
             status_list = [module.get_module_complete_percent(self, user)
                            for module in modules]
             count = sum(status_list)
-            percent = round((count / len(modules)))
+            percent = round((count / modules.count()))
         return percent
 
     def get_grade(self, user):
@@ -786,6 +798,11 @@ class Course(models.Model):
             grade = "NA"
         return grade
 
+    def get_current_unit(self, user):
+        course_status = CourseStatus.objects.filter(course=self, user=user)
+        if course_status.exists():
+            return course_status.first().current_unit
+
     def days_before_start(self):
         """ Get the days remaining for the start of the course """
         if timezone.now() < self.start_enroll_time:
@@ -793,6 +810,14 @@ class Course(models.Model):
         else:
             remaining_days = 0
         return remaining_days
+
+    def get_completion_percent(self, user):
+        course_status = CourseStatus.objects.filter(course=self, user=user)
+        if course_status.exists():
+            percentage = course_status.first().percent_completed
+        else:
+            percentage = 0
+        return percentage
 
     def __str__(self):
         return self.name
@@ -808,6 +833,7 @@ class CourseStatus(models.Model):
     user = models.ForeignKey(User)
     grade = models.CharField(max_length=255, null=True, blank=True)
     percentage = models.FloatField(default=0.0)
+    percent_completed = models.IntegerField(default=0)
 
     def get_grade(self):
         return self.grade
@@ -845,6 +871,10 @@ class CourseStatus(models.Model):
             if not complete:
                 break
         return complete
+
+    def set_current_unit(self, unit):
+        self.current_unit = unit
+        self.save()
 
 
 ###############################################################################
@@ -922,11 +952,10 @@ class Question(models.Model):
     # Check assignment upload based question
     grade_assignment_upload = models.BooleanField(default=False)
 
-    min_time =  models.IntegerField("time in minutes", default=0)
+    min_time = models.IntegerField("time in minutes", default=0)
 
-    #Solution for the question.
+    # Solution for the question.
     solution = models.TextField(blank=True)
-
 
     def consolidate_answer_data(self, user_answer, user=None):
         question_data = {}
@@ -953,7 +982,7 @@ class Question(models.Model):
                 )
             if assignment_files:
                 metadata['assign_files'] = [(file.assignmentFile.path, False)
-                                             for file in assignment_files]
+                                            for file in assignment_files]
         question_data['metadata'] = metadata
 
         return json.dumps(question_data)
@@ -987,8 +1016,7 @@ class Question(models.Model):
             for question in questions:
                 question['user'] = user
                 file_names = question.pop('files') \
-                             if 'files' in question \
-                             else None
+                    if 'files' in question else None
                 tags = question.pop('tags') if 'tags' in question else None
                 test_cases = question.pop('testcase')
                 que, result = Question.objects.get_or_create(**question)
@@ -1007,8 +1035,8 @@ class Question(models.Model):
                         new_test_case.type = test_case_type
                         new_test_case.save()
 
-                    except:
-                        msg = "File not correct."
+                    except Exception:
+                        msg = "Unable to parse test case data"
         except Exception as exc_msg:
             msg = "Error Parsing Yaml: {0}".format(exc_msg)
         return msg
@@ -1042,7 +1070,7 @@ class Question(models.Model):
     def get_ordered_test_cases(self, answerpaper):
         try:
             order = TestCaseOrder.objects.get(answer_paper=answerpaper,
-                                              question = self
+                                              question=self
                                               ).order.split(",")
             return [self.get_test_case(id=int(tc_id))
                     for tc_id in order
@@ -1078,13 +1106,11 @@ class Question(models.Model):
                 file_upload.extract = extract
                 file_upload.file.save(file_name, django_file, save=True)
 
-    def _add_yaml_to_zip(self, zip_file, q_dict,path_to_file=None):
-        
+    def _add_yaml_to_zip(self, zip_file, q_dict, path_to_file=None):
         tmp_file_path = tempfile.mkdtemp()
         yaml_path = os.path.join(tmp_file_path, "questions_dump.yaml")
         for elem in q_dict:
             relevant_dict = CommentedMap()
-            irrelevant_dict = CommentedMap()
             relevant_dict['summary'] = elem.pop('summary')
             relevant_dict['type'] = elem.pop('type')
             relevant_dict['language'] = elem.pop('language')
@@ -1092,8 +1118,8 @@ class Question(models.Model):
             relevant_dict['points'] = elem.pop('points')
             relevant_dict['testcase'] = elem.pop('testcase')
             relevant_dict.update(CommentedMap(sorted(elem.items(),
-                                                  key=lambda x:x[0]
-                                                  ))
+                                                     key=lambda x: x[0]
+                                                     ))
                                  )
 
             yaml_block = dict_to_yaml(relevant_dict)
@@ -1109,7 +1135,7 @@ class Question(models.Model):
         if os.path.exists(yaml_file):
             with open(yaml_file, 'r') as q_file:
                 questions_list = q_file.read()
-                msg = self.load_questions(questions_list, user, 
+                msg = self.load_questions(questions_list, user,
                                           file_path, files
                                           )
         else:
@@ -1258,7 +1284,7 @@ class QuestionPaper(models.Model):
 
     # Shuffle testcase order.
     shuffle_testcases = models.BooleanField("Shuffle testcase for each user",
-                                             default=True
+                                            default=True
                                             )
 
     objects = QuestionPaperManager()
@@ -1327,16 +1353,16 @@ class QuestionPaper(models.Model):
             question_ids = []
             for question in questions:
                 question_ids.append(str(question.id))
-                if (question.type == "arrange") or (self.shuffle_testcases
-                        and question.type in ["mcq", "mcc"]):
+                if (question.type == "arrange") or (
+                        self.shuffle_testcases and
+                        question.type in ["mcq", "mcc"]):
                     testcases = question.get_test_cases()
                     random.shuffle(testcases)
                     testcases_ids = ",".join([str(tc.id) for tc in testcases]
                                              )
-                    testcases_order = TestCaseOrder.objects.create(
-                                    answer_paper=ans_paper,
-                                    question=question,
-                                    order=testcases_ids)
+                    TestCaseOrder.objects.create(
+                        answer_paper=ans_paper, question=question,
+                        order=testcases_ids)
 
             ans_paper.questions_order = ",".join(question_ids)
             ans_paper.save()
@@ -1355,11 +1381,12 @@ class QuestionPaper(models.Model):
                 user=user, questionpaper=self, course_id=course_id
             )
             if last_attempt:
-                time_lag = (timezone.now() - last_attempt.start_time).total_seconds() / 3600
+                time_lag = (timezone.now() - last_attempt.start_time)
+                time_lag = time_lag.total_seconds()/3600
                 can_attempt = time_lag >= self.quiz.time_between_attempts
-                msg = "You cannot start the next attempt for this quiz before {0} hour(s)".format(
-                    self.quiz.time_between_attempts
-                ) if not can_attempt else None
+                msg = "You cannot start the next attempt for this quiz before"\
+                    "{0} hour(s)".format(self.quiz.time_between_attempts) \
+                    if not can_attempt else None
                 return can_attempt, msg
             else:
                 return True, None
@@ -1663,11 +1690,12 @@ class AnswerPaper(models.Model):
                            )
 
     def get_per_question_score(self, question_id):
-        if question_id not in self.get_questions().values_list('id', flat=True):
+        questions = self.get_questions().values_list('id', flat=True)
+        if question_id not in questions:
             return 'NA'
         answer = self.get_latest_answer(question_id)
         if answer:
-            return  answer.marks
+            return answer.marks
         else:
             return 0
 
@@ -1683,7 +1711,8 @@ class AnswerPaper(models.Model):
     def get_current_question(self, questions):
         if self.questions_order:
             available_question_ids = questions.values_list('id', flat=True)
-            ordered_question_ids = [int(q) for q in self.questions_order.split(',')]
+            ordered_question_ids = [int(q)
+                                    for q in self.questions_order.split(',')]
             for qid in ordered_question_ids:
                 if qid in available_question_ids:
                     return questions.get(id=qid)
@@ -1698,7 +1727,7 @@ class AnswerPaper(models.Model):
             Adds the completed question to the list of answered
             questions and returns the next question.
         """
-        if question_id not in self.questions_answered.all(): 
+        if question_id not in self.questions_answered.all():
             self.questions_answered.add(question_id)
         self.questions_unanswered.remove(question_id)
 
@@ -1886,11 +1915,11 @@ class AnswerPaper(models.Model):
                 for tc in question.get_test_cases():
                     if tc.string_check == "lower":
                         if tc.correct.lower().splitlines()\
-                            == user_answer.lower().splitlines():
+                           == user_answer.lower().splitlines():
                             tc_status.append(True)
                     else:
                         if tc.correct.splitlines()\
-                            == user_answer.splitlines():
+                           == user_answer.splitlines():
                             tc_status.append(True)
                 if any(tc_status):
                     result['success'] = True
@@ -1914,7 +1943,6 @@ class AnswerPaper(models.Model):
                 if user_answer == testcase_ids:
                     result['success'] = True
                     result['error'] = ['Correct answer']
-
 
             elif question.type == 'code' or question.type == "upload":
                 user_dir = self.user.profile.get_user_dir()
@@ -2107,6 +2135,7 @@ class HookTestCase(TestCase):
     def __str__(self):
         return u'Hook Testcase | Correct: {0}'.format(self.hook_code)
 
+
 class IntegerTestCase(TestCase):
     correct = models.IntegerField(default=None)
 
@@ -2119,11 +2148,11 @@ class IntegerTestCase(TestCase):
 
 class StringTestCase(TestCase):
     correct = models.TextField(default=None)
-    string_check = models.CharField(max_length=200,choices=string_check_type)
+    string_check = models.CharField(max_length=200, choices=string_check_type)
 
     def get_field_value(self):
         return {"test_case_type": "stringtestcase", "correct": self.correct,
-                "string_check":self.string_check}
+                "string_check": self.string_check}
 
     def __str__(self):
         return u'String Testcase | Correct: {0}'.format(self.correct)
@@ -2136,7 +2165,7 @@ class FloatTestCase(TestCase):
 
     def get_field_value(self):
         return {"test_case_type": "floattestcase", "correct": self.correct,
-                "error_margin":self.error_margin}
+                "error_margin": self.error_margin}
 
     def __str__(self):
         return u'Testcase | Correct: {0} | Error Margin: +or- {1}'.format(
@@ -2145,7 +2174,6 @@ class FloatTestCase(TestCase):
 
 
 class ArrangeTestCase(TestCase):
-    
     options = models.TextField(default=None)
 
     def get_field_value(self):
@@ -2168,7 +2196,7 @@ class TestCaseOrder(models.Model):
     # Question in an answerpaper.
     question = models.ForeignKey(Question)
 
-    #Order of the test case for a question.
+    # Order of the test case for a question.
     order = models.TextField()
 
 

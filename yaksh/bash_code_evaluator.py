@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
-import traceback
-import pwd
 import os
-from os.path import join, isfile
-import sys
+from os.path import isfile
 import subprocess
-import importlib
 
 # local imports
 from .base_evaluator import BaseEvaluator
@@ -19,7 +15,7 @@ class BashCodeEvaluator(BaseEvaluator):
         self.files = []
         self.submit_code_path = ""
         self.test_code_path = ""
-        self.tc_args_path= ""
+        self.tc_args_path = ""
 
         # Set metadata values
         self.user_answer = metadata.get('user_answer')
@@ -55,20 +51,20 @@ class BashCodeEvaluator(BaseEvaluator):
 
         Returns
         --------
-        success - Boolean, indicating if code was executed successfully, correctly
+        success - Boolean, indicating if code was executed successfully,
+        correctly
         weight - Float, indicating total weight of all successful test cases
         error - String, error message if success is false
 
-        returns (True, "Correct answer", 1.0) : If the student script passes all
-        test cases/have same output, when compared to the instructor script
+        returns (True, "Correct answer", 1.0) : If the student script passes
+        all test cases/have same output, when compared to the instructor script
 
         returns (False, error_msg, 0.0): If the student script fails a single
         test/have dissimilar output, when compared to the instructor script.
 
-        Returns (False, error_msg, 0.0): If mandatory arguments are not files or if
-        the required permissions are not given to the file(s).
+        Returns (False, error_msg, 0.0): If mandatory arguments are not files
+        or if the required permissions are not given to the file(s).
         """
-        success = False
         mark_fraction = 0.0
         self.submit_code_path = self.create_submit_code_file('submit.sh')
         self._set_file_as_executable(self.submit_code_path)
@@ -76,13 +72,15 @@ class BashCodeEvaluator(BaseEvaluator):
         self._set_file_as_executable(self.test_code_path)
         if self.test_case_args:
             self.tc_args_path = self.create_submit_code_file('main.args')
-            self.write_to_submit_code_file(self.tc_args_path, self.test_case_args)
+            self.write_to_submit_code_file(self.tc_args_path,
+                                           self.test_case_args)
         shebang = "#!/bin/bash\n"
         self.user_answer = shebang + self.user_answer.replace("\r", "")
         self.test_case = self.test_case.replace("\r", "")
         self.write_to_submit_code_file(self.submit_code_path, self.user_answer)
         self.write_to_submit_code_file(self.test_code_path, self.test_case)
-        clean_ref_code_path, clean_test_case_path = self.test_code_path, self.tc_args_path
+        clean_ref_code_path, clean_test_case_path = \
+            self.test_code_path, self.tc_args_path
 
         if self.file_paths:
             self.files = copy_files(self.file_paths)
@@ -101,22 +99,23 @@ class BashCodeEvaluator(BaseEvaluator):
 
         if not clean_test_case_path:
             ret = self._run_command(["bash", clean_ref_code_path],
-                stdin=None,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
+                                    stdin=None,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE
+                                    )
             proc, inst_stdout, inst_stderr = ret
             ret = self._run_command(["bash", self.submit_code_path],
-                stdin=None,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
+                                    stdin=None,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE
+                                    )
             proc, stdnt_stdout, stdnt_stderr = ret
             if inst_stdout == stdnt_stdout:
                 mark_fraction = 1.0 if self.partial_grading else 0.0
                 return True, None, mark_fraction
             else:
-                err = "Error: expected %s, got %s" % (inst_stdout + inst_stderr,
+                err = "Error: expected %s, got %s" % (
+                    inst_stdout + inst_stderr,
                     stdnt_stdout + stdnt_stderr
                 )
                 return False, err, 0.0
@@ -140,27 +139,28 @@ class BashCodeEvaluator(BaseEvaluator):
                     args = ["bash", clean_ref_code_path] + \
                         [x for x in tc.split()]
                     ret = self._run_command(args,
-                        stdin=None,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE
-                    )
+                                            stdin=None,
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE
+                                            )
                     proc, inst_stdout, inst_stderr = ret
                     if self.file_paths:
                         self.files = copy_files(self.file_paths)
                     args = ["bash", self.submit_code_path] + \
                         [x for x in tc.split()]
                     ret = self._run_command(args,
-                        stdin=None,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
+                                            stdin=None,
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE
+                                            )
                     proc, stdnt_stdout, stdnt_stderr = ret
                     valid_answer = inst_stdout == stdnt_stdout
             if valid_answer and (num_lines == loop_count):
                 mark_fraction = 1.0 if self.partial_grading else 0.0
                 return True, None, mark_fraction
             else:
-                err = ("Error:expected"
-                    " {0}, got {1}").format(inst_stdout+inst_stderr,
+                err = ("Error:expected {0}, got {1}").format(
+                        inst_stdout+inst_stderr,
                         stdnt_stdout+stdnt_stderr
                     )
                 return False, err, 0.0
