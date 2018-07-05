@@ -138,13 +138,43 @@ def merge(data, catts):
 ###########################main fn to get all data############################
 
 def get_data(start_date, end_date):
+	
+	'''
 	data = pd.read_csv('analysis/cleaned_data.csv')
 	data['course_start_enroll_time'] = pd.to_datetime(data['course_start_enroll_time'], format='%d-%m-%Y')
 	mask = (data['course_start_enroll_time'] >= start_date) & (data['course_start_enroll_time'] <= end_date)
 	data = data.loc[mask]
-
+	
 	if data.empty:
 		return {}
+	
+	'''
+
+	data = list(CourseStatus.objects.filter(course__start_enroll_time__range=(start_date, end_date))
+					.values('grade', 'course_id', 'user__profile__institute', 'user__profile__position', 
+						'user__profile__gender', 'user__profile__age', 'user__profile__state', 
+						'course__name', 'course__level', 'course__group',
+						'course__start_enroll_time'))
+	
+	data = pd.DataFrame(data)
+
+	data.rename(columns={'user__profile__institute': 'institute', 
+				'user__profile__position': 'user_position', 
+				'user__profile__gender': 'user_gender', 
+				'user__profile__age': 'user_age', 
+				'user__profile__state': 'state', 
+				'course__name': 'course_name', 
+				'course__level': 'course_tag', 
+				'course__group': 'course_group',
+				'course__start_enroll_time': 'course_start_enroll_time'}, inplace=True)
+
+	
+	if data.empty:
+		return {}
+
+
+	labels = [0, '1-15', '16-25', '26-35', '36-45', '46-55', '56-65', '66-75', '76-85']
+	data['user_age_group'] = pd.cut(data['user_age'], [0, 1, 15, 25, 35, 45, 55, 65, 75, 85], labels=labels, include_lowest=True)
 
 	months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
 	data['month'] = data['course_start_enroll_time'].apply(lambda row: months[row.month-1])

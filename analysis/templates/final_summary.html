@@ -153,7 +153,7 @@
 		var rows = '';
 
 		$.each(DISPDATA, function(key, val){
-			rows += '<tr><td onclick=select_level("' + key + '")><a>' + key + '</a></td><td>' + DISPDATA[key]['Enrolled'] + '</td><td>' + DISPDATA[key]['A+'] + '</td><td>' + DISPDATA[key]['A']+ '</td><td>' + DISPDATA[key]['Passed'] + '</td></td>';
+			rows += '<tr><td onclick=select_level("' + encodeURIComponent(key) + '")><a>' + key + '</a></td><td>' + DISPDATA[key]['Enrolled'] + '</td><td>' + DISPDATA[key]['A+'] + '</td><td>' + DISPDATA[key]['A']+ '</td><td>' + DISPDATA[key]['Passed'] + '</td></td>';
 		});
 		var table = "<table id='result-table' class='tablesorter table table-striped'><thead>" + heading + "</thead><tbody>" + rows + "</tbody></table>";
 		$('#table').html(table);
@@ -163,6 +163,7 @@
 	}
 
 	function select_level(key){
+		key = decodeURIComponent(key)
 		VALS['level'] = key;
 		var levels = $('#level-menu').find('button');
 		levels.each(function(){
@@ -295,7 +296,7 @@
 		var rows = '';
 
 		$.each(DISPDATA, function(key, val){
-			rows += '<tr><td onclick=select_institue("' + key + '")><a>' + key + '</a></td><td>' + DISPDATA[key]['Enrolled'] + '</td><td>' +  DISPDATA[key]['Passed'] + '</td></td>';
+			rows += '<tr><td onclick=select_institue("' + encodeURIComponent(key) + '")><a>' + key + '</a></td><td>' + DISPDATA[key]['Enrolled'] + '</td><td>' +  DISPDATA[key]['Passed'] + '</td></td>';
 		});
 		var table = "<table id='result-table' class='tablesorter table table-striped'><thead>" + heading + "</thead><tbody>" + rows + "</tbody></table>";
 		$('#table').html(table);
@@ -304,6 +305,7 @@
 	}
 
 	function select_institue(key){
+		key = decodeURIComponent(key)
 		VALS['institute'] = key;
 		VALS['institutewise_page'] = 2;
 		display();
