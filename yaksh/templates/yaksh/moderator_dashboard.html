@@ -8,32 +8,36 @@
 
 {% block content %}
 
-<center><h4 class="pull-left">List of quizzes! Click on the given links to have a look at answer papers for a quiz.</h4></center>
-<a href="{{URL_ROOT}}/exam/toggle_moderator/" class="btn btn-primary pull-right">
-  Switch To Student
-</a>
-<table class="table table-bordered">
-    <th>Courses</th>
-    <th>Quizzes</th>
+<center><h4 class="yakshgreen">List of quizzes! Click on the given links to have a look at answer papers for a quiz.</h4></center>
+<div class="row justify-content-center">
+<div class="col-md-10 ">
+  <div class="table-wrapper-2">
+<table class="table table-bordered table-responsive-sm">
+  <tr class="yakshlabel">
+    <th class="yakshred text-center"><i class="fa fa-book"></i> Courses</th>
+    <th class="yakshred text-center"><i class="fa fa-puzzle-piece"></i> Quizzes</th>
+  </tr>
     {% for course in courses %}
         <tr>
             <td>
-                <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}">
-                {{ course }}
+                <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}" class="btn btn-outline-success">
+                <i class="fa fa-caret-right"></i> {{ course }}
                 </a>
             </td>
             <td>
                 {% get_course_details course as course_details %}
                 {% if course_details %}
-                <table class="table table-bordered">
+                <table class="table table-bordered table-responsive-sm">
+                <tr class="yakshlight">
                   <th>Quiz</th>
                   <th>Taken By</th>
                   <th>No. of users Passed</th>
                   <th>No. of users Failed</th>
+                </tr>
                   {% for quiz, users_no, passed, failed in course_details %}
                   <tr>
                     <td>
-                    <a href="{{URL_ROOT}}/exam/manage/monitor/{{ quiz.id }}/{{course.id}}">{{ quiz.description }}</a>
+                    <a href="{{URL_ROOT}}/exam/manage/monitor/{{ quiz.id }}/{{course.id}}" >{{ quiz.description }}</a>
                     </td>
                     <td>
                       {{users_no}} user(s)
@@ -54,17 +58,18 @@
         </tr>
     {% endfor %}
 </table>
+</div>
 
 <hr>
 <center>
-    <a href="{{URL_ROOT}}/exam/manage/add_course" class="btn btn-default">
+    <a href="{{URL_ROOT}}/exam/manage/add_course" class="btn btn-primary">
       Add New Course
     </a>
-    <a href="{{URL_ROOT}}/exam/manage/create_demo_course" class="btn btn-default">
+    <a href="{{URL_ROOT}}/exam/manage/create_demo_course" class="btn btn-primary">
       Create Demo Course
     </a>
-    <a data-toggle="collapse" data-target="#help">
-      <span class="glyphicon glyphicon-question-sign"></span> What's This
+    <a data-toggle="collapse" data-target="#help" class="btn">
+      <span class="fa fa-question-circle yakshred"></span> What's This
     </a>
     <div id="help" class="collapse">
       <ul class="list">
@@ -75,9 +80,11 @@
         <li>You can also edit the Demo quiz.</li>
       </ul>
     </div>
+    <center>
     {% if msg %}
-      <h4>{{ msg }}</h4>
+      <h4 class="alert alert-info col-md-10 animated flash">{{ msg }}</h4>
     {% endif %}
+    </center>
 </center>
 {% if trial_paper %}
   <br/>
@@ -85,7 +92,7 @@
   &nbsp;&nbsp;<input type="checkbox" class="selectall"/>&nbsp;&nbsp;Select all
   <br/>
   <div id="trial">
-  <table class="table table-bordered">
+  <table class="table table-bordered table-responsive-sm">
   <form action="" method="post">
   {% csrf_token %}
    {% for paper in trial_paper %}
@@ -95,13 +102,11 @@
   </tr>
   {% endfor %}
   </table>
-  <center><button class="btn" type="submit">Delete Selected</button></center>
+  <center><button class="btn btn-danger" type="submit">Delete Selected</button></center>
   </form>
   </div>
   {% endif %}
+</div>
+</div>
 {% endblock %}
-{% if user %}
-  {% block info %}
-  <h5>{{user.get_full_name|title}}({{user.profile.roll_number}}) Logged in as {{user.username}}</h5>
-  {% endblock %}
-{% endif %}
+

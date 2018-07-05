@@ -1,32 +1,43 @@
 {% extends "base.html" %}
 
-{% block pagetitle %} <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_text.png"
-width="80" alt="YAKSH"></img> {% endblock %}
+{% block pagetitle %} 
+<div class="yakshnav fixed-top" style=" padding-top: 0.5%;padding-bottom: 0.5%;">
+    <a class="navbar-brand" href="{{ URL_ROOT }}/exam/"  >
+    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH">
+    </img>
+    </a> 
+</div>
+{% endblock %}
+
 {% block content %}
-<center><table class="table table-bordered" >
-        <caption> <center><h3>Submission Status</h3> </center> </caption>
+<center>
+<div class="col-md-8 yakshwell">
+    <h3>Submission Status</h3>
+    <table class="table table-bordered table-responsive-sm" >
         <thead>
-            <tr>
+            <tr class="yakshred text-center">
                 <th> Question</th>
-                <th> State </th>
+                <th> Status </th>
             </tr>
         </thead>
 
         {% for question in paper.questions.all %}
             <tbody>
                 {% if question in paper.questions_answered.all %}
-                    <tr class="info">
+                    <tr class="table-success">
                     <td> {{ question.summary }} </td>
                     <td> Attempted </td>
                 {% else %}
-                    <tr class="danger">
+                    <tr class="table-danger">
                     <td> {{ question }} </td>
                     <td> Not completed </td>
                 {% endif %}
                 </tr>
             </tbody>
         {% endfor %}
-</table></center>
+    </table>
+</div>
+</center>
 
     {% if paper.question_paper.quiz.is_exercise %}
 	    <center><h4> Are you sure you wish to quit the Exercise?</h4></center>
@@ -38,8 +49,8 @@ width="80" alt="YAKSH"></img> {% endblock %}
 	<form action="{{URL_ROOT}}/exam/complete/{{ paper.attempt_number }}/{{module_id}}/{{ paper.question_paper.id }}/{{course_id}}/" method="post">
 	{% csrf_token %}
 	<center>
-        <button class="btn" type="submit" name="yes">Yes!</button>&nbsp;
-        <button class="btn" type="button" name="no" onClick="window.location='{{ URL_ROOT }}/exam/start/{{ paper.attempt_number }}/{{module_id}}/{{ paper.question_paper.id }}/{{course_id}}'">No!</button>
+        <button class="btn btn-outline-success" type="submit" name="yes">Yes!</button>&nbsp;
+        <button class="btn btn-outline-danger" type="button" name="no" onClick="window.location='{{ URL_ROOT }}/exam/start/{{ paper.attempt_number }}/{{module_id}}/{{ paper.question_paper.id }}/{{course_id}}'">No!</button>
     </center>
 	</form>
 {% endblock content %}

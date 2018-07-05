@@ -22,6 +22,7 @@ select
 {% endblock %}
 
 {% block content %}
+<div class="yakshwell container">
 <input type=hidden id="url_root" value={{ URL_ROOT }}>
 {% if course_id %}
     <form action="{{ URL_ROOT }}/exam/manage/designquestionpaper/{{ qpaper.quiz.id }}/{{ qpaper.id }}/{{course_id}}/" method="POST" id="design_q">
@@ -138,7 +139,7 @@ select
                             </ul>
                     </div>
                      <br />
-                    <button id="remove-fixed" name="remove-fixed" class="btn small primary pull-right" type="submit"> Remove from paper</button>
+                    <button id="remove-fixed" name="remove-fixed" class="btn btn-danger pull-right" type="submit"> Remove from paper</button>
                 </div>
             </div>
         </div> <!-- /.row -->
@@ -179,7 +180,7 @@ select
                         {% endif %}
                     </div>
                     <br /><br />
-                    <button id="add-random" name="add-random" class="btn small primary pull-right" type="submit">Add to paper</button>
+                    <button id="add-random" name="add-random" class="btn btn-primary pull-right" type="submit">Add to paper</button>
                 </div>
             </div>
             <div class="col-md-6">
@@ -205,16 +206,16 @@ select
                             </ul>
                     </div>
                     <br />
-                    <button id="remove-random" name="remove-random" class="btn small primary pull-right" type="submit"> Remove from paper</button>
+                    <button id="remove-random" name="remove-random" class="btn btn-danger pull-right" type="submit"> Remove from paper</button>
                 </div>
             </div>
         </div> <!-- /.row -->
         <br>
         <div class="pull-left">
-            <a class="btn btn-primary" id="random-prev">&lt; Previous</a>
+            <a class="btn btn-info" id="random-prev">&lt; Previous</a>
         </div>
         <div class="pull-right">
-            <a class="btn btn-primary" id="random-next">Next &gt;</a>
+            <a class="btn btn-info" id="random-next">Next &gt;</a>
         </div>
    </div> <!-- /#random-questions -->
 
@@ -229,10 +230,10 @@ select
                 {{ qpaper_form.shuffle_testcases }}
                 <span>Shuffle MCQ/MCC options for each student</span>
             </label> <br><br>
-            <input class ="btn primary large" type="submit" name="save" id="save" value="Save question paper">
+            <input class ="btn btn-success" type="submit" name="save" id="save" value="Save question paper">
             <br>
             <div class="pull-left">
-                <a class="btn btn-primary" id="finish-prev">&lt; Previous</a>
+                <a class="btn btn-info" id="finish-prev">&lt; Previous</a>
             </div>
        </center>
     </div> <!-- /#finish -->
@@ -252,6 +253,7 @@ select
         {% endif %}
     })
 </script>
+</div>
 {% endblock %}
 {% block manage %}
 {% endblock %}

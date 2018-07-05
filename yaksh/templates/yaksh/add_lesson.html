@@ -14,6 +14,7 @@
 {% endblock %}
 
 {% block content %}
+<div class="yakshwell container">
 {% if error %}
 <div class="alert alert-danger">
     {{error}}
@@ -22,20 +23,18 @@
 <form name=frm id=frm action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <center>
-    <table class="table table-bordered">
+    <table class="table table-bordered table-responsive-sm">
     {{ lesson_form.as_table }}
     {{ lesson_file_form.as_table }}
     </table>
     </center>
     <br><br>
     {% if lesson_files %}
-    <div class="alert alert-success">
-        <center><h4>Files added to this lesson</h4></center>
+    <center>
+    <div class="alert alert-success col-md-8 animated flash">
+        <h4>Files added to this lesson</h4>
     </div>
-        <ul class="list-group">
-        <strong>
-            Select checkbox and click Delete Files button to delete files
-        </strong>
+    </center>
         {% for f in lesson_files %}
             <li class="list-group-item">
                 <h4>
@@ -46,40 +45,42 @@
             </li>
         {% endfor %}
     {% else %}
-    <div class="alert alert-warning">
-        <center><h4 class="alert-warning">No Files added to this lesson
-        </h4></center>
+
+    <center>
+    <div class="alert alert-warning col-md-8 animated flash">
+        <h4 class="alert-warning">No Files added to this lesson</h4>
     </div>
+    </center>
     {% endif %}
     <br><br>
     <center>
-    <button class="btn" type="submit" id="submit" name="Save"> Save
+    <button class="btn btn-success" type="submit" id="submit" name="Save"> Save
     </button>
     {% if lesson_files %}
-    <button class="btn" type="submit" id="submit" name="Delete"> Delete Files
+    <button class="btn btn-danger" type="submit" id="submit" name="Delete"> Delete Files
     </button>
     {% endif %}
     {% if course_id %}
-    <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button>
+    <button class="btn btn-danger" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button>
     {% else %}
-    <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/all_lessons/");'>Cancel</button>
+    <button class="btn btn-danger" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/all_lessons/");'>Cancel</button>
     {% endif %}
     </form>
-    <button class="btn" type="button" name="button" id="preview">Preview Lesson Description
+    <button class="btn btn-outline-primary" type="button" name="button" id="preview">Preview Lesson Description
     </button>
-    <button class="btn" type="button" name="button" id="embed">
+    <button class="btn btn-outline-primary" type="button" name="button" id="embed">
         Embed Video link
     </button>
     </center>
     <hr>
-    <div class="panel panel-default" id="preview_text_div" style="display: none;">
-        <div class="panel-heading">
+    <div class="card" id="preview_text_div" style="display: none;">
+        <div class="card-heading">
             <center>
                 <h3>Description Preview</h3>
             </center>
         </div>
-        <div class="panel-body" id="description_body">
+        <div class="card-body" id="description_body">
         </div>
     </div>
-
+</div>
 {% endblock %}
