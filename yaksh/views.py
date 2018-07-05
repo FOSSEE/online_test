@@ -28,10 +28,12 @@ import re
 # Local imports.
 from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.models import (
-    Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, Profile,
-    QuestionPaper, QuestionSet, Quiz, Question, TestCase, User,
-    FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile, LearningUnit,
-    LearningModule, CourseStatus
+    Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, FloatTestCase,
+    HookTestCase, IntegerTestCase, McqTestCase, Profile,
+    QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
+    StdIOBasedTestCase, StringTestCase, TestCase, User,
+    get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
+    LearningUnit, LearningModule, CourseStatus, question_types
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -613,6 +615,7 @@ def show_question(request, question, paper, error_message=None,
     course = Course.objects.get(id=course_id)
     module = course.learning_module.get(id=module_id)
     all_modules = course.get_learning_modules()
+    all_question_types = [types[0] for types in question_types]
     context = {
         'question': question,
         'paper': paper,
@@ -627,7 +630,8 @@ def show_question(request, question, paper, error_message=None,
         'can_skip': can_skip,
         'delay_time': delay_time,
         'quiz_type': quiz_type,
-        'all_modules': all_modules
+        'all_modules': all_modules,
+        "question_types": all_question_types
     }
     answers = paper.get_previous_answers(question)
     if answers:
