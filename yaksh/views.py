@@ -121,15 +121,29 @@ def user_register(request):
                     'yaksh/activation_status.html', context
                 )
             return index(request)
+               
+    #########################skt##############################
+
         else:
+            colleges_list = json.load(open('analysis/colleges.json'))
+
+            #print(colleges_list[0])
+
             return my_render_to_response(
-                request, 'yaksh/register.html', {'form': form}
+                request, 'yaksh/register.html', {'form': form, 'colleges_list': colleges_list}
             )
     else:
         form = UserRegisterForm()
+        
+        colleges_list = json.load(open('analysis/colleges.json'))
+
+        #print(colleges_list[0])
+
         return my_render_to_response(
-            request, 'yaksh/register.html', {'form': form}
+            request, 'yaksh/register.html', {'form': form, 'colleges_list': colleges_list}
         )
+
+    #########################skt##############################
 
 
 def user_logout(request):
@@ -1690,12 +1704,14 @@ def edit_profile(request):
             return my_render_to_response(request, 'yaksh/profile_updated.html')
         else:
             context['form'] = form
+            context['colleges_list'] = json.load(open('analysis/colleges.json'))
             return my_render_to_response(
                 request, 'yaksh/editprofile.html', context
             )
     else:
         form = ProfileForm(user=user, instance=profile)
         context['form'] = form
+        context['colleges_list'] = json.load(open('analysis/colleges.json'))
         return my_render_to_response(
             request, 'yaksh/editprofile.html', context
         )

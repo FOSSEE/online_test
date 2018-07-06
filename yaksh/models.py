@@ -36,54 +36,71 @@ from django.forms.models import model_to_dict
 from grades.models import GradingSystem
 
 languages = (
-        ("python", "Python"),
-        ("bash", "Bash"),
-        ("c", "C Language"),
-        ("cpp", "C++ Language"),
-        ("java", "Java Language"),
-        ("scilab", "Scilab"),
-    )
+    ("python", "Python"),
+    ("bash", "Bash"),
+    ("c", "C Language"),
+    ("cpp", "C++ Language"),
+    ("java", "Java Language"),
+    ("scilab", "Scilab"),
+)
 
 question_types = (
-        ("mcq", "Single Correct Choice"),
-        ("mcc", "Multiple Correct Choices"),
-        ("code", "Code"),
-        ("upload", "Assignment Upload"),
-        ("integer", "Answer in Integer"),
-        ("string", "Answer in String"),
-        ("float", "Answer in Float"),
-        ("arrange", "Arrange in Correct Order"),
+    ("mcq", "Single Correct Choice"),
+    ("mcc", "Multiple Correct Choices"),
+    ("code", "Code"),
+    ("upload", "Assignment Upload"),
+    ("integer", "Answer in Integer"),
+    ("string", "Answer in String"),
+    ("float", "Answer in Float"),
+    ("arrange", "Arrange in Correct Order"),
 
-    )
+)
 
 enrollment_methods = (
     ("default", "Enroll Request"),
     ("open", "Open Enrollment"),
-    )
+)
+
+
+course_levels = ['Basic', 'Advanced', 'Intermediate']
+
+course_groups = ['Self', 'Instructor']
+
+position_list = ["Faculty", "School Student", "Graduate Student",
+                 "Postgraduate Student", "Industry Professional",
+                 "Research Scholar"]
+
+state_list = ["Andra Pradesh", "Arunachal Pradesh", "Assam", "Bihar",
+              "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh",
+              "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala",
+              "Madya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
+              "Mizoram", "Nagaland", "Orissa", "Punjab", "Rajasthan",
+              "Sikkim", "Tamil Nadu", "Tripura", "Uttaranchal",
+              "Uttar Pradesh", "West Bengal"]
 
 test_case_types = (
-        ("standardtestcase", "Standard Testcase"),
-        ("stdiobasedtestcase", "StdIO Based Testcase"),
-        ("mcqtestcase", "MCQ Testcase"),
-        ("hooktestcase", "Hook Testcase"),
-        ("integertestcase", "Integer Testcase"),
-        ("stringtestcase", "String Testcase"),
-        ("floattestcase", "Float Testcase"),
-        ("arrangetestcase", "Arrange Testcase"),
-    )
+    ("standardtestcase", "Standard Testcase"),
+    ("stdiobasedtestcase", "StdIO Based Testcase"),
+    ("mcqtestcase", "MCQ Testcase"),
+    ("hooktestcase", "Hook Testcase"),
+    ("integertestcase", "Integer Testcase"),
+    ("stringtestcase", "String Testcase"),
+    ("floattestcase", "Float Testcase"),
+    ("arrangetestcase", "Arrange Testcase"),
+)
 
 string_check_type = (
     ("lower", "Case Insensitive"),
     ("exact", "Case Sensitive"),
-    )
+)
 
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
 
 test_status = (
-                ('inprogress', 'Inprogress'),
-                ('completed', 'Completed'),
-              )
+    ('inprogress', 'Inprogress'),
+    ('completed', 'Completed'),
+)
 
 FIXTURES_DIR_PATH = os.path.join(settings.BASE_DIR, 'yaksh', 'fixtures')
 
@@ -360,9 +377,9 @@ class Quiz(models.Model):
         except QuestionPaper.DoesNotExist:
             qp = None
         return AnswerPaper.objects.filter(
-                question_paper=qp,
-                course=course
-            ).values_list("user", flat=True).distinct().count()
+            question_paper=qp,
+            course=course
+        ).values_list("user", flat=True).distinct().count()
 
     def get_passed_students(self, course):
         try:
@@ -370,9 +387,9 @@ class Quiz(models.Model):
         except QuestionPaper.DoesNotExist:
             qp = None
         return AnswerPaper.objects.filter(
-                question_paper=qp,
-                course=course, passed=True
-            ).values_list("user", flat=True).distinct().count()
+            question_paper=qp,
+            course=course, passed=True
+        ).values_list("user", flat=True).distinct().count()
 
     def get_failed_students(self, course):
         try:
@@ -380,9 +397,9 @@ class Quiz(models.Model):
         except QuestionPaper.DoesNotExist:
             qp = None
         return AnswerPaper.objects.filter(
-                question_paper=qp,
-                course=course, passed=False
-            ).values_list("user", flat=True).distinct().count()
+            question_paper=qp,
+            course=course, passed=False
+        ).values_list("user", flat=True).distinct().count()
 
     def get_answerpaper_status(self, user, course):
         try:
@@ -413,6 +430,11 @@ class Quiz(models.Model):
         desc = self.description or 'Quiz'
         return '%s: on %s for %d minutes' % (desc, self.start_date_time,
                                              self.duration)
+
+    def has_code_questions(self):
+        questionpaper = self.questionpaper_set.get()
+        questions = questionpaper.get_question_bank()
+        return len([question for question in questions if question.type == 'code']) > 0
 
 
 ##########################################################################
@@ -545,7 +567,7 @@ class LearningModule(models.Model):
             success = True
         else:
             prev_module = ordered_modules.get(
-                id=ordered_modules_ids[current_module_index-1])
+                id=ordered_modules_ids[current_module_index - 1])
             status = prev_module.get_status(user, course)
             if status == "completed":
                 success = True
@@ -601,6 +623,16 @@ class Course(models.Model):
     instructions = models.TextField(default=None, null=True, blank=True)
     learning_module = models.ManyToManyField(LearningModule,
                                              related_name='learning_module')
+
+    level = models.CharField(max_length=32,
+                             choices=[(course_level, course_level)
+                                      for course_level in course_levels],
+                             default='Basic')
+
+    group = models.CharField(max_length=32,
+                             choices=[(course_group, course_group)
+                                      for course_group in course_groups],
+                             default='Unknown')
 
     # The start date of the course enrollment.
     start_enroll_time = models.DateTimeField(
@@ -857,10 +889,10 @@ class CourseStatus(models.Model):
             for quiz in quizzes:
                 total_weightage += quiz.weightage
                 marks = AnswerPaper.objects.get_user_best_of_attempts_marks(
-                        quiz, self.user.id, self.course.id)
+                    quiz, self.user.id, self.course.id)
                 out_of = quiz.questionpaper_set.first().total_marks
-                sum += (marks/out_of)*quiz.weightage
-            self.percentage = (sum/total_weightage)*100
+                sum += (marks / out_of) * quiz.weightage
+            self.percentage = (sum / total_weightage) * 100
             self.save()
 
     def is_course_complete(self):
@@ -890,7 +922,7 @@ class Profile(models.Model):
     roll_number = models.CharField(max_length=20)
     institute = models.CharField(max_length=128)
     department = models.CharField(max_length=64)
-    position = models.CharField(max_length=64)
+
     timezone = models.CharField(
         max_length=64,
         default=pytz.utc.zone,
@@ -899,6 +931,21 @@ class Profile(models.Model):
     is_email_verified = models.BooleanField(default=False)
     activation_key = models.CharField(max_length=255, blank=True, null=True)
     key_expiry_time = models.DateTimeField(blank=True, null=True)
+
+    position = models.CharField(max_length=64, choices=[(
+        position, position) for position in position_list])
+
+    state = models.CharField(max_length=128, default='Unknown', choices=[
+                             (state, state) for state in state_list])
+    age = models.IntegerField(default=0)
+    gender = models.CharField(max_length=32,
+                              default='Unknown',
+                              choices=(
+                                  ('Male', 'Male'),
+                                  ('Female', 'Female'),
+                                  ('Transgender', 'Transgender')
+                              )
+                              )
 
     def get_user_dir(self):
         """Return the output directory for the user."""
@@ -979,7 +1026,7 @@ class Question(models.Model):
         if self.type == "upload":
             assignment_files = AssignmentUpload.objects.filter(
                 assignmentQuestion=self, user=user
-                )
+            )
             if assignment_files:
                 metadata['assign_files'] = [(file.assignmentFile.path, False)
                                             for file in assignment_files]
@@ -1016,7 +1063,8 @@ class Question(models.Model):
             for question in questions:
                 question['user'] = user
                 file_names = question.pop('files') \
-                    if 'files' in question else None
+                    if 'files' in question \
+                    else None
                 tags = question.pop('tags') if 'tags' in question else None
                 test_cases = question.pop('testcase')
                 que, result = Question.objects.get_or_create(**question)
@@ -1154,6 +1202,33 @@ class Question(models.Model):
 
     def __str__(self):
         return self.summary
+
+    def get_que_stats(self, answerpapers):
+        
+        if self.type != 'code':
+            return []
+
+        answers = Answer.objects.filter(
+            answerpaper__in=answerpapers, question=self)
+
+        total_errors = 0
+        logical_errors = 0
+        syntax_errors = 0
+
+        for answer in answers:
+            errors = json.loads(answer.error)
+            if errors:
+                total_errors += 1
+                if errors[0]['type'] == 'stdio' \
+                        or errors[0]['exception'] == 'AssertionError':
+                    logical_errors += 1
+                else:
+                    syntax_errors += 1
+
+        return logical_errors, syntax_errors, total_errors
+        # return 0, 0, 0
+
+    #########################################################
 
 
 ###############################################################################
@@ -1358,8 +1433,7 @@ class QuestionPaper(models.Model):
                         question.type in ["mcq", "mcc"]):
                     testcases = question.get_test_cases()
                     random.shuffle(testcases)
-                    testcases_ids = ",".join([str(tc.id) for tc in testcases]
-                                             )
+                    testcases_ids = ",".join([str(tc.id) for tc in testcases])
                     TestCaseOrder.objects.create(
                         answer_paper=ans_paper, question=question,
                         order=testcases_ids)
@@ -1381,8 +1455,8 @@ class QuestionPaper(models.Model):
                 user=user, questionpaper=self, course_id=course_id
             )
             if last_attempt:
-                time_lag = (timezone.now() - last_attempt.start_time)
-                time_lag = time_lag.total_seconds()/3600
+                time_lag = (timezone.now() -
+                            last_attempt.start_time).total_seconds() / 3600
                 can_attempt = time_lag >= self.quiz.time_between_attempts
                 msg = "You cannot start the next attempt for this quiz before"\
                     "{0} hour(s)".format(self.quiz.time_between_attempts) \
@@ -1433,11 +1507,39 @@ class QuestionPaper(models.Model):
 
     def has_questions(self):
         questions = self.get_ordered_questions() + \
-                    list(self.random_questions.all())
+            list(self.random_questions.all())
         return len(questions) > 0
 
     def __str__(self):
         return "Question Paper for " + self.quiz.description
+
+    def get_quiz_stats(self, user, course_id):
+
+        answerpapers = AnswerPaper.objects.filter(
+            question_paper_id=self.id, course_id=course_id, user=user)
+
+        quiz_attempts = answerpapers.count()
+
+        que_stats = []
+
+        # logic, syntax, total
+        quiz_stats = [0, 0, 0]
+
+        questions = self.get_question_bank()
+
+        for question in questions:
+            vals = question.get_que_stats(answerpapers)
+            if vals:
+                logical_errors, syntax_errors, total_errors = vals
+                que_stats.append(
+                    {question: [logical_errors, syntax_errors, total_errors]})
+                quiz_stats[0] += logical_errors
+                quiz_stats[1] += syntax_errors
+                quiz_stats[2] += total_errors
+
+        return quiz_stats, que_stats
+
+    ########################################################################
 
 
 ###############################################################################
@@ -1530,9 +1632,9 @@ class AnswerPaperManager(models.Manager):
         questions = self.get_all_questions(questionpaper_id, attempt_number,
                                            course_id)
         all_questions = Question.objects.filter(
-                id__in=set(questions),
-                active=True
-            ).order_by('type')
+            id__in=set(questions),
+            active=True
+        ).order_by('type')
         for question in all_questions:
             if question.id in questions_answered:
                 question_stats[question] = [questions_answered[question.id],
@@ -1591,7 +1693,7 @@ class AnswerPaperManager(models.Manager):
     def get_user_all_attempts(self, questionpaper, user, course_id):
         return self.filter(question_paper=questionpaper, user=user,
                            course_id=course_id)\
-                            .order_by('-attempt_number')
+            .order_by('-attempt_number')
 
     def get_user_data(self, user, questionpaper_id, course_id,
                       attempt_number=None):
@@ -1915,11 +2017,11 @@ class AnswerPaper(models.Model):
                 for tc in question.get_test_cases():
                     if tc.string_check == "lower":
                         if tc.correct.lower().splitlines()\
-                           == user_answer.lower().splitlines():
+                                == user_answer.lower().splitlines():
                             tc_status.append(True)
                     else:
                         if tc.correct.splitlines()\
-                           == user_answer.splitlines():
+                                == user_answer.splitlines():
                             tc_status.append(True)
                 if any(tc_status):
                     result['success'] = True
@@ -1938,8 +2040,8 @@ class AnswerPaper(models.Model):
 
             elif question.type == 'arrange':
                 testcase_ids = sorted(
-                                  [tc.id for tc in question.get_test_cases()]
-                                  )
+                    [tc.id for tc in question.get_test_cases()]
+                )
                 if user_answer == testcase_ids:
                     result['success'] = True
                     result['error'] = ['Correct answer']
@@ -1955,7 +2057,7 @@ class AnswerPaper(models.Model):
         try:
             question = self.questions.get(id=question_id)
             msg = 'User: {0}; Quiz: {1}; Question: {2}.\n'.format(
-                    self.user, self.question_paper.quiz.description, question)
+                self.user, self.question_paper.quiz.description, question)
         except Question.DoesNotExist:
             msg = 'User: {0}; Quiz: {1} Question id: {2}.\n'.format(
                 self.user, self.question_paper.quiz.description,
@@ -1971,14 +2073,14 @@ class AnswerPaper(models.Model):
                 if type(answer) is not list:
                     return (False,
                             msg + '{0} answer not a list.'.format(
-                                                            question.type
-                                                            )
+                                question.type
+                            )
                             )
             except Exception:
                 return (False,
                         msg + '{0} answer submission error'.format(
-                                                             question.type
-                                                             )
+                            question.type
+                        )
                         )
         else:
             answer = user_answer.answer
@@ -2027,18 +2129,18 @@ class AssignmentUploadManager(models.Manager):
     def get_assignments(self, qp, que_id=None, user_id=None):
         if que_id and user_id:
             assignment_files = AssignmentUpload.objects.filter(
-                        assignmentQuestion_id=que_id, user_id=user_id,
-                        question_paper=qp
-                        )
+                assignmentQuestion_id=que_id, user_id=user_id,
+                question_paper=qp
+            )
             file_name = User.objects.get(id=user_id).get_full_name()
         else:
             assignment_files = AssignmentUpload.objects.filter(
-                        question_paper=qp
-                        )
+                question_paper=qp
+            )
 
             file_name = "{0}_Assignment_files".format(
-                            assignment_files[0].question_paper.quiz.description
-                            )
+                assignment_files[0].question_paper.quiz.description
+            )
 
         return assignment_files, file_name
 
@@ -2169,8 +2271,8 @@ class FloatTestCase(TestCase):
 
     def __str__(self):
         return u'Testcase | Correct: {0} | Error Margin: +or- {1}'.format(
-                self.correct, self.error_margin
-                )
+            self.correct, self.error_margin
+        )
 
 
 class ArrangeTestCase(TestCase):

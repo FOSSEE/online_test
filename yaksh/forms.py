@@ -1,7 +1,7 @@
 from django import forms
 from yaksh.models import (
     get_model_class, Profile, Quiz, Question, Course, QuestionPaper, Lesson,
-    LearningModule
+    LearningModule, position_list, state_list
 )
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -79,15 +79,32 @@ class UserRegisterForm(forms.Form):
         max_length=30, widget=forms.PasswordInput())
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
+
+    age = forms.IntegerField()
+
+    gender = forms.ChoiceField(
+        choices=(
+            ('Male', 'Male'),
+            ('Female', 'Female'),
+            ('Transgender', 'Transgender')
+        )
+    )
+
     roll_number = forms.CharField(
         max_length=30, help_text="Use a dummy if you don't have one.")
     institute = forms.CharField(
         max_length=128, help_text='Institute/Organization')
     department = forms.CharField(
         max_length=64, help_text='Department you work/study at')
-    position = forms.CharField(
-        max_length=64,
-        help_text='Student/Faculty/Researcher/Industry/Fellowship/etc.')
+
+    position = forms.ChoiceField(
+        choices=[(position, position) for position in position_list],
+        initial='Graduate Student')
+
+    state = forms.ChoiceField(
+        choices=[(state, state) for state in state_list]
+    )
+
     timezone = forms.ChoiceField(
         choices=[(tz, tz) for tz in pytz.common_timezones],
         help_text='Course timings are shown based on the selected timezone',
@@ -96,6 +113,7 @@ class UserRegisterForm(forms.Form):
     def clean_username(self):
         u_name = self.cleaned_data["username"]
         if u_name.strip(UNAME_CHARS):
+
             msg = "Only letters, digits, period and underscore characters are"\
                   " allowed in username"
             raise forms.ValidationError(msg)
@@ -144,6 +162,11 @@ class UserRegisterForm(forms.Form):
         new_profile.department = cleaned_data["department"]
         new_profile.position = cleaned_data["position"]
         new_profile.timezone = cleaned_data["timezone"]
+
+        new_profile.state = cleaned_data["state"]
+        new_profile.age = cleaned_data["age"]
+        new_profile.gender = cleaned_data["gender"]
+
         if settings.IS_DEVELOPMENT:
             new_profile.is_email_verified = True
         else:
@@ -165,7 +188,7 @@ class UserLoginForm(forms.Form):
         super(UserLoginForm, self).clean()
         try:
             u_name, pwd = self.cleaned_data["username"],\
-                          self.cleaned_data["password"]
+                self.cleaned_data["password"]
             user = authenticate(username=u_name, password=pwd)
         except Exception:
             raise forms.ValidationError(
@@ -232,8 +255,8 @@ class QuestionForm(forms.ModelForm):
 
 class FileForm(forms.Form):
     file_field = forms.FileField(widget=forms.ClearableFileInput(
-                                attrs={'multiple': True}),
-                                required=False)
+        attrs={'multiple': True}),
+        required=False)
 
 
 class RandomQuestionForm(forms.Form):
@@ -281,8 +304,10 @@ class CourseForm(forms.ModelForm):
 
     class Meta:
         model = Course
-        fields = ['name', 'enrollment', 'active', 'code', 'instructions',
-                  'start_enroll_time', 'end_enroll_time', 'grading_system']
+
+        fields = ['name', 'group', 'level', 'enrollment', 'active', 'code',
+                  'instructions', 'start_enroll_time', 'end_enroll_time',
+                  'grading_system']
 
 
 class ProfileForm(forms.ModelForm):
@@ -290,8 +315,9 @@ class ProfileForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'institute',
-                  'department', 'roll_number', 'position', 'timezone']
+        fields = ['first_name', 'last_name', 'age', 'gender',
+                  'roll_number', 'institute', 'department',
+                  'position', 'state', 'timezone']
 
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
@@ -329,8 +355,8 @@ class LessonForm(forms.ModelForm):
 
 class LessonFileForm(forms.Form):
     Lesson_files = forms.FileField(widget=forms.ClearableFileInput(
-                                attrs={'multiple': True}),
-                                required=False)
+        attrs={'multiple': True}),
+        required=False)
 
 
 class LearningModuleForm(forms.ModelForm):

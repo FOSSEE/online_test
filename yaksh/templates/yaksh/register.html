@@ -9,11 +9,35 @@
     {% csrf_token %}
     <h3> Please fill in the following details:</h3>
     <center>
-        <table class="table">
+        <table class='table'>
     {{ form.as_table }}
     </table></center>
     <center><button class="btn btn-primary" type="submit">Register</button>&nbsp;&nbsp;
     <a href="{{URL_ROOT}}/exam" class="btn btn-danger">Cancel</a></center>
 </form>
+
+<link rel="stylesheet" href="{{URL_ROOT}}/static/yaksh/css/MissPlete.css">
+<script src='{{URL_ROOT}}/static/yaksh/js/MissPlete.js'></script>
+
+<script>
+
+	$(function(){
+		
+		$('#id_institute').attr('autocomplete','off');
+		$('#id_institute').parent().css('width', '80%');
+		$('#id_institute').css('width', '90%');
+
+		miss_plete = new MissPlete({
+	  	input: document.querySelector('input[id="id_institute"]'),
+
+		  // Each subarray contains an option and all its synonyms
+		  options: {{colleges_list | safe}} ,
+
+		  // The class name for the dropdown. Ex. 'miss-plete'
+		  className: 'miss-plete'
+		});
+	});
+
+</script>
 
 {% endblock content %}

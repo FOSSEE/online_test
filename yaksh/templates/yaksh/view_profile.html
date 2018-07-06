@@ -15,6 +15,22 @@
     <th><label for="id_email"><h5>Email:</h5></label></th>
     <th><label for="id_email"><h5>{{ user.email }}</h5></label></th>
   </tr>
+
+  <tr>
+    <th><label for="id_email"><h5>Age:</h5></label></th>
+    <th><label for="id_email"><h5>{{ user.profile.age }}</h5></label></th>
+  </tr>
+
+  <tr>
+    <th><label for="id_email"><h5>Gender:</h5></label></th>
+    <th><label for="id_email"><h5>{{ user.profile.gender }}</h5></label></th>
+  </tr>
+
+  <tr>
+    <th><label for="id_roll_number"><h5>Roll number:</h5></label></th>
+    <th><label for="id_roll_number"><h5>{{ user.profile.roll_number }}</h5></label></th>
+  </tr>
+
   <tr>
     <th><label for="id_institute"><h5>Institute:</h5></label></th>
     <th><label for="id_institute"><h5>{{ user.profile.institute }}</h5></label></th>
@@ -23,14 +39,17 @@
     <th><label for="id_department"><h5>Department:</h5></label></th>
     <th><label for="id_department"><h5>{{ user.profile.department }}</h5></label></th>
   </tr>
-  <tr>
-    <th><label for="id_roll_number"><h5>Roll number:</h5></label></th>
-    <th><label for="id_roll_number"><h5>{{ user.profile.roll_number }}</h5></label></th>
-  </tr>
+
   <tr>
     <th><label for="id_position"><h5>Position:</h5></label></th>
     <th><label for="id_position"><h5>{{ user.profile.position }}</h5></label></th>
   </tr>
+
+  <tr>
+    <th><label for="id_position"><h5>State:</h5></label></th>
+    <th><label for="id_position"><h5>{{ user.profile.state }}</h5></label></th>
+  </tr>
+  
   <tr>
     <th><label for="id_position"><h5>Timezone:</h5></label></th>
     <th><label for="id_position"><h5>{{ user.profile.timezone }}</h5></label></th>

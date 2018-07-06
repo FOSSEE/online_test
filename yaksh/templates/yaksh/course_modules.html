@@ -58,6 +58,7 @@
                                     <th>Status</th>
                                     <th>Type</th>
                                     <th>View AnswerPaper</th>
+                                    <th>View Stats</th>
                                 </tr>
                                 {% for unit in module.get_learning_units %}
                                 <tr>
@@ -102,6 +103,14 @@
                                             <i class="fa fa-eye-slash" aria-hidden="true">
                                             </i> Cannot view now </a>
                                         {% endif %}
+                                    {% else %}
+                                        ------
+                                    {% endif %}
+                                    </td>
+                                    <td>
+                                    {% if unit.type == "quiz" and unit.quiz.has_code_questions %}
+                                        <a href="{{ URL_ROOT }}/analysis/view_quiz_stats/{{ course.id }}/{{ unit.quiz.questionpaper_set.get.id }}">
+                                        View Stats </a>
                                     {% else %}
                                         ------
                                     {% endif %}
