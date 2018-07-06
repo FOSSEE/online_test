@@ -14,12 +14,16 @@ from django.utils import timezone
 from django.core.exceptions import (
     MultipleObjectsReturned, ObjectDoesNotExist
 )
+from django.conf import settings
+from django.forms import fields
+import pytz
 from taggit.models import Tag
 import json
 import six
 from textwrap import dedent
 import zipfile
 from markdown import Markdown
+from online_test.settings import CODE_TEMPLATES
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -31,7 +35,8 @@ from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, Profile,
     QuestionPaper, QuestionSet, Quiz, Question, TestCase, User,
     FIXTURES_DIR_PATH, Lesson, LessonFile, LearningUnit, LearningModule,
-    CourseStatus
+    CourseStatus, EasyStandardTestCase,
+    StandardTestCase, StdIOBasedTestCase, HookTestCase
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -45,6 +50,42 @@ from .file_utils import extract_files, is_csv
 from .send_emails import (send_user_mail,
                           generate_activation_key, send_bulk_mail)
 from .decorators import email_verified, has_profile
+from django.db import models
+
+
+code_testcase = {
+    "easystandardtestcase": EasyStandardTestCase,
+    "standardtestcase": StandardTestCase,
+    "hooktestcase": HookTestCase,
+    "stdiobasedtestcase": StdIOBasedTestCase
+}
+
+code_testcase_bash_scilab = {
+    "standardtestcase": StandardTestCase,
+    "hooktestcase": HookTestCase,
+    "stdiobasedtestcase": StdIOBasedTestCase
+}
+
+operator_choices_py = (
+    ("==", "=="),
+    ("!=", "!="),
+    (">=", ">="),
+    ("<=", "<="),
+    (">", ">"),
+    ("<", "<"),
+    ("is", "is"),
+    ("in", "in"),
+    ("is not", "is not")
+)
+
+operator_choices_c = (
+    ("==", "=="),
+    ("!=", "!="),
+    (">=", ">="),
+    ("<=", "<="),
+    (">", ">"),
+    ("<", "<")
+)
 
 
 def my_redirect(url):
@@ -159,7 +200,7 @@ def quizlist_user(request, enrolled=None, msg=None):
         courses = Course.objects.filter(
             active=True, is_trial=False
         ).exclude(
-           ~Q(requests=user), ~Q(rejected=user), hidden=True
+            ~Q(requests=user), ~Q(rejected=user), hidden=True
         )
         title = 'All Courses'
 
@@ -184,12 +225,22 @@ def results_user(request):
 def add_question(request, question_id=None):
     user = request.user
     test_case_type = None
+    if not is_moderator(user):
+        raise Http404("You cannot access this page")
 
     if question_id is None:
-        question = Question(user=user)
-        question.save()
+        question = None
     else:
         question = Question.objects.get(id=question_id)
+
+    def formfield_callback(field):
+        if (isinstance(field, models.CharField) and
+                (field.name == 'operator')):
+            if lang == "python":
+                return fields.ChoiceField(choices=operator_choices_py)
+            elif lang == "c" or lang == "cpp":
+                return fields.ChoiceField(choices=operator_choices_c)
+        return field.formfield()
 
     if request.method == "POST" and 'delete_files' in request.POST:
         remove_files_id = request.POST.getlist('clear')
@@ -216,58 +267,243 @@ def add_question(request, question_id=None):
             for file in files:
                 file.toggle_hide_status()
         formsets = []
-        for testcase in TestCase.__subclasses__():
-            formset = inlineformset_factory(Question, testcase, extra=0,
-                                            fields='__all__')
-            formsets.append(formset(
-                request.POST, request.FILES, instance=question
+        lang = qform.data["language"]
+        q_type = qform.data["type"]
+
+        if q_type == "code" and (
+                lang == "python" or lang == "c" or
+                lang == "cpp" or lang == "java"):
+
+            for testcase in code_testcase:
+                if lang == "python" and (
+                        code_testcase[testcase].__name__.lower() ==
+                        "easystandardtestcase"):
+                    formset = inlineformset_factory(
+                        Question,
+                        code_testcase[testcase],
+                        extra=0,
+                        fields=(
+                            'function_name',
+                            'operator',
+                            'input_vals',
+                            'output_vals',
+                            'type'
+                        ),
+                        formfield_callback=formfield_callback
+                    )
+
+                elif ((lang == "c" or lang == "cpp" or lang == "java") and
+                      code_testcase[testcase].__name__.lower() ==
+                      "easystandardtestcase"):
+                    formset = inlineformset_factory(
+                        Question,
+                        code_testcase[testcase],
+                        extra=0,
+                        fields=(
+                            'function_name',
+                            'operator',
+                            'typeof_var',
+                            'input_vals',
+                            'output_vals',
+                            'typeof_output',
+                            'type'),
+                        formfield_callback=formfield_callback
+                    )
+                else:
+                    formset = inlineformset_factory(
+                        Question,
+                        code_testcase[testcase],
+                        extra=0,
+                        fields='__all__'
+                    )
+
+                formsets.append(formset(
+                    request.POST, request.FILES, instance=question
                 )
-            )
+                )
+
+        elif (q_type == "code" and (lang == "bash" or lang == "scilab")):
+            for testcase in code_testcase_bash_scilab:
+                formset = inlineformset_factory(
+                    Question,
+                    code_testcase_bash_scilab[testcase],
+                    extra=0,
+                    fields='__all__'
+                )
+
+                formsets.append(
+                    formset(request.POST, request.FILES, instance=question))
+
+        else:
+            for testcase in TestCase.__subclasses__():
+
+                if lang == "python" and (
+                        testcase.__name__.lower() ==
+                        "easystandardtestcase"):
+                    formset = inlineformset_factory(
+                        Question,
+                        testcase,
+                        extra=0,
+                        fields=(
+                            'function_name',
+                            'operator',
+                            'input_vals',
+                            'output_vals',
+                            'type')
+                    )
+
+                elif ((lang == "c" or lang == "cpp" or lang == "java") and
+                      testcase.__name__.lower() ==
+                      "easystandardtestcase"):
+                    formset = inlineformset_factory(
+                        Question,
+                        testcase,
+                        extra=0,
+                        fields=(
+                            'function_name',
+                            'typeof_var',
+                            'input_vals',
+                            'output_vals',
+                            'typeof_output',
+                            'type')
+                    )
+                else:
+                    formset = inlineformset_factory(
+                        Question,
+                        testcase,
+                        extra=0,
+                        fields='__all__'
+                    )
+
+                formsets.append(formset(
+                    request.POST, request.FILES, instance=question
+                )
+                )
+
         files = request.FILES.getlist('file_field')
-        uploaded_files = FileUpload.objects.filter(question_id=question.id)
+        uploaded_files = FileUpload.objects.filter(question_id=question_id)
         if qform.is_valid():
             question = qform.save(commit=False)
             question.user = user
+
             question.save()
-            # many-to-many field save function used to save the tags
             qform.save_m2m()
             for formset in formsets:
                 if formset.is_valid():
                     formset.save()
+                else:
+                    pass
+
+            question.save_test_case()
+
             test_case_type = request.POST.get('case_type', None)
         else:
             context = {
                 'qform': qform,
+                'question': question,
                 'fileform': fileform,
                 'question': question,
                 'formsets': formsets,
-                'uploaded_files': uploaded_files
+                'uploaded_files': uploaded_files,
             }
+
             return my_render_to_response(
                 request, "yaksh/add_question.html", context
             )
 
     qform = QuestionForm(instance=question)
     fileform = FileForm()
-    uploaded_files = FileUpload.objects.filter(question_id=question.id)
+    uploaded_files = FileUpload.objects.filter(question_id=question_id)
     formsets = []
+    lang = qform.instance.language
+
     for testcase in TestCase.__subclasses__():
         if test_case_type == testcase.__name__.lower():
-            formset = inlineformset_factory(
-                Question, testcase, extra=1, fields='__all__'
-            )
+            if (test_case_type == "easystandardtestcase"):
+                if lang == "python":
+                    formset = inlineformset_factory(
+                        Question,
+                        EasyStandardTestCase,
+                        extra=1,
+                        fields=(
+                            'type',
+                            'function_name',
+                            'operator',
+                            'input_vals',
+                            'output_vals'),
+                        formfield_callback=formfield_callback
+                    )
+
+                elif lang == 'c' or lang == 'cpp' or lang == 'java':
+                    formset = inlineformset_factory(
+                        Question,
+                        testcase,
+                        extra=1,
+                        fields=(
+                            'type',
+                            'function_name',
+                            'operator',
+                            'typeof_var',
+                            'input_vals',
+                            'output_vals',
+                            'typeof_output'),
+                        formfield_callback=formfield_callback
+                    )
+            else:
+                formset = inlineformset_factory(
+                    Question, testcase, extra=1, fields='__all__'
+                )
         else:
-            formset = inlineformset_factory(
-                Question, testcase, extra=0, fields='__all__'
-            )
+            if lang == "python" and (
+                    testcase.__name__.lower() ==
+                    "easystandardtestcase"):
+
+                formset = inlineformset_factory(
+                    Question,
+                    testcase,
+                    extra=0,
+                    fields=(
+                        'type',
+                        'function_name',
+                        'operator',
+                        'input_vals',
+                        'output_vals'),
+                    formfield_callback=formfield_callback
+                )
+            elif ((lang == "c" or lang == "cpp" or lang == "java") and
+                  testcase.__name__.lower() ==
+                  "easystandardtestcase"):
+                formset = inlineformset_factory(
+                    Question,
+                    testcase,
+                    extra=0,
+                    fields=(
+                        'type',
+                        'function_name',
+                        'operator',
+                        'typeof_var',
+                        'input_vals',
+                        'output_vals',
+                        'typeof_output'),
+                    formfield_callback=formfield_callback
+                )
+            else:
+                formset = inlineformset_factory(
+                    Question, testcase, extra=0, fields='__all__'
+                )
+
         formsets.append(
             formset(
                 instance=question,
                 initial=[{'type': test_case_type}]
             )
         )
+
     context = {'qform': qform, 'fileform': fileform, 'question': question,
-               'formsets': formsets, 'uploaded_files': uploaded_files}
+               'formsets': formsets,
+               'uploaded_files': uploaded_files
+               }
+
     return my_render_to_response(
         request, "yaksh/add_question.html", context
     )
@@ -276,8 +512,7 @@ def add_question(request, question_id=None):
 @login_required
 @email_verified
 def add_quiz(request, quiz_id=None, course_id=None):
-    """To add a new quiz in the database.
-    Create a new quiz and store it."""
+    """To add a new quiz in the database. Create a new quiz and store it."""
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this course !')
@@ -718,14 +953,14 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
             for fname in assignment_filename:
                 fname._name = fname._name.replace(" ", "_")
                 assignment_files = AssignmentUpload.objects.filter(
-                            assignmentQuestion=current_question,
-                            assignmentFile__icontains=fname, user=user,
-                            question_paper=questionpaper_id)
+                    assignmentQuestion=current_question,
+                    assignmentFile__icontains=fname, user=user,
+                    question_paper=questionpaper_id)
                 if assignment_files.exists():
                     assign_file = assignment_files.get(
-                            assignmentQuestion=current_question,
-                            assignmentFile__icontains=fname, user=user,
-                            question_paper=questionpaper_id)
+                        assignmentQuestion=current_question,
+                        assignmentFile__icontains=fname, user=user,
+                        question_paper=questionpaper_id)
                     if os.path.exists(assign_file.assignmentFile.path):
                         os.remove(assign_file.assignmentFile.path)
                     assign_file.delete()
@@ -1267,10 +1502,10 @@ def _remove_already_present(questionpaper_id, questions):
         return questions
     questionpaper = QuestionPaper.objects.get(pk=questionpaper_id)
     questions = questions.exclude(
-            id__in=questionpaper.fixed_questions.values_list('id', flat=True))
+        id__in=questionpaper.fixed_questions.values_list('id', flat=True))
     for random_set in questionpaper.random_questions.all():
         questions = questions.exclude(
-                id__in=random_set.questions.values_list('id', flat=True))
+            id__in=random_set.questions.values_list('id', flat=True))
     return questions
 
 
@@ -1313,7 +1548,7 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
             question_ids = request.POST.get('checked_ques', None)
             if question_paper.fixed_question_order:
                 ques_order = question_paper.fixed_question_order.split(",") +\
-                            question_ids.split(",")
+                    question_ids.split(",")
                 questions_order = ",".join(ques_order)
             else:
                 questions_order = question_ids
@@ -1531,19 +1766,19 @@ def download_quiz_csv(request, course_id, quiz_id):
     writer.writerow(csv_fields)
 
     csv_fields_values = {
-            'name': 'user.get_full_name().title()',
-            'roll_number': 'user.profile.roll_number',
-            'institute': 'user.profile.institute',
-            'department': 'user.profile.department',
-            'username': 'user.username',
-            'marks_obtained': 'answerpaper.marks_obtained',
-            'out_of': 'question_paper.total_marks',
-            'percentage': 'answerpaper.percent',
-            'status': 'answerpaper.status'}
+        'name': 'user.get_full_name().title()',
+        'roll_number': 'user.profile.roll_number',
+        'institute': 'user.profile.institute',
+        'department': 'user.profile.department',
+        'username': 'user.username',
+        'marks_obtained': 'answerpaper.marks_obtained',
+        'out_of': 'question_paper.total_marks',
+        'percentage': 'answerpaper.percent',
+        'status': 'answerpaper.status'}
     questions_scores = {}
     for question in questions:
         questions_scores['{0}-{1}'.format(question.summary, question.points)] \
-                = 'answerpaper.get_per_question_score({0})'.format(question.id)
+            = 'answerpaper.get_per_question_score({0})'.format(question.id)
     csv_fields_values.update(questions_scores)
 
     users = users.exclude(id=course.creator.id).exclude(
@@ -1591,8 +1826,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             raise Http404('This course does not belong to you')
 
         has_quiz_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id=questionpaper_id
-                                ).exists()
+            question_paper_id=questionpaper_id
+        ).exists()
         context = {
             "users": user_details,
             "quiz_id": quiz_id,
@@ -1610,9 +1845,9 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             except IndexError:
                 raise Http404('No attempts for paper')
             has_user_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id=questionpaper_id,
-                                user_id=user_id
-                                ).exists()
+                question_paper_id=questionpaper_id,
+                user_id=user_id
+            ).exists()
             user = User.objects.get(id=user_id)
             data = AnswerPaper.objects.get_user_data(
                 user, questionpaper_id, course_id, attempt_number
@@ -1995,7 +2230,7 @@ def new_activation(request, email=None):
         user = User.objects.get(email=email)
     except MultipleObjectsReturned:
         context['email_err_msg'] = "Multiple entries found for this email"\
-                                    "Please change your email"
+            "Please change your email"
         return my_render_to_response(
             request, 'yaksh/activation_status.html', context
         )
@@ -2005,7 +2240,7 @@ def new_activation(request, email=None):
                             Please verify your account"
         return my_render_to_response(
             request, 'yaksh/activation_status.html', context
-            )
+        )
 
     if not user.profile.is_email_verified:
         user.profile.activation_key = generate_activation_key(user.username)
@@ -2060,8 +2295,8 @@ def download_assignment_file(request, quiz_id, question_id=None, user_id=None):
         folder = f_name.user.get_full_name().replace(" ", "_")
         sub_folder = f_name.assignmentQuestion.summary.replace(" ", "_")
         folder_name = os.sep.join((folder, sub_folder, os.path.basename(
-                        f_name.assignmentFile.name))
-                        )
+            f_name.assignmentFile.name))
+        )
         zip_file.write(
             f_name.assignmentFile.path, folder_name
         )
@@ -2069,8 +2304,8 @@ def download_assignment_file(request, quiz_id, question_id=None, user_id=None):
     zipfile_name.seek(0)
     response = HttpResponse(content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename={0}.zip'.format(
-                                            file_name.replace(" ", "_")
-                                            )
+        file_name.replace(" ", "_")
+    )
     response.write(zipfile_name.read())
     return response
 
@@ -2173,8 +2408,8 @@ def _get_csv_values(row, fields):
     roll_no, institute, department = "", "", ""
     remove = "false"
     email, first_name, last_name = map(str.strip, [row['email'],
-                                       row['firstname'],
-                                       row['lastname']])
+                                                   row['firstname'],
+                                                   row['lastname']])
     password = email
     username = email
     if 'password' in fields and row['password']:
@@ -2701,7 +2936,7 @@ def course_modules(request, course_id, msg=None):
     context['modules'] = [
         (module, module.get_module_complete_percent(course, user))
         for module in learning_modules
-        ]
+    ]
     if course_status.exists():
         course_status = course_status.first()
         if not course_status.grade:
@@ -2784,7 +3019,7 @@ def get_user_data(request, course_id, student_id):
             """\
             You are neither course creator nor course teacher for {0}
             """.format(course.name)
-            )
+        )
         data['msg'] = msg
         data['status'] = False
     else:
@@ -2794,14 +3029,14 @@ def get_user_data(request, course_id, student_id):
         module_percent = [
             (module, module.get_module_complete_percent(course, student))
             for module in modules
-            ]
+        ]
         data['modules'] = module_percent
         _update_course_percent(course, student)
         data['course_percentage'] = course.get_completion_percent(student)
         data['student'] = student
     template_path = os.path.join(
         os.path.dirname(__file__), "templates", "yaksh", "user_status.html"
-        )
+    )
     with open(template_path) as f:
         template_data = f.read()
         template = Template(template_data)

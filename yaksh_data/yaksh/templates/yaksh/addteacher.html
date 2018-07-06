@@ -1,0 +1,78 @@
+{% extends "manage.html" %}
+
+{% block title %} Add teacher {% endblock title %}
+{% block subtitle %} {{ course.name }} {% endblock %}
+
+{% block css %}
+<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/course.css" />
+{% endblock %}
+
+{% block content %}
+<center><h3>Add Teachers for this course</h3><br></center>
+<center><h3>Search teacher with username, firstname, lastname, email</h3><br></center>
+<div align="center">
+		<form action="{{ URL_ROOT }}/exam/manage/searchteacher/{{ course.id }}/" method="post">
+		{% csrf_token %}
+		Search Teacher: <input type="text" name="uname" style="height: 25px; padding: 0px"><br><br>
+		<center><button class="btn" type="submit">Search</button>
+		<button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses");'>Cancel</button> </center></form>
+</div>
+<br><br>
+
+<form action="{{ URL_ROOT }}/exam/manage/addteacher/{{ course.id }}/" method="post">
+{% csrf_token %}
+{% if success == True %}
+	{% if teachers|length == 0 %}
+		<center><h3>No results found</h3></center>
+	{% else %}
+		<center><b><u>Search Results</u></b></center><br>
+		<center><b>Search results does not include teachers already added</b></center><br>
+		<table class="table table-striped">
+            <th></th>
+            <th>Username</th>
+			<th>First Name</th>
+			<th>Last Name</th>
+			<th>Email</th>
+			<th>Institute</th>
+			<th>Department</th>
+            <th>Position</th>
+			{% for teacher in teachers %}
+				{% if teacher not in course.get_teachers %}
+				<tr>
+				<td><input type="checkbox" name="check" value="{{ teacher.id }}"></td>
+				<td>{{ teacher.username }}</td>
+				<td>{{ teacher.first_name }}</td>
+				<td>{{ teacher.last_name }}</td>
+				<td>{{ teacher.email }}</td>
+				<td>{{ teacher.profile.institute }}</td>
+				<td>{{ teacher.profile.department }}</td>
+				<td>{{ teacher.profile.position }}</td>
+				</tr>
+				{% endif %}
+			{% endfor %}
+		</table>
+	</br>
+		<button class="btn" type="submit">Add Selected</button>
+	{% endif %}
+{% endif %}
+</form>
+{% if status == True %}
+<div class="row">
+    <div class="span6 offset4 wrap">  
+        {% if teachers_added %}
+        {% for teacher in teachers_added %}
+        <div class="well">
+            <div class="row">
+				<div class="span3" style="width: auto;">
+					<h5>{{ teacher.get_full_name }}</h5>
+				</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <center><b>No Teacher(s) Added</b></center>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

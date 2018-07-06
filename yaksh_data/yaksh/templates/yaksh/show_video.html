@@ -1,0 +1,146 @@
+{% extends "user.html" %}
+{% load custom_filters %}
+
+{% block title %} {{ learning_module.name }} {% endblock %}
+
+{% block pagetitle %} {{ learning_module.name }}
+{% if state == "lesson" %}
+    : {{lesson.name}}
+{% endif %}
+{% endblock %}
+
+{% block main %}
+<div class="col-sm-3 col-md-2 sidebar">
+    <center><h4>{{course.name}}</h4></center>
+    <br>
+    {% for module in all_modules %}
+        {% if module.id == learning_module.id %}
+            <span class="glyphicon glyphicon-edit" data-toggle="tooltip" title="Currently on">
+            </span>
+        {% endif %}
+        <b><u><a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}">{{module}}</u></b>
+        </a>
+        <ul class="list">
+        {% for unit in module.get_learning_units %}
+        <span>
+        <li>
+        {% get_unit_status course module unit user as status %}
+
+        {% if unit.id == current_unit.id %}
+            <span class="glyphicon glyphicon-edit" data-toggle="tooltip" title="Currently on">
+            </span>
+        {% endif %}
+        {% if unit.type == "quiz" %}
+            <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{module.id}}/{{course.id}}">
+                {{ unit.quiz.description }}
+            </a>
+        {% else %}
+            <a href="{{ URL_ROOT }}/exam/show_lesson/{{unit.lesson.id}}/{{module.id}}/{{course.id}}">
+                {{ unit.lesson.name }}
+            </a>
+        {% endif %}
+        {% if status == "completed" %}
+          <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
+        {% else %}
+          <span class="glyphicon glyphicon-remove" style="color:  #FF0000"></span>
+        {% endif %}
+        </li>
+        </span>
+        {% endfor %}
+        </ul>
+    {% endfor %}
+</div>
+{% if msg %}
+<center>
+<div class="col-md-12 col-md-offset-1 main">
+<div class="alert alert-warning">{{msg}}</div></div>
+</center>
+{% endif %}
+<div class="col-md-12 col-md-offset-1 main">
+{% if state == "module" %}
+<div class="panel panel-default" style="border: none; box-shadow: none;">
+    <div class="panel-body">
+        {{learning_module.html_data|safe}}
+        {% if learning_module.html_data%}
+        <hr>
+        {% endif %}
+        {% if learning_module.get_learning_units %}
+        <center><h4>Following are the units in this modules</h4></center>
+        <table class="table">
+        <tr>
+        <th>Unit Name</th>
+        <th>Unit Type</th>
+        </tr>
+        {% for unit in learning_module.get_learning_units %}
+        <tr>
+        <ul class="inputs-list">
+            <td>
+            {% if unit.type == "quiz" %}
+                {{unit.quiz.description}}
+            {% else %}
+                {{unit.lesson.name}}
+            {% endif %}
+            </td>
+            <td>
+            {% if unit.type == "quiz" %}
+                {% if unit.quiz.is_exercise %}
+                    Exercise
+                {% else %}
+                    Quiz
+                {% endif %}
+            {% else %}
+                Lesson
+            {% endif %}
+            </td>
+        </ul>
+        </tr>
+        {% endfor %}
+        </table>
+        {% else %}
+            <center><h3>No Lessons/Quizzes Found</h3></center>
+        {% endif %}
+    </div>
+</div>
+<div style="text-align: center;">
+    {% if first_unit %}
+        <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{first_unit.id}}/1" class="btn btn-info">Start
+            <span class="glyphicon glyphicon-chevron-right">
+            </span>
+        </a>
+    {% else %}
+        <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}" class="btn btn-info">Next
+            <span class="glyphicon glyphicon-chevron-right">
+            </span>
+        </a>
+    {% endif %}
+</div>
+{% else %}
+<div class="panel panel-default" style="border: none; box-shadow: none;">
+    <div class="panel-body">
+        {{lesson.html_data|safe}}
+    </div>
+</div>
+{% if lesson.get_files %}
+    <div class="panel" style="border-width: 10px;">
+        <center>
+        <div class="alert alert-success">
+            <h4>Files for this lesson</h4>
+        </div>
+        {% for f in lesson.get_files %}
+            <h4>
+            <b>{{forloop.counter}}.</b>
+            <a href="{{f.file.url}}">{{ f.file.name|file_title }}</a>
+            </h4><br>
+        {% endfor %}
+        </center>
+    </div>
+{% endif %}
+<div style="text-align: center;">
+    <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{current_unit.id}}" class="btn btn-info" style="display: inline-block;">Next
+        <span class="glyphicon glyphicon-chevron-right">
+        </span>
+    </a>
+</div>
+{% endif %}
+</div>
+{% endblock %}

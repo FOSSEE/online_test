@@ -30,21 +30,26 @@ code_evaluators = {
       "yaksh.python_assertion_evaluator.PythonAssertionEvaluator",
       "stdiobasedtestcase":
       "yaksh.python_stdio_evaluator.PythonStdIOEvaluator",
-      "hooktestcase": "yaksh.hook_evaluator.HookEvaluator"
+      "hooktestcase": "yaksh.hook_evaluator.HookEvaluator",
+      "easystandardtestcase":
+      "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
       },
     "c": {"standardtestcase": "yaksh.cpp_code_evaluator.CppCodeEvaluator",
           "stdiobasedtestcase": "yaksh.cpp_stdio_evaluator.CppStdIOEvaluator",
-          "hooktestcase": "yaksh.hook_evaluator.HookEvaluator"
+          "hooktestcase": "yaksh.hook_evaluator.HookEvaluator",
+          "easystandardtestcase":"yaksh.cpp_code_evaluator.CppCodeEvaluator"
           },
     "cpp": {"standardtestcase": "yaksh.cpp_code_evaluator.CppCodeEvaluator",
-            "stdiobasedtestcase":
-            "yaksh.cpp_stdio_evaluator.CppStdIOEvaluator",
-            "hooktestcase": "yaksh.hook_evaluator.HookEvaluator"
+            "stdiobasedtestcase": "yaksh.cpp_stdio_evaluator.CppStdIOEvaluator",
+            "hooktestcase": "yaksh.hook_evaluator.HookEvaluator",
+            "easystandardtestcase":"yaksh.cpp_code_evaluator.CppCodeEvaluator"
             },
     "java": {"standardtestcase": "yaksh.java_code_evaluator.JavaCodeEvaluator",
              "stdiobasedtestcase":
              "yaksh.java_stdio_evaluator.JavaStdIOEvaluator",
-             "hooktestcase": "yaksh.hook_evaluator.HookEvaluator"
+             "hooktestcase": "yaksh.hook_evaluator.HookEvaluator",
+             "easystandardtestcase":
+             "yaksh.java_code_evaluator.JavaCodeEvaluator"
              },
     "bash": {"standardtestcase": "yaksh.bash_code_evaluator.BashCodeEvaluator",
              "stdiobasedtestcase":

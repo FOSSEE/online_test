@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block pagetitle %} Yaksh Account Activation {% endblock %}
+{% block title %} Yaksh Account Activation {% endblock %}
+{% block css%}
+    <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
+{% endblock %}
+{% block nav %}
+<nav class="navbar navbar-fixed-top navbar-inverse">
+  <div class="container">
+    <div class= "collapse navbar-collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+          <li><a href="{{ URL_ROOT }}/exam/viewprofile"> {{ user.get_full_name.title }} </a></li>
+          <li><a style='cursor:pointer' id='logout' onClick='location.replace("{{URL_ROOT}}/exam/logout/");'> 
+          <span class="glyphicon glyphicon-log-out">Logout </span></a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+{% block content %}
+{% if success %}
+    <center>
+    <div class="alert alert-success" role="alert">
+        <strong> {{ msg }} </strong>
+    </div>
+    <a href="{{URL_ROOT}}/exam/"> Home </a>
+    </center>
+{% else %}
+    {% if msg %}
+        <center>
+        <div class="alert alert-warning" role="alert">
+            <strong> {{ msg }} </strong>
+        </div>
+        </center>
+        <form action="{{ URL_ROOT }}/exam/new_activation/" method="post">
+        {% csrf_token %}
+        <center>
+        Enter Email Address for verification: <input type="email" name="email" required><br><br>
+        <button class="btn" type="submit">Send Email</button>
+        </center>
+        </form>
+    {% endif %}
+{% endif %}
+<br/>
+{% if activation_msg %}
+    <center>
+    <div class="alert alert-info" role="alert">
+        <strong> {{ activation_msg }} </strong>
+    </div>
+    <a href="{{URL_ROOT}}/exam/"> Home </a>
+    </center>
+{% endif %}
+
+{% if email_err_msg %}
+    <center>
+    <div class="alert alert-warning" role="alert">
+        <strong> {{ email_err_msg }} </strong>
+    </div>
+    </center>
+    <form action="{{ URL_ROOT }}/exam/update_email/" method="post">
+    {% csrf_token %}
+    <center>
+    <table>
+    <tr>
+    <td>Enter Username:</td>
+    <td><input type="text" name="username" required></td>
+    </tr>
+    <tr>
+    <td>Enter New Email Address:</td>
+    <td><input type="email" name="email" required></td>
+    </tr>
+    </table>
+    <br>
+    <button class="btn" type="submit">Submit</button>
+    </center>
+    </form>
+{% endif %}
+{% endblock content %}

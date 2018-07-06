@@ -1,0 +1,155 @@
+{% extends "manage.html" %}
+
+{% block title %} Questions {% endblock %}
+
+{% block pagetitle %} Questions {% endblock pagetitle %}
+
+{% block script %}
+<script src="{{ URL_ROOT }}/static/yaksh/js/show_question.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/question_filter.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-3 col-md-2 sidebar">
+      <ul class="nav nav-sidebar nav-stacked">
+      <li class="active"><a href="#show" data-toggle="pill" > Show all Questions</a></li>
+      <li><a href="#updown" data-toggle="pill" > Upload and Download Questions</a></li>
+      </ul>
+    </div>
+<div class="tab-content col-md-9 col-md-offset-2 main">
+<!-- Upload Questions -->
+<div id="updown" class="tab-pane fade">
+<a class="btn btn-primary" href="{{URL_ROOT}}/exam/manage/courses/download_yaml_template/"> Download Template</a>
+<br/>
+<h4> Or </h4>
+<form action="" method="post"  enctype="multipart/form-data">
+{% csrf_token %}
+    {{ upload_form.as_p }}
+<br/>
+<h4> And </h4>
+<button class="btn btn-success" type="submit" name="upload" value="upload">
+Upload File <span class="glyphicon glyphicon-open"/></button>
+</form>
+</div>
+<!-- End of upload questions -->
+
+<!-- Show questions -->
+<div id="show" class= "tab-pane fade in active">
+<form name=frm action="" method="post">
+{% csrf_token %}
+{% if message %}
+{%if message == "Questions Uploaded Successfully"%}
+<div class="alert alert-success alert-dismissable">
+<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+  {{ message }}
+</div>
+{%else %}
+<div class="alert alert-danger alert-dismissable"> 
+  <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+  {{ message }}
+</div>
+{% endif %}
+{% endif %}
+{% if msg %}
+<div class="alert alert-danger alert-dismissable"> 
+  <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+  {{ msg }}
+</div>
+{% endif %}
+<br><br>
+<form name=frm action="" method="post">
+<!-- Filtering Questions  -->
+<div class="row" id="selectors">
+    <h4 style="padding-left: 20px;">Filters Questions: </h4>
+    <div class="col-md-3">
+        {{ form.question_type }}
+    </div>
+    <div class="col-md-3">
+        {{ form.language }}
+    </div>
+    <div class="col-md-3">
+        {{ form.marks }}
+    </div>
+<br>
+<h4 style="padding-left: 20px;">Or</h4>
+
+<h4 style="padding-left: 20px;">Search using Tags: </h4>
+</div>
+<!-- Searching Tags -->
+{% csrf_token %}
+    <div class="col-md-14">
+    <div class="input-group">
+    <span class="input-group-addon" id="basic-addon1">Search Questions </span>
+    <input type="text" id="question_tags" name="question_tags" class="form-control"
+     placeholder="Search using comma separated Tags">
+    <span class="input-group-btn">
+    <button class="btn btn-default" type="submit">Search</button>
+    </span>
+    <div class="col-md-6">
+    <select class="form-control" id="sel1" onchange="append_tag(this);">
+    {% if all_tags %}
+     <option value="" disabled selected>Available Tags</option>
+    {% for tag in all_tags %}
+    <option>
+        {{tag}}
+    </option>
+    {% endfor %}
+    {% else %}
+     <option value="" disabled selected>No Available Tags</option>
+    {% endif %}
+    </select>
+    </div>
+    </div>
+     </div>
+<br><br>
+<button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>
+ Clear Filters</button>
+
+<div id="filtered-questions">
+{% if questions %}
+<h5><input id="checkall" type="checkbox"> Select All </h5>
+
+<table id="questions-table" class="tablesorter table table table-striped">
+    <thead>
+    <tr>
+    <th> Select </th>
+    <th> Summary </th>
+    <th> Language </th>
+    <th> Type </th>  
+    <th> Marks </th>
+    </tr>
+    </thead>
+    <tbody>
+    
+{% for question in questions %}
+<tr>
+<td>
+<input type="checkbox" name="question" value="{{ question.id }}">
+</td>
+<td><a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{question.summary|capfirst}}</a></td>
+<td>{{question.language|capfirst}}</td>
+<td>{{question.type|capfirst}}</td>
+<td>{{question.points}}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+</div>
+<br>
+<center>
+<button class="btn btn-primary" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question <span class="glyphicon glyphicon-plus"></span></button>&nbsp;&nbsp;
+{% if questions %}
+<button class="btn btn-primary" type="submit" name='download' value='download'>Download Selected <span class="glyphicon glyphicon-save"></span></button>&nbsp;&nbsp;
+<button class="btn btn-primary" type="submit" name="test" value="test">Test Selected</button>&nbsp;&nbsp;
+{% endif %}
+<button class="btn btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected <span class="glyphicon glyphicon-minus"></span></button>
+</center>
+</form>
+</div>
+</div>
+</div>
+<!-- End of Show questions -->
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block pagetitle %}<img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_text.png"
+width="80" alt="YAKSH"></img>{% endblock %}
+{% block content %}
+{% csrf_token %}
+    {% if paper.questions_answered.all or paper.questions_unanswered.all %}
+<center><table class="table table-bordered" >
+        <caption> <center><h3>Submission Status</h3> </center></caption>
+        <thead>
+            <tr>
+                <th> Question</th>
+                <th> State </th>
+            </tr>
+        </thead>
+
+        {% for question in paper.questions.all %}
+            <tbody>
+                {% if question in paper.questions_answered.all %}
+                    <tr class="info">
+                    <td> {{ question.summary }} </td>
+                    <td> Attempted </td>
+                {% else %}
+                    <tr class="danger">
+                    <td> {{ question }} </td>
+                    <td> Not completed </td>
+                {% endif %}
+                </tr>
+            </tbody>
+        {% endfor %}
+</table></center>
+    {% endif %}
+	<center><h3>{{message}}</h3></center>
+    <center>
+    <br>
+    {% if module_id and not user == "moderator" %}
+        {% if first_unit %}
+            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}/1" class="btn btn-info" id="Next"> Next
+                <span class="glyphicon glyphicon-chevron-right">
+                </span>
+            </a>
+        {% else %}
+            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}" class="btn btn-info" id="Next"> Next
+                <span class="glyphicon glyphicon-chevron-right">
+                </span>
+            </a>
+        {% endif %}
+    {% else %}
+        <a href="{{URL_ROOT}}/exam/" id="home" class="btn btn-success"> Home </a>
+    {% endif %}
+    </center>
+{% endblock content %}

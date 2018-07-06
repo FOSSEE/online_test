@@ -1,0 +1,13 @@
+{% extends template  %}
+{% block pagetitle %} Please fill in the following details {% endblock %}
+{% block main %}
+<form action="{{URL_ROOT}}/exam/editprofile/" method="post" >
+  {% csrf_token %}
+  <center>
+  <table class="table table-bordered">
+  {{ form.as_table }}
+  </table>
+  </center>
+  <button class="btn btn-primary pull-right" type="submit">Save Profile</button>
+</form>
+{% endblock main %}
