@@ -24,8 +24,6 @@ from textwrap import dedent
 import zipfile
 from markdown import Markdown
 from online_test.settings import CODE_TEMPLATES
-from .template_python import template_python
-from .template_c import template_c
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -62,7 +60,7 @@ code_testcase = {
     "stdiobasedtestcase": StdIOBasedTestCase
 }
 
-code_testcase1 = {
+code_testcase_bash_scilab = {
     "standardtestcase": StandardTestCase,
     "hooktestcase": HookTestCase,
     "stdiobasedtestcase": StdIOBasedTestCase
@@ -325,10 +323,10 @@ def add_question(request, question_id=None):
                 )
 
         elif (q_type == "code" and (lang == "bash" or lang == "scilab")):
-            for testcase in code_testcase1:
+            for testcase in code_testcase_bash_scilab:
                 formset = inlineformset_factory(
                     Question,
-                    code_testcase1[testcase],
+                    code_testcase_bash_scilab[testcase],
                     extra=0,
                     fields='__all__'
                 )

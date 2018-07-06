@@ -1080,7 +1080,6 @@ class Question(models.Model):
         etc = q.testcase_set.filter(
             type="easystandardtestcase", easystandardtestcase__test_case="")
         if etc:
-            easy = etc.first().easystandardtestcase
             easy_id = EasyStandardTestCase.objects.get(
                 testcase_ptr=etc.first().id)
             if (self.language == "python"):
@@ -1088,16 +1087,17 @@ class Question(models.Model):
                 easy_id.test_case = 'assert ' + easy_id.function_name + \
                     '(' + easy_id.input_vals + ')' + op + easy_id.output_vals
                 easy_id.save()
-                e = EasyStandardTestCase.objects.filter(testcase_ptr=easy.id)
 
             elif(self.language == "c" or self.language == "cpp"):
                 typevar = easy_id.typeof_var
                 path = CODE_TEMPLATES + 'template_c.c'
-                #/home/amitpeshwani/Desktop/Yaksh/online_test/yaksh/template_c.c
                 with open(path, "r") as myfile:
                     data = myfile.read()
-                easy_id.test_case = data.format(easy_id.function_name, typevar, easy_id.input_vals,
-                                                easy_id.output_vals, '{', '}', easy_id.typeof_output, easy_id.operator)
+                easy_id.test_case = data.format(easy_id.function_name, typevar,
+                                                easy_id.input_vals,
+                                                easy_id.output_vals, '{', '}',
+                                                easy_id.typeof_output,
+                                                easy_id.operator)
                 easy_id.save()
 
             elif(self.language == "java"):
@@ -1106,8 +1106,12 @@ class Question(models.Model):
                 with open(path, "r") as myfile:
                     data = myfile.read()
                 # easy_id.test_case=data.format(easy_id.function_name,easy_id.input_vals,easy_id.output_vals,'{','}')
-                easy_id.test_case = data.format(easy_id.function_name, easy_id.input_vals,
-                                                easy_id.output_vals, easy_id.typeof_output, '{', '}', easy_id.operator)
+                easy_id.test_case = data.format(easy_id.function_name,
+                                                easy_id.input_vals,
+                                                easy_id.output_vals,
+                                                easy_id.typeof_output,
+                                                '{', '}',
+                                                easy_id.operator)
                 easy_id.save()
 
     def get_test_case(self, **kwargs):
