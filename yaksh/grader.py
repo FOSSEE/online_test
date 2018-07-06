@@ -167,10 +167,14 @@ class Grader(object):
                 line_no = traceback.extract_tb(exc_tb)[-1][1]
             if len(tb_list) > 2:
                 del tb_list[1:3]
+            try:
+                exc_value = str(exc_value)
+            except UnicodeEncodeError:
+                exc_value = unicode(exc_value)
             error.append(
                 prettify_exceptions(
-                    exc_type.__name__, str(exc_value), "".join(tb_list),
-                    line_no=line_no
+                    exc_type.__name__, exc_value,
+                    "".join(tb_list), line_no=line_no
                     )
                 )
         finally:
