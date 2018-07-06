@@ -4,7 +4,7 @@ import subprocess
 import os
 from os.path import isfile
 
-#Local imports
+# Local imports
 from .stdio_evaluator import StdIOEvaluator
 from .file_utils import copy_files, delete_files
 
@@ -22,7 +22,7 @@ class JavaStdIOEvaluator(StdIOEvaluator):
         # Set test case data values
         self.expected_input = test_case_data.get('expected_input')
         self.expected_output = test_case_data.get('expected_output')
-        self.weight = test_case_data.get('weight') 
+        self.weight = test_case_data.get('weight')
 
     def teardown(self):
         os.remove(self.submit_code_path)
@@ -84,7 +84,7 @@ class JavaStdIOEvaluator(StdIOEvaluator):
                         err = err + "\n" + e.split(":", 1)[1]
                     else:
                         err = err + "\n" + e
-            except:
+            except Exception:
                 err = err + "\n" + stdnt_stderr
         mark_fraction = 1.0 if self.partial_grading and success else 0.0
         return success, err, mark_fraction

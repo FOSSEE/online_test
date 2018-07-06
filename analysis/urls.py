@@ -8,3 +8,4 @@ urlpatterns = [
     url(r'^view_quiz_stats/(?P<course_id>\d+)/(?P<question_paper_id>\d+)/$',
         views.view_quiz_stats, name='view_quiz_stats'),
 ]
+	

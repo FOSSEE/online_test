@@ -9,7 +9,8 @@ from .error_messages import compare_outputs
 
 
 class StdIOEvaluator(BaseEvaluator):
-    def evaluate_stdio(self, user_answer, proc, expected_input, expected_output):
+    def evaluate_stdio(self, user_answer, proc,
+                       expected_input, expected_output):
         success = False
         try:
             if expected_input:
@@ -21,7 +22,6 @@ class StdIOEvaluator(BaseEvaluator):
             else:
                 user_output_bytes, output_err_bytes = proc.communicate()
             user_output = user_output_bytes.decode('utf-8')
-            output_err = output_err_bytes.decode('utf-8')
         except TimeoutException:
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             raise

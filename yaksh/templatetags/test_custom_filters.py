@@ -5,10 +5,7 @@ import pytz
 
 # local imports
 from yaksh.models import (User, Profile, Question, Quiz, QuestionPaper,
-                          QuestionSet, AnswerPaper, Answer, Course,
-                          IntegerTestCase, FloatTestCase,
-                          StringTestCase, McqTestCase, ArrangeTestCase,
-                          TestCaseOrder
+                          AnswerPaper, Course, ArrangeTestCase, TestCaseOrder
                           )
 
 from yaksh.templatetags.custom_filters import (completed, inprogress,
@@ -19,9 +16,10 @@ from yaksh.templatetags.custom_filters import (completed, inprogress,
 
 def setUpModule():
     # Create user profile
-    teacher = User.objects.create_user(username='teacher2000',
-                                    password='demo',
-                                    email='teacher2000@test.com')
+    teacher = User.objects.create_user(
+      username='teacher2000', password='demo',
+      email='teacher2000@test.com'
+      )
     Profile.objects.create(user=teacher, roll_number=2000, institute='IIT',
                            department='Chemical', position='Teacher')
     # Create a course
@@ -29,34 +27,31 @@ def setUpModule():
                                    enrollment="Enroll Request",
                                    creator=teacher)
     # Create a quiz
-    quiz = Quiz.objects.create(start_date_time=datetime(
-    											2015, 10, 9, 10, 8, 15, 0,
-                                                tzinfo=pytz.utc),
-                               end_date_time=datetime(
-                               					2199, 10, 9, 10, 8, 15, 0,
-                                                tzinfo=pytz.utc),
-                               duration=30, active=True,
-                               attempts_allowed=1, time_between_attempts=0,
-                               description='demo quiz 2000',
-                               pass_criteria=0,
-                               instructions="Demo Instructions",
-                               creator=teacher
-                               )
+    quiz = Quiz.objects.create(
+      start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+      end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
+      duration=30, active=True,
+      attempts_allowed=1, time_between_attempts=0,
+      description='demo quiz 2000',
+      pass_criteria=0, instructions="Demo Instructions",
+      creator=teacher
+      )
     # Create a question paper
     question_paper = QuestionPaper.objects.create(quiz=quiz,
                                                   total_marks=1.0)
     # Create an answer paper
-    answerpaper = AnswerPaper.objects.create(user=teacher,
-    										 user_ip='101.0.0.1',
-                                             start_time=timezone.now(), 
-                                             question_paper=question_paper,
-                                             end_time=timezone.now()
-                                              +timedelta(minutes=5),
-                                             attempt_number=1,
-                                             course=course
-                                             )
+    AnswerPaper.objects.create(
+        user=teacher, user_ip='101.0.0.1',
+        start_time=timezone.now(),
+        question_paper=question_paper,
+        end_time=timezone.now()+timedelta(minutes=5),
+        attempt_number=1,
+        course=course
+        )
+
+
 def tearDownModule():
-  User.objects.get(username="teacher2000").delete()
+    User.objects.get(username="teacher2000").delete()
 
 
 class CustomFiltersTestCases(unittest.TestCase):
@@ -76,47 +71,47 @@ class CustomFiltersTestCases(unittest.TestCase):
         self.question1.save()
         self.question_paper.fixed_questions.add(self.question1)
         self.question_paper.save()
-        #Creating answerpaper
+        # Creating answerpaper
 
-        self.answerpaper = AnswerPaper.objects.get(user=self.user,
-                                      course=self.course,
-                                      question_paper=self.question_paper
-                                      )
+        self.answerpaper = AnswerPaper.objects.get(
+            user=self.user, course=self.course,
+            question_paper=self.question_paper
+            )
         self.answerpaper.questions.add(self.question1)
         self.answerpaper.save()
-        # For question 
-        self.arrange_testcase_1 = ArrangeTestCase(question=self.question1,
-                                                  options="A",
-                                                  type = 'arrangetestcase',
-                                                  )
+        # For question
+        self.arrange_testcase_1 = ArrangeTestCase(
+            question=self.question1, options="A",
+            type='arrangetestcase',
+            )
         self.arrange_testcase_1.save()
         self.testcase_1_id = self.arrange_testcase_1.id
-        self.arrange_testcase_2 = ArrangeTestCase(question=self.question1,
-                                                  options="B",
-                                                  type = 'arrangetestcase',
-                                                  )
+        self.arrange_testcase_2 = ArrangeTestCase(
+            question=self.question1, options="B",
+            type='arrangetestcase',
+            )
         self.arrange_testcase_2.save()
         self.testcase_2_id = self.arrange_testcase_2.id
-        self.arrange_testcase_3 = ArrangeTestCase(question=self.question1,
-                                                  options="C",
-                                                  type = 'arrangetestcase',
-                                                  )
+        self.arrange_testcase_3 = ArrangeTestCase(
+            question=self.question1, options="C",
+            type='arrangetestcase',
+            )
         self.arrange_testcase_3.save()
         self.testcase_3_id = self.arrange_testcase_3.id
 
     @classmethod
     def tearDownClass(self):
-      self.question1.delete()
-      self.answerpaper.delete()
+        self.question1.delete()
+        self.answerpaper.delete()
 
     def test_completed_inprogress(self):
-        # Test in progress 
+        # Test in progress
         answerpaper = AnswerPaper.objects.filter(id=self.answerpaper.id)
 
         self.assertEqual(inprogress(answerpaper), 1)
         self.assertEqual(completed(answerpaper), 0)
         # Test completed
-        self.answerpaper.status='completed'
+        self.answerpaper.status = 'completed'
         self.answerpaper.save()
         self.assertEqual(inprogress(answerpaper), 0)
         self.assertEqual(completed(answerpaper), 1)
@@ -134,7 +129,7 @@ class CustomFiltersTestCases(unittest.TestCase):
 
     def test_get_ordered_testcases(self):
         new_answerpaper = self.question_paper.make_answerpaper(self.user,
-                                                               "101.0.0.1",2,
+                                                               "101.0.0.1", 2,
                                                                self.course.id
                                                                )
         tc_order = TestCaseOrder.objects.get(answer_paper=new_answerpaper,
@@ -142,8 +137,8 @@ class CustomFiltersTestCases(unittest.TestCase):
                                              )
         testcases = [self.question1.get_test_case(id=ids)
                      for ids in tc_order.order.split(",")
-                    ]
-        
+                     ]
+
         ordered_testcases = get_ordered_testcases(self.question1,
                                                   new_answerpaper
                                                   )

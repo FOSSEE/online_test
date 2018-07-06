@@ -23,7 +23,8 @@ def add_grading_system(request, system_id=None):
     GradeRangeFormSet = inlineformset_factory(GradingSystem, GradeRange,
                                               fields='__all__', extra=0)
     grade_form = GradingSystemForm(instance=grading_system)
-    is_default = grading_system is not None and grading_system.name == 'default'
+    is_default = (grading_system is not None and
+                  grading_system.name == 'default')
 
     if request.method == 'POST':
         formset = GradeRangeFormSet(request.POST, instance=grading_system)
@@ -36,10 +37,13 @@ def add_grading_system(request, system_id=None):
         if formset.is_valid():
             formset.save()
         if 'add' in request.POST:
-            GradeRangeFormSet = inlineformset_factory(GradingSystem, GradeRange,
-                                                      fields='__all__', extra=1)
+            GradeRangeFormSet = inlineformset_factory(
+                GradingSystem, GradeRange, fields='__all__', extra=1
+                )
     formset = GradeRangeFormSet(instance=grading_system)
 
-    return render(request, 'add_grades.html', {'formset': formset,
-                  'grade_form': grade_form, "system_id": system_id,
-                  'is_default': is_default})
+    return render(request, 'add_grades.html',
+                  {'formset': formset,
+                   'grade_form': grade_form, "system_id": system_id,
+                   'is_default': is_default}
+                  )

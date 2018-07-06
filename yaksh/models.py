@@ -19,8 +19,6 @@ except ImportError:
     from io import BytesIO as string_io
 import pytz
 import os
-import sys
-import traceback
 import stat
 from os.path import join, exists
 import shutil
@@ -109,11 +107,10 @@ FIXTURES_DIR_PATH = os.path.join(settings.BASE_DIR, 'yaksh', 'fixtures')
 
 def get_assignment_dir(instance, filename):
     upload_dir = instance.question_paper.quiz.description.replace(" ", "_")
-    return os.sep.join((
-        upload_dir, instance.user.username, str(
-            instance.assignmentQuestion.id),
-        filename
-    ))
+    return os.sep.join((upload_dir, instance.user.username,
+                        str(instance.assignmentQuestion.id),
+                        filename
+                        ))
 
 
 def get_model_class(model):
@@ -223,12 +220,10 @@ class QuizManager(models.Manager):
 
     def create_trial_quiz(self, user):
         """Creates a trial quiz for testing questions"""
-        trial_quiz = self.create(duration=1000,
-                                 description="trial_questions",
-                                 is_trial=True,
-                                 time_between_attempts=0,
-                                 creator=user
-                                 )
+        trial_quiz = self.create(
+            duration=1000, description="trial_questions",
+            is_trial=True, time_between_attempts=0, creator=user
+            )
         return trial_quiz
 
     def create_trial_from_quiz(self, original_quiz_id, user, godmode,
@@ -406,6 +401,20 @@ class Quiz(models.Model):
             course=course, passed=False
         ).values_list("user", flat=True).distinct().count()
 
+    def get_answerpaper_status(self, user, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
+        ans_ppr = AnswerPaper.objects.filter(
+            user=user, course=course, question_paper=qp
+        ).order_by("-attempt_number")
+        if ans_ppr.exists():
+            status = ans_ppr.first().status
+        else:
+            status = "not attempted"
+        return status
+
     def _create_quiz_copy(self, user):
         question_papers = self.questionpaper_set.all()
         new_quiz = self
@@ -449,6 +458,8 @@ class LearningUnit(models.Model):
         if course_status.exists():
             if self in course_status.first().completed_units.all():
                 state = "completed"
+            elif self.type == "quiz":
+                state = self.quiz.get_answerpaper_status(user, course)
             elif course_status.first().current_unit == self:
                 state = "inprogress"
         return state
@@ -575,7 +586,7 @@ class LearningModule(models.Model):
             status_list = [unit.get_completion_status(user, course)
                            for unit in units]
             count = status_list.count("completed")
-            percent = round((count / len(units)) * 100)
+            percent = round((count / units.count()) * 100)
         return percent
 
     def _create_module_copy(self, user, module_name):
@@ -801,15 +812,14 @@ class Course(models.Model):
             next_index = 0
         return modules.get(id=module_ids[next_index])
 
-    def percent_completed(self, user):
-        modules = self.get_learning_modules()
+    def percent_completed(self, user, modules):
         if not modules:
             percent = 0.0
         else:
             status_list = [module.get_module_complete_percent(self, user)
                            for module in modules]
             count = sum(status_list)
-            percent = round((count / len(modules)))
+            percent = round((count / modules.count()))
         return percent
 
     def get_grade(self, user):
@@ -820,6 +830,11 @@ class Course(models.Model):
             grade = "NA"
         return grade
 
+    def get_current_unit(self, user):
+        course_status = CourseStatus.objects.filter(course=self, user=user)
+        if course_status.exists():
+            return course_status.first().current_unit
+
     def days_before_start(self):
         """ Get the days remaining for the start of the course """
         if timezone.now() < self.start_enroll_time:
@@ -827,6 +842,14 @@ class Course(models.Model):
         else:
             remaining_days = 0
         return remaining_days
+
+    def get_completion_percent(self, user):
+        course_status = CourseStatus.objects.filter(course=self, user=user)
+        if course_status.exists():
+            percentage = course_status.first().percent_completed
+        else:
+            percentage = 0
+        return percentage
 
     def __str__(self):
         return self.name
@@ -842,6 +865,7 @@ class CourseStatus(models.Model):
     user = models.ForeignKey(User)
     grade = models.CharField(max_length=255, null=True, blank=True)
     percentage = models.FloatField(default=0.0)
+    percent_completed = models.IntegerField(default=0)
 
     def get_grade(self):
         return self.grade
@@ -879,6 +903,10 @@ class CourseStatus(models.Model):
             if not complete:
                 break
         return complete
+
+    def set_current_unit(self, unit):
+        self.current_unit = unit
+        self.save()
 
 
 ###############################################################################
@@ -1055,8 +1083,8 @@ class Question(models.Model):
                         new_test_case.type = test_case_type
                         new_test_case.save()
 
-                    except:
-                        msg = "File not correct."
+                    except Exception:
+                        msg = "Unable to parse test case data"
         except Exception as exc_msg:
             msg = "Error Parsing Yaml: {0}".format(exc_msg)
         return msg
@@ -1127,12 +1155,10 @@ class Question(models.Model):
                 file_upload.file.save(file_name, django_file, save=True)
 
     def _add_yaml_to_zip(self, zip_file, q_dict, path_to_file=None):
-
         tmp_file_path = tempfile.mkdtemp()
         yaml_path = os.path.join(tmp_file_path, "questions_dump.yaml")
         for elem in q_dict:
             relevant_dict = CommentedMap()
-            irrelevant_dict = CommentedMap()
             relevant_dict['summary'] = elem.pop('summary')
             relevant_dict['type'] = elem.pop('type')
             relevant_dict['language'] = elem.pop('language')
@@ -1178,7 +1204,7 @@ class Question(models.Model):
         return self.summary
 
     def get_que_stats(self, answerpapers):
-
+        
         if self.type != 'code':
             return []
 
@@ -1402,15 +1428,14 @@ class QuestionPaper(models.Model):
             question_ids = []
             for question in questions:
                 question_ids.append(str(question.id))
-                if (question.type == "arrange") or (self.shuffle_testcases
-                                                    and question.type in ["mcq", "mcc"]):
+                if (question.type == "arrange") or (
+                        self.shuffle_testcases and
+                        question.type in ["mcq", "mcc"]):
                     testcases = question.get_test_cases()
                     random.shuffle(testcases)
-                    testcases_ids = ",".join([str(tc.id) for tc in testcases]
-                                             )
-                    testcases_order = TestCaseOrder.objects.create(
-                        answer_paper=ans_paper,
-                        question=question,
+                    testcases_ids = ",".join([str(tc.id) for tc in testcases])
+                    TestCaseOrder.objects.create(
+                        answer_paper=ans_paper, question=question,
                         order=testcases_ids)
 
             ans_paper.questions_order = ",".join(question_ids)
@@ -1433,9 +1458,9 @@ class QuestionPaper(models.Model):
                 time_lag = (timezone.now() -
                             last_attempt.start_time).total_seconds() / 3600
                 can_attempt = time_lag >= self.quiz.time_between_attempts
-                msg = "You cannot start the next attempt for this quiz before {0} hour(s)".format(
-                    self.quiz.time_between_attempts
-                ) if not can_attempt else None
+                msg = "You cannot start the next attempt for this quiz before"\
+                    "{0} hour(s)".format(self.quiz.time_between_attempts) \
+                    if not can_attempt else None
                 return can_attempt, msg
             else:
                 return True, None
@@ -1497,7 +1522,7 @@ class QuestionPaper(models.Model):
 
         que_stats = []
 
-        #logic, syntax, total
+        # logic, syntax, total
         quiz_stats = [0, 0, 0]
 
         questions = self.get_question_bank()
@@ -1767,7 +1792,8 @@ class AnswerPaper(models.Model):
                            )
 
     def get_per_question_score(self, question_id):
-        if question_id not in self.get_questions().values_list('id', flat=True):
+        questions = self.get_questions().values_list('id', flat=True)
+        if question_id not in questions:
             return 'NA'
         answer = self.get_latest_answer(question_id)
         if answer:
@@ -2250,7 +2276,6 @@ class FloatTestCase(TestCase):
 
 
 class ArrangeTestCase(TestCase):
-
     options = models.TextField(default=None)
 
     def get_field_value(self):
