@@ -1,6 +1,6 @@
-from yaksh.models import *
+from yaksh.models import Course
 import numpy as np
-    
+
 group = []
 
 for course in Course.objects.all():
