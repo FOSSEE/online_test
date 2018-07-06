@@ -1,10 +1,10 @@
 # Django settings
 SECRET_KEY=dUmMy_s3cR3t_k3y
-DB_ENGINE=mysql
-DB_NAME=yaksh_test
-DB_USER=root
-DB_PASSWORD=1901
-DB_HOST=localhost
+#DB_ENGINE=mysql
+#DB_NAME=yaksh
+#DB_USER=root
+#DB_PASSWORD=root
+#DB_HOST=yaksh-db
 #DB_PORT=3306
 # Yaksh settings
 N_CODE_SERVERS=5
