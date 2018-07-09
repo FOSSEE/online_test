@@ -16,6 +16,7 @@ from string import punctuation, digits
 import pytz
 from .send_emails import generate_activation_key
 
+
 languages = (
     ("select", "Select Language"),
     ("python", "Python"),
@@ -47,6 +48,8 @@ test_case_types = (
     ("stringtestcase", "String Testcase"),
     ("floattestcase", "Float Testcase"),
 )
+
+
 
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
