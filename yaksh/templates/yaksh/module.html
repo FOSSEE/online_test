@@ -2,28 +2,10 @@
 <html>
 <link rel="stylesheet" href="../static/css/bootstrap.css">
 <link rel="stylesheet" href="../static/css/bootstrap.min.css">
+<link rel="stylesheet" href="../static/css/offline.css">
 <script src="../static/js/jquery-1.9.1.min.js"></script>
 <script src="../static/js/bootstrap.min.js"></script>
 <script src="https://vjs.zencdn.net/6.9.0/video.js"></script>
-<style>
-.footer {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    background-color: #D3D3D3;
-    color: black;
-    text-align: center;
-}
-table {
-    border: none;
-    border-spacing: 0;
-    border-collapse: collapse;
-}
-table tr td:nth-child(2) {
-    border-left: 1px solid #D3D3D3;
-}
-</style>
 {% block pagetitle %} {{module.name}} {% endblock %}
 <nav class="navbar navbar-inverse navbar-fixed-top">
     <div class="container-fluid">
@@ -46,7 +28,7 @@ table tr td:nth-child(2) {
 <hr>
 {% block content %}
     <center><h2>{{module.name}}</h2></center>
-    <table class="table">
+    <table class="table module">
         <tr>
             <td>
                 <h4><strong>Lessons (Click on lesson name to open lesson)

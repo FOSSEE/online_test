@@ -70,13 +70,12 @@ def is_csv(document):
 
 
 def write_static_files_to_zip(zipfile, course_name, current_dir):
-    relative_folders = ["css", "js", "images"]
     static_files = {"js": ["bootstrap.js", "bootstrap.min.js",
                            "jquery-1.9.1.min.js", "video.js"],
                     "css": ["bootstrap.css", "bootstrap.min.css",
-                            "video-js.css"],
+                            "video-js.css", "offline.css"],
                     "images": ["yaksh_banner.png"]}
-    for folder in relative_folders:
+    for folder in static_files.keys():
         folder_path = os.sep.join((current_dir, "static", "yaksh", folder))
         for file in static_files[folder]:
             file_path = os.sep.join((folder_path, file))
