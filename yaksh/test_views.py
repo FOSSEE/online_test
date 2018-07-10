@@ -2049,9 +2049,18 @@ class TestCourses(TestCase):
         )
         course_name = self.user1_course.name.replace(" ", "_")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get('Content-Disposition'),
-                         'attachment; filename={0}.zip'.format(course_name)
-                         )
+        zip_file = string_io(response.content)
+        zipped_file = zipfile.ZipFile(zip_file, 'r')
+        self.assertIsNone(zipped_file.testzip())
+        files_in_zip = zipped_file.namelist()
+        module_path = os.path.join(course_name, "demo_module",
+                                   "demo_module.html")
+        lesson_path = os.path.join(course_name, "demo_module", "demo_lesson",
+                                   "demo_lesson.html")
+        self.assertIn(module_path, files_in_zip)
+        self.assertIn(lesson_path, files_in_zip)
+        zip_file.close()
+        zipped_file.close()
         self.user1_course.learning_module.remove(self.learning_module1)
 
 
