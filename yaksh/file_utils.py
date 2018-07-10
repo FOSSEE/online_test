@@ -69,12 +69,25 @@ def is_csv(document):
     return True, dialect
 
 
-def write_static_files_to_zip(zipfile, course_name, current_dir):
-    static_files = {"js": ["bootstrap.js", "bootstrap.min.js",
-                           "jquery-1.9.1.min.js", "video.js"],
-                    "css": ["bootstrap.css", "bootstrap.min.css",
-                            "video-js.css", "offline.css"],
-                    "images": ["yaksh_banner.png"]}
+def write_static_files_to_zip(zipfile, course_name, current_dir, static_files):
+    """ Write static files to zip
+
+        Parameters
+        ----------
+
+        zipfile : Zipfile object
+            zip file in which the static files need to be added
+
+        course_name : str
+            Create a folder with course name
+
+        current_dir: str
+            Path from which the static files will be taken
+
+        static_files: dict
+            Dictionary containing static folders as keys and static files as
+            values
+    """
     for folder in static_files.keys():
         folder_path = os.sep.join((current_dir, "static", "yaksh", folder))
         for file in static_files[folder]:
@@ -87,10 +100,35 @@ def write_static_files_to_zip(zipfile, course_name, current_dir):
 
 
 def write_templates_to_zip(zipfile, template_path, data, filename, filepath):
+    """ Write template files to zip
+
+        Parameters
+        ----------
+
+        zipfile : Zipfile object
+            zip file in which the template files need to be added
+
+        template_path : str
+            Path from which the template file will be loaded
+
+        data: dict
+            Dictionary containing context data required for template
+
+        filename: str
+            Filename with which the template file should be named
+
+        filepath: str
+            File path in zip where the template will be added
+    """
+    rendered_template = render_template(template_path, data)
+    zipfile.writestr(os.sep.join((filepath, "{0}.html".format(filename))),
+                     str(rendered_template))
+
+
+def render_template(template_path, data):
     with open(template_path) as f:
         template_data = f.read()
         template = Template(template_data)
         context = Context(data)
         render = template.render(context)
-        zipfile.writestr(os.sep.join((filepath, "{0}.html".format(filename))),
-                         str(render))
+    return render

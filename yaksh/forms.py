@@ -332,7 +332,7 @@ class LessonForm(forms.ModelForm):
         file = self.cleaned_data.get("video_file")
         if file:
             extension = file.name.split(".")[-1]
-            actual_extension = ["mp4", "ogv"]
+            actual_extension = ["mp4", "ogv", "webm"]
             if extension not in actual_extension:
                 raise forms.ValidationError(
                     "Please upload video files in {0} format".format(
