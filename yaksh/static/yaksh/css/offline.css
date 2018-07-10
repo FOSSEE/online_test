@@ -1,0 +1,18 @@
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: #D3D3D3;
+    color: black;
+    text-align: center;
+}
+
+.module {
+    border: none;
+    border-spacing: 0;
+    border-collapse: collapse;
+}
+.module tr td:nth-child(2) {
+    border-left: 1px solid #D3D3D3;
+}
