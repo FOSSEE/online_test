@@ -166,9 +166,11 @@ class Lesson(models.Model):
     active = models.BooleanField(default=True)
 
     # A video file
-    video_file = models.FileField(upload_to=get_file_dir, default=None,
-                                  null=True, blank=True
-                                  )
+    video_file = models.FileField(
+        upload_to=get_file_dir, default=None,
+        null=True, blank=True,
+        help_text="Please upload video files in mp4, ogv, webm format"
+        )
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -882,13 +884,14 @@ class Course(models.Model):
     def is_student(self, user):
         return user in self.students.all()
 
-    def create_zip(self, path):
+    def create_zip(self, path, static_files):
         zip_file_name = string_io()
         with zipfile.ZipFile(zip_file_name, "a") as zip_file:
             course_name = self.name.replace(" ", "_")
             modules = self.get_learning_modules()
             file_path = os.sep.join((path, "templates", "yaksh", "index.html"))
-            write_static_files_to_zip(zip_file, course_name, path)
+            write_static_files_to_zip(zip_file, course_name, path,
+                                      static_files)
             course_data = {"course": self, "modules": modules}
             write_templates_to_zip(zip_file, file_path, course_data,
                                    "index", course_name)

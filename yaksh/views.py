@@ -2832,7 +2832,14 @@ def download_course(request, course_id):
             course.name))
     current_dir = os.path.dirname(__file__)
     course_name = course.name.replace(" ", "_")
-    zip_file = course.create_zip(current_dir)
+
+    # Static files required for styling in html template
+    static_files = {"js": ["bootstrap.js", "bootstrap.min.js",
+                           "jquery-1.9.1.min.js", "video.js"],
+                    "css": ["bootstrap.css", "bootstrap.min.css",
+                            "video-js.css", "offline.css"],
+                    "images": ["yaksh_banner.png"]}
+    zip_file = course.create_zip(current_dir, static_files)
     zip_file.seek(0)
     response = HttpResponse(content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename={0}.zip'.format(
