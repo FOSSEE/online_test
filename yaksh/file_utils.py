@@ -47,7 +47,7 @@ def extract_files(zip_file, path=None):
         if path:
             extract_path = path
         else:
-            extract_path = tempfile.gettempdir()
+            extract_path = tempfile.mkdtemp()
         zip_file.extractall(extract_path)
         zip_file.close()
         return zfiles, extract_path

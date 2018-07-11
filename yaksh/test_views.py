@@ -25,7 +25,7 @@ from yaksh.models import (
     User, Profile, Question, Quiz, QuestionPaper, AnswerPaper, Answer, Course,
     AssignmentUpload, McqTestCase, IntegerTestCase, StringTestCase,
     FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,
-    LessonFile, CourseStatus
+    LessonFile, CourseStatus, dict_to_yaml
 )
 from yaksh.decorators import user_has_profile
 
@@ -4049,6 +4049,37 @@ class TestShowQuestions(TestCase):
             points=1.0, language="python", type="mcq", user=self.user,
             active=True
             )
+        test_case_upload_data = [{"test_case": "assert fact(3)==6",
+                                "test_case_type": "standardtestcase",
+                                "test_case_args": "",
+                                "weight": 1.0
+                                }]
+        question_data_1 = {"snippet": "def fact()", "active": True,
+                           "points": 1.0,
+                           "description": "factorial of a no",
+                           "language": "Python", "type": "Code",
+                           "testcase": test_case_upload_data,
+                           "summary": "Yaml Demo 2",
+                           "tags": ['yaml_demo']
+                           }
+
+        question_data_2 = {"snippet": "def fact()", "active": True,
+                           "points": 1.0,
+                           "description": "factorial of a no",
+                           "language": "Python", "type": "Code",
+                           "testcase": test_case_upload_data,
+                           "summary": "Yaml Demo 3",
+                           "tags": ['yaml_demo']
+                           }
+        yaml_question_1 = dict_to_yaml(question_data_1)
+        yaml_question_2 = dict_to_yaml(question_data_2)
+        self.yaml_file_1 = SimpleUploadedFile("test1.yaml",
+                                              yaml_question_1.encode("utf-8")
+                                              )
+        self.yaml_file_2 = SimpleUploadedFile("test2.yaml",
+                                              yaml_question_2.encode("utf-8")
+                                              )
+
 
     def test_show_questions_denies_student(self):
         """
@@ -4111,7 +4142,7 @@ class TestShowQuestions(TestCase):
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
         self.assertIn("download", response.context['msg'])
 
-    def test_upload_questions(self):
+    def test_upload_zip_questions(self):
         """
             Check for uploading questions zip file
         """
@@ -4150,6 +4181,60 @@ class TestShowQuestions(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
         self.assertIn("ZIP file", response.context['message'])
+
+    def test_upload_yaml_questions(self):
+        """
+            Check for uploading questions yaml file
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        response = self.client.post(
+            reverse('yaksh:show_questions'),
+            data={'file': self.yaml_file_1,
+                  'upload': 'upload'}
+            )
+        uploaded_ques = Question.objects.filter(
+            active=True, summary="Yaml Demo 2",
+            user=self.user)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/showquestions.html')
+        self.assertEqual(uploaded_ques.count(), 1)
+        uploaded_ques.delete()
+
+    def test_upload_multiple_yaml_zip_questions(self):
+        """
+            Check for uploading questions zip file with
+            multiple yaml files
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        zipfile_name = string_io()
+        zip_file = zipfile.ZipFile(zipfile_name, "w")
+        zip_file.writestr("test1.yaml", self.yaml_file_1.read())
+        zip_file.writestr("test2.yaml", self.yaml_file_2.read())
+        zip_file.close()
+        zipfile_name.seek(0)
+        questions_file = SimpleUploadedFile("questions.zip",
+                                            zipfile_name.read(),
+                                            content_type="application/zip"
+                                            )
+        response = self.client.post(
+            reverse('yaksh:show_questions'),
+            data={'file': questions_file,
+                  'upload': 'upload'}
+            )
+        uploaded_ques = Question.objects.filter(
+            active=True, summary="Yaml Demo 2",
+            user=self.user).count()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/showquestions.html')
+        self.assertEqual(uploaded_ques, 1)
+
 
     def test_attempt_questions(self):
         """
