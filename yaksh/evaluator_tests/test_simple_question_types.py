@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
 from django.utils import timezone
+from django.contrib.auth.models import Group
 from textwrap import dedent
 import pytz
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
@@ -8,7 +9,9 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     StringTestCase, McqTestCase, ArrangeTestCase
 
 
+
 def setUpModule():
+    mod_group = Group.objects.create(name='moderator')
     # Create user profile
     # Create User 1
     user = User.objects.create_user(username='demo_user_100',
@@ -46,6 +49,7 @@ def setUpModule():
 def tearDownModule():
     User.objects.filter(username__in=["demo_user_100", "demo_user_101"])\
                  .delete()
+    Group.objects.all().delete()
 
 
 class IntegerQuestionTestCases(unittest.TestCase):

@@ -30,7 +30,7 @@ from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, Profile,
     QuestionPaper, QuestionSet, Quiz, Question, TestCase, User,
-    FIXTURES_DIR_PATH, Lesson, LessonFile, LearningUnit, LearningModule,
+    FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile, LearningUnit, LearningModule,
     CourseStatus
 )
 from yaksh.forms import (
@@ -63,7 +63,7 @@ def my_render_to_response(request, template, context=None, **kwargs):
     return render(request, template, context, **kwargs)
 
 
-def is_moderator(user,  group_name='moderator'):
+def is_moderator(user, group_name=MOD_GROUP_NAME):
     """Check if the user is having moderator rights"""
     try:
         group = Group.objects.get(name=group_name)
@@ -74,7 +74,7 @@ def is_moderator(user,  group_name='moderator'):
         return False
 
 
-def add_as_moderator(users, group_name='moderator'):
+def add_as_moderator(users, group_name=MOD_GROUP_NAME):
     """ add users to moderator group """
     try:
         group = Group.objects.get(name=group_name)

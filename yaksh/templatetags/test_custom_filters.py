@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
 from django.utils import timezone
+from django.contrib.auth.models import Group
 import pytz
 
 # local imports
@@ -15,6 +16,8 @@ from yaksh.templatetags.custom_filters import (completed, inprogress,
 
 
 def setUpModule():
+    mod_group = Group.objects.create(name='moderator')
+
     # Create user profile
     teacher = User.objects.create_user(
       username='teacher2000', password='demo',
@@ -52,7 +55,7 @@ def setUpModule():
 
 def tearDownModule():
     User.objects.get(username="teacher2000").delete()
-
+    Group.objects.all().delete()
 
 class CustomFiltersTestCases(unittest.TestCase):
 

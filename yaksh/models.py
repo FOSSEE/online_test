@@ -8,7 +8,7 @@ from ruamel.yaml.comments import CommentedMap
 from random import sample
 from collections import Counter
 from django.db import models
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
 from django.utils import timezone
@@ -93,6 +93,8 @@ test_status = (
 
 FIXTURES_DIR_PATH = os.path.join(settings.BASE_DIR, 'yaksh', 'fixtures')
 
+MOD_GROUP_NAME = 'moderator'
+
 
 def get_assignment_dir(instance, filename):
     upload_dir = instance.question_paper.quiz.description.replace(" ", "_")
@@ -135,6 +137,21 @@ def get_file_dir(instance, filename):
     else:
         upload_dir = instance.name.replace(" ", "_")
     return os.sep.join((upload_dir, filename))
+
+def create_group(group_name, app_label):
+    try:
+        group = Group.objects.get(name=group_name)
+    except Group.DoesNotExist:
+        group = Group(name=group_name)
+        group.save()
+        # Get the models for the given app
+        content_types = ContentType.objects.filter(app_label=app_label)
+        # Get list of permissions for the models
+        permission_list = Permission.objects.filter(
+            content_type__in=content_types)
+        group.permissions.add(*permission_list)
+        group.save()
+    return group
 
 
 ###############################################################################
@@ -1002,7 +1019,7 @@ class Profile(models.Model):
             os.chmod(user_dir, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         return user_dir
 
-    def _toggle_moderator_group(self, group_name='moderator'):
+    def _toggle_moderator_group(self, group_name):
         group = Group.objects.get(name=group_name)
         if self.is_moderator:
             self.user.groups.add(group)
@@ -1010,7 +1027,7 @@ class Profile(models.Model):
             self.user.groups.remove(group)
 
     def save(self, *args, **kwargs):
-        self._toggle_moderator_group()
+        self._toggle_moderator_group(group_name=MOD_GROUP_NAME)
         super(Profile, self).save(*args, **kwargs)
 
     def __str__(self):
