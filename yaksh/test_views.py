@@ -33,9 +33,11 @@ from yaksh.decorators import user_has_profile
 class TestUserRegistration(TestCase):
     def setUp(self):
         self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
 
     def tearDown(self):
         self.registered_user.delete()
+        self.mod_group.delete()
 
     def test_register_user_post(self):
         self.client.post(
@@ -63,6 +65,7 @@ class TestUserRegistration(TestCase):
 class TestProfile(TestCase):
     def setUp(self):
         self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
 
         # Create User without profile
         self.user1_plaintext_pass = 'demo1'
@@ -95,6 +98,7 @@ class TestProfile(TestCase):
         self.client.logout()
         self.user1.delete()
         self.user2.delete()
+        self.mod_group.delete()
 
     def test_user_has_profile_for_user_without_profile(self):
         """
@@ -302,6 +306,7 @@ class TestProfile(TestCase):
 class TestStudentDashboard(TestCase):
     def setUp(self):
         self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
 
         # student
         self.student_plaintext_pass = 'student'
@@ -365,6 +370,7 @@ class TestStudentDashboard(TestCase):
         self.client.logout()
         self.user.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_student_dashboard_denies_anonymous_user(self):
         """
@@ -562,6 +568,7 @@ class TestMonitor(TestCase):
         self.new_answer.delete()
         self.learning_module.delete()
         self.learning_unit.delete()
+        self.mod_group.delete()
 
     def test_monitor_denies_student(self):
         """
@@ -960,6 +967,7 @@ class TestDownloadAssignment(TestCase):
         self.course.delete()
         self.learning_module.delete()
         self.learning_unit.delete()
+        self.mod_group.delete()
         dir_name = self.quiz.description.replace(" ", "_")
         file_path = os.sep.join((settings.MEDIA_ROOT, dir_name))
         if os.path.exists(file_path):
@@ -1100,6 +1108,7 @@ class TestAddQuiz(TestCase):
         self.quiz.delete()
         self.exercise.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_add_quiz_denies_anonymous(self):
         """
@@ -1405,6 +1414,7 @@ class TestAddTeacher(TestCase):
         self.quiz.delete()
         self.pre_req_quiz.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_add_teacher_denies_anonymous(self):
         """
@@ -1570,6 +1580,7 @@ class TestRemoveTeacher(TestCase):
         self.quiz.delete()
         self.pre_req_quiz.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_remove_teacher_denies_anonymous(self):
         """
@@ -1788,6 +1799,7 @@ class TestCourses(TestCase):
         self.user2.delete()
         self.student.delete()
         self.teacher.delete()
+        self.mod_group.delete()
 
     def test_courses_denies_anonymous(self):
         """
@@ -2173,6 +2185,7 @@ class TestAddCourse(TestCase):
         self.quiz.delete()
         self.pre_req_quiz.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_add_course_denies_anonymous(self):
         """
@@ -2304,7 +2317,8 @@ class TestCourseDetail(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -2351,6 +2365,7 @@ class TestCourseDetail(TestCase):
         self.user2.delete()
         self.student.delete()
         self.user1_course.delete()
+        self.mod_group.delete()
 
     def test_upload_users_with_correct_csv(self):
         # Given
@@ -2917,6 +2932,7 @@ class TestEnrollRequest(TestCase):
         self.user2.delete()
         self.student.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_enroll_request_denies_anonymous(self):
         """
@@ -3188,6 +3204,7 @@ class TestSelfEnroll(TestCase):
         self.user2.delete()
         self.student.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_self_enroll_denies_anonymous(self):
         response = self.client.get(
@@ -3321,6 +3338,7 @@ class TestGrader(TestCase):
         Quiz.objects.all().delete()
         QuestionPaper.objects.all().delete()
         AnswerPaper.objects.all().delete()
+        self.mod_group.delete()
 
     def test_grader_denies_anonymous(self):
         # Given
@@ -3470,6 +3488,8 @@ class TestGrader(TestCase):
 
 class TestPasswordReset(TestCase):
     def setUp(self):
+        self.mod_group = Group.objects.create(name='moderator')
+
         # Create User with profile
         self.user1_plaintext_pass = 'demo1'
         self.user1 = User.objects.create_user(
@@ -3491,6 +3511,7 @@ class TestPasswordReset(TestCase):
 
     def tearDown(self):
         self.user1.delete()
+        self.mod_group.delete()
 
     def test_password_reset_post(self):
         """
@@ -3681,6 +3702,7 @@ class TestModeratorDashboard(TestCase):
         self.question_paper.delete()
         self.answerpaper.delete()
         self.new_answer.delete()
+        self.mod_group.delete()
 
     def test_moderator_dashboard_denies_student(self):
         """
@@ -3767,6 +3789,8 @@ class TestUserLogin(TestCase):
     def setUp(self):
         self.client = Client()
 
+        self.mod_group = Group.objects.create(name='moderator')
+
         # Create Moderator with profile
         self.user1_plaintext_pass = 'demo1'
         self.user1 = User.objects.create_user(
@@ -3790,6 +3814,7 @@ class TestUserLogin(TestCase):
         self.client.logout()
         settings.IS_DEVELOPMENT = True
         self.user1.delete()
+        self.mod_group.delete()
 
     def test_successful_user_login(self):
         """
@@ -3923,6 +3948,7 @@ class TestDownloadCsv(TestCase):
         self.student.delete()
         self.quiz.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_download_csv_denies_student(self):
         """
@@ -4108,6 +4134,13 @@ class TestShowQuestions(TestCase):
         self.yaml_file_2 = SimpleUploadedFile("test2.yaml",
                                               yaml_question_2.encode("utf-8")
                                               )
+
+    def tearDown(self):
+        self.client.logout()
+        User.objects.all().delete()
+        Profile.objects.all().delete()
+        Question.objects.all().delete()
+        Group.objects.all().delete()
 
     def test_show_questions_denies_student(self):
         """
@@ -4459,6 +4492,7 @@ class TestShowStatistics(TestCase):
         self.question.delete()
         self.question_paper.delete()
         self.new_answer.delete()
+        self.mod_group.delete()
 
     def test_show_statistics_denies_student(self):
         """
@@ -4771,6 +4805,7 @@ class TestQuestionPaper(TestCase):
         self.question_paper.delete()
         self.learning_module.delete()
         self.learning_unit.delete()
+        self.mod_group.delete()
 
     def test_preview_questionpaper_correct(self):
         self.client.login(
@@ -5388,6 +5423,7 @@ class TestLearningModule(TestCase):
         self.course.delete()
         self.learning_unit.delete()
         self.learning_module.delete()
+        self.mod_group.delete()
 
     def test_add_new_module_denies_non_moderator(self):
         self.client.login(
@@ -5776,6 +5812,7 @@ class TestLessons(TestCase):
         self.learning_module2.delete()
         self.lesson.delete()
         self.lesson2.delete()
+        self.mod_group.delete()
 
     def test_edit_lesson_denies_non_moderator(self):
         """ Student should not be allowed to edit lesson """

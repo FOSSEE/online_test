@@ -1,4 +1,5 @@
 import unittest
+from django.contrib.auth.models import Group
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
@@ -24,6 +25,8 @@ from yaksh import settings
 
 
 def setUpModule():
+    mod_group = Group.objects.create(name='moderator')
+
     # create user profile
     user = User.objects.create_user(username='creator',
                                     password='demo',
@@ -111,6 +114,7 @@ def tearDownModule():
     LearningUnit.objects.all().delete()
     LearningModule.objects.all().delete()
     AnswerPaper.objects.all().delete()
+    Group.objects.all().delete()
 
 
 ###############################################################################
