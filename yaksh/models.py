@@ -13,6 +13,8 @@ from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
 from django.utils import timezone
 from django.core.files import File
+import glob
+
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -1020,7 +1022,7 @@ class Question(models.Model):
                 tags = question.pop('tags') if 'tags' in question else None
                 test_cases = question.pop('testcase')
                 que, result = Question.objects.get_or_create(**question)
-                if file_names:
+                if file_names and file_path:
                     que._add_files_to_db(file_names, file_path)
                 if tags:
                     que.tags.add(*tags)
@@ -1089,13 +1091,15 @@ class Question(models.Model):
         files = FileUpload.objects.filter(question=self)
         files_list = []
         for f in files:
-            zip_file.write(f.file.path, (os.path.basename(f.file.path)))
+            zip_file.write(f.file.path, os.path.join("additional_files",
+                                         os.path.basename(f.file.path))
+                           )
             files_list.append(((os.path.basename(f.file.path)), f.extract))
         return files_list
 
     def _add_files_to_db(self, file_names, path):
         for file_name, extract in file_names:
-            q_file = os.path.join(path, file_name)
+            q_file = glob.glob(os.path.join(path, "**", file_name))[0]
             if os.path.exists(q_file):
                 que_file = open(q_file, 'rb')
                 # Converting to Python file object with
@@ -1130,16 +1134,16 @@ class Question(models.Model):
         shutil.rmtree(tmp_file_path)
 
     def read_yaml(self, file_path, user, files=None):
-        yaml_file = os.path.join(file_path, "questions_dump.yaml")
-        msg = ""
-        if os.path.exists(yaml_file):
-            with open(yaml_file, 'r') as q_file:
-                questions_list = q_file.read()
-                msg = self.load_questions(questions_list, user,
-                                          file_path, files
-                                          )
-        else:
-            msg = "Please upload zip file with questions_dump.yaml in it."
+        msg = "Failed to upload Questions"
+        for ext in ["yaml", "yml"]:
+            for yaml_file in glob.glob(
+                os.path.join(file_path, "*.{0}".format(ext))):
+                if os.path.exists(yaml_file):
+                    with open(yaml_file, 'r') as q_file:
+                        questions_list = q_file.read()
+                        msg = self.load_questions(questions_list, user,
+                                                  file_path, files
+                                                  )
 
         if files:
             delete_files(files, file_path)

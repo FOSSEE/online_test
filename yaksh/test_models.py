@@ -434,7 +434,9 @@ class QuestionTestCases(unittest.TestCase):
     def test_load_questions_with_all_fields(self):
         """ Test load questions into database from Yaml """
         question = Question()
-        question.load_questions(self.yaml_questions_data, self.user1)
+        question.load_questions(self.yaml_questions_data, self.user1,
+                                self.load_tmp_path
+                                )
         question_data = Question.objects.get(summary="Yaml Demo")
         file = FileUpload.objects.get(question=question_data)
         test_case = question_data.get_test_cases()
