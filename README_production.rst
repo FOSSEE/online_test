@@ -16,26 +16,21 @@ Pre-Requisite
 
 1. Ensure `pip <https://pip.pypa.io/en/latest/installing.html>`__ is
    installed
-2. Install dependencies, Run;
-   
-   ::
 
-       pip install -r requirements/requirements-py2.txt # For Python 2
+2. Install MySQL Server
 
-       pip3 install -r requirements/requirements-py3.txt # For Python 3
+3. Install Python MySQL system dependencies
 
-3. Install MySql Server
-4. Install Python MySql support
-5. Install Apache Server for deployment
+4. Install Apache Server for deployment
 
-6. Create a database named ``yaksh`` by following the steps below
+5. Create a database named ``yaksh`` by following the steps below
 
    ::
 
-       $> mysql -u root -p    
-       $> mysql> create database yaksh
+      $> mysql -u root -p
+      $> mysql> create database yaksh
 
-7. Add a user named ``yaksh_user`` and give access to it on the database
+6. Add a user named ``yaksh_user`` and give access to it on the database
    ``yaksh`` by following the steps below
 
    ::
@@ -44,9 +39,6 @@ Pre-Requisite
       by 'mysecretpassword';
 
       mysql> grant all privileges on yaksh to yaksh_user@localhost;
-
-8. Add ``DATABASE_PASSWORD = 'mysecretpassword'`` and
-   ``DATABASE_USER = 'yaksh_user'`` to online\_test/settings.py
 
 
 Installation & Usage
@@ -58,52 +50,65 @@ To install this app follow the steps below:
 
    ::
 
-       $ git clone  https://github.com/FOSSEE/online_test.git
+      $ git clone  https://github.com/FOSSEE/online_test.git
+      $ cd online_test
 
-2. Rename the ``.sampleenv`` to ``.env``
-
-3. In the ``.env`` file, uncomment the following and replace the values (please keep the remaining settings as is);
-
-   ::
-
-       DB_ENGINE=mysql # Or psycopg (postgresql), sqlite3 (SQLite)
-       DB_NAME=yaksh
-       DB_USER=root
-       DB_PASSWORD=mypassword # Or the password used while creating a Database
-       DB_PORT=3306
-
-4. Run:
+2. Install Yaksh dependencies, Run
 
    ::
 
-       $ python manage.py makemigrations yaksh
+      pip install -r requirements/requirements-py2.txt # For Python 2
 
-       $ python manage.py migrate yaksh
+      pip3 install -r requirements/requirements-py3.txt # For Python 3
 
-5. Run the python server provided. This ensures that the code is
+3. Rename the ``.sampleenv`` to ``.env``
+
+4. In the ``.env`` file, uncomment the following and replace the values
+(please keep the remaining settings as is);
+
+   ::
+
+      DB_ENGINE=mysql # Or psycopg (postgresql), sqlite3 (SQLite)
+      DB_NAME=yaksh
+      DB_USER=root
+      DB_PASSWORD=mypassword # Or the password used while creating a Database
+      DB_PORT=3306
+
+5. Run:
+
+   ::
+
+        $ python manage.py migrate
+
+6. Run the python server provided. This ensures that the code is
    executed in a safe environment. Do this like so:
 
    ::
 
-       $ sudo python -m yaksh.code_server # For Python 2.x
+        $ sudo python -m yaksh.code_server # For Python 2.x
 
 
-       $ sudo python3 -m yaksh.code_server # For Python 3.x
+        $ sudo python3 -m yaksh.code_server # For Python 3.x
 
-   Put this in the background once it has started since this will not
-   return back the prompt. It is important that the server be running
-   *before* students start attempting the exam. Using sudo is necessary
-   since the server is run as the user "nobody". This runs the number
-   ports configured in the settings.py file in the variable
-   "N\_CODE\_SERVERS". The "SERVER\_TIMEOUT" also can be changed there.
-   This is the maximum time allowed to execute the submitted code. Note
-   that this will likely spawn multiple processes as "nobody" depending
-   on the number of server ports specified.
+    Put this in the background once it has started since this will not
+    return back the prompt. It is important that the server be running
+    *before* students start attempting the exam. Using sudo is necessary
+    since the server is run as the user "nobody". Code server requires several
+    parameters specified in `.env` file such as "N\_CODE\_SERVERS",
+    "SERVER\_TIMEOUT", "SERVER\_POOL\_PORT", "SERVER\_HOST\_NAME"
+    set to some default values.
 
-   You can also use a Dockerized code server, see `Dockerized Code Server <https://github.com/FOSSEE/online_test/blob/add-docker-compose-test/README_production.rst#using-dockerized-code-server>`__
+    These parameters can be changed to different values based on your
+    requirement. Multiple code server processes are spawned based on
+    "N\_CODE\_SERVERS" value.
+    The "SERVER\_TIMEOUT" also can be changed. This is the maximum time allowed
+    to execute the submitted code.
+
+    You can also use a Dockerized code server,
+    see :ref:`Dockerized Code Server <https://github.com/FOSSEE/online_test/blob/add-docker-compose-test/README_production.rst#using-dockerized-code-server>`__
 
 
-6.  The ``wsgi.py`` script should make it easy to deploy this using
+7.  The ``wsgi.py`` script should make it easy to deploy this using
     mod\_wsgi. You will need to add a line of the form:
 
     ::
@@ -114,21 +119,24 @@ To install this app follow the steps below:
 
     https://docs.djangoproject.com/en/2.0/howto/deployment/wsgi/
 
-7. Create a Superuser/Administrator:
+8. Create a Superuser/Administrator:
 
    ::
 
-       python manage.py createsuperuser
+        python manage.py createsuperuser
 
-8. Go to http://desired\_host\_or\_ip:desired\_port/exam
+9. Go to http://desired\_host\_or\_ip:desired\_port/exam
 
    And you should be all set.
 
-9. Note that the directory "output" will contain directories, one for
-   each user. Users can potentially write output into these that can be
-   used for checking later.
+10. Note that the "output" directory present in "yaksh_data" folder will
+    contain directories, one for each user.
+    Users' code files are created in "output" directory that can be used for
+    checking later.
 
-10. As admin user you can visit http://desired\_host\_or\_ip/exam/monitor to view results and user data interactively. You could also "grade" the papers manually if needed.
+11. As admin user, you can visit http://desired\_host\_or\_ip/exam/monitor to
+    view results and user data interactively. You could also "grade" the papers
+    manually if needed.
 
 .. _dockerized-code-server:
 
@@ -142,18 +150,18 @@ Using Dockerized Code Server
 
    ::
 
-       cd /path/to/online_test
+        cd /path/to/online_test
 
 3. Create a docker image. This may take a few minutes,
 
    ::
 
-       docker build -t yaksh_code_server -f ./docker/Dockerfile_codeserver
+        docker build -t yaksh_code_server -f ./docker/Dockerfile_codeserver
 
 4. Check if the image has been created using the output of ``docker
    images``
 
-5. Run the invoke script using the command ``invoke start`` The command
+5. Run the invoke script using the command ``invoke start``. The command
    will create and run a new docker container (that is running the
    code\_server.py within it), it will also bind the ports of the host
    with those of the container
@@ -167,7 +175,8 @@ Using Dockerized Code Server
 Deploying Multiple Dockers
 ######################################
 
-Follow these steps to deploy and run the Django Server, MySQL instance and Code Server in seperate Docker instances.
+Follow these steps to deploy and run the Django Server, MySQL instance and
+Code Server in seperate Docker instances.
 
 1. Install `Docker <https://docs.docker.com/engine/installation/>`__
 
@@ -175,50 +184,54 @@ Follow these steps to deploy and run the Django Server, MySQL instance and Code 
 
 3. Rename the ``.sampleenv`` to ``.env``
 
-4. In the ``.env`` file, uncomment all the values and keep the default values as is.
+4. In the ``.env`` file, uncomment all the values and keep the default values
+   as is.
 
 5. Go to the ``docker`` directory where the project is located:
    
    ::
 
-       cd /path/to/online_test/docker
+        cd /path/to/online_test/docker
 
 6. Build the docker images
 
    ::
 
-       invoke build
+        invoke build
 
 7. Run the containers and scripts necessary to deploy the web
    application
 
    ::
 
-       invoke begin
+        invoke begin
 
 8. Make sure that all the containers are ``Up`` and stable
 
    ::
 
-       invoke status
+        invoke status
 
 8. Run the containers and scripts necessary to deploy the web
    application, ``--fixtures`` allows you to load fixtures.
 
    ::
 
-       invoke deploy --fixtures
+        invoke deploy --fixtures
 
-10. Stop the containers, you can use ``invoke restart`` to restart the containers without removing them
-
-   ::
-
-       invoke halt
-
-11. Remove the containers
+10. To stop the containers, run
 
    ::
 
-       invoke remove
+        invoke halt
 
-12. You can use ``invoke --list`` to get a list of all the available commands
+11. You can use ``invoke restart`` to restart the containers without
+    removing them.
+
+12. Remove the containers
+
+   ::
+
+        invoke remove
+
+13. You can use ``invoke --list`` to get a list of all the available commands.
