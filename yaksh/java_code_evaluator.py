@@ -7,6 +7,7 @@ import subprocess
 # Local imports
 from .base_evaluator import BaseEvaluator
 from .file_utils import copy_files, delete_files
+from .grader import CompilationError, TestCaseError
 
 
 class JavaCodeEvaluator(BaseEvaluator):
@@ -149,6 +150,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                     mark_fraction = 1.0 if self.partial_grading else 0.0
                 else:
                     err = stdout + "\n" + stderr
+                    raise AssertionError(err)
             else:
                 err = "Test case Error:"
                 try:
@@ -160,6 +162,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                             err = err + "\n" + e
                 except Exception:
                         err = err + "\n" + main_err
+                raise TestCaseError(err)
         else:
             err = "Compilation Error:"
             try:
@@ -171,5 +174,6 @@ class JavaCodeEvaluator(BaseEvaluator):
                         err = err + "\n" + e
             except Exception:
                 err = err + "\n" + stdnt_stderr
+            raise CompilationError(err)
 
         return success, err, mark_fraction
