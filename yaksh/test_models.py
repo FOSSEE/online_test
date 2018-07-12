@@ -276,7 +276,7 @@ class ProfileTestCases(unittest.TestCase):
         self.user2 = User.objects.get(username='demo_user3')
 
     def test_user_profile(self):
-        """ Test user.yaksh_profile"""
+        """ Test user yaksh_profile"""
         self.assertEqual(self.user1.username, 'creator')
         self.assertEqual(self.profile.user.username, 'creator')
         self.assertEqual(int(self.profile.roll_number), 1)

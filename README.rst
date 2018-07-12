@@ -144,12 +144,29 @@ Short instructions
 
         from django.conf.urls import url, include
 
-        urlpattern += [
+        urlpatterns += [
             url(r'^exam/', include('yaksh.urls', namespace='yaksh', app_name='yaksh')),
             url(r'^exam/reset/', include('yaksh.urls_password_reset')),
             url(r'^', include('social.apps.django_app.urls', namespace='social')),
             url(r'^grades/', include('grades.urls', namespace='grades', app_name='grades')),
         ]
+
+Note, here there should be static url for Media files,
+this is necessary for file upload/download to work. Following is for reference:
+
+   ::
+
+        In project settings file
+
+        MEDIA_URL = '/data/'
+        MEDIA_ROOT = BASE_DIR
+
+        In project root url
+
+        from django.conf.urls.static import static
+        from django.conf import settings
+
+        urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 5. You can create a moderator using the following command:
 
@@ -163,13 +180,20 @@ Short instructions
 
         $ sudo python -m yaksh.code_server
 
-Note: If you are using a python virtualenv then run the above command as following:
+Note, if you are using a python virtualenv then run the above command as following:
 
     ::
 
         $ sudo <path-to-your-created-virtualenv>/bin/python -m yaksh.code_server
 
 7. Visit ``http://localhost:8000/exam``
+
+Note, for login redirect to work while accessing valid url by Anonymous user,
+LOGIN_URL must be set in the project settings. Following is for reference:
+
+    ::
+
+        LOGIN_URL = '/exam/login/'
 
 History
 =======
