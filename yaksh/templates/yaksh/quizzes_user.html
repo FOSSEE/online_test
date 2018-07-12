@@ -42,6 +42,10 @@ No Courses to display
                 {% if user in course.requests.all %} <span class="label label-warning">Request Pending </span>
                 {% elif user in course.rejected.all %}<span class="label label-danger">Request Rejected</span>
                 {% elif user in course.students.all %}<span class="label label-info">Enrolled</span>
+                {% if course.has_lessons %}&nbsp;&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/download_course/{{course.id}}" data-toggle="tooltip" title="Download course content" class="btn btn-primary">
+                    Download Course
+                </a>
+                {% endif %}
                 {% else %}
                     {% if course.active %}
                         {% if course.is_active_enrollment %}
@@ -57,7 +61,7 @@ No Courses to display
                         {% endif %}
                     {% else %}
                         <span class="label label-danger" style="font-size: 15px">
-                            Course is not activated
+                            Course Closed
                         </span>
                     {% endif %}
                 {% endif %}
