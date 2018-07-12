@@ -2,7 +2,8 @@ import unittest
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
-    LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus
+    LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
+    TestCaseOrder
 from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
@@ -1271,6 +1272,21 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertTrue(details[0])
         self.assertEqual(self.answer.marks, 0)
         self.assertFalse(self.answer.correct)
+
+    def test_testcase_order(self):
+        testcase_ids = ",".join([str(ids) for ids in
+                                 self.question2.get_test_cases()
+                                 ])
+        testcase_order = TestCaseOrder.objects.create(
+                                       answer_paper=self.answerpaper,
+                                       question=self.question2,
+                                       order=testcase_ids)
+        with self.assertRaises(IntegrityError):
+            TestCaseOrder.objects.create(answer_paper=self.answerpaper,
+                                         question=self.question2,
+                                         order=testcase_ids
+                                         )
+        testcase_order.delete()
 
     def test_validate_and_regrade_mcq_correct_answer(self):
         # Given

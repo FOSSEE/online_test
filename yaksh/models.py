@@ -1458,9 +1458,12 @@ class QuestionPaper(models.Model):
                     random.shuffle(testcases)
                     testcases_ids = ",".join([str(tc.id) for tc in testcases]
                                              )
-                    TestCaseOrder.objects.create(
-                        answer_paper=ans_paper, question=question,
-                        order=testcases_ids)
+                    if not TestCaseOrder.objects.filter(
+                        answer_paper=ans_paper, question=question
+                        ).exists():
+                        TestCaseOrder.objects.create(
+                            answer_paper=ans_paper, question=question,
+                            order=testcases_ids)
 
             ans_paper.questions_order = ",".join(question_ids)
             ans_paper.save()
@@ -2297,5 +2300,8 @@ class TestCaseOrder(models.Model):
     # Order of the test case for a question.
     order = models.TextField()
 
+
+    class Meta:
+        unique_together = ("answer_paper", "question", "order")
 
 ##############################################################################
