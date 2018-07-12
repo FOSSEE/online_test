@@ -14,6 +14,7 @@ from django.contrib.auth import authenticate
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test import Client
+from django.http import Http404
 from django.utils import timezone
 from django.core import mail
 from django.conf import settings
@@ -27,6 +28,7 @@ from yaksh.models import (
     FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,
     LessonFile, CourseStatus, dict_to_yaml
 )
+from yaksh.views import add_as_moderator
 from yaksh.decorators import user_has_profile
 
 
@@ -1343,6 +1345,141 @@ class TestAddQuiz(TestCase):
         self.assertEqual(response.context['quizzes'][0], self.quiz)
         self.assertTemplateUsed(response, "yaksh/courses.html")
 
+class TestAddAsModerator(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
+        )
+
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user
+        )
+
+        self.mod_group.delete()
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+
+    def test_add_as_moderator_group_does_not_exist(self):
+        """
+        If group does not exist return 404
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        response = self.client.get(
+            reverse('yaksh:add_teacher',
+                    kwargs={'course_id': self.course.id}
+                    ),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 404)
+        with self.assertRaises(Http404):
+            add_as_moderator(self.user, 'moderator')
+
+class TestToggleModerator(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator')
+
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
+        )
+
+        # Create Student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Student',
+            timezone='UTC',
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user
+            )
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.student.delete()
+        self.course.delete()
+        self.mod_group.delete()
+
+    def test_toggle_for_moderator(self):
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:toggle_moderator')
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEquals(self.user.groups.all().count(), 0)
+
+    def test_toggle_for_student(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:toggle_moderator')
+        )
+
+        self.assertEqual(response.status_code, 404)
 
 class TestAddTeacher(TestCase):
     def setUp(self):
@@ -1350,6 +1487,16 @@ class TestAddTeacher(TestCase):
 
         self.mod_group = Group.objects.create(name='moderator')
         tzone = pytz.timezone('UTC')
+
+        # Create User with no profile
+        self.user_no_profile_plaintext_pass = 'demo_no_profile'
+        self.user_no_profile = User.objects.create_user(
+            username='demo_user_no_profile',
+            password=self.user_no_profile_plaintext_pass,
+            first_name='first_name_no_profile',
+            last_name='last_name_no_profile',
+            email='demo_no_profile@test.com'
+        )
 
         # Create Moderator with profile
         self.user_plaintext_pass = 'demo'
@@ -1415,6 +1562,23 @@ class TestAddTeacher(TestCase):
         self.pre_req_quiz.delete()
         self.course.delete()
         self.mod_group.delete()
+
+    def test_add_teacher_denies_no_profile(self):
+        """
+        If not moderator redirect to login page
+        """
+        self.client.login(
+            username=self.user_no_profile.username,
+            password=self.user_no_profile_plaintext_pass
+        )
+
+        response = self.client.get(
+            reverse('yaksh:add_teacher',
+                    kwargs={'course_id': self.course.id}
+                    ),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_add_teacher_denies_anonymous(self):
         """
