@@ -1434,12 +1434,15 @@ def show_all_questions(request):
             form = UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
                 questions_file = request.FILES['file']
-                file_name = questions_file.name.split('.')
-                if file_name[-1] == "zip":
-                    ques = Question()
+                file_extension = questions_file.name.split('.')[-1]
+                ques = Question()
+                if file_extension == "zip":
                     files, extract_path = extract_files(questions_file)
                     context['message'] = ques.read_yaml(extract_path, user,
                                                         files)
+                elif file_extension in ["yaml", "yml"]:
+                    questions = questions_file.read()
+                    context['message'] = ques.load_questions(questions, user)
                 else:
                     message = "Please Upload a ZIP file"
                     context['message'] = message
