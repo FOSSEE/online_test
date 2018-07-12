@@ -330,14 +330,34 @@ Features in Question
     
     * **Download Questions**
 
-            Select questions from the list of questions displayed on the Questions page. Click on the Download Selected button to download the questions. This will create a zip file of the Questions selected.
+            Select questions from a list of questions displayed on the
+            Questions page. Click on the Download Selected button to download
+            the questions. This will create a zip file of the Questions
+            selected. The zip will contain yaml file and an folder called
+            **additional_files** which will contain files required by questions
+            downloaded. Finally one can also download a template yaml file
+            and modify it to add his/her questions.
 
     * **Upload Questions**
             
-            Click on the browse button. This will open up a window. Select the zip file of questions and click Ok and then click on Upload file button, questions will be uploaded and displayed on the Questions page.
+            Click on the **Upload and Download questions** tab in the
+            **Question Page**.
+            One can upload Yaml file with extensions .yaml or .yml.
+            Please note that you cannot upload files associated to a question.
+            Yaml file can have any name.
 
-                Zip file should contain **questions_dump.yaml** from which questions will be loaded.
-                Zip file can contain files related to questions.
+            One can also upload zip with the following zip structure -
+
+            .. code::
+
+                .zip
+                |-- .yaml or .yml
+                |-- .yaml or .yml
+                |-- folder1
+                |   |-- Files required by questions
+                |-- folder2
+                |   |-- Files required by questions
+
 
     * **Test Questions**
             
