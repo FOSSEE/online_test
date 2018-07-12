@@ -4,7 +4,7 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
-    TestCaseOrder
+    TestCaseOrder, create_group
 from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
@@ -116,6 +116,14 @@ def tearDownModule():
     AnswerPaper.objects.all().delete()
     Group.objects.all().delete()
 
+
+###############################################################################
+class GlobalMethodsTestCases(unittest.TestCase):
+    def test_create_group_when_group_exists(self):
+        self.assertEqual(
+            create_group('moderator', 'yaksh'),
+            Group.objects.get(name='moderator')
+        )
 
 ###############################################################################
 class LessonTestCases(unittest.TestCase):
