@@ -3989,10 +3989,10 @@ class TestShowQuestions(TestCase):
             active=True
             )
         test_case_upload_data = [{"test_case": "assert fact(3)==6",
-                                "test_case_type": "standardtestcase",
-                                "test_case_args": "",
-                                "weight": 1.0
-                                }]
+                                  "test_case_type": "standardtestcase",
+                                  "test_case_args": "",
+                                  "weight": 1.0
+                                  }]
         question_data_1 = {"snippet": "def fact()", "active": True,
                            "points": 1.0,
                            "description": "factorial of a no",
@@ -4018,7 +4018,6 @@ class TestShowQuestions(TestCase):
         self.yaml_file_2 = SimpleUploadedFile("test2.yaml",
                                               yaml_question_2.encode("utf-8")
                                               )
-
 
     def test_show_questions_denies_student(self):
         """
@@ -4173,7 +4172,6 @@ class TestShowQuestions(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
         self.assertEqual(uploaded_ques, 1)
-
 
     def test_attempt_questions(self):
         """
