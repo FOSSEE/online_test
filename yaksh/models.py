@@ -1182,7 +1182,10 @@ class Question(models.Model):
         files_list = []
         for f in files:
             zip_file.write(f.file.path, os.path.join("additional_files",
-                                         os.path.basename(f.file.path))
+                                                     os.path.basename(
+                                                        f.file.path
+                                                        )
+                                                     )
                            )
             files_list.append(((os.path.basename(f.file.path)), f.extract))
         return files_list
@@ -1226,8 +1229,9 @@ class Question(models.Model):
     def read_yaml(self, file_path, user, files=None):
         msg = "Failed to upload Questions"
         for ext in ["yaml", "yml"]:
-            for yaml_file in glob.glob(
-                os.path.join(file_path, "*.{0}".format(ext))):
+            for yaml_file in glob.glob(os.path.join(file_path,
+                                                    "*.{0}".format(ext)
+                                                    )):
                 if os.path.exists(yaml_file):
                     with open(yaml_file, 'r') as q_file:
                         questions_list = q_file.read()
