@@ -4373,6 +4373,24 @@ class TestQuestionPaper(TestCase):
             timezone='UTC'
         )
 
+        self.student_plaintext_pass = 'demo'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Student',
+            timezone='UTC'
+        )
+
         self.user2_plaintext_pass = 'demo2'
         self.user2 = User.objects.create_user(
             username='demo_user2',
@@ -4432,6 +4450,15 @@ class TestQuestionPaper(TestCase):
             duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz 2', pass_criteria=40,
+            creator=self.user
+        )
+
+        self.quiz_without_qp = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='quiz without question paper', pass_criteria=40,
             creator=self.user
         )
 
@@ -4517,6 +4544,13 @@ class TestQuestionPaper(TestCase):
         )
         self.float_based_testcase.save()
 
+        # Question with tag
+        self.tagged_que = Question.objects.create(
+            summary="Test_tag_question", description="Test Tag",
+            points=1.0, language="python", type="float", user=self.teacher
+            )
+        self.tagged_que.tags.add("test_tag")
+
         self.questions_list = [self.question_mcq, self.question_mcc,
                                self.question_int, self.question_str,
                                self.question_float]
@@ -4528,6 +4562,13 @@ class TestQuestionPaper(TestCase):
         self.question_paper = QuestionPaper.objects.create(
             quiz=self.quiz,
             total_marks=5.0, fixed_question_order=questions_order
+        )
+        self.fixed_que = Question.objects.create(
+            summary="Test_fixed_question", description="Test Tag",
+            points=1.0, language="python", type="float", user=self.teacher
+            )
+        self.fixed_question_paper = QuestionPaper.objects.create(
+            quiz=self.demo_quiz, total_marks=5.0
         )
         self.question_paper.fixed_questions.add(*self.questions_list)
         self.answerpaper = AnswerPaper.objects.create(
@@ -4883,6 +4924,26 @@ class TestQuestionPaper(TestCase):
                             "questionpaper_id": self.question_paper.id}))
         self.assertEqual(response.status_code, 404)
 
+        # Design question paper for a quiz
+        response = self.client.post(
+            reverse('yaksh:design_questionpaper',
+                    kwargs={"quiz_id": self.quiz_without_qp.id}),
+            data={"marks": "1.0", "question_type": "code"})
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['questions'])
+
+        # Student should not be able to design question paper
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        response = self.client.get(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.demo_quiz.id,
+                            "questionpaper_id": self.question_paper.id}))
+        self.assertEqual(response.status_code, 404)
+
         self.client.login(
             username=self.teacher.username,
             password=self.teacher_plaintext_pass
@@ -4919,6 +4980,18 @@ class TestQuestionPaper(TestCase):
                          self.questions_list)
         self.assertEqual(response.context['qpaper'], self.question_paper)
 
+        # Get questions using tags for question paper
+        search_tag = [tag for tag in self.tagged_que.tags.all()]
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"question_tags": search_tag})
+
+        self.assertEqual(response.context["questions"][0], self.tagged_que)
+
+        # Add random questions in question paper
         response = self.client.post(
             reverse('yaksh:designquestionpaper',
                     kwargs={"quiz_id": self.quiz.id,
@@ -4929,12 +5002,98 @@ class TestQuestionPaper(TestCase):
                   'marks': ['1.0'], 'question_type': ['code'],
                   'add-random': ['']}
             )
+
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/design_questionpaper.html')
         random_set = response.context['random_sets'][0]
         added_random_ques = random_set.questions.all()
         self.assertIn(self.random_que1, added_random_ques)
         self.assertIn(self.random_que2, added_random_ques)
+
+        # Check if questions already exists
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.question_paper.id}),
+            data={'marks': ['1.0'], 'question_type': ['code'],
+                  'add-fixed': ['']}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["questions"].count(), 0)
+
+        # Add fixed question in question paper
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.demo_quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.fixed_question_paper.id}),
+            data={'checked_ques': [self.fixed_que.id],
+                  'add-fixed': ''}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
+        self.assertEqual(response.context['fixed_questions'][0],
+                         self.fixed_que)
+
+        # Add one more fixed question in question paper
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.demo_quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.fixed_question_paper.id}),
+            data={'checked_ques': [self.question_float.id],
+                  'add-fixed': ''}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
+        self.assertEqual(response.context['fixed_questions'],
+                         [self.fixed_que, self.question_float])
+
+        # Remove fixed question from question paper
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.demo_quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.fixed_question_paper.id}),
+            data={'added-questions': [self.fixed_que.id],
+                  'remove-fixed': ''}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
+        self.assertEqual(response.context['fixed_questions'],
+                         [self.question_float])
+
+        # Remove one more fixed question from question paper
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.demo_quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.fixed_question_paper.id}),
+            data={'added-questions': [self.question_float.id],
+                  'remove-fixed': ''}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
+        self.assertEqual(response.context['fixed_questions'], [])
+
+        # Remove random questions from question paper
+        random_que_set = self.question_paper.random_questions.all().first()
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.question_paper.id}),
+            data={'random_sets': random_que_set.id,
+                  'remove-random': ''}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['qpaper'], self.question_paper)
+        self.assertEqual(len(response.context['random_sets']), 0)
 
 
 class TestLearningModule(TestCase):
