@@ -78,8 +78,6 @@ To install this app follow the steps below:
 
    ::
 
-        $ python manage.py makemigrations
-
         $ python manage.py migrate
 
 6. Run the python server provided. This ensures that the code is
