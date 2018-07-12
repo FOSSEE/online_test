@@ -163,8 +163,10 @@ def quizlist_user(request, enrolled=None, msg=None):
         )
         title = 'All Courses'
 
-    context = {'user': user, 'courses': courses, 'title': title,
-               'msg': msg}
+    context = {
+        'user': user, 'is_moderator': is_moderator(user), 'courses': courses,
+        'title': title, 'msg': msg
+    }
 
     return my_render_to_response(request, "yaksh/quizzes_user.html", context)
 
