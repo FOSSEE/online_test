@@ -4384,9 +4384,11 @@ class TestShowQuestions(TestCase):
             data={'file': questions_file,
                   'upload': 'upload'}
             )
-        summaries = ['Roots of quadratic equation', 'Print Output',
+        summaries = ['Find the value of n', 'Print Output in Python2.x',
                      'Adding decimals', 'For Loop over String',
-                     'Hello World in File', 'Extract columns from files',
+                     'Hello World in File',
+                     'Arrange code to convert km to miles',
+                     'Print Hello, World!', "Square of two numbers",
                      'Check Palindrome', 'Add 3 numbers', 'Reverse a string'
                      ]
 
@@ -4395,7 +4397,7 @@ class TestShowQuestions(TestCase):
             user=self.user).count()
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
-        self.assertEqual(uploaded_ques, 9)
+        self.assertEqual(uploaded_ques, 11)
         f.close()
         dummy_file = SimpleUploadedFile("test.txt", b"test")
         response = self.client.post(

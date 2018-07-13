@@ -16,7 +16,7 @@ SERVER_POOL_PORT = config('SERVER_POOL_PORT', default=55555, cast=int)
 SERVER_HOST_NAME = config('SERVER_HOST_NAME', default='http://localhost')
 
 # Timeout for the code to run in seconds.  This is an integer!
-SERVER_TIMEOUT = config('SERVER_TIMEOUT', default=6, cast=int)
+SERVER_TIMEOUT = config('SERVER_TIMEOUT', default=4, cast=int)
 
 # The root of the URL, for example you might be in the situation where you
 # are not hosted as host.org/exam/  but as host.org/foo/exam/ for whatever
