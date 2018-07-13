@@ -1027,7 +1027,10 @@ class Profile(models.Model):
             self.user.groups.remove(group)
 
     def save(self, *args, **kwargs):
-        self._toggle_moderator_group(group_name=MOD_GROUP_NAME)
+        if self.pk is not None:
+            old_profile = Profile.objects.get(pk=self.pk)
+            if old_profile.is_moderator != self.is_moderator:
+                self._toggle_moderator_group(group_name=MOD_GROUP_NAME)
         super(Profile, self).save(*args, **kwargs)
 
     def __str__(self):
