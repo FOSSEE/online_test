@@ -1596,9 +1596,11 @@ class QuestionPaper(models.Model):
         question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
                                                       shuffle_questions=False
                                                       )
-        summaries = ['Roots of quadratic equation', 'Print Output',
+        summaries = ['Find the value of n', 'Print Output in Python2.x',
                      'Adding decimals', 'For Loop over String',
-                     'Hello World in File', 'Extract columns from files',
+                     'Hello World in File',
+                     'Arrange code to convert km to miles',
+                     'Print Hello, World!', "Square of two numbers",
                      'Check Palindrome', 'Add 3 numbers', 'Reverse a string'
                      ]
         questions = Question.objects.filter(active=True,
