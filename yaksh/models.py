@@ -208,7 +208,7 @@ def write_templates_to_zip(zipfile, template_path, data, filename, filepath):
                      str(rendered_template))
 
 
-def render_template(template_path, data):
+def render_template(template_path, data=None):
     with open(template_path) as f:
         template_data = f.read()
         template = Template(template_data)
@@ -855,16 +855,28 @@ class Course(models.Model):
             demo_que_ppr = QuestionPaper()
             demo_que_ppr.create_demo_quiz_ppr(demo_quiz, user)
             success = True
+            file_path = os.sep.join(
+                (os.path.dirname(__file__), "templates", "yaksh",
+                 "demo_video.html")
+                )
+            rendered_text = render_template(file_path)
+            lesson_data = "Demo Lesson\n{0}".format(rendered_text)
             demo_lesson = Lesson.objects.create(
-                name="Demo lesson", description="demo lesson",
-                html_data="demo lesson", creator=user)
+                name="Demo Lesson", description=lesson_data,
+                html_data=lesson_data, creator=user
+                )
             quiz_unit = LearningUnit.objects.create(
-                order=1, type="quiz", quiz=demo_quiz)
+                order=1, type="quiz", quiz=demo_quiz, check_prerequisite=False
+                )
             lesson_unit = LearningUnit.objects.create(
-                order=2, type="lesson", lesson=demo_lesson)
+                order=2, type="lesson", lesson=demo_lesson,
+                check_prerequisite=False
+                )
             learning_module = LearningModule.objects.create(
-                name="demo module", description="demo module", creator=user,
-                html_data="demo module")
+                name="Demo Module", description="<center>Demo Module</center>",
+                creator=user, html_data="<center>Demo Module</center>",
+                check_prerequisite=False
+                )
             learning_module.learning_unit.add(quiz_unit)
             learning_module.learning_unit.add(lesson_unit)
             course.learning_module.add(learning_module)
