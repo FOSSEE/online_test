@@ -1,3 +1,20 @@
+=== 0.9 (13-07-2018) ===
+
+* Questions can be searched using tags while creating/editing question papers.
+* Fixed a bug that would not select all questions in Question page.
+* Fixed a bug in QuestionFilterForm that would force marks value to be selected
+  in Question page.
+* Added a feature that can download all lessons of a course for offline viewing.
+* Yaml files can be used to upload Questions along with zip files.
+  Support for uploading multiple Yaml files at once also added.
+* Moderator can switch between student and moderator from the dashboard.
+* Updated Yaksh to act like a Django app. Updated pip package.
+* Appropriate Exceptions are raised for C, C++ and Java assertion and
+  STDIO questions.
+* Fixed a bug that would create multiple TestCaseOrder objects for an
+  answerpaper.
+* Updated README.rst.
+
 === 0.8.1 (18-06-2018) ===
 
 * Fixed a bug where quiz completion shows inprogress even after completing.

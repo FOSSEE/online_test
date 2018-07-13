@@ -28,10 +28,8 @@ import zipfile
 import tempfile
 from textwrap import dedent
 from ast import literal_eval
-from .file_utils import (
-    extract_files, delete_files, write_templates_to_zip,
-    write_static_files_to_zip
-)
+from .file_utils import extract_files, delete_files
+from django.template import Context, Template
 from yaksh.code_server import (
     submit, get_result as get_result_from_code_server
 )
@@ -137,6 +135,7 @@ def get_file_dir(instance, filename):
         upload_dir = instance.name.replace(" ", "_")
     return os.sep.join((upload_dir, filename))
 
+
 def create_group(group_name, app_label):
     try:
         group = Group.objects.get(name=group_name)
@@ -151,6 +150,71 @@ def create_group(group_name, app_label):
         group.permissions.add(*permission_list)
         group.save()
     return group
+
+
+def write_static_files_to_zip(zipfile, course_name, current_dir, static_files):
+    """ Write static files to zip
+
+        Parameters
+        ----------
+
+        zipfile : Zipfile object
+            zip file in which the static files need to be added
+
+        course_name : str
+            Create a folder with course name
+
+        current_dir: str
+            Path from which the static files will be taken
+
+        static_files: dict
+            Dictionary containing static folders as keys and static files as
+            values
+    """
+    for folder in static_files.keys():
+        folder_path = os.sep.join((current_dir, "static", "yaksh", folder))
+        for file in static_files[folder]:
+            file_path = os.sep.join((folder_path, file))
+            with open(file_path, "rb") as f:
+                zipfile.writestr(
+                    os.sep.join((course_name, "static", folder, file)),
+                    f.read()
+                    )
+
+
+def write_templates_to_zip(zipfile, template_path, data, filename, filepath):
+    """ Write template files to zip
+
+        Parameters
+        ----------
+
+        zipfile : Zipfile object
+            zip file in which the template files need to be added
+
+        template_path : str
+            Path from which the template file will be loaded
+
+        data: dict
+            Dictionary containing context data required for template
+
+        filename: str
+            Filename with which the template file should be named
+
+        filepath: str
+            File path in zip where the template will be added
+    """
+    rendered_template = render_template(template_path, data)
+    zipfile.writestr(os.sep.join((filepath, "{0}.html".format(filename))),
+                     str(rendered_template))
+
+
+def render_template(template_path, data):
+    with open(template_path) as f:
+        template_data = f.read()
+        template = Template(template_data)
+        context = Context(data)
+        render = template.render(context)
+    return render
 
 
 ###############################################################################
@@ -1490,8 +1554,8 @@ class QuestionPaper(models.Model):
                     testcases_ids = ",".join([str(tc.id) for tc in testcases]
                                              )
                     if not TestCaseOrder.objects.filter(
-                        answer_paper=ans_paper, question=question
-                        ).exists():
+                         answer_paper=ans_paper, question=question
+                         ).exists():
                         TestCaseOrder.objects.create(
                             answer_paper=ans_paper, question=question,
                             order=testcases_ids)
@@ -1532,9 +1596,11 @@ class QuestionPaper(models.Model):
         question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
                                                       shuffle_questions=False
                                                       )
-        summaries = ['Roots of quadratic equation', 'Print Output',
+        summaries = ['Find the value of n', 'Print Output in Python2.x',
                      'Adding decimals', 'For Loop over String',
-                     'Hello World in File', 'Extract columns from files',
+                     'Hello World in File',
+                     'Arrange code to convert km to miles',
+                     'Print Hello, World!', "Square of two numbers",
                      'Check Palindrome', 'Add 3 numbers', 'Reverse a string'
                      ]
         questions = Question.objects.filter(active=True,
@@ -2330,7 +2396,6 @@ class TestCaseOrder(models.Model):
 
     # Order of the test case for a question.
     order = models.TextField()
-
 
     class Meta:
         unique_together = ("answer_paper", "question", "order")

@@ -1345,6 +1345,7 @@ class TestAddQuiz(TestCase):
         self.assertEqual(response.context['quizzes'][0], self.quiz)
         self.assertTemplateUsed(response, "yaksh/courses.html")
 
+
 class TestAddAsModerator(TestCase):
     def setUp(self):
         self.client = Client()
@@ -1398,6 +1399,7 @@ class TestAddAsModerator(TestCase):
         self.assertEqual(response.status_code, 404)
         with self.assertRaises(Http404):
             add_as_moderator(self.user, 'moderator')
+
 
 class TestToggleModerator(TestCase):
     def setUp(self):
@@ -1480,6 +1482,7 @@ class TestToggleModerator(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+
 
 class TestAddTeacher(TestCase):
     def setUp(self):
@@ -2850,7 +2853,8 @@ class TestCourseDetail(TestCase):
                              target_status_code=301)
 
     def test_send_mail_to_course_students(self):
-        """ Check if bulk mail is sent to multiple students enrolled in a course
+        """ Check if bulk mail is sent to multiple students enrolled
+            in a course
         """
         self.client.login(
             username=self.user1.username,
@@ -4384,9 +4388,11 @@ class TestShowQuestions(TestCase):
             data={'file': questions_file,
                   'upload': 'upload'}
             )
-        summaries = ['Roots of quadratic equation', 'Print Output',
+        summaries = ['Find the value of n', 'Print Output in Python2.x',
                      'Adding decimals', 'For Loop over String',
-                     'Hello World in File', 'Extract columns from files',
+                     'Hello World in File',
+                     'Arrange code to convert km to miles',
+                     'Print Hello, World!', "Square of two numbers",
                      'Check Palindrome', 'Add 3 numbers', 'Reverse a string'
                      ]
 
@@ -4395,7 +4401,7 @@ class TestShowQuestions(TestCase):
             user=self.user).count()
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
-        self.assertEqual(uploaded_ques, 9)
+        self.assertEqual(uploaded_ques, 11)
         f.close()
         dummy_file = SimpleUploadedFile("test.txt", b"test")
         response = self.client.post(
