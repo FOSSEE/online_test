@@ -136,6 +136,7 @@ def get_file_dir(instance, filename):
         upload_dir = instance.name.replace(" ", "_")
     return os.sep.join((upload_dir, filename))
 
+
 def create_group(group_name, app_label):
     try:
         group = Group.objects.get(name=group_name)

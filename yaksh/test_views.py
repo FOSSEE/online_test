@@ -1345,6 +1345,7 @@ class TestAddQuiz(TestCase):
         self.assertEqual(response.context['quizzes'][0], self.quiz)
         self.assertTemplateUsed(response, "yaksh/courses.html")
 
+
 class TestAddAsModerator(TestCase):
     def setUp(self):
         self.client = Client()
@@ -1398,6 +1399,7 @@ class TestAddAsModerator(TestCase):
         self.assertEqual(response.status_code, 404)
         with self.assertRaises(Http404):
             add_as_moderator(self.user, 'moderator')
+
 
 class TestToggleModerator(TestCase):
     def setUp(self):
@@ -1480,6 +1482,7 @@ class TestToggleModerator(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
+
 
 class TestAddTeacher(TestCase):
     def setUp(self):
@@ -2850,7 +2853,8 @@ class TestCourseDetail(TestCase):
                              target_status_code=301)
 
     def test_send_mail_to_course_students(self):
-        """ Check if bulk mail is sent to multiple students enrolled in a course
+        """ Check if bulk mail is sent to multiple students enrolled
+            in a course
         """
         self.client.login(
             username=self.user1.username,

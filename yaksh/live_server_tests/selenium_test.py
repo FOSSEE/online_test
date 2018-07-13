@@ -172,6 +172,7 @@ def wrap_run_load_test(args):
     selenium_test = SeleniumTest(url=url, quiz_name=quiz_name)
     return selenium_test.run_load_test(*args)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
