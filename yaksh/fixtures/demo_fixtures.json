@@ -145,7 +145,8 @@
     "institute": "Demo",
     "department": "Demo",
     "position": "Faculty",
-    "timezone": "UTC"
+    "timezone": "UTC",
+    "is_moderator": true
   }
 },
 {
