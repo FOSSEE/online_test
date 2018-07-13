@@ -118,7 +118,7 @@ class SeleniumTest():
 
         # Correct Answer
         loop_count = 1
-        answer = '\"#!/bin/bash\\necho "Hello, World!"\"'
+        answer = '\"#!/bin/bash\\necho Hello, World!\"'
         self.submit_answer(question_label, answer, loop_count)
 
     def open_quiz(self):
