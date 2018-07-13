@@ -30,7 +30,7 @@ from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, Profile,
     QuestionPaper, QuestionSet, Quiz, Question, TestCase, User,
-    FIXTURES_DIR_PATH, Lesson, LessonFile, LearningUnit, LearningModule,
+    FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile, LearningUnit, LearningModule,
     CourseStatus
 )
 from yaksh.forms import (
@@ -63,18 +63,27 @@ def my_render_to_response(request, template, context=None, **kwargs):
     return render(request, template, context, **kwargs)
 
 
-def is_moderator(user):
+def is_moderator(user, group_name=MOD_GROUP_NAME):
     """Check if the user is having moderator rights"""
-    if user.groups.filter(name='moderator').exists():
-        return True
+    try:
+        group = Group.objects.get(name=group_name)
+        return user.profile.is_moderator and user in group.user_set.all()
+    except Profile.DoesNotExist:
+        return False
+    except Group.DoesNotExist:
+        return False
 
 
-def add_to_group(users):
+def add_as_moderator(users, group_name=MOD_GROUP_NAME):
     """ add users to moderator group """
-    group = Group.objects.get(name="moderator")
+    try:
+        group = Group.objects.get(name=group_name)
+    except Group.DoesNotExist:
+        raise Http404('The Group {0} does not exist.'.format(group_name))
     for user in users:
         if not is_moderator(user):
-            user.groups.add(group)
+            user.profile.is_moderator = True
+            user.profile.save()
 
 
 CSV_FIELDS = ['name', 'username', 'roll_number', 'institute', 'department',
@@ -163,8 +172,10 @@ def quizlist_user(request, enrolled=None, msg=None):
         )
         title = 'All Courses'
 
-    context = {'user': user, 'courses': courses, 'title': title,
-               'msg': msg}
+    context = {
+        'user': user, 'courses': courses,
+        'title': title, 'msg': msg
+    }
 
     return my_render_to_response(request, "yaksh/quizzes_user.html", context)
 
@@ -1757,6 +1768,29 @@ def search_teacher(request, course_id):
 
 @login_required
 @email_verified
+def toggle_moderator_role(request):
+    """ Allow moderator to switch to student and back """
+
+    user = request.user
+
+    try:
+        group = Group.objects.get(name='moderator')
+    except Group.DoesNotExist:
+        raise Http404('The Moderator group does not exist')
+
+    if not user.profile.is_moderator:
+        raise Http404('You are not allowed to view this page!')
+
+    if user not in group.user_set.all():
+        group.user_set.add(user)
+    else:
+        group.user_set.remove(user)
+
+    return my_redirect('/exam/')
+
+
+@login_required
+@email_verified
 def add_teacher(request, course_id):
     """ add teachers to the course """
 
@@ -1775,7 +1809,7 @@ def add_teacher(request, course_id):
     if request.method == 'POST':
         teacher_ids = request.POST.getlist('check')
         teachers = User.objects.filter(id__in=teacher_ids)
-        add_to_group(teachers)
+        add_as_moderator(teachers)
         course.add_teachers(*teachers)
         context['status'] = True
         context['teachers_added'] = teachers

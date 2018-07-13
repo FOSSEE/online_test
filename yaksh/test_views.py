@@ -14,6 +14,7 @@ from django.contrib.auth import authenticate
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test import Client
+from django.http import Http404
 from django.utils import timezone
 from django.core import mail
 from django.conf import settings
@@ -27,15 +28,18 @@ from yaksh.models import (
     FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,
     LessonFile, CourseStatus, dict_to_yaml
 )
+from yaksh.views import add_as_moderator
 from yaksh.decorators import user_has_profile
 
 
 class TestUserRegistration(TestCase):
     def setUp(self):
         self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
 
     def tearDown(self):
         self.registered_user.delete()
+        self.mod_group.delete()
 
     def test_register_user_post(self):
         self.client.post(
@@ -63,6 +67,7 @@ class TestUserRegistration(TestCase):
 class TestProfile(TestCase):
     def setUp(self):
         self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
 
         # Create User without profile
         self.user1_plaintext_pass = 'demo1'
@@ -95,6 +100,7 @@ class TestProfile(TestCase):
         self.client.logout()
         self.user1.delete()
         self.user2.delete()
+        self.mod_group.delete()
 
     def test_user_has_profile_for_user_without_profile(self):
         """
@@ -302,6 +308,7 @@ class TestProfile(TestCase):
 class TestStudentDashboard(TestCase):
     def setUp(self):
         self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
 
         # student
         self.student_plaintext_pass = 'student'
@@ -365,6 +372,7 @@ class TestStudentDashboard(TestCase):
         self.client.logout()
         self.user.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_student_dashboard_denies_anonymous_user(self):
         """
@@ -467,7 +475,7 @@ class TestMonitor(TestCase):
             password=self.user_plaintext_pass,
             first_name='first_name',
             last_name='last_name',
-            email='demo@test.com'
+            email='demo@test.com',
         )
 
         Profile.objects.create(
@@ -476,7 +484,8 @@ class TestMonitor(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -561,6 +570,7 @@ class TestMonitor(TestCase):
         self.new_answer.delete()
         self.learning_module.delete()
         self.learning_unit.delete()
+        self.mod_group.delete()
 
     def test_monitor_denies_student(self):
         """
@@ -661,7 +671,8 @@ class TestGradeUser(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -877,7 +888,8 @@ class TestDownloadAssignment(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group
@@ -957,6 +969,7 @@ class TestDownloadAssignment(TestCase):
         self.course.delete()
         self.learning_module.delete()
         self.learning_unit.delete()
+        self.mod_group.delete()
         dir_name = self.quiz.description.replace(" ", "_")
         file_path = os.sep.join((settings.MEDIA_ROOT, dir_name))
         if os.path.exists(file_path):
@@ -1052,7 +1065,8 @@ class TestAddQuiz(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -1096,6 +1110,7 @@ class TestAddQuiz(TestCase):
         self.quiz.delete()
         self.exercise.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_add_quiz_denies_anonymous(self):
         """
@@ -1330,13 +1345,65 @@ class TestAddQuiz(TestCase):
         self.assertEqual(response.context['quizzes'][0], self.quiz)
         self.assertTemplateUsed(response, "yaksh/courses.html")
 
+class TestAddAsModerator(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
 
-class TestAddTeacher(TestCase):
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
+        )
+
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user
+        )
+
+        self.mod_group.delete()
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+
+    def test_add_as_moderator_group_does_not_exist(self):
+        """
+        If group does not exist return 404
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        response = self.client.get(
+            reverse('yaksh:add_teacher',
+                    kwargs={'course_id': self.course.id}
+                    ),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 404)
+        with self.assertRaises(Http404):
+            add_as_moderator(self.user, 'moderator')
+
+class TestToggleModerator(TestCase):
     def setUp(self):
         self.client = Client()
 
         self.mod_group = Group.objects.create(name='moderator')
-        tzone = pytz.timezone('UTC')
 
         # Create Moderator with profile
         self.user_plaintext_pass = 'demo'
@@ -1354,7 +1421,101 @@ class TestAddTeacher(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
+        )
+
+        # Create Student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Student',
+            timezone='UTC',
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user
+            )
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.student.delete()
+        self.course.delete()
+        self.mod_group.delete()
+
+    def test_toggle_for_moderator(self):
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:toggle_moderator')
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEquals(self.user.groups.all().count(), 0)
+
+    def test_toggle_for_student(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:toggle_moderator')
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+class TestAddTeacher(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
+
+        # Create User with no profile
+        self.user_no_profile_plaintext_pass = 'demo_no_profile'
+        self.user_no_profile = User.objects.create_user(
+            username='demo_user_no_profile',
+            password=self.user_no_profile_plaintext_pass,
+            first_name='first_name_no_profile',
+            last_name='last_name_no_profile',
+            email='demo_no_profile@test.com'
+        )
+
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -1400,6 +1561,24 @@ class TestAddTeacher(TestCase):
         self.quiz.delete()
         self.pre_req_quiz.delete()
         self.course.delete()
+        self.mod_group.delete()
+
+    def test_add_teacher_denies_no_profile(self):
+        """
+        If not moderator redirect to login page
+        """
+        self.client.login(
+            username=self.user_no_profile.username,
+            password=self.user_no_profile_plaintext_pass
+        )
+
+        response = self.client.get(
+            reverse('yaksh:add_teacher',
+                    kwargs={'course_id': self.course.id}
+                    ),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_add_teacher_denies_anonymous(self):
         """
@@ -1565,6 +1744,7 @@ class TestRemoveTeacher(TestCase):
         self.quiz.delete()
         self.pre_req_quiz.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_remove_teacher_denies_anonymous(self):
         """
@@ -1668,7 +1848,8 @@ class TestCourses(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -1686,7 +1867,8 @@ class TestCourses(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -1714,6 +1896,16 @@ class TestCourses(TestCase):
             first_name='teacher_first_name',
             last_name='teacher_last_name',
             email='demo_teacher@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.teacher,
+            roll_number=10,
+            institute='IIT',
+            department='Aeronautical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group
@@ -1771,6 +1963,7 @@ class TestCourses(TestCase):
         self.user2.delete()
         self.student.delete()
         self.teacher.delete()
+        self.mod_group.delete()
 
     def test_courses_denies_anonymous(self):
         """
@@ -2087,7 +2280,8 @@ class TestAddCourse(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create a teacher
@@ -2106,7 +2300,8 @@ class TestAddCourse(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -2154,6 +2349,7 @@ class TestAddCourse(TestCase):
         self.quiz.delete()
         self.pre_req_quiz.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_add_course_denies_anonymous(self):
         """
@@ -2266,7 +2462,8 @@ class TestCourseDetail(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -2284,7 +2481,8 @@ class TestCourseDetail(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -2331,6 +2529,7 @@ class TestCourseDetail(TestCase):
         self.user2.delete()
         self.student.delete()
         self.user1_course.delete()
+        self.mod_group.delete()
 
     def test_upload_users_with_correct_csv(self):
         # Given
@@ -2849,7 +3048,8 @@ class TestEnrollRequest(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -2867,7 +3067,8 @@ class TestEnrollRequest(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -2895,6 +3096,7 @@ class TestEnrollRequest(TestCase):
         self.user2.delete()
         self.student.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_enroll_request_denies_anonymous(self):
         """
@@ -3118,7 +3320,8 @@ class TestSelfEnroll(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -3136,7 +3339,8 @@ class TestSelfEnroll(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -3164,6 +3368,7 @@ class TestSelfEnroll(TestCase):
         self.user2.delete()
         self.student.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_self_enroll_denies_anonymous(self):
         response = self.client.get(
@@ -3228,7 +3433,8 @@ class TestGrader(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -3246,7 +3452,8 @@ class TestGrader(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -3295,6 +3502,7 @@ class TestGrader(TestCase):
         Quiz.objects.all().delete()
         QuestionPaper.objects.all().delete()
         AnswerPaper.objects.all().delete()
+        self.mod_group.delete()
 
     def test_grader_denies_anonymous(self):
         # Given
@@ -3444,6 +3652,8 @@ class TestGrader(TestCase):
 
 class TestPasswordReset(TestCase):
     def setUp(self):
+        self.mod_group = Group.objects.create(name='moderator')
+
         # Create User with profile
         self.user1_plaintext_pass = 'demo1'
         self.user1 = User.objects.create_user(
@@ -3465,6 +3675,7 @@ class TestPasswordReset(TestCase):
 
     def tearDown(self):
         self.user1.delete()
+        self.mod_group.delete()
 
     def test_password_reset_post(self):
         """
@@ -3553,7 +3764,8 @@ class TestModeratorDashboard(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.mod_no_profile_plaintext_pass = 'demo2'
@@ -3654,6 +3866,7 @@ class TestModeratorDashboard(TestCase):
         self.question_paper.delete()
         self.answerpaper.delete()
         self.new_answer.delete()
+        self.mod_group.delete()
 
     def test_moderator_dashboard_denies_student(self):
         """
@@ -3740,6 +3953,8 @@ class TestUserLogin(TestCase):
     def setUp(self):
         self.client = Client()
 
+        self.mod_group = Group.objects.create(name='moderator')
+
         # Create Moderator with profile
         self.user1_plaintext_pass = 'demo1'
         self.user1 = User.objects.create_user(
@@ -3763,6 +3978,7 @@ class TestUserLogin(TestCase):
         self.client.logout()
         settings.IS_DEVELOPMENT = True
         self.user1.delete()
+        self.mod_group.delete()
 
     def test_successful_user_login(self):
         """
@@ -3801,7 +4017,7 @@ class TestUserLogin(TestCase):
         self.assertTemplateUsed(response, "yaksh/activation_status.html")
 
 
-class TestDownloadcsv(TestCase):
+class TestDownloadCsv(TestCase):
     def setUp(self):
         self.client = Client()
         tzone = pytz.timezone("utc")
@@ -3841,7 +4057,8 @@ class TestDownloadcsv(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
         self.mod_group.user_set.add(self.user)
         self.course = Course.objects.create(
@@ -3895,6 +4112,7 @@ class TestDownloadcsv(TestCase):
         self.student.delete()
         self.quiz.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_download_csv_denies_student(self):
         """
@@ -4036,7 +4254,8 @@ class TestShowQuestions(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
         self.mod_group.user_set.add(self.user)
         self.question = Question.objects.create(
@@ -4079,6 +4298,13 @@ class TestShowQuestions(TestCase):
         self.yaml_file_2 = SimpleUploadedFile("test2.yaml",
                                               yaml_question_2.encode("utf-8")
                                               )
+
+    def tearDown(self):
+        self.client.logout()
+        User.objects.all().delete()
+        Profile.objects.all().delete()
+        Question.objects.all().delete()
+        Group.objects.all().delete()
 
     def test_show_questions_denies_student(self):
         """
@@ -4352,7 +4578,8 @@ class TestShowStatistics(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -4429,6 +4656,7 @@ class TestShowStatistics(TestCase):
         self.question.delete()
         self.question_paper.delete()
         self.new_answer.delete()
+        self.mod_group.delete()
 
     def test_show_statistics_denies_student(self):
         """
@@ -4514,7 +4742,8 @@ class TestQuestionPaper(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.student_plaintext_pass = 'demo'
@@ -4568,7 +4797,8 @@ class TestQuestionPaper(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group
@@ -4739,6 +4969,7 @@ class TestQuestionPaper(TestCase):
         self.question_paper.delete()
         self.learning_module.delete()
         self.learning_unit.delete()
+        self.mod_group.delete()
 
     def test_preview_questionpaper_correct(self):
         self.client.login(
@@ -5262,7 +5493,8 @@ class TestLearningModule(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create a student
@@ -5282,7 +5514,17 @@ class TestLearningModule(TestCase):
             password=self.teacher_plaintext_pass,
             first_name='first_name',
             last_name='last_name',
-            email='demo@student.com'
+            email='demo@teacher.com',
+        )
+
+        Profile.objects.create(
+            user=self.teacher,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group
@@ -5345,6 +5587,7 @@ class TestLearningModule(TestCase):
         self.course.delete()
         self.learning_unit.delete()
         self.learning_module.delete()
+        self.mod_group.delete()
 
     def test_add_new_module_denies_non_moderator(self):
         self.client.login(
@@ -5643,7 +5886,8 @@ class TestLessons(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create a student
@@ -5656,6 +5900,15 @@ class TestLessons(TestCase):
             email='demo@student.com'
         )
 
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='student',
+            timezone='UTC'
+        )
+
         # Create a teacher to add to the course
         self.teacher_plaintext_pass = 'demo_teacher'
         self.teacher = User.objects.create_user(
@@ -5664,6 +5917,16 @@ class TestLessons(TestCase):
             first_name='first_name',
             last_name='last_name',
             email='demo@student.com'
+        )
+
+        Profile.objects.create(
+            user=self.teacher,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group
@@ -5713,6 +5976,7 @@ class TestLessons(TestCase):
         self.learning_module2.delete()
         self.lesson.delete()
         self.lesson2.delete()
+        self.mod_group.delete()
 
     def test_edit_lesson_denies_non_moderator(self):
         """ Student should not be allowed to edit lesson """

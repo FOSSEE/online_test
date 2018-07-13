@@ -1,9 +1,10 @@
 import unittest
+from django.contrib.auth.models import Group
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
-    TestCaseOrder
+    TestCaseOrder, create_group
 from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
@@ -24,6 +25,8 @@ from yaksh import settings
 
 
 def setUpModule():
+    mod_group = Group.objects.create(name='moderator')
+
     # create user profile
     user = User.objects.create_user(username='creator',
                                     password='demo',
@@ -111,7 +114,16 @@ def tearDownModule():
     LearningUnit.objects.all().delete()
     LearningModule.objects.all().delete()
     AnswerPaper.objects.all().delete()
+    Group.objects.all().delete()
 
+
+###############################################################################
+class GlobalMethodsTestCases(unittest.TestCase):
+    def test_create_group_when_group_exists(self):
+        self.assertEqual(
+            create_group('moderator', 'yaksh'),
+            Group.objects.get(name='moderator')
+        )
 
 ###############################################################################
 class LessonTestCases(unittest.TestCase):

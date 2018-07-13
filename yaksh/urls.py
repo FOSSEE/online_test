@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^update_email/$', views.update_email, name="update_email"),
     url(r'^activate/(?P<key>.+)$', views.activate_user, name="activate"),
     url(r'^new_activation/$', views.new_activation, name='new_activation'),
+    url(r'^toggle_moderator/$', views.toggle_moderator_role, name='toggle_moderator'),
     url(r'^quizzes/$', views.quizlist_user, name='quizlist_user'),
     url(r'^quizzes/(?P<enrolled>\w+)/$', views.quizlist_user,
         name='quizlist_user'),

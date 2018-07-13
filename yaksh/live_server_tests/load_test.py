@@ -1,8 +1,10 @@
 from threading import Thread
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.contrib.auth.models import User, Group, Permission
+from django.contrib.contenttypes.models import ContentType
 
 # Local imports
-from yaksh.models import User, Profile, Course
+from yaksh.models import User, Profile, Course, create_group
 from yaksh.code_server import ServerPool
 from yaksh import settings
 from .selenium_test import SeleniumTest
@@ -26,6 +28,10 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
         cls.code_server_thread = t = Thread(target=code_server_pool.run)
         t.start()
 
+        app_label = 'yaksh'
+        group_name = 'moderator'
+        cls.group = create_group(group_name, app_label)
+
         cls.demo_student = User.objects.create_user(
             username='demo_student',
             password='demo_student',
@@ -45,7 +51,8 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
         cls.demo_mod_profile = Profile.objects.create(
             user=cls.demo_mod,
             roll_number=0, institute='IIT',
-            department='Chemical', position='Moderator'
+            department='Chemical', position='Moderator',
+            is_moderator=True
         )
 
         course_obj = Course()
@@ -61,6 +68,7 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
         cls.demo_mod.delete()
         cls.demo_mod_profile.delete()
         cls.demo_course.delete()
+        cls.group.delete()
 
         cls.code_server_pool.stop()
         cls.code_server_thread.join()
