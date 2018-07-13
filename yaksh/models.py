@@ -2398,7 +2398,4 @@ class TestCaseOrder(models.Model):
     # Order of the test case for a question.
     order = models.TextField()
 
-    class Meta:
-        unique_together = ("answer_paper", "question", "order")
-
 ##############################################################################

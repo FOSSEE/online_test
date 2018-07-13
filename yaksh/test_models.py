@@ -1285,21 +1285,6 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(self.answer.marks, 0)
         self.assertFalse(self.answer.correct)
 
-    def test_testcase_order(self):
-        testcase_ids = ",".join([str(ids) for ids in
-                                 self.question2.get_test_cases()
-                                 ])
-        testcase_order = TestCaseOrder.objects.create(
-                                       answer_paper=self.answerpaper,
-                                       question=self.question2,
-                                       order=testcase_ids)
-        with self.assertRaises(IntegrityError):
-            TestCaseOrder.objects.create(answer_paper=self.answerpaper,
-                                         question=self.question2,
-                                         order=testcase_ids
-                                         )
-        testcase_order.delete()
-
     def test_validate_and_regrade_mcq_correct_answer(self):
         # Given
         mcq_answer = str(self.mcq_based_testcase.id)
