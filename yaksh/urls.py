@@ -8,7 +8,8 @@ urlpatterns = [
     url(r'^update_email/$', views.update_email, name="update_email"),
     url(r'^activate/(?P<key>.+)$', views.activate_user, name="activate"),
     url(r'^new_activation/$', views.new_activation, name='new_activation'),
-    url(r'^toggle_moderator/$', views.toggle_moderator_role, name='toggle_moderator'),
+    url(r'^toggle_moderator/$', views.toggle_moderator_role,
+        name='toggle_moderator'),
     url(r'^quizzes/$', views.quizlist_user, name='quizlist_user'),
     url(r'^quizzes/(?P<enrolled>\w+)/$', views.quizlist_user,
         name='quizlist_user'),
@@ -41,6 +42,9 @@ urlpatterns = [
         name='self_enroll'),
     url(r'^view_answerpaper/(?P<questionpaper_id>\d+)/(?P<course_id>\d+)$',
         views.view_answerpaper, name='view_answerpaper'),
+    url(r'^download/user_assignment/(?P<question_id>\d+)/(?P<user_id>\d+)/'
+        '(?P<quiz_id>\d+)/(?P<course_id>\d+)$',
+        views.download_assignment_file, name="download_user_assignment"),
     url(r'^show_lesson/(?P<lesson_id>\d+)/(?P<module_id>\d+)/'
         '(?P<course_id>\d+)/$', views.show_lesson, name='show_lesson'),
     url(r'^quizzes/view_module/(?P<module_id>\d+)/(?P<course_id>\d+)/$',
@@ -160,10 +164,11 @@ urlpatterns = [
     url(r'^manage/courses/download_course_csv/(?P<course_id>\d+)/$',
         views.download_course_csv, name="download_course_csv"),
     url(r'^manage/download/user_assignment/(?P<question_id>\d+)/'
-        '(?P<user_id>\d+)/(?P<quiz_id>\d+)/$',
+        '(?P<user_id>\d+)/(?P<quiz_id>\d+)/(?P<course_id>\d+)$',
         views.download_assignment_file, name="download_user_assignment"),
-    url(r'^manage/download/quiz_assignments/(?P<quiz_id>\d+)/$',
-        views.download_assignment_file, name="download_quiz_assignment"),
+    url(r'^manage/download/quiz_assignments/(?P<quiz_id>\d+)/'
+        '(?P<course_id>\d+)$', views.download_assignment_file,
+        name="download_quiz_assignment"),
     url(r'^manage/courses/download_yaml_template/',
         views.download_yaml_template, name="download_yaml_template"),
     url(r'^manage/download_sample_csv/',
