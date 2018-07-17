@@ -2113,6 +2113,7 @@ def download_assignment_file(request, quiz_id, course_id,
             course.name)
         )
     qp = get_object_or_404(QuestionPaper, quiz_id=quiz_id)
+    
     assignment_files, file_name = AssignmentUpload.objects.get_assignments(
         qp, question_id, user_id, course_id
     )
