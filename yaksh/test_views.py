@@ -948,7 +948,6 @@ class TestDownloadAssignment(TestCase):
         # create assignment file
         assignment_file1 = SimpleUploadedFile("file1.txt", b"Test")
         assignment_file2 = SimpleUploadedFile("file2.txt", b"Test")
-        SimpleUploadedFile("file3.txt", b"Test")
         self.assignment1 = AssignmentUpload.objects.create(
             user=self.student1, assignmentQuestion=self.question,
             course=self.course,
@@ -972,7 +971,7 @@ class TestDownloadAssignment(TestCase):
         self.learning_module.delete()
         self.learning_unit.delete()
         self.mod_group.delete()
-        dir_name = self.quiz.description.replace(" ", "_")
+        dir_name = self.course.name.replace(" ", "_")
         file_path = os.sep.join((settings.MEDIA_ROOT, dir_name))
         if os.path.exists(file_path):
             shutil.rmtree(file_path)

@@ -4,7 +4,7 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
-    TestCaseOrder, create_group
+    create_group
 from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
@@ -25,7 +25,7 @@ from yaksh import settings
 
 
 def setUpModule():
-    mod_group = Group.objects.create(name='moderator')
+    Group.objects.create(name='moderator')
 
     # create user profile
     user = User.objects.create_user(username='creator',
@@ -124,6 +124,7 @@ class GlobalMethodsTestCases(unittest.TestCase):
             create_group('moderator', 'yaksh'),
             Group.objects.get(name='moderator')
         )
+
 
 ###############################################################################
 class LessonTestCases(unittest.TestCase):
@@ -1903,7 +1904,7 @@ class AssignmentUploadTestCases(unittest.TestCase):
         self.user2.last_name = "user3"
         self.user2.save()
         self.quiz = Quiz.objects.get(description="demo quiz 1")
-
+        self.course = Course.objects.get(name="Python Course")
         self.questionpaper = QuestionPaper.objects.create(
             quiz=self.quiz, total_marks=0.0, shuffle_questions=True
         )
@@ -1919,17 +1920,19 @@ class AssignmentUploadTestCases(unittest.TestCase):
         file_path2 = os.path.join(tempfile.gettempdir(), "upload2.txt")
         self.assignment1 = AssignmentUpload.objects.create(
             user=self.user1, assignmentQuestion=self.question,
-            assignmentFile=file_path1, question_paper=self.questionpaper
+            assignmentFile=file_path1, question_paper=self.questionpaper,
+            course=self.course
             )
         self.assignment2 = AssignmentUpload.objects.create(
             user=self.user2, assignmentQuestion=self.question,
-            assignmentFile=file_path2, question_paper=self.questionpaper
+            assignmentFile=file_path2, question_paper=self.questionpaper,
+            course=self.course
             )
 
     def test_get_assignments_for_user_files(self):
         assignment_files, file_name = AssignmentUpload.objects.get_assignments(
                                     self.questionpaper, self.question.id,
-                                    self.user1.id
+                                    self.user1.id, self.course.id
                                     )
         self.assertIn("upload1.txt", assignment_files[0].assignmentFile.name)
         self.assertEqual(assignment_files[0].user, self.user1)
@@ -1939,15 +1942,15 @@ class AssignmentUploadTestCases(unittest.TestCase):
 
     def test_get_assignments_for_quiz_files(self):
         assignment_files, file_name = AssignmentUpload.objects.get_assignments(
-                                    self.questionpaper
-                                    )
+            self.questionpaper, course_id=self.course.id
+            )
         files = [os.path.basename(file.assignmentFile.name)
                  for file in assignment_files]
         question_papers = [file.question_paper for file in assignment_files]
         self.assertIn("upload1.txt", files)
         self.assertIn("upload2.txt", files)
         self.assertEqual(question_papers[0].quiz, self.questionpaper.quiz)
-        actual_file_name = self.quiz.description.replace(" ", "_")
+        actual_file_name = self.course.name.replace(" ", "_")
         file_name = file_name.replace(" ", "_")
         self.assertIn(actual_file_name, file_name)
 
