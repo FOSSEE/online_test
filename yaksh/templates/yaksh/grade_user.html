@@ -62,7 +62,7 @@ $(document).ready(function()
 
 {% if has_quiz_assignments %}
 
-<a href="{{URL_ROOT}}/exam/manage/download/quiz_assignments/{{quiz_id}}/">
+<a href="{{URL_ROOT}}/exam/manage/download/quiz_assignments/{{quiz_id}}/{{course_id}}">
     Download All Assignments</a>
 {% endif %}
 
@@ -194,7 +194,7 @@ Status : <b style="color: red;"> Failed </b><br/>
     <h5>Student answer: </h5>
     {% if question.type == "upload" %}
     {% if has_user_assignments %}
-        <a href="{{URL_ROOT}}/exam/manage/download/user_assignment/{{question.id}}/{{data.user.id}}/{{paper.question_paper.quiz.id}}">
+        <a href="{{URL_ROOT}}/exam/manage/download/user_assignment/{{question.id}}/{{data.user.id}}/{{paper.question_paper.quiz.id}}/{{course_id}}">
         <div class="panel">
         Assignment File for {{ data.user.get_full_name.title }}
         </div>
