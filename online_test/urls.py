@@ -2,6 +2,7 @@ from django.conf.urls import include, url
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from online_test import views
 admin.autodiscover()
 
 urlpatterns = [
@@ -10,6 +11,7 @@ urlpatterns = [
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^$', views.index, name='index'),
     url(r'^exam/', include('yaksh.urls', namespace='yaksh', app_name='yaksh')),
     url(r'^exam/reset/', include('yaksh.urls_password_reset')),
     url(r'^', include('social.apps.django_app.urls', namespace='social')),
