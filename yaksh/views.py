@@ -28,12 +28,10 @@ import re
 # Local imports.
 from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.models import (
-    Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, FloatTestCase,
-    HookTestCase, IntegerTestCase, McqTestCase, Profile,
-    QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
-    StdIOBasedTestCase, StringTestCase, TestCase, User,
-    get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
-    LearningUnit, LearningModule, CourseStatus, question_types
+    Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, Profile,
+    QuestionPaper, QuestionSet, Quiz, Question, TestCase, User,
+    FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
+    LearningUnit, LearningModule, CourseStatus, question_types, Room
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -2908,3 +2906,78 @@ def download_course(request, course_id):
                                             )
     response.write(zip_file.read())
     return response
+
+
+def chat_room(request, label, course_id):
+    """
+    Create a new chat room or get mesasges for already created chat room
+    """
+    user = request.user
+    context = {}
+    response_kwargs = {}
+    context['success'] = False
+    response_kwargs['content_type'] = 'application/json'
+    course = Course.objects.get(id=course_id)
+    result = [course.is_creator(user), course.is_teacher(user),
+              course.is_student(user)]
+    if not any(result):
+        context['messages'] = [{"message": "You do not belong to this course"}]
+        data = json.dumps(context)
+        return HttpResponse(data, **response_kwargs)
+
+    room, created = Room.objects.get_or_create(
+        label=label, course_id=course_id
+        )
+    chat_msgs_dict = []
+    messages = room.messages.order_by('-timestamp')
+    if messages:
+        messages = reversed(messages)
+        for message in messages:
+            chat_dict = {
+                "sender": message.sender.id,
+                "sender_name": message.sender.get_full_name().title(),
+                "timestamp": datetime.strftime(message.timestamp,
+                                               "%Y-%m-%dT%H:%M:%S"),
+                "message": message.message
+            }
+            chat_msgs_dict.append(chat_dict)
+        context['success'] = True
+    context['messages'] = chat_msgs_dict
+    context['room_label'] = room.label
+    data = json.dumps(context)
+    return HttpResponse(data, **response_kwargs)
+
+
+@has_profile
+@login_required
+@email_verified
+def start_room(request, course_id):
+    """
+    Randomly create a new room, and redirect to it.
+    """
+    room = Room.objects.filter(course_id=course_id)
+    if room.exists():
+        room_label = room.get(course_id=course_id).label
+    else:
+        room_label = uuid.uuid4().__str__()
+    return chat_room(request, room_label, course_id)
+
+
+@login_required
+@has_profile
+@email_verified
+def toggle_chat(request, course_id, quiz_id):
+    """
+    Enable/Disable chat per course
+    """
+    user = request.user
+    course = Course.objects.get(id=course_id)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    course.toggle_chat_status()
+    return redirect(
+        '/exam/manage/monitor/{0}/{1}'.format(course_id, quiz_id)
+        )

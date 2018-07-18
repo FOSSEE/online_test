@@ -768,6 +768,8 @@ class Course(models.Model):
 
     grading_system = models.ForeignKey(GradingSystem, null=True, blank=True)
 
+    enable_chat = models.BooleanField(default=False)
+
     objects = CourseManager()
 
     def _create_duplicate_instance(self, creator, course_name=None):
@@ -1004,6 +1006,13 @@ class Course(models.Model):
                 status = True
                 break
         return status
+
+    def toggle_chat_status(self):
+        if self.enable_chat:
+            self.enable_chat = False
+        else:
+            self.enable_chat = True
+        self.save()
 
     def __str__(self):
         return self.name
@@ -2411,4 +2420,17 @@ class TestCaseOrder(models.Model):
     # Order of the test case for a question.
     order = models.TextField()
 
-##############################################################################
+
+###############################################################################
+class Room(models.Model):
+    label = models.SlugField(unique=True)
+    course = models.ForeignKey(Course, related_name="room_course")
+
+
+class Message(models.Model):
+    room = models.ForeignKey(Room, related_name='messages')
+    sender = models.ForeignKey(User, related_name='sender')
+    receiver = models.ForeignKey(User, related_name='receiver',
+                                 blank=True, null=True)
+    message = models.TextField()
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)

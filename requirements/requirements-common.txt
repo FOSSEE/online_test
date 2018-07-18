@@ -8,3 +8,6 @@ selenium==2.53.6
 coverage
 ruamel.yaml==0.15.23
 markdown==2.6.9
+channels==1.1.6
+asgi-redis==1.4.3
+Twisted[tls,http2]

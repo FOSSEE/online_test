@@ -7,6 +7,11 @@
 
 
 {% block script %}
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/reconnecting-websocket.min.js" %}></script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/chat.js"></script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/monitor.js"></script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/moment.js"></script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/moment-timezone-with-data.js"></script>
 {% if papers %}
 <script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript">
@@ -45,20 +50,97 @@ $(document).ready(function()
             <tr>
             <td><ul class="list-group">{{course.name}} </td>
 
-            {% if course.get_quizzes %}
-            <td>
-            {% for quiz in course.get_quizzes %}
-             <li class="list-group-item"><a href = "{{URL_ROOT}}/exam/manage/monitor/{{quiz.id}}/{{course.id}}/">
-             {{quiz.description}}
-             </a></li>
-            {% endfor %}
-            </td>
-            {% else %}
-            <td> No quiz</td>
-            {% endif %}
-            </ul></tr>
-            {% endfor %}
-            </table>
+    {% for course in course_details %}
+    <tr>
+    <td><ul class="list-group">{{course.name}} </td>
+
+    {% if course.get_quizzes %}
+    <td>
+    {% for quiz in course.get_quizzes %}
+     <li class="list-group-item"><a href = "{{URL_ROOT}}/exam/manage/monitor/{{quiz.id}}/{{course.id}}/">
+     {{quiz.description}}
+     </a></li>
+    {% endfor %}
+    </td>
+    {% else %}
+    <td> No quiz</td>
+    {% endif %}
+    </ul></tr>
+    {% endfor %}
+    </table>
+{% endif %}
+
+{# ############################################################### #}
+{# This is rendered when we are just viewing exam/monitor/quiz_num #}
+{% if msg != "Monitor" %}
+{% if quiz %}
+{% if papers %}
+<input type="hidden" id="course_id" value="{{course.id}}">
+<input type="hidden" id="course_name" value="{{course.name|title}}">
+<input type="hidden" id="papers" value="{{papers|length}}">
+<input type="hidden" id="quiz_status" value="{{quiz.is_trial}}">
+<input type="hidden" id="user_tz" value="{{user.profile.timezone}}">
+{% if not quiz.enable_chat %}
+<div class="alert alert-warning">
+    <h4>Chat functionality is disabled. To enable chat
+    <a href="{{URL_ROOT}}/toggle_chat/{{course.id}}/{{quiz.id}}">Click Here</a>
+    </h4>
+</div>
+{% else %}
+<div class="alert alert-success">
+    <h4>Chat functionality is Enabled. To disable chat
+    <a href="{{URL_ROOT}}/toggle_chat/{{course.id}}/{{quiz.id}}">Click Here</a>
+    </h4>
+</div>
+{% endif %}
+<div class="alert alert-danger" id="chat_err" style="display: none;">
+    <h4>Unable to establish connection. Please try again later.</h4>
+</div>
+<input type="hidden" id="chat_status" value="{{quiz.enable_chat}}">
+
+
+<p>Course Name: {{ course.name }}</p>
+<p>Quiz Name: {{ quiz.description }}</p>
+<p>Number of papers: {{ papers|length }} </p>
+{% completed papers as completed_papers %}
+ {# template tag used to get the count of completed papers #}
+ <p>Papers completed: <b> {{ completed_papers }} </b></p>
+
+{% inprogress papers as inprogress_papers %}
+ {# template tag used to get the count of inprogress papers #}
+ <p>Papers in progress:<b>  {{ inprogress_papers }} </b></p>
+
+<p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{papers.0.question_paper.id}}/{{course.id}}">Question Statisitics</a></p>
+<p>
+   <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#csvModal">
+       Download CSV <span class="glyphicon glyphicon-save"></span>
+   </button></p>
+<table id="result-table" class="tablesorter table table table-striped">
+    <thead>
+    <tr>
+    <th> Name </th>
+    <th> Username </th>
+    <th> Roll number </th>  
+    <th> Institute </th>
+    <th> Questions answered </th> 
+    <th> Marks obtained </th>
+    <th> Attempts </th>
+    <th> Time Remaining </th>
+    <th> Status </th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for paper in latest_attempts %}
+    <tr> 
+        <td> <a href="{{URL_ROOT}}/exam/manage/user_data/{{paper.user.id}}/{{paper.question_paper.id}}/{{course.id}}">{{ paper.user.get_full_name.title }}</a> </td>
+        <td> {{ paper.user.username }} </td>
+        <td> {{ paper.user.profile.roll_number }} </td>
+        <td> {{ paper.user.profile.institute }} </td>
+        <td> {{ paper.get_answered_str }} </td>
+        <td> {{ paper.marks_obtained }} </td>
+        <td> {{ paper.answers.count }} </td>
+        <td id="time_left{{forloop.counter0}}"> {{ paper.time_left }} </td>
+        <td>{{ paper.status }}</td>
         </div>
         {% endif %}
 

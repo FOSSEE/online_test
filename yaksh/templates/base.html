@@ -70,6 +70,49 @@
   {% block footer %}
   {% endblock %}
 
+   <!-- Chat message div -->
+   <div class="container" id="chat_container" style="display: none;">
+    <div class="row chat-window col-md-4 chatbox" id="chat_window_1">
+        <div class="col-xs-12 col-md-12">
+          <div class="panel">
+                <div class="panel-heading top-bar" id="heading-title">
+                    <div class="col-md-8 col-xs-8">
+                        <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-comment" id="title"></span>
+                        </h3>
+                    </div>
+                    <div class="row">
+                    <div class="col-md-4 col-xs-4">
+                        <a><span id="minim_chat_window" class="glyphicon glyphicon-minus icon_minim"></span></a>
+                        <a><span class="glyphicon glyphicon-remove icon_close" data-id="chat_window_1"></span></a>
+                    </div>
+                    </div>
+                </div>
+                <div class="panel-body msg_container_base" id="msg_base">
+                    <div class="row vertical-center-row">
+                    </div>
+                </div>
+                {% block postchat %}
+                {% endblock %}
+          </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Open chat div -->
+  <div class="container-fluid" id="open_chat_icon" style="display: none;">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="btn-group">
+        <button class="btn btn-success btn-fab" id="main" data-toggle="tooltip"
+        title="Open Chat">
+          <i class="material-icons glyphicon glyphicon-plus"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  </div>
+
 </body>
 </html>
 
