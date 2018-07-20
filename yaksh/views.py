@@ -2101,13 +2101,13 @@ def update_email(request):
 def download_assignment_file(request, quiz_id, course_id,
                              question_id=None, user_id=None):
     user = request.user
-    course = Course.objects.get(id=course_id)
+    course = get_object_or_404(Course, pk=course_id)
     if (not course.is_creator(user) and not course.is_teacher(user) and
             not course.is_student(user)):
         raise Http404("You are not allowed to download files for {0}".format(
             course.name)
         )
-    qp = QuestionPaper.objects.get(quiz_id=quiz_id)
+    qp = get_object_or_404(QuestionPaper, quiz_id=quiz_id)
     assignment_files, file_name = AssignmentUpload.objects.get_assignments(
         qp, question_id, user_id, course_id
     )
