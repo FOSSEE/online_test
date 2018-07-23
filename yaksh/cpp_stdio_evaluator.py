@@ -41,9 +41,9 @@ class CppStdIOEvaluator(StdIOEvaluator):
         return user_output_path, ref_output_path
 
     def get_commands(self, user_output_path, ref_output_path):
-        compile_command = 'g++  {0} -c -o {1}'.format(self.submit_code_path,
+        compile_command = 'gcc  {0} -c -o {1} -llapack'.format(self.submit_code_path,
                                                       user_output_path)
-        compile_main = 'g++ {0} -o {1}'.format(user_output_path,
+        compile_main = 'gcc {0} -o {1} -llapack'.format(user_output_path,
                                                ref_output_path)
         return compile_command, compile_main
 

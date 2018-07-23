@@ -51,9 +51,9 @@ class CppCodeEvaluator(BaseEvaluator):
 
     def get_commands(self, clean_ref_code_path, user_output_path,
                      ref_output_path):
-        compile_command = 'g++  {0} -c -o {1}'.format(
+        compile_command = 'gcc {0} -c -o {1} -llapack'.format(
             self.submit_code_path, user_output_path)
-        compile_main = 'g++ {0} {1} -o {2}'.format(
+        compile_main = 'gcc {0} {1} -o {2} -llapack'.format(
             clean_ref_code_path, user_output_path,
             ref_output_path
             )
