@@ -94,8 +94,10 @@ MOD_GROUP_NAME = 'moderator'
 
 
 def get_assignment_dir(instance, filename):
-    upload_dir = instance.question_paper.quiz.description.replace(" ", "_")
-    return os.sep.join((upload_dir, instance.user.username,
+    folder_name = instance.course.name.replace(" ", "_")
+    sub_folder_name = instance.question_paper.quiz.description.replace(
+        " ", "_")
+    return os.sep.join((folder_name, sub_folder_name, instance.user.username,
                         str(instance.assignmentQuestion.id),
                         filename
                         ))
@@ -2234,20 +2236,19 @@ class AnswerPaper(models.Model):
 ##############################################################################
 class AssignmentUploadManager(models.Manager):
 
-    def get_assignments(self, qp, que_id=None, user_id=None):
+    def get_assignments(self, qp, que_id=None, user_id=None, course_id=None):
         if que_id and user_id:
             assignment_files = AssignmentUpload.objects.filter(
                         assignmentQuestion_id=que_id, user_id=user_id,
-                        question_paper=qp
+                        question_paper=qp, course_id=course_id
                         )
             file_name = User.objects.get(id=user_id).get_full_name()
         else:
             assignment_files = AssignmentUpload.objects.filter(
-                        question_paper=qp
+                        question_paper=qp, course_id=course_id
                         )
-
             file_name = "{0}_Assignment_files".format(
-                            assignment_files[0].question_paper.quiz.description
+                            assignment_files[0].course.name
                             )
 
         return assignment_files, file_name
@@ -2259,6 +2260,7 @@ class AssignmentUpload(models.Model):
     assignmentQuestion = models.ForeignKey(Question)
     assignmentFile = models.FileField(upload_to=get_assignment_dir)
     question_paper = models.ForeignKey(QuestionPaper, blank=True, null=True)
+    course = models.ForeignKey(Course, null=True, blank=True)
     objects = AssignmentUploadManager()
 
 

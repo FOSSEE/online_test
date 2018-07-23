@@ -948,13 +948,14 @@ class TestDownloadAssignment(TestCase):
         # create assignment file
         assignment_file1 = SimpleUploadedFile("file1.txt", b"Test")
         assignment_file2 = SimpleUploadedFile("file2.txt", b"Test")
-        SimpleUploadedFile("file3.txt", b"Test")
         self.assignment1 = AssignmentUpload.objects.create(
             user=self.student1, assignmentQuestion=self.question,
+            course=self.course,
             assignmentFile=assignment_file1, question_paper=self.question_paper
             )
         self.assignment2 = AssignmentUpload.objects.create(
             user=self.student2, assignmentQuestion=self.question,
+            course=self.course,
             assignmentFile=assignment_file2, question_paper=self.question_paper
             )
 
@@ -970,23 +971,25 @@ class TestDownloadAssignment(TestCase):
         self.learning_module.delete()
         self.learning_unit.delete()
         self.mod_group.delete()
-        dir_name = self.quiz.description.replace(" ", "_")
+        dir_name = self.course.name.replace(" ", "_")
         file_path = os.sep.join((settings.MEDIA_ROOT, dir_name))
         if os.path.exists(file_path):
             shutil.rmtree(file_path)
 
     def test_download_assignment_denies_student(self):
         """
-            Check download assignment denies student
+            Check download assignment denies student not enrolled in a course
         """
         self.client.login(
             username=self.student1.username,
             password=self.student1_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:download_quiz_assignment',
-                                           kwargs={'quiz_id': self.quiz.id}),
-                                   follow=True
-                                   )
+        response = self.client.get(
+            reverse('yaksh:download_quiz_assignment',
+                    kwargs={'quiz_id': self.quiz.id,
+                            "course_id": self.course.id}),
+            follow=True
+            )
         self.assertEqual(response.status_code, 404)
 
     def test_download_assignment_per_quiz(self):
@@ -997,11 +1000,13 @@ class TestDownloadAssignment(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(reverse('yaksh:download_quiz_assignment',
-                                           kwargs={'quiz_id': self.quiz.id}),
-                                   follow=True
-                                   )
-        file_name = "{0}_Assignment_files.zip".format(self.quiz.description)
+        response = self.client.get(
+            reverse('yaksh:download_quiz_assignment',
+                    kwargs={'quiz_id': self.quiz.id,
+                            'course_id': self.course.id}),
+            follow=True
+            )
+        file_name = "{0}_Assignment_files.zip".format(self.course.name)
         file_name = file_name.replace(" ", "_")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
@@ -1026,7 +1031,8 @@ class TestDownloadAssignment(TestCase):
             reverse('yaksh:download_user_assignment',
                     kwargs={'quiz_id': self.quiz.id,
                             'question_id': self.question.id,
-                            'user_id': self.student2.id
+                            'user_id': self.student2.id,
+                            'course_id': self.course.id
                             }),
             follow=True
             )
