@@ -39,7 +39,7 @@ setup(
     license='BSD License',
     entry_points={
             'console_scripts': [
-                'yaksh = yaksh.scripts.cli:main',
+                'yaksh = yaksh.code_server:main',
             ],
     },
     description='A django app to conduct online programming tests.',
