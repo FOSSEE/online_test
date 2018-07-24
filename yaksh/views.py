@@ -383,7 +383,7 @@ def prof_manage(request, msg=None):
     if not is_moderator(user):
         return my_redirect('/exam/')
     courses = Course.objects.filter(Q(creator=user) | Q(teachers=user),
-                                    is_trial=False)
+                                    is_trial=False).distinct()
     trial_paper = AnswerPaper.objects.filter(
         user=user, question_paper__quiz__is_trial=True,
         course__is_trial=True
