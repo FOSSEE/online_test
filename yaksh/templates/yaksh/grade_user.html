@@ -153,7 +153,7 @@ Status : <b style="color: red;"> Failed </b><br/>
             </strong>
         </div>
         <div class="panel-body">
-            <h5><u>Question:</u></h5> <strong>{{ question.description|escape }}</strong>
+            <h5><u>Question:</u></h5> <strong>{{ question.description|safe }}</strong>
             {% if question.type == "mcq" or question.type == "mcc" %}
                 <h5> <u>Choices:</u></h5>
                 {% for testcase in question.get_test_cases %}
