@@ -768,7 +768,7 @@ class Course(models.Model):
 
     grading_system = models.ForeignKey(GradingSystem, null=True, blank=True)
 
-    enable_chat = models.BooleanField(default=False)
+    enable_chat = models.BooleanField("Enable/Disable Chat", default=False)
 
     objects = CourseManager()
 
@@ -2234,6 +2234,16 @@ class AnswerPaper(models.Model):
         user_answer.save()
         self.update_marks('completed')
         return True, msg
+
+    def get_latest_attempted_question(self):
+        """ Return latest attempted question for a AnswerPaper """
+        answers = self.answers.order_by("id")
+        if answers.exists():
+            return answers.last().question
+
+    def get_all_answers(self, que_id):
+        """ Return latest answer submitted to a question by the user """
+        return self.answers.filter(question_id=que_id).order_by("id")
 
     def __str__(self):
         u = self.user

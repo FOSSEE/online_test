@@ -211,8 +211,11 @@ urlpatterns = [
         views.download_course, name="download_course"),
     url(r'^download_course/(?P<course_id>\d+)/$',
         views.download_course, name="download_course"),
-    url(r'^start_chat_room/(?P<course_id>\d+)/$', views.start_room,
-        name='new_room'),
-    url(r'^toggle_chat/(?P<course_id>\d+)/(?P<quiz_id>\d+)/$',
+    url(r'^chat/start_room/(?P<course_id>\d+)/$', views.start_room,
+        name='start_room'),
+    url(r'^manage/toggle_chat/(?P<course_id>\d+)/(?P<quiz_id>\d+)/$',
         views.toggle_chat, name="toggle_chat"),
+    url(r'^manage/get_question_answer/(?P<answerpaper_id>\d+)/'
+        '(?P<user_id>\d+)/(?P<question_id>\d+)',
+        views.get_question_answer, name="get_question_answer")
 ]

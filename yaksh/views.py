@@ -1,5 +1,7 @@
 import os
 import csv
+import uuid
+from datetime import datetime
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
@@ -31,7 +33,8 @@ from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, Profile,
     QuestionPaper, QuestionSet, Quiz, Question, TestCase, User,
     FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
-    LearningUnit, LearningModule, CourseStatus, question_types, Room
+    LearningUnit, LearningModule, CourseStatus, question_types, Room,
+    render_template
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -2981,3 +2984,34 @@ def toggle_chat(request, course_id, quiz_id):
     return redirect(
         '/exam/manage/monitor/{0}/{1}'.format(course_id, quiz_id)
         )
+
+
+@login_required
+@email_verified
+def get_question_answer(request, answerpaper_id, user_id, question_id):
+    """ Get answer for latest question """
+    user = request.user
+    context = {}
+    response_kwargs = {'content_type': 'application/json'}
+    answer_paper = get_object_or_404(AnswerPaper, pk=answerpaper_id,
+                                     user_id=user_id)
+    if not is_moderator(user):
+        raise Http404("You are not a moderator")
+    if (not answer_paper.course.is_creator(user) and
+            not answer_paper.course.is_teacher(user)):
+        raise Http404('{0} does not belong to you'.format(
+            answer_paper.course.name))
+    question = get_object_or_404(Question, pk=question_id)
+    answers = answer_paper.get_all_answers(question.id)
+    template_path = os.path.join(
+        os.path.dirname(__file__), "templates", "yaksh", "show_attempts.html"
+        )
+    context['answers'] = answers
+    context['question'] = question
+    context['user'] = answer_paper.user
+    context['template_dir'] = os.path.join(
+        os.path.dirname(__file__), "templates", "yaksh", "error_template.html"
+        )
+    rendered_data = render_template(template_path, context)
+    ans_data = {"rendered_data": rendered_data}
+    return HttpResponse(json.dumps(ans_data), **response_kwargs)

@@ -3,10 +3,9 @@ from channels import Group
 from channels.sessions import channel_session
 from channels.auth import channel_session_user_from_http
 from datetime import datetime
-import pytz
 
 # Local Imports
-from yaksh.models import Room, User
+from yaksh.models import Room
 
 
 @channel_session_user_from_http
