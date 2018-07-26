@@ -2,10 +2,12 @@ from django import template
 from django.template.defaultfilters import stringfilter
 from ast import literal_eval
 import os
+import json
 try:
     from itertools import zip_longest
 except ImportError:
     from itertools import izip_longest as zip_longest
+from yaksh.models import render_template
 
 register = template.Library()
 
@@ -91,9 +93,18 @@ def replace_spaces(name):
 
 @register.simple_tag
 def get_questions_by_type(all_questions, question_type):
-    return [question for question in all_questions if question.type == question_type]
+    return [question for question in all_questions
+            if question.type == question_type
+            ]
 
 
 @register.simple_tag
 def course_grade(course, user):
     return course.get_grade(user)
+
+
+@register.simple_tag
+def format_error(question, error_data, template_dir):
+    error = json.loads(error_data)
+    data = render_template(template_dir, {"error_message": error})
+    return data

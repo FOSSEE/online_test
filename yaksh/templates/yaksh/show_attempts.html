@@ -1,0 +1,101 @@
+{% load custom_filters %}
+
+{% block script %}
+<script src="{{ URL_ROOT }}/static/yaksh/js/mathjax/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+{% endblock %}
+<h3 id="header1" class="alert alert-info">
+	Answer submited by <span id="user">{{user.get_full_name|title}}</span>
+</h3>
+<div class="panel panel-primary">
+	<div class="panel-heading">
+		Question:
+	</div>
+	<div class="panel-body">
+		{{question.description|safe}}
+		{% if question.type != "code" %}
+			<ul class="list-group">
+				{% for tc in question.get_test_cases %}
+					<li class="list-group-item">
+					{% if question.type == "mcc" or question.type == "mcq" %}
+						{{tc.options}}
+						{% if tc.correct %}
+						<span class="label label-success">Correct</span>
+						{% endif %}
+					{% elif question.type == "arrange" %}
+						{{tc.options}}
+					{% endif %}
+					</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+	</div>
+</div>
+<br>
+<div class="panel panel-primary">
+	<div class="panel-heading">
+		Student Answer:
+	</div>
+	<div class="panel-body">
+	{% for answer in answers %}
+		<Strong><u>Answer: {{forloop.counter}}</u></Strong>
+		<br><br>
+		{% if question.type == "mcc"%}
+			<div class="well well-sm">
+				<ul class="list-group">
+					{% for testcases in question.get_test_cases %}
+					{% if testcases.id|stringformat:"i" in answer|safe %}
+			 			<li class="list-group-item">
+			 				{{ testcases.options.strip|safe }}
+			 			</li>
+					{% endif %}
+					{% endfor %}
+				</ul>
+			</div>
+
+	    {% elif question.type == "mcq"%}
+	        <div class="well well-sm">
+	        	<ul class="list-group">
+		        	{% for testcases in question.get_test_cases %}
+		        	{% if testcases.id|stringformat:"i" == answer|safe %}
+		         		<li class="list-group-item">
+		         			{{ testcases.options.strip|safe }}
+		         		</li>
+		        	{% endif %}
+		        	{% endfor %}
+	        	</ul>
+	        </div>
+	    {% elif question.type == "arrange"%}
+			<div class="well well-sm">
+				{% get_answer_for_arrange_options answer question as tc_list %}
+				<ul class="list-group">
+					{% for testcases in tc_list %}
+				 		<li class="list-group-item">
+				 			{{ testcases.options.strip|safe }}
+				 		</li>
+					{% endfor %}
+				</ul>
+			</div>
+		{% elif question.type == "code" %}
+			<pre><code>{{ answer.answer.strip|escape }}</code></pre>
+	    {% else %}
+			<div class="well well-sm">
+				{{ answer.answer|safe }}
+			</div>
+	    {% endif %}
+		<br>
+
+		{% if answer.correct %}
+			<div class="panel panel-success">
+				<div class="panel-heading">
+					Correct Answer
+				</div>
+			</div>
+		{% else %}
+			{% format_error question answer.error template_dir as error %}
+			{{error}}
+		{% endif %}
+	{% endfor %}
+	</div>
+</div>
+<br>

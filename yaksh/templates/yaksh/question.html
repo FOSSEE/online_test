@@ -18,6 +18,9 @@
 {% endblock %}
 
 {% block script %}
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/reconnecting-websocket.min.js" %}>
+</script>
+<script language="text/javascript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/chat.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/requesthandler.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/lib/codemirror.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/python/python.js"></script>
@@ -25,6 +28,9 @@
 <script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/shell/shell.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/mathjax/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/jquery-sortable.js"></script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/moment.js"></script>
+<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/moment-timezone-with-data.js">
+</script>
 <script>
 init_val = '{{ last_attempt|escape_quotes|safe }}';
 lang = "{{ question.language }}"
@@ -115,6 +121,21 @@ question_type = "{{ question.type }}"
 
 
 {% block main %}
+        <input type="hidden" id="course_id" value="{{course.id}}">
+        <input type="hidden" id="course_name" value="{{course.name|title}}">
+        <input type="hidden" id="handle" value="{{user.id}}"/>
+        {% if not course.enable_chat %}
+        <div class="alert alert-warning">
+            <h4>Chat functionality is disabled for this quiz
+            </h4>
+        </div>
+        {% endif %}
+        <div class="alert alert-danger" id="chat_err" style="display: none;">
+            <h4>Unable to establish connection. Please try again later.</h4>
+        </div>
+        <input type="hidden" id="chat_status" value="{{course.enable_chat}}">
+        <input type="hidden" id="quiz_status" value="{{paper.question_paper.quiz.is_trial}}">
+        <input type="hidden" id="user_tz" value="{{user.profile.timezone}}">
         <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <input type=hidden name="question_id" id="question_id" value={{ question.id }}></input>
@@ -336,4 +357,19 @@ question_type = "{{ question.type }}"
       </div>
    </div>
 {% endblock main %}
-
+<!-- Open chat container -->
+{% block postchat %}
+<form id="chatform">
+<div class="panel-footer">
+  <div class="input-group">
+    <div id="message" g_editable="true" role="textbox" contenteditable="true" placeholder="Write your message here...">
+    </div>
+    <span class="input-group-btn">
+    <button class="btn btn-primary btn-sm" id="btn-chat">
+    Send
+    </button>
+    </span>
+  </div>
+</div>
+</form>
+{% endblock %}

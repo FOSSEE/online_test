@@ -8,13 +8,19 @@ $(document).ready(function() {
     var timer;
     var page_title = document.title;
     var course_id = $("#course_id").val();
-    var quiz_id = $("#quiz_id").val()
+    var room_url = window.location.protocol + "//" +
+                    window.location.host + "/exam/chat/start_room/" + course_id;
+
+    $("#open_chat").click(function() {
+        $('#message').html("@" + $("#user").html());
+        ajax_request(room_url);
+        if(!$("#chat_container").is(':visible')) {
+            $("#chat_container").toggle();
+        }
+    });
 
     $("#main").on("click", function(){
         // Open chat window
-        var room_url = window.location.protocol + "//" +
-                    window.location.host + "/start_chat_room/" + course_id +
-                    "/" + quiz_id;
         ajax_request(room_url);
     });
 
@@ -41,7 +47,7 @@ $(document).ready(function() {
         label = msg['room_label'];
         create_ws(label);
         $("#msg_base").empty();
-        if(msg['success']){
+        if(msg['success']) {
             for (var j=0; j<msg['messages'].length; j++){
                 fill_data(msg['success'], msg['messages'][j]);
             }
@@ -61,12 +67,12 @@ $(document).ready(function() {
                 $("#msg_base").empty();
             }
             var data = JSON.parse(message.data);
-            fill_data(data['success'], data['messages'], "new")
+            fill_data(data['success'], data['messages'], "new");
         };
         chatsock.onerror = function(){
             $("#chat_err").toggle();
             chatsock.close();
-        }
+        };
     }
 
     $("#chatform").on("submit", function(event) {
@@ -107,7 +113,8 @@ $(document).ready(function() {
 
         var par_msg = document.createElement("p");
         par_msg.setAttribute("id", "chat_msg");
-        var msg_text = document.createTextNode(message);
+        var msg_text = document.createElement("div");
+        msg_text.innerHTML = message;
         par_msg.appendChild(msg_text);
 
         sent_msg_div.appendChild(par_user);
@@ -143,7 +150,8 @@ $(document).ready(function() {
 
         var par_msg = document.createElement("p");
         par_msg.setAttribute("id", "chat_msg");
-        var msg_text = document.createTextNode(message);
+        var msg_text = document.createElement("div");
+        msg_text.innerHTML = message;
         par_msg.appendChild(msg_text);
 
         receive_msg_div.appendChild(par_user);
@@ -214,7 +222,7 @@ $(document).ready(function() {
     }
 
     function toggle_title(sender) {
-        if (document.title == page_title) { document.title =  sender + ' messsaged you'; }
+        if (document.title == page_title) { document.title =  sender + ' sent a messsage'; }
         else { document.title = page_title; }
     }
 
@@ -245,5 +253,4 @@ $(document).ready(function() {
         clearInterval(timer);
         document.title = page_title;
     });
-
 });

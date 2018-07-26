@@ -148,10 +148,7 @@ body {
     overflow: hidden;
     display: flex;
 }
-img {
-    display: block;
-    width: 100%;
-}
+
 .avatar {
     position: relative;
 }
