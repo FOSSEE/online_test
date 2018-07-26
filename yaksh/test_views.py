@@ -26,10 +26,13 @@ from yaksh.models import (
     User, Profile, Question, Quiz, QuestionPaper, AnswerPaper, Answer, Course,
     AssignmentUpload, McqTestCase, IntegerTestCase, StringTestCase,
     FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,
-    LessonFile, CourseStatus, dict_to_yaml
+    LessonFile, CourseStatus, dict_to_yaml, Room, Message
 )
 from yaksh.views import add_as_moderator
 from yaksh.decorators import user_has_profile
+
+# Channels imports
+from channels.test import WSClient, ChannelTestCase
 
 
 class TestUserRegistration(TestCase):
@@ -507,6 +510,24 @@ class TestMonitor(TestCase):
             timezone='UTC'
         )
 
+        self.user1_plaintext_pass = 'demo'
+        self.user1 = User.objects.create_user(
+            username='demo_user1',
+            password=self.user1_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user1,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
         # Add to moderator group
         self.mod_group.user_set.add(self.user)
 
@@ -647,6 +668,49 @@ class TestMonitor(TestCase):
         self.assertEqual(response.context['data']['user'], self.student)
         self.assertEqual(response.context['data']['questionpaperid'],
                          str(self.question_paper.id))
+
+    def test_get_question_answer_for_answerpaper(self):
+        """
+            Check to get latest answer for questions in monitor
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:get_question_answer',
+                    kwargs={'user_id': self.student.id,
+                            'answerpaper_id': self.answerpaper.id,
+                            'question_id': self.question.id}),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_question_answer_invalid_user(self):
+        """
+            Check to raise Http404 message for invalid user
+        """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:get_question_answer',
+                    kwargs={'user_id': self.student.id,
+                            'answerpaper_id': self.answerpaper.id,
+                            'question_id': self.question.id}),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 404)
+
+        get_response = self.client.get(
+            reverse('yaksh:get_question_answer',
+                    kwargs={'user_id': self.student.id,
+                            'answerpaper_id': self.answerpaper.id,
+                            'question_id': self.question.id}),
+            follow=True
+        )
+        self.assertEqual(get_response.status_code, 404)
 
 
 class TestGradeUser(TestCase):
@@ -6138,3 +6202,339 @@ class TestLessons(TestCase):
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['data'], '<p>test description</p>')
+
+
+class TestConsumers(ChannelTestCase):
+    def setUp(self):
+        self.client = WSClient()
+
+        self.mod_group = Group.objects.create(name='moderator')
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Open Enrollment", creator=self.user,
+            enable_chat=True
+        )
+
+        # Create a new chat room
+        self.room = Room.objects.create(
+            course=self.course,
+            label="test_room"
+        )
+
+    def tearDown(self):
+        self.room.delete()
+        self.user.delete()
+        self.student.delete()
+        self.course.delete()
+        self.mod_group.delete()
+
+    def test_consumers_ws_connect_success(self):
+        # Check for successful connection
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        ws_correct_path = '/chat/test_room/{0}'.format(self.room.course_id)
+        self.client.send_and_consume(u'websocket.connect',
+                                     path=ws_correct_path)
+        # check that there is nothing to receive
+        self.assertIsNone(self.client.receive())
+
+    def test_consumers_ws_connect_invalid_path(self):
+        # Check for wrong path
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        ws_wrong_path = '/chatting/test_room/{0}'.format(self.room.course_id)
+        self.client.send_and_consume(
+            u'websocket.connect', path=ws_wrong_path,
+            check_accept=False
+        )
+        self.assertEqual(self.client.receive(), {"close": True})
+
+    def test_consumers_ws_connect_value_error(self):
+        # Check if path has all the information
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        ws_path = '/chat/test_room/'
+        self.client.send_and_consume(
+            u'websocket.connect', path=ws_path,
+            check_accept=False
+        )
+        self.assertEqual(self.client.receive(), {"close": True})
+
+    def test_consumers_ws_connect_room_does_not_exist(self):
+        # Check if path has all the information
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        ws_path = '/chat/test/1'
+        self.client.send_and_consume(
+            u'websocket.connect', path=ws_path,
+            check_accept=False
+        )
+        self.assertEqual(self.client.receive(), {"close": True})
+
+    def test_consumers_ws_connect_incorrect_user(self):
+        # Check if user is a course creator or teacher or student
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        ws_correct_path = '/chat/test_room/{0}'.format(self.room.course_id)
+        self.client.send_and_consume(
+            u'websocket.connect', path=ws_correct_path,
+            check_accept=False
+        )
+        self.assertEqual(self.client.receive(), {"close": True})
+
+    def test_consumers_ws_receive_success(self):
+        # Check if message is received successfully
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        ws_correct_path = '/chat/test_room/{0}'.format(self.room.course_id)
+        self.client.send_and_consume(u'websocket.connect',
+                                     path=ws_correct_path)
+        self.client.send_and_consume(
+            u'websocket.receive', path=ws_correct_path,
+            text={"message": "Test", "sender_id": self.user.id}
+        )
+        message = self.client.receive()
+        user_full_name = self.user.get_full_name().title()
+        self.assertTrue(message['success'])
+        self.assertEqual(message['messages']['sender'], self.user.id)
+        self.assertEqual(message['messages']['message'], "Test")
+        self.assertEqual(message['messages']['sender_name'], user_full_name)
+
+    def test_consumers_ws_receive_incorrect_json_data(self):
+        # Check for incorrect json data
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        ws_path = '/chat/test_room/{0}'.format(self.room.course_id)
+        self.client.send_and_consume(u'websocket.connect', path=ws_path)
+        self.client.send_and_consume(
+            u'websocket.receive', path=ws_path,
+            check_accept=False, text={"message": "Test"}
+        )
+        self.assertEqual(self.client.receive(), {"close": True})
+
+    def test_consumers_ws_receive_incorrect_key_error(self):
+        # Check for no channel session
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        ws_path = '/chat/test_room/{0}'.format(self.room.course_id)
+        self.client.send_and_consume(
+            u'websocket.receive', path=ws_path,
+            check_accept=False
+        )
+        self.assertEqual(self.client.receive(), {"close": True})
+
+    def test_consumers_ws_disconnect(self):
+        # Check for disconnect channel
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        ws_path = '/chat/test_room/{0}'.format(self.room.course_id)
+        self.client.send_and_consume(u'websocket.connect', path=ws_path)
+        self.client.send_and_consume(
+            u'websocket.disconnect', path=ws_path,
+            check_accept=False
+        )
+        self.assertEqual(self.client.receive(), {"close": True})
+
+
+class TestChatMessages(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC', is_moderator=True
+        )
+
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+
+        self.course1 = Course.objects.create(
+            name="Python Course",
+            enrollment="Open Enrollment", creator=self.user
+        )
+
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz', pass_criteria=40,
+            )
+
+        self.course2 = Course.objects.create(
+            name="Demo Course",
+            enrollment="Open Enrollment", creator=self.user
+        )
+
+        self.room = Room.objects.create(
+            course=self.course1,
+            label="test_room"
+        )
+        self.message = Message.objects.create(
+            room=self.room, sender=self.user,
+            message="Test", timestamp=timezone.now()
+        )
+
+    def tearDown(self):
+        Room.objects.all().delete()
+        User.objects.all().delete()
+        Course.objects.all().delete()
+        Message.objects.all().delete()
+
+    def test_get_chat_messages(self):
+        # Check to get all messages for a room
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:start_room',
+                    kwargs={'course_id': self.course1.id}),
+            follow=True
+        )
+        message = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(message['success'])
+        self.assertEqual(message['room_label'], 'test_room')
+        self.assertEqual(message['messages'][0]['message'], 'Test')
+        self.assertEqual(message['messages'][0]['sender'], self.user.id)
+
+    def test_create_new_room(self):
+        # Check to create a new room
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:start_room',
+                    kwargs={'course_id': self.course2.id}),
+            follow=True
+        )
+        new_room = Room.objects.get(course_id=self.course2.id)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(new_room.course_id, self.course2.id)
+
+    def test_chat_room_invalid_user(self):
+        # Check if user is a course creator or teacher or student
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:start_room',
+                    kwargs={'course_id': self.course1.id}),
+            follow=True
+        )
+        message = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(message['success'])
+        err_msg = "You do not belong to this course"
+        self.assertEqual(message['messages'][0]['message'], err_msg)
+
+    def test_toggle_chat_status(self):
+        # Check course chat toggle status
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:toggle_chat',
+                    kwargs={"course_id": self.course1.id,
+                            "quiz_id": self.quiz.id}),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(self.course1.enable_chat)
+        updated_course = Course.objects.get(id=self.course1.id)
+        self.assertTrue(updated_course.enable_chat)
