@@ -3,7 +3,6 @@ $(document).ready(function(){
     $qpaper_id = $('#qpaper_id');
     $marks = $('#id_marks');
     $show = $('#show');
-    /* ajax requsts on selectors change */
     $question_type.change(function() {
         this.form.submit();
     });
