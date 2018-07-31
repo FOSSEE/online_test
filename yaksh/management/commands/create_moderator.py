@@ -7,7 +7,9 @@
 # django imports
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User, Group, Permission
-from django.contrib.contenttypes.models import ContentType
+
+# local imports
+from yaksh.models import create_group
 
 
 class Command(BaseCommand):
@@ -19,19 +21,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         app_label = 'yaksh'
-
-        try:
-            group = Group.objects.get(name='moderator')
-        except Group.DoesNotExist:
-            group = Group(name='moderator')
-            group.save()
-            # Get the models for the given app
-            content_types = ContentType.objects.filter(app_label=app_label)
-            # Get list of permissions for the models
-            permission_list = Permission.objects.filter(
-                content_type__in=content_types)
-            group.permissions.add(*permission_list)
-            group.save()
+        group_name = 'moderator'
+        group = create_group(group_name, app_label)
+        if group and isinstance(group, Group):
             self.stdout.write('Moderator group added successfully')
 
         if options['usernames']:

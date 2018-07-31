@@ -173,7 +173,6 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
         err = result.get("error")[0]['traceback']
-
         # Then
         self.assertFalse(result.get("success"))
         for msg in syntax_error_msg:

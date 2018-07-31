@@ -8,11 +8,13 @@ from ruamel.yaml.comments import CommentedMap
 from random import sample
 from collections import Counter
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
 from django.utils import timezone
 from django.core.files import File
+import glob
+
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -27,6 +29,7 @@ import tempfile
 from textwrap import dedent
 from ast import literal_eval
 from .file_utils import extract_files, delete_files
+from django.template import Context, Template
 from yaksh.code_server import (
     submit, get_result as get_result_from_code_server
 )
@@ -86,6 +89,8 @@ test_status = (
               )
 
 
+MOD_GROUP_NAME = 'moderator'
+
 def get_assignment_dir(instance, filename):
     upload_dir = instance.question_paper.quiz.description.replace(" ", "_")
     return os.sep.join((upload_dir, instance.user.username,
@@ -122,8 +127,92 @@ def dict_to_yaml(dictionary):
 
 
 def get_file_dir(instance, filename):
-    upload_dir = instance.lesson.name.replace(" ", "_")
+    if isinstance(instance, LessonFile):
+        upload_dir = instance.lesson.name.replace(" ", "_")
+    else:
+        upload_dir = instance.name.replace(" ", "_")
     return os.sep.join((upload_dir, filename))
+
+
+def create_group(group_name, app_label):
+    try:
+        group = Group.objects.get(name=group_name)
+    except Group.DoesNotExist:
+        group = Group(name=group_name)
+        group.save()
+        # Get the models for the given app
+        content_types = ContentType.objects.filter(app_label=app_label)
+        # Get list of permissions for the models
+        permission_list = Permission.objects.filter(
+            content_type__in=content_types)
+        group.permissions.add(*permission_list)
+        group.save()
+    return group
+
+
+def write_static_files_to_zip(zipfile, course_name, current_dir, static_files):
+    """ Write static files to zip
+
+        Parameters
+        ----------
+
+        zipfile : Zipfile object
+            zip file in which the static files need to be added
+
+        course_name : str
+            Create a folder with course name
+
+        current_dir: str
+            Path from which the static files will be taken
+
+        static_files: dict
+            Dictionary containing static folders as keys and static files as
+            values
+    """
+    for folder in static_files.keys():
+        folder_path = os.sep.join((current_dir, "static", "yaksh", folder))
+        for file in static_files[folder]:
+            file_path = os.sep.join((folder_path, file))
+            with open(file_path, "rb") as f:
+                zipfile.writestr(
+                    os.sep.join((course_name, "static", folder, file)),
+                    f.read()
+                    )
+
+
+def write_templates_to_zip(zipfile, template_path, data, filename, filepath):
+    """ Write template files to zip
+
+        Parameters
+        ----------
+
+        zipfile : Zipfile object
+            zip file in which the template files need to be added
+
+        template_path : str
+            Path from which the template file will be loaded
+
+        data: dict
+            Dictionary containing context data required for template
+
+        filename: str
+            Filename with which the template file should be named
+
+        filepath: str
+            File path in zip where the template will be added
+    """
+    rendered_template = render_template(template_path, data)
+    zipfile.writestr(os.sep.join((filepath, "{0}.html".format(filename))),
+                     str(rendered_template))
+
+
+def render_template(template_path, data=None):
+    with open(template_path) as f:
+        template_data = f.read()
+        template = Template(template_data)
+        context = Context(data)
+        render = template.render(context)
+    return render
 
 
 ###############################################################################
@@ -157,6 +246,13 @@ class Lesson(models.Model):
     # Activate/Deactivate Lesson
     active = models.BooleanField(default=True)
 
+    # A video file
+    video_file = models.FileField(
+        upload_to=get_file_dir, default=None,
+        null=True, blank=True,
+        help_text="Please upload video files in mp4, ogv, webm format"
+        )
+
     def __str__(self):
         return "{0}".format(self.name)
 
@@ -180,11 +276,42 @@ class Lesson(models.Model):
                 lesson_file_obj.file.save(file_name, django_file, save=True)
         return new_lesson
 
+    def remove_file(self):
+        if self.video_file:
+            file_path = self.video_file.path
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+    def _add_lesson_to_zip(self, module, course, zip_file, path):
+        lesson_name = self.name.replace(" ", "_")
+        course_name = course.name.replace(" ", "_")
+        module_name = module.name.replace(" ", "_")
+        sub_folder_name = os.sep.join((
+            course_name, module_name, lesson_name
+            ))
+        lesson_files = self.get_files()
+        if self.video_file:
+            video_file = os.sep.join((sub_folder_name, os.path.basename(
+                        self.video_file.name)))
+            zip_file.writestr(video_file, self.video_file.read())
+        for lesson_file in lesson_files:
+            if os.path.exists(lesson_file.file.path):
+                filename = os.sep.join((sub_folder_name, os.path.basename(
+                    lesson_file.file.name)))
+                zip_file.writestr(filename, lesson_file.file.read())
+        unit_file_path = os.sep.join((
+            path, "templates", "yaksh", "unit.html"
+            ))
+        lesson_data = {"course": course, "module": module,
+                       "lesson": self, "lesson_files": lesson_files}
+        write_templates_to_zip(zip_file, unit_file_path, lesson_data,
+                               lesson_name, sub_folder_name)
+
 
 #############################################################################
 class LessonFile(models.Model):
     lesson = models.ForeignKey(Lesson, related_name="lesson")
-    file = models.FileField(upload_to=get_file_dir)
+    file = models.FileField(upload_to=get_file_dir, default=None)
 
     def remove(self):
         if os.path.exists(self.file.path):
@@ -489,6 +616,10 @@ class LearningModule(models.Model):
         return [unit.quiz for unit in self.learning_unit.filter(
                 type="quiz")]
 
+    def get_lesson_units(self):
+        return [unit.lesson for unit in self.learning_unit.filter(
+                type="lesson").order_by("order")]
+
     def get_learning_units(self):
         return self.learning_unit.order_by("order")
 
@@ -576,6 +707,20 @@ class LearningModule(models.Model):
             new_unit = unit._create_unit_copy(user)
             new_module.learning_unit.add(new_unit)
         return new_module
+
+    def _add_module_to_zip(self, course, zip_file, path):
+        module_name = self.name.replace(" ", "_")
+        course_name = course.name.replace(" ", "_")
+        folder_name = os.sep.join((course_name, module_name))
+        lessons = self.get_lesson_units()
+        for lesson in lessons:
+            lesson._add_lesson_to_zip(self, course, zip_file, path)
+        module_file_path = os.sep.join((
+            path, "templates", "yaksh", "module.html"
+            ))
+        module_data = {"course": course, "module": self, "lessons": lessons}
+        write_templates_to_zip(zip_file, module_file_path, module_data,
+                               module_name, folder_name)
 
     def __str__(self):
         return self.name
@@ -708,16 +853,28 @@ class Course(models.Model):
             demo_que_ppr = QuestionPaper()
             demo_que_ppr.create_demo_quiz_ppr(demo_quiz, user)
             success = True
+            file_path = os.sep.join(
+                (os.path.dirname(__file__), "templates", "yaksh",
+                 "demo_video.html")
+                )
+            rendered_text = render_template(file_path)
+            lesson_data = "Demo Lesson\n{0}".format(rendered_text)
             demo_lesson = Lesson.objects.create(
-                name="Demo lesson", description="demo lesson",
-                html_data="demo lesson", creator=user)
+                name="Demo Lesson", description=lesson_data,
+                html_data=lesson_data, creator=user
+                )
             quiz_unit = LearningUnit.objects.create(
-                order=1, type="quiz", quiz=demo_quiz)
+                order=1, type="quiz", quiz=demo_quiz, check_prerequisite=False
+                )
             lesson_unit = LearningUnit.objects.create(
-                order=2, type="lesson", lesson=demo_lesson)
+                order=2, type="lesson", lesson=demo_lesson,
+                check_prerequisite=False
+                )
             learning_module = LearningModule.objects.create(
-                name="demo module", description="demo module", creator=user,
-                html_data="demo module")
+                name="Demo Module", description="<center>Demo Module</center>",
+                creator=user, html_data="<center>Demo Module</center>",
+                check_prerequisite=False
+                )
             learning_module.learning_unit.add(quiz_unit)
             learning_module.learning_unit.add(lesson_unit)
             course.learning_module.add(learning_module)
@@ -817,6 +974,33 @@ class Course(models.Model):
             percentage = 0
         return percentage
 
+    def is_student(self, user):
+        return user in self.students.all()
+
+    def create_zip(self, path, static_files):
+        zip_file_name = string_io()
+        with zipfile.ZipFile(zip_file_name, "a") as zip_file:
+            course_name = self.name.replace(" ", "_")
+            modules = self.get_learning_modules()
+            file_path = os.sep.join((path, "templates", "yaksh", "index.html"))
+            write_static_files_to_zip(zip_file, course_name, path,
+                                      static_files)
+            course_data = {"course": self, "modules": modules}
+            write_templates_to_zip(zip_file, file_path, course_data,
+                                   "index", course_name)
+            for module in modules:
+                module._add_module_to_zip(self, zip_file, path)
+        return zip_file_name
+
+    def has_lessons(self):
+        modules = self.get_learning_modules()
+        status = False
+        for module in modules:
+            if module.get_lesson_units():
+                status = True
+                break
+        return status
+
     def __str__(self):
         return self.name
 
@@ -889,6 +1073,7 @@ class Profile(models.Model):
     institute = models.CharField(max_length=128)
     department = models.CharField(max_length=64)
     position = models.CharField(max_length=64)
+    is_moderator = models.BooleanField(default=False)
     timezone = models.CharField(
         max_length=64,
         default=pytz.utc.zone,
@@ -906,6 +1091,20 @@ class Profile(models.Model):
             os.makedirs(user_dir)
             os.chmod(user_dir, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         return user_dir
+
+    def _toggle_moderator_group(self, group_name):
+        group = Group.objects.get(name=group_name)
+        if self.is_moderator:
+            self.user.groups.add(group)
+        else:
+            self.user.groups.remove(group)
+
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            old_profile = Profile.objects.get(pk=self.pk)
+            if old_profile.is_moderator != self.is_moderator:
+                self._toggle_moderator_group(group_name=MOD_GROUP_NAME)
+        super(Profile, self).save(*args, **kwargs)
 
     def __str__(self):
         return '%s' % (self.user.get_full_name())
@@ -1018,7 +1217,7 @@ class Question(models.Model):
                 tags = question.pop('tags') if 'tags' in question else None
                 test_cases = question.pop('testcase')
                 que, result = Question.objects.get_or_create(**question)
-                if file_names:
+                if file_names and file_path:
                     que._add_files_to_db(file_names, file_path)
                 if tags:
                     que.tags.add(*tags)
@@ -1087,13 +1286,18 @@ class Question(models.Model):
         files = FileUpload.objects.filter(question=self)
         files_list = []
         for f in files:
-            zip_file.write(f.file.path, (os.path.basename(f.file.path)))
+            zip_file.write(f.file.path, os.path.join("additional_files",
+                                                     os.path.basename(
+                                                        f.file.path
+                                                        )
+                                                     )
+                           )
             files_list.append(((os.path.basename(f.file.path)), f.extract))
         return files_list
 
     def _add_files_to_db(self, file_names, path):
         for file_name, extract in file_names:
-            q_file = os.path.join(path, file_name)
+            q_file = glob.glob(os.path.join(path, "**", file_name))[0]
             if os.path.exists(q_file):
                 que_file = open(q_file, 'rb')
                 # Converting to Python file object with
@@ -1128,16 +1332,17 @@ class Question(models.Model):
         shutil.rmtree(tmp_file_path)
 
     def read_yaml(self, file_path, user, files=None):
-        yaml_file = os.path.join(file_path, "questions_dump.yaml")
-        msg = ""
-        if os.path.exists(yaml_file):
-            with open(yaml_file, 'r') as q_file:
-                questions_list = q_file.read()
-                msg = self.load_questions(questions_list, user,
-                                          file_path, files
-                                          )
-        else:
-            msg = "Please upload zip file with questions_dump.yaml in it."
+        msg = "Failed to upload Questions"
+        for ext in ["yaml", "yml"]:
+            for yaml_file in glob.glob(os.path.join(file_path,
+                                                    "*.{0}".format(ext)
+                                                    )):
+                if os.path.exists(yaml_file):
+                    with open(yaml_file, 'r') as q_file:
+                        questions_list = q_file.read()
+                        msg = self.load_questions(questions_list, user,
+                                                  file_path, files
+                                                  )
 
         if files:
             delete_files(files, file_path)
@@ -1358,9 +1563,12 @@ class QuestionPaper(models.Model):
                     random.shuffle(testcases)
                     testcases_ids = ",".join([str(tc.id) for tc in testcases]
                                              )
-                    TestCaseOrder.objects.create(
-                        answer_paper=ans_paper, question=question,
-                        order=testcases_ids)
+                    if not TestCaseOrder.objects.filter(
+                         answer_paper=ans_paper, question=question
+                         ).exists():
+                        TestCaseOrder.objects.create(
+                            answer_paper=ans_paper, question=question,
+                            order=testcases_ids)
 
             ans_paper.questions_order = ",".join(question_ids)
             ans_paper.save()
@@ -1398,9 +1606,11 @@ class QuestionPaper(models.Model):
         question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
                                                       shuffle_questions=False
                                                       )
-        summaries = ['Roots of quadratic equation', 'Print Output',
+        summaries = ['Find the value of n', 'Print Output in Python2.x',
                      'Adding decimals', 'For Loop over String',
-                     'Hello World in File', 'Extract columns from files',
+                     'Hello World in File',
+                     'Arrange code to convert km to miles',
+                     'Print Hello, World!', "Square of two numbers",
                      'Check Palindrome', 'Add 3 numbers', 'Reverse a string'
                      ]
         questions = Question.objects.filter(active=True,
@@ -2198,6 +2408,5 @@ class TestCaseOrder(models.Model):
 
     # Order of the test case for a question.
     order = models.TextField()
-
 
 ##############################################################################

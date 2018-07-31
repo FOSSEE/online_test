@@ -113,13 +113,12 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
+        errors = result.get('error')
 
         # Then
         self.assertFalse(result.get('success'))
-        lines_of_error = len(result.get('error')[0].splitlines())
-        self.assertFalse(result.get('success'))
-        self.assert_correct_output("Incorrect", result.get('error'))
-        self.assertTrue(lines_of_error > 1)
+        for error in errors:
+            self.assertEqual(error.get('exception'), 'AssertionError')
 
     def test_error(self):
         # Given
@@ -136,10 +135,11 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-
+        errors = result.get('error')
         # Then
         self.assertFalse(result.get("success"))
-        self.assert_correct_output("Error", result.get("error"))
+        for error in errors:
+            self.assertEqual(error.get('exception'), 'CompilationError')
 
     def test_infinite_loop(self):
         # Given
@@ -290,13 +290,12 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
+        errors = result.get('error')
 
         # Then
-        err = result.get('error')[0]
-        lines_of_error = len(err.splitlines())
         self.assertFalse(result.get('success'))
-        self.assertTrue(lines_of_error > 1)
-        self.assertIn("Test case Error", err)
+        for error in errors:
+            self.assertEqual(error.get('exception'), 'TestCaseError')
 
 
 class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
@@ -432,10 +431,12 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
+        errors = result.get('error')
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertTrue("Compilation Error" in '\n'.join(result.get("error")))
+        for error in errors:
+            self.assertEqual(error.get('exception'), 'CompilationError')
 
     def test_infinite_loop(self):
         # Given

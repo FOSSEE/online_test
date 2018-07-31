@@ -59,19 +59,11 @@ You can install Yaksh as a project or an app.
 
           $ cd ./online_test
 
-   -  Install the dependencies
+   -  Install the dependencies for local setup
 
-      -  For Python 2 use:
+        ::
 
-         ::
-
-             $ pip install -r ./requirements/requirements-py2.txt
-
-      -  For Python 3 (recommended) use:
-
-         ::
-
-             $ pip install -r ./requirements/requirements-py3.txt
+            $ pip install -r ./requirements/requirements-common.txt
 
 Short instructions
 ^^^^^^^^^^^^^^^^^^

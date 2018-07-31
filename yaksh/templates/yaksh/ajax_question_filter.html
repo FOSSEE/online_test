@@ -1,16 +1,49 @@
 <div id="questions">
+    <script>
+    $(document).ready(function(){
+    $("#checkall").change(function(){
+            if($(this).prop("checked")) {
+                    $("#filtered-questions input:checkbox").each(function(index, element) {
+                    $(this).prop('checked', true);
+                    });
+            }
+            else {
+                    $("#filtered-questions input:checkbox").each(function(index, element) {
+                    $(this).prop('checked', false);
+                    });
+            }
+        });
+    });
+    </script>
     {% if questions %}
-    <h5 class="highlight"><input type="checkbox" id="checkall" class="ignore"> Select All </h5>
+        <h5 class="highlight"><input type="checkbox" id="checkall">
+            Select All
+        </h5>
+        <ul class="inputs-list">
+            <table id="questions-table" class="tablesorter table table table-striped">
+            <thead>
+            <tr>
+            <th> Select </th>
+            <th> Summary </th>
+            <th> Language </th>
+            <th> Type </th>
+            <th> Marks </th>
+            </tr>
+            </thead>
+            <tbody>
+           {% for question in questions %}
+                <tr>
+                <td>
+                <input type="checkbox" name="question" value="{{ question.id }}">
+                </td>
+                <td><a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{question.summary|capfirst}}</a></td>
+                <td>{{question.language|capfirst}}</td>
+                <td>{{question.type|capfirst}}</td>
+                <td>{{question.points}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        </ul>
     {% endif %}
-    <ul class="inputs-list">
-
-       {% for question in questions %}
-            <li>
-                <label>
-                    <input type="checkbox" name="question" data-qid="{{question.id}}" value=
-                    "{{question.id}}">&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{ question }}</a><br>
-                </label>
-             </li>
-        {% endfor %}
-    </ul>
 </div>

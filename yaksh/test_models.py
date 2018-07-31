@@ -1,8 +1,10 @@
 import unittest
+from django.contrib.auth.models import Group
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
-    LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus
+    LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
+    TestCaseOrder, create_group
 from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
@@ -23,7 +25,9 @@ from yaksh import code_server_settings as server_settings
 
 
 def setUpModule():
-    # create user.yaksh_profile
+    mod_group = Group.objects.create(name='moderator')
+
+    # create user profile
     user = User.objects.create_user(username='creator',
                                     password='demo',
                                     email='demo@test.com')
@@ -110,7 +114,16 @@ def tearDownModule():
     LearningUnit.objects.all().delete()
     LearningModule.objects.all().delete()
     AnswerPaper.objects.all().delete()
+    Group.objects.all().delete()
 
+
+###############################################################################
+class GlobalMethodsTestCases(unittest.TestCase):
+    def test_create_group_when_group_exists(self):
+        self.assertEqual(
+            create_group('moderator', 'yaksh'),
+            Group.objects.get(name='moderator')
+        )
 
 ###############################################################################
 class LessonTestCases(unittest.TestCase):
@@ -434,7 +447,9 @@ class QuestionTestCases(unittest.TestCase):
     def test_load_questions_with_all_fields(self):
         """ Test load questions into database from Yaml """
         question = Question()
-        question.load_questions(self.yaml_questions_data, self.user1)
+        question.load_questions(self.yaml_questions_data, self.user1,
+                                self.load_tmp_path
+                                )
         question_data = Question.objects.get(summary="Yaml Demo")
         file = FileUpload.objects.get(question=question_data)
         test_case = question_data.get_test_cases()

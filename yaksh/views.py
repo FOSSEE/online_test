@@ -30,7 +30,8 @@ from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, Profile,
     QuestionPaper, QuestionSet, Quiz, Question, TestCase, User,
-    Lesson, LessonFile, LearningUnit, LearningModule, CourseStatus
+    MOD_GROUP_NAME, Lesson, LessonFile, LearningUnit, LearningModule,
+    CourseStatus
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -62,18 +63,27 @@ def my_render_to_response(request, template, context=None, **kwargs):
     return render(request, template, context, **kwargs)
 
 
-def is_moderator(user):
+def is_moderator(user, group_name=MOD_GROUP_NAME):
     """Check if the user is having moderator rights"""
-    if user.groups.filter(name='moderator').exists():
-        return True
+    try:
+        group = Group.objects.get(name=group_name)
+        return user.yaksh_profile.is_moderator and user in group.user_set.all()
+    except Profile.DoesNotExist:
+        return False
+    except Group.DoesNotExist:
+        return False
 
 
-def add_to_group(users):
+def add_as_moderator(users, group_name=MOD_GROUP_NAME):
     """ add users to moderator group """
-    group = Group.objects.get(name="moderator")
+    try:
+        group = Group.objects.get(name=group_name)
+    except Group.DoesNotExist:
+        raise Http404('The Group {0} does not exist.'.format(group_name))
     for user in users:
         if not is_moderator(user):
-            user.groups.add(group)
+            user.yaksh_profile.is_moderator = True
+            user.yaksh_profile.save()
 
 
 CSV_FIELDS = ['name', 'username', 'roll_number', 'institute', 'department',
@@ -162,8 +172,10 @@ def quizlist_user(request, enrolled=None, msg=None):
         )
         title = 'All Courses'
 
-    context = {'user': user, 'courses': courses, 'title': title,
-               'msg': msg}
+    context = {
+        'user': user, 'courses': courses,
+        'title': title, 'msg': msg
+    }
 
     return my_render_to_response(request, "yaksh/quizzes_user.html", context)
 
@@ -1231,16 +1243,15 @@ def ajax_questions_filter(request):
     question_type = request.POST.get('question_type')
     marks = request.POST.get('marks')
     language = request.POST.get('language')
-
-    if question_type != "select":
+    if question_type:
         filter_dict['type'] = str(question_type)
 
-    if marks != "select":
+    if marks:
         filter_dict['points'] = marks
 
-    if language != "select":
+    if language:
         filter_dict['language'] = str(language)
-    questions = list(Question.objects.filter(**filter_dict))
+    questions = Question.objects.filter(**filter_dict)
 
     return my_render_to_response(
         request, 'yaksh/ajax_question_filter.html', {'questions': questions}
@@ -1266,11 +1277,19 @@ def _remove_already_present(questionpaper_id, questions):
         return questions
     questionpaper = QuestionPaper.objects.get(pk=questionpaper_id)
     questions = questions.exclude(
-            id__in=questionpaper.fixed_questions.values_list('id', flat=True))
+        id__in=questionpaper.fixed_questions.values_list('id', flat=True))
     for random_set in questionpaper.random_questions.all():
         questions = questions.exclude(
-                id__in=random_set.questions.values_list('id', flat=True))
+            id__in=random_set.questions.values_list('id', flat=True))
     return questions
+
+
+def _get_questions_from_tags(question_tags, user):
+    search_tags = []
+    for tags in question_tags:
+        search_tags.extend(re.split('[; |, |\*|\n]', tags))
+    return Question.objects.filter(tags__name__in=search_tags,
+                                   user=user).distinct()
 
 
 @login_required
@@ -1278,7 +1297,9 @@ def _remove_already_present(questionpaper_id, questions):
 def design_questionpaper(request, quiz_id, questionpaper_id=None,
                          course_id=None):
     user = request.user
-
+    que_tags = Question.objects.filter(
+        active=True, user=user).values_list('tags', flat=True).distinct()
+    all_tags = Tag.objects.filter(id__in=que_tags)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     if quiz_id:
@@ -1308,18 +1329,24 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
         question_type = request.POST.get('question_type', None)
         marks = request.POST.get('marks', None)
         state = request.POST.get('is_active', None)
+        tags = request.POST.get('question_tags', None)
         if 'add-fixed' in request.POST:
             question_ids = request.POST.get('checked_ques', None)
-            if question_paper.fixed_question_order:
-                ques_order = question_paper.fixed_question_order.split(",") +\
-                            question_ids.split(",")
-                questions_order = ",".join(ques_order)
-            else:
-                questions_order = question_ids
-            questions = Question.objects.filter(id__in=question_ids.split(','))
-            question_paper.fixed_question_order = questions_order
-            question_paper.save()
-            question_paper.fixed_questions.add(*questions)
+            if question_ids:
+                if question_paper.fixed_question_order:
+                    ques_order = (
+                        question_paper.fixed_question_order.split(",") +
+                        question_ids.split(",")
+                    )
+                    questions_order = ",".join(ques_order)
+                else:
+                    questions_order = question_ids
+                questions = Question.objects.filter(
+                    id__in=question_ids.split(',')
+                )
+                question_paper.fixed_question_order = questions_order
+                question_paper.save()
+                question_paper.fixed_questions.add(*questions)
 
         if 'remove-fixed' in request.POST:
             question_ids = request.POST.getlist('added-questions', None)
@@ -1355,6 +1382,11 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
 
         if marks:
             questions = _get_questions(user, question_type, marks)
+        elif tags:
+            que_tags = request.POST.getlist('question_tags', None)
+            questions = _get_questions_from_tags(que_tags, user)
+
+        if questions:
             questions = _remove_already_present(questionpaper_id, questions)
 
         question_paper.update_total_marks()
@@ -1369,7 +1401,8 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
         'fixed_questions': fixed_questions,
         'state': state,
         'random_sets': random_sets,
-        'course_id': course_id
+        'course_id': course_id,
+        'all_tags': all_tags
     }
     return my_render_to_response(
         request, 'yaksh/design_questionpaper.html', context
@@ -1412,12 +1445,15 @@ def show_all_questions(request):
             form = UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
                 questions_file = request.FILES['file']
-                file_name = questions_file.name.split('.')
-                if file_name[-1] == "zip":
-                    ques = Question()
+                file_extension = questions_file.name.split('.')[-1]
+                ques = Question()
+                if file_extension == "zip":
                     files, extract_path = extract_files(questions_file)
                     context['message'] = ques.read_yaml(extract_path, user,
                                                         files)
+                elif file_extension in ["yaml", "yml"]:
+                    questions = questions_file.read()
+                    context['message'] = ques.load_questions(questions, user)
                 else:
                     message = "Please Upload a ZIP file"
                     context['message'] = message
@@ -1452,11 +1488,7 @@ def show_all_questions(request):
 
         if request.POST.get('question_tags'):
             question_tags = request.POST.getlist("question_tags")
-            search_tags = []
-            for tags in question_tags:
-                search_tags.extend(re.split('[; |, |\*|\n]', tags))
-            search_result = Question.objects.filter(tags__name__in=search_tags,
-                                                    user=user).distinct()
+            search_result = _get_questions_from_tags(question_tags, user)
             context['questions'] = search_result
 
     return my_render_to_response(request, 'yaksh/showquestions.html', context)
@@ -1736,6 +1768,29 @@ def search_teacher(request, course_id):
 
 @login_required
 @email_verified
+def toggle_moderator_role(request):
+    """ Allow moderator to switch to student and back """
+
+    user = request.user
+
+    try:
+        group = Group.objects.get(name='moderator')
+    except Group.DoesNotExist:
+        raise Http404('The Moderator group does not exist')
+
+    if not user.yaksh_profile.is_moderator:
+        raise Http404('You are not allowed to view this page!')
+
+    if user not in group.user_set.all():
+        group.user_set.add(user)
+    else:
+        group.user_set.remove(user)
+
+    return my_redirect('/exam/')
+
+
+@login_required
+@email_verified
 def add_teacher(request, course_id):
     """ add teachers to the course """
 
@@ -1754,7 +1809,7 @@ def add_teacher(request, course_id):
     if request.method == 'POST':
         teacher_ids = request.POST.getlist('check')
         teachers = User.objects.filter(id__in=teacher_ids)
-        add_to_group(teachers)
+        add_as_moderator(teachers)
         course.add_teachers(*teachers)
         context['status'] = True
         context['teachers_added'] = teachers
@@ -2298,9 +2353,16 @@ def edit_lesson(request, lesson_id=None, course_id=None):
     context = {}
     if request.method == "POST":
         if "Save" in request.POST:
-            lesson_form = LessonForm(request.POST, instance=lesson)
+            lesson_form = LessonForm(request.POST, request.FILES,
+                                     instance=lesson)
             lesson_file_form = LessonFileForm(request.POST, request.FILES)
             lessonfiles = request.FILES.getlist('Lesson_files')
+            clear = request.POST.get("video_file-clear")
+            video_file = request.FILES.get("video_file")
+            if (clear or video_file) and lesson:
+                # Remove previous video file if new file is uploaded or
+                # if clear is selected
+                lesson.remove_file()
             if lesson_form.is_valid():
                 if lesson is None:
                     lesson_form.instance.creator = user
@@ -2315,6 +2377,7 @@ def edit_lesson(request, lesson_id=None, course_id=None):
                 return my_redirect(redirect_url)
             else:
                 context['lesson_form'] = lesson_form
+                context['error'] = lesson_form["video_file"].errors
                 context['lesson_file_form'] = lesson_file_form
 
         if 'Delete' in request.POST:
@@ -2809,3 +2872,34 @@ def get_user_data(request, course_id, student_id):
         context = Context(data)
         data = template.render(context)
     return HttpResponse(json.dumps({"user_data": data}), **response_kwargs)
+
+
+@login_required
+@email_verified
+def download_course(request, course_id):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    if (not course.is_creator(user) and not course.is_teacher(user) and not
+            course.is_student(user)):
+        raise Http404("You are not allowed to download {0} course".format(
+            course.name))
+    if not course.has_lessons():
+        raise Http404("{0} course does not have any lessons".format(
+            course.name))
+    current_dir = os.path.dirname(__file__)
+    course_name = course.name.replace(" ", "_")
+
+    # Static files required for styling in html template
+    static_files = {"js": ["bootstrap.js", "bootstrap.min.js",
+                           "jquery-1.9.1.min.js", "video.js"],
+                    "css": ["bootstrap.css", "bootstrap.min.css",
+                            "video-js.css", "offline.css"],
+                    "images": ["yaksh_banner.png"]}
+    zip_file = course.create_zip(current_dir, static_files)
+    zip_file.seek(0)
+    response = HttpResponse(content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename={0}.zip'.format(
+                                            course_name
+                                            )
+    response.write(zip_file.read())
+    return response

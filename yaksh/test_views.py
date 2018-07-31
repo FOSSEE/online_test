@@ -14,6 +14,7 @@ from django.contrib.auth import authenticate
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test import Client
+from django.http import Http404
 from django.utils import timezone
 from django.core import mail
 from yaksh import settings
@@ -24,17 +25,20 @@ from yaksh.models import (
     User, Profile, Question, Quiz, QuestionPaper, AnswerPaper, Answer, Course,
     AssignmentUpload, McqTestCase, IntegerTestCase, StringTestCase,
     FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,
-    LessonFile, CourseStatus
+    LessonFile, CourseStatus, dict_to_yaml
 )
+from yaksh.views import add_as_moderator
 from yaksh.decorators import user_has_profile
 
 
 class TestUserRegistration(TestCase):
     def setUp(self):
         self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
 
     def tearDown(self):
         self.registered_user.delete()
+        self.mod_group.delete()
 
     def test_register_user_post(self):
         self.client.post(
@@ -64,6 +68,7 @@ class TestUserRegistration(TestCase):
 class TestProfile(TestCase):
     def setUp(self):
         self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
 
         # Create User without profile
         self.user1_plaintext_pass = 'demo1'
@@ -96,6 +101,7 @@ class TestProfile(TestCase):
         self.client.logout()
         self.user1.delete()
         self.user2.delete()
+        self.mod_group.delete()
 
     def test_user_has_profile_for_user_without_profile(self):
         """
@@ -303,6 +309,7 @@ class TestProfile(TestCase):
 class TestStudentDashboard(TestCase):
     def setUp(self):
         self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
 
         # student
         self.student_plaintext_pass = 'student'
@@ -366,6 +373,7 @@ class TestStudentDashboard(TestCase):
         self.client.logout()
         self.user.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_student_dashboard_denies_anonymous_user(self):
         """
@@ -468,7 +476,7 @@ class TestMonitor(TestCase):
             password=self.user_plaintext_pass,
             first_name='first_name',
             last_name='last_name',
-            email='demo@test.com'
+            email='demo@test.com',
         )
 
         Profile.objects.create(
@@ -477,7 +485,8 @@ class TestMonitor(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -562,6 +571,7 @@ class TestMonitor(TestCase):
         self.new_answer.delete()
         self.learning_module.delete()
         self.learning_unit.delete()
+        self.mod_group.delete()
 
     def test_monitor_denies_student(self):
         """
@@ -662,7 +672,8 @@ class TestGradeUser(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -878,7 +889,8 @@ class TestDownloadAssignment(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group
@@ -958,6 +970,7 @@ class TestDownloadAssignment(TestCase):
         self.course.delete()
         self.learning_module.delete()
         self.learning_unit.delete()
+        self.mod_group.delete()
         dir_name = self.quiz.description.replace(" ", "_")
         file_path = os.sep.join((settings.YAKSH_MEDIA_ROOT, dir_name))
         if os.path.exists(file_path):
@@ -1053,7 +1066,8 @@ class TestAddQuiz(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -1097,6 +1111,7 @@ class TestAddQuiz(TestCase):
         self.quiz.delete()
         self.exercise.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_add_quiz_denies_anonymous(self):
         """
@@ -1332,12 +1347,66 @@ class TestAddQuiz(TestCase):
         self.assertTemplateUsed(response, "yaksh/courses.html")
 
 
-class TestAddTeacher(TestCase):
+class TestAddAsModerator(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
+        )
+
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user
+        )
+
+        self.mod_group.delete()
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+
+    def test_add_as_moderator_group_does_not_exist(self):
+        """
+        If group does not exist return 404
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        response = self.client.get(
+            reverse('yaksh:add_teacher',
+                    kwargs={'course_id': self.course.id}
+                    ),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 404)
+        with self.assertRaises(Http404):
+            add_as_moderator(self.user, 'moderator')
+
+
+class TestToggleModerator(TestCase):
     def setUp(self):
         self.client = Client()
 
         self.mod_group = Group.objects.create(name='moderator')
-        tzone = pytz.timezone('UTC')
 
         # Create Moderator with profile
         self.user_plaintext_pass = 'demo'
@@ -1355,7 +1424,102 @@ class TestAddTeacher(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
+        )
+
+        # Create Student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Student',
+            timezone='UTC',
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user
+            )
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.student.delete()
+        self.course.delete()
+        self.mod_group.delete()
+
+    def test_toggle_for_moderator(self):
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:toggle_moderator')
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEquals(self.user.groups.all().count(), 0)
+
+    def test_toggle_for_student(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:toggle_moderator')
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+
+class TestAddTeacher(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
+
+        # Create User with no profile
+        self.user_no_profile_plaintext_pass = 'demo_no_profile'
+        self.user_no_profile = User.objects.create_user(
+            username='demo_user_no_profile',
+            password=self.user_no_profile_plaintext_pass,
+            first_name='first_name_no_profile',
+            last_name='last_name_no_profile',
+            email='demo_no_profile@test.com'
+        )
+
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='demo_user',
+            password=self.user_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -1401,6 +1565,24 @@ class TestAddTeacher(TestCase):
         self.quiz.delete()
         self.pre_req_quiz.delete()
         self.course.delete()
+        self.mod_group.delete()
+
+    def test_add_teacher_denies_no_profile(self):
+        """
+        If not moderator redirect to login page
+        """
+        self.client.login(
+            username=self.user_no_profile.username,
+            password=self.user_no_profile_plaintext_pass
+        )
+
+        response = self.client.get(
+            reverse('yaksh:add_teacher',
+                    kwargs={'course_id': self.course.id}
+                    ),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_add_teacher_denies_anonymous(self):
         """
@@ -1566,6 +1748,7 @@ class TestRemoveTeacher(TestCase):
         self.quiz.delete()
         self.pre_req_quiz.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_remove_teacher_denies_anonymous(self):
         """
@@ -1669,7 +1852,8 @@ class TestCourses(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -1687,7 +1871,8 @@ class TestCourses(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -1717,6 +1902,16 @@ class TestCourses(TestCase):
             email='demo_teacher@test.com'
         )
 
+        Profile.objects.create(
+            user=self.teacher,
+            roll_number=10,
+            institute='IIT',
+            department='Aeronautical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
+        )
+
         # Add to moderator group
         self.mod_group.user_set.add(self.user1)
         self.mod_group.user_set.add(self.user2)
@@ -1744,6 +1939,10 @@ class TestCourses(TestCase):
         self.lesson = Lesson.objects.create(
             name="demo lesson", description="test description",
             creator=self.user1)
+        lesson_file = SimpleUploadedFile("file1.mp4", b"Test")
+        django_file = File(lesson_file)
+        self.lesson.video_file.save(lesson_file.name, django_file,
+                                    save=True)
 
         self.lesson_unit = LearningUnit.objects.create(
             order=1, type="lesson", lesson=self.lesson)
@@ -1768,6 +1967,7 @@ class TestCourses(TestCase):
         self.user2.delete()
         self.student.delete()
         self.teacher.delete()
+        self.mod_group.delete()
 
     def test_courses_denies_anonymous(self):
         """
@@ -2003,6 +2203,63 @@ class TestCourses(TestCase):
                 os.remove(file_path)
                 shutil.rmtree(os.path.dirname(file_path))
 
+    def test_download_course_offline(self):
+        """ Test to download course with lessons offline"""
+
+        # Student fails to download course if not enrolled in that course
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:download_course',
+                    kwargs={"course_id": self.user1_course.id}),
+            follow=True
+        )
+        self.assertEqual(response.status_code, 404)
+
+        # Teacher/Moderator should be able to download course
+        self.client.login(
+            username=self.teacher.username,
+            password=self.teacher_plaintext_pass
+        )
+
+        # Should not allow to download if the course doesn't have lessons
+        self.user1_course.learning_module.add(self.learning_module)
+        response = self.client.get(
+            reverse('yaksh:download_course',
+                    kwargs={"course_id": self.user1_course.id}),
+            follow=True
+        )
+        self.user1_course.learning_module.remove(self.learning_module)
+        self.assertEqual(response.status_code, 404)
+        lesson_file = SimpleUploadedFile("file1.txt", b"Test")
+        django_file = File(lesson_file)
+        lesson_file_obj = LessonFile()
+        lesson_file_obj.lesson = self.lesson
+        lesson_file_obj.file.save(lesson_file.name, django_file, save=True)
+        self.user1_course.learning_module.add(self.learning_module1)
+        response = self.client.get(
+            reverse('yaksh:download_course',
+                    kwargs={"course_id": self.user1_course.id}),
+            follow=True
+        )
+        course_name = self.user1_course.name.replace(" ", "_")
+        self.assertEqual(response.status_code, 200)
+        zip_file = string_io(response.content)
+        zipped_file = zipfile.ZipFile(zip_file, 'r')
+        self.assertIsNone(zipped_file.testzip())
+        files_in_zip = zipped_file.namelist()
+        module_path = os.path.join(course_name, "demo_module",
+                                   "demo_module.html")
+        lesson_path = os.path.join(course_name, "demo_module", "demo_lesson",
+                                   "demo_lesson.html")
+        self.assertIn(module_path, files_in_zip)
+        self.assertIn(lesson_path, files_in_zip)
+        zip_file.close()
+        zipped_file.close()
+        self.user1_course.learning_module.remove(self.learning_module1)
+
 
 class TestAddCourse(TestCase):
     def setUp(self):
@@ -2027,7 +2284,8 @@ class TestAddCourse(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create a teacher
@@ -2046,7 +2304,8 @@ class TestAddCourse(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -2094,6 +2353,7 @@ class TestAddCourse(TestCase):
         self.quiz.delete()
         self.pre_req_quiz.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_add_course_denies_anonymous(self):
         """
@@ -2206,7 +2466,8 @@ class TestCourseDetail(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -2224,7 +2485,8 @@ class TestCourseDetail(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -2271,6 +2533,7 @@ class TestCourseDetail(TestCase):
         self.user2.delete()
         self.student.delete()
         self.user1_course.delete()
+        self.mod_group.delete()
 
     def test_upload_users_with_correct_csv(self):
         # Given
@@ -2593,7 +2856,8 @@ class TestCourseDetail(TestCase):
                              target_status_code=301)
 
     def test_send_mail_to_course_students(self):
-        """ Check if bulk mail is sent to multiple students enrolled in a course
+        """ Check if bulk mail is sent to multiple students enrolled
+            in a course
         """
         self.client.login(
             username=self.user1.username,
@@ -2791,7 +3055,8 @@ class TestEnrollRequest(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -2809,7 +3074,8 @@ class TestEnrollRequest(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -2837,6 +3103,7 @@ class TestEnrollRequest(TestCase):
         self.user2.delete()
         self.student.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_enroll_request_denies_anonymous(self):
         """
@@ -3060,7 +3327,8 @@ class TestSelfEnroll(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -3078,7 +3346,8 @@ class TestSelfEnroll(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -3106,6 +3375,7 @@ class TestSelfEnroll(TestCase):
         self.user2.delete()
         self.student.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_self_enroll_denies_anonymous(self):
         response = self.client.get(
@@ -3170,7 +3440,8 @@ class TestGrader(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.user2_plaintext_pass = 'demo2'
@@ -3188,7 +3459,8 @@ class TestGrader(TestCase):
             institute='IIT',
             department='Aeronautical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -3237,6 +3509,7 @@ class TestGrader(TestCase):
         Quiz.objects.all().delete()
         QuestionPaper.objects.all().delete()
         AnswerPaper.objects.all().delete()
+        self.mod_group.delete()
 
     def test_grader_denies_anonymous(self):
         # Given
@@ -3386,6 +3659,8 @@ class TestGrader(TestCase):
 
 class TestPasswordReset(TestCase):
     def setUp(self):
+        self.mod_group = Group.objects.create(name='moderator')
+
         # Create User with profile
         self.user1_plaintext_pass = 'demo1'
         self.user1 = User.objects.create_user(
@@ -3407,6 +3682,7 @@ class TestPasswordReset(TestCase):
 
     def tearDown(self):
         self.user1.delete()
+        self.mod_group.delete()
 
     def test_password_reset_post(self):
         """
@@ -3495,7 +3771,8 @@ class TestModeratorDashboard(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         self.mod_no_profile_plaintext_pass = 'demo2'
@@ -3596,6 +3873,7 @@ class TestModeratorDashboard(TestCase):
         self.question_paper.delete()
         self.answerpaper.delete()
         self.new_answer.delete()
+        self.mod_group.delete()
 
     def test_moderator_dashboard_denies_student(self):
         """
@@ -3682,6 +3960,8 @@ class TestUserLogin(TestCase):
     def setUp(self):
         self.client = Client()
 
+        self.mod_group = Group.objects.create(name='moderator')
+
         # Create Moderator with profile
         self.user1_plaintext_pass = 'demo1'
         self.user1 = User.objects.create_user(
@@ -3705,6 +3985,7 @@ class TestUserLogin(TestCase):
         self.client.logout()
         settings.IS_DEVELOPMENT = True
         self.user1.delete()
+        self.mod_group.delete()
 
     def test_successful_user_login(self):
         """
@@ -3743,7 +4024,7 @@ class TestUserLogin(TestCase):
         self.assertTemplateUsed(response, "yaksh/activation_status.html")
 
 
-class TestDownloadcsv(TestCase):
+class TestDownloadCsv(TestCase):
     def setUp(self):
         self.client = Client()
         tzone = pytz.timezone("utc")
@@ -3783,7 +4064,8 @@ class TestDownloadcsv(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
         self.mod_group.user_set.add(self.user)
         self.course = Course.objects.create(
@@ -3837,6 +4119,7 @@ class TestDownloadcsv(TestCase):
         self.student.delete()
         self.quiz.delete()
         self.course.delete()
+        self.mod_group.delete()
 
     def test_download_csv_denies_student(self):
         """
@@ -3978,7 +4261,8 @@ class TestShowQuestions(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
         self.mod_group.user_set.add(self.user)
         self.question = Question.objects.create(
@@ -3991,6 +4275,43 @@ class TestShowQuestions(TestCase):
             points=1.0, language="python", type="mcq", user=self.user,
             active=True
             )
+        test_case_upload_data = [{"test_case": "assert fact(3)==6",
+                                  "test_case_type": "standardtestcase",
+                                  "test_case_args": "",
+                                  "weight": 1.0
+                                  }]
+        question_data_1 = {"snippet": "def fact()", "active": True,
+                           "points": 1.0,
+                           "description": "factorial of a no",
+                           "language": "Python", "type": "Code",
+                           "testcase": test_case_upload_data,
+                           "summary": "Yaml Demo 2",
+                           "tags": ['yaml_demo']
+                           }
+
+        question_data_2 = {"snippet": "def fact()", "active": True,
+                           "points": 1.0,
+                           "description": "factorial of a no",
+                           "language": "Python", "type": "Code",
+                           "testcase": test_case_upload_data,
+                           "summary": "Yaml Demo 3",
+                           "tags": ['yaml_demo']
+                           }
+        yaml_question_1 = dict_to_yaml(question_data_1)
+        yaml_question_2 = dict_to_yaml(question_data_2)
+        self.yaml_file_1 = SimpleUploadedFile("test1.yaml",
+                                              yaml_question_1.encode("utf-8")
+                                              )
+        self.yaml_file_2 = SimpleUploadedFile("test2.yaml",
+                                              yaml_question_2.encode("utf-8")
+                                              )
+
+    def tearDown(self):
+        self.client.logout()
+        User.objects.all().delete()
+        Profile.objects.all().delete()
+        Question.objects.all().delete()
+        Group.objects.all().delete()
 
     def test_show_questions_denies_student(self):
         """
@@ -4053,7 +4374,7 @@ class TestShowQuestions(TestCase):
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
         self.assertIn("download", response.context['msg'])
 
-    def test_upload_questions(self):
+    def test_upload_zip_questions(self):
         """
             Check for uploading questions zip file
         """
@@ -4071,9 +4392,11 @@ class TestShowQuestions(TestCase):
             data={'file': questions_file,
                   'upload': 'upload'}
             )
-        summaries = ['Roots of quadratic equation', 'Print Output',
+        summaries = ['Find the value of n', 'Print Output in Python2.x',
                      'Adding decimals', 'For Loop over String',
-                     'Hello World in File', 'Extract columns from files',
+                     'Hello World in File',
+                     'Arrange code to convert km to miles',
+                     'Print Hello, World!', "Square of two numbers",
                      'Check Palindrome', 'Add 3 numbers', 'Reverse a string'
                      ]
 
@@ -4082,7 +4405,7 @@ class TestShowQuestions(TestCase):
             user=self.user).count()
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
-        self.assertEqual(uploaded_ques, 9)
+        self.assertEqual(uploaded_ques, 11)
         f.close()
         dummy_file = SimpleUploadedFile("test.txt", b"test")
         response = self.client.post(
@@ -4093,6 +4416,59 @@ class TestShowQuestions(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
         self.assertIn("ZIP file", response.context['message'])
+
+    def test_upload_yaml_questions(self):
+        """
+            Check for uploading questions yaml file
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+
+        response = self.client.post(
+            reverse('yaksh:show_questions'),
+            data={'file': self.yaml_file_1,
+                  'upload': 'upload'}
+            )
+        uploaded_ques = Question.objects.filter(
+            active=True, summary="Yaml Demo 2",
+            user=self.user)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/showquestions.html')
+        self.assertEqual(uploaded_ques.count(), 1)
+        uploaded_ques.delete()
+
+    def test_upload_multiple_yaml_zip_questions(self):
+        """
+            Check for uploading questions zip file with
+            multiple yaml files
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        zipfile_name = string_io()
+        zip_file = zipfile.ZipFile(zipfile_name, "w")
+        zip_file.writestr("test1.yaml", self.yaml_file_1.read())
+        zip_file.writestr("test2.yaml", self.yaml_file_2.read())
+        zip_file.close()
+        zipfile_name.seek(0)
+        questions_file = SimpleUploadedFile("questions.zip",
+                                            zipfile_name.read(),
+                                            content_type="application/zip"
+                                            )
+        response = self.client.post(
+            reverse('yaksh:show_questions'),
+            data={'file': questions_file,
+                  'upload': 'upload'}
+            )
+        uploaded_ques = Question.objects.filter(
+            active=True, summary="Yaml Demo 2",
+            user=self.user).count()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/showquestions.html')
+        self.assertEqual(uploaded_ques, 1)
 
     def test_attempt_questions(self):
         """
@@ -4212,7 +4588,8 @@ class TestShowStatistics(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -4289,6 +4666,7 @@ class TestShowStatistics(TestCase):
         self.question.delete()
         self.question_paper.delete()
         self.new_answer.delete()
+        self.mod_group.delete()
 
     def test_show_statistics_denies_student(self):
         """
@@ -4374,6 +4752,25 @@ class TestQuestionPaper(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
+            timezone='UTC',
+            is_moderator=True
+        )
+
+        self.student_plaintext_pass = 'demo'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Student',
             timezone='UTC'
         )
 
@@ -4410,7 +4807,8 @@ class TestQuestionPaper(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group
@@ -4436,6 +4834,15 @@ class TestQuestionPaper(TestCase):
             duration=30, active=True, instructions="Demo Instructions",
             attempts_allowed=-1, time_between_attempts=0,
             description='demo quiz 2', pass_criteria=40,
+            creator=self.user
+        )
+
+        self.quiz_without_qp = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='quiz without question paper', pass_criteria=40,
             creator=self.user
         )
 
@@ -4521,6 +4928,13 @@ class TestQuestionPaper(TestCase):
         )
         self.float_based_testcase.save()
 
+        # Question with tag
+        self.tagged_que = Question.objects.create(
+            summary="Test_tag_question", description="Test Tag",
+            points=1.0, language="python", type="float", user=self.teacher
+            )
+        self.tagged_que.tags.add("test_tag")
+
         self.questions_list = [self.question_mcq, self.question_mcc,
                                self.question_int, self.question_str,
                                self.question_float]
@@ -4532,6 +4946,13 @@ class TestQuestionPaper(TestCase):
         self.question_paper = QuestionPaper.objects.create(
             quiz=self.quiz,
             total_marks=5.0, fixed_question_order=questions_order
+        )
+        self.fixed_que = Question.objects.create(
+            summary="Test_fixed_question", description="Test Tag",
+            points=1.0, language="python", type="float", user=self.teacher
+            )
+        self.fixed_question_paper = QuestionPaper.objects.create(
+            quiz=self.demo_quiz, total_marks=5.0
         )
         self.question_paper.fixed_questions.add(*self.questions_list)
         self.answerpaper = AnswerPaper.objects.create(
@@ -4558,6 +4979,7 @@ class TestQuestionPaper(TestCase):
         self.question_paper.delete()
         self.learning_module.delete()
         self.learning_unit.delete()
+        self.mod_group.delete()
 
     def test_preview_questionpaper_correct(self):
         self.client.login(
@@ -4887,6 +5309,26 @@ class TestQuestionPaper(TestCase):
                             "questionpaper_id": self.question_paper.id}))
         self.assertEqual(response.status_code, 404)
 
+        # Design question paper for a quiz
+        response = self.client.post(
+            reverse('yaksh:design_questionpaper',
+                    kwargs={"quiz_id": self.quiz_without_qp.id}),
+            data={"marks": "1.0", "question_type": "code"})
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['questions'])
+
+        # Student should not be able to design question paper
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        response = self.client.get(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.demo_quiz.id,
+                            "questionpaper_id": self.question_paper.id}))
+        self.assertEqual(response.status_code, 404)
+
         self.client.login(
             username=self.teacher.username,
             password=self.teacher_plaintext_pass
@@ -4923,6 +5365,18 @@ class TestQuestionPaper(TestCase):
                          self.questions_list)
         self.assertEqual(response.context['qpaper'], self.question_paper)
 
+        # Get questions using tags for question paper
+        search_tag = [tag for tag in self.tagged_que.tags.all()]
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.question_paper.id}),
+            data={"question_tags": search_tag})
+
+        self.assertEqual(response.context["questions"][0], self.tagged_que)
+
+        # Add random questions in question paper
         response = self.client.post(
             reverse('yaksh:designquestionpaper',
                     kwargs={"quiz_id": self.quiz.id,
@@ -4933,12 +5387,98 @@ class TestQuestionPaper(TestCase):
                   'marks': ['1.0'], 'question_type': ['code'],
                   'add-random': ['']}
             )
+
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/design_questionpaper.html')
         random_set = response.context['random_sets'][0]
         added_random_ques = random_set.questions.all()
         self.assertIn(self.random_que1, added_random_ques)
         self.assertIn(self.random_que2, added_random_ques)
+
+        # Check if questions already exists
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.question_paper.id}),
+            data={'marks': ['1.0'], 'question_type': ['code'],
+                  'add-fixed': ['']}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["questions"].count(), 0)
+
+        # Add fixed question in question paper
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.demo_quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.fixed_question_paper.id}),
+            data={'checked_ques': [self.fixed_que.id],
+                  'add-fixed': ''}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
+        self.assertEqual(response.context['fixed_questions'][0],
+                         self.fixed_que)
+
+        # Add one more fixed question in question paper
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.demo_quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.fixed_question_paper.id}),
+            data={'checked_ques': [self.question_float.id],
+                  'add-fixed': ''}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
+        self.assertEqual(response.context['fixed_questions'],
+                         [self.fixed_que, self.question_float])
+
+        # Remove fixed question from question paper
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.demo_quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.fixed_question_paper.id}),
+            data={'added-questions': [self.fixed_que.id],
+                  'remove-fixed': ''}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
+        self.assertEqual(response.context['fixed_questions'],
+                         [self.question_float])
+
+        # Remove one more fixed question from question paper
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.demo_quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.fixed_question_paper.id}),
+            data={'added-questions': [self.question_float.id],
+                  'remove-fixed': ''}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
+        self.assertEqual(response.context['fixed_questions'], [])
+
+        # Remove random questions from question paper
+        random_que_set = self.question_paper.random_questions.all().first()
+        response = self.client.post(
+            reverse('yaksh:designquestionpaper',
+                    kwargs={"quiz_id": self.quiz.id,
+                            "course_id": self.course.id,
+                            "questionpaper_id": self.question_paper.id}),
+            data={'random_sets': random_que_set.id,
+                  'remove-random': ''}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['qpaper'], self.question_paper)
+        self.assertEqual(len(response.context['random_sets']), 0)
 
 
 class TestLearningModule(TestCase):
@@ -4963,7 +5503,8 @@ class TestLearningModule(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create a student
@@ -4983,7 +5524,17 @@ class TestLearningModule(TestCase):
             password=self.teacher_plaintext_pass,
             first_name='first_name',
             last_name='last_name',
-            email='demo@student.com'
+            email='demo@teacher.com',
+        )
+
+        Profile.objects.create(
+            user=self.teacher,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group
@@ -5046,6 +5597,7 @@ class TestLearningModule(TestCase):
         self.course.delete()
         self.learning_unit.delete()
         self.learning_module.delete()
+        self.mod_group.delete()
 
     def test_add_new_module_denies_non_moderator(self):
         self.client.login(
@@ -5344,7 +5896,8 @@ class TestLessons(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create a student
@@ -5357,6 +5910,15 @@ class TestLessons(TestCase):
             email='demo@student.com'
         )
 
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='student',
+            timezone='UTC'
+        )
+
         # Create a teacher to add to the course
         self.teacher_plaintext_pass = 'demo_teacher'
         self.teacher = User.objects.create_user(
@@ -5365,6 +5927,16 @@ class TestLessons(TestCase):
             first_name='first_name',
             last_name='last_name',
             email='demo@student.com'
+        )
+
+        Profile.objects.create(
+            user=self.teacher,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Add to moderator group
@@ -5414,6 +5986,7 @@ class TestLessons(TestCase):
         self.learning_module2.delete()
         self.lesson.delete()
         self.lesson2.delete()
+        self.mod_group.delete()
 
     def test_edit_lesson_denies_non_moderator(self):
         """ Student should not be allowed to edit lesson """
@@ -5436,6 +6009,7 @@ class TestLessons(TestCase):
             password=self.teacher_plaintext_pass
         )
         dummy_file = SimpleUploadedFile("test.txt", b"test")
+        video_file = SimpleUploadedFile("test.mp4", b"test")
         response = self.client.post(
             reverse('yaksh:edit_lesson',
                     kwargs={"lesson_id": self.lesson.id,
@@ -5443,6 +6017,7 @@ class TestLessons(TestCase):
             data={"name": "updated lesson",
                   "description": "updated description",
                   "Lesson_files": dummy_file,
+                  "video_file": video_file,
                   "Save": "Save"}
             )
 
@@ -5454,6 +6029,8 @@ class TestLessons(TestCase):
         self.assertEqual(updated_lesson.creator, self.user)
         self.assertEqual(updated_lesson.html_data,
                          Markdown().convert("updated description"))
+        self.assertEqual(os.path.basename(updated_lesson.video_file.name),
+                         "test.mp4")
         lesson_files = LessonFile.objects.filter(
             lesson=self.lesson).first()
         self.assertIn("test.txt", lesson_files.file.name)
@@ -5472,6 +6049,7 @@ class TestLessons(TestCase):
             lesson=self.lesson).exists()
         self.assertFalse(lesson_file_exists)
         self.assertFalse(os.path.exists(lesson_file_path))
+        updated_lesson.remove_file()
 
     def test_show_lesson(self):
         """ Student should be able to view lessons """

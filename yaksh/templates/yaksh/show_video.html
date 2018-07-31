@@ -125,18 +125,16 @@
     </div>
 </div>
 {% if lesson.get_files %}
-    <div class="panel" style="border-width: 10px;">
-        <center>
-        <div class="alert alert-success">
-            <h4>Files for this lesson</h4>
-        </div>
+    <div class="panel-body" style="border-width: 10px;">
+        <h4><strong>Lesson Files (Click on file to download)
+        </strong></h4>
+        <ul class="list-group">
         {% for f in lesson.get_files %}
-            <h4>
-            <b>{{forloop.counter}}.</b>
-            <a href="{{f.file.url}}">{{ f.file.name|file_title }}</a>
-            </h4><br>
+            <a class="list-group-item" href="{{f.file.url}}">
+                {{ f.file.name|file_title }}
+            </a>
         {% endfor %}
-        </center>
+        </ul>
     </div>
 {% endif %}
 <div style="text-align: center;">

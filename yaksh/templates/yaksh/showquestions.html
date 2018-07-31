@@ -15,13 +15,40 @@
     <div class="col-sm-3 col-md-2 sidebar">
       <ul class="nav nav-sidebar nav-stacked">
       <li class="active"><a href="#show" data-toggle="pill" > Show all Questions</a></li>
-      <li><a href="#updown" data-toggle="pill" > Upload and Download Questions</a></li>
+      <li><a href="#updown" data-toggle="pill" > Upload Questions</a></li>
       </ul>
     </div>
 <div class="tab-content col-md-9 col-md-offset-2 main">
 <!-- Upload Questions -->
+
 <div id="updown" class="tab-pane fade">
-<a class="btn btn-primary" href="{{URL_ROOT}}/exam/manage/courses/download_yaml_template/"> Download Template</a>
+<div class="alert alert-info" role="alert">
+        <p>You can upload question files the following ways -
+          <li><b><u>Yaml File</u></b>
+          <p>One can upload Yaml file with extensions .yaml or .yml. Please note
+            that you cannot upload files associated to a question. Yaml file can
+            have any name.
+          </p>
+          </li>
+          <li><b><u>Zip File</u></b>
+           <p> One can also upload zip with the following zip structure -
+          <pre>
+            .zip
+            |-- .yaml or .yml
+            |-- .yaml or .yml
+            |-- folder1
+            |   |-- Files required by questions
+            |-- folder2
+            |   |-- Files required by questions
+          </pre>
+          </li>
+        </p>
+
+        <p>
+        <b> Click <a class="btn btn-success" href="{{URL_ROOT}}/exam/manage/courses/download_yaml_template/"
+>here</a> to download a sample YAML, edit and upload it</b>
+        </p>
+    </div>
 <br/>
 <h4> Or </h4>
 <form action="" method="post"  enctype="multipart/form-data">

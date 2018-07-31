@@ -118,7 +118,7 @@ class SeleniumTest():
 
         # Correct Answer
         loop_count = 1
-        answer = '\"#!/bin/bash\\ncat $1 | cut -d: -f2 | paste -d: $3 - $2\"'
+        answer = '\"#!/bin/bash\\necho Hello, World!\"'
         self.submit_answer(question_label, answer, loop_count)
 
     def open_quiz(self):
@@ -135,9 +135,9 @@ class SeleniumTest():
         )
         start_exam_elem.click()
 
-        self.test_c_question(question_label=7)
-        self.test_python_question(question_label=5)
-        self.test_bash_question(question_label=4)
+        self.test_c_question(question_label=6)
+        self.test_python_question(question_label=4)
+        self.test_bash_question(question_label=10)
 
     def quit_quiz(self):
         quit_link_elem = WebDriverWait(self.driver, 5).until(
@@ -171,6 +171,7 @@ def wrap_run_load_test(args):
     url = "http://yaksh.fossee.aero.iitb.ac.in/exam/"
     selenium_test = SeleniumTest(url=url, quiz_name=quiz_name)
     return selenium_test.run_load_test(*args)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

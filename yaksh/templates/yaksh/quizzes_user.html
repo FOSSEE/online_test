@@ -7,6 +7,13 @@
             <center>{{ msg }}</center>
         </div>
     {% endif %}
+    {% if user.yaksh_profile.is_moderator %}
+        <div class="row">
+            <a href="{{URL_ROOT}}/exam/toggle_moderator/" class="btn btn-primary pull-right" style="margin-top: 20px; margin-bottom: 20px;">
+              Switch To Moderator
+            </a>
+        </div>
+    {% endif %}
     {% if 'Enrolled Courses' not in title%}
         <div class="row well">
             <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" class="form-search form-horizontal">
@@ -42,6 +49,10 @@ No Courses to display
                 {% if user in course.requests.all %} <span class="label label-warning">Request Pending </span>
                 {% elif user in course.rejected.all %}<span class="label label-danger">Request Rejected</span>
                 {% elif user in course.students.all %}<span class="label label-info">Enrolled</span>
+                {% if course.has_lessons %}&nbsp;&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/download_course/{{course.id}}" data-toggle="tooltip" title="Download course content" class="btn btn-primary">
+                    Download Course
+                </a>
+                {% endif %}
                 {% else %}
                     {% if course.active %}
                         {% if course.is_active_enrollment %}
@@ -57,7 +68,7 @@ No Courses to display
                         {% endif %}
                     {% else %}
                         <span class="label label-danger" style="font-size: 15px">
-                            Course is not activated
+                            Course Closed
                         </span>
                     {% endif %}
                 {% endif %}

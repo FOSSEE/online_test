@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^update_email/$', views.update_email, name="update_email"),
     url(r'^activate/(?P<key>.+)$', views.activate_user, name="activate"),
     url(r'^new_activation/$', views.new_activation, name='new_activation'),
+    url(r'^toggle_moderator/$', views.toggle_moderator_role, name='toggle_moderator'),
     url(r'^quizzes/$', views.quizlist_user, name='quizlist_user'),
     url(r'^quizzes/(?P<enrolled>\w+)/$', views.quizlist_user,
         name='quizlist_user'),
@@ -200,5 +201,9 @@ urlpatterns = [
     url(r'^manage/preview_questionpaper/(?P<questionpaper_id>\d+)/$',
         views.preview_questionpaper, name="preview_questionpaper"),
     url(r'^manage/get_user_status/(?P<course_id>\d+)/(?P<student_id>\d+)/$',
-        views.get_user_data, name="get_user_data")
+        views.get_user_data, name="get_user_data"),
+    url(r'^manage/courses/download_course/(?P<course_id>\d+)/$',
+        views.download_course, name="download_course"),
+    url(r'^download_course/(?P<course_id>\d+)/$',
+        views.download_course, name="download_course"),
 ]
