@@ -14,6 +14,7 @@ def get_version():
     exec(compile(open(fname).read(), fname, 'exec'), data)
     return data.get('__version__')
 
+
 install_requires = [
     'django==1.10',
     'django-taggit==0.18.1',
@@ -39,7 +40,7 @@ setup(
     license='BSD License',
     entry_points={
             'console_scripts': [
-                'yaksh = yaksh.scripts.cli:main',
+                'yaksh = yaksh.code_server:main',
             ],
     },
     description='A django app to conduct online programming tests.',
