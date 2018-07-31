@@ -124,7 +124,7 @@
         {% endfor %}
         </div>
         {% elif question.type == "upload" and has_user_assignment %}
-                <a href="{{URL_ROOT}}/exam/download/user_assignment/{{question.id}}/{{data.user.id}}/{{paper.question_paper.quiz.id}}">
+                <a href="{{URL_ROOT}}/exam/download/user_assignment/{{question.id}}/{{data.user.id}}/{{paper.question_paper.quiz.id}}/{{course_id}}">
                 <div class="well well-sm">
                 <div class="panel">
                 Assignment File for {{ data.user.get_full_name.title }}
