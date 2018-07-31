@@ -5708,7 +5708,7 @@ class TestLearningModule(TestCase):
                     kwargs={"module_id": self.learning_module1.id,
                             "course_id": self.course.id}),
             data={"Add": "Add",
-                  "choosen_list": ",".join([str(self.quiz.id)+":"+"quiz"])
+                  "chosen_list": ",".join([str(self.quiz.id)+":"+"quiz"])
                   })
 
         # Test add learning unit

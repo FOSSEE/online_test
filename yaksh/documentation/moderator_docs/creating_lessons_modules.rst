@@ -68,7 +68,7 @@ Design a Module
 
 	To add a lesson or a quiz to the module select the checkbox beside every lesson or quiz and click **Add to Module** button.
 
-	**Choosen Lesson and quizzes** contains all the lessons and quizzes that are added to a module.
+	**Chosen Lesson and quizzes** contains all the lessons and quizzes that are added to a module.
 
 	A lesson or quiz added to a module becomes a unit. A unit has following parameters to change:
 

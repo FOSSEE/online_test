@@ -16,7 +16,7 @@ $(document).ready(function(){
                 order_list.push($(this).data('item-id')+":"+$(this).val());
             });
         }
-        $(this).append('<input type="hidden" name="choosen_list" value='+checked_vals+'>');
+        $(this).append('<input type="hidden" name="chosen_list" value='+checked_vals+'>');
         $(this).append('<input type="hidden" name="ordered_list" value='+order_list+'>');
         return true;
     });
