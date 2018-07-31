@@ -2451,7 +2451,7 @@ def design_module(request, module_id, course_id=None):
     learning_module = LearningModule.objects.get(id=module_id)
     if request.method == "POST":
         if "Add" in request.POST:
-            add_values = request.POST.get("choosen_list").split(',')
+            add_values = request.POST.get("chosen_list").split(',')
             to_add_list = []
             if add_values:
                 ordered_units = learning_module.get_learning_units()
