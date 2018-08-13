@@ -1,4 +1,11 @@
 
+{% block css%}
+    <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
+{% endblock %}
+{% block script %}
+  <script src="{{ URL_ROOT }}/static/yaksh/js/jquery-ui.js"></script>
+{% endblock %}
+
 {% load custom_filters %}
 {% if error_message %}
 <div class="container-fluid row justify-content-center">
@@ -64,8 +71,8 @@
           </tr>
           {% for expected,user in error.expected_output|zip:error.user_output %}
           <td> {{forloop.counter}} </td>
-          <td>{{expected|default:""}} </td>
-          <td>{{user|default:""}}</td>
+          <td>{{expected|default:""|highlight_spaces|safe}} </td>
+          <td>{{user|default:""|highlight_spaces|safe}}</td>
           {% if forloop.counter0 in error.error_line_numbers or not expected or not user %}
           <td><span class ="fa fa-times text-warning"/></td>
           {% else %}

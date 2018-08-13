@@ -6,10 +6,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.template import Context, Template
 from django.http import Http404
 from django.db.models import Max, Q, F
+from django.db import models
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.forms.models import inlineformset_factory
+from django.forms import fields
 from django.utils import timezone
 from django.core.exceptions import (
     MultipleObjectsReturned, ObjectDoesNotExist
@@ -96,6 +98,12 @@ def get_html_text(md_text):
     """Takes markdown text and converts it to html"""
     return Markdown().convert(md_text)
 
+def formfield_callback(field):
+    if (isinstance(field, models.TextField)
+         and field.name == 'expected_output'
+         or field.name == 'expected_input'):
+        return fields.CharField(strip=False)
+    return field.formfield()
 
 @email_verified
 def index(request, next_url=None):
@@ -243,8 +251,12 @@ def add_question(request, question_id=None):
                 file.toggle_hide_status()
         formsets = []
         for testcase in TestCase.__subclasses__():
-            formset = inlineformset_factory(Question, testcase, extra=0,
-                                            fields='__all__')
+
+            formset = inlineformset_factory(
+                                Question, testcase, extra=0,
+                                fields='__all__',
+                                formfield_callback = formfield_callback
+                                )
             formsets.append(formset(
                 request.POST, request.FILES, instance=question
                 )
