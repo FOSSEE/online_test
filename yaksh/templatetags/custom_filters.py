@@ -97,3 +97,7 @@ def get_questions_by_type(all_questions, question_type):
 @register.simple_tag
 def course_grade(course, user):
     return course.get_grade(user)
+
+@register.filter(name='highlight_spaces')
+def highlight_spaces(text):
+    return text.replace(" ",'<span style="background-color:#ffb6db">&nbsp</span>')
