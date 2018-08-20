@@ -298,7 +298,9 @@ Status : <b style="color: red;"> Failed </b><br/>
         
         <div class="panel-body">
         {% if question.type == "code" %}
-        <pre><code>{{ ans.answer.answer.strip|safe }}</code></pre>
+        {% pygmentise_user_answer question.language ans.answer.answer.strip as user_answer %}
+          <style type="text/css">{{user_answer.1}}</style>
+          <pre><code>{{user_answer.0|safe}}</code></pre>
         {% elif question.type == "mcc"%}
         <div class="well well-sm">
         {% for testcases in question.get_test_cases %}
@@ -327,6 +329,7 @@ Status : <b style="color: red;"> Failed </b><br/>
         {% else %}
          <div class="well well-sm">
         {{ ans.answer.answer.strip|safe }}
+
         </div>
         {% endif %}
         </div>

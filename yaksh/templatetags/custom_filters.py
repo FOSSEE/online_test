@@ -6,6 +6,9 @@ try:
     from itertools import zip_longest
 except ImportError:
     from itertools import izip_longest as zip_longest
+from pygments import highlight
+from pygments.lexers import get_lexer_by_name
+from pygments.formatters import HtmlFormatter
 
 register = template.Library()
 
@@ -87,3 +90,13 @@ def get_answer_for_arrange_options(ans, question):
 @register.filter(name='replace_spaces')
 def replace_spaces(name):
     return name.replace(" ", "_")
+
+@register.simple_tag
+def pygmentise_user_answer(language, answer):
+    lexer = get_lexer_by_name(language, stripall=True)
+    formatter = HtmlFormatter(linenos="inline",
+                              cssclass="highlight",
+                              style="colorful")
+    style = formatter.get_style_defs('.highlight')
+    result = highlight(answer, lexer, formatter)
+    return result, style
