@@ -2895,9 +2895,9 @@ def download_course(request, course_id):
     course_name = course.name.replace(" ", "_")
 
     # Static files required for styling in html template
-    static_files = {"js": ["bootstrap.js", "bootstrap.min.js",
+    static_files = {"js": ["bootstrap.min.js",
                            "jquery-1.9.1.min.js", "video.js"],
-                    "css": ["bootstrap.css", "bootstrap.min.css",
+                    "css": ["bootstrap.min.css",
                             "video-js.css", "offline.css"],
                     "images": ["yaksh_banner.png"]}
     zip_file = course.create_zip(current_dir, static_files)
