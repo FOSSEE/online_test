@@ -14,13 +14,6 @@
     {% endif %}
 
     {% block navtab %}
-        {% if user.profile.is_moderator %}
-            <div class="row">
-                <a href="{{URL_ROOT}}/exam/toggle_moderator/" class="btn btn-primary pull-right" style="margin-top: 20px; margin-bottom: 20px;">
-                  Switch To Moderator
-                </a>
-            </div>
-        {% endif %}
         {% if 'Enrolled Courses' not in title%} 
             <div class="container">
                 <div class="nav nav-tabs yakshnavtab">
@@ -163,8 +156,6 @@
                         <table class="table table-borderless card table-responsive-sm">
                             <tr><td class="yakshgreen">STARTS ON</td> <td>{{course.start_enroll_time}}</td></tr>
                             <tr><td class="yakshgreen">ENDS ON</td>  <td>{{course.end_enroll_time}}</td>
-                            <tr><td class="yakshgreen">LEVEL</td>  <td></td></tr>
-                            <tr><td class="yakshgreen">PERKS</td> <td> Verified Certificate </td></tr>
                         </table>
                     </div>
                 </div>
