@@ -27,6 +27,8 @@ class SeleniumTestError(Exception):
 class SeleniumTest():
     def __init__(self, url, quiz_name, module_name, course_name):
         self.driver = webdriver.Firefox()
+        self.driver.set_window_position(0, 0)
+        self.driver.set_window_size(1024, 768)
         self.quiz_name = quiz_name
         self.module_name = module_name
         self.course_name = course_name
@@ -124,8 +126,8 @@ class SeleniumTest():
     def open_quiz(self):
         # open module link
         self.driver.find_elements_by_partial_link_text(
-            self.course_name)[0].click()
-        self.driver.find_element_by_link_text(self.module_name).click()
+            'START')[0].click()
+        self.driver.find_element_by_link_text('Start').click()
         # open quiz link
         self.driver.find_element_by_link_text(self.quiz_name).click()
 
@@ -157,11 +159,14 @@ class SeleniumTest():
         quit_link_elem.click()
 
     def logout(self):
-        logout_link_elem = WebDriverWait(self.driver, 5).until(
-            EC.presence_of_element_located((By.ID, "logout"))
+        logout_link_menu = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "user_dropdown"))
+        )
+        logout_link_menu.click()
+        logout_link_elem = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "user_logout"))
         )
         logout_link_elem.click()
-
 
 def user_gen(url, ids):
     return [(url, 'User%d' % x, 'User%d' % x) for x in ids]

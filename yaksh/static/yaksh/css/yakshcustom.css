@@ -72,57 +72,6 @@
 	width: 100%;
 }
 
-/*---------------------*/
-
-/*Buttons 
-
-.btn-success, .badge-success{
-	background-color: #35beb1;
-	border-color: #35beb1;
-	color: black;
-}
-
-.btn-primary, .badge-primary{
-	background-color: #4ce8d9;
-	border-color: #4ce8d9;
-	color: black;
-}
-
-.btn-success:hover, .open>.dropdown-toggle.btn-success, .btn-primary:hover, .open>.dropdown-toggle.btn-primary {
-	background-color: #156b62;
-	color: white;
-	border-color: #156b62;
-}
-
-.btn-warning, .badge-warning {
-	background-color: #f7bd38;
-	border-color: #f7bd38;
-	color: black;
-}
-
-.btn-warning:hover, .open>.dropdown-toggle.btn-warning {
-	background-color: #c6921b;
-	color: white;
-	border-color: #c6921b;
-}
-
-.btn-danger, .badge-danger{
-	background-color: #f03c69;
-	border-color: #f03c69;
-	color: black;
-}
-
-.btn-danger:hover, .open>.dropdown-toggle.btn-danger, .btn-danger:hover, .open>.dropdown-toggle.btn-danger {
-	background-color: #b7123b;
-	color: white;
-	border-color: #b7123b;
-}
-
-
-
-/*---------------------*/
-
-
 /* Sidebar */
 
 
