@@ -11,7 +11,8 @@ from yaksh.models import (User, Profile, Question, Quiz, QuestionPaper,
 
 from yaksh.templatetags.custom_filters import (completed, inprogress,
                                                get_ordered_testcases,
-                                               get_answer_for_arrange_options
+                                               get_answer_for_arrange_options,
+                                               highlight_spaces
                                                )
 
 
@@ -148,3 +149,9 @@ class CustomFiltersTestCases(unittest.TestCase):
         self.assertSequenceEqual(testcases, ordered_testcases)
 
         new_answerpaper.delete()
+
+    def test_highlight_spaces(self):
+        expected_output = "A "
+        highlighted_output = highlight_spaces(expected_output)
+        self.assertEqual(highlighted_output,
+                         'A<span style="background-color:#ffb6db">&nbsp</span>')
