@@ -58,6 +58,7 @@ def tearDownModule():
     User.objects.get(username="teacher2000").delete()
     Group.objects.all().delete()
 
+
 class CustomFiltersTestCases(unittest.TestCase):
 
     @classmethod
@@ -154,4 +155,5 @@ class CustomFiltersTestCases(unittest.TestCase):
         expected_output = "A "
         highlighted_output = highlight_spaces(expected_output)
         self.assertEqual(highlighted_output,
-                         'A<span style="background-color:#ffb6db">&nbsp</span>')
+                         'A<span style="background-color:#ffb6db">&nbsp</span>'
+                         )

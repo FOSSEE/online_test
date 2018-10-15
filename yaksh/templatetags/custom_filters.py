@@ -110,4 +110,6 @@ def course_grade(course, user):
 
 @register.filter(name='highlight_spaces')
 def highlight_spaces(text):
-    return text.replace(" ",'<span style="background-color:#ffb6db">&nbsp</span>')
+    return text.replace(
+        " ", '<span style="background-color:#ffb6db">&nbsp</span>'
+        )
