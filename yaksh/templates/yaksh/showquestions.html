@@ -12,171 +12,206 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-sm-3 col-md-2 sidebar">
-      <ul class="nav nav-sidebar nav-stacked">
-      <li class="active"><a href="#show" data-toggle="pill" > Show all Questions</a></li>
-      <li><a href="#updown" data-toggle="pill" > Upload Questions</a></li>
-      </ul>
+    <!-- Side bar -->
+    <div class="col-md-3 yakshlabel collapse nav flex-column nav-pills" id="sidebar" role="tablist" aria-orientation="vertical">
+          <a href="#show" id="showbar" class="nav-link active"  data-toggle="pill" role="tab" aria-controls="show" aria-selected="true"> Show all Questions</a>
+          <a href="#updown" id="updownbar" class="nav-link" data-toggle="pill" role="tab" aria-controls="updown" aria-selected="false" > Upload and Download Questions</a>
     </div>
-<div class="tab-content col-md-9 col-md-offset-2 main">
-<!-- Upload Questions -->
-
-<div id="updown" class="tab-pane fade">
-<div class="alert alert-info" role="alert">
-        <p>You can upload question files the following ways -
-          <li><b><u>Yaml File</u></b>
-          <p>One can upload Yaml file with extensions .yaml or .yml. Please note
-            that you cannot upload files associated to a question. Yaml file can
-            have any name.
+     <a href="#sidebar" data-toggle="collapse" id="sidebaricon"><i class="fa fa-navicon fa-lg"></i></a>
+    <!-- End of side bar -->
+    <main class="col  main" id="sidebarbody">
+     
+      <div class="yakshwell tab-content">
+      <!-- Upload Questions -->
+      <div id="updown"  class="card col-md-5 tab-pane fade" role="tabpanel" aria-labelledby="updownbar">
+        <div class="alert alert-info" role="alert">
+          <p>You can upload question files the following ways -
+            <li><b><u>Yaml File</u></b>
+            <p>One can upload Yaml file with extensions .yaml or .yml. Please note
+              that you cannot upload files associated to a question. Yaml file can
+              have any name.
+            </p>
+            </li>
+            <li><b><u>Zip File</u></b>
+             <p> One can also upload zip with the following zip structure -
+            <pre>
+              .zip
+              |-- .yaml or .yml
+              |-- .yaml or .yml
+              |-- folder1
+              |   |-- Files required by questions
+              |-- folder2
+              |   |-- Files required by questions
+            </pre>
+            </li>
           </p>
-          </li>
-          <li><b><u>Zip File</u></b>
-           <p> One can also upload zip with the following zip structure -
-          <pre>
-            .zip
-            |-- .yaml or .yml
-            |-- .yaml or .yml
-            |-- folder1
-            |   |-- Files required by questions
-            |-- folder2
-            |   |-- Files required by questions
-          </pre>
-          </li>
-        </p>
+        </div>
+        <div class="card-body">
+        <div><a class="btn btn-primary" href="{{URL_ROOT}}/exam/manage/courses/download_yaml_template/"> Download Template</a> </div>
+        <br/>
+        <h4> Or </h4>
+        <form action="" method="post"  enctype="multipart/form-data">
+        {% csrf_token %}
+            {{ upload_form.as_p }}
+        <br/>
+        <h4> And </h4>
+        <button class="btn btn-success" type="submit" name="upload" value="upload">
+        Upload File <span class="glyphicon glyphicon-open"/></button>
+        </form>
+      </div>
+      </div>
+      <!-- End of upload questions -->
 
-        <p>
-        <b> Click <a class="btn btn-success" href="{{URL_ROOT}}/exam/manage/courses/download_yaml_template/"
->here</a> to download a sample YAML, edit and upload it</b>
-        </p>
-    </div>
-<br/>
-<h4> Or </h4>
-<form action="" method="post"  enctype="multipart/form-data">
-{% csrf_token %}
-    {{ upload_form.as_p }}
-<br/>
-<h4> And </h4>
-<button class="btn btn-success" type="submit" name="upload" value="upload">
-Upload File <span class="glyphicon glyphicon-open"/></button>
-</form>
-</div>
-<!-- End of upload questions -->
+      <!-- Show questions -->
+        <div id="show" class="yakshwell tab-pane fade show active" role="tabpanel" aria-labelledby="showbar">
+          <form name=frm action="" method="post">
+          {% csrf_token %}
+          {% if message %}
+            {%if message == "Questions Uploaded Successfully"%}
+              <div class="alert alert-success alert-dismissable">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                  {{ message }}
+              </div>
+            {%else %}
+              <div class="alert alert-danger alert-dismissable"> 
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                {{ message }}
+              </div>
+            {% endif %}
+          {% endif %}
+          {% if msg %}
+            <div class="alert alert-danger alert-dismissable animated flash"> 
+              <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+              {{ msg }}
+            </div>
+          {% endif %}
+          <br><br> 
+          <form name=frm action="" method="post">
+            <div class="card">
+              <div class="card-body">
+            <!-- Filtering Questions  -->
+            <div class="row" id="selectors">
+                <h4 style="padding-left: 20px;">Filters Questions: </h4>
+                <div class="col-md-3">
+                    {{ form.question_type }}
+                </div>
+                <div class="col-md-3">
+                    {{ form.language }}
+                </div>
+                <div class="col-md-3">
+                    {{ form.marks }}
+                </div>
+                <br><br>
+                
+            </div>
+            <hr>
+            <h4 >Or Search using Tags: </h4>
+            <!-- Searching Tags -->
+            {% csrf_token %}
+              <div class="col-md-14">
+                <div class="input-group">
+                  <div class="col-md-6">
+                          <div class="input-group"> 
+                              <div class="input-group-prepend">
+                              <span class="input-group-text" id="basic-addon1">Search Questions</span>
+                              </div>
+                              <input type="text" name="question_tags" id="question_tags" class="form-control" type="search"  placeholder="Search using comma separated Tags">
+                              <span class="input-group-append">
+                                  <button class="btn btn-outline-secondary" type="submit"><i class="fa fa-search yakshred"></i></button>
+                              </span>
+                          </div>                     
+                  </div>
 
-<!-- Show questions -->
-<div id="show" class= "tab-pane fade in active">
-<form name=frm action="" method="post">
-{% csrf_token %}
-{% if message %}
-{%if message == "Questions Uploaded Successfully"%}
-<div class="alert alert-success alert-dismissable">
-<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-  {{ message }}
-</div>
-{%else %}
-<div class="alert alert-danger alert-dismissable"> 
-  <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-  {{ message }}
-</div>
-{% endif %}
-{% endif %}
-{% if msg %}
-<div class="alert alert-danger alert-dismissable"> 
-  <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-  {{ msg }}
-</div>
-{% endif %}
-<br><br>
-<form name=frm action="" method="post">
-<!-- Filtering Questions  -->
-<div class="row" id="selectors">
-    <h4 style="padding-left: 20px;">Filters Questions: </h4>
-    <div class="col-md-3">
-        {{ form.question_type }}
-    </div>
-    <div class="col-md-3">
-        {{ form.language }}
-    </div>
-    <div class="col-md-3">
-        {{ form.marks }}
-    </div>
-<br>
-<h4 style="padding-left: 20px;">Or</h4>
+                  <div class="col-md-6">
+                    <select class="form-control" id="sel1" onchange="append_tag(this);">
+                    {% if all_tags %}
+                     <option value="" disabled selected>Available Tags</option>
+                    {% for tag in all_tags %}
+                    <option>
+                        {{tag}}
+                    </option>
+                    {% endfor %}
+                    {% else %}
+                     <option value="" disabled selected>No Available Tags</option>
+                    {% endif %}
+                    </select>
+                  </div>
+                </div>
+               </div>
+            <br><br>
+            <button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>
+             Clear Filters</button>
+           </div>
+         </div>
 
-<h4 style="padding-left: 20px;">Search using Tags: </h4>
-</div>
-<!-- Searching Tags -->
-{% csrf_token %}
-    <div class="col-md-14">
-    <div class="input-group">
-    <span class="input-group-addon" id="basic-addon1">Search Questions </span>
-    <input type="text" id="question_tags" name="question_tags" class="form-control"
-     placeholder="Search using comma separated Tags">
-    <span class="input-group-btn">
-    <button class="btn btn-default" type="submit">Search</button>
-    </span>
-    <div class="col-md-6">
-    <select class="form-control" id="sel1" onchange="append_tag(this);">
-    {% if all_tags %}
-     <option value="" disabled selected>Available Tags</option>
-    {% for tag in all_tags %}
-    <option>
-        {{tag}}
-    </option>
-    {% endfor %}
-    {% else %}
-     <option value="" disabled selected>No Available Tags</option>
-    {% endif %}
-    </select>
+          <div id="filtered-questions">
+          {% if questions %}
+          <div class="yakshwell">
+            <h5><input id="checkall" type="checkbox"> Select All </h5>
+             <div class="table-wrapper-2">
+                <table id="questions-table" class="tablesorter table  table-striped table-responsive-sm">
+                    <thead>
+                      <tr class="yakshred">
+                      <th> Select </th>
+                      <th> Summary </th>
+                      <th> Language </th>
+                      <th> Type </th>  
+                      <th> Marks </th>
+                      </tr>
+                    </thead>
+                    <tbody>              
+                      {% for question in questions %}
+                      <tr>
+                      <td>
+                      <input type="checkbox" name="question" value="{{ question.id }}">
+                      </td>
+                      <td><a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{question.summary|capfirst}}</a></td>
+                      <td>{{question.language|capfirst}}</td>
+                      <td>{{question.type|capfirst}}</td>
+                      <td>{{question.points}}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                </table>
+              </div>
+          </div>
+          {% endif %}
+          </div>
+          <br>
+          <center>
+            <button class="btn btn-primary" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question <span class="glyphicon glyphicon-plus"></span></button>&nbsp;&nbsp;
+            {% if questions %}
+            <button class="btn btn-primary" type="submit" name='download' value='download'>Download Selected <span class="glyphicon glyphicon-save"></span></button>&nbsp;&nbsp;
+            <button class="btn btn-primary" type="submit" name="test" value="test">Test Selected</button>&nbsp;&nbsp;
+            {% endif %}
+            <button class="btn btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected <span class="glyphicon glyphicon-minus"></span></button>
+          </center>
+        </form>
+      </div>
+      <!-- End of Show questions -->
     </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block footer %}
+  <!--footer-->   
+  <footer class="container-fluid yakshsidebarfooter text-center">
+    <div class="row justify-content-center">
+    <div class="col-sm-5 ">
+      {% if user %}
+         {% block info %}
+         <b>{{user.get_full_name|title}}</b> with Roll no. <b>{{user.profile.roll_number}}</b> is logged in as <b>{{user.username}}</b>
+         {% endblock %}
+         {% endif %}
     </div>
-     </div>
-<br><br>
-<button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>
- Clear Filters</button>
-
-<div id="filtered-questions">
-{% if questions %}
-<h5><input id="checkall" type="checkbox"> Select All </h5>
-
-<table id="questions-table" class="tablesorter table table table-striped">
-    <thead>
-    <tr>
-    <th> Select </th>
-    <th> Summary </th>
-    <th> Language </th>
-    <th> Type </th>  
-    <th> Marks </th>
-    </tr>
-    </thead>
-    <tbody>
-    
-{% for question in questions %}
-<tr>
-<td>
-<input type="checkbox" name="question" value="{{ question.id }}">
-</td>
-<td><a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{question.summary|capfirst}}</a></td>
-<td>{{question.language|capfirst}}</td>
-<td>{{question.type|capfirst}}</td>
-<td>{{question.points}}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-{% endif %}
-</div>
-<br>
-<center>
-<button class="btn btn-primary" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question <span class="glyphicon glyphicon-plus"></span></button>&nbsp;&nbsp;
-{% if questions %}
-<button class="btn btn-primary" type="submit" name='download' value='download'>Download Selected <span class="glyphicon glyphicon-save"></span></button>&nbsp;&nbsp;
-<button class="btn btn-primary" type="submit" name="test" value="test">Test Selected</button>&nbsp;&nbsp;
-{% endif %}
-<button class="btn btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected <span class="glyphicon glyphicon-minus"></span></button>
-</center>
-</form>
-</div>
-</div>
-</div>
-<!-- End of Show questions -->
+    <div class="col-sm-2">
+      |
+    </div>
+    <div class="col-sm-4 text-left">
+     <b>Any Queries?</b> Email : info@fossee.in
+    </div>
+  </div>
+  </footer>
+  <!--footer end-->
 {% endblock %}

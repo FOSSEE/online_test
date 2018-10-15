@@ -2,7 +2,9 @@
 
 {% block pagetitle %} Profile {% endblock %}
 {% block main %}
-  <table class="table table-bordered">
+<div class=" row justify-content-center">
+<div class="yakshwell col-md-8 ">
+  <table class="table table-bordered table-responsive-sm">
   <tr>
     <th><label for="id_first_name"><h5>First name:</h5></label></th>
     <th><label for="id_first_name"><h5>{{ user.first_name }}</h5></label></th>
@@ -37,4 +39,6 @@
   </tr>
   </table>
   <a class="btn btn-primary pull-right" href="{{ URL_ROOT }}/exam/editprofile/">Edit Profile</a>
+</div>
+</div>
 {% endblock %}

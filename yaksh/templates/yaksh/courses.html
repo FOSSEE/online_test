@@ -5,7 +5,6 @@
 <script>
     $(document).ready(function(){
         $('[data-toggle="tooltip"]').tooltip();
-        $("#created_courses").toggle();
         $("#link_created_courses").click(function() {
             if ($("#allotted_courses").is(":visible")){
                 $("#allotted_courses").toggle();
@@ -35,467 +34,481 @@
 {% endblock %}
 {% block content %}
 <div class="row">
-    <div class="col-sm-3 col-md-2 sidebar">
-        <ul class="nav nav-sidebar">
+    <!-- Side bar -->
+    <div class="col-md-3 yakshlabel collapse" id="sidebar">
+        <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
             {% if type == "courses" %}
-                <li><a href="#" id="link_created_courses">My Courses</a></li>
-                <li><a href="#" id="link_allotted_courses">Allotted Courses</a></li>
-            {% else %}
-                <li><a href="{{URL_ROOT}}/exam/manage/courses">View all Courses</a></li>
+              <a href="#sidebarbody" id="link_created_courses" data-toggle="pill" class="nav-link active" role="tab" aria-controls="sidebarbody" aria-selected="true" >My Courses</a>
+              <a href="#sidebarbody" id="link_allotted_courses" class="nav-link" data-toggle="pill" role="tab" aria-controls="sidebarbody" aria-selected="flase" > Allotted Courses</a>
+              {% else %}
+              <a href="{{URL_ROOT}}/exam/manage/courses" class="nav-link"  >View all Courses</a>
             {% endif %}
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/add_course">Add New Course</a>
-            </li>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/all_quizzes/">Add/View Quizzes</a>
-            </li>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/all_lessons/">Add/View Lessons</a>
-            </li>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/all_learning_module">
-                Add/View Modules</a>
-            </li>
-            <li>
-                <a href="{% url 'grades:grading_systems'%}"> 
-                Add/View Grading Systems </a>
-            </li>
-        </ul>
+            <a href="{{URL_ROOT}}/exam/manage/add_course" class="nav-link"  >Add New Course</a>
+            <a href="{{URL_ROOT}}/exam/manage/courses/all_quizzes/" class="nav-link" >Add/View Quizzes</a>
+            <a href="{{URL_ROOT}}/exam/manage/courses/all_lessons/" class="nav-link" >Add/View Lessons</a>
+            <a href="{{URL_ROOT}}/exam/manage/courses/all_learning_module" class="nav-link" >Add/View Modules</a>
+            <a href="{% url 'grades:grading_systems'%}" class="nav-link" > Add/View Grading Systems </a>
+       </div>
     </div>
-</div>
+    <a href="#sidebar" data-toggle="collapse" id="sidebaricon"><i class="fa fa-navicon fa-lg"></i></a>
+    <!-- End of side bar -->
+    <main class="tab-content col" id="sidebarbody">
+        
+        <div class="tab-pane fade show active container-fluid yakshwell" role="tabpanel" aria-labelledby="sidebar-tab">
+            
+            {% if type == "courses" %}
+            <div id="created_courses">
+                {% if not courses %}
+                    <center><h4> No new Courses created </h4></center>
+                {% else %}
+            <div class="col-md-offset-2 main">
+                <center><h3 class="yakshlabel"> Course(s) Created</h3></center>
+                 <div class="table-wrapper-2">
+                <table id="course-details" class="table table-bordered table-responsive-sm">
+                <tr class="text-center yakshred bg-light">
+                <th>Courses</th>
+                <th>Modules</th>
+                </tr>
 
-{% if type == "courses" %}
-<div id="created_courses" style="display: none;">
-{% if not courses %}
-    <center><h4> No new Courses created </h4></center>
-{% else %}
-<div class="col-md-offset-2 main">
-    <center><h3> Course(s) Created</h3></center>
-    <table id="course-details" class="table table-bordered">
-    <tr>
-    <th>Courses</th>
-    <th>Modules</th>
-    </tr>
-
-    {% for course in courses %}
-    <tr>
-    <td width="30%">
-        <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}">{{ course.name }}
-        </a>
-        {% if course.active %}
-            <span class="label label-success">Active</span>
-        {% else %}
-            <span class="label label-danger">Closed</span>
-        {% endif %}
-        <br><br>
-        <center><b><u>Teacher(s) added to {{ course }}</u></b></center>
-        <br>
-        <form action="{{URL_ROOT}}/exam/manage/remove_teachers/{{ course.id }}/" method="post">
-        {% if course.get_teachers %}
-        <div align="left">
-        {% csrf_token %}
-        {% for teacher in course.get_teachers %}
-        <div class="well">
-            <div class="row">
-                <div class="col-md-333" style="width: auto;">
-                    <input type="checkbox" name="remove" value="{{ teacher.id }}">&nbsp;{{ teacher.get_full_name }}
-                </div>
-            </div>
-        </div>
-        {% endfor %} <!-- end for teachers -->
-        <button class="btn btn-danger" type="submit" data-toggle="tooltip" title="Remove Selected Teachers from this course">Remove Teachers</button>
-        </div>
-        {% else %}
-        <center><b>No Teacher(s) added</b></center>
-        {% endif %}
-        </form>
-        <br><br>
-        <ul>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course.id}}/" data-toggle="tooltip" title="Add/Remove/Change course modules" data-placement="top">
-                    Design Course
-                </a>
-            </li>
-            <br>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/edit_course/{{course.id}}">Edit Course</a>
-            </li>
-            <br>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/download_course_csv/{{course.id}}">Download CSV
-                </a>
-            </li>
-            <br>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher</a>
-            </li>
-            <br>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">
-                {% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}
-                </a>
-            </li>
-            <br>
-            <li>
-                <a class="test" href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/" data-toggle="tooltip" title="Creates Copy of selected Course as well as its Modules, Lessons/Quizzes" data-placement="top">
-                Clone Course</a>
-            </li>
-            <br>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/download_course/{{course.id}}" data-toggle="tooltip" title="Download course content for offline view" data-placement="top">
-                    Download course offline
-                </a>
-            </li>
-        </ul>
-    </td>
-    <td>
-        <table id="course-details" class="table table-bordered">
-        {% if course.get_learning_modules %}
-            <tr>
-            <th>Module</th>
-            <th>Module Design</th>
-            <th>Lessons/Quizzes</th>
-            </tr>
-            {% for module in course.get_learning_modules %}
-            <tr>
-                <td>
-                <a href="{{URL_ROOT}}/exam/manage/courses/add_module/{{module.id}}/{{course.id}}">
-                    {{module.name}}</a>
-                </td>
-                <td>
-                    <a href="{{URL_ROOT}}/exam/manage/courses/designmodule/{{module.id}}/{{course.id}}/">
-                        Add Quizzes/Lessons for {{module.name}}
+                {% for course in courses %}
+                <tr>
+                <td width="30%">
+                    <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}">{{ course.name }}
                     </a>
-                </td>
-                <td>
-                    {% for unit in module.get_learning_units %}
-                        <ul class="inputs-list">
-                        <li>
-                        {% if unit.type == "quiz" %}
-                            {% if unit.quiz.is_exercise %}
-                                <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{unit.quiz.id}}/{{course.id}}">
-                                {{unit.quiz.description}}</a>
-                            {% else %}
-                                <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
-                                {{unit.quiz.description}}</a>
-                            {% endif %}
-                        {% else %}
-                            <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{unit.lesson.id}}/{{course.id}}">
-                            {{unit.lesson.name}}</a>
-                        {% endif %}
-                        </li>
-                        </ul>
-                    {% endfor %}
-                </td>
-            </tr>
-            {% endfor %} <!-- end for modules -->
-        {% else %}
-             No learning modules
-        {% endif %}
-        </table>
-    </td>
-    </tr>
-    {% endfor %} <!-- end for courses -->
-    </table>
-</div>
-{% endif %}
-</div>
-
-<!-- Show Alotted courses -->
-<div id="allotted_courses" style="display: none;">
-{% if not allotted_courses %}
-    <center><h4> No new Courses allotted</h4></center>
-    <br><br>
-{% else %}
-<div class="col-md-offset-2 main">
-    <center><h3> Course(s) Allotted </h3></center>
-    <table id="course-details" class="table table-bordered">
-    <tr>
-    <th>Courses</th>
-    <th>Modules</th>
-    </tr>
-
-    {% for course in allotted_courses %}
-    <tr>
-    <td width="30%">
-        <ul class="list-group">
-        <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">{{ course.name }}</a>
-        {% if course.active %}
-            <span class="label label-success">Active</span>
-        {% else %}
-            <span class="label label-danger">Closed</span>
-        {% endif %}
-        <br><br>
-        <center><b><u> Course Creator</u></b><br>
-            <h4>{{course.creator.get_full_name.title}}</h4>
-        </center><br>
-        <center><b><u>Teacher(s) added to {{ course }}</u></b></center>
-        <br>
-        <form action="{{URL_ROOT}}/exam/manage/remove_teachers/{{ course.id }}/" method="post">
-        {% if course.get_teachers %}
-        <div align="left">
-        {% csrf_token %}
-        {% for teacher in course.get_teachers %}
-        <div class="well">
-            <div class="row">
-                <div class="col-md-333" style="width: auto;">
-                    <input type="checkbox" name="remove" value="{{ teacher.id }}">&nbsp;
-                    {{ teacher.get_full_name }}
-                </div>
-            </div>
-        </div>
-        {% endfor %} <!-- end for teachers -->
-        <button class="btn btn-danger" type="submit" data-toggle="tooltip" title="Remove Selected Teachers from this course">Remove Teachers</button>
-        </div>
-        {% else %}
-        <center><b>No Teacher(s) added</b></center>
-        {% endif %}
-        </form>
-        <br><br>
-        <ul>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course.id}}/">Design Course
-                </a>
-            </li>
-            <br>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/edit_course/{{course.id}}">Edit Course</a>
-            </li>
-            <br>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/download_course_csv/{{course.id}}">Download CSV
-                </a>
-            </li>
-            <br>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher
-                </a>
-            </li>
-            <br>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">
-                {% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}
-                </a>
-            </li>
-            <br>
-            <li>
-                <a class="test" href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/" data-toggle="tooltip" title="Creates Copy of selected Course as well as its Modules, Lessons/Quizzes" data-placement="top">
-                Clone Course</a>
-            </li>
-            <br>
-            <li>
-                <a href="{{URL_ROOT}}/exam/manage/courses/download_course/{{course.id}}" data-toggle="tooltip" title="Download course content for offline view" data-placement="top">Download course offline
-                </a>
-            </li>
-        </ul>
-    </td>
-    <td>
-        <table id="course-details" class="table table-bordered">
-        {% if course.get_learning_modules %}
-            <tr>
-            <th>Module</th>
-            <th>Module Design</th>
-            <th>Lessons/Quizzes</th>
-            </tr>
-            {% for module in course.get_learning_modules %}
-            <tr>
-                <td>
-                <a href="{{URL_ROOT}}/exam/manage/courses/add_module/{{module.id}}/{{course.id}}">
-                    {{module.name}}</a>
-                </td>
-                <td>
-                    <a href="{{URL_ROOT}}/exam/manage/courses/designmodule/{{module.id}}/{{course.id}}/">
-                        Add Quizzes/Lessons for {{module.name}}
-                    </a>
-                </td>
-                <td>
-                    {% for unit in module.get_learning_units %}
-                        <ul class="inputs-list">
-                        <li>
-                        {% if unit.type == "quiz" %}
-                            {% if unit.quiz.is_exercise %}
-                                <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{unit.quiz.id}}/{{course.id}}">
-                                {{unit.quiz.description}}</a>
-                            {% else %}
-                                <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
-                                {{unit.quiz.description}}</a>
-                            {% endif %}
-                        {% else %}
-                            <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{unit.lesson.id}}/{{course.id}}">
-                            {{unit.lesson.name}}</a>
-                        {% endif %}
-                        </li>
-                        </ul>
-                    {% endfor %}
-                </td>
-            </tr>
-            {% endfor %} <!-- end for modules -->
-        {% else %}
-             No learning modules
-        {% endif %}
-        </table>
-    </td>
-    {% endfor %} <!-- end for courses -->
-    </tr>
-    </table>
-</div>
-{% endif %}
-</div>
-{% endif %}
-<!-- End if all Courses  -->
-
-<!-- Show all Quizzes -->
-<div id="all_quizzes" >
-<div class="col-md-offset-2 main">
-{% if type == "quiz" %}
-    <a href="{{URL_ROOT}}/exam/manage/addquiz/" class="btn btn-primary">Add New Quiz</a>
-    <a href="{{URL_ROOT}}/exam/manage/add_exercise/" class="btn btn-primary">Add New Exercise</a>
-    {% if not quizzes %}
-        <center><h4> No new Quiz added</h4></center>
-        <br><br>
-    {% else %}
-        <center><h3> Quizzes </h3></center>
-        <table id="course-details" class="table table-bordered">
-        <tr>
-        <th>Sr.No</th>
-        <th>Quiz</th>
-        <th>QuestionPaper</th>
-        </tr>
-
-        {% for quiz in quizzes %}
-        <tr>
-        <td>{{forloop.counter}}</td>
-        <td width="30%">
-            <ul class="list-group">
-            {% if quiz.is_exercise %}
-                <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{quiz.id}}/">{{ quiz.description }}</a>
-            {% else %}
-            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}</a>
-            {% endif %}
-            {% if quiz.active %}
-                <span class="label label-success">Active</span>
-            {% else %}
-                <span class="label label-danger">Closed</span>
-            {% endif %}
-            </ul>
-        </td>
-        <td>
-            {% if quiz.questionpaper_set.get %}
-                <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/">
-                Question Paper for {{ quiz.description }}</a>
-                <a href="{{URL_ROOT}}/exam/manage/preview_questionpaper/{{quiz.questionpaper_set.get.id}}" class="btn btn-primary active btn-xs" target="_blank">
-                        View
-                </a>
-                <br>
-            {% else %}
-                <p>No Question Paper 
-                <a href="#" onClick='location.replace("{{URL_ROOT}}/exam/manage/quiz/designquestionpaper/{{ quiz.id }}/");'>Add</a>
-                </p>
-            {% endif %}
-        </td>
-        {% endfor %} <!-- end for quizzes -->
-        </tr>
-        </table>
-    </div>
-    {% endif %}
-{% endif %}
-</div>
-
-<!-- Show all lessons -->
-
-<div id="all_lessons">
-    <div class="col-md-offset-2 main">
-{% if type == "lesson" %}
-    <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/" class="btn btn-primary">Add new Lesson</a>
-    {% if not lessons %}
-        <center><h4> No new Lessons added</h4></center>
-        <br><br>
-    {% else %}
-        <center><h3> Lessons </h3></center>
-        <table id="course-details" class="table table-bordered">
-        <tr>
-        <th>Sr.No</th>
-        <th>Lesson</th>
-        </tr>
-
-        {% for lesson in lessons %}
-        <tr>
-        <td width="2%">{{forloop.counter}}</td>
-        <td width="30%">
-            <ul class="list-group">
-            <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{lesson.id}}/">
-            {{ lesson.name }}</a>
-            {% if lesson.active %}
-                <span class="label label-success">Active</span>
-            {% else %}
-                <span class="label label-danger">Closed</span>
-            {% endif %}
-            </ul>
-        </td>
-        {% endfor %} <!-- end for lessons -->
-        </tr>
-        </table>
-    </div>
-    {% endif %}
-{% endif %}
-</div>
-
-<!-- Show all learning modules -->
-    <div class="col-md-offset-2 main">
-<div id="all_lessons">
-{% if type == "learning_module" %}
-    <a href="{{URL_ROOT}}/exam/manage/courses/add_module/" class="btn btn-primary">
-    Add new Module</a>
-    {% if not learning_modules %}
-        <center><h4> No new learning modules added</h4></center>
-        <br><br>
-    {% else %}
-        <center><h3> Learning Modules </h3></center>
-        <table id="course-details" class="table table-bordered">
-        <tr>
-        <th>Sr.No</th>
-        <th>Learning Modules</th>
-        <th>Design Module</th>
-        <th>Learning Units</th>
-        </tr>
-        {% for module in learning_modules %}
-        <tr>
-        <td width="2%">{{forloop.counter}}</td>
-        <td>
-            <a href="{{URL_ROOT}}/exam/manage/courses/add_module/{{module.id}}/">
-            {{ module.name }}</a>
-            {% if module.active %}
-                <span class="label label-success">Active</span>
-            {% else %}
-                <span class="label label-danger">Closed</span>
-            {% endif %}
-        </td>
-        <td>
-            <a href="{{URL_ROOT}}/exam/manage/courses/designmodule/{{module.id}}">
-                Add Quizzes/Lessons for {{module.name}}
-            </a>
-        </td>
-        <td>
-            {% if module.get_learning_units %}
-                {% for unit in module.get_learning_units %}
-                    <ul class="list-group">
-                    {% if unit.type == 'quiz' %}
-                        {{unit.quiz.description}}
+                    {% if course.active %}
+                        <span class="badge badge-success">Active</span>
                     {% else %}
-                        {{unit.lesson.name}}
+                        <span class="badge badge-danger">Closed</span>
                     {% endif %}
-                    </ul>
-                {% endfor %} <!-- end for learning units -->
-            {% else %}
-                No Learning units
-            {% endif %}
-        </td>
-        {% endfor %} <!-- end for modules -->
-        </tr>
-        </table>
-    </div>
-    {% endif %}
-{% endif %}
-</div>
+                    <br><br>
+                    <center><b><u>Teacher(s) added to {{ course }}</u></b></center>
+                    <br>
+                    <form action="{{URL_ROOT}}/exam/manage/remove_teachers/{{ course.id }}/" method="post">
+                    {% if course.get_teachers %}
+                    <div align="left">
+                    {% csrf_token %}
+                    {% for teacher in course.get_teachers %}
+                    <div class="well">
+                        <div class="row">
+                            <div class="col-md-333" style="width: auto;">
+                                <input type="checkbox" name="remove" value="{{ teacher.id }}">&nbsp;{{ teacher.get_full_name }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %} <!-- end for teachers -->
+                    <button class="btn btn-danger" type="submit" data-toggle="tooltip" title="Remove Selected Teachers from this course">Remove Teachers</button>
+                    </div>
+                    {% else %}
+                    <center><b>No Teacher(s) added</b></center>
+                    {% endif %}
+                    </form>
+                    <br><br>
+                    <ul>
+                        <li>
+                            <a href="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course.id}}/" data-toggle="tooltip" title="Add/Remove/Change course modules" data-placement="top">
+                                Design Course
+                            </a>
+                        </li>
 
+                        <br>
+                        <li>
+                            <a href="{{URL_ROOT}}/exam/manage/edit_course/{{course.id}}">Edit Course</a>
+                        </li>
+                        <br>
+                        <li>
+                            <a href="{{URL_ROOT}}/exam/manage/courses/download_course_csv/{{course.id}}">Download CSV
+                            </a>
+                        </li>
+                        <br>
+                        <li>
+                            <a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher</a>
+                        </li>
+                        <br>
+                        <li>
+                            <a href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">
+                            {% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}
+                            </a>
+                        </li>
+                        <br>
+                        <li>
+                            <a class="test" href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/" data-toggle="tooltip" title="Creates Copy of selected Course as well as its Modules, Lessons/Quizzes" data-placement="top">
+                            Clone Course</a>
+                        </li>
+                    </ul>
+                </td>
+                <td>
+                    <table id="course-details" class="table table-bordered table-responsive-sm">
+                    {% if course.get_learning_modules %}
+                        <tr class="yakshlight">
+                        <th>Module</th>
+                        <th>Module Design</th>
+                        <th>Lessons/Quizzes</th>
+                        </tr>
+                        {% for module in course.get_learning_modules %}
+                        <tr>
+                            <td>
+                            <a href="{{URL_ROOT}}/exam/manage/courses/add_module/{{module.id}}/{{course.id}}">
+                                {{module.name}}</a>
+                            </td>
+                            <td>
+                                <a href="{{URL_ROOT}}/exam/manage/courses/designmodule/{{module.id}}/{{course.id}}/">
+                                    Add Quizzes/Lessons for {{module.name}}
+                                </a>
+                            </td>
+                            <td>
+                                {% for unit in module.get_learning_units %}
+                                    <ul class="inputs-list">
+                                    <li>
+                                    {% if unit.type == "quiz" %}
+                                        {% if unit.quiz.is_exercise %}
+                                            <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{unit.quiz.id}}/{{course.id}}">
+                                            {{unit.quiz.description}}</a>
+                                        {% else %}
+                                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
+                                            {{unit.quiz.description}}</a>
+                                        {% endif %}
+                                    {% else %}
+                                        <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{unit.lesson.id}}/{{course.id}}">
+                                        {{unit.lesson.name}}</a>
+                                    {% endif %}
+                                    </li>
+                                    </ul>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %} <!-- end for modules -->
+                    {% else %}
+                         No learning modules
+                    {% endif %}
+                    </table>
+                </td>
+                </tr>
+                {% endfor %} <!-- end for courses -->
+                </table>
+            </div>
+            </div>
+            {% endif %}
+            </div>
+
+            <!-- Show Alotted courses -->
+            <div id="allotted_courses" style="display: none;">
+            {% if not allotted_courses %}
+                <center><h4> No new Courses allotted</h4></center>
+                <br><br>
+            {% else %}
+            <div class="col-md-offset-2 main">
+                <center><h3> Course(s) Allotted </h3></center>
+                 <div class="table-wrapper-2">
+                <table id="course-details" class="table table-bordered table-responsive-sm">
+                <tr class="text-center yakshred bg-light">
+                <th>Courses</th>
+                <th>Modules</th>
+                </tr>
+
+                {% for course in allotted_courses %}
+                <tr>
+                <td width="30%">
+                    <ul class="list-group">
+                    <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">{{ course.name }}</a>
+                    {% if course.active %}
+                        <span class="badge badge-success">Active</span>
+                    {% else %}
+                        <span class="badge badge-danger">Closed</span>
+                    {% endif %}
+                    <br><br>
+                    <center><b><u> Course Creator</u></b><br>
+                        <h4>{{course.creator.get_full_name.title}}</h4>
+                    </center><br>
+                    <center><b><u>Teacher(s) added to {{ course }}</u></b></center>
+                    <br>
+                    <form action="{{URL_ROOT}}/exam/manage/remove_teachers/{{ course.id }}/" method="post">
+                    {% if course.get_teachers %}
+                    <div align="left">
+                    {% csrf_token %}
+                    {% for teacher in course.get_teachers %}
+                    <div class="well">
+                        <div class="row">
+                            <div class="col-md-333" style="width: auto;">
+                                <input type="checkbox" name="remove" value="{{ teacher.id }}">&nbsp;
+                                {{ teacher.get_full_name }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %} <!-- end for teachers -->
+                    <button class="btn btn-danger" type="submit" data-toggle="tooltip" title="Remove Selected Teachers from this course">Remove Teachers</button>
+                    </div>
+                    {% else %}
+                    <center><b>No Teacher(s) added</b></center>
+                    {% endif %}
+                    </form>
+                    <br><br>
+                    <ul>
+                        <li>
+                            <a href="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course.id}}/">Design Course
+                            </a>
+                        </li>
+                        <br>
+                        <li>
+                            <a href="{{URL_ROOT}}/exam/manage/edit_course/{{course.id}}">Edit Course</a>
+                        </li>
+                        <br>
+                        <li>
+                            <a href="{{URL_ROOT}}/exam/manage/courses/download_course_csv/{{course.id}}">Download CSV
+                            </a>
+                        </li>
+                        <br>
+                        <li>
+                            <a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher
+                            </a>
+                        </li>
+                        <br>
+                        <li>
+                            <a href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">
+                            {% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}
+                            </a>
+                        </li>
+                        <br>
+                        <li>
+                            <a class="test" href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/" data-toggle="tooltip" title="Creates Copy of selected Course as well as its Modules, Lessons/Quizzes" data-placement="top">
+                            Clone Course</a>
+                        </li>
+                    </ul>
+                </td>
+                <td>
+                    <table id="course-details" class="table table-bordered table-responsive-sm">
+                    {% if course.get_learning_modules %}
+                        <tr class="yakshlight">
+                        <th>Module</th>
+                        <th>Module Design</th>
+                        <th>Lessons/Quizzes</th>
+                        </tr>
+                        {% for module in course.get_learning_modules %}
+                        <tr>
+                            <td>
+                            <a href="{{URL_ROOT}}/exam/manage/courses/add_module/{{module.id}}/{{course.id}}">
+                                {{module.name}}</a>
+                            </td>
+                            <td>
+                                <a href="{{URL_ROOT}}/exam/manage/courses/designmodule/{{module.id}}/{{course.id}}/">
+                                    Add Quizzes/Lessons for {{module.name}}
+                                </a>
+                            </td>
+                            <td>
+                                {% for unit in module.get_learning_units %}
+                                    <ul class="inputs-list">
+                                    <li>
+                                    {% if unit.type == "quiz" %}
+                                        {% if unit.quiz.is_exercise %}
+                                            <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{unit.quiz.id}}/{{course.id}}">
+                                            {{unit.quiz.description}}</a>
+                                        {% else %}
+                                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
+                                            {{unit.quiz.description}}</a>
+                                        {% endif %}
+                                    {% else %}
+                                        <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{unit.lesson.id}}/{{course.id}}">
+                                        {{unit.lesson.name}}</a>
+                                    {% endif %}
+                                    </li>
+                                    </ul>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %} <!-- end for modules -->
+                    {% else %}
+                         No learning modules
+                    {% endif %}
+                    </table>
+                </td>
+                {% endfor %} <!-- end for courses -->
+                </tr>
+                </table>
+            </div>
+            </div>
+            {% endif %}
+            </div>
+            {% endif %}
+            <!-- End if all Courses  -->
+
+            <!-- Show all Quizzes -->
+            <div id="all_quizzes" >
+            <div class="col-md-offset-2 main">
+            {% if type == "quiz" %}
+                <a href="{{URL_ROOT}}/exam/manage/addquiz/" class="btn btn-primary">Add New Quiz</a>
+                <a href="{{URL_ROOT}}/exam/manage/add_exercise/" class="btn btn-primary">Add New Exercise</a>
+                {% if not quizzes %}
+                    <center><h4> No new Quiz added</h4></center>
+                    <br><br>
+                {% else %}
+                    <center><h3> Quizzes </h3></center>
+                    <div class="table-wrapper-2">
+                    <table id="course-details" class="table table-bordered table-responsive-sm">
+                    <tr>
+                    <th>Sr.No</th>
+                    <th>Quiz</th>
+                    <th>QuestionPaper</th>
+                    </tr>
+
+                    {% for quiz in quizzes %}
+                    <tr>
+                    <td>{{forloop.counter}}</td>
+                    <td width="30%">
+                        
+                        {% if quiz.is_exercise %}
+                            <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{quiz.id}}/">{{ quiz.description }}</a>
+                        {% else %}
+                        <a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}</a>
+                        {% endif %}
+                        {% if quiz.active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-danger">Closed</span>
+                        {% endif %}
+                        
+                    </td>
+                    <td>
+                        {% if quiz.questionpaper_set.get %}
+                            <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/">
+                            Question Paper for {{ quiz.description }}</a>
+                            <a href="{{URL_ROOT}}/exam/manage/preview_questionpaper/{{quiz.questionpaper_set.get.id}}" class="btn btn-primary active btn-xs" target="_blank">
+                                    View
+                            </a>
+                            <br>
+                        {% else %}
+                            <p>No Question Paper 
+                            <a href="#" onClick='location.replace("{{URL_ROOT}}/exam/manage/quiz/designquestionpaper/{{ quiz.id }}/");'>Add</a>
+                            </p>
+                        {% endif %}
+                    </td>
+                    {% endfor %} <!-- end for quizzes -->
+                    </tr>
+                    </table>
+                </div>
+                </div>
+                {% endif %}
+            {% endif %}
+            </div>
+
+            <!-- Show all lessons -->
+
+            <div id="all_lessons">
+                <div class="col-md-offset-2 main">
+            {% if type == "lesson" %}
+                <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/" class="btn btn-primary">Add new Lesson</a>
+                {% if not lessons %}
+                    <center><h4> No new Lessons added</h4></center>
+                    <br><br>
+                {% else %}
+                    <center><h3> Lessons </h3></center>
+                    <div class="table-wrapper-2">
+                    <table id="course-details" class="table table-bordered table-responsive-sm">
+                    <tr>
+                    <th>Sr.No</th>
+                    <th>Lesson</th>
+                    </tr>
+
+                    {% for lesson in lessons %}
+                    <tr>
+                    <td width="2%">{{forloop.counter}}</td>
+                    <td width="30%">
+                        
+                        <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{lesson.id}}/">
+                        {{ lesson.name }}</a>
+                        {% if lesson.active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-danger">Closed</span>
+                        {% endif %}
+                        
+                    </td>
+                    {% endfor %} <!-- end for lessons -->
+                    </tr>
+                    </table>
+                </div>
+                </div>
+                {% endif %}
+            {% endif %}
+            </div>
+
+            <!-- Show all learning modules -->
+                <div class="col-md-offset-2 main">
+            <div id="all_modules">
+            {% if type == "learning_module" %}
+                <a href="{{URL_ROOT}}/exam/manage/courses/add_module/" class="btn btn-primary">
+                Add new Module</a>
+                {% if not learning_modules %}
+                    <center><h4> No new learning modules added</h4></center>
+                    <br><br>
+                {% else %}
+                    <center><h3> Learning Modules </h3></center>
+                    <table id="course-details" class="table table-bordered table-responsive-sm">
+                    <tr>
+                    <th>Sr.No</th>
+                    <th>Learning Modules</th>
+                    <th>Design Module</th>
+                    <th>Learning Units</th>
+                    </tr>
+                    {% for module in learning_modules %}
+                    <tr>
+                    <td width="2%">{{forloop.counter}}</td>
+                    <td>
+                        <a href="{{URL_ROOT}}/exam/manage/courses/add_module/{{module.id}}/">
+                        {{ module.name }}</a>
+                        {% if module.active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-danger">Closed</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{URL_ROOT}}/exam/manage/courses/designmodule/{{module.id}}">
+                            Add Quizzes/Lessons for {{module.name}}
+                        </a>
+                    </td>
+                    <td>
+                        {% if module.get_learning_units %}
+                            {% for unit in module.get_learning_units %}
+                                <ul class="list-group">
+                                {% if unit.type == 'quiz' %}
+                                    {{unit.quiz.description}}
+                                {% else %}
+                                    {{unit.lesson.name}}
+                                {% endif %}
+                                </ul>
+                            {% endfor %} <!-- end for learning units -->
+                        {% else %}
+                            No Learning units
+                        {% endif %}
+                    </td>
+                    {% endfor %} <!-- end for modules -->
+                    </tr>
+                    </table>
+                </div>
+                {% endif %}
+            {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+{% block footer %}
+  <!--footer-->   
+  <footer class="container-fluid yakshsidebarfooter text-center">
+    <div class="row justify-content-center">
+    <div class="col-sm-5 ">
+      {% if user %}
+         {% block info %}
+         <b>{{user.get_full_name|title}}</b> with Roll no. <b>{{user.profile.roll_number}}</b> is logged in as <b>{{user.username}}</b>
+         {% endblock %}
+         {% endif %}
+    </div>
+    <div class="col-sm-2">
+      |
+    </div>
+    <div class="col-sm-4 text-left">
+     <b>Any Queries?</b> Email : info@fossee.in
+    </div>
+  </div>
+  </footer>
+  <!--footer end-->
 {% endblock %}

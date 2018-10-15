@@ -16,6 +16,7 @@
 {% endblock %}
 
 {% block content %}
+<div class="yaskhwell container">
 {% if course_id %}
     <a href="{{URL_ROOT}}/exam/manage/courses/" class="btn btn-primary">
     Back to Courses</a>
@@ -28,31 +29,31 @@
     {% csrf_token %}
     <br>
     <center>
-    <table class="table table-bordered">
+    <table class="table table-bordered table-responsive-sm">
     {{ module_form.as_table }}
     </table>
     </center>
     <br><br>
     <center>
-    <button class="btn" type="submit" id="submit" name="Save">
+    <button class="btn btn-success" type="submit" id="submit" name="Save">
         Save
     </button>
-    <button class="btn" type="button" name="button" id="preview">
+    <button class="btn btn-outline-primary" type="button" name="button" id="preview">
         Preview Module Description
     </button>
-    <button class="btn" type="button" name="button" id="embed">
+    <button class="btn btn-outline-primary" type="button" name="button" id="embed">
         Embed Video link
     </button>
     </center>
 </form>
 <hr>
-<div class="panel panel-default" id="preview_text_div" style="display: none;">
-    <div class="panel-heading">
+<div class="card" id="preview_text_div" style="display: none;">
+    <div class="card-heading">
         <center>
             <h3>Description Preview</h3>
         </center>
     </div>
-    <div class="panel-body" id="description_body">
+    <div class="card-body" id="description_body">
     </div>
 </div>
 {% endif %}
@@ -97,7 +98,7 @@
                     <p><u><b>Chosen Lessons and quizzes:</b></u>
                     </p>
                     <div id="fixed-added">
-                        <table id="course-details" class="table table-bordered">
+                        <table id="course-details" class="table table-bordered table-responsive-sm">
                         <tr>
                         <th width="5%">Select</th>
                         <th>Quiz/Lesson</th>
@@ -160,4 +161,5 @@
     </div>
 </form>
 {% endif %}
+</div>
 {% endblock %}

@@ -2,147 +2,202 @@
 {% load custom_filters %}
 
 {% block title %} {{ learning_module.name }} {% endblock %}
+    
 
-{% block pagetitle %} {{ learning_module.name }}
-{% if state == "lesson" %}
-    : {{lesson.name}}
-{% endif %}
-{% endblock %}
 
 {% block main %}
-<div class="col-sm-3 col-md-2 sidebar">
-    <center>
-        <a href="{{URL_ROOT}}/exam/course_modules/{{course.id}}">
-            <h4>{{course.name}}</h4>
-        </a>
-    </center>
-    <br>
-    {% for module in all_modules %}
-        {% if module.id == learning_module.id %}
-            <span class="glyphicon glyphicon-edit" data-toggle="tooltip" title="Currently on">
-            </span>
-        {% endif %}
-        <b><u><a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}">{{module}}</u></b>
-        </a>
-        <ul class="list">
-        {% for unit in module.get_learning_units %}
-        <span>
-        <li>
-        {% get_unit_status course module unit user as status %}
 
-        {% if unit.id == current_unit.id %}
-            <span class="glyphicon glyphicon-edit" data-toggle="tooltip" title="Currently on">
-            </span>
-        {% endif %}
-        {% if unit.type == "quiz" %}
-            <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{module.id}}/{{course.id}}">
-                {{ unit.quiz.description }}
+<div class="row">
+
+    <!-- Side bar -->
+    <div class="col-md-3 yakshlabel collapse" id="sidebar">
+        <center><h4><a class="text-dark" href="{{ URL_ROOT }}/exam/course_modules/{{course.id}}"><i class="fa fa-caret-left"></i> {{course.name}}</h4></center>
+        {% for module in all_modules %}
+        <div class="list-group">         
+    
+            <a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}" id="menu1" class="list-group-item bg-light" data-parent="#sidebar">
+                    {% if module.id == learning_module.id %}
+                        <i class="fa fa-toggle-on yakshred" data-toggle="tooltip" title="Currently on">
+                        </i>
+                    {% else %}
+                        <i class="fa fa-toggle-off" data-toggle="tooltip" title="Currently off"></i>
+                    {% endif %}                
+                {{module}}
             </a>
-        {% else %}
-            <a href="{{ URL_ROOT }}/exam/show_lesson/{{unit.lesson.id}}/{{module.id}}/{{course.id}}">
-                {{ unit.lesson.name }}
-            </a>
-        {% endif %}
-        {% if status == "completed" %}
-          <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
-        {% else %}
-          <span class="glyphicon glyphicon-remove" style="color:  #FF0000"></span>
-        {% endif %}
-        </li>
-        </span>
-        {% endfor %}
-        </ul>
-    {% endfor %}
-</div>
-{% if msg %}
-<center>
-<div class="col-md-12 col-md-offset-1 main">
-<div class="alert alert-warning">{{msg}}</div></div>
-</center>
-{% endif %}
-<div class="col-md-12 col-md-offset-1 main">
-{% if state == "module" %}
-<div class="panel panel-default" style="border: none; box-shadow: none;">
-    <div class="panel-body">
-        {{learning_module.html_data|safe}}
-        {% if learning_module.html_data%}
-        <hr>
-        {% endif %}
-        {% if learning_module.get_learning_units %}
-        <center><h4>Following are the units in this modules</h4></center>
-        <table class="table">
-        <tr>
-        <th>Unit Name</th>
-        <th>Unit Type</th>
-        </tr>
-        {% for unit in learning_module.get_learning_units %}
-        <tr>
-        <ul class="inputs-list">
-            <td>
-            {% if unit.type == "quiz" %}
-                {{unit.quiz.description}}
-            {% else %}
-                {{unit.lesson.name}}
-            {% endif %}
-            </td>
-            <td>
-            {% if unit.type == "quiz" %}
-                {% if unit.quiz.is_exercise %}
-                    Exercise
+            {% for unit in module.get_learning_units %}
+            <span id="menudrop">
+                {% if unit.type == "quiz" %}
+                    <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{module.id}}/{{course.id}}" class="list-group-item" data-parent="#menu1">
+                        {% if status == "completed" %}
+                          <i class="fa fa-check-square yakshgreen"></i>
+                        {% else %}
+                          <i class="fa fa-square-o"></i>
+                        {% endif %}
+                        {% get_unit_status course module unit user as status %}
+                    {{ unit.quiz.description }}
+                        {% if unit.id == current_unit.id %}
+                            <i class="fa fa-thumb-tack yakshred" data-toggle="tooltip" title="Currently on">
+                            </i>
+                        {% endif %}
+                    </a>
                 {% else %}
-                    Quiz
+                    <a href="{{ URL_ROOT }}/exam/show_lesson/{{unit.lesson.id}}/{{module.id}}/{{course.id}}" class="list-group-item" data-parent="#menu1">
+                        {% if status == "completed" %}
+                          <i class="fa fa-check-square yakshgreen"></i>
+                        {% else %}
+                          <i class="fa fa-square-o"></i>
+                        {% endif %}
+                        {% get_unit_status course module unit user as status %}
+
+                        
+                    {{ unit.lesson.name }}
+                        {% if unit.id == current_unit.id %}
+                            <i class="fa fa-thumb-tack yakshred" data-toggle="tooltip" title="Currently on">
+                            </i>
+                        {% endif %}
+                    </a>
                 {% endif %}
-            {% else %}
-                Lesson
+            </span>
+            {% endfor %}          
+
+        </div>
+        {% endfor %}
+    </div>
+     <a href="#sidebar" data-toggle="collapse" id="sidebaricon"><i class="fa fa-navicon fa-lg"></i></a>
+    <!-- End of sidebar-->
+
+    <main class="col" id="sidebarbody">
+
+    <div class="container-fluid yakshwell">
+            <div class="yakshwell bg-light">
+            <div class="row align-items-center ">
+                <div class="col h3 text-center">
+                 {{ learning_module.name }}
+                {% if state == "lesson" %}
+                    : {{lesson.name}}
+                {% endif %}
+                </div>
+            </div>
+            </div>
+            
+           
+            {% if msg %}
+            <center>
+                <div class="col-md-8 yakshwell">
+                    <div class="alert alert-warning animated flash">{{msg}}</div>
+                </div>
+            </center>
             {% endif %}
-            </td>
-        </ul>
-        </tr>
-        {% endfor %}
-        </table>
-        {% else %}
-            <center><h3>No Lessons/Quizzes Found</h3></center>
+
+            <div class="col-md-12 main">
+        {% if state == "module" %}  <!-- Module instructions body -->
+            <div class="row yakshwell">
+                <div class="col-md-8 ">
+                    {{learning_module.html_data|safe}}
+                    {% if learning_module.html_data%}
+                    {% endif %}
+                </div>
+                <div class="yakshwell col-md-3">
+                    <div class="bg-light">
+                    {% if learning_module.get_learning_units %}
+                    <center><h4>Units in this module</h4></center><hr>
+                    {% for unit in learning_module.get_learning_units %}
+                    <div class="row justify-content-center">
+                        <span class="col-sm-2 yakshgreen">
+                        {% if unit.type == "quiz" %}
+                            {% if unit.quiz.is_exercise %}
+                                <span class="fa fa-pencil"></span>
+                            {% else %}
+                                <span class="fa fa-puzzle-piece"></span>
+                            {% endif %}
+                        {% else %}
+                            <span class="fa fa-book"></span>
+                        {% endif %}
+                        </span>
+                        <span class="col-sm-7">
+                        {% if unit.type == "quiz" %}
+                            {{unit.quiz.description}}
+                        {% else %}
+                            {{unit.lesson.name}}
+                        {% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                        <center><h3>No Lessons/Quizzes Found</h3></center>
+                    {% endif %}
+                </div>
+                </div>
+            </div>
+            <div class="yakshwell text-center">
+                {% if first_unit %}
+                    <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{first_unit.id}}/1" class="btn btn-success">Start
+                        <i class="fa fa-play">
+                        </i>
+                    </a>
+                {% else %}
+                    <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}" class="btn btn-success">Next
+                        <i class="fa fa-step-forward">
+                        </i>
+                    </a>
+                {% endif %}
+            </div>
+            </div>
+        {% else %}    <!--  Lesson body   -->
+            
+            <div class="yakshwell">
+                <div class="yakshwell text-center ">
+                    {{lesson.html_data|safe}}
+                </div>
+                {% if lesson.get_files %}
+                    <div class="yakshwell col-md-5">
+                        <div class="card yakshwell">
+                        <span class="h4"> Files for this lesson </span> <hr>
+                        <span  class="col-md-2">
+                        {% for f in lesson.get_files %}
+                            <div class="yakshwell">
+                                <a href="{{f.file.url}}" class="btn btn-outline-secondary"><b>{{forloop.counter}}.</b> {{ f.file.name|file_title }}</a>
+                                <br>
+                            </div>
+                        {% endfor %}
+                        </span>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="yakshwell text-center">
+                <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{current_unit.id}}" class="btn btn-info" >Next
+                    <i class="fa fa-step-forward">
+                    </i>
+                </a>
+            </div>
         {% endif %}
+        </div>
     </div>
-</div>
-<div style="text-align: center;">
-    {% if first_unit %}
-        <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{first_unit.id}}/1" class="btn btn-info">Start
-            <span class="glyphicon glyphicon-chevron-right">
-            </span>
-        </a>
-    {% else %}
-        <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}" class="btn btn-info">Next
-            <span class="glyphicon glyphicon-chevron-right">
-            </span>
-        </a>
-    {% endif %}
-</div>
-{% else %}
-<div class="panel panel-default" style="border: none; box-shadow: none;">
-    <div class="panel-body">
-        {{lesson.html_data|safe}}
-    </div>
-</div>
-{% if lesson.get_files %}
-    <div class="panel-body" style="border-width: 10px;">
-        <h4><strong>Lesson Files (Click on file to download)
-        </strong></h4>
-        <ul class="list-group">
-        {% for f in lesson.get_files %}
-            <a class="list-group-item" href="{{f.file.url}}">
-                {{ f.file.name|file_title }}
-            </a>
-        {% endfor %}
-        </ul>
-    </div>
-{% endif %}
-<div style="text-align: center;">
-    <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{current_unit.id}}" class="btn btn-info" style="display: inline-block;">Next
-        <span class="glyphicon glyphicon-chevron-right">
-        </span>
-    </a>
-</div>
-{% endif %}
+    </main>
 </div>
 {% endblock %}
+
+
+{% block footer %}
+  <!--footer-->   
+  <footer class="container-fluid yakshsidebarfooter text-center">
+    <div class="row justify-content-center">
+    <div class="col-sm-5 ">
+      {% if user %}
+         {% block info %}
+         <b>{{user.get_full_name|title}}</b> with Roll no. <b>{{user.profile.roll_number}}</b> is logged in as <b>{{user.username}}</b>
+         {% endblock %}
+         {% endif %}
+    </div>
+    <div class="col-sm-2">
+      |
+    </div>
+    <div class="col-sm-4 text-left">
+     <b>Any Queries?</b> Email : info@fossee.in
+    </div>
+  </div>
+  </footer>
+  <!--footer end-->
+{% endblock %}
+

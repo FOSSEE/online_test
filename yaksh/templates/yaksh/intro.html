@@ -1,55 +1,61 @@
 {% extends "base.html" %}
 
-{% block pagetitle %} OnlineTest Instructions and Rules
-<h3> Important instructions & rules </h3>
-{% endblock pagetitle %}
-{% block content %}
+{% block pagetitle %} OnlineTest Instructions and Rules {% endblock pagetitle %}
 
-         {% if questionpaper.quiz.is_expired %}
-              <div class="alert alert-error">
-                  This Quiz has expired. You can no longer attempt this Quiz.
+{% block content %}
+<div class="container-fluid card col-md-10">
+    <center class="yakshwell">
+     {% if questionpaper.quiz.is_expired %}
+          <div class="alert col-md-8 alert-error animated flash">
+              This Quiz has expired. You can no longer attempt this Quiz.
+          <br/>
+          </div>
+     {% else %}
+          <div class="alert alert-success col-md-8 animated flash">
+          {% load tz %}
+          {% get_current_timezone as TIME_ZONE %}
+              You can attempt this Quiz at any time between {{ questionpaper.quiz.start_date_time }} {{ TIME_ZONE }} and {{ questionpaper.quiz.end_date_time }} {{ TIME_ZONE }}
               <br/>
-              </div>
-         {% else %}
-              <div class="alert">
-              {% load tz %}
-              {% get_current_timezone as TIME_ZONE %}
-                  You can attempt this Quiz at any time between {{ questionpaper.quiz.start_date_time }} {{ TIME_ZONE }} and {{ questionpaper.quiz.end_date_time }} {{ TIME_ZONE }}
-                  <br/>
-                  You are not allowed to attempt the Quiz before or after this duration
-              <br/>
-              </div>
-         {% endif %}
-          <p> Welcome <strong>{{user.get_full_name|title}}</strong>, to the programming quiz! </p>
-          {{ questionpaper.quiz.instructions|safe }}
-        <div class="row">
-            <div class="col-md-6">
-              <center>
-                {% if status != "moderator" %}
-                    <a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}" class="btn btn-primary" name="home">
-                    <span class=" glyphicon glyphicon-arrow-left">
-                    </span>
-                    Go Back</a>
-                {% else %}
-                    <a href="{{URL_ROOT}}/exam" class="btn btn-primary" name="home">
-                    <span class=" glyphicon glyphicon-arrow-left">
-                    </span>
-                    Go Back</a>
+              You are not allowed to attempt the Quiz before or after this duration
+          <br/>
+          </div>
+     {% endif %}
+    </center>
+    <div class="yakshwell">
+      <p> Welcome <strong>{{user.get_full_name|title}}</strong>, to the programming quiz! </p>
+      {{ questionpaper.quiz.instructions|safe }}
+      <div class="row yakshwell">
+          <div class="col-md-6">
+            <center>
+              {% if status != "moderator" %}
+                  <a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}" class="btn btn-primary" name="home">
+                  <i class="fa fa-step-backward">
+                  </i>
+                  Go Back</a>
+              {% else %}
+                  <a href="{{URL_ROOT}}/exam" class="btn btn-primary" name="home">
+                  <i class="fa fa-step-backward">
+                  </i>
+                  Go Back</a>
+              {% endif %}
+            </center>
+          </div>
+          <div class="col-md-6">
+                {% if not questionpaper.quiz.is_expired %}
+                    <form action="{{URL_ROOT}}/exam/start/{{ attempt_num }}/{{module.id}}/{{ questionpaper.id }}/{{course.id}}/" method="post" align="center">
+                     {% csrf_token %}
+                     <center><button class="btn btn-success" type="submit" name="start"> Start Exam <i class="fa fa-play"></i></button></center>
+                    </form>
                 {% endif %}
-              </center>
-            </div>
-            <div class="col-md-6">
-                  {% if not questionpaper.quiz.is_expired %}
-                      <form action="{{URL_ROOT}}/exam/start/{{ attempt_num }}/{{module.id}}/{{ questionpaper.id }}/{{course.id}}/" method="post" align="center">
-                       {% csrf_token %}
-                       <center><button class="btn btn-success" type="submit" name="start"> Start Exam <span class="glyphicon glyphicon-chevron-right"></span></button></center>
-                      </form>
-                  {% endif %}
-            </div>
-        </div>
+          </div>
+      </div>
+    </div>
+    </div>
 {% endblock content %}
+
 {% if user %}
   {% block info %}
   <h5>{{user.get_full_name|title}}({{user.profile.roll_number}}) Logged in as {{user.username}}</h5>
   {% endblock %}
 {% endif %}
+

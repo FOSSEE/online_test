@@ -1,54 +1,65 @@
 {% extends "base.html" %}
 
-{% block pagetitle %}<img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_text.png"
-width="80" alt="YAKSH"></img>{% endblock %}
+{% block pagetitle %}
+<div class="yakshnav fixed-top" style=" padding-top: 0.5%;padding-bottom: 0.5%;">
+    <a class="navbar-brand" href="{{ URL_ROOT }}/exam/"  >
+    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH">
+    </img>
+    </a> 
+</div>
+{% endblock %}
+
 {% block content %}
 {% if module_id and not paper.question_paper.quiz.is_trial %}
 <center>
-    <div class="alert alert-info">
+    <div class="alert alert-info col-md-8 animated flash">
         Note:- Please Click on the Next button to submit the quiz. Please do not close the browser without clicking Next.
     </div>
 </center>
 {% endif %}
 {% csrf_token %}
     {% if paper.questions_answered.all or paper.questions_unanswered.all %}
-<center><table class="table table-bordered" >
-        <caption> <center><h3>Submission Status</h3> </center></caption>
-        <thead>
-            <tr>
-                <th> Question</th>
-                <th> State </th>
-            </tr>
-        </thead>
+        <center>
+        <div class="col-md-8 yakshwell">
+            <h3>Submission Status</h3>
+            <table class="table table-bordered table-responsive-sm" >
+                <thead>
+                    <tr class="yakshred text-center">
+                        <th> Question</th>
+                        <th> Status </th>
+                    </tr>
+                </thead>
 
-        {% for question in paper.questions.all %}
-            <tbody>
-                {% if question in paper.questions_answered.all %}
-                    <tr class="info">
-                    <td> {{ question.summary }} </td>
-                    <td> Attempted </td>
-                {% else %}
-                    <tr class="danger">
-                    <td> {{ question }} </td>
-                    <td> Not completed </td>
-                {% endif %}
-                </tr>
-            </tbody>
-        {% endfor %}
-</table></center>
+                {% for question in paper.questions.all %}
+                    <tbody>
+                        {% if question in paper.questions_answered.all %}
+                            <tr class="table-success">
+                            <td> {{ question.summary }} </td>
+                            <td> Attempted </td>
+                        {% else %}
+                            <tr class="table-danger">
+                            <td> {{ question }} </td>
+                            <td> Not completed </td>
+                        {% endif %}
+                        </tr>
+                    </tbody>
+                {% endfor %}
+            </table>
+        </div>
+        </center>
     {% endif %}
-	<center><h3>{{message}}</h3></center>
+	<center class="yakshwell container-fluid"><h5 class="yakshwell"><span class="alert alert-success animated flash">{{message}}</span></h5></center>
     <center>
     <br>
     {% if module_id and not paper.question_paper.quiz.is_trial %}
         {% if first_unit %}
             <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}/1" class="btn btn-info" id="Next"> Next
-                <span class="glyphicon glyphicon-chevron-right">
+                <span class="fa fa-step-forward">
                 </span>
             </a>
         {% else %}
             <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}" class="btn btn-info" id="Next"> Next
-                <span class="glyphicon glyphicon-chevron-right">
+                <span class="fa fa-step-forward">
                 </span>
             </a>
         {% endif %}

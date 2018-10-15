@@ -11,19 +11,19 @@
 {% endblock %}
 {% block onload %} onload="javascript:test();"  {% endblock %}
 {% block content %}
-
+<div class="yakshwell container">
 <form name=frm id=frm action="" method="post" >
     {% csrf_token %}
     <center>
-    <table class="span1 table">
+    <table class="span1 table table-responsive-sm">
     {{ form.as_table }}
     </table>
     <br/><br/>
     </center>
-    <center><button class="btn" type="submit" id="submit" name="save_exercise"> Save
+    <center><button class="btn btn-success" type="submit" id="submit" name="save_exercise"> Save
     </button>
 
-    <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button> </center>
+    <button class="btn btn-danger" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button> </center>
 </form>
 {% if exercise and course_id %}
     {% if exercise.questionpaper_set.get.id %}
@@ -50,4 +50,5 @@
     </div>
     {% endif %}
 {% endif %}
+</div>
 {% endblock %}

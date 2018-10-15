@@ -15,10 +15,10 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/yakshcustom.css" type="text/css" />
+  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/animate.min.css" type="text/css" />
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/font-awesome.css" type="text/css" />
-  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/sticky-footer.css" type="text/css" />
-  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/ontop.css" type="text/css" />
 
 
@@ -30,40 +30,45 @@
 
   {% block css %}
   {% endblock %}
-  <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js"></script>
-  <script src="{{ URL_ROOT }}/static/yaksh/js/bootstrap.min.js"></script>
+
+ 
+
+  <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/popper.min.js"></script>
+  <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/jquery-3.3.1.min.js"></script>
+  <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/bootstrap.min.js"></script>
+  <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/wow.min.js"></script>
+ 
+  <script>
+      new WOW().init();
+  </script>
   {% block script %}
   {% endblock %}
+  </script>
 </head>
 
-<body {% block onload %} {% endblock %}>
+<body {% block onload %} {% endblock %} class="yaksh">
+
   <div id="ontop">
     <div id="state">
-        Checking...
-    </div>
-  </div>
+      Checking...<img src="{{ URL_ROOT }}/static/yaksh/images/check_answer.gif"/>
+    </div></div>
+
+    
+  
   {% block nav %}
   {% endblock %}
-  <div class="container">
+
      <div class="content">
          <div class="header">
              <h3><center>{% block pagetitle %}{% endblock pagetitle %}</center></h2>
          </div>
-	       {% block content %}
-	       {% endblock %}
+         {% block content %}
+         {% endblock %}
      </div>
-     </div>
-     <div class="container">
-     <footer class="footer" id="footer_div">
-      <div class="logged_user_info" align="center" >
-            {% block info %}
-            {% endblock %}
-      </div>
-     <div class="container">
-         <p align="center">Developed by FOSSEE group, IIT Bombay</p>
-     </div>
-     </footer>
-   </div>
+     
+
+  {% block footer %}
+  {% endblock %}
 
 </body>
 </html>

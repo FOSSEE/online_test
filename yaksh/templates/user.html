@@ -1,44 +1,69 @@
 {% extends "base.html" %}
-{% block css%}
-    <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
-{% endblock %}
+
 {% block nav %}
-    <nav class="navbar navbar-fixed-top navbar-inverse">
-      <div class="container">
-        <div class="navbar-header">
-              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-              </button>
-          <a class="navbar-brand navbar-left" href="{{ URL_ROOT }}/exam/">
-            <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH" style="margin-top: -3px; margin-left:-15px">
-            </img>
-          </a>
-        </div>
-        <div class= "collapse navbar-collapse" id="navbar">
-          <ul class="nav navbar-nav navbar-right">
-              <li><a href="{{ URL_ROOT }}/exam/quizzes/enrolled/"> Enrolled Courses </a></li>
-              <li><a href="{{ URL_ROOT }}/exam/reset/changepassword"> Change Password </a></li>
-              <li><a href="{{ URL_ROOT }}/exam/viewprofile"> {{ user.get_full_name.title }} </a></li>
-              <li><a href="{{URL_ROOT}}/exam/logout/" id="logout">Logout</a></li>
-          </ul>
-        </div><!-- /.navbar -->
-      </div><!-- /.container -->
-    </nav><!-- /.navbar -->
-{% endblock %}
-{% block content %}
-<div class="row">
-    <div class="col-sm-8 col-sm-offset-3 col-md-9 col-md-offset-2 main">
-    <div class="row">
-        {% block main %}
-        {% endblock %}
+<div class="container-fluid yakshnav">
+<nav class="navbar fixed-top navbar-expand-lg yakshheading yakshnav">
+  <div class="container">
+    <button class="navbar-toggler navbar-dark" type="button" data-toggle="collapse" data-target="#myNavbar" aria-controls="myNavbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon" style="color: white"></span>
+    </button>
+    <a class="navbar-brand" href="{{ URL_ROOT }}/exam/">
+    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH" style="margin-top: -3px; margin-left:-15px">
+    </img>
+    </a>    
+    <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav nav-pills ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/"><i class="fa fa-home" style="size: 18px"></i></a></li>
+            <li class="nav-item dropdown">
+          <a class="dropdown-toggle nav-link" id="user_dropdown" data-toggle="dropdown" href="#"> {{user.get_full_name|title}}</a>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="{{ URL_ROOT }}/exam/viewprofile/"><i class="fa fa-user"></i>  My Profile</a>
+            <div class="dropdown-divider"></div>
+            {% if user.profile.is_moderator %}
+            <a class="dropdown-item" href="{{URL_ROOT}}/exam/toggle_moderator/"><i class="fa fa-exchange"></i>
+              Switch To Moderator  
+            </a>
+            <div class="dropdown-divider"></div>
+            {% endif %}
+            <a class="dropdown-item" href="{{ URL_ROOT }}/exam/reset/changepassword/"><i class="fa fa-key"></i> Change Password</a>
+            <div class="dropdown-divider"></div>
+            <a id="user_logout" class="dropdown-item" href="{{URL_ROOT}}/exam/logout/"><i class="fa fa-sign-out"></i> Logout</a>
+
+          </div>
+        </li>
+        </ul>
     </div>
-    </div>
+  </div>
+</nav>
 </div>
 {% endblock %}
-{% if user %}
-  {% block info %}
-  <h5><b>{{user.get_full_name|title}}</b> with Roll no. <b>{{user.profile.roll_number}}</b> is logged in as <b>{{user.username}}</b></h5>
+
+
+{% block content %}  
+  {% block main %}
+    {% block navtab %}
+    {% endblock %}
   {% endblock %}
-{% endif %}
+{% endblock %}
+
+{% block footer %}
+  <!--footer-->   
+  <footer class="container-fluid yakshfooter text-center ">
+    <div class="row justify-content-center">
+    <div class="col-sm-5 ">
+      {% if user %}
+         {% block info %}
+         <b>{{user.get_full_name|title}}</b> with Roll no. <b>{{user.profile.roll_number}}</b> is logged in as <b>{{user.username}}</b>
+         {% endblock %}
+         {% endif %}
+    </div>
+    <div class="col-sm-2">
+      |
+    </div>
+    <div class="col-sm-4 text-left">
+     <b>Any Queries?</b> Email : info@fossee.in
+    </div>
+  </div>
+  </footer>
+  <!--footer end-->
+{% endblock %}

@@ -11,10 +11,11 @@
 {% endblock %}
 
 {% block content %}
+<div class="yakshwell container">
 <form name=frm id=frm action="" method="post" >
   {% csrf_token %}
   <center>
-  <table class="table table-bordered">
+  <table class="table table-bordered table-responsive-sm">
   {{ form.as_table }}
   </table>
   <br/>
@@ -24,7 +25,8 @@
   </script>
   </center>
 
-  <center><button class="btn primary" type="submit" id="submit" name="questionpaper">Save</button>
-  <button class="btn primary" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses");'>Cancel</button> </center>
+  <center><button class="btn btn-success" type="submit" id="submit" name="questionpaper">Save</button>
+  <button class="btn btn-danger" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses");'>Cancel</button> </center>
 </form>
+</div>
 {% endblock %}

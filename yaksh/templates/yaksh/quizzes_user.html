@@ -1,114 +1,173 @@
 {% extends "user.html" %}
 {% block title %} Student Dashboard {% endblock %}
-{% block pagetitle %} {{ title }} {% endblock %}
+
+{% block script %}
+
+{% endblock %}
+
 {% block main %}
+<div class="container">
     {% if msg %}
-        <div class="alert alert-warning" role="alert">
-            <center>{{ msg }}</center>
-        </div>
+         <center><div class="col-md-8 alert alert-warning animated flash" role="alert">
+           {{ msg }}
+        </div></center>
     {% endif %}
-    {% if user.profile.is_moderator %}
-        <div class="row">
-            <a href="{{URL_ROOT}}/exam/toggle_moderator/" class="btn btn-primary pull-right" style="margin-top: 20px; margin-bottom: 20px;">
-              Switch To Moderator
-            </a>
-        </div>
+
+    {% block navtab %}
+        {% if 'Enrolled Courses' not in title%} 
+            <div class="container">
+                <div class="nav nav-tabs yakshnavtab">
+                  <li class="nav-item" >
+                    <a class="active nav-link bg-light" href="{{ URL_ROOT }}/exam/quizzes/" id="yakshactive">ALL COURSES</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{{ URL_ROOT }}/exam/quizzes/enrolled/">ENROLLED COURSES</a>
+                  </li>
+                </div>
+            </div>
+            <div class="row justify-content-center yakshwell"> 
+            <div class="col-md-6">
+                <div class="yakshwell">
+                        <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" >
+                            {% csrf_token %}
+                            <div class="col-md-12">
+                                <div class="input-group"> 
+                                    <div class="input-group-prepend">
+                                    <span class="input-group-text" id="basic-addon1">Search Course</span>
+                                    </div>
+                                    <input type="text" name="course_code" class="form-control" type="search"  placeholder="Enter Course-Code">
+                                    <span class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="submit"><i class="fa fa-search yakshred"></i></button>
+                                        <button class="btn btn-outline-secondary" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/quizzes/");'>Go Back</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </form>
+                </div>
+            </div>
+            </div>
+        {% else %}
+        <div class="container">
+                <div class="nav nav-tabs yakshnavtab">
+                  <li class="nav-item" >
+                    <a class="nav-link" href="{{ URL_ROOT }}/exam/quizzes/">ALL COURSES</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="active nav-link bg-light" href="{{ URL_ROOT }}/exam/quizzes/enrolled/" id="yakshactive">ENROLLED COURSES</a>
+                  </li>
+                </div>
+            </div>
+        {% endif %}
+    {% endblock %}
+
+    {% if not courses %}
+        <center><div class="col-md-8 alert alert-warning animated flash" role="alert">
+            No Courses to display
+        </div></center>    
     {% endif %}
-    {% if 'Enrolled Courses' not in title%}
-        <div class="row well">
-            <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" class="form-search form-horizontal">
-                {% csrf_token %}
-                <div class="col-md-12">
-                    <div class="input-group">
-                        <span class="input-group-addon" id="basic-addon1">Search Course</span>
-                        <input type="text" name="course_code" class="form-control" placeholder="Course Code">
-                        <span class="input-group-btn">
-                            <button class="btn btn-default" type="submit">Search</button>
-                            <button class="btn btn-default" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/quizzes/");'>Cancel</button>
+
+    <div class="row justify-content-md-center align-items-center" >
+    <div class="col col-sm-10 yakshwell">
+    {% for course in courses %}
+        <div class="yakshwell">
+            <div class="row yakshlabel align-items-center">
+                <div class="col">
+                    <h4><b>
+                        
+                        {{ course.name }} by {{ course.creator.get_full_name }}
+                        
+                    </b></h4>
+                    {% if course.is_active_enrollment %}
+                        <div class="text-left">
+                            <span class="yakshgreen">{{course.start_enroll_time}}</span>&nbsp;&nbsp; to &nbsp;&nbsp;<span class="yakshgreen">{{course.end_enroll_time}}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-sm-auto">
+                    {% if course.days_before_start != 0 %}
+                    <span class="label label-info" style="font-size: 15px">
+                        {{course.days_before_start}} day(s) to start
+                    </span>
+                    {% endif %}
+                    
+                </div>
+                <div class="container col-sm-4 offset-sm-2">
+                    <span class="row align-items-center">
+                        <span class="col-sm-4" >   
+                        <a class="btn btn-primary" data-toggle="collapse" href="#collapsedetails{{course.id}}" role="button" aria-expanded="false" aria-controls="#collapsedetails{{course.id}}">DETAILS</a>
                         </span>
+                        
+                        <span class="col-sm-auto">
+                            {% if user in course.requests.all %} <span class="badge badge-warning">Request Pending </span>
+                            {% elif user in course.rejected.all %}<span class="badge badge-danger">Request Rejected</span>
+                            {% elif user in course.students.all %}<a class="btn btn-success" href="{{URL_ROOT}}/exam/course_modules/{{course.id}}" >START</a>
+                            {% else %}
+                                {% if course.active %}
+                                    {% if course.is_active_enrollment %}
+                                        {% if course.is_self_enroll %}
+                                            <a class="btn btn-success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.id }}">ENROLL</a>
+                                        {% else %}
+                                            <a class="btn btn-success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.id }}">ENROLL</a>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="btn btn-danger disabled" style="font-size: 15px">
+                                            Enrollment Closed
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge badge-danger" style="font-size: 15px">
+                                        Inactive Course
+                                    </span>
+                                {% endif %}
+                            {% endif %}
+                        </span>
+                    </span>
+                </div>
+                     <!-- About course-->
+             <div class="collapse container-fluid" id="collapsedetails{{course.id}}">
+              <div class="card card-body ">
+                <h4>{{ course.name }} by {{ course.creator.get_full_name }}</h4><hr>
+                <div class="row">
+                    <div class="col-md-7">
+                        {% if course.description %}
+                            <p> <span class="yakshred yakshheading">About the course</span><br>
+                               {{ course.description }}
+                            </p>
+                        {% endif %}
+                        {% if course.get_learning_modules %}
+                            <p> <span class="yakshred yakshheading">What you'll learn</span>
+                                <ul>
+                                    {% for module in course.get_learning_modules %}
+                                    <li>{{module.name|title}}</li>
+                                    {% endfor %}
+                                </ul>    
+                            </p>
+                        {% endif %}
+                        <p> <span class="yakshred yakshheading">Instructor</span><br>
+                            {{ course.creator.get_full_name }}
+                        </p>
+                        {% if course.instructions %}
+                        <p> <span class="yakshred yakshheading">Requirement(s)</span><br>
+                            {{ course.instructions|safe }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 ">
+                        <table class="table table-borderless card table-responsive-sm">
+                            <tr><td class="yakshgreen">STARTS ON</td> <td>{{course.start_enroll_time}}</td></tr>
+                            <tr><td class="yakshgreen">ENDS ON</td>  <td>{{course.end_enroll_time}}</td>
+                        </table>
                     </div>
                 </div>
-            </form>
-        </div>
-    {% endif %}
-{% if not courses %}
-No Courses to display
-{% endif %}
-{% for course in courses %}
-<div class="row well">
-    <div class="col-md-12">
-        <div class="row">
-            <div class="col-md-4">
-                <h4><b>
-                    <a href="{{URL_ROOT}}/exam/course_modules/{{course.id}}">
-                    {{ course.name }} by {{ course.creator.get_full_name }}
-                    </a>
-                </b></h4>
+              </div>
             </div>
-            <div class="col-md-4">
-                {% if user in course.requests.all %} <span class="label label-warning">Request Pending </span>
-                {% elif user in course.rejected.all %}<span class="label label-danger">Request Rejected</span>
-                {% elif user in course.students.all %}<span class="label label-info">Enrolled</span>
-                {% if course.has_lessons %}&nbsp;&nbsp;&nbsp;<a href="{{URL_ROOT}}/exam/download_course/{{course.id}}" data-toggle="tooltip" title="Download course content" class="btn btn-primary">
-                    Download Course
-                </a>
-                {% endif %}
-                {% else %}
-                    {% if course.active %}
-                        {% if course.is_active_enrollment %}
-                            {% if course.is_self_enroll %}
-                                <a class="btn btn-success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.id }}">Enroll</a>
-                            {% else %}
-                                <a class="btn btn-success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.id }}">Enroll</a>
-                            {% endif %}
-                        {% else %}
-                            <span class="label label-danger" style="font-size: 15px">
-                                Enrollment Closed
-                            </span>
-                        {% endif %}
-                    {% else %}
-                        <span class="label label-danger" style="font-size: 15px">
-                            Course Closed
-                        </span>
-                    {% endif %}
-                {% endif %}
-            </div>
-            <div class="col-md-4">
-                {% if course.days_before_start != 0 %}
-                <span class="label label-info" style="font-size: 15px">
-                    {{course.days_before_start}} day(s) to start
-                </span>
-                {% endif %}
+               <!-- End of About course-->
             </div>
         </div>
-        {% if course.is_active_enrollment %}
-            <div class="alert alert-info">
-                Start Date&nbsp;: {{course.start_enroll_time}}
-                <br>
-                End Date&nbsp;&nbsp;: {{course.end_enroll_time}}
-            </div>
-        {% endif %}
-
-        {% if course.instructions %}
-        <div class="row">
-        <div class="panel-group">
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h4 class="panel-title">
-                <a data-toggle="collapse" href="#collapse{{ forloop.counter }}">Course Instructions</a>
-              </h4>
-            </div>
-            <div id="collapse{{ forloop.counter }}" class="panel-collapse collapse">
-              <div class="panel-body"> {{ course.instructions|safe }}</div> 
-            </div>
-          </div>
-        </div>
-        </div>
-        {% endif %}
+    {% endfor %}
     </div>
-</div><!--/row-->
-</br>
-{% endfor %}
+    </div>
+</div>
 
 {% endblock %}
 

@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block manage %}
+<div class="yakshwell container">
 <form name=frm action="" method="post">
 {% csrf_token %}
 <p><u> Fixed Questions </u></p>
@@ -23,4 +24,5 @@
 {% endfor %}
 <br>
 </form>
+</div>
 {% endblock %}

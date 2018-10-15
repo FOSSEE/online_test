@@ -2,9 +2,10 @@
 
 {% block pagetitle %} Results {% endblock pagetitle %}
 {% block content %}
+<div class="yakshwell container">
 <form>
   {% csrf_token %}
-  <center><table class="table well">
+  <center><table class="table table-responsive-sm">
     <th>Quiz Description
     <th>Obtained Marks
     <th>Maximum Marks
@@ -19,5 +20,6 @@
     {% endfor %}
   </table></center>
 </form>
+</div>
 {% endblock %}
 

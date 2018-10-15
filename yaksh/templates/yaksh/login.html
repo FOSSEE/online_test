@@ -1,21 +1,78 @@
 {% extends "base.html" %}
 
-{% block pagetitle %}<img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_text.png" width="100" alt="YAKSH">
-</img>{% endblock %}
+
+
+{% block nav %}
+<div class="container-fluid yakshnav">
+<nav class="navbar fixed-top navbar-expand-lg yakshheading yakshnav">
+  <div class="container">
+    <button class="navbar-toggler navbar-dark" type="button" data-toggle="collapse" data-target="#myNavbar" aria-controls="myNavbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon" style="color: white"></span>
+    </button>
+    <a class="navbar-brand" href="{{ URL_ROOT }}/exam/">
+    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH" style="margin-top: -3px; margin-left:-15px">
+    </img>
+    </a>    
+    <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav nav-pills ml-auto">
+            <li><a href="#aboutus" class="nav-link">ABOUT US</a></li>
+            <li><a href="#contact" class="nav-link">CONTACT</a></li>
+        </ul>
+    </div>
+  </div>
+</nav>
+</div>
+{% endblock %}
 
 {% block content %}
-    <div class="row">
-        <div class="col-md-6" style="border-right:1px solid gray;">
+
+<div class="container yakshheading yakshwell text-center wow animated fadeIn">
+ 
+    <span class="yakshred h3">2500+</span> Students in <span class="yakshred h3">350+</span> Institutions across <span class="yakshred h3">16+</span> states in India are using YAKSH
+    </br>
+</div>
+<div class="container">
+    <div class="row yakshlabel text-center">
+        <p class="yakshred h4">Online Test Interface for conducting online programming quiz.</p>
+        <div class="col-md-7 text-left">            
+            <ul class="h5">
+                </br>
+                <li class="wow animated fadeInRight">Define fairly complicated programming problems and have users
+                solve the problem. </li>
+                </br>
+                <li class="wow animated fadeInRight" data-wow-delay="0.5s">Immediate verification of code solution. </li>
+                </br>
+                <li class="wow animated fadeInRight" data-wow-delay="1s">Supports pretty much arbitrary programming questions in Python, C, C++ and
+                simple Bash and uses "test cases" to test the implementations of the students.</li>
+                </br>
+                <li class="wow animated fadeInRight" data-wow-delay="1.5s">Supports simple multiple choice questions and File uploads.</li>
+                </br>
+                <li class="wow animated fadeInRight" data-wow-delay="2s">Since it runs on your Python, you could technically test any Python based library.</li>
+                </br>
+                <li class="wow animated fadeInRight" data-wow-delay="2.5s">Scales to over 500+ simultaneous users.</li>
+                </br>
+            </ul>           
+            
+        </div>
+
+        <div class="col-md-5">
+            <div class="yakshwell">
+                <div class="yakshwell">
+                    <a href="{{URL_ROOT}}/exam/register/" class="btn btn-outline-primary col-md-11 " >New User? SIGN UP</a>
+                </div>
+                <hr>
         <form action="" method="post">
         {% csrf_token %}
           
-        <center><table class="table">
+        <center><table class="table table-borderless yakshheading yakshgreen table-responsive-sm">
         {{ form.as_table }}
         </table></center>
-        <button class="btn btn-primary" type="submit">Login</button>
-        <a class="btn btn-primary" href="{{URL_ROOT}}/exam/reset/forgotpassword/">Forgot Password?</a>
-        <a class="btn btn-primary" href="{{URL_ROOT}}/exam/register/">New User? Sign-Up </a>
-        <h3> Login with </h3>
+        <div class="row justify-content-center">
+        <button class="col-4 btn btn-success" type="submit">Login</button><span class="col-1"></span>
+        <a class="btn btn-primary col-4" href="{{URL_ROOT}}/exam/reset/forgotpassword/">Forgot Password?</a>
+        </div>
+        <hr>
+         Login with 
         <a class="btn btn-social-icon btn-google" href="{% url 'social:begin' 'google-oauth2' %}">
             <span class="fa fa-google" style="font-size:32px;color:red" ></span>
         </a>
@@ -24,29 +81,58 @@
         </a>
         </form>
         </div>
-        <div class="col-md-6">
-            <p> Online Test Interface for conducting online programming quiz.
-            <ul>
-                <li>Define fairly complicated programming problems and have users
-                solve the problem. </li>
-                <li>Immediate verification of code solution. </li>
-                <li>Supports pretty much arbitrary programming questions in Python, C, C++ and
-                simple Bash and uses "test cases" to test the implementations of the students.</li>
-                <li>Supports simple multiple choice questions and File uploads.</li>
-                <li>Since it runs on your Python, you could technically test any Python based library.</li>
-                <li>Scales to over 500+ simultaneous users.</li>
-            </ul>
-            </p>
-            <br/>
-            <p><b>Fork us at:</b>
-            <a class = "btn btn-social-icon btn-github"
-            href ="https://github.com/fossee/online_test"
-            style="color:black">
-            
-            <span class="fa fa-github" style="font-size:48px"></span>
-            </p>
-            </a>
+        </br>
+        <div class="yakshred h4">
+            Best platform you can find to learn</br> and to test your skills
         </div>
+        </div>
+        
     </div>
-      
+
+    <div>
+        </br></br>
+        <h2 class="h4 yakshred" id="aboutus">About Us</h2>
+        <div class="yakshwell">
+        <h5><b>History</b></h5>
+
+        <p>At FOSSEE, Nishanth had implemented a nice django based app to test for multiple-choice questions. Prabhu Ramachandran was inspired by a programming contest that he saw at PyCon APAC 2011. Chris Boesch, who administered the contest, used a nice web application Singpath that he had built on top of GAE that basically checked your Python code, live. This made it fun and interesting.</p>
+        <p>Prabhu wanted an implementation that was not tied to GAE and hence wrote the initial cut of what is now 'Yaksh'. The idea being that anyone can use this to test students programming skills and not have to worry about grading their answers manually and instead do so on their machines.</p>
+        <p>The application has since been refactored and maintained by FOSSEE Developers.</p>
+
+        <h5><b>Contact</b></h5>
+        <p>For further information and support you can contact 
+        Python Team at FOSSEE: pythonsupport@fossee.in</p>
+
+        <h5><b>License</b></h5>
+        <p>This is distributed under the terms of the BSD license. Copyright information is at the bottom of this file.</p>
+
+        <h5><b>Authors</b></h5>
+        <p><a href="https://github.com/FOSSEE/online_test/graphs/contributors">FOSSEE Developers</a><br>
+        Copyright (c) 2011-{% now "Y" %} FOSSEE</p>
+         </div>
+    </div>
+
+</div>     
 {% endblock content %}
+
+
+{% block footer %}
+  <!--footer-->   
+  <footer class="container-fluid yakshfooter text-center" id="contact">
+       {% block info %}
+       {% endblock %}
+       Developed by FOSSEE team, IIT Bombay
+       <hr style="background-color: white"> 
+       <nav class="nav nav-pills nav-fill col-lg-12"> 
+
+            <li class="nav-item">
+                <a class = "btn btn-social-icon btn-github nav-link" href ="https://github.com/fossee/online_test"">Fork us at:
+                <span class="fa fa-github" style="font-size:20px;"></span>
+                </a>
+            </li>
+                <li class="nav-item"><span class="nav-link"> Email : info@fossee.in</span></li>
+                <li class="nav-item"><a href="#" class="nav-link">FOSSEE website</a></li>
+            </nav>
+  </footer>
+  <!--footer end-->
+{% endblock %}

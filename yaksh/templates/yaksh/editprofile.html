@@ -4,7 +4,7 @@
 <form action="{{URL_ROOT}}/exam/editprofile/" method="post" >
   {% csrf_token %}
   <center>
-  <table class="table table-bordered">
+  <table class="table table-bordered table-responsive-sm">
   {{ form.as_table }}
   </table>
   </center>

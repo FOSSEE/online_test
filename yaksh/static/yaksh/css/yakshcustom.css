@@ -1,0 +1,232 @@
+
+@import url('https://fonts.googleapis.com/css?family=Dosis|Exo+2');
+
+/* Navbar */
+
+
+.yakshnav {
+	background-color: #142624;
+	color: white;
+	left: 0;
+	top:0;
+    width: 100%;
+    text-align: center;
+}
+
+.navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus {
+    background-color: white;
+    color: #000000;
+	 }
+.navbar-nav > li > a {
+	color: white;
+}
+
+/*---------------------*/
+
+/* Nav pills */
+
+.yakshfooter .nav-pills>li>a, .yakshfooter .nav-pills .nav-link,.yakshnav .nav-pills>li>a {
+	color: white;
+}
+
+.yakshfooter .nav-pills>li>a:hover, .yakshnav .nav-pills>li>a:hover {
+	color: black;
+	background-color: white;
+}
+
+.nav-pills .nav-link {
+	color: black;
+}
+
+.nav-pills>a:hover {
+	color: black;
+	background-color: #f8f9fa;
+}
+
+
+
+/*---------------------*/
+
+/* Nav tab */
+
+.nav-tabs>li>a {
+	color: black;
+	border-color: #f03c69;
+}
+
+
+.nav-tabs .nav-link:hover, .nav-tabs .nav-link:active, .nav-tabs .nav-link .active:hover{
+	color: white;
+	background-color: #d8003d;
+	border-color: #d8003d;
+}
+#yakshactive {
+	border-bottom-color: #d8003d;
+	border-width: 3px;
+}
+
+
+
+.yakshnavtab {
+	border-color: #d8003d;
+	width: 100%;
+}
+
+/* Sidebar */
+
+
+
+#sidebar .list-group-item {
+    border-radius: 0;
+    background-color: inherit;
+    color: black;
+    border-left: 0;
+    border-right: 0;
+    border-color: transparent; 
+}
+
+#sidebar .list-group-item:hover {
+	background-color: #f8f9fa;
+}
+
+#sidebar {
+	max-width: 250px;
+}
+
+@media (max-width:400px) {
+	#sidebaricon>i {
+		display: show;
+		padding-left: 50%;
+	}
+}
+
+@media (min-width: 768px) {
+#sidebaricon>i {
+		display: none;
+	}
+
+
+
+ #sidebar {
+    position: fixed;
+    top: 9.5%;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    display: block;
+    overflow-x: auto;
+    overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+    border-right: 1px solid #eee;
+  }
+  #sidebarbody {
+	padding-left:280px;
+}
+}
+
+
+#menudrop {
+	text-indent: 15px;
+}
+
+
+
+/*---------------------*/
+
+/* Others */
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+.yaksh {
+	font-size: 15px;
+	font-family: 'Dosis', sans-serif;
+	padding-top: 60px;
+  	padding-bottom: 10%;
+}
+
+@media (max-width:400px) {
+.yaksh{
+	padding-bottom: 40%;
+}
+
+#sidebarbody {
+	padding-left: 5%;
+}
+
+
+}
+
+.yakshlabel {
+	background-color: #dbf9f2;
+	padding-top: 1%;
+	padding-bottom: 1%;
+	padding-left: 1%;
+}
+
+.yakshred {
+	color: #d8003d;
+}
+
+.yakshgreen {
+	color: #01825f;
+}
+
+.yakshfooter {
+	background-color: #142624;
+	padding-top: 1%;
+	padding-left: 10%;
+	padding-right: 10%;
+	padding-bottom: 1%;
+	color: white;
+    bottom: 0;
+    width: 100%;
+    position: absolute;
+    text-align: center;
+}
+
+.yakshsidebarfooter {
+	padding-top: 1%;
+	padding-left: 10%;
+	padding-right: 10%;
+	padding-bottom: 1%;
+	left: 10%;
+	position: absolute;
+    text-align: center;
+    color: white;
+    bottom: 0;
+    width: 100%;
+    background-color: #142624;
+}
+
+.yakshheading {
+	font-size: 18px;
+	font-family: 'Exo 2', sans-serif;
+}
+
+.h1, .h2, .h3, .h4 {
+	font-family: 'Exo 2', sans-serif;
+}
+
+.yakshwell {
+	background-color: white;
+	box-shadow: none;
+	padding-left: 1%;
+	padding-bottom: 1%;
+	padding-right: 1%;
+	padding-top: 1%
+}
+
+.yakshlight {
+	background-color: #efefef;
+}
+
+.table-wrapper-2 {
+    display: block;
+    max-height: 500px;
+    overflow-y: auto;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+
+/*---------------------*/

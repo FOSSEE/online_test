@@ -1,9 +1,8 @@
 {% extends "exam.html" %}
 {% load custom_filters %}
 
-{% block pagetitle %} {{ paper.question_paper.quiz.description }} {% endblock pagetitle %}
+
 {% block css %}
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question.css" type="text/css" />
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/codemirror/lib/codemirror.css" type="text/css" />
 <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/exam.css" type="text/css" />
@@ -114,93 +113,82 @@ question_type = "{{ question.type }}"
 
 {% block onload %} onload="updateTime();" {% endblock %}
 
-{% block learning_units %}
-<center><h4>{{course.name}}</h4></center>
-    <br>
-    {% for learning_module in all_modules %}
-        {% if learning_module.id == module.id %}
-            <span class="glyphicon glyphicon-edit" data-toggle="tooltip" title="Currently on">
-            </span>
-        {% endif %}
-        <b><u><a href="{{URL_ROOT}}/exam/quizzes/view_module/{{learning_module.id}}/{{course.id}}">{{learning_module.name}}</u></b>
-        </a>
-        <ul class="list">
-        {% for unit in learning_module.get_learning_units %}
-        <span>
-        <li>
-        {% get_unit_status course learning_module unit user as status %}
-
-        {% if unit.quiz.id == paper.question_paper.quiz.id %}
-            <span class="glyphicon glyphicon-edit" data-toggle="tooltip" title="Currently on">
-            </span>
-        {% endif %}
-        {% if unit.type == "quiz" %}
-            <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{learning_module.id}}/{{course.id}}">
-                {{ unit.quiz.description }}
-            </a>
-        {% else %}
-            <a href="{{ URL_ROOT }}/exam/show_lesson/{{unit.lesson.id}}/{{learning_module.id}}/{{course.id}}">
-                {{ unit.lesson.name }}
-            </a>
-        {% endif %}
-        {% if status == "completed" %}
-          <span class="glyphicon glyphicon-ok" style="color: #7CFC00;"></span>
-        {% else %}
-          <span class="glyphicon glyphicon-remove" style="color:  #FF0000"></span>
-        {% endif %}
-        </li>
-        </span>
-        {% endfor %}
-        </ul>
-    {% endfor %}
-{% endblock %}
 
 {% block main %}
         <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <input type=hidden name="question_id" id="question_id" value={{ question.id }}></input>
-            <div class="panel panel-default">
-                  <div class="panel-heading">
-                      <h4>
-                        <u> {{ question.summary }}
-                             {% if question.type == "mcq" %}
-                             (SINGLE CORRECT CHOICE)
-                             {% elif question.type == "mcc" %}
-                             (MULTIPLE CORRECT CHOICES)
-                             {% elif question.type == "code" %}
-                             (PROGRAMMING)
-                             {% elif question.type == "upload" %}
-                             (ASSIGNMENT UPLOAD)
-                             {% elif question.type == "integer" %}
-                             (FILL IN THE BLANKS WITH INTEGER ANSWER)
-                             {% elif question.type == "string" %}
-                             (FILL IN THE BLANKS WITH STRING ANSWER)
-                                {% if testcase.string_check == "lower" %}
-                                    <h5>(CASE INSENSITIVE)</h5>
-                                {% else %}
-                                    <h5>(CASE SENSITIVE)</h5>
-                                {% endif %}
-                             {% elif question.type == "float" %}
-                             (FILL IN THE BLANKS WITH FLOAT ANSWER)
-                             {% elif question.type == "arrange" %}
-                            (ARRANGE THE OPTIONS IN CORRECT ORDER)
-                             {% endif %}
-
-                        </u>
-                        <font class=pull-right>(Marks : {{ question.points }}) </font>
-                      </h4>
-                      <font size=3 face=arial> {{ question.description|safe }} </font>
-                      {% if files %}
-                      <h4>Files to download for this question</h4>
-                      {% for f_name in files %}
-                      <h5><a href="{{f_name.file.url}}">{{f_name.file.name}}</a></h5>
-                      {% endfor %}
-                      {% endif %}
+            <div class="yakshwell">
+                  <div class="card ">
+                    <div class="col-md-12 bg-light">
+                      <div class="row align-items-center ">
+                          <div class="col yakshheading"> {{ question.summary }} </div>
+                          <div class="col-md-4 ml-auto yakshwell text-center">
+                               {% if question.type == "mcq" %}
+                               SINGLE CORRECT CHOICE
+                               {% elif question.type == "mcc" %}
+                               MULTIPLE CORRECT CHOICES
+                               {% elif question.type == "code" %}
+                               PROGRAMMING
+                               {% elif question.type == "upload" %}
+                               ASSIGNMENT UPLOAD
+                               {% elif question.type == "integer" %}
+                               FILL IN THE BLANKS WITH INTEGER ANSWER
+                               {% elif question.type == "string" %}
+                               FILL IN THE BLANKS WITH STRING ANSWER
+                                  {% if testcase.string_check == "lower" %}
+                                      <br>(CASE INSENSITIVE)
+                                  {% else %}
+                                      <br>(CASE SENSITIVE)
+                                  {% endif %}
+                               {% elif question.type == "float" %}
+                               FILL IN THE BLANKS WITH FLOAT ANSWER
+                               {% elif question.type == "arrange" %}
+                               ARRANGE THE OPTIONS IN CORRECT ORDER
+                               {% endif %}
+                          </div>
+                          <div class="col-md-1 ml-auto text-center">
+                            <span class="badge badge-warning">{{ question.points }}</span><br>Marks
+                          </div>
+                      </div>
+                    </div>
+                    <div class="yakshwell">
+                        <font size=3 face=arial> {{ question.description|safe }} </font>
+                        {% if files %}
+                            <div class="yakshwell col-md-5">
+                                <div class="card yakshwell">
+                                <span> Files to download for this question </span> <hr>
+                                {% for f_name in files %}
+                                  <div class="yakshwell">
+                                    <a href="{{f.file.url}}" class="btn btn-outline-secondary"><b>{{forloop.counter}}.</b> {{f_name.file.name}}</a>
+                                    <br>
+                                    </div>
+                                {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
                 <br/>
+      <center>
+        {% if notification %}
+          {% if question.type == "code" %}
+          <div id="notification" class="alert alert-success col-md-8 animated flash" role="alert">
+            <strong>Note:</strong> {{ notification }}
+          </div>
+          {% else %}
+          <div id="notification" class="alert alert-warning col-md-8 animated flash" role="alert">
+            <strong>Note:</strong> {{ notification }}
+          </div>
+          {% endif %}
+        {% else %}
+          <div id="notification" role="alert">
+          </div>
+        {% endif %}
+      </center>
                         {% if quiz.is_exercise %}
                             {% if can_skip %}
-                                <div class = "well well-sm" id="solution">
+                                <div class = "card col-md-8" id="solution">
                             {% else %}
                                 <div id="solution" style="display:none">
                             {% endif %}
@@ -210,7 +198,8 @@ question_type = "{{ question.type }}"
                                 <font size=3 face=arial> {{ question.solution|safe }} </font>
                                 </div>
                         {% endif %}
-                 <div class="panel-body">
+                 <div class="card">
+                  <div class="yakshwell">
                      {% if question.type == "mcq" %}
                      {% for test_case in test_cases %}
                      {% if last_attempt and last_attempt|safe == test_case.id|safe %}
@@ -256,96 +245,82 @@ question_type = "{{ question.type }}"
                      {% if question.type == "upload" %}
                      <p>Upload assignment file for the said question<p>
                      <input type=file id="assignment" name="assignment" multiple="">
-                     <hr>
                      {% endif %}
 
                      {% if question.type == "arrange" %}
-                     {% if last_attempt %}
-                     {% get_answer_for_arrange_options last_attempt question as test_cases %}
-                     {% endif %}
-                     <input name="answer" type="hidden" id='arrange_order'/>
-                     <div class="list-group">
-                     <ol class="arrange">
-                     {% for test_case in test_cases %}
-                      <li class="list-group-item" id={{test_case.id}}>{{test_case.options| safe }}</li>
-                     {% endfor %}
-                      </ol>
-                    </div>
-
-                     <script type="text/javascript">
-                      var arrange = $("ol.arrange");
-                      var order_array = $(arrange).sortable(['serialize']);
-                     </script>
+                       {% if last_attempt %}
+                        {% get_answer_for_arrange_options last_attempt question as test_cases %}
+                       {% endif %}
+                       <input name="answer" type="hidden" id='arrange_order'/>
+                       <div class="list-group">
+                       <ol class="arrange ">                      
+                       {% for test_case in test_cases %}                     
+                        <li class="list-group-item yakshlight" id={{test_case.id}}>{{test_case.options| safe }}</li> {% endfor %}                    
+                        </ol>                      
+                      </div>
+                       <script type="text/javascript">
+                        var arrange = $("ol.arrange");
+                        var order_array = $(arrange).sortable(['serialize']);
+                       </script>
                      {% endif %}
 
 
-                     {% if question.type == "code" %}
-                     <div class="row">
-                         <div class="col-md-9">
-                             <h4>Write your program below:</h4>
-                         </div>
-                         <div class="col-md-3">
-                             <a href="#answer" class="pull-right" onclick="reset_editor()" name="reset" id="reset">Undo Changes&nbsp;<span class="glyphicon glyphicon-refresh"></span></a>
-                             </div>
-                    </div>
-                     <textarea autofocus name="answer" id="answer"></textarea>
-                     <br>
-                     {% endif %}
-        <div class="from-group">
+                    {% if question.type == "code" %}
+                      <div class="row align-items-center">
+                           <div class="col-md-9">
+                               <h5>Write your program below:</h5>
+                           </div>
+                           <div class="col-md-3 ml-auto">
+                               <a href="#answer" class=" btn btn-outline-primary" onclick="reset_editor()" name="reset" id="reset">Undo Changes&nbsp;<span class="glyphicon glyphicon-refresh"></span></a>
+                               </div>
+                      </div>
+                      <div class="yakshwell">
+                       <textarea  autofocus name="answer" id="answer"></textarea>
+                      </div>
+                    {% endif %}
+                  </div>
+                  </div>
+        <div class="text-center yakshwell">
 
          {% if question.type == "mcq" or  question.type == "mcc" or question.type == "integer" or question.type == "float" or question.type ==  "string" %}
-         <br><button class="btn btn-primary" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
+         <br><button class="btn btn-success" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
          {% elif question.type == "upload" %}
-         <br><button class="btn btn-primary" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
+         <br><button class="btn btn-success" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
          {% elif question.type == "arrange" %}
-         <br><button class="btn btn-primary" type="submit" name="check" id="check" onClick="return user_arranged_options();">Submit Answer</button>&nbsp;&nbsp;
+         <br><button class="btn btn-success" type="submit" name="check" id="check" onClick="return user_arranged_options();">Submit Answer</button>&nbsp;&nbsp;
 
 
          {% else %}
            {% if question in paper.get_questions_unanswered or quiz.is_exercise %}
-           <button class="btn btn-primary" type="submit" name="check" id="check" >Check Answer <span class="glyphicon glyphicon-cog"></span></button>&nbsp;&nbsp;
+           <button class="btn btn-success" type="submit" name="check" id="check" >Check Answer <span class="glyphicon glyphicon-cog"></span></button>&nbsp;&nbsp;
            {% endif %}
          {% endif %}
          {% if quiz.is_exercise %}
          {% if can_skip %}
              <button id="skip_ex" class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip"> Next <span class="glyphicon glyphicon-arrow-right"></span></button>
          {% else %}
-             <button id="skip_ex" class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" style="visibility:hidden"> Next <span class="glyphicon glyphicon-arrow-right"></span></button>
+             <button id="skip_ex" class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" style="visibility:hidden"> Next <span class="fa fa-step-forward"></span></button>
         {% endif %}
         {% endif %}
 
          {% if paper.question_paper.quiz.allow_skip and not paper.get_questions_unanswered|length_is:"1" %}
          {% if question in paper.get_questions_unanswered %}
-         <button class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" id="skip">Attempt Later <span class="glyphicon glyphicon-arrow-right"></span></button>
+         <button class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" id="skip">Attempt Later <span class="fa fa-step-forward"></span></button>
          {% endif %}
          {% endif %}
        </div>
          </form>
-         </div>
+         
      </div>
    </div>
    <br/>
    <p id="status"></p>
-        {% if notification %}
-          {% if question.type == "code" %}
-          <div id="notification" class="alert alert-success" role="alert">
-            <strong>Note:</strong> {{ notification }}
-          </div>
-          {% else %}
-          <div id="notification" class="alert alert-warning" role="alert">
-            <strong>Note:</strong> {{ notification }}
-          </div>
-          {% endif %}
-        {% else %}
-          <div id="notification" role="alert">
-          </div>
-        {% endif %}
   {% if question.type == 'code' or question.type == 'upload' %}
   <div class="row" id="error_panel"></div>
   {% endif %}
          
     <!-- Modal -->
-    <div class="modal fade " id="upload_alert" >
+    <div class="modal" id="upload_alert" >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -355,14 +330,10 @@ question_type = "{{ question.type }}"
               <font color="brown"><b>Kindly attach a file and then click upload.</b></font>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn primary close" data-dismiss="modal">OK</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
           </div>
         </div>
       </div>
    </div>
 {% endblock main %}
-{% if user %}
-  {% block info %}
-  <h5>{{user.get_full_name|title}}({{user.profile.roll_number}}) Logged in as {{user.username}}</h5>
-  {% endblock %}
-{% endif %}
+

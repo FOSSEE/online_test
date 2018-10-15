@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 
-{% block pagetitle %} <h2>Yaksh</h2> {% endblock %}
+{% block pagetitle %}
+<div class="yakshnav fixed-top" style=" padding-top: 0.5%;padding-bottom: 0.5%;">
+    <a class="navbar-brand" href="{{ URL_ROOT }}/exam/"  >
+    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH">
+    </img>
+    </a> 
+</div>
+{% endblock %}
 
 {% block content %}
 <center>
@@ -8,6 +15,6 @@ It seems that you have encountered an error
 <br>
 Please contact your administrator
 <br><br>
-<div class="alert alert-danger">Error Message:- {{exception}}</div>
+<div class="alert alert-danger animated flash col-md-8">Error Message:- {{exception}}</div>
 </center>
 {% endblock %}

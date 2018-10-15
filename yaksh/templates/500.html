@@ -1,7 +1,18 @@
 {% extends "base.html" %}
+{% block pagetitle %}
+<div class="yakshnav fixed-top" style=" padding-top: 0.5%;padding-bottom: 0.5%;">
+    <a class="navbar-brand" href="{{ URL_ROOT }}/exam/"  >
+    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH">
+    </img>
+    </a> 
+</div>
+{% endblock %}
 
 {% block content %}
+<br><br>
+<center>
 Internal Server error.<br />
 This event will be reported.<br />
 Sorry for the inconvinience.
+</center>
 {% endblock %}

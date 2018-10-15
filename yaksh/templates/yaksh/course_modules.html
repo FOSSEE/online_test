@@ -1,8 +1,8 @@
 {% extends "user.html" %}
 {% load custom_filters %}
 {% block title %} Course Modules {% endblock %}
-{% block pagetitle %} Curriculum for {{course}} {% endblock %}
 {% block script %}
+<script src="{{ URL_ROOT }}/static/yaksh/js/donutpiechart.js"></script>
 <script>
     function view_unit(unit){
         $("#"+unit+"_down").toggle();
@@ -11,15 +11,47 @@
 
 </script>
 {% endblock %}
+
 {% block main %}
+
+<div class="container">
+<div class="row justify-content-md-center yakshwell ">
+    <div class="col-md-10 bg-light card">
+        <div class="row align-items-center">
+            <div class="col h4">  {{course}}  </div>
+            <div class="col-md-3 ml-auto yakshwell">
+                <div class="row align-items-center"> 
+                    <div class="col-sm-6"> Overall
+                    Course</br>Completion :
+                    </div>
+                    <div class="col-sm-5">
+                    <span class="progress">
+                      <span class="progress-bar bg-warning " role="progressbar" style="width: 50%; color: black;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">50% completed</span>
+                    </span>
+                    </div>
+                </div>
+            </div>   
+        </div>
+    </div>
+</div>
+
+<center>
+<div class=" col-md-8">
+<b>Grade: {% if grade %} {{ grade }} {% else %} Will be available once the course is complete {% endif %}</b>
+</div>
+
+
 {% if msg %}
-    <div class="alert alert-warning" role="alert">
-        <center>{{ msg }}</center>
+    <div class="col-md-8 alert alert-warning animated flash" role="alert">
+        {{ msg }}
     </div>
 {% endif %}
-<b>Grade: {% if grade %} {{ grade }} {% else %} Will be available once the course is complete {% endif %}</b>
+</center>
+
+<div class="row justify-content-md-center ">
 {% if modules %}
-    <br><br>
+    <div class="col-md-10  yakshwell">
+
     <strong>Overall Course Progress</strong>
     <div class="progress">
         {% if course_percentage <= 50 %}
@@ -35,101 +67,138 @@
         <b style="color: black;">{{course_percentage}}% Completed</b>
         </div>
     </div>
-    <div class="panel panel-default">
-        <div class="panel panel-body">
-            <table class="table">
-                {% for module, percent in modules %}
-                    <tr>
-                        <td width="25%">
-                            <a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}">
-                            {{module.name|title}}</a>
-                        </td>
-                        <td>
-                            <span class="glyphicon glyphicon-chevron-down" id="learning_units{{module.id}}{{course.id}}_down">
-                            </span>
-                            <span class="glyphicon glyphicon-chevron-up" id="learning_units{{module.id}}{{course.id}}_up" style="display: none;">
-                            </span>
-                            <a data-toggle="collapse" data-target="#learning_units{{module.id}}{{course.id}}" onclick="view_unit('learning_units{{module.id}}{{course.id}}');">
-                            View Lessons/Quizzes/Exercises</a>
-                            <div id="learning_units{{module.id}}{{course.id}}" class="collapse">
-                                <table class="table table-bordered">
-                                <tr>
-                                    <th>Lesson/Quiz/Exercise</th>
-                                    <th>Status</th>
-                                    <th>Type</th>
-                                    <th>View AnswerPaper</th>
-                                </tr>
-                                {% for unit in module.get_learning_units %}
-                                <tr>
-                                    <td>
-                                    {% if unit.type == "quiz" %}
-                                        {{unit.quiz.description}}
-                                    {% else %}
-                                        {{unit.lesson.name}}
-                                    {% endif %}
-                                    </td>
-                                    <td>
-                                    {% get_unit_status course module unit user as status %}
-                                    {% if status == "completed" %}
-                                        <span class="label label-success">{{status|title}}
-                                        </span>
-                                    {% elif status == "inprogress" %}
-                                        <span class="label label-info">{{status|title}}
-                                        </span>
-                                    {% else %}
-                                        <span class="label label-warning">{{status|title}}
-                                        </span>
-                                    {% endif %}
-                                    </td>
-                                    <td>
-                                    {% if unit.type == "quiz" %}
-                                        {% if unit.quiz.is_exercise %}
-                                            Exercise
-                                        {% else %}
-                                            Quiz
-                                        {% endif %}
-                                    {% else %}
-                                        Lesson
-                                    {% endif %}
-                                    </td>
-                                    <td>
-                                    {% if unit.type == "quiz" %}
-                                        {% if unit.quiz.view_answerpaper %}
-                                            <a href="{{ URL_ROOT }}/exam/view_answerpaper/{{ unit.quiz.questionpaper_set.get.id }}/{{course.id}}">
-                                            <i class="fa fa-eye" aria-hidden="true"></i> Can View </a>
-                                        {% else %}
-                                            <a>
-                                            <i class="fa fa-eye-slash" aria-hidden="true">
-                                            </i> Cannot view now </a>
-                                        {% endif %}
-                                    {% else %}
-                                        ------
-                                    {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                                </table>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="progress">
-                                {% if percent <= 50 %}
-                                <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
-                                {% elif percent <= 75 %}
-                                <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+        
+        {% for module, percent in modules %}
+        <div class="yakshwell">
+            <div class="row yakshlabel align-items-center">
+                <div class="col-md-4">
+                    {{module.name|title}}
+                </div>
+
+                <div class="col-md-1">
+                    <a data-toggle="collapse" data-target="#learning_units{{module.id}}{{course.id}}" onclick="view_unit('learning_units{{module.id}}{{course.id}}');">
+                    <div class="btn yakshred"> 
+                    <span class="fa fa-caret-down fa-2x" id="learning_units{{module.id}}{{course.id}}_down" >
+                    </span>
+                    <span class="fa fa-caret-right fa-2x" id="learning_units{{module.id}}{{course.id}}_up" style="display: none; ">
+                    </span>
+                    </div>
+                    </a>
+                    
+                </div>
+                <div class="col-md-5 ml-auto">
+                    <div class="row align-items-center justify-content-md-end">
+                    <div class="col-md-3">
+                        <a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}">
+                        {% get_module_status user module course as module_status %}
+                        {% if module_status == "completed" %}
+                        <div class="btn btn-success ">
+                            View
+                        </div>
+                        {% elif module_status == "inprogress" %}
+                        <div class="btn btn-info">
+                            Continue
+                        </div>
+                        {% else %}
+                        <div class="btn btn-danger ">
+                            Start
+                        </div>
+                        {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        {% get_module_status user module course as module_status %}
+                        {% if module_status == "completed" %}
+                        <div class="progress">
+                          <div class="progress-bar bg-success" role="progressbar" style="width: 100%; color: black;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">100% completed</div>
+                        </div>
+                        {% elif module_status == "inprogress" %}
+                        <div class="progress">
+                          <div class="progress-bar bg-warning " role="progressbar" style="width: 50%; color: black;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">50% completed</div>
+                        </div>
+                        {% else %}
+                        <div class="progress">
+                          <div class="progress-bar bg-danger" role="progressbar" style="width: 1%; color: black;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0% completed</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <div id="learning_units{{module.id}}{{course.id}}" class="collapse">
+                        <table class="table yakshwell">
+                        
+                        {% for unit in module.get_learning_units %}
+                        <tr>
+                            <td>
+                            {% if unit.type == "quiz" %}
+                                {% if unit.quiz.is_exercise %}
+                                    <span class="fa fa-pencil"></span>
                                 {% else %}
-                                <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                    <span class="fa fa-puzzle-piece"></span>
                                 {% endif %}
-                                <b style="color: black;">{{percent}}% Completed</b>
+                            {% else %}
+                                <span class="fa fa-book"></span>
+                            {% endif %}
+                            </td>
+                            <td>
+                            {% if unit.type == "quiz" %}
+                                {{unit.quiz.description}}
+                            {% else %}
+                                {{unit.lesson.name}}
+                            {% endif %}
+                            </td>
+                            
+                            <td>
+                            {% get_unit_status course module unit user as status %}
+                            {% if status == "completed" %}
+                                <span class="badge badge-success">{{status|title}}
+                                </span>
+                            {% elif status == "inprogress" %}
+                                <span class="badge badge-info">{{status|title}}
+                                </span>
+                            {% else %}
+                                <span class="badge badge-warning">{{status|title}}
+                                </span>
+                            {% endif %}
+                            </td>
+                            <td>
+                            {% if unit.type == "quiz" %}
+                                {% if unit.quiz.view_answerpaper %}
+                                    <a href="{{ URL_ROOT }}/exam/view_answerpaper/{{ unit.quiz.questionpaper_set.get.id }}/{{course.id}}" >
+                                    <i class="fa fa-eye" aria-hidden="true"></i>Answer paper</a>
+                                {% else %}
+                                    <a >
+                                    <i class="fa fa-eye-slash" aria-hidden="true">
+                                    </i>Answer paper</a>
+                                {% endif %}
+                            {% else %}
+                                ------
+                            {% endif %}
+                            </td>
+                            <td>
+                                <div class="progress">
+                                    {% if percent <= 50 %}
+                                    <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                    {% elif percent <= 75 %}
+                                    <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                    {% else %}
+                                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                    {% endif %}
+                                    <b style="color: black;">{{percent}}% Completed</b>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </table>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </table>
+                    </div>
         </div>
+        {% endfor %}
     </div>
 {% else %}
-    <h3> No lectures found </h3>
+    <h3 class="alert-danger"> No lectures found </h3>
 {% endif %}
+</div>
+</div>
 {% endblock %}
