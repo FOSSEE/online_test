@@ -958,9 +958,8 @@ def add_course(request, course_id=None):
     else:
         form = CourseForm(instance=course)
         return my_render_to_response(
-            'yaksh/add_course.html',
-            {'form': form, 'course_id': course.id if course else None},
-            context_instance=ci
+            request, 'yaksh/add_course.html',
+            {'form': form, 'course_id': course.id if course else None}
         )
 
 
