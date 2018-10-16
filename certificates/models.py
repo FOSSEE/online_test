@@ -77,7 +77,7 @@ class Certificate(models.Model):
         return render_certificate_template(template, context)
 
     def create_certificate_pdf(self, student):
-        html = self.create_certificate_html(student, self.course)
+        html = self.create_certificate_html(student)
         template_path = get_cert_template_dir(self)
         pdf_formatter = PDFFormatter(template_path, html)
         return pdf_formatter.get_pdf()
