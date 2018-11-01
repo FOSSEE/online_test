@@ -360,15 +360,12 @@ question_type = "{{ question.type }}"
 <!-- Open chat container -->
 {% block postchat %}
 <form id="chatform">
-<div class="panel-footer">
-  <div class="input-group">
-    <div id="message" g_editable="true" role="textbox" contenteditable="true" placeholder="Write your message here...">
+<div class="card-footer">
+<div class="input-group mb-5">
+    <div id="message" g_editable="true" class = "form-control" role="textbox" contenteditable="true" placeholder="Write your message here...">
     </div>
-    <span class="input-group-btn">
-    <button class="btn btn-primary btn-sm" id="btn-chat">
-    Send
-    </button>
-    </span>
+<div class="input-group-append"><button class="btn btn-primary btn-sm" id="btn-chat">Send</button>
+    </div>
   </div>
 </div>
 </form>

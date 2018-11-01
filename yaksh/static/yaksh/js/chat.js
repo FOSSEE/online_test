@@ -96,7 +96,7 @@ $(document).ready(function() {
         div_sent.setAttribute("class", "row msg_container base_sent");
 
         var sent_col_div = document.createElement("div");
-        sent_col_div.setAttribute("class", "col-xs-10 col-md-10");
+        sent_col_div.setAttribute("class", "col-xs-10 col-md-8");
 
         var sent_msg_div = document.createElement("div");
         sent_msg_div.setAttribute("class", "messages msg_sent");
@@ -133,7 +133,7 @@ $(document).ready(function() {
         div_receive.setAttribute("class", "row msg_container base_receive");
 
         var receive_col_div = document.createElement("div");
-        receive_col_div.setAttribute("class", "col-xs-10 col-md-10");
+        receive_col_div.setAttribute("class", "col-xs-10 col-md-8");
 
         var receive_msg_div = document.createElement("div");
         receive_msg_div.setAttribute("class", "messages msg_receive");
@@ -233,11 +233,11 @@ $(document).ready(function() {
         if (!$this.hasClass('panel-collapsed')) {
             $this.parents('.panel').find('.panel-body').slideUp();
             $this.addClass('panel-collapsed');
-            $this.removeClass('glyphicon-minus').addClass('glyphicon-plus');
+            $this.removeClass('fa-minus').addClass('fa-plus');
         } else {
             $this.parents('.panel').find('.panel-body').slideDown();
             $this.removeClass('panel-collapsed');
-            $this.removeClass('glyphicon-plus').addClass('glyphicon-minus');
+            $this.removeClass('fa-plus').addClass('fa-minus');
         }
     });
 
