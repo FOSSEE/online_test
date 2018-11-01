@@ -57,8 +57,9 @@ code_evaluators = {
         "hooktestcase": "yaksh.hook_evaluator.HookEvaluator"
         },
 
-    "ruby": {"stdiobasedtestcase": "yaksh.ruby_stdio_evaluator.RubyStdIOEvaluator",
-             "standardtestcase": "yaksh.ruby_assertion_evaluator.rubyCodeEvaluator",
-             "hooktestcase": "yaksh.hook_evaluator.HookEvaluator"
+    "ruby": {
+        "stdiobasedtestcase": "yaksh.ruby_stdio_evaluator.RubyStdIOEvaluator",
+        "standardtestcase": "yaksh.ruby_assertion_evaluator.rubyCodeEvaluator",
+        "hooktestcase": "yaksh.hook_evaluator.HookEvaluator"
             },
 }

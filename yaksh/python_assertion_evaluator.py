@@ -42,8 +42,8 @@ class PythonAssertionEvaluator(BaseEvaluator):
             return self.exec_scope
 
     def check_code(self):
-        """ Function validates user answer by running an assertion based test case
-        against it
+        """ Function validates user answer by running an assertion based
+        test case against it
 
         Returns
         --------

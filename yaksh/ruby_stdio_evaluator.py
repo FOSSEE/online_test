@@ -23,7 +23,7 @@ def redirect_stdout():
     try:
         yield new_target  # run some code with the replaced stdout
     finally:
-        sys.stdout = old_target 
+        sys.stdout = old_target
 
 
 class RubyStdIOEvaluator(StdIOEvaluator):
@@ -59,19 +59,20 @@ class RubyStdIOEvaluator(StdIOEvaluator):
 
         # with redirect_stdout() as output_buffer:
         self.proc = subprocess.Popen('ruby {0}'.format(self.submit_code_path),
-                                    shell=True,
-                                    stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    preexec_fn=os.setpgrp
-                                    )
+                                     shell=True,
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     preexec_fn=os.setpgrp
+                                     )
 
     def check_code(self):
         success = False
         err = ''
         mark_fraction = 0.0
-        success, err = self.evaluate_stdio(self.user_answer, 
-                                          self.proc, self.expected_input, 
-                                          self.expected_output)
+        success, err = self.evaluate_stdio(self.user_answer,
+                                           self.proc, self.expected_input,
+                                           self.expected_output
+                                           )
         mark_fraction = 1.0 if self.partial_grading and success else 0.0
         return success, err, mark_fraction

@@ -29,22 +29,27 @@ class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
           end
         end
 """)
-        self.test_case_data = [{"test_case": '{0}\n{1}'.format(self.tc_data, 'assert{add(1,2)==3}'),
+        self.test_case_data = [{"test_case": '{0}\n{1}'.format(
+                                    self.tc_data, 'assert{add(1,2)==3}'),
                                 "test_case_type": "standardtestcase",
                                 "weight": 0.0
                                 },
-                                {"test_case": '{0}\n{1}'.format(self.tc_data, 'assert{add(-1,2)==1}'),
+                               {"test_case": '{0}\n{1}'.format(
+                                    self.tc_data, 'assert{add(-1,2)==1}'),
                                 "test_case_type": "standardtestcase",
                                 "weight": 0.0
                                 },
-                                {"test_case": '{0}\n{1}'.format(self.tc_data, 'assert{add(-2,1)==-1}'),
+                               {"test_case": '{0}\n{1}'.format(
+                                    self.tc_data, 'assert{add(-2,1)==-1}'),
                                 "test_case_type": "standardtestcase",
                                 "weight": 0.0
-                                }, ]
+                                },
+                               ]
         self.in_dir = tmp_in_dir_path
         self.timeout_msg = ("Code took more than {0} seconds to run. "
-            "You probably have an infinite loop in your"
-            " code.").format(SERVER_TIMEOUT)
+                            "You probably have an infinite loop in your "
+                            "code."
+                            ).format(SERVER_TIMEOUT)
         self.file_paths = None
 
     def tearDown(self):
@@ -55,14 +60,12 @@ class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
         # Given
         user_answer = "\ndef add(a,b)\n\treturn a+b\nend\n"
         kwargs = {
-                  'metadata': 
-                    {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'ruby'
-                    },
-                    'test_case_data': self.test_case_data,
+                  'metadata': {'user_answer': user_answer,
+                               'file_paths': self.file_paths,
+                               'partial_grading': False,
+                               'language': 'ruby'
+                               },
+                  'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -75,13 +78,12 @@ class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
         # Given
         user_answer = "\ndef add(a,b)\n\treturn a-b\nend\n"
         kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'ruby'
-                    },
-                    'test_case_data': self.test_case_data,
+                  'metadata': {'user_answer': user_answer,
+                               'file_paths': self.file_paths,
+                               'partial_grading': False,
+                               'language': 'ruby'
+                               },
+                  'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -218,7 +220,7 @@ class RubyAssertionEvalutionTestCases(EvaluatorBaseTest):
         user_answer = dedent("""
         def add(a)
          return a + b
-        end        
+        end
         """)
         type_error_msg = ["Traceback",
                           "call",
@@ -269,13 +271,12 @@ class RubyStdIOEvaluationTestCases(EvaluatorBaseTest):
         print (val1.to_i + val2.to_i)
         """)
         kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'ruby'
-                    },
-                    'test_case_data': self.test_case_data
+                  'metadata': {'user_answer': user_answer,
+                               'file_paths': self.file_paths,
+                               'partial_grading': False,
+                               'language': 'ruby'
+                               },
+                  'test_case_data': self.test_case_data
                  }
 
         # When
@@ -293,13 +294,12 @@ class RubyStdIOEvaluationTestCases(EvaluatorBaseTest):
             print (val1.to_i * val2.to_i)
         """)
         kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'ruby'
-                    },
-                    'test_case_data': self.test_case_data
+                  'metadata': {'user_answer': user_answer,
+                               'file_paths': self.file_paths,
+                               'partial_grading': False,
+                               'language': 'ruby'
+                               },
+                  'test_case_data': self.test_case_data
                   }
 
         # When
@@ -354,13 +354,12 @@ class RubyStdIOEvaluationTestCases(EvaluatorBaseTest):
          puts "12":
         """)
         kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'ruby'
-                    },
-                    'test_case_data': self.test_case_data
+                  'metadata': {'user_answer': user_answer,
+                               'file_paths': self.file_paths,
+                               'partial_grading': False,
+                               'language': 'ruby'
+                               },
+                  'test_case_data': self.test_case_data
                   }
 
         # When
@@ -369,7 +368,6 @@ class RubyStdIOEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        #self.assert_correct_output("Compilation Error", result.get("error")[0]['error_msg'])
 
     def test_only_stdout(self):
         # Given
@@ -381,13 +379,12 @@ class RubyStdIOEvaluationTestCases(EvaluatorBaseTest):
         print("11")
         """)
         kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'ruby'
-                    },
-                    'test_case_data': self.test_case_data
+                  'metadata': {'user_answer': user_answer,
+                               'file_paths': self.file_paths,
+                               'partial_grading': False,
+                               'language': 'ruby'
+                               },
+                  'test_case_data': self.test_case_data
                   }
 
         # When
@@ -415,13 +412,12 @@ class RubyStdIOEvaluationTestCases(EvaluatorBaseTest):
         end
         """)
         kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'ruby'
-                    },
-                    'test_case_data': self.test_case_data,
+                  'metadata': {'user_answer': user_answer,
+                               'file_paths': self.file_paths,
+                               'partial_grading': False,
+                               'language': 'ruby'
+                               },
+                  'test_case_data': self.test_case_data,
                   }
 
         # When
@@ -445,13 +441,12 @@ class RubyStdIOEvaluationTestCases(EvaluatorBaseTest):
         end
         """)
         kwargs = {
-                  'metadata': {
-                    'user_answer': user_answer,
-                    'file_paths': self.file_paths,
-                    'partial_grading': False,
-                    'language': 'ruby'
-                    },
-                    'test_case_data': self.test_case_data
+                  'metadata': {'user_answer': user_answer,
+                               'file_paths': self.file_paths,
+                               'partial_grading': False,
+                               'language': 'ruby'
+                               },
+                  'test_case_data': self.test_case_data
                   }
 
         # When
