@@ -168,4 +168,6 @@ class CppCodeEvaluator(BaseEvaluator):
                 err = "{0} \n {1}".format(err, stdnt_stderr)
             raise CompilationError(err)
 
+            raise CompilationError(err)
+
         return success, err, mark_fraction

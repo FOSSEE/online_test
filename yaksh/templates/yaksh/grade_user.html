@@ -200,6 +200,7 @@ Status : <b style="color: red;"> Failed </b><br/>
     {% if question.type == "upload" %}
     {% if has_user_assignments %}
         <a href="{{URL_ROOT}}/exam/manage/download/user_assignment/{{question.id}}/{{data.user.id}}/{{paper.question_paper.quiz.id}}/{{course_id}}">
+
         <div class="btn btn-outline-info text-center">
         Assignment File for {{ data.user.get_full_name.title }}
         </div>

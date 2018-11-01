@@ -88,10 +88,11 @@ def get_answer_for_arrange_options(ans, question):
 def replace_spaces(name):
     return name.replace(" ", "_")
 
-
 @register.simple_tag
 def get_questions_by_type(all_questions, question_type):
-    return [question for question in all_questions if question.type == question_type]
+    return [question for question in all_questions 
+            if question.type == question_type
+            ]
 
 
 @register.simple_tag
