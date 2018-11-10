@@ -1,7 +1,13 @@
-table td, table th { border: #ff8295 solid 1px !important;
+#assertion td, #assertion th, #stdio td, #stdio th { border: #ff8295 solid 1px !important;
 			word-wrap: break-word !important;
 			white-space: pre-wrap !important;
 			}
 #stdio, #assertion {
 	table-layout: fixed
+}
+.table{
+	border: 1px solid;
+	background-color: white;
+	border-spacing: 5px;
+	border-collapse: collapse;
 }
