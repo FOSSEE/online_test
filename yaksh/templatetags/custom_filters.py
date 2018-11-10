@@ -85,10 +85,5 @@ def replace_spaces(name):
 
 
 @register.simple_tag
-def get_questions_by_type(all_questions, question_type):
-    return [question for question in all_questions if question.type == question_type]
-
-
-@register.simple_tag
 def course_grade(course, user):
     return course.get_grade(user)
