@@ -6,20 +6,20 @@ body {
   color: #404040;
 }
 .tabs li {
+    padding-top: 1em;
+    padding-bottom: 1em;
     text-align: center;
     width: 33%;
 }
 .tabs li:last-child {
     width: 34%;
 }
-.tabs > .active > a {
+.tabs > .active{
     border: 0;
     background: lightgreen;
 }
 .tabs > .active > a:hover {
     border: 0;
-    background: green;
-    color: #ffffff;
 }
 .tabs li a {
     border-radius: 0;
