@@ -25,14 +25,30 @@
 
 {% block content %}
 <div class="container-fluid row justify-content-center">
+		
+		{% if messages %}
+		<ul class="messages">
+		    {% for message in messages %}
+		    	<div class="alert alert-danger">
+				    <li {% if message.tags %} class="{{ message.tags }}"{% endif %}> {{ message }}
+				    </li>
+			    </div>
+		    {% endfor %}
+		</ul>
+        {% endif %}
+
 <div class="col-md-10">
 <form action="" method="post">
     {% csrf_token %}
+
+	<script src='https://www.google.com/recaptcha/api.js'></script>
+
     <h5> Please fill in the following details:</h5>
     <center>
         <table class="table table-responsive-sm">
     {{ form.as_table }}
     </table></center>
+	<div class="g-recaptcha" data-sitekey={{ data_key }} ></div>
     <center class="yakshwell"><button class="btn btn-success" type="submit">Register</button>&nbsp;&nbsp;
     <a href="{{URL_ROOT}}/exam" class="btn btn-danger">Cancel</a></center>
 </form>

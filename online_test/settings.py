@@ -163,6 +163,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'social.apps.django_app.context_processors.backends',
                 'social.apps.django_app.context_processors.login_redirect',
+                'django.contrib.messages.context_processors.messages'
             ],
             'debug': False,
         }
@@ -187,3 +188,6 @@ SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id, name, email'
 }
+
+GOOGLE_RECAPTCHA_SECRET_KEY = 'Your Key here'
+data_key = 'Google API key here'

@@ -25,6 +25,10 @@ try:
 except ImportError:
     from io import BytesIO as string_io
 import re
+import urllib
+import urllib2
+from django.conf import settings
+from django.contrib import messages
 # Local imports.
 from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.models import (
@@ -62,6 +66,7 @@ def my_render_to_response(request, template, context=None, **kwargs):
         context = {'URL_ROOT': URL_ROOT}
     else:
         context['URL_ROOT'] = URL_ROOT
+    
     return render(request, template, context, **kwargs)
 
 
@@ -121,25 +126,67 @@ def user_register(request):
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            u_name, pwd, user_email, key = form.save()
-            new_user = authenticate(username=u_name, password=pwd)
-            login(request, new_user)
-            if user_email and key:
-                success, msg = send_user_mail(user_email, key)
-                context = {'activation_msg': msg}
-                return my_render_to_response(
+            if not settings.IS_DEVELOPMENT:
+                ''' Begin reCAPTCHA validation '''
+                recaptcha_response = request.POST.get('g-recaptcha-response')
+                url = 'https://www.google.com/recaptcha/api/siteverify'
+                values = {
+                    'secret': settings.GOOGLE_RECAPTCHA_SECRET_KEY,
+                    'response': recaptcha_response
+                }
+                data = urllib.urlencode(values)
+                req = urllib2.Request(url, data)
+                response = urllib2.urlopen(req)
+                result = json.load(response)
+                ''' End reCAPTCHA validation '''
+
+                if result['success']:
+                    u_name, pwd, user_email, key = form.save()
+                    new_user = authenticate(username=u_name, password=pwd)
+                    login(request, new_user)
+                    if user_email and key:
+                        success, msg = send_user_mail(user_email, key)
+                        context = {'activation_msg': msg}
+                        return my_render_to_response(
+                        request,
+                        'yaksh/activation_status.html', context
+                        )
+                else:
+                    messages.error(request, 'Invalid reCAPTCHA. Please try again.')
+                    return my_render_to_response(request,
+                            'yaksh/register.html',
+                            {'form': form,
+                            'data_key': settings.data_key
+                            }
+                            )
+                return index(request)
+            else:
+                u_name, pwd, user_email, key = form.save()
+                new_user = authenticate(username=u_name, password=pwd)
+                login(request, new_user)
+                if user_email and key:
+                    success, msg = send_user_mail(user_email, key)
+                    context = {'activation_msg': msg}
+                    return my_render_to_response(
                     request,
                     'yaksh/activation_status.html', context
-                )
-            return index(request)
+                    )
+                return index(request)
         else:
+            messages.info(request, 'Invalid form')
             return my_render_to_response(
-                request, 'yaksh/register.html', {'form': form}
+                request, 'yaksh/register.html',
+                {'form': form,
+                'data_key': settings.data_key
+                }
             )
     else:
         form = UserRegisterForm()
         return my_render_to_response(
-            request, 'yaksh/register.html', {'form': form}
+            request, 'yaksh/register.html',
+            {'form': form,
+             'data_key': settings.data_key
+            }
         )
 
 
