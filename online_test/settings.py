@@ -190,4 +190,5 @@ SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
 }
 
 GOOGLE_RECAPTCHA_SECRET_KEY = 'Your Key here'
-data_key = 'Google API key here'
+DATA_KEY = 'Google API key here'
+VERIFY_LINK = 'Google verification link here'
