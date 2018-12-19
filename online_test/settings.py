@@ -45,6 +45,8 @@ INSTALLED_APPS = (
     'taggit',
     'social.apps.django_app.default',
     'grades',
+    'rest_framework',
+    'api',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -186,4 +188,17 @@ SOCIAL_AUTH_PIPELINE = AUTH_PIPELINE
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id, name, email'
+}
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated'
+    ],
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json'
 }

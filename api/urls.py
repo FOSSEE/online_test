@@ -1,0 +1,23 @@
+from django.conf.urls import url
+from rest_framework.urlpatterns import format_suffix_patterns
+from api import views
+
+
+urlpatterns = [
+    url(r'questions/$', views.QuestionList.as_view(), name='questions'),
+    url(r'questions/(?P<pk>[0-9]+)/$', views.QuestionDetail.as_view(),
+        name='question'),
+    url(r'quizzes/$', views.QuizList.as_view(), name='quizzes'),
+    url(r'quizzes/(?P<pk>[0-9]+)/$', views.QuizDetail.as_view(), name='quiz'),
+    url(r'questionpapers/$', views.QuestionPaperList.as_view(),
+        name='questionpapers'),
+    url(r'questionpapers/(?P<pk>[0-9]+)/$', views.QuestionPaperDetail.as_view(),
+        name='questionpaper'),
+    url(r'answerpapers/$', views.AnswerPaperList.as_view(), name='answerpapers'),
+    url(r'validate/(?P<answerpaper_id>[0-9]+)/(?P<question_id>[0-9]+)/$',
+        views.AnswerValidator.as_view(), name='validators'),
+    url(r'validate/(?P<uid>[0-9]+)/$',
+        views.AnswerValidator.as_view(), name='validator'),
+]
+
+urlpatterns = format_suffix_patterns(urlpatterns)

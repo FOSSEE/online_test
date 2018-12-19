@@ -22,6 +22,7 @@ script:
   - coverage erase
   - coverage run -p manage.py test -v 2 --settings online_test.test_settings yaksh
   - coverage run -p manage.py test -v 2 --settings online_test.test_settings grades
+  - coverage run -p manage.py test -v 2 --settings online_test.test_settings api
   - coverage run -p manage.py test -v 2 --settings online_test.test_settings yaksh.live_server_tests.load_test
 
 after_success:
