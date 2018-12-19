@@ -1,6 +1,6 @@
 -r requirements-codeserver.txt
 invoke==0.21.0
-django==1.10
+django==1.11.17
 django-taggit==0.18.1
 pytz==2016.4
 python-social-auth==0.2.19
@@ -8,3 +8,4 @@ selenium==2.53.6
 coverage
 ruamel.yaml==0.15.23
 markdown==2.6.9
+djangorestframework==3.9.0
