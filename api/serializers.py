@@ -19,6 +19,7 @@ class QuestionPaperSerializer(serializers.ModelSerializer):
         model = QuestionPaper
         fields = '__all__'
 
+
 class AnswerPaperSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnswerPaper

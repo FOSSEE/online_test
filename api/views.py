@@ -17,12 +17,11 @@ import json
 
 class QuestionList(APIView):
     """ List all questions or create a new question. """
-    
+
     def get(self, request, format=None):
         questions = Question.objects.filter(user=request.user)
         serializer = QuestionSerializer(questions, many=True)
         return Response(serializer.data)
-
 
     def post(self, request, format=None):
         serializer = QuestionSerializer(data=request.data)
@@ -85,7 +84,8 @@ class AnswerPaperList(APIView):
 
     def is_user_allowed(self, user, course):
         ''' if user is student or teacher or creator then allow '''
-        return user in course.students.all() or user in course.teachers.all() or user == course.creator
+        return user in course.students.all() or user in course.teachers.all() \
+            or user == course.creator
 
     def post(self, request, format=None):
         try:
@@ -100,13 +100,14 @@ class AnswerPaperList(APIView):
         course = self.get_course(course_id)
         if not self.is_user_allowed(user, course):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        answerpaper = questionpaper.make_answerpaper(user, ip, attempt_number, course_id)
+        answerpaper = questionpaper.make_answerpaper(user, ip, attempt_number,
+                                                     course_id)
         serializer = AnswerPaperSerializer(answerpaper)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class AnswerValidator(APIView):
-   
+
     def get_answerpaper(self, pk, user):
         try:
             return AnswerPaper.objects.get(pk=pk, user=user)
@@ -144,7 +145,8 @@ class AnswerValidator(APIView):
         json_data = None
         if question.type in ['code', 'upload']:
             json_data = question.consolidate_answer_data(user_answer, user)
-        result = answerpaper.validate_answer(user_answer, question, json_data, answer.id)
+        result = answerpaper.validate_answer(user_answer, question, json_data,
+                                             answer.id)
 
         # updaTE RESult
         if question.type not in ['code', 'upload']:
@@ -273,7 +275,7 @@ class QuestionPaperList(APIView):
 
 class QuestionPaperDetail(APIView):
     """ Retrieve, update or delete a question paper"""
-    
+
     def get_questionpaper(self, pk, user):
         try:
             return QuestionPaper.objects.get(pk=pk, quiz__creator=user)
@@ -327,4 +329,3 @@ class QuestionPaperDetail(APIView):
         questionpaper = self.get_questionpaper(pk, request.user)
         questionpaper.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
