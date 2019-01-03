@@ -2091,6 +2091,21 @@ class AnswerPaper(models.Model):
     def get_previous_answers(self, question):
         return self.answers.filter(question=question).order_by('-id')
 
+    def get_question_by_index(self, all_ordered_questions, questions_by_type):
+        return [index+1 for index, item in enumerate(all_ordered_questions)
+                if item in set(questions_by_type)]
+
+    def get_questions_by_type(self, all_ordered_questions, objective_types):
+        questions_by_type = []
+        for types in objective_types:
+            for question in all_ordered_questions:
+                if question.type == types:
+                    questions_by_type.append(question)
+        return self.get_question_by_index(
+                            all_ordered_questions,
+                            questions_by_type
+                        )
+
     def validate_answer(self, user_answer, question, json_data=None, uid=None,
                         server_port=SERVER_POOL_PORT):
         """

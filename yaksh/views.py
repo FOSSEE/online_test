@@ -561,20 +561,6 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
             raise Http404(msg)
 
 
-def _get_question_by_index(all_ordered_questions, questions_by_type):
-    return [index+1 for index, item in enumerate(all_ordered_questions)
-            if item in set(questions_by_type)]
-
-
-def _get_questions_by_type(all_ordered_questions, objective_types):
-    questions_by_type = []
-    for types in objective_types:
-        for question in all_ordered_questions:
-            if question.type == types:
-                questions_by_type.append(question)
-    return _get_question_by_index(all_ordered_questions, questions_by_type)
-
-
 @login_required
 @email_verified
 def show_question(request, question, paper, error_message=None,
@@ -632,45 +618,53 @@ def show_question(request, question, paper, error_message=None,
     all_modules = course.get_learning_modules()
     all_question_types = [types[0] for types in question_types]
     types = {}
-    categories = {}
-    categories["objectives"] = questions.filter(Q(type="mcq") |
-                                                Q(type="mcc") |
-                                                Q(type="arrange"))
-    categories["blanks"] = questions.filter(Q(type="integer") |
-                                            Q(type="string") |
-                                            Q(type="float"))
-    categories["programming"] = questions.filter(Q(type="code"))
-    categories["upload"] = questions.filter(Q(type="upload"))
-    types["objective_types"] = set([type_.type
-                                    for type_ in categories["objectives"]])
-    types["blank_types"] = set([type_.type
-                                for type_ in categories["blanks"]])
-    types["programming_types"] = set([type_.type
-                                      for type_ in categories["programming"]])
-    types["upload_types"] = set([type_.type
-                                 for type_ in categories["upload"]])
+    categorized_questions = {}
+    categorized_questions["objectives"] = questions.filter(Q(type="mcq") |
+                                                           Q(type="mcc") |
+                                                           Q(type="arrange"))
+    categorized_questions["blanks"] = questions.filter(Q(type="integer") |
+                                                       Q(type="string") |
+                                                       Q(type="float"))
+    categorized_questions["programming"] = questions.filter(Q(type="code"))
+    categorized_questions["upload"] = questions.filter(Q(type="upload"))
+
+    types["objective_types"] = set([_type.type
+                                    for _type in
+                                    categorized_questions["objectives"]])
+    types["blank_types"] = set([_type.type
+                                for _type in
+                                categorized_questions["blanks"]])
+    types["programming_types"] = set([_type.type
+                                      for _type in
+                                      categorized_questions["programming"]])
+    types["upload_types"] = set([_type.type
+                                 for _type in categorized_questions["upload"]])
+
     all_ordered_questions = paper.get_all_ordered_questions()
-    objectives_index = _get_questions_by_type(
+
+    objectives_index = paper.get_questions_by_type(
                             all_ordered_questions,
                             types["objective_types"]
                         )
-    blanks_index = _get_questions_by_type(
+    blanks_index = paper.get_questions_by_type(
                         all_ordered_questions,
                         types["blank_types"]
                     )
-    programming_index = _get_questions_by_type(
+    programming_index = paper.get_questions_by_type(
                             all_ordered_questions,
                             types["programming_types"]
                         )
-    upload_index = _get_questions_by_type(
+    upload_index = paper.get_questions_by_type(
                         all_ordered_questions,
                         types["upload_types"]
                     )
-    index = {}
-    index["objectives_index"] = objectives_index
-    index["blanks_index"] = blanks_index
-    index["programming_index"] = programming_index
-    index["upload_index"] = upload_index
+
+    index = {
+        'objectives_index': objectives_index,
+        'blanks_index': blanks_index,
+        'programming_index': programming_index,
+        'upload_index': upload_index
+    }
     context = {
         'question': question,
         'paper': paper,
