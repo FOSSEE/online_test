@@ -24,22 +24,30 @@ class Command(BaseCommand):
         group_name = 'moderator'
         group = create_group(group_name, app_label)
         if group and isinstance(group, Group):
-            self.stdout.write('Moderator group added successfully')
+            self.stdout.write(self.style.SUCCESS(
+                              'Moderator group added successfully'))
 
         if options['usernames']:
             for uname in options['usernames']:
                 try:
                     user = User.objects.get(username=uname)
                 except User.DoesNotExist:
-                    raise CommandError('User "{0}" does not exist'.format(
-                        uname)
+                    raise CommandError(
+                        'User "{0}" does not exist'.format(uname)
                     )
                 if user in group.user_set.all():
-                    self.stdout.write('User "{0}" is '
-                                      'already a Moderator'.format(uname)
-                                      )
+                    self.stdout.write(
+                        self.style.WARNING(
+                            'User "{0}" is already'
+                            ' a Moderator'.format(uname)
+                        )
+                    )
                 else:
-                    group.user_set.add(user)
-                    self.stdout.write('Successfully added User "{0}"'
-                                      ' to Moderator group'.format(uname)
-                                      )
+                    user.profile.is_moderator = True
+                    user.profile.save()
+                    self.stdout.write(
+                        self.style.SUCCESS(
+                            'Successfully added User "{0}"'
+                            ' to Moderator group'.format(uname)
+                        )
+                    )
