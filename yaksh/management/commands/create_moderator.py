@@ -32,17 +32,22 @@ class Command(BaseCommand):
                 try:
                     user = User.objects.get(username=uname)
                 except User.DoesNotExist:
-                    raise CommandError('User "{0}" does not exist'.format(
-                        uname)
+                    raise CommandError(
+                        'User "{0}" does not exist'.format(uname)
                     )
                 if user in group.user_set.all():
-                    self.stdout.write(self.style.WARNING('User "{0}" is '
-                                      'already a Moderator'.format(uname)
-                                      ))
+                    self.stdout.write(
+                        self.style.WARNING(
+                            'User "{0}" is already'
+                            ' a Moderator'.format(uname)
+                        )
+                    )
                 else:
                     user.profile.is_moderator = True
                     user.profile.save()
-                    self.stdout.write(self.style.SUCCESS(
-                                      'Successfully added User "{0}"'
-                                      ' to Moderator group'.format(uname)
-                                      ))
+                    self.stdout.write(
+                        self.style.SUCCESS(
+                            'Successfully added User "{0}"'
+                            ' to Moderator group'.format(uname)
+                        )
+                    )
