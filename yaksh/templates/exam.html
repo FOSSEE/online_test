@@ -78,7 +78,7 @@
           <p class="text-center">Question(s) left: <b>{{ paper.questions_left }}</b></p>
           </div>
           <br>
-          <table class = "table table-bordered table-sm">
+          <table class = "legend_table table-bordered table-sm">
             <thead>
               <tr>
                 <th>Category</th>
@@ -86,46 +86,16 @@
               </tr>
             </thead>
             <tbody>
-              {% if index.objectives_index %}
+              {% for category, question_number in paper.get_categorized_question_indices.items %}
               <tr>
                 <td>
-                  Objectives:
+                  {{category}}
                 </td>
                 <td>
-                  {{index.objectives_index|join:", "}}
+                  {{question_number| join:", "}}
                 </td>
               </tr>
-              {% endif %}
-              {% if index.blanks_index %}
-              <tr>
-                <td>
-                  Blanks:
-                </td>
-                <td>
-                  {{index.blanks_index|join:", "}}
-                </td>
-              </tr>
-              {% endif %}
-              {% if index.upload_index %}
-              <tr>
-                <td>
-                  Upload:
-                </td>
-                <td>
-                  {{index.upload_index|join:", "}}
-                </td>
-              </tr>
-              {% endif %}
-              {% if index.programming_index %}
-              <tr>
-                <td>
-                  Programming:
-                </td>
-                <td>
-                  {{index.programming_index|join:", "}}
-                </td>
-              </tr>
-              {% endif %}
+              {% endfor %}
             </tbody>
           </table>
       </div> <!--end of sidebar -->

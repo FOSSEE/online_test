@@ -616,55 +616,6 @@ def show_question(request, question, paper, error_message=None,
     course = Course.objects.get(id=course_id)
     module = course.learning_module.get(id=module_id)
     all_modules = course.get_learning_modules()
-    all_question_types = [types[0] for types in question_types]
-    types = {}
-    categorized_questions = {}
-    categorized_questions["objectives"] = questions.filter(Q(type="mcq") |
-                                                           Q(type="mcc") |
-                                                           Q(type="arrange"))
-    categorized_questions["blanks"] = questions.filter(Q(type="integer") |
-                                                       Q(type="string") |
-                                                       Q(type="float"))
-    categorized_questions["programming"] = questions.filter(Q(type="code"))
-    categorized_questions["upload"] = questions.filter(Q(type="upload"))
-
-    types["objective_types"] = set([_type.type
-                                    for _type in
-                                    categorized_questions["objectives"]])
-    types["blank_types"] = set([_type.type
-                                for _type in
-                                categorized_questions["blanks"]])
-    types["programming_types"] = set([_type.type
-                                      for _type in
-                                      categorized_questions["programming"]])
-    types["upload_types"] = set([_type.type
-                                 for _type in categorized_questions["upload"]])
-
-    all_ordered_questions = paper.get_all_ordered_questions()
-
-    objectives_index = paper.get_questions_by_type(
-                            all_ordered_questions,
-                            types["objective_types"]
-                        )
-    blanks_index = paper.get_questions_by_type(
-                        all_ordered_questions,
-                        types["blank_types"]
-                    )
-    programming_index = paper.get_questions_by_type(
-                            all_ordered_questions,
-                            types["programming_types"]
-                        )
-    upload_index = paper.get_questions_by_type(
-                        all_ordered_questions,
-                        types["upload_types"]
-                    )
-
-    index = {
-        'objectives_index': objectives_index,
-        'blanks_index': blanks_index,
-        'programming_index': programming_index,
-        'upload_index': upload_index
-    }
     context = {
         'question': question,
         'paper': paper,
@@ -680,8 +631,6 @@ def show_question(request, question, paper, error_message=None,
         'delay_time': delay_time,
         'quiz_type': quiz_type,
         'all_modules': all_modules,
-        "question_types": all_question_types,
-        "index": index,
     }
     answers = paper.get_previous_answers(question)
     if answers:

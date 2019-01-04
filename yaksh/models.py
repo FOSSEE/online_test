@@ -6,7 +6,8 @@ import ruamel.yaml
 from ruamel.yaml.scalarstring import PreservedScalarString
 from ruamel.yaml.comments import CommentedMap
 from random import sample
-from collections import Counter
+from collections import Counter, defaultdict
+
 from django.db import models
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -79,6 +80,17 @@ string_check_type = (
     ("lower", "Case Insensitive"),
     ("exact", "Case Sensitive"),
     )
+
+legend_display_types = {
+        "mcq": {"category": "objective", "label": "Objective Type"},
+        "mcc": {"category": "objective", "label": "Objective Type"},
+        "code": {"category": "programming", "label": "Programming"},
+        "upload": {"category": "upload", "label": "Upload"},
+        "integer": {"category": "objective", "label": "Objective Type"},
+        "string": {"category": "objective", "label": "Objective Type"},
+        "float": {"category": "objective", "label": "Objective Type"},
+        "arrange": {"category": "objective", "label": "Objective Type"},
+    }
 
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
@@ -2091,20 +2103,14 @@ class AnswerPaper(models.Model):
     def get_previous_answers(self, question):
         return self.answers.filter(question=question).order_by('-id')
 
-    def get_question_by_index(self, all_ordered_questions, questions_by_type):
-        return [index+1 for index, item in enumerate(all_ordered_questions)
-                if item in set(questions_by_type)]
+    def get_categorized_question_indices(self):
 
-    def get_questions_by_type(self, all_ordered_questions, objective_types):
-        questions_by_type = []
-        for types in objective_types:
-            for question in all_ordered_questions:
-                if question.type == types:
-                    questions_by_type.append(question)
-        return self.get_question_by_index(
-                            all_ordered_questions,
-                            questions_by_type
-                        )
+        category_question_map = defaultdict(lambda: [])
+        for index, question in enumerate(self.get_all_ordered_questions(), 1):
+            category_question_map[
+                legend_display_types[question.type]["label"]
+            ].append(index)
+        return dict(category_question_map)
 
     def validate_answer(self, user_answer, question, json_data=None, uid=None,
                         server_port=SERVER_POOL_PORT):

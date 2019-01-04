@@ -5,8 +5,9 @@
 #stdio, #assertion {
 	table-layout: fixed
 }
-.table{
+.legend_table{
 	border: 1px solid;
+	width: 15em;
 	background-color: white;
 	border-spacing: 5px;
 	border-collapse: collapse;
