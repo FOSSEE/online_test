@@ -4,7 +4,7 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
-    create_group
+    create_group, legend_display_types
 from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
@@ -21,6 +21,7 @@ import os
 import shutil
 import tempfile
 from threading import Thread
+from collections import Counter, defaultdict
 from yaksh import settings
 
 
@@ -1582,6 +1583,20 @@ class AnswerPaperTestCases(unittest.TestCase):
                 end_time=self.answerpaper.end_time,
                 course=self.answerpaper.course
                 )
+
+    def test_get_categorized_question_indices(self):
+        all_questions = self.answerpaper.get_all_ordered_questions()
+        categorized_question_indices = \
+            self.answerpaper.get_categorized_question_indices()
+        questions = all_questions[0:4]
+        category_question_map = defaultdict(lambda: [])
+        for index, question in enumerate(questions, 1):
+            category_question_map[
+                    legend_display_types[question.type]["label"]
+                    ].append(index)
+        category_question_map = dict(category_question_map)
+        self.assertDictEqual(
+                        category_question_map, categorized_question_indices)
 
 
 ###############################################################################
