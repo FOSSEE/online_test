@@ -5,9 +5,20 @@ body {
   line-height: 18px;
   color: #404040;
 }
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background-color: #FFFFFF;
+    border-color: #DDDDDD #DDDDDD rgba(0, 0, 0, 0);
+    border-image: none;
+    border-style: solid;
+    border-width: 1px;
+    color: #555555;
+    cursor: default;
+}
 .tabs li {
-    padding-top: 1em;
-    padding-bottom: 1em;
     text-align: center;
     width: 33%;
 }
@@ -16,7 +27,6 @@ body {
 }
 .tabs > .active{
     border: 0;
-    background: lightgreen;
 }
 .tabs > .active > a:hover {
     border: 0;
