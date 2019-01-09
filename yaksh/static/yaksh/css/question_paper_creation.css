@@ -87,6 +87,9 @@ body {
 #random-added hr {
     margin: 5px 0 4px;
 }
+ #fixed-next, #random-prev, #random-next, #finish-prev{
+    color: white;
+}
 .qcard {
     position: relative;
     background: #ffffff;

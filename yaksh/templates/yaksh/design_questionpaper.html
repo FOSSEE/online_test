@@ -35,9 +35,9 @@ select
     <input type=hidden name="is_active" id="is_active" value="{{ state }}">
 <center><b>Manual mode to design the {{lang}}  Question Paper</center><br>
     <div class = "tab-base">
-        <ul class="nav nav-tabs tabs" role="tablist" data-tabs="tabs" id = "ulTab">
-        <li class="active" id="fixed-tab">
-            <a data-toggle="tab" href="#fixed-questions" class = "nav-link" id="fixed">
+        <ul class="nav nav-pills tabs">
+        <li class="" id="fixed-tab">
+            <a data-toggle="tab" href="#fixed-questions" class = "nav-link active" id="fixed">
                 STEP 1<br>
                 Add Fixed Questions
             </a>
@@ -121,7 +121,7 @@ select
                         {% endif %}
                     </div>
                     <br /><br />
-                    <button id="add-fixed" name="add-fixed" class="btn small primary pull-right" type="submit">Add to paper</button>
+                    <button id="add-fixed" name="add-fixed" class="btn small btn-primary pull-right" type="submit">Add to paper</button>
                 </div>
             </div>
             <div class="col-md-6">
