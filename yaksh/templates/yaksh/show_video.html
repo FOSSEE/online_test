@@ -25,39 +25,36 @@
                 {{module}}
             </a>
             {% for unit in module.get_learning_units %}
-            <span id="menudrop">
-                {% if unit.type == "quiz" %}
-                    <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{module.id}}/{{course.id}}" class="list-group-item" data-parent="#menu1">
-                        {% if status == "completed" %}
-                          <i class="fa fa-check-square yakshgreen"></i>
-                        {% else %}
-                          <i class="fa fa-square-o"></i>
-                        {% endif %}
-                        {% get_unit_status course module unit user as status %}
-                    {{ unit.quiz.description }}
-                        {% if unit.id == current_unit.id %}
-                            <i class="fa fa-thumb-tack yakshred" data-toggle="tooltip" title="Currently on">
-                            </i>
-                        {% endif %}
-                    </a>
-                {% else %}
-                    <a href="{{ URL_ROOT }}/exam/show_lesson/{{unit.lesson.id}}/{{module.id}}/{{course.id}}" class="list-group-item" data-parent="#menu1">
-                        {% if status == "completed" %}
-                          <i class="fa fa-check-square yakshgreen"></i>
-                        {% else %}
-                          <i class="fa fa-square-o"></i>
-                        {% endif %}
-                        {% get_unit_status course module unit user as status %}
-
-                        
-                    {{ unit.lesson.name }}
-                        {% if unit.id == current_unit.id %}
-                            <i class="fa fa-thumb-tack yakshred" data-toggle="tooltip" title="Currently on">
-                            </i>
-                        {% endif %}
-                    </a>
-                {% endif %}
-            </span>
+                {% get_unit_status course module unit user as status %}
+                <span id="menudrop">
+                    {% if unit.type == "quiz" %}
+                        <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{module.id}}/{{course.id}}" class="list-group-item" data-parent="#menu1">
+                            {% if status == "completed" %}
+                              <i class="fa fa-check-square yakshgreen"></i>
+                            {% else %}
+                              <i class="fa fa-square-o"></i>
+                            {% endif %}
+                        {{ unit.quiz.description }}
+                            {% if unit.id == current_unit.id %}
+                                <i class="fa fa-thumb-tack yakshred" data-toggle="tooltip" title="Currently on">
+                                </i>
+                            {% endif %}
+                        </a>
+                    {% else %}
+                        <a href="{{ URL_ROOT }}/exam/show_lesson/{{unit.lesson.id}}/{{module.id}}/{{course.id}}" class="list-group-item" data-parent="#menu1">
+                            {% if status == "completed" %}
+                              <i class="fa fa-check-square yakshgreen"></i>
+                            {% else %}
+                              <i class="fa fa-square-o"></i>
+                            {% endif %}
+                        {{ unit.lesson.name }}
+                            {% if unit.id == current_unit.id %}
+                                <i class="fa fa-thumb-tack yakshred" data-toggle="tooltip" title="Currently on">
+                                </i>
+                            {% endif %}
+                        </a>
+                    {% endif %}
+                </span>
             {% endfor %}          
 
         </div>
