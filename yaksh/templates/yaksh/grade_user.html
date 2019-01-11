@@ -1,6 +1,5 @@
 {% extends "manage.html" %}
 {% load custom_filters %}
-
 {% block title %} Grade User {% endblock %}
 
 {% block pagetitle %} Grade User {% endblock pagetitle %}
@@ -74,12 +73,11 @@ $(document).ready(function()
 <div id = "paper" class="col-md-10">
 {% if data %}
 
-
-<p> <h3> <center> Showing paper for {{data.user.get_full_name.title}} </center></h3>
+<p><h3> <center> Showing paper for {{data.user.get_full_name.title}} </center></h3>
 <p><b>Name:</b> {{ data.user.get_full_name.title }}
 {% if data.profile %}
 
-<p><b> Roll number:</b> {{ data.profile.roll_number }}
+<p><b>Roll number:</b> {{ data.profile.roll_number }}
 <p><b>Position: </b> {{ data.profile.position }}
 <p><b>Department: </b>{{ data.profile.department }} 
 <p><b>Institute: </b>{{ data.profile.institute }}
@@ -312,6 +310,7 @@ Status : <b style="color: red;"> Failed </b><br/>
         <div class="card-body">
         {% if question.type == "code" %}
         <pre><code>{{ ans.answer.answer.strip|safe }}</code></pre>
+
         {% elif question.type == "mcc"%}
         <div class="card">
           <div class="card-body">
@@ -363,11 +362,23 @@ Status : <b style="color: red;"> Failed </b><br/>
     </div>
 
     {% endfor %} {# for question, answers ... #}
-    </div>
+</div>
+<hr style="border-top: 3px solid #ccc; background: transparent;">
+<div class="table-wrapper-2">
+<h3>Diff for consecutive submissions</h3>
+<hr style="border-top: 3px solid #ccc; background: transparent;">
+
+{% for ele in diff %}
+    <pre><code>{{ ele|safe}}</pre></code>
+  <hr style="border-top: 3px solid #ccc; background: transparent;">
+{% endfor %}
+</div>
+
 <div class="form-group">
 <h3>Teacher comments: </h3>
 <textarea id="comments_{{paper.question_paper.id}}" class="form-control"
-    name="comments_{{ paper.question_paper.id }}">{{ paper.comments }}</textarea>
+    name="comments_{{ paper.question_paper.id }}">{{ paper.comments }}
+    </textarea>
 </div>
 <br><button class="btn btn-primary" type="submit" name="submit_{{paper.quiz.id}}">Save Marks</button>
 

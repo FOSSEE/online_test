@@ -1,5 +1,6 @@
 from __future__ import unicode_literals, division
 from datetime import datetime, timedelta
+import difflib
 import json
 import random
 import ruamel.yaml
@@ -2061,6 +2062,39 @@ class AnswerPaper(models.Model):
                     'error_list': [e for e in json.loads(answer.error)]
                 }]
         return q_a
+
+    def get_diff_of_consecutive_submissions_for_all_code_question(self):
+        """
+            Return diff of consecutive submissions for all questions
+        """
+        q_a = {} # key : question, value : all submitted answers for this question
+        for answer in self.answers.all():
+            question = answer.question
+            if question in q_a:
+                q_a[question].append(answer)
+            else:
+                q_a[question] = [answer]
+
+        q_diff = {} # key : question, value : list of diff between consecutive submission for this question
+        for question in q_a:
+            if question.type=='code':
+                answers = q_a[question]
+                arr = [] #all answers for a question as list of lines
+                for ans in answers:
+                    split_ans_line_by_line = ans.answer.split("\n")
+                    split_ans_line_by_line = [ele+'\n' for ele in split_ans_line_by_line]
+                    arr.append(split_ans_line_by_line)
+
+                if len(arr)>1:#if there are more than one submissions for this question
+                    zipped = zip(arr, arr[1:])
+                    temp = []
+                    for consecutive_submissions in zipped:
+                        diff_of_consecutive_submissions =  difflib.ndiff(consecutive_submissions[0], consecutive_submissions[1])
+                        #remove unwanted ? produced by difflib.ndiff()
+                        temp.append([ele for ele in diff_of_consecutive_submissions if not ele.startswith("?")])
+                    q_diff[question] = temp
+        return q_diff
+
 
     def get_latest_answer(self, question_id):
         return self.answers.filter(question=question_id).order_by("id").last()
