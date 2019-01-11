@@ -19,6 +19,7 @@ install_requires = [
     'django==1.10',
     'django-taggit==0.18.1',
     'pytz==2016.4',
+    'requests-oauthlib>=0.6.1',
     'python-social-auth==0.2.19',
     'tornado',
     'psutil',
