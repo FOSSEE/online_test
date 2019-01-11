@@ -164,27 +164,27 @@ Status : <b style="color: red;"> Failed </b><br/>
                 {% for testcase in question.get_test_cases %}
                     {% if testcase.correct %}
                     <br/>
-                    <strong>{{ forloop.counter }}. {{ testcase.options|safe }}</strong>
+                    <strong>{{ forloop.counter }}. {{ testcase.options }}</strong>
                     <span class="alert alert-success"> Correct </span>
                     {% else %}
                     <br/><strong>
-                    {{ forloop.counter }}. {{ testcase.options|safe }}</strong>
+                    {{ forloop.counter }}. {{ testcase.options }}</strong>
                     {% endif %}
                     {% endfor %}
 
             {% elif question.type == "integer" or question.type == "string" or question.type == "float" %}
                 <h5> <u>Correct Answer:</u></h5>
                     {% for testcase in question.get_test_cases %}
-                    <strong>{{ testcase.correct|safe }}</strong>
+                    <strong>{{ testcase.correct }}</strong>
                     {% if testcase.error_margin %}
-                    <strong>{{ testcase.error_margin|safe }}</strong>
+                    <strong>{{ testcase.error_margin }}</strong>
                     {% endif %}
                     {% endfor %}
               {% elif question.type == "arrange" %}
               <h5> <u>Correct Order:</u></h5>
               <div class="list-group" >
               {% for testcase in question.get_test_cases %}
-                    <li class="list-group-item"><strong>{{ testcase.options|safe }}</strong></li>
+                    <li class="list-group-item"><strong>{{ testcase.options }}</strong></li>
               {% endfor %}
               </div>
 
@@ -303,7 +303,7 @@ Status : <b style="color: red;"> Failed </b><br/>
       </div>
       </div> <!-- Closes card -->
         {% else %}
-            <pre><code> {{error|safe}} </code></pre>
+            <pre><code> {{error}} </code></pre>
         {% endif %}
         {% endfor %}
         {% endwith %}
@@ -311,13 +311,13 @@ Status : <b style="color: red;"> Failed </b><br/>
         
         <div class="card-body">
         {% if question.type == "code" %}
-        <pre><code>{{ ans.answer.answer.strip|safe }}</code></pre>
+        <pre><code>{{ ans.answer.answer.strip }}</code></pre>
         {% elif question.type == "mcc"%}
         <div class="card">
           <div class="card-body">
         {% for testcases in question.get_test_cases %}
-        {%if testcases.id|stringformat:"i" in ans.answer.answer.strip|safe %}
-         <li>{{ testcases.options.strip|safe }}</li>
+        {%if testcases.id|stringformat:"i" in ans.answer.answer.strip %}
+         <li>{{ testcases.options.strip }}</li>
         {% endif %}
         {% endfor %}
         </div>
@@ -326,8 +326,8 @@ Status : <b style="color: red;"> Failed </b><br/>
         <div class="card">
           <div class="card-body">
         {% for testcases in question.get_test_cases %}
-        {%if testcases.id|stringformat:"i" == ans.answer.answer.strip|safe %}
-         <li>{{ testcases.options.strip|safe }}</li>
+        {%if testcases.id|stringformat:"i" == ans.answer.answer.strip %}
+         <li>{{ testcases.options.strip }}</li>
         {% endif %}
         {% endfor %}
         </div>
@@ -338,7 +338,7 @@ Status : <b style="color: red;"> Failed </b><br/>
           <div class="card-body">
           {% get_answer_for_arrange_options ans.answer.answer question as tc_list %}
         {% for testcases in tc_list %}
-         <li>{{ testcases.options.strip|safe }}</li>
+         <li>{{ testcases.options.strip }}</li>
         {% endfor %}
       </div>
         </div>
@@ -346,7 +346,7 @@ Status : <b style="color: red;"> Failed </b><br/>
         {% else %}
          <div class="card">
             <div class="card-body">
-          {{ ans.answer.answer.strip|safe }}
+          {{ ans.answer.answer.strip }}
           </div>
         </div>
         {% endif %}
