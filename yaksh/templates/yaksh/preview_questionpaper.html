@@ -27,7 +27,7 @@
             <h5><u>Question:</u></h5> <strong>{{ question.description|safe }}</strong>
             <br/><b>Answer:</b><br/>
             {% if question.type == "code" %}
-                <div class="card">{{ question.snippet }}<br/></div>
+                <div class="card"><pre>{{ question.snippet }}</pre><br/></div>
             {% endif %}
             {% if question.type == "mcq" or question.type == "mcc" %}
                 <h5> <u>Choices:</u></h5>

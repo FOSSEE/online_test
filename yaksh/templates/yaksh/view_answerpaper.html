@@ -54,32 +54,32 @@
             </strong>
         </div>
         <div class="card-body">
-            <h5><u>Question:</u></h5> <strong>{{ question.description|safe }}</strong>
+            <h5><u>Question:</u></h5> <strong>{{ question.description }}</strong>
             {% if question.type == "mcq" or question.type == "mcc" %}
                 <h5> <u>Choices:</u></h5>
                 {% get_ordered_testcases question paper as testcases %}
                 {% for testcase in testcases %}
                 {% if testcase.correct %}
                    <br/>
-                   <strong>{{ forloop.counter }}. {{ testcase.options|safe }}</strong>
+                   <strong>{{ forloop.counter }}. {{ testcase.options }}</strong>
                    <span class="alert alert-success"> Correct</span>
                 {% else %}
                 <br/><strong>
-                {{ forloop.counter }}. {{ testcase.options|safe }}</strong>
+                {{ forloop.counter }}. {{ testcase.options }}</strong>
                 {% endif %}
                 {% endfor %}
 
             {% elif question.type == "integer" or question.type == "string" or question.type == "float" %}
                 <h5> <u>Correct Answer:</u></h5>
                     {% for testcase in question.get_test_cases %}
-                    <strong>{{ testcase.correct|safe }}</strong>
+                    <strong>{{ testcase.correct }}</strong>
                     {% endfor %}
 
             {% elif question.type == "arrange" %}
               <h5> <u>Correct Order:</u></h5>
               <div class="list-group">
               {% for testcase in question.get_test_cases %}
-                    <li class="list-group-item"><strong>{{ testcase.options|safe }}</strong></li>
+                    <li class="list-group-item"><strong>{{ testcase.options }}</strong></li>
               {% endfor %}
               </div>
 
@@ -106,8 +106,8 @@
         <div class="card">
           <div class="card-body">
         {% for testcases in question.get_test_cases %}
-        {%if testcases.id|stringformat:"i" in answers.0.answer|safe %}
-         <li>{{ testcases.options.strip|safe }}</li>
+        {%if testcases.id|stringformat:"i" in answers.0.answer %}
+         <li>{{ testcases.options.strip }}</li>
         {% endif %}
         {% endfor %}
         </div>
@@ -116,8 +116,8 @@
         <div class="card">
           <div class="card-body">
         {% for testcases in question.get_test_cases %}
-        {%if testcases.id|stringformat:"i" == answers.0.answer|safe %}
-         <li>{{ testcases.options.strip|safe }}</li>
+        {%if testcases.id|stringformat:"i" == answers.0.answer %}
+         <li>{{ testcases.options.strip }}</li>
         {% endif %}
         {% endfor %}
         </div>
@@ -127,7 +127,7 @@
           <div class="card-body">
           {% get_answer_for_arrange_options answers.0.answer question as tc_list %}
         {% for testcases in tc_list %}
-         <li>{{ testcases.options.strip|safe }}</li>
+         <li>{{ testcases.options.strip }}</li>
         {% endfor %}
         </div>
       </div>
@@ -142,7 +142,7 @@
                 <h5><u>Student answer:</u></h5>
                 <div class="card">
                   <div class="card-body">
-                 {{ answers.0.answer|safe }}
+                 {{ answers.0.answer }}
                  </div>
                </div>
         {% endif %}
@@ -236,7 +236,7 @@
         </table>
       </div> <!-- Closes well -->
         {% else %}
-          <pre><code> {{error|safe}} </code></pre>
+          <pre><code> {{error}} </code></pre>
         {% endif %}
         {% endfor %}
         {% endwith %}

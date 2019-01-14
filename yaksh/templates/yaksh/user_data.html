@@ -67,25 +67,25 @@ User IP address: {{ paper.user_ip }}
                 {% for testcase in question.get_test_cases %}
                     {% if testcase.correct %}
                         <br/>
-                        <strong>{{ forloop.counter }}. {{ testcase.options|safe }}</strong>
+                        <strong>{{ forloop.counter }}. {{ testcase.options }}</strong>
                         <span class="label label-success"> Correct </span>
                         {% else %}
                         <br/><strong>
-                        {{ forloop.counter }}. {{ testcase.options|safe }}</strong>
+                        {{ forloop.counter }}. {{ testcase.options }}</strong>
                         {% endif %}
                     {% endfor %}
 
             {% elif question.type == "integer" or question.type == "string" or question.type == "float" %}
                 <h5> <u>Correct Answer:</u></h5>
                     {% for testcase in question.get_test_cases %}
-                    <strong>{{ testcase.correct|safe }}</strong>
+                    <strong>{{ testcase.correct }}</strong>
                     {% endfor %}
 
             {% elif question.type == "arrange" %}
               <h5> <u>Correct Order:</u></h5>
               <div class="list-group" >
               {% for testcase in question.get_test_cases %}
-                    <li class="list-group-item"><strong>{{ testcase.options|safe }}</strong></li>
+                    <li class="list-group-item"><strong>{{ testcase.options }}</strong></li>
               {% endfor %}
               </div>
 
@@ -111,8 +111,8 @@ User IP address: {{ paper.user_ip }}
         {% if question.type == "mcc"%}
         <div class="well well-sm">
         {% for testcases in question.get_test_cases %}
-        {%if testcases.id|stringformat:"i" in answers.0.answer|safe %}
-         <li>{{ testcases.options.strip|safe }}</li>
+        {%if testcases.id|stringformat:"i" in answers.0.answer %}
+         <li>{{ testcases.options.strip }}</li>
         {% endif %}
         {% endfor %}
         </div>
@@ -120,8 +120,8 @@ User IP address: {{ paper.user_ip }}
         {% elif question.type == "mcq"%}
         <div class="well well-sm">
         {% for testcases in question.get_test_cases %}
-        {%if testcases.id|stringformat:"i" == answers.0.answer|safe %}
-         <li>{{ testcases.options.strip|safe }}</li>
+        {%if testcases.id|stringformat:"i" == answers.0.answer %}
+         <li>{{ testcases.options.strip }}</li>
         {% endif %}
         {% endfor %}
         </div>
@@ -130,13 +130,13 @@ User IP address: {{ paper.user_ip }}
         <div class="well well-sm">
           {% get_answer_for_arrange_options answers.0.answer question as tc_list %}
         {% for testcases in tc_list %}
-         <li>{{ testcases.options.strip|safe }}</li>
+         <li>{{ testcases.options.strip }}</li>
         {% endfor %}
         </div>
 
         {%else%}
                  <div class="well well-sm">
-                 {{ answers.0.answer|safe }}
+                 {{ answers.0.answer }}
                  </div>
         {% endif %}
             </div>
@@ -220,7 +220,7 @@ User IP address: {{ paper.user_ip }}
         </table>
       </div> <!-- Closes well -->
         {% else %}
-          <pre><code> {{error|safe}} </code></pre>
+          <pre><code> {{error}} </code></pre>
         {% endif %}
         {% endfor %}
         {% endwith %}
@@ -231,10 +231,10 @@ User IP address: {{ paper.user_ip }}
     {% if question.type != "code" %}
     <div class="well well-sg">
     {{question.type}}
-    {{ answer.answer.answer.strip|safe }}
+    {{ answer.answer.answer.strip }}
     </div>
     {% else %}
-    <pre><code>{{ answer.answer.answer.strip|safe }}</code></pre>
+    <pre><code>{{ answer.answer.answer.strip }}</code></pre>
     {% endif %}
     </div>
     </div>
