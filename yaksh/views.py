@@ -905,8 +905,8 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None,
     """Show a page to inform user that the quiz has been completed."""
     user = request.user
     if questionpaper_id is None:
-        message = reason or "An Unexpected Error occurred. Please contact your '\
-            'instructor/administrator.'"
+        message = (reason or "An Unexpected Error occurred. Please contact your"
+            " instructor/administrator.")
         context = {'message': message}
         return my_render_to_response(request, 'yaksh/complete.html', context)
     else:
