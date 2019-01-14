@@ -568,7 +568,6 @@ def show_question(request, question, paper, error_message=None,
                   previous_question=None):
     """Show a question if possible."""
     quiz = paper.question_paper.quiz
-    questions = paper.questions.all()
     quiz_type = 'Exam'
     can_skip = False
     if previous_question:

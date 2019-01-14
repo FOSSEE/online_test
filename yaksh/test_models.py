@@ -21,7 +21,7 @@ import os
 import shutil
 import tempfile
 from threading import Thread
-from collections import Counter, defaultdict
+from collections import defaultdict
 from yaksh import settings
 
 
