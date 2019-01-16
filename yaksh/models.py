@@ -82,14 +82,14 @@ string_check_type = (
     )
 
 legend_display_types = {
-        "mcq": {"category": "objective", "label": "Objective Type"},
-        "mcc": {"category": "objective", "label": "Objective Type"},
-        "code": {"category": "programming", "label": "Programming"},
-        "upload": {"category": "upload", "label": "Upload"},
-        "integer": {"category": "objective", "label": "Objective Type"},
-        "string": {"category": "objective", "label": "Objective Type"},
-        "float": {"category": "objective", "label": "Objective Type"},
-        "arrange": {"category": "objective", "label": "Objective Type"},
+        "mcq": {"label": "Objective Type"},
+        "mcc": {"label": "Objective Type"},
+        "code": {"label": "Programming"},
+        "upload": {"label": "Upload"},
+        "integer": {"label": "Objective Type"},
+        "string": {"label": "Objective Type"},
+        "float": {"label": "Objective Type"},
+        "arrange": {"label": "Objective Type"},
     }
 
 attempts = [(i, i) for i in range(1, 6)]
@@ -2104,12 +2104,13 @@ class AnswerPaper(models.Model):
         return self.answers.filter(question=question).order_by('-id')
 
     def get_categorized_question_indices(self):
-
-        category_question_map = defaultdict(lambda: [])
+        category_question_map = defaultdict(list)
         for index, question in enumerate(self.get_all_ordered_questions(), 1):
-            category_question_map[
-                legend_display_types[question.type]["label"]
-            ].append(index)
+            question_category = legend_display_types.get(question.type)
+            if question_category:
+                category_question_map[
+                    question_category["label"]
+                ].append(index)
         return dict(category_question_map)
 
     def validate_answer(self, user_answer, question, json_data=None, uid=None,

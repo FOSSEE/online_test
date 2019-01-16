@@ -1585,18 +1585,10 @@ class AnswerPaperTestCases(unittest.TestCase):
                 )
 
     def test_get_categorized_question_indices(self):
-        all_questions = self.answerpaper.get_all_ordered_questions()
+        question_indices = {'Programming': [1], 'Objective Type': [2, 3]}
         categorized_question_indices = \
             self.answerpaper.get_categorized_question_indices()
-        questions = all_questions[0:4]
-        category_question_map = defaultdict(lambda: [])
-        for index, question in enumerate(questions, 1):
-            category_question_map[
-                    legend_display_types[question.type]["label"]
-                    ].append(index)
-        category_question_map = dict(category_question_map)
-        self.assertDictEqual(
-                        category_question_map, categorized_question_indices)
+        self.assertDictEqual(question_indices, categorized_question_indices)
 
 
 ###############################################################################
