@@ -61,11 +61,6 @@ def module_completion_percent(course, module, user):
 
 
 @register.simple_tag
-def course_completion_percent(course, user):
-    return course.percent_completed(user)
-
-
-@register.simple_tag
 def get_ordered_testcases(question, answerpaper):
     return question.get_ordered_test_cases(answerpaper)
 

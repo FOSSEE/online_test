@@ -141,61 +141,52 @@
                         <thead>
                             <tr class="yakshlight">
                             <th>Sr No.</th>
-                            <th>Students</th>
-                            <th>Total</th>
+                            <th>Roll No.</th>
+                            <th>Email</th>
+                            <th>Current Unit</th>
+                            <th>Course Completion Percentage</th>
                             <th>Grade</th>
-                            <th colspan="{{modules|length}}">Modules</th>
-                            </tr>
-                            <tr>
-                                <th scope="row"></th>
-                                <th></th>
-                                <th></th>
-                                <th></th>
-                                {% if modules %}
-                                    {% for module in modules %}
-                                        <th>
-                                            {{module.name}}
-                                            ({{module.get_learning_units|length}} Units)
-                                            <br>
-                                            <a data-target="tooltip" title="{% for unit in module.get_learning_units %}{% if unit.type == 'quiz' %}{{unit.quiz.description}}{% else %}{{unit.lesson.name}}{% endif %} / {% endfor %}" id="unit_status{{module.id}}" onmouseover="view_status('#unit_status{{module.id}}')" class="text-info"> <i class="fa fa-info-circle"></i>
-                                                View Units</a>
-                                        </th>
-                                    {% endfor %}
-                                {% else %}
-                                    <th></th>
-                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
-                            {% for student in students %}
+                            {% for student, grade, percent, unit in student_details %}
                                 <tr>
                                 <td width="5%">
                                     {{forloop.counter}}.
                                 </td>
                                 <td>
+                                    {{ student.profile.roll_number}}
+                                </td>                            
+                                <td width="50%">
+                                    <a class="user_data" data-item-id="{{course.id}}+{{student.id}}" data-toggle="tooltip" title="Click to view Overall Course progress" data-placement="top">
+                                        {% if student.email %}
+                                            {{ student.email }}
+                                        {% else %}
+                                            {{ student.get_full_name|title}}
+                                        {% endif %}
+                                        <i class="fa fa-caret-down"></i>
+                                    </a>
+                                    <div id="show_status_{{course.id}}_{{student.id}}" style="display: None;">
+                                    </div>
+                                </td>
+                                <td>
                                     {{ student.get_full_name|title }}
-                                </td>
-                                <td>
-                                    {% course_completion_percent course student as c_percent %}
-                                    {{c_percent}} %
-                                </td>
-                                <td>
-                                    {% course_grade course student as grade %}
-                                    {{grade}}
-                                </td>
-                                    {% if modules %}
-                                        {% for module in modules %}
-                                            <td>
-                                                {% module_completion_percent course module student as m_percent %}
-                                                {{m_percent}} %
-                                                <br>
-                                                <a data-target="tooltip" title="{% for unit in module.get_learning_units %}{% if unit.type == 'quiz' %}{{unit.quiz.description}}{% else %}{{unit.lesson.name}}{% endif %} - {% get_unit_status course module unit student as status %}{{status|title}} / {% endfor %}" id="unit_status{{module.id}}{{student.id}}" onmouseover="view_status('#unit_status{{module.id}}{{student.id}}')" class="text-info"> <i class="fa fa-info-circle"></i>
-                                                View Unit Status</a>
-                                            </td>
-                                        {% endfor %}
+                                    {% if unit %}
+                                        {% if unit.type == 'quiz' %}
+                                            {{unit.quiz.description}}
+                                        {% else %}
+                                            {{unit.lesson.name}}
+                                        {% endif %}
                                     {% else %}
-                                        <td>-------</td>
-                                    {% endif %}
+                                        NA
+                                    {% endif%}
+                                </td>
+                                <td>
+                                    {{ percent }} %
+                                </td>
+                                <td>
+                                    {{ grade }}
+                                </td>
                                 </tr>
                             {% endfor %}
                         </tbody>

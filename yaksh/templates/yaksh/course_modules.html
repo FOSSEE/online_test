@@ -18,7 +18,7 @@
 <div class="row justify-content-md-center yakshwell ">
     <div class="col-md-10 bg-light card">
         <div class="row align-items-center">
-            <div class="col h4">  {{course}}  </div>
+            <div class="col h4">  {{ course.name }}  </div>
             <div class="col-md-3 ml-auto yakshwell">
                 <div class="row align-items-center"> 
                     <div class="col-sm-6"> Overall
@@ -26,7 +26,7 @@
                     </div>
                     <div class="col-sm-5">
                     <span class="progress">
-                      <span class="progress-bar bg-warning " role="progressbar" style="width: 50%; color: black;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">50% completed</span>
+                      <span class="progress-bar bg-warning " role="progressbar" style="width: {{ course_percentage }}%; color: black;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">{{ course_percentage }} % completed</span>
                     </span>
                     </div>
                 </div>
@@ -110,15 +110,15 @@
                         {% get_module_status user module course as module_status %}
                         {% if module_status == "completed" %}
                         <div class="progress">
-                          <div class="progress-bar bg-success" role="progressbar" style="width: 100%; color: black;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">100% completed</div>
+                          <div class="progress-bar bg-success" role="progressbar" style="width: 100%; color: black;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">{{ percent }} % completed</div>
                         </div>
                         {% elif module_status == "inprogress" %}
                         <div class="progress">
-                          <div class="progress-bar bg-warning " role="progressbar" style="width: 50%; color: black;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">50% completed</div>
+                          <div class="progress-bar bg-warning " role="progressbar" style="width: 50%; color: black;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">{{ percent }} % completed</div>
                         </div>
                         {% else %}
                         <div class="progress">
-                          <div class="progress-bar bg-danger" role="progressbar" style="width: 1%; color: black;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0% completed</div>
+                          <div class="progress-bar bg-danger" role="progressbar" style="width: 1%; color: black;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">{{ percent }} % completed</div>
                         </div>
                         {% endif %}
                     </div>
@@ -175,19 +175,6 @@
                             {% else %}
                                 ------
                             {% endif %}
-                            </td>
-                            <td>
-                                <div class="progress">
-                                    {% if percent <= 50 %}
-                                    <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
-                                    {% elif percent <= 75 %}
-                                    <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
-                                    {% else %}
-                                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
-                                    {% endif %}
-                                    <b style="color: black;">{{percent}}% Completed</b>
-                                    </div>
-                                </div>
                             </td>
                         </tr>
                         {% endfor %}
