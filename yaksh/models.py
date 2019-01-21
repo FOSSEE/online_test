@@ -1096,12 +1096,17 @@ class Profile(models.Model):
             os.chmod(user_dir, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         return user_dir
 
+    def get_moderated_courses(self):
+        return Course.objects.filter(teachers=self.user)
+
     def _toggle_moderator_group(self, group_name):
         group = Group.objects.get(name=group_name)
         if self.is_moderator:
             self.user.groups.add(group)
         else:
             self.user.groups.remove(group)
+            for course in self.get_moderated_courses():
+                course.remove_teachers(self.user)
 
     def save(self, *args, **kwargs):
         if self.pk is not None:
