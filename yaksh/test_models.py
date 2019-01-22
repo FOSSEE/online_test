@@ -983,30 +983,20 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.profile = self.user.profile
         self.quiz = Quiz.objects.get(description='demo quiz 1')
         self.question_paper = QuestionPaper(quiz=self.quiz, total_marks=3)
-        self.question_paper2 = QuestionPaper(quiz=self.quiz, total_marks=3)
-        self.question_paper3 = QuestionPaper(quiz=self.quiz, total_marks=3)
         self.question_paper.save()
-        self.question_paper2.save()
-        self.question_paper3.save()
         self.quiz2 = Quiz.objects.get(description='demo quiz 2')
         self.qtn_paper_with_single_question = QuestionPaper(
             quiz=self.quiz2, total_marks=3
         )
         self.qtn_paper_with_single_question.save()
-
         all_questions = Question.objects.filter(user=self.user).order_by("id")
         self.questions = all_questions[0:3]
-        self.questions2 = all_questions[4:7]
-        self.questions3 = []
         self.start_time = timezone.now()
         self.end_time = self.start_time + timedelta(minutes=20)
         self.question1 = all_questions[0]
         self.question2 = all_questions[1]
         self.question3 = all_questions[2]
         self.question4 = all_questions[3]
-        self.question5 = self.questions2[0]
-        self.question6 = self.questions2[1]
-        self.question7 = self.questions2[2]
 
         # create answerpaper
         self.answerpaper = AnswerPaper(
@@ -1125,56 +1115,6 @@ class AnswerPaperTestCases(unittest.TestCase):
         )
         self.mcc_based_testcase.save()
 
-        # create answerpaper2
-        self.answerpaper2 = AnswerPaper(
-            user=self.user,
-            question_paper=self.question_paper2,
-            start_time=self.start_time,
-            end_time=self.end_time,
-            user_ip=self.ip,
-            course=self.course
-        )
-
-        self.attempted_papers2 = AnswerPaper.objects.filter(
-            question_paper=self.question_paper2,
-            user=self.user
-        )
-
-        self.question_paper2.fixed_questions.add(*self.questions2)
-        already_attempted2 = self.attempted_papers2.count()
-        self.answerpaper2.attempt_number = already_attempted2 + 1
-        self.answerpaper2.save()
-
-        self.answerpaper2.questions.add(*self.questions2)
-        self.answerpaper2.questions_order = ",".join(
-                [str(question.id) for question in self.questions2]
-            )
-        self.answerpaper2.questions_unanswered.add(*self.questions2)
-        self.answerpaper2.save()
-
-        # create answerpaper3 with no questions
-        self.answerpaper3 = AnswerPaper(
-            user=self.user,
-            question_paper=self.question_paper3,
-            start_time=self.start_time,
-            end_time=self.end_time,
-            user_ip=self.ip,
-            course=self.course
-        )
-
-        self.attempted_papers3 = AnswerPaper.objects.filter(
-            question_paper=self.question_paper3,
-            user=self.user
-        )
-        self.question_paper3.fixed_questions.add(*self.questions3)
-        already_attempted3 = self.attempted_papers3.count()
-        self.answerpaper3.attempt_number = already_attempted3 + 1
-        self.answerpaper3.save()
-        self.answerpaper3.questions.add(*self.questions3)
-        self.answerpaper3.question_order = ""
-        self.answerpaper3.questions_unanswered.add(*self.questions3)
-        self.answerpaper3.save()
-
         # Setup quiz where questions are shuffled
         # Create Quiz and Question Paper
         self.quiz2 = Quiz.objects.get(description="demo quiz 2")
@@ -1196,6 +1136,29 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.user2_answerpaper2 = self.question_paper.make_answerpaper(
             self.user2, self.ip, 1, self.course.id
         )
+        self.questions_list = Question.objects.filter(summary__in=summary_list[0:5])
+        # create question_paper3
+        self.question_paper3 = QuestionPaper(
+			quiz=self.quiz2, total_marks=3, shuffle_questions=True)
+        self.question_paper3.save()
+        question_list_with_only_one_category = \
+			[question for question in self.questions_list
+			if question.type == 'code']
+        self.question_paper3.fixed_questions.add(*question_list_with_only_one_category)
+        # create anspaper for user1 with questions of only one category
+        self.user1_answerpaper2 = self.question_paper3.make_answerpaper(
+			self.user, self.ip, 1, self.course.id
+		)
+        # create question_paper4
+        self.question_paper4 = QuestionPaper(
+			quiz=self.quiz, total_marks=3, shuffle_questions=True
+		)
+        self.question_paper4.save()
+        question_list_with_no_questions = []
+        self.question_paper4.fixed_questions.add(*question_list_with_no_questions)
+        # create anspaper for user1 with no questions
+        self.user1_answerpaper3 = self.question_paper4.make_answerpaper(self.user, self.ip, 1, self.course.id)
+
         settings.code_evaluators['python']['standardtestcase'] = \
             "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
         self.SERVER_POOL_PORT = 4000
@@ -1644,7 +1607,7 @@ class AnswerPaperTestCases(unittest.TestCase):
                 course=self.answerpaper.course
                 )
 
-    def test_get_categorized_question_indices(self):
+    def test_get_categorized_question_indices_with_multiple_categories(self):
         question_indices = {'Programming': [1], 'Objective Type': [2, 3]}
         categorized_question_indices = \
             self.answerpaper.get_categorized_question_indices()
@@ -1653,13 +1616,13 @@ class AnswerPaperTestCases(unittest.TestCase):
     def test_get_categorized_question_indices_for_only_one_category(self):
         question_indices = {'Programming': [1, 2, 3]}
         categorized_question_indices = \
-            self.answerpaper2.get_categorized_question_indices()
+            self.user1_answerpaper2.get_categorized_question_indices()
         self.assertDictEqual(question_indices, categorized_question_indices)
 
     def test_get_categorized_question_indices_for_no_questions(self):
         question_indices = {}
         categorized_question_indices = \
-            self.answerpaper3.get_categorized_question_indices()
+            self.user1_answerpaper3.get_categorized_question_indices()
         self.assertDictEqual(question_indices, categorized_question_indices)
 
 
