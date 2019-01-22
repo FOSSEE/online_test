@@ -1136,28 +1136,35 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.user2_answerpaper2 = self.question_paper.make_answerpaper(
             self.user2, self.ip, 1, self.course.id
         )
-        self.questions_list = Question.objects.filter(summary__in=summary_list[0:5])
+        self.questions_list = Question.objects.filter(
+            summary__in=summary_list[0:5])
         # create question_paper3
         self.question_paper3 = QuestionPaper(
-			quiz=self.quiz2, total_marks=3, shuffle_questions=True)
+            quiz=self.quiz2, total_marks=3, shuffle_questions=True)
         self.question_paper3.save()
-        question_list_with_only_one_category = \
-			[question for question in self.questions_list
-			if question.type == 'code']
-        self.question_paper3.fixed_questions.add(*question_list_with_only_one_category)
+        question_list_with_only_one_category = [
+            question for question in self.questions_list
+            if question.type == 'code']
+        self.question_paper3.fixed_questions.add(
+            *question_list_with_only_one_category
+        )
         # create anspaper for user1 with questions of only one category
         self.user1_answerpaper2 = self.question_paper3.make_answerpaper(
-			self.user, self.ip, 1, self.course.id
-		)
+            self.user, self.ip, 1, self.course.id
+        )
         # create question_paper4
         self.question_paper4 = QuestionPaper(
-			quiz=self.quiz, total_marks=3, shuffle_questions=True
-		)
+            quiz=self.quiz, total_marks=3, shuffle_questions=True
+        )
         self.question_paper4.save()
         question_list_with_no_questions = []
-        self.question_paper4.fixed_questions.add(*question_list_with_no_questions)
+        self.question_paper4.fixed_questions.add(
+            *question_list_with_no_questions
+        )
         # create anspaper for user1 with no questions
-        self.user1_answerpaper3 = self.question_paper4.make_answerpaper(self.user, self.ip, 1, self.course.id)
+        self.user1_answerpaper3 = self.question_paper4.make_answerpaper(
+            self.user, self.ip, 1, self.course.id
+        )
 
         settings.code_evaluators['python']['standardtestcase'] = \
             "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
