@@ -285,19 +285,49 @@ class LearningUnitTestCases(unittest.TestCase):
 
 class ProfileTestCases(unittest.TestCase):
     def setUp(self):
-        self.user1 = User.objects.get(username='creator')
-        self.profile = Profile.objects.get(user=self.user1)
-        self.user2 = User.objects.get(username='demo_user3')
+        self.creator = User.objects.get(username='creator')
+        self.profile = Profile.objects.get(user=self.creator)
+        self.teacher = User.objects.create_user(username='teacher_profile',
+                                           password='teacher_profile',
+                                           email='teacher_profile@test.com')
+        Profile.objects.create(
+            user=self.teacher, roll_number=123, institute='IIT',
+            is_moderator=True, department='Chemical', position='Teacher'
+        )
+        self.course = Course.objects.create(
+            name="Course For ProfileTestCase",
+            enrollment="Open Course",
+            creator=self.creator,
+            start_enroll_time=datetime(
+                2015, 10, 9, 10, 8, 15, 0,
+                tzinfo=pytz.utc
+            ),
+            end_enroll_time=datetime(
+                2015, 11, 9, 10, 8, 15, 0,
+                tzinfo=pytz.utc
+            ),
+        )
+        self.course.add_teachers(self.teacher)
 
     def test_user_profile(self):
         """ Test user profile"""
-        self.assertEqual(self.user1.username, 'creator')
+        self.assertEqual(self.creator.username, 'creator')
         self.assertEqual(self.profile.user.username, 'creator')
         self.assertEqual(int(self.profile.roll_number), 1)
         self.assertEqual(self.profile.institute, 'IIT')
         self.assertEqual(self.profile.department, 'Chemical')
         self.assertEqual(self.profile.position, 'Student')
 
+    def test_profile_is_moderator_removes_teacher(self):
+        teacher_profile = self.teacher.profile
+        teacher_profile.is_moderator = False
+        teacher_profile.save()
+        self.assertNotIn(self.teacher, self.course.teachers.all())
+
+    def tearDown(self):
+        self.teacher.profile.delete()
+        self.teacher.delete()
+        self.course.delete()
 
 ###############################################################################
 class QuestionTestCases(unittest.TestCase):
