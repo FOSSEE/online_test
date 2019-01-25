@@ -2941,7 +2941,7 @@ def download_course(request, course_id):
 
     # Static files required for styling in html template
     static_files = {"js": ["bootstrap.min.js",
-                           "jquery-1.9.1.min.js", "video.js"],
+                           "jquery-3.3.1.min.js", "video.js"],
                     "css": ["bootstrap.min.css",
                             "video-js.css", "offline.css"],
                     "images": ["yaksh_banner.png"]}
