@@ -1154,13 +1154,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         )
         # create question_paper4
         self.question_paper4 = QuestionPaper(
-            quiz=self.quiz, total_marks=3, shuffle_questions=True
+            quiz=self.quiz, total_marks=0, shuffle_questions=True
         )
         self.question_paper4.save()
-        question_list_with_no_questions = []
-        self.question_paper4.fixed_questions.add(
-            *question_list_with_no_questions
-        )
+
         # create anspaper for user1 with no questions
         self.user1_answerpaper3 = self.question_paper4.make_answerpaper(
             self.user, self.ip, 1, self.course.id
