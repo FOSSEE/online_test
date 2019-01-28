@@ -6,10 +6,6 @@ body {
   color: #404040;
 }
 .nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus {
-    -moz-border-bottom-colors: none;
-    -moz-border-left-colors: none;
-    -moz-border-right-colors: none;
-    -moz-border-top-colors: none;
     background-color: #FFFFFF;
     border-color: #DDDDDD #DDDDDD rgba(0, 0, 0, 0);
     border-image: none;

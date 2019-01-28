@@ -251,8 +251,6 @@ select
             $('#fixed').tab('show');
         {% elif state == "random" %}
             $("#random").tab('show');
-            $('li').removeClass('active');
-            $(this).addClass('active');
         {% elif state == "finish" %}
             $('#finished').tab('show');
         {% endif %}
