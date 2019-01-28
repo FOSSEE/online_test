@@ -288,9 +288,10 @@ class ProfileTestCases(unittest.TestCase):
     def setUp(self):
         self.creator = User.objects.get(username='creator')
         self.profile = Profile.objects.get(user=self.creator)
-        self.teacher = User.objects.create_user(username='teacher_profile',
-                                           password='teacher_profile',
-                                           email='teacher_profile@test.com')
+        self.teacher = User.objects.create_user(
+                                            username='teacher_profile',
+                                            password='teacher_profile',
+                                            email='teacher_profile@test.com')
         Profile.objects.create(
             user=self.teacher, roll_number=123, institute='IIT',
             is_moderator=True, department='Chemical', position='Teacher'
@@ -329,6 +330,7 @@ class ProfileTestCases(unittest.TestCase):
         self.teacher.profile.delete()
         self.teacher.delete()
         self.course.delete()
+
 
 ###############################################################################
 class QuestionTestCases(unittest.TestCase):
