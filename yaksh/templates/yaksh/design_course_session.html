@@ -18,6 +18,8 @@
 <a href="{{URL_ROOT}}/exam/manage/courses/" class="btn btn-primary">
     Back to Courses
 </a>
+<br/>
+<br/>
 <form action="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course_id}}/" method="POST" id="design_course_form">
 {% csrf_token %}
     <div class="tab-pane active" id="available-lesson-quiz">
