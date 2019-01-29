@@ -1600,7 +1600,7 @@ class QuestionPaper(models.Model):
         attempts = AnswerPaper.objects.get_total_attempt(questionpaper=self,
                                                          user=user,
                                                          course_id=course_id)
-        return attempts != self.quiz.attempts_allowed
+        return attempts < self.quiz.attempts_allowed or self.quiz.attempts_allowed == -1
 
     def can_attempt_now(self, user, course_id):
         if self._is_attempt_allowed(user, course_id):
