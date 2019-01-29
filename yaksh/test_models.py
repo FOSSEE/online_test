@@ -4,7 +4,7 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
-    create_group
+    create_group, legend_display_types
 from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
@@ -21,6 +21,7 @@ import os
 import shutil
 import tempfile
 from threading import Thread
+from collections import defaultdict
 from yaksh import settings
 
 
@@ -287,9 +288,10 @@ class ProfileTestCases(unittest.TestCase):
     def setUp(self):
         self.creator = User.objects.get(username='creator')
         self.profile = Profile.objects.get(user=self.creator)
-        self.teacher = User.objects.create_user(username='teacher_profile',
-                                           password='teacher_profile',
-                                           email='teacher_profile@test.com')
+        self.teacher = User.objects.create_user(
+                                            username='teacher_profile',
+                                            password='teacher_profile',
+                                            email='teacher_profile@test.com')
         Profile.objects.create(
             user=self.teacher, roll_number=123, institute='IIT',
             is_moderator=True, department='Chemical', position='Teacher'
@@ -328,6 +330,7 @@ class ProfileTestCases(unittest.TestCase):
         self.teacher.profile.delete()
         self.teacher.delete()
         self.course.delete()
+
 
 ###############################################################################
 class QuestionTestCases(unittest.TestCase):
@@ -988,7 +991,6 @@ class AnswerPaperTestCases(unittest.TestCase):
             quiz=self.quiz2, total_marks=3
         )
         self.qtn_paper_with_single_question.save()
-
         all_questions = Question.objects.filter(user=self.user).order_by("id")
         self.questions = all_questions[0:3]
         self.start_time = timezone.now()
@@ -1021,6 +1023,7 @@ class AnswerPaperTestCases(unittest.TestCase):
                             )
         self.answerpaper.questions_unanswered.add(*self.questions)
         self.answerpaper.save()
+
         # answers for the Answer Paper
         self.answer_right = Answer(
             question=self.question1,
@@ -1135,6 +1138,33 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.user2_answerpaper2 = self.question_paper.make_answerpaper(
             self.user2, self.ip, 1, self.course.id
         )
+        self.questions_list = Question.objects.filter(
+            summary__in=summary_list[0:5])
+        # create question_paper3
+        self.question_paper3 = QuestionPaper(
+            quiz=self.quiz2, total_marks=3, shuffle_questions=True)
+        self.question_paper3.save()
+        question_list_with_only_one_category = [
+            question for question in self.questions_list
+            if question.type == 'code']
+        self.question_paper3.fixed_questions.add(
+            *question_list_with_only_one_category
+        )
+        # create anspaper for user1 with questions of only one category
+        self.user1_answerpaper2 = self.question_paper3.make_answerpaper(
+            self.user, self.ip, 1, self.course.id
+        )
+        # create question_paper4
+        self.question_paper4 = QuestionPaper(
+            quiz=self.quiz, total_marks=0, shuffle_questions=True
+        )
+        self.question_paper4.save()
+
+        # create anspaper for user1 with no questions
+        self.user1_answerpaper3 = self.question_paper4.make_answerpaper(
+            self.user, self.ip, 1, self.course.id
+        )
+
         settings.code_evaluators['python']['standardtestcase'] = \
             "yaksh.python_assertion_evaluator.PythonAssertionEvaluator"
         self.SERVER_POOL_PORT = 4000
@@ -1582,6 +1612,24 @@ class AnswerPaperTestCases(unittest.TestCase):
                 end_time=self.answerpaper.end_time,
                 course=self.answerpaper.course
                 )
+
+    def test_get_categorized_question_indices_with_multiple_categories(self):
+        question_indices = {'Programming': [1], 'Objective Type': [2, 3]}
+        categorized_question_indices = \
+            self.answerpaper.get_categorized_question_indices()
+        self.assertDictEqual(question_indices, categorized_question_indices)
+
+    def test_get_categorized_question_indices_for_only_one_category(self):
+        question_indices = {'Programming': [1, 2, 3]}
+        categorized_question_indices = \
+            self.user1_answerpaper2.get_categorized_question_indices()
+        self.assertDictEqual(question_indices, categorized_question_indices)
+
+    def test_get_categorized_question_indices_for_no_questions(self):
+        question_indices = {}
+        categorized_question_indices = \
+            self.user1_answerpaper3.get_categorized_question_indices()
+        self.assertDictEqual(question_indices, categorized_question_indices)
 
 
 ###############################################################################

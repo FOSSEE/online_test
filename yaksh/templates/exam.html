@@ -1,10 +1,5 @@
 {% extends "base.html" %}
 {% load custom_filters %}
-
-
-
-
-{% load custom_filters %}
 {% block nav %}
 <div class="container-fluid yakshnav">
   <nav class="navbar fixed-top navbar-expand-lg yakshheading yakshnav">
@@ -83,28 +78,26 @@
           <p class="text-center">Question(s) left: <b>{{ paper.questions_left }}</b></p>
           </div>
           <br>
-          <div class="">
-            <div class="">
-              <div class="">
-                {% for types in question_types %}
-                {% get_questions_by_type  paper.get_all_ordered_questions types as questions_by_type %}  
-                  {% if types == "mcq" %}  Single Correct Choice 
-                  {% elif types == "mcc" %}  Multiple Correct Choice 
-                  {% elif types == "code" %} Programming
-                  {% elif types == "upload" %} Assignment Upload 
-                  {% elif types == "integer" %} Integer Blanks
-                  {% elif types == "string" %} String Blanks
-                  {% elif types == "float" %} Float Blanks
-                  {% elif types == "arrange" %} Arranging Options  
-                  {% endif %}      
-                  --->
-                   <b>  {% for question in questions_by_type %} {{question.id}}  {%endfor%}  </b>
-                     <br>
-                {%endfor%}  
-              </div>
-            </div>
-          </div>
-        
+          <table class = "legend_table table-bordered table-sm">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Question No.</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for category, question_number in paper.get_categorized_question_indices.items %}
+              <tr>
+                <td>
+                  {{category}}
+                </td>
+                <td>
+                  {{question_number| join:", "}}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
       </div> <!--end of sidebar -->
       <a href="#sidebar" data-toggle="collapse" id="sidebaricon"><i class="fa fa-navicon fa-lg"></i></a>
 

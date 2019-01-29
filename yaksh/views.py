@@ -615,7 +615,6 @@ def show_question(request, question, paper, error_message=None,
     course = Course.objects.get(id=course_id)
     module = course.learning_module.get(id=module_id)
     all_modules = course.get_learning_modules()
-    all_question_types = [types[0] for types in question_types]
     context = {
         'question': question,
         'paper': paper,
@@ -631,7 +630,6 @@ def show_question(request, question, paper, error_message=None,
         'delay_time': delay_time,
         'quiz_type': quiz_type,
         'all_modules': all_modules,
-        "question_types": all_question_types
     }
     answers = paper.get_previous_answers(question)
     if answers:
@@ -905,8 +903,10 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None,
     """Show a page to inform user that the quiz has been completed."""
     user = request.user
     if questionpaper_id is None:
-        message = (reason or "An Unexpected Error occurred. Please contact your"
-            " instructor/administrator.")
+        message = (
+            reason or "An Unexpected Error occurred."
+            " Please contact your instructor/administrator."
+        )
         context = {'message': message}
         return my_render_to_response(request, 'yaksh/complete.html', context)
     else:
