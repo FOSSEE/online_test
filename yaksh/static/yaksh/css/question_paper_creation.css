@@ -5,6 +5,15 @@ body {
   line-height: 18px;
   color: #404040;
 }
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus {
+    background-color: #FFFFFF;
+    border-color: #DDDDDD #DDDDDD rgba(0, 0, 0, 0);
+    border-image: none;
+    border-style: solid;
+    border-width: 1px;
+    color: #555555;
+    cursor: default;
+}
 .tabs li {
     text-align: center;
     width: 33%;
@@ -12,14 +21,11 @@ body {
 .tabs li:last-child {
     width: 34%;
 }
-.tabs > .active > a {
+.tabs > .active{
     border: 0;
-    background: lightgreen;
 }
 .tabs > .active > a:hover {
     border: 0;
-    background: green;
-    color: #ffffff;
 }
 .tabs li a {
     border-radius: 0;
@@ -76,6 +82,9 @@ body {
 #fixed-added hr,
 #random-added hr {
     margin: 5px 0 4px;
+}
+ #fixed-next, #random-prev, #random-next, #finish-prev{
+    color: white;
 }
 .qcard {
     position: relative;

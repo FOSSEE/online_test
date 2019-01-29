@@ -15,9 +15,9 @@ select
 {% endblock %}
 
 {% block script %}
-    <script src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js"></script>
-    <script src="{{ URL_ROOT }}/static/yaksh/js/bootstrap.js"></script>
-    <script src="{{ URL_ROOT }}/static/yaksh/js/bootstrap-tabs.js"></script>
+    <script src="{{ URL_ROOT }}/static/yaksh/js/jquery-3.3.1.min.js"></script>
+    <script src="{{ URL_ROOT }}/static/yaksh/js/jquery-ui.js"></script>
+    <script src="{{ URL_ROOT }}/static/yaksh/js/bootstrap.min.js"></script>
     <script src="{{ URL_ROOT }}/static/yaksh/js/question_paper_creation.js"></script>
 {% endblock %}
 
@@ -34,33 +34,36 @@ select
     {% csrf_token %}
     <input type=hidden name="is_active" id="is_active" value="{{ state }}">
 <center><b>Manual mode to design the {{lang}}  Question Paper</center><br>
-    <ul class="nav nav-tabs tabs" data-tabs="tabs">
-    <li class="active" id="fixed-tab">
-        <a href="#fixed-questions" id="fixed">
-            STEP 1<br>
-            Add Fixed Questions
-        </a>
-    </li>
-    <li id="random-tab">
-        <a href="#random-questions" id="random">
-            STEP 2<br>
-            Add Random Questions
-        </a>
-    </li>
-    <li id="finish-tab">
-    <a href="#finish" id="finished">
-        STEP 3<br>
-        Finish
-    </a></li>
-</ul>
-
+    <div class = "tab-base">
+        <ul class="nav nav-pills tabs">
+        <li id="fixed-tab">
+            <a data-toggle="tab" href="#fixed-questions" class = "nav-link active" id="fixed">
+                STEP 1<br>
+                Add Fixed Questions
+            </a>
+        </li>
+        <li id="random-tab">
+            <a data-toggle="tab" href="#random-questions" class = "nav-link" id="random">
+                STEP 2<br>
+                Add Random Questions
+            </a>
+        </li>
+        <li id="finish-tab">
+        <a data-toggle="tab" href="#finish" class = "nav-link" id="finished">
+            STEP 3<br>
+            Finish
+        </a></li>
+    </ul>
+    </div>
     <div>
         <h3>Total Marks:  <span id="total_marks" class="well"> {{ qpaper.total_marks }} </span></h3>
     </div>
 <div class="tab-content">
     <!-- common to fixed and random questions -->
     <div class="row" id="selectors">
-        <h5 style="padding-left: 20px;">Please select Question type and Marks</h5>
+        <div class = "col-md-8">
+            <h5>Please select Question type and Marks</h5>
+        </div>
         <div class="col-md-6">
             {{ filter_form.question_type }}
         </div>
@@ -71,12 +74,12 @@ select
     <br><br>
     {% csrf_token %}
     <div class="tab-pane active" id="fixed-questions">
-        <h4 style="padding-left: 20px;">Or</h4>
+        <h4>Or</h4>
         <!-- Search questions using tags -->
-        <h4 style="padding-left: 20px;">Search using Tags: </h4>
+        <h4>Search using Tags: </h4>
+        <span class="input-group-addon" id="basic-addon1">Search Questions: </span>
         <div class="col-md-14">
         <div class="input-group">
-            <span class="input-group-addon" id="basic-addon1">Search Questions </span>
             <input type="text" id="question_tags" name="question_tags" class="form-control"
              placeholder="Search using comma separated Tags">
             <span class="input-group-btn">
@@ -118,7 +121,7 @@ select
                         {% endif %}
                     </div>
                     <br /><br />
-                    <button id="add-fixed" name="add-fixed" class="btn small primary pull-right" type="submit">Add to paper</button>
+                    <button id="add-fixed" name="add-fixed" class="btn small btn-primary pull-right" type="submit">Add to paper</button>
                 </div>
             </div>
             <div class="col-md-6">
@@ -145,7 +148,7 @@ select
         </div> <!-- /.row -->
         <br>
         <div class="pull-right">
-            <a class="btn btn-primary" id="fixed-next">Next &gt;</a>
+            <a class="btn btn-info" id="fixed-next">Next &gt;</a>
         </div>
     </div> <!-- /#fixed-questions -->
 

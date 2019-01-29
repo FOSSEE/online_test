@@ -21,7 +21,7 @@ $(document).ready(function(){
                 $('#is_active').val("fixed");
             }
             if($(this).attr("id") == "random-tab") {
-            $('#is_active').val("random");
+                $('#is_active').val("random");
             }
                 $question_type.val('select');
                 $marks.val('select')
