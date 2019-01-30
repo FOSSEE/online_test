@@ -14,7 +14,6 @@ $(document).ready(function()
 {
   $("#marks_table").tablesorter({sortList: [[2,1]]});
 });
-
 </script>
 {% endblock script %}
 
@@ -220,7 +219,7 @@ Status : <b style="color: red;"> Failed </b><br/>
     {% endif %}
     {% else %}
         {% for ans in answers %}
-        {% if ans.answer.correct %}
+            {% if ans.answer.correct %}
                 <div class="card ">
                     <div class="card-heading alert-success">Correct answer:
             {% else %}
@@ -306,7 +305,7 @@ Status : <b style="color: red;"> Failed </b><br/>
         {% endfor %}
         {% endwith %}
         </div>
-        
+        <input type="button" name="ans_diff" onclick="show_diff();">
         <div class="card-body">
         {% if question.type == "code" %}
         <pre><code>{{ ans.answer.answer.strip|safe }}</code></pre>

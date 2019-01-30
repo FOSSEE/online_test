@@ -2079,21 +2079,34 @@ class AnswerPaper(models.Model):
         for question in q_a:
             if question.type=='code':
                 answers = q_a[question]
-                arr = [] #all answers for a question as list of lines
+                all_submissions_for_a_question = [] #all answers for a question as list of lines
                 for ans in answers:
-                    split_ans_line_by_line = ans.answer.split("\n")
-                    split_ans_line_by_line = [ele+'\n' for ele in split_ans_line_by_line]
-                    arr.append(split_ans_line_by_line)
+                    split_ans_line_by_line = [ele+'\n' for ele in ans.answer.split("\n")]
+                    all_submissions_for_a_question.append(split_ans_line_by_line)
 
-                if len(arr)>1:#if there are more than one submissions for this question
-                    zipped = zip(arr, arr[1:])
+                if len(all_submissions_for_a_question)>1:#if there are more than one submissions for this question
+                    zipped = zip(all_submissions_for_a_question, all_submissions_for_a_question[1:])
                     temp = []
                     for consecutive_submissions in zipped:
                         diff_of_consecutive_submissions =  difflib.ndiff(consecutive_submissions[0], consecutive_submissions[1])
                         #remove unwanted ? produced by difflib.ndiff()
                         temp.append([ele for ele in diff_of_consecutive_submissions if not ele.startswith("?")])
                     q_diff[question] = temp
-        return q_diff
+
+        questionwise_diff = ""
+        for question in q_diff:
+            for ans in q_diff[question]:
+                questionwise_diff += '</br><font color="red" size="4"><b>'+question.summary+'</b></font></br>'
+                for line in ans:
+                    if(line.startswith("+")):
+                        questionwise_diff += '<span class="Color_Added">'+line+'</span>'
+                    elif(line.startswith("-")):
+                        questionwise_diff += '<span class="Color_Removed">'+line+'</span>'
+                    else:
+                        questionwise_diff += line
+                questionwise_diff += '<hr style="border-top: 3px solid #ccc; background: transparent;">'
+                    
+        return questionwise_diff
 
 
     def get_latest_answer(self, question_id):

@@ -1652,77 +1652,10 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             data = AnswerPaper.objects.get_user_data(
                 user, questionpaper_id, course_id, attempt_number
             )
-            '''
-            papers = data['papers']
-            arr = []
-            diff1 = []
-            qq = []
-            for paper in papers:
-                for question, answers in six.iteritems(paper.get_question_answers()):
-                    if(question.type == "code"):
-                        for ans in answers:
-                            #arr.append(str(ans['answer']))
-                            temp = str(ans['answer']).split('\n')
-                            temp = [ele+'\n' for ele in temp]
-                            arr.append(temp)
-                            qq.append(question)
-            #check if there are multiple submission for the question
-            if(len(arr)>1):
-                #find diff of consecutive answers
-                zipped = zip(arr, arr[1:]) #each element will be consecutive submissions
-                for consecutive_submissions in zipped:
-                    diff1.append(difflib.ndiff(consecutive_submissions[0], consecutive_submissions[1]))
             
-            #remove the diff which is generated when codes are from two different questions
-            #i.e. code comparision is not needed when ith submission is for question 1 and (i+1)th 
-            #submission is for question different from 1
             diff = []
-            idx = 0
-            zipped_q = zip(qq, qq[1:])
-            for q_ele in zipped_q:
-                if(q_ele[0].id==q_ele[1].id):#checks if successive submissions are for the same question
-                    diff.append((q_ele[0], diff1[idx]))
-                else:#delimeter between two questions
-                    diff.append("***")
-                idx+=1
-            
-
-            dd = []
-            for ele in diff:# ele[0] : question, ele[1] : diff of successive submissions
-                prefix = ""
-                if ele is not "***":
-                    #question summary
-                    prefix += '<font color="red" size="4"><b>'+ele[0].summary+'</b></font></br></br>'
-                    for e in ele[1]:
-                        if(not e.startswith("?")):
-                            if(e.startswith("+")):
-                                prefix += '<span class="Color2">'+e+'</span>'
-                            elif(e.startswith("-")):
-                                prefix += '<span class="Color1">'+e+'</span>'
-                            else:
-                                prefix += e
-                else:
-                    prefix+="</br>"
-                dd.append(prefix)
-            '''
-            papers = data['papers']
-            diff = []
-            for paper in papers:
-                q_diff = paper.get_diff_of_consecutive_submissions_for_all_code_question()
-                
-                for question in q_diff:
-                    questionwise_diff = ""
-                    for ans in q_diff[question]:
-                        questionwise_diff += '</br><font color="red" size="4"><b>'+question.summary+'</b></font></br>'
-                        for line in ans:
-                            if(line.startswith("+")):
-                                questionwise_diff += '<span class="Color_Added">'+line+'</span>'
-                            elif(line.startswith("-")):
-                                questionwise_diff += '<span class="Color_Removed">'+line+'</span>'
-                            else:
-                                questionwise_diff += line
-                        questionwise_diff += '<hr style="border-top: 3px solid #ccc; background: transparent;">'
-                    diff.append(questionwise_diff)            
+            for paper in data['papers']:
+                diff.append(paper.get_diff_of_consecutive_submissions_for_all_code_question())          
 
             context = {
                 "data": data,
@@ -1753,7 +1686,6 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
         course_status = CourseStatus.objects.filter(course=course, user=user)
         if course_status.exists():
             course_status.first().set_grade()
-    # context = {"hello":"how are you?"}
     return my_render_to_response(request, 'yaksh/grade_user.html', context)
 
 
