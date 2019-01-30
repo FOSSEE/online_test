@@ -758,6 +758,7 @@ class Course(models.Model):
     teachers = models.ManyToManyField(User, related_name='teachers')
     is_trial = models.BooleanField(default=False)
     instructions = models.TextField(default=None, null=True, blank=True)
+    view_grade = models.BooleanField(default=False)
     learning_module = models.ManyToManyField(LearningModule,
                                              related_name='learning_module')
 

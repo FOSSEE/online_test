@@ -2,7 +2,6 @@
 {% load custom_filters %}
 {% block title %} Course Modules {% endblock %}
 {% block script %}
-<script src="{{ URL_ROOT }}/static/yaksh/js/donutpiechart.js"></script>
 <script>
     function view_unit(unit){
         $("#"+unit+"_down").toggle();
@@ -36,16 +35,17 @@
 </div>
 
 <center>
-<div class=" col-md-8">
-<b>Grade: {% if grade %} {{ grade }} {% else %} Will be available once the course is complete {% endif %}</b>
-</div>
+    {% if course.view_grade %}
+        <div class=" col-md-8">
+        <b>Grade: {% if grade %} {{ grade }} {% else %} Will be available once the course is complete {% endif %}</b>
+        </div>
+    {% endif %}
 
-
-{% if msg %}
-    <div class="col-md-8 alert alert-warning animated flash" role="alert">
-        {{ msg }}
-    </div>
-{% endif %}
+    {% if msg %}
+        <div class="col-md-8 alert alert-warning animated flash" role="alert">
+            {{ msg }}
+        </div>
+    {% endif %}
 </center>
 
 <div class="row justify-content-md-center ">
