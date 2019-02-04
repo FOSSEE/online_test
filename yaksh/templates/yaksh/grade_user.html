@@ -29,7 +29,7 @@ $(document).ready(function()
 
     {% for course in course_details %}
     <tr>
-    <td><ul class="list-group">{{course.name}} </td>
+    <td><ul class="list-group">{{course.name|truncatechars:30}} </td>
 
     {% if course.get_quizzes %}
     <td>

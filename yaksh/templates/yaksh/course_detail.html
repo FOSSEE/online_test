@@ -2,10 +2,6 @@
 {% load custom_filters %}
 {% block title %} Course Details {% endblock title %}
 
-<div class="text-center col-md-offset-2">
-{% block pagetitle %} Course Details for {{ course.name|title }} {% endblock %}
-</div>
-
 {% block script %}
 <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/course.js"></script>
 <script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/tinymce/js/tinymce/tinymce.min.js"></script>
@@ -42,6 +38,9 @@
     <main class="col" id="sidebarbody">
         <div class="container-fluid yakshwell">
             
+            <div class="text-center col-md-offset-2">
+                <h3><center>Course Details for {{ course.name|title }}</center></h3>
+            </div>
             <form id="upload_users" action="{{ URL_ROOT }}/exam/manage/upload_users/{{course.id}}/"
                 method="POST" enctype="multipart/form-data" class="yakshwell">
                 {% csrf_token %}

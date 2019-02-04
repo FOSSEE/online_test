@@ -36,7 +36,7 @@
       <!-- Side bar -->
       <div class="col-md-3 yakshlabel collapse" id="sidebar">
         <center>
-          <b class="yakshheading">{{course.name}}</b><br>
+          <b class="yakshheading">{{course.name|truncatechars:30}}</b><br>
           {{ paper.question_paper.quiz.description }}</h4>
           <hr>
         </center>

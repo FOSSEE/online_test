@@ -21,7 +21,7 @@
         <tr>
             <td>
                 <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}" class="btn btn-outline-success">
-                <i class="fa fa-caret-right"></i> {{ course }}
+                <i class="fa fa-caret-right"></i> {{ course|truncatechars:30 }}
                 </a>
             </td>
             <td>
