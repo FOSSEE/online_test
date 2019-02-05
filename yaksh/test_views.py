@@ -420,10 +420,14 @@ class TestStudentDashboard(TestCase):
         response = self.client.get(reverse('yaksh:quizlist_user'),
                                    follow=True
                                    )
+        courses_in_context = {
+            'data': self.course,
+            'completion_percentage': None,
+        }
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
         self.assertEqual(response.context['title'], 'All Courses')
-        self.assertEqual(response.context['courses'][0], self.course)
+        self.assertEqual(response.context['courses'][0], courses_in_context)
 
     def test_student_dashboard_enrolled_courses_get(self):
         """
@@ -439,10 +443,14 @@ class TestStudentDashboard(TestCase):
                                            kwargs={'enrolled': "enrolled"}),
                                    follow=True
                                    )
+        courses_in_context = {
+            'data': self.course,
+            'completion_percentage': 0,
+        }
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
         self.assertEqual(response.context['title'], 'Enrolled Courses')
-        self.assertEqual(response.context['courses'][0], self.course)
+        self.assertEqual(response.context['courses'][0], courses_in_context)
 
     def test_student_dashboard_hidden_courses_post(self):
         """
@@ -456,10 +464,14 @@ class TestStudentDashboard(TestCase):
         response = self.client.post(reverse('yaksh:quizlist_user'),
                                     data={'course_code': 'hide'}
                                     )
+        courses_in_context = {
+            'data': self.hidden_course,
+            'completion_percentage': None,
+        }
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
         self.assertEqual(response.context['title'], 'Search')
-        self.assertEqual(response.context['courses'][0], self.hidden_course)
+        self.assertEqual(response.context['courses'][0], courses_in_context)
 
 
 class TestMonitor(TestCase):

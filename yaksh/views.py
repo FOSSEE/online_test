@@ -175,11 +175,14 @@ def quizlist_user(request, enrolled=None, msg=None):
         ).order_by('-id')
         title = 'All Courses'
 
-    for c in courses:
-        _percent = c.get_completion_percent(user) if user in c.students.all() else None
+    for course in courses:
+        if user in course.students.all():
+            _percent = course.get_completion_percent(user)
+        else:
+            _percent = None
         courses_data.append(
             {
-                'data': c,
+                'data': course,
                 'completion_percentage': _percent,
             }
         )
