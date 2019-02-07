@@ -1,4 +1,27 @@
-=== 0.9 (13-07-2018) ===
+=== 0.9.1 (07-02-2019) ===
+
+* Changed routing so that opening the base URL will redirect user to /exam
+* Updated storage hierarchy of uploaded assignments so that they are stored
+  per course and per quiz
+* Deprecated yaksh cli.py script
+* Changed and Upgraded UI
+* Fixed a bug where assigning moderator privileges with create_moderator
+  command did not set is_moderator to True
+* Fixed a bug that caused incorrect rendering of Unit Completion
+* Fixed a bug to allow escaping of special characters in rendered answers
+* Fixed a bug that fetched the same course multiple times when the user is
+  creator and teacher
+* Deprecated the 'course_completion_percent' custom template tag
+* Fixed overall Course Completion percentage in Student interface
+* Fixed the broken Monitor interface UI
+* Fixed a bug to remove user as teacher of any course if is_moderator is set
+  to False
+* Fixed the broken Create Question Paper interface UI
+* Improve the Question Legend in Exam interface
+* Fixed embed video link modal alignment in Add Lesson and Add Module
+  interface
+
+=== 0.9.0 (13-07-2018) ===
 
 * Questions can be searched using tags while creating/editing question papers.
 * Fixed a bug that would not select all questions in Question page.
