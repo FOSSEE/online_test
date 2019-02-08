@@ -197,6 +197,11 @@ if (question_type == 'upload' || question_type == 'code') {
   reset_editor = function() {
       global_editor.editor.setValue(init_val);
       global_editor.editor.clearHistory();
+      $('#undo_changes').modal('hide');
+  }
+
+  confirm = function(){
+    $("#undo_changes").modal("show");
   }
 });
 function user_arranged_options(){
