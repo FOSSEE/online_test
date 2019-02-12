@@ -1408,6 +1408,9 @@ class FileUpload(models.Model):
             self.hide = True
         self.save()
 
+    def get_filename(self):
+        return os.path.basename(self.file.name)
+
 
 ###############################################################################
 class Answer(models.Model):
