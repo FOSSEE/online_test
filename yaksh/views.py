@@ -2822,8 +2822,6 @@ def _update_course_percent(course, user):
 @email_verified
 def preview_questionpaper(request, questionpaper_id):
     user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
     paper = QuestionPaper.objects.get(id=questionpaper_id)
     if not paper.quiz.creator == user:
         raise Http404('This questionpaper does not belong to you')
