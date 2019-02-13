@@ -113,7 +113,7 @@ select
                                     <li>
                                         <label>
                                             <input type="checkbox" name="questions" data-qid="{{question.id}}" value={{question.id}}>
-                                            <span> {{ question.summary }} </span> <span> {{ question.points }} </span>
+                                            <span><a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{ question.summary }}</a></span> <span> {{ question.points }} </span>
                                         </label>
                                      </li>
                                 {% endfor %}
@@ -134,7 +134,7 @@ select
                                         <label>
                                             <input type="checkbox" name="added-questions"
                                             data-qid="{{question.id}}" value={{question.id}}>
-                                            <span> {{ question.summary }} </span>
+                                            <span> <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{ question.summary }}</a></span>
                                             <span> {{ question.points }} </span>
                                         </label>
                                      </li>
@@ -175,7 +175,7 @@ select
                                     <li>
                                         <label>
                                             <input type="checkbox" name="random_questions" data-qid="{{question.id}}" value={{question.id}}>
-                                            <span> {{ question.summary }} </span> <span> {{ question.points }} </span>
+                                            <span> <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{ question.summary }}</a></span> <span> {{ question.points }} </span>
                                         </label>
                                      </li>
                                 {% endfor %}
@@ -201,7 +201,7 @@ select
                                     {% for question in random_set.questions.all %}
                                         <li>
                                         <label>
-                                            <span> {{ question.summary }} </span> <span> {{ question.points }} </span>
+                                            <span> <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{ question.summary }}</a></span> <span> {{ question.points }} </span>
                                         </label>
                                         </li>
                                     {% endfor %}
