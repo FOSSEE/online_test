@@ -98,15 +98,6 @@
               {% endfor %}
             </tbody>
           </table>
-          <br>
-          {% if user.profile.is_moderator %}
-            {% if quiz.questionpaper_set.get %}
-              <a href="{{URL_ROOT}}/exam/manage/preview_questionpaper/{{quiz.questionpaper_set.get.id}}" class="btn btn-primary active btn-xs" target="_blank">
-                View Question Paper
-              </a>
-              <br>
-            {% endif %}
-          {% endif %}
       </div> <!--end of sidebar -->
       <a href="#sidebar" data-toggle="collapse" id="sidebaricon"><i class="fa fa-navicon fa-lg"></i></a>
 
