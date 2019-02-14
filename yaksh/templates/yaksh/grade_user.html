@@ -219,15 +219,16 @@ Status : <b style="color: red;"> Failed </b><br/>
     {% endif %}
     {% else %}
         {% for ans in answers %}
-            {% if ans.answer.correct %}
+            <!-- {% if ans.answer.correct %}
                 <div class="card ">
-                    <div class="card-heading alert-success">Correct answer:
-            {% else %}
+                   <div class="card-heading alert-success">Correct answer:</div></div> -->
+            <!-- {% else %} --><!-- 
                 <div class="card ">
-                    <div class="card-heading-heading alert-danger">Error:
-            {% endif %}
-            {% with ans.error_list as err %}
-            {% for error in err %}
+                    <div class="card-heading-heading alert-danger">Error: -->
+
+            <!-- {% endif %} -->
+            <!-- {% with ans.error_list as err %} -->
+            <!-- {% for error in err %}
 
       {% if error.type == 'stdio' %}
         <div class = "card">
@@ -239,9 +240,9 @@ Status : <b style="color: red;"> Failed </b><br/>
           <td> For given Input value(s):</td>
           <td>{{error.given_input}}</td>
           </tr>
-       </table>
-       {% endif %}
-        <table class="table table-bordered table-responsive-sm" width="100%" id="output" style="table-layout: fixed">
+       </table> -->
+       <!-- {% endif %} -->
+        <!-- <table class="table table-bordered table-responsive-sm" width="100%" id="output" style="table-layout: fixed">
           <col width="10%">
           <col width="40%">
           <col width="40%">
@@ -298,22 +299,28 @@ Status : <b style="color: red;"> Failed </b><br/>
           </tr>
         </table>
       </div>
-      </div> <!-- Closes card -->
-        {% else %}
+      </div> <!- Closes card -->
+        <!-- {% else %}
             <pre><code> {{error|safe}} </code></pre>
         {% endif %}
         {% endfor %}
         {% endwith %}
-        </div>
-        <input type="button" name="ans_diff" onclick="show_diff();">
-        <div class="card-body">
-        {% if question.type == "code" %}
-        <pre><code>{{ ans.answer.answer.strip|safe }}</code></pre>
+        </div> --> 
+        <!-- <div class="card-body"> -->
+        <!-- {% if question.type == "code" %}
+        <! {{ ans.answer.answer.strip|safe }} -->
+        <!-- {% for ele in diff %}
+          {% for key, value in ele.items %}
+            {% if key == question.summary %}
+              <pre><code>{{value|safe}}</code></pre>
+            {% endif %}
+          {% endfor %}
+        {% endfor %} --> 
 
         {% elif question.type == "mcc"%}
         <div class="card">
           <div class="card-body">
-        {% for testcases in question.get_test_cases %}
+        {% for tesctases in question.get_test_cases %}
         {%if testcases.id|stringformat:"i" in ans.answer.answer.strip|safe %}
          <li>{{ testcases.options.strip|safe }}</li>
         {% endif %}
@@ -348,11 +355,24 @@ Status : <b style="color: red;"> Failed </b><br/>
           </div>
         </div>
         {% endif %}
-        </div>
-        </div>
         {% endfor %}
     {% endif %}
     {% with answers|last as answer %}
+    <div class="card">
+          <div class="card-body">
+          {% if question.type == "code" %}
+              <!-- {{ ans.answer.answer.strip|safe }} -->
+              {% for ele in diff %}
+                {% for key, value in ele.items %}
+                  {% if key == question.summary %}
+                    <pre><code>{{value|safe}}</code></pre>
+                  {% endif %}
+                {% endfor %}
+              {% endfor %}
+          {% endif %}
+        </div>
+    </div>
+
     Marks: <input id="q{{ question.id }}" type="text" 
         name="q{{ question.id }}_marks" size="4"
         value="{{ answer.answer.marks }}"><br><br>
@@ -362,17 +382,8 @@ Status : <b style="color: red;"> Failed </b><br/>
 
     {% endfor %} {# for question, answers ... #}
 </div>
-<hr style="border-top: 3px solid #ccc; background: transparent;">
-<div class="table-wrapper-2">
-<h3>Diff for consecutive submissions</h3>
-<hr style="border-top: 3px solid #ccc; background: transparent;">
-
-{% for ele in diff %}
-    <pre><code>{{ ele|safe}}</pre></code>
-  <hr style="border-top: 3px solid #ccc; background: transparent;">
-{% endfor %}
 </div>
-
+<div>
 <div class="form-group">
 <h3>Teacher comments: </h3>
 <textarea id="comments_{{paper.question_paper.id}}" class="form-control"

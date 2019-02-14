@@ -1655,7 +1655,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             
             diff = []
             for paper in data['papers']:
-                diff.append(paper.get_diff_of_consecutive_submissions_for_all_code_question())          
+                diff = [paper.get_diff_of_consecutive_submissions_for_all_code_question()]         
 
             context = {
                 "data": data,
