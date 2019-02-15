@@ -34,7 +34,7 @@ $(document).ready(function()
         {# This is rendered when we are just viewing exam/monitor #}
 
         {% if course_details %}
-        <div class="table-wrapper-2">
+        <div class="table-wrapper-2 monitor_table">
             <table id="course-details" class="table table-bordered table-responsive-sm">
             <tr class="table-info">
             <th>Courses</th>
@@ -43,7 +43,7 @@ $(document).ready(function()
 
             {% for course in course_details %}
             <tr>
-            <td><ul class="list-group">{{course.name|truncatechars:30}} </td>
+            <td><ul class="list-group">{{course.name}} </td>
 
             {% if course.get_quizzes %}
             <td>

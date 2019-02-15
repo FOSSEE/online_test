@@ -20,7 +20,7 @@ $(document).ready(function()
 {% endblock script %}
 
 {% if course_details %}
-<div class="table-wrapper-2">
+<div class="table-wrapper-2 monitor_table">
     <table id="course-details" class="table table-bordered table-responsive-sm">
     <tr class="yakshlabel yakshred text-center">
     <th><i class="fa fa-book"></i> Courses</th>
@@ -29,7 +29,7 @@ $(document).ready(function()
 
     {% for course in course_details %}
     <tr>
-    <td><ul class="list-group">{{course.name|truncatechars:30}} </td>
+    <td><ul class="list-group">{{course.name}} </td>
 
     {% if course.get_quizzes %}
     <td>

@@ -228,3 +228,45 @@ html {
     overflow-y: auto;
     -ms-overflow-style: -ms-autohiding-scrollbar;
 }
+
+/* Moderator Dashboard Table */
+#moderator_table{
+	border-collapse:collapse;
+	table-layout:fixed;
+	width:100%;
+}
+
+#moderator_table th{
+	width:20em;
+}
+
+#moderator_table th:first-child{
+	width:12%;
+}
+
+#moderator_table td{
+	word-wrap:break-word;
+	overflow: hidden;
+}
+
+#moderator_table td a, .regrade{
+	display: block;
+	height: 100%;
+	overflow: hidden;
+	width:100%;
+}
+
+#moderator_table td a{
+	text-overflow: ellipsis;
+	max-width: 20em;
+	text-align: left;
+}
+
+#moderator_table table th:first-child{
+	width:45%;
+}
+
+/* Monitor Table */
+.monitor_table table th:first-child{
+	width:40%;
+}

@@ -11,7 +11,7 @@
 
     <!-- Side bar -->
     <div class="col-md-3 yakshlabel collapse" id="sidebar">
-        <center><h4><a class="text-dark" href="{{ URL_ROOT }}/exam/course_modules/{{course.id}}"><i class="fa fa-caret-left"></i> {{course.name|truncatechars:30}}</h4></center>
+        <center><h4><a class="text-dark" href="{{ URL_ROOT }}/exam/course_modules/{{course.id}}"><i class="fa fa-caret-left"></i> {{course.name}}</h4></center>
         {% for module in all_modules %}
         <div class="list-group">         
     
@@ -22,7 +22,7 @@
                     {% else %}
                         <i class="fa fa-toggle-off" data-toggle="tooltip" title="Currently off"></i>
                     {% endif %}                
-                {{module|truncatechars:30}}
+                {{module}}
             </a>
             {% for unit in module.get_learning_units %}
                 {% get_unit_status course module unit user as status %}

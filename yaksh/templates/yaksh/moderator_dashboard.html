@@ -12,7 +12,7 @@
 <div class="row justify-content-center">
 <div class="col-md-10 ">
   <div class="table-wrapper-2">
-<table class="table table-bordered table-responsive-sm">
+<table class="table table-bordered table-responsive-sm" id="moderator_table">
   <tr class="yakshlabel">
     <th class="yakshred text-center"><i class="fa fa-book"></i> Courses</th>
     <th class="yakshred text-center"><i class="fa fa-puzzle-piece"></i> Quizzes</th>
@@ -21,7 +21,7 @@
         <tr>
             <td>
                 <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}" class="btn btn-outline-success">
-                <i class="fa fa-caret-right"></i> {{ course|truncatechars:30 }}
+                <i class="fa fa-caret-right"></i> {{ course }}
                 </a>
             </td>
             <td>
