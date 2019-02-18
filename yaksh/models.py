@@ -539,6 +539,18 @@ class Quiz(models.Model):
             status = "not attempted"
         return status
 
+    def get_answerpaper_passing_status(self, user, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
+        ans_ppr = AnswerPaper.objects.filter(
+            user=user, course=course, question_paper=qp
+        ).order_by("-attempt_number")
+        if ans_ppr.exists():
+            return ans_ppr.first().passed
+        return False
+
     def _create_quiz_copy(self, user):
         question_papers = self.questionpaper_set.all()
         new_quiz = self
@@ -586,7 +598,7 @@ class LearningUnit(models.Model):
     def has_prerequisite(self):
         return self.check_prerequisite
 
-    def is_prerequisite_passed(self, user, learning_module, course):
+    def is_prerequisite_complete(self, user, learning_module, course):
         ordered_units = learning_module.learning_unit.order_by("order")
         ordered_units_ids = list(ordered_units.values_list("id", flat=True))
         current_unit_index = ordered_units_ids.index(self.id)
@@ -624,6 +636,7 @@ class LearningModule(models.Model):
     order = models.IntegerField(default=0)
     creator = models.ForeignKey(User, related_name="module_creator")
     check_prerequisite = models.BooleanField(default=True)
+    check_prerequisite_passes = models.BooleanField(default=False)
     html_data = models.TextField(null=True, blank=True)
     active = models.BooleanField(default=True)
     is_trial = models.BooleanField(default=False)
@@ -653,6 +666,9 @@ class LearningModule(models.Model):
     def toggle_check_prerequisite(self):
         self.check_prerequisite = not self.check_prerequisite
 
+    def toggle_check_prerequisite_passes(self):
+        self.check_prerequisite_passes = not self.check_prerequisite_passes
+
     def get_next_unit(self, current_unit_id):
         ordered_units = self.learning_unit.order_by("order")
         ordered_units_ids = list(ordered_units.values_list("id", flat=True))
@@ -680,7 +696,7 @@ class LearningModule(models.Model):
             default_status = "inprogress"
         return default_status
 
-    def is_prerequisite_passed(self, user, course):
+    def is_prerequisite_complete(self, user, course):
         """ Check if prerequisite module is completed """
         ordered_modules = course.learning_module.order_by("order")
         ordered_modules_ids = list(ordered_modules.values_list(
@@ -697,6 +713,33 @@ class LearningModule(models.Model):
             else:
                 success = False
         return success
+
+    def get_passing_status(self, user, course):
+        course_status = CourseStatus.objects.filter(user=user, course=course)
+        state = "failed"
+        if course_status.exists():
+            ordered_units = self.learning_unit.filter(type='quiz').order_by("order")
+
+        status_list = [unit.quiz.get_answerpaper_passing_status(user, course)
+                       for unit in ordered_units]
+
+        if not status_list:
+            status = False
+        else:
+            status = all(status_list)
+        return status
+
+    def is_prerequisite_passed(self, user, course):
+        """ Check if prerequisite module is passed """
+        ordered_modules = course.learning_module.order_by("order")
+        if ordered_modules.first() == self:
+            return True
+        else:
+            if self.order == 0:
+                return True
+            prev_module = ordered_modules.get(order=self.order-1)
+            status = prev_module.get_passing_status(user, course)
+            return status
 
     def has_prerequisite(self):
         return self.check_prerequisite
