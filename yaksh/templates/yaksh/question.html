@@ -160,7 +160,7 @@ question_type = "{{ question.type }}"
                                 <span> Files to download for this question </span> <hr>
                                 {% for f_name in files %}
                                   <div class="yakshwell">
-                                    <a href="{{f.file.url}}" class="btn btn-outline-secondary"><b>{{forloop.counter}}.</b> {{f_name.file.name}}</a>
+                                    <a href="{{f_name.file.url}}" class="btn btn-outline-secondary btn-sm " target="_blank">{{f_name.get_filename}}</a>
                                     <br>
                                     </div>
                                 {% endfor %}
