@@ -142,7 +142,15 @@ function textareaformat()
         else{
             $("#id_grade_assignment_upload").prop("disabled", true);
         }
-   });
+    });
+
+    $(function() {
+        tinymce.init({
+            selector: 'textarea#id_description',
+            max_height: 200,
+            height: 200
+        });
+    });
 }
 
 function autosubmit()
