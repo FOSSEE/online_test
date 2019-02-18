@@ -5017,19 +5017,25 @@ class TestQuestionPaper(TestCase):
             )
         self.assertEqual(response.status_code, 404)
 
-    def test_preview_qustionpaper_without_quiz_owner(self):
+    def test_preview_questionpaper_without_quiz_owner(self):
         self.client.login(
             username=self.teacher.username,
             password=self.teacher_plaintext_pass
         )
 
-        # Should raise an HTTP 404 response
+        # Should pass successfully
         response = self.client.get(
             reverse('yaksh:preview_questionpaper',
                     kwargs={"questionpaper_id": self.question_paper.id}
                     )
             )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/preview_questionpaper.html')
+        self.assertEqual(
+           response.context['questions'],
+           self.questions_list
+        )
+        self.assertEqual(response.context['paper'], self.question_paper)
 
     def test_mcq_attempt_right_after_wrong(self):
         """ Case:- Check if answerpaper and answer marks are updated after
