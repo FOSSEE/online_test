@@ -1,5 +1,6 @@
 import unittest
 from django.contrib.auth.models import Group
+from django.core.files.uploadedfile import SimpleUploadedFile
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
@@ -2130,3 +2131,22 @@ class CourseStatusTestCases(unittest.TestCase):
 
         # Test get course grade after completion
         self.assertEqual(self.course.get_grade(self.answerpaper1.user), 'B')
+
+
+class FileUploadTestCases(unittest.TestCase):
+    def setUp(self):
+        self.question = Question.objects.get(summary='Q1')
+        self.filename = "uploadtest.txt"
+        self.uploaded_file = SimpleUploadedFile(self.filename, b'Test File')
+        self.file_upload = FileUpload.objects.create(
+            file=self.uploaded_file,
+            question=self.question
+        )
+
+    def test_get_file_name(self):
+        print((self.file_upload.file.path))
+        self.assertEqual(self.file_upload.get_filename(), self.filename)
+
+    def tearDown(self):
+        os.remove(self.file_upload.file.path)
+        self.file_upload.delete()
