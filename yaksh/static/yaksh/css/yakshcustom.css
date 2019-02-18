@@ -256,6 +256,11 @@ html {
 	width:100%;
 }
 
+.regrade{
+	text-overflow: ellipsis;
+	max-width: 100em;
+}
+
 #moderator_table td a{
 	text-overflow: ellipsis;
 	max-width: 20em;
