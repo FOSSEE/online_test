@@ -271,7 +271,7 @@ question_type = "{{ question.type }}"
                                <h5>Write your program below:</h5>
                            </div>
                            <div class="col-md-3 ml-auto">
-                               <a href="#answer" class=" btn btn-outline-primary" onclick="reset_editor()" name="reset" id="reset">Undo Changes&nbsp;<span class="glyphicon glyphicon-refresh"></span></a>
+                               <a href="#answer" class=" btn btn-outline-primary" onclick="confirm()" name="reset" id="reset">Undo Changes&nbsp;<span class="glyphicon glyphicon-refresh"></span></a>
                                </div>
                       </div>
                       <div class="yakshwell">
@@ -335,5 +335,24 @@ question_type = "{{ question.type }}"
         </div>
       </div>
    </div>
+
+   <!-- UNDO CHANGES Modal -->
+    <div class="modal" id="undo_changes" >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="myModalLabel">Are you Sure?</h4>
+          </div>
+          <div id = "modal_body"class="modal-body">
+              <font color="brown"><b>Your code will be reset.</b></font>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-warning" onclick="reset_editor()">OK</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
+          </div>
+        </div>
+      </div>
+   </div>
+
 {% endblock main %}
 
