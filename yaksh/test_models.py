@@ -2144,9 +2144,9 @@ class FileUploadTestCases(unittest.TestCase):
         )
 
     def test_get_file_name(self):
-        print((self.file_upload.file.path))
         self.assertEqual(self.file_upload.get_filename(), self.filename)
 
     def tearDown(self):
-        os.remove(self.file_upload.file.path)
+        if os.path.isfile(self.file_upload.file.path):
+            os.remove(self.file_upload.file.path)
         self.file_upload.delete()

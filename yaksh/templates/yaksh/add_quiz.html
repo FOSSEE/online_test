@@ -37,8 +37,13 @@
 {% if quiz and course_id %}
     {% if quiz.questionpaper_set.get.id %}
     <center>
+      <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/{{course_id}}" class="btn btn-primary">Edit Question Paper</a>
+      <a href="{{URL_ROOT}}/exam/manage/preview_questionpaper/{{quiz.questionpaper_set.get.id}}" class="btn btn-primary" target="_blank">
+        Preview Question Paper
+      </a>
+      <br>
+      <br>
     <h4>You can check the quiz by attempting it in the following modes:</h4>
-      <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/{{course_id}}" class="btn btn-primary">View Question Paper</a>
       <button class="btn btn-outline-info" type="button" name="button" onClick='usermode("{{URL_ROOT}}/exam/manage/usermode/{{quiz.id}}/{{course_id}}/");'>User Mode</button>
 
       <button class="btn btn-outline-info" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/godmode/{{quiz.id}}/{{course_id}}/");'>
