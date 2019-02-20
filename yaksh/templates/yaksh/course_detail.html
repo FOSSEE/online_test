@@ -48,7 +48,7 @@
                 <input type="file" name="csv_file" />
                 <button class="btn btn-outline-primary" type=submit> Upload Users <span class="glyphicon glyphicon-open"/></button>
             </form>
-            <div class="card" role="alert">
+            <div class="card border-0" role="alert">
                 <div class="card-body">
                 <p>
                 - The uploaded csv should have headers exactly same as mentioned below:<br />
@@ -196,7 +196,7 @@
                     </div>
                 {% else %}
                     <div id="students_enrollment">
-                        <div id="student-requests" class="card">                            
+                        <div id="student-requests" class="card border-0">
                             <center><div class="yakshlabel card-heading">Requests</div></center><br>
                             <div class="card-body">
                             {% if course.get_requests %}
@@ -248,7 +248,7 @@
                          </div>
                          </div>
                         <br>
-                        <div id="enrolled-students" class="card">
+                        <div id="enrolled-students" class="card border-0">
                             <center><div class="yakshlabel card-heading">Enrolled</div></center><br>
                              <div class="card-body">
                             {% if course.get_enrolled %}
@@ -297,7 +297,7 @@
                             </div>                         
                         </div>
                         <br>
-                        <div id="rejected-students" class="card">
+                        <div id="rejected-students" class="card border-0">
                             <center><div class="yakshlabel card-heading">Rejected</div></center><br>
                              <div class="card-body">
                             {% if course.get_rejected %}

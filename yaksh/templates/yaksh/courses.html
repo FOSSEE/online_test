@@ -90,7 +90,7 @@
                     {% for teacher in course.get_teachers %}
                     <div class="well">
                         <div class="row">
-                            <div class="col-md-333" style="width: auto;">
+                            <div class="col" style="width: auto;">
                                 <input type="checkbox" name="remove" value="{{ teacher.id }}">&nbsp;{{ teacher.get_full_name }}
                             </div>
                         </div>
