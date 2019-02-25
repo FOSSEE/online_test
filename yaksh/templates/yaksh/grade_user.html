@@ -219,105 +219,9 @@ Status : <b style="color: red;"> Failed </b><br/>
     {% endif %}
     {% else %}
         {% for ans in answers %}
-            <!-- {% if ans.answer.correct %}
-                <div class="card ">
-                   <div class="card-heading alert-success">Correct answer:</div></div> -->
-            <!-- {% else %} --><!-- 
-                <div class="card ">
-                    <div class="card-heading-heading alert-danger">Error: -->
+           
 
-            <!-- {% endif %} -->
-            <!-- {% with ans.error_list as err %} -->
-            <!-- {% for error in err %}
-
-      {% if error.type == 'stdio' %}
-        <div class = "card">
-          <div class="card-body">
-        {% if error.given_input %}
-       <table class="table table-bordered table-responsive-sm">
-        <col width="30%">
-          <tr class = "table-active">
-          <td> For given Input value(s):</td>
-          <td>{{error.given_input}}</td>
-          </tr>
-       </table> -->
-       <!-- {% endif %} -->
-        <!-- <table class="table table-bordered table-responsive-sm" width="100%" id="output" style="table-layout: fixed">
-          <col width="10%">
-          <col width="40%">
-          <col width="40%">
-          <col width="10%">
-          <tr>
-          <th><center>Line No.</center></th>
-          <th><center>Expected Output</center></th>
-          <th><center>User output</center></th>
-          <th><center>Status</center></th>
-          </tr>
-          {% for expected,user in error.expected_output|zip:error.user_output %}
-          <td> {{forloop.counter}} </td>
-          <td>{{expected|default:""}} </td>
-          <td>{{user|default:""}}</td>
-          {% if forloop.counter0 in error.error_line_numbers or not expected or not user %}
-          <td><span class ="fa fa-times text-warning"/></td>
-          {% else %}
-          <td><span class ="fa fa-check text-success"/></td>
-          {% endif %}
-          </tr>
-          {% endfor %}
-          </table>
-          <table width="100%" class="table table-bordered table-responsive-sm">
-          <col width="10">
-          <tr>
-          <td><b>Error:</b></td>
-           <td>{{error.error_msg}}</td>
-           </tr>
-          </table>
-        </div>
-      </div>
-        {% elif error.type == 'assertion' %}
-            {% if error.test_case %}
-      <strong> We tried you code with the following test case:</strong><br/></br>
-              <pre><code><strong style="color:#d9534f">{{error.test_case}}</strong></code></pre>
-            {% endif %}
-          <p> <b>The following error took place: </b></p>
-          <div class="card">
-            <div class="card-body">
-        <table class="table table-bordered table-responsive-sm" width="100%"  style="table-layout: fixed">
-          <col width="30%">
-            <tr class = "active">
-            <td><b>Exception Name: </b></td>
-            <td><span style="color: #d9534f">{{error.exception}}</span></td>
-          </tr>
-          <tr>
-            <td><b>Exception Message: </b></td><td>{{error.message}}</td>
-          </tr>
-          <tr>
-            {% if error.traceback %}
-            <td><b>Full Traceback: </b></td>
-            <td><pre>{{error.traceback}}</pre></td>
-            {% endif %}
-          </tr>
-        </table>
-      </div>
-      </div> <!- Closes card -->
-        <!-- {% else %}
-            <pre><code> {{error|safe}} </code></pre>
-        {% endif %}
-        {% endfor %}
-        {% endwith %}
-        </div> --> 
-        <!-- <div class="card-body"> -->
-        <!-- {% if question.type == "code" %}
-        <! {{ ans.answer.answer.strip|safe }} -->
-        <!-- {% for ele in diff %}
-          {% for key, value in ele.items %}
-            {% if key == question.summary %}
-              <pre><code>{{value|safe}}</code></pre>
-            {% endif %}
-          {% endfor %}
-        {% endfor %} --> 
-
-        {% elif question.type == "mcc"%}
+        {% if question.type == "mcc"%}
         <div class="card">
           <div class="card-body">
         {% for tesctases in question.get_test_cases %}
@@ -347,28 +251,54 @@ Status : <b style="color: red;"> Failed </b><br/>
         {% endfor %}
       </div>
         </div>
-
         {% else %}
-         <div class="card">
-            <div class="card-body">
-          {{ ans.answer.answer.strip|safe }}
-          </div>
-        </div>
         {% endif %}
         {% endfor %}
     {% endif %}
     {% with answers|last as answer %}
     <div class="card">
           <div class="card-body">
-          {% if question.type == "code" %}
-              <!-- {{ ans.answer.answer.strip|safe }} -->
+          {% if question.type == "code" %}  
               {% for ele in diff %}
                 {% for key, value in ele.items %}
                   {% if key == question.summary %}
-                    <pre><code>{{value|safe}}</code></pre>
+                    <font color="red" size="4"><b>{{question.summary}}</b></font>
+                    </br>
+                    <pre><code>{{value.0}}</code></pre>
+                    <hr style="border-top: 3px solid #ccc; background: transparent;"> 
+                    </br>
+                    {% for tuple_of_four in value.1 %}
+                    <!-- tuple_of_four.0 : diff .. preprocess it, tuple_of_four.1 : original, tuple_of_four.2 : diff id, tuple_of_four.3 : submission id -->
+                    
+                   <font color="red" size="4"><b>{{question.summary}}</b></font>
+                    </br><ul class="nav nav-tab">
+                    <li class="active"><a data-toggle="tab" href="#{{tuple_of_four.2}}">Diff  </a></l>
+                    <li><a data-toggle="tab" href="#{{tuple_of_four.3}}">Submission  </a></li></ul>
+                    <div class="tab-content">
+                      <div id="{{tuple_of_four.2}}" class="tab-pane active in">
+                              
+                              {% for tuple_of_two in tuple_of_four.0 %}
+                                {% if tuple_of_two.0 == plus %}
+                                <span class="Color_Added"> {{tuple_of_two.1}} </span>
+                                {% elif tuple_of_two.0 == minus %}
+                                <span class="Color_Removed"> {{tuple_of_two.1}} </span>
+                                {% else %}
+                                      {{tuple_of_two.1}} 
+                                {% endif %}
+                                </br>
+                              {% endfor %}
+                       </div>
+                       <div id="{{tuple_of_four.3}}" class="tab-pane">
+                          <pre><code>{{tuple_of_four.1}}</code></pre>
+                       </div>
+                       <hr style="border-top: 3px solid #ccc; background: transparent;"> 
+                    </div>
+                    {% endfor %}
+
                   {% endif %}
                 {% endfor %}
               {% endfor %}
+              <pre><code>{{ answer.answer.answer.strip|safe }} </code></pre>
           {% endif %}
         </div>
     </div>

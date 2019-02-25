@@ -2048,87 +2048,71 @@ class AnswerPaper(models.Model):
             Return a dictionary with keys as questions and a list of the
             corresponding answers.
         """
-        q_a = {}
+        question_answers = {}
         for answer in self.answers.all():
             question = answer.question
-            if question in q_a:
-                q_a[question].append({
+            if question in question_answers:
+                question_answers[question].append({
                     'answer': answer,
                     'error_list': [e for e in json.loads(answer.error)]
                 })
             else:
-                q_a[question] = [{
+                question_answers[question] = [{
                     'answer': answer,
                     'error_list': [e for e in json.loads(answer.error)]
                 }]
-        return q_a
+        return question_answers
 
     def get_diff_of_consecutive_submissions_for_all_code_question(self):
         """
             Return diff of consecutive submissions for all questions
         """
-        q_a = {} # key : question, value : all submitted answers for this question
-        for answer in self.answers.all():
-            question = answer.question
-            if question in q_a:
-                q_a[question].append(answer)
-            else:
-                q_a[question] = [answer]
-
+        question_answers = {q:self.answers.filter(question=q) for q in self.questions.all() if q.type=='code'} # key : question, value : all submitted answers for this question
         q_diff = {} # key : question, value : list of diff between consecutive submission for this question
         first_submissions = []
-        for question in q_a:
-            if question.type=='code':
-                answers = q_a[question]
-                all_submissions_for_a_question = [] #all answers for a question as list of lines
-                for ans in answers:
-                    split_ans_line_by_line = [ele+'\n' for ele in ans.answer.split("\n")]
-                    all_submissions_for_a_question.append(split_ans_line_by_line)
+        for question in question_answers: 
+            answers = question_answers[question]
+            first_submission = answers[0].answer
+            all_submissions_for_a_question = [] #all answers for a question as list of lines
+            for ans in answers:
+                split_ans_line_by_line = [ele for ele in ans.answer.split("\n")]
+                all_submissions_for_a_question.append(split_ans_line_by_line)
 
-                if len(all_submissions_for_a_question)>=1:
-                    first_submissions.append(all_submissions_for_a_question[0])
-                if len(all_submissions_for_a_question)>1:#if there are more than one submissions for this question
-                    zipped = zip(all_submissions_for_a_question, all_submissions_for_a_question[1:])
-                    temp = []
-                    for idx, consecutive_submissions in enumerate(zipped):
-                        diff_of_consecutive_submissions =  difflib.ndiff(consecutive_submissions[0], consecutive_submissions[1])
-                        #remove unwanted ? produced by difflib.ndiff()
-                        temp.append([ele for ele in diff_of_consecutive_submissions if not ele.startswith("?")])
-                    q_diff[question] = zip(temp, all_submissions_for_a_question[1:])
+            
+            if len(all_submissions_for_a_question)>1:#if there are more than one submissions for this question
+                zipped = zip(all_submissions_for_a_question, all_submissions_for_a_question[1:])
+                temp = []
+                for idx, consecutive_submissions in enumerate(zipped):
+                    diff_of_consecutive_submissions =  difflib.ndiff(consecutive_submissions[0], consecutive_submissions[1])
+                    #remove unwanted ? produced by difflib.ndiff()
+                    temp.append([ele for ele in diff_of_consecutive_submissions if not ele.startswith("?")])
+                q_diff[question] = (first_submission, zip(temp, all_submissions_for_a_question[1:]))
 
         
         idx1 =1
         idx2 =1
         q_all_diff = {}
+        
         for idx3, question in enumerate(q_diff):
-            questionwise_diff = '</br><font color="red" size="4"><b>'+question.summary+'</b></font></br>'+''.join(first_submissions[idx3])+\
-            '<hr style="border-top: 3px solid #ccc; background: transparent;">' 
             idx1 += 1
-            for diff_original in q_diff[question]:
+            questionwise_diff_original_id = []
+            for diff_original in q_diff[question][1]:
                 diff = diff_original[0]
                 original = diff_original[1]
+                submissionwise_plus_minus_common = []
                 idx2 += 1
-                diff_temp = ""
                 for line in diff:
                     if(line.startswith("+")):
-                        diff_temp += '<span class="Color_Added">'+line+'</span>'
+                        submissionwise_plus_minus_common.append(("plus", line))
                     elif(line.startswith("-")):
-                        diff_temp += '<span class="Color_Removed">'+line+'</span>'
+                        submissionwise_plus_minus_common.append(("minus", line))
                     else:
-                        diff_temp += line
-
-                questionwise_diff += '</br><font color="red" size="4"><b>'+question.summary+'</b></font>'+\
-                '</br><ul class="nav nav-pills">'+\
-                '<li class="active"><a data-toggle="tab" href="#diff'+str(1000*idx1)+str(idx2)+ '">Diff  </a></li>'+\
-                '<li><a data-toggle="tab" href="#submission'+str(1000*idx1)+str(idx2)+ '">Submission  </a></li></ul>'+\
-                '<div class="tab-content">'+\
-                '<div id="diff'+str(1000*idx1)+str(idx2)+ '" class="tab-pane active in">'+ diff_temp +'</div>'+\
-                '<div id="submission'+str(1000*idx1)+str(idx2)+ '" class="tab-pane">'+ ''.join(original) + '</div>'+\
-                '<hr style="border-top: 3px solid #ccc; background: transparent;"> </div>'
-            q_all_diff[question.summary] = questionwise_diff
+                        submissionwise_plus_minus_common.append(("common", line))
+                #(diff, original, unique_id_for_diff, unique_id_for_submission)
+                questionwise_diff_original_id.append((submissionwise_plus_minus_common, ''.join(original), 'diff'+str(1000*idx1)+str(idx2), 'submission'+str(1000*idx1)+str(idx2)))
+            q_all_diff[question.summary] = (q_diff[question][0], questionwise_diff_original_id)
 
         return q_all_diff
-
 
     def get_latest_answer(self, question_id):
         return self.answers.filter(question=question_id).order_by("id").last()

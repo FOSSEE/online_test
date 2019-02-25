@@ -1666,7 +1666,9 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                 "has_user_assignments": has_user_assignments,
                 "has_quiz_assignments": has_quiz_assignments,
                 "course_id": course_id,
-                "diff" : diff
+                "diff" : diff,
+                "plus" : "plus",
+                "minus" : "minus"
             }
 
     if request.method == "POST":
