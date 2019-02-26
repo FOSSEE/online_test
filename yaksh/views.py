@@ -156,6 +156,7 @@ def user_logout(request):
 def quizlist_user(request, enrolled=None, msg=None):
     """Show All Quizzes that is available to logged-in user."""
     user = request.user
+    courses_data = []
 
     if request.method == "POST":
         course_code = request.POST.get('course_code')
@@ -164,18 +165,30 @@ def quizlist_user(request, enrolled=None, msg=None):
         title = 'Search'
 
     elif enrolled is not None:
-        courses = user.students.all()
+        courses = user.students.all().order_by('-id')
         title = 'Enrolled Courses'
     else:
         courses = Course.objects.filter(
             active=True, is_trial=False
         ).exclude(
            ~Q(requests=user), ~Q(rejected=user), hidden=True
-        )
+        ).order_by('-id')
         title = 'All Courses'
 
+    for course in courses:
+        if user in course.students.all():
+            _percent = course.get_completion_percent(user)
+        else:
+            _percent = None
+        courses_data.append(
+            {
+                'data': course,
+                'completion_percentage': _percent,
+            }
+        )
+
     context = {
-        'user': user, 'courses': courses,
+        'user': user, 'courses': courses_data,
         'title': title, 'msg': msg
     }
 
