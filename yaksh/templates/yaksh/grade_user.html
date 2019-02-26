@@ -224,7 +224,7 @@ Status : <b style="color: red;"> Failed </b><br/>
         {% if question.type == "mcc"%}
         <div class="card">
           <div class="card-body">
-        {% for tesctases in question.get_test_cases %}
+        {% for testcases in question.get_test_cases %}
         {%if testcases.id|stringformat:"i" in ans.answer.answer.strip|safe %}
          <li>{{ testcases.options.strip|safe }}</li>
         {% endif %}

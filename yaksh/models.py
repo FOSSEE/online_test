@@ -2088,7 +2088,6 @@ class AnswerPaper(models.Model):
                     temp.append([ele for ele in diff_of_consecutive_submissions if not ele.startswith("?")])
                 q_diff[question] = (first_submission, zip(temp, all_submissions_for_a_question[1:]))
 
-        
         idx1 =1
         idx2 =1
         q_all_diff = {}
