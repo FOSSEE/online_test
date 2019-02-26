@@ -113,7 +113,14 @@ select
                                     <li>
                                         <label>
                                             <input type="checkbox" name="questions" data-qid="{{question.id}}" value={{question.id}}>
-                                            <span> {{ question.summary }} </span> <span> {{ question.points }} </span>
+                                            <span>
+                                                {% if user == question.user %}
+                                                    <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}" target="_blank">{{ question.summary }}</a>
+                                                {% else %}
+                                                    {{question.summary}}
+                                                {% endif %}
+                                            </span>
+                                            <span> {{ question.points }}</span>
                                         </label>
                                      </li>
                                 {% endfor %}
@@ -134,7 +141,13 @@ select
                                         <label>
                                             <input type="checkbox" name="added-questions"
                                             data-qid="{{question.id}}" value={{question.id}}>
-                                            <span> {{ question.summary }} </span>
+                                            <span>
+                                                {% if user == question.user %}
+                                                    <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}" target="_blank">{{ question.summary }}</a>
+                                                {% else %}
+                                                    {{question.summary}}
+                                                {% endif %}
+                                            </span>
                                             <span> {{ question.points }} </span>
                                         </label>
                                      </li>
@@ -175,7 +188,13 @@ select
                                     <li>
                                         <label>
                                             <input type="checkbox" name="random_questions" data-qid="{{question.id}}" value={{question.id}}>
-                                            <span> {{ question.summary }} </span> <span> {{ question.points }} </span>
+                                            <span>
+                                                {% if user == question.user %}
+                                                    <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}" target="_blank">{{ question.summary }}</a>
+                                                {% else %}
+                                                    {{question.summary}}
+                                                {% endif %}</span>
+                                            <span> {{ question.points }} </span>
                                         </label>
                                      </li>
                                 {% endfor %}
@@ -201,7 +220,13 @@ select
                                     {% for question in random_set.questions.all %}
                                         <li>
                                         <label>
-                                            <span> {{ question.summary }} </span> <span> {{ question.points }} </span>
+                                            <span>
+                                                {% if user == question.user %}
+                                                    <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}" target="_blank">{{ question.summary }}</a>
+                                                {% else %}
+                                                    {{question.summary}}
+                                                {% endif %}</span>
+                                            <span> {{ question.points }} </span>
                                         </label>
                                         </li>
                                     {% endfor %}
