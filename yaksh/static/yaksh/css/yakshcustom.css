@@ -135,6 +135,10 @@ html {
   min-height: 100%;
 }
 
+.question-nav-bg {
+	background-color:#B4B8BA;
+}
+
 .yaksh {
 	font-size: 15px;
 	font-family: 'Dosis', sans-serif;

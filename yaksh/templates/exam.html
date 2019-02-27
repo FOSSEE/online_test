@@ -8,7 +8,7 @@
       <span class="navbar-toggler-icon" style="color: white"></span>
       </button>
       <a class="navbar-brand">
-          <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH" style="margin-top: -3px; margin-left:-15px">
+          <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH">
           </img>
        </a>    
       <div class="collapse navbar-collapse col-md-6" id="myNavbar">
@@ -24,8 +24,7 @@
                 {% endif %}
               <span class="fa fa-power-off"></span></button></span>
               </form>
-              
-          </div>    
+          </div>
       </div><!-- /.navbar -->
     </div><!-- /.container -->
   </nav><!-- /.navbar -->
@@ -57,15 +56,15 @@
                 {% endif %}
                 {% endif %}
                 {% if qid in paper.get_questions_answered %}
-                <a class="  btn btn-outline-success " style="background-color:#B4B8BA;" href="#" data-toggle="tooltip"
+                <a class="btn btn-outline-light question-nav-bg" href="#" data-toggle="tooltip"
                 onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')"
                 title="{{ qid.description }}">{{ forloop.counter }}</a>
                 {% endif %}
                 {% else %}
                 {% if qid.id == question.id %}
-                <a class="active btn btn-outline-success " data-toggle="tooltip" title="{{ qid.description|striptags }}">{{ forloop.counter }}</a>
+                <a class="active btn btn-outline-success" data-toggle="tooltip" title="{{ qid.description|striptags }}">{{ forloop.counter }}</a>
                 {% elif qid in paper.get_questions_answered %}
-                <a class=" btn btn-outline-success " style="background-color:#B4B8BA;" href="#" data-toggle="tooltip"
+                <a class="btn btn-outline-success question-nav-bg" href="#" data-toggle="tooltip"
                 onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')"
                 title="{{ qid.description }}">{{ forloop.counter }}</a>
                 {% else %}
@@ -112,26 +111,3 @@
 </div>
 
 {% endblock %}
-
-{% block footer %}
-  <!--footer-->   
-  <footer class="container-fluid yakshsidebarfooter text-center">
-    <div class="row justify-content-center">
-    <div class="col-sm-5 ">
-      {% if user %}
-         {% block info %}
-         <b>{{user.get_full_name|title}}</b> with Roll no. <b>{{user.profile.roll_number}}</b> is logged in as <b>{{user.username}}</b>
-         {% endblock %}
-         {% endif %}
-    </div>
-    <div class="col-sm-2">
-      |
-    </div>
-    <div class="col-sm-4 text-left">
-     <b>Any Queries?</b> Email : info@fossee.in
-    </div>
-  </div>
-  </footer>
-  <!--footer end-->
-{% endblock %}
-

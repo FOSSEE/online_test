@@ -94,37 +94,6 @@
                     {% if learning_module.html_data%}
                     {% endif %}
                 </div>
-                <div class="yakshwell col-md-3">
-                    <div class="bg-light">
-                    {% if learning_module.get_learning_units %}
-                    <center><h4>Units in this module</h4></center><hr>
-                    {% for unit in learning_module.get_learning_units %}
-                    <div class="row justify-content-center">
-                        <span class="col-sm-2 yakshgreen">
-                        {% if unit.type == "quiz" %}
-                            {% if unit.quiz.is_exercise %}
-                                <span class="fa fa-pencil"></span>
-                            {% else %}
-                                <span class="fa fa-puzzle-piece"></span>
-                            {% endif %}
-                        {% else %}
-                            <span class="fa fa-book"></span>
-                        {% endif %}
-                        </span>
-                        <span class="col-sm-7">
-                        {% if unit.type == "quiz" %}
-                            {{unit.quiz.description}}
-                        {% else %}
-                            {{unit.lesson.name}}
-                        {% endif %}
-                        </span>
-                    </div>
-                    {% endfor %}
-                    {% else %}
-                        <center><h3>No Lessons/Quizzes Found</h3></center>
-                    {% endif %}
-                </div>
-                </div>
             </div>
             <div class="yakshwell text-center">
                 {% if first_unit %}

@@ -122,8 +122,8 @@ question_type = "{{ question.type }}"
                   <div class="card ">
                     <div class="col-md-12 bg-light">
                       <div class="row align-items-center ">
-                          <div class="col yakshheading"> {{ question.summary }} </div>
-                          <div class="col-md-4 ml-auto yakshwell text-center">
+                          <div class="col-md-6 yakshheading"> {{ question.summary }} </div>
+                          <div class="col-md-3 ml-auto yakshwell text-center">
                                {% if question.type == "mcq" %}
                                SINGLE CORRECT CHOICE
                                {% elif question.type == "mcc" %}
@@ -147,8 +147,16 @@ question_type = "{{ question.type }}"
                                ARRANGE THE OPTIONS IN CORRECT ORDER
                                {% endif %}
                           </div>
-                          <div class="col-md-1 ml-auto text-center">
-                            <span class="badge badge-warning">{{ question.points }}</span><br>Marks
+                          <div class="col-md-2 ml-auto text-center">
+                            <div class="row">
+                              <div class="col-md-6">
+                                <h5>
+                                  <span class="badge badge-warning">
+                                    {{ question.points }} Marks
+                                  </span>
+                                </h5>
+                              </div>
+                            </div>
                           </div>
                       </div>
                     </div>
