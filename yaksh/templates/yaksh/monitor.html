@@ -87,7 +87,7 @@ $(document).ready(function()
                         <td><b>Papers Completed: &nbsp</b></td>
                         <td>
                             {% completed papers as completed_papers %}
-                            <b class = "yakshred">{{completed_papers}}</b>
+                            <b class = "yakshgreen">{{completed_papers}}</b>
                         </td>
                     </tr>
                     <tr>
@@ -100,15 +100,17 @@ $(document).ready(function()
                 </table>
             </div>
          </div>
-         <div class="col-md-2">
+         <div class = "row">
+            <div class="col-md-2">
                 <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{papers.0.question_paper.id}}/{{course.id}}" class="btn btn-primary">Question Statisitics</a></p>
                 <p>
                    <button type="button" class="btn btn-info" data-toggle="modal" data-target="#csvModal">
                        Download CSV <span class="fa fa-download"></span>
-                   </button></p>
+                   </button>
+               </p>
+            </div>
          </div>
-         <div class="yakshwell container-fluid">
-            <div class="table-wrapper-2">
+        <div class="table-wrapper-2">
             <table id="result-table" class="tablesorter table  table-striped table-responsive-sm">
                 <thead>
                 <tr class="table-info">
@@ -135,7 +137,6 @@ $(document).ready(function()
                     <td> {{ paper.answers.count }} </td>
                     <td id="time_left{{forloop.counter0}}"> {{ paper.time_left }} </td>
                     <td>{{ paper.status }}</td>
-                    </div>
                 </tr>
                 {% endfor %}
                 </tbody>
