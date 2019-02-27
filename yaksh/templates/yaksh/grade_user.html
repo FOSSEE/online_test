@@ -259,37 +259,37 @@ Status : <b style="color: red;"> Failed </b><br/>
     <div class="card">
           <div class="card-body">
           {% if question.type == "code" %}  
-              {% for ele in diff %}
-                {% for key, value in ele.items %}
+              {% for diff_ele in diff %}
+                {% for key, orignal_diff in diff_ele.items %}
                   {% if key == question.summary %}
                     <font color="red" size="4"><b>{{question.summary}}</b></font>
                     </br>
-                    <pre><code>{{value.0}}</code></pre>
+                    <pre><code>{{orignal_diff.0}}</code></pre>
                     <hr style="border-top: 3px solid #ccc; background: transparent;"> 
                     </br>
-                    {% for tuple_of_four in value.1 %}
-                    <!-- tuple_of_four.0 : diff .. preprocess it, tuple_of_four.1 : original, tuple_of_four.2 : diff id, tuple_of_four.3 : submission id -->
+                    {% for diff_original_diffID_submissionID_tuple in orignal_diff.1 %}
+                    <!-- diff_original_diffID_submissionID_tuple.0 : diff .. preprocess it, diff_original_diffID_submissionID_tuple.1 : original, diff_original_diffID_submissionID_tuple.2 : diff id, diff_original_diffID_submissionID_tuple.3 : submission id -->
                     
                    <font color="red" size="4"><b>{{question.summary}}</b></font>
                     </br><ul class="nav nav-tab">
-                    <li class="active"><a data-toggle="tab" href="#{{tuple_of_four.2}}">Diff  </a></l>
-                    <li><a data-toggle="tab" href="#{{tuple_of_four.3}}">Submission  </a></li></ul>
+                    <li class="active"><a data-toggle="tab" href="#{{diff_original_diffID_submissionID_tuple.2}}">Diff  </a></l>
+                    <li><a data-toggle="tab" href="#{{diff_original_diffID_submissionID_tuple.3}}">Submission  </a></li></ul>
                     <div class="tab-content">
-                      <div id="{{tuple_of_four.2}}" class="tab-pane active in">
+                      <div id="{{diff_original_diffID_submissionID_tuple.2}}" class="tab-pane active in">
                               
-                              {% for tuple_of_two in tuple_of_four.0 %}
-                                {% if tuple_of_two.0 == plus %}
-                                <span class="Color_Added"> {{tuple_of_two.1}} </span>
-                                {% elif tuple_of_two.0 == minus %}
-                                <span class="Color_Removed"> {{tuple_of_two.1}} </span>
+                              {% for plus_minus_tuple in diff_original_diffID_submissionID_tuple.0 %}
+                                {% if plus_minus_tuple.0 == plus %}
+                                <span class="Color_Added"> {{plus_minus_tuple.1}} </span>
+                                {% elif plus_minus_tuple.0 == minus %}
+                                <span class="Color_Removed"> {{plus_minus_tuple.1}} </span>
                                 {% else %}
-                                      {{tuple_of_two.1}} 
+                                      {{plus_minus_tuple.1}} 
                                 {% endif %}
                                 </br>
                               {% endfor %}
                        </div>
-                       <div id="{{tuple_of_four.3}}" class="tab-pane">
-                          <pre><code>{{tuple_of_four.1}}</code></pre>
+                       <div id="{{diff_original_diffID_submissionID_tuple.3}}" class="tab-pane">
+                          <pre><code>{{diff_original_diffID_submissionID_tuple.1}}</code></pre>
                        </div>
                        <hr style="border-top: 3px solid #ccc; background: transparent;"> 
                     </div>

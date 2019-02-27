@@ -2081,18 +2081,18 @@ class AnswerPaper(models.Model):
             
             if len(all_submissions_for_a_question)>1:#if there are more than one submissions for this question
                 zipped = zip(all_submissions_for_a_question, all_submissions_for_a_question[1:])
-                temp = []
+                diff_without_unwanted_question_marks = []
                 for idx, consecutive_submissions in enumerate(zipped):
                     diff_of_consecutive_submissions =  difflib.ndiff(consecutive_submissions[0], consecutive_submissions[1])
                     #remove unwanted ? produced by difflib.ndiff()
-                    temp.append([ele for ele in diff_of_consecutive_submissions if not ele.startswith("?")])
-                q_diff[question] = (first_submission, zip(temp, all_submissions_for_a_question[1:]))
+                    diff_without_unwanted_question_marks.append([ele for ele in diff_of_consecutive_submissions if not ele.startswith("?")])
+                q_diff[question] = (first_submission, zip(diff_without_unwanted_question_marks, all_submissions_for_a_question[1:]))
 
         idx1 =1
         idx2 =1
         q_all_diff = {}
         
-        for idx3, question in enumerate(q_diff):
+        for question in q_diff:
             idx1 += 1
             questionwise_diff_original_id = []
             for diff_original in q_diff[question][1]:
