@@ -20,7 +20,7 @@
             <div class="col h4">  {{ course.name }}  </div>
             <div class = "col">
                 {% if course.has_lessons %}
-                <a href="{{URL_ROOT}}/exam/download_course/{{course.id}}" data-toggle="tooltip" title="Download course content" class="btn btn-primary pull-right">
+                <a href="{% url 'yaksh:download_course' course.id %}" data-toggle="tooltip" title="Download course content" class="btn btn-primary pull-right">
                     Download Course
                 </a>
                 {% endif %}
