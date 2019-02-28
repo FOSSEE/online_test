@@ -34,11 +34,11 @@ $(document).ready(function()
         {# This is rendered when we are just viewing exam/monitor #}
 
         {% if course_details %}
-        <div class="table-wrapper-2 monitor_table">
+        <div class="table-wrapper-2">
             <table id="course-details" class="table table-bordered table-responsive-sm">
             <tr class="table-info">
-            <th>Courses</th>
-            <th> Quizzes </th>
+            <th width="400">Courses</th>
+            <th width="700"> Quizzes </th>
             </tr>
 
             {% for course in course_details %}

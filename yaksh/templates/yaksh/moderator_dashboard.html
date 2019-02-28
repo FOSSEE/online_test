@@ -12,15 +12,15 @@
 <div class="row justify-content-center">
 <div class="col-md-10 ">
   <div class="table-wrapper-2">
-<table class="table table-bordered table-responsive-sm" id="moderator_table">
+<table class="table table-bordered table-responsive-sm">
   <tr class="yakshlabel">
-    <th class="yakshred text-center"><i class="fa fa-book"></i> Courses</th>
-    <th class="yakshred text-center"><i class="fa fa-puzzle-piece"></i> Quizzes</th>
+    <th class="yakshred text-center" width="400"><i class="fa fa-book"></i> Courses</th>
+    <th class="yakshred text-center" width="700"><i class="fa fa-puzzle-piece"></i> Quizzes</th>
   </tr>
     {% for course in courses %}
         <tr>
             <td>
-                <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}" class="btn btn-outline-success">
+                <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}">
                 <i class="fa fa-caret-right"></i> {{ course }}
                 </a>
             </td>

@@ -34,7 +34,7 @@
      
       <div class="card-body">
       <h4><span class="">
-       <a href="#questions_quizzes{{ course.id }}" data-toggle="collapse" class="btn btn-outline-success regrade">Course: {{ course }}</a>
+       <a href="#questions_quizzes{{ course.id }}" data-toggle="collapse" class="btn btn-outline-success">Course: {{ course }}</a>
       </span></h4>
        <div id="questions_quizzes{{ course.id }}" class="collapse card">
         <div class="card-body">
@@ -76,7 +76,7 @@
     
       <div class="card-body">
      <h4><span class="">
-      <span class=""><a href="#quizzes_quizzes{{ course.id }}" data-toggle="collapse" class="btn btn-outline-success regrade">Course: {{ course }}</a></span>
+      <span class=""><a href="#quizzes_quizzes{{ course.id }}" data-toggle="collapse" class="btn btn-outline-success">Course: {{ course }}</a></span>
      </span></h4>
      <div id="quizzes_quizzes{{ course.id }}" class="collapse card">
       <div class="card-body">
@@ -116,7 +116,7 @@
     {% for course in courses %}
      
       <h4><span class="">
-       <a href="#users_users{{ course.id }}" data-toggle="collapse" class="btn btn-outline-success regrade">Course: {{ course }}</a>
+       <a href="#users_users{{ course.id }}" data-toggle="collapse" class="btn btn-outline-success">Course: {{ course }}</a>
       </span></h4>
       <div id="users_users{{ course.id }}" class="collapse card">
         <div class="card-body">
