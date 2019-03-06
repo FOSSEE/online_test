@@ -132,17 +132,26 @@
                 {% elif state == "course_status" %}
                     <div class="course_data">
                         
-                        <center><div class="yakshlabel">
-                            <input type="hidden" id="course_name" value="{{course.name}}">
-                            <a href="#" class="btn btn-outline-success pull-right" id="export">Export to CSV</a><h5>Course Status</h5>
-                        </div></center>
+                        <center>
+                            <div class="row">
+                                <div class="col">
+                                    <h5>Course Status</h5>
+                                </div>
+                                <div class="col-md-8">
+                                    Number Of Students: {{ student_details | length }}
+                                </div>
+                                <div class="col">
+                                    <input type="hidden" id="course_name" value="{{course.name}}">
+                                    <a href="#" class="btn btn-outline-success" id="export">Export to CSV</a>
+                                </div>
+                            </div>
+                        </center>
                         <div class="yakshwell">
                         <table class="tablesorter table table-bordered table-responsive-sm" id="course_table" data-sortlist="[0,0]">
                         <thead>
                             <tr class="yakshlight">
-                            <th>Sr No.</th>
                             <th>Roll No.</th>
-                            <th>Email</th>
+                            <th>Name</th>
                             <th>Current Unit</th>
                             <th>Course Completion Percentage</th>
                             <th>Grade</th>
@@ -151,26 +160,18 @@
                         <tbody>
                             {% for student, grade, percent, unit in student_details %}
                                 <tr>
-                                <td width="5%">
-                                    {{forloop.counter}}.
-                                </td>
                                 <td>
                                     {{ student.profile.roll_number}}
                                 </td>                            
                                 <td width="50%">
                                     <a class="user_data" data-item-id="{{course.id}}+{{student.id}}" data-toggle="tooltip" title="Click to view Overall Course progress" data-placement="top">
-                                        {% if student.email %}
-                                            {{ student.email }}
-                                        {% else %}
-                                            {{ student.get_full_name|title}}
-                                        {% endif %}
+                                        {{ student.get_full_name|title}}
                                         <i class="fa fa-caret-down"></i>
                                     </a>
                                     <div id="show_status_{{course.id}}_{{student.id}}" style="display: None;">
                                     </div>
                                 </td>
                                 <td>
-                                    {{ student.get_full_name|title }}
                                     {% if unit %}
                                         {% if unit.type == 'quiz' %}
                                             {{unit.quiz.description}}

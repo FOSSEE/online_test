@@ -68,32 +68,49 @@ $(document).ready(function()
         {% if quiz %}
         {% if papers %}
         <div class="row">
-        <div class="card col-md-4">
-            <div class="row">
-                <div class="col"><b>Course Name:<br>Quiz Name:<br>Number of papers:<br>Papers completed:<br>Papers in progress:</b>
-                </div>
-                <div class="col">                
-                     {{ course.name }}<br>
-                     {{ quiz.description }}<br>
-                    {{ papers|length }}<br>
-                    {% completed papers as completed_papers %}
-                     {# template tag used to get the count of completed papers #}
-                      <b class="yakshred"> {{ completed_papers }} </b><br>
-                    {% inprogress papers as inprogress_papers %}
-                     {# template tag used to get the count of inprogress papers #}
-                     <b class="yakshred">  {{ inprogress_papers }} </b>
-                </div>
+        <div class="card col-md-10">
+            <div class = "table-responsive"">
+                <table class = "table">
+                    <tr>
+                        <td><b>Course Name:&nbsp</b></td>
+                        <td>{{course.name}}</td>
+                    </tr>
+                    <tr>
+                        <td><b>Quiz Name:&nbsp</b></td>
+                        <td>{{quiz.description}}</td>
+                    </tr>
+                    <tr>
+                        <td><b>Number of papers: &nbsp</b></td>
+                        <td>{{papers|length}}</td>
+                    </tr>
+                    <tr>
+                        <td><b>Papers Completed: &nbsp</b></td>
+                        <td>
+                            {% completed papers as completed_papers %}
+                            <b class = "yakshgreen">{{completed_papers}}</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><b>Papers in progress: &nbsp</b></td>
+                        <td>
+                            {% inprogress papers as inprogress_papers %}
+                            <b class="yakshred">  {{ inprogress_papers }} </b>
+                        </td>
+                    </tr>
+                </table>
             </div>
          </div>
-         <div class="col">
+         <div class = "row">
+            <div class="col-md-2">
                 <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{papers.0.question_paper.id}}/{{course.id}}" class="btn btn-primary">Question Statisitics</a></p>
                 <p>
                    <button type="button" class="btn btn-info" data-toggle="modal" data-target="#csvModal">
                        Download CSV <span class="fa fa-download"></span>
-                   </button></p>
+                   </button>
+               </p>
+            </div>
          </div>
-         <div class="yakshwell container-fluid">
-            <div class="table-wrapper-2">
+        <div class="table-wrapper-2">
             <table id="result-table" class="tablesorter table  table-striped table-responsive-sm">
                 <thead>
                 <tr class="table-info">
@@ -120,7 +137,6 @@ $(document).ready(function()
                     <td> {{ paper.answers.count }} </td>
                     <td id="time_left{{forloop.counter0}}"> {{ paper.time_left }} </td>
                     <td>{{ paper.status }}</td>
-                    </div>
                 </tr>
                 {% endfor %}
                 </tbody>
