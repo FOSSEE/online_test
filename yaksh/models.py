@@ -1604,7 +1604,9 @@ class QuestionPaper(models.Model):
         attempts = AnswerPaper.objects.get_total_attempt(questionpaper=self,
                                                          user=user,
                                                          course_id=course_id)
-        return attempts != self.quiz.attempts_allowed
+        attempts_allowed = attempts < self.quiz.attempts_allowed
+        infinite_attempts = self.quiz.attempts_allowed == -1
+        return attempts_allowed or infinite_attempts
 
     def can_attempt_now(self, user, course_id):
         if self._is_attempt_allowed(user, course_id):

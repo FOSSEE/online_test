@@ -528,23 +528,28 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     # if any previous attempt
     last_attempt = AnswerPaper.objects.get_user_last_attempt(
         quest_paper, user, course_id)
-    if last_attempt and last_attempt.is_attempt_inprogress():
-        return show_question(
-            request, last_attempt.current_question(), last_attempt,
-            course_id=course_id, module_id=module_id,
-            previous_question=last_attempt.current_question()
-        )
+
+    if last_attempt:
+        if last_attempt.is_attempt_inprogress():
+            return show_question(
+                request, last_attempt.current_question(), last_attempt,
+                course_id=course_id, module_id=module_id,
+                previous_question=last_attempt.current_question()
+            )
+        attempt_number = last_attempt.attempt_number + 1
+    else:
+        attempt_number = 1
+
     # allowed to start
     if not quest_paper.can_attempt_now(user, course_id)[0]:
         msg = quest_paper.can_attempt_now(user, course_id)[1]
         if is_moderator(user):
             return prof_manage(request, msg=msg)
-        return view_module(request, module_id=module_id, course_id=course_id,
-                           msg=msg)
-    if not last_attempt:
-        attempt_number = 1
-    else:
-        attempt_number = last_attempt.attempt_number + 1
+        return complete(
+            request, msg, last_attempt.attempt_number, quest_paper.id,
+            course_id=course_id, module_id=module_id
+        )
+
     if attempt_num is None and not quest_paper.quiz.is_exercise:
         context = {
             'user': user,
