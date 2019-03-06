@@ -228,3 +228,7 @@ html {
     overflow-y: auto;
     -ms-overflow-style: -ms-autohiding-scrollbar;
 }
+
+#card{
+	flex-wrap: wrap;
+}

@@ -14,10 +14,17 @@
 {% block main %}
 
 <div class="container">
-<div class="row justify-content-md-center yakshwell ">
-    <div class="col-md-10 bg-light card">
-        <div class="row align-items-center my-3">
-            <div class="col h4 text-center">  {{ course.name }}  </div>
+<div class="row justify-content-md-center yakshwell">
+    <div class="col-md-10 bg-light card" id="card">
+        <div class="row align-items-center">
+            <div class="col h4">  {{ course.name }}  </div>
+            <div class = "col">
+                {% if course.has_lessons %}
+                <a href="{% url 'yaksh:download_course' course.id %}" data-toggle="tooltip" title="Download course content" class="btn btn-primary pull-right">
+                    Download Course
+                </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
