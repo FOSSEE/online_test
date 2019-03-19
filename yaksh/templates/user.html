@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block nav %}
 <div class="container-fluid yakshnav">
 <nav class="navbar fixed-top navbar-expand-lg yakshheading yakshnav">
@@ -18,6 +17,8 @@
           <a class="dropdown-toggle nav-link" id="user_dropdown" data-toggle="dropdown" href="#"> {{user.get_full_name|title}}</a>
           <div class="dropdown-menu">
             <a class="dropdown-item" href="{{ URL_ROOT }}/exam/viewprofile/"><i class="fa fa-user"></i>  My Profile</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="{% url 'yaksh:message_box' %}"><i class="fa fa-envelope"> Message(s)</i></a>
             <div class="dropdown-divider"></div>
             {% if user.profile.is_moderator %}
             <a class="dropdown-item" href="{{URL_ROOT}}/exam/toggle_moderator/"><i class="fa fa-exchange"></i>

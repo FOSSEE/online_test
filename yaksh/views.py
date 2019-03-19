@@ -7,6 +7,7 @@ from django.template import Context, Template
 from django.http import Http404
 from django.db.models import Max, Q, F
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.forms.models import inlineformset_factory
@@ -14,12 +15,14 @@ from django.utils import timezone
 from django.core.exceptions import (
     MultipleObjectsReturned, ObjectDoesNotExist
 )
+from django.template.loader import render_to_string
 from taggit.models import Tag
 import json
 import six
 from textwrap import dedent
 import zipfile
 from markdown import Markdown
+from itertools import chain
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -33,7 +36,7 @@ from yaksh.models import (
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
-    LearningUnit, LearningModule, CourseStatus, question_types
+    LearningUnit, LearningModule, CourseStatus, question_types, Room, Message
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -2954,3 +2957,71 @@ def download_course(request, course_id):
                                             )
     response.write(zip_file.read())
     return response
+
+@login_required
+@email_verified
+@require_POST
+def send_message(request, course_id=None):
+    receivers = []
+    user = request.user
+    message = request.POST.get("message")
+    course_name = Course.objects.get(id=course_id)
+    course_creator = course_name.creator
+    course_teachers = course_name.teachers
+    if course_teachers.exists():
+        receivers = list(chain(course_creator, course_teachers))
+    else:
+        receivers.append(course_creator)
+    try:
+        room = Room.objects.get(user=user, course__name=course_name)
+    except Room.DoesNotExist:
+        room = Room.objects.create(user=user, course=course_name)
+
+    for receiver in receivers:
+        message = Message.objects.create(room=room,
+                                         sender=user,
+                                         receiver=receiver,
+                                         message=message)
+        message.save()
+    return redirect('yaksh:course_modules', course_id=course_id)
+
+
+@login_required
+@email_verified
+def message_box(request, room_id=None):
+    rooms = []
+    user = request.user
+    room_id = request.GET.get('room_id')
+    if is_moderator(user):
+        all_rooms = Room.objects.all().order_by('-timestamp')
+        if room_id is not None:
+            room_messages = Message.objects.filter(room=room_id)
+
+            if request.is_ajax():
+                html = render_to_string('yaksh/message.html',{
+                    'user_rooms': all_rooms,
+                    'room_messages': room_messages
+                })
+                return HttpResponse(html)
+        else:
+            first_room = all_rooms.first()
+            room_messages = first_room.messages.all()
+            return render(request, 'yaksh/message_box.html',{
+                'user_rooms': all_rooms,
+                'room_messages': room_messages
+            })
+    user_rooms = user.room_creator.all().order_by('-timestamp')
+    if room_id is not None:
+        user_room = user_rooms.get(id=room_id)
+        room_messages = user_room.messages.all()
+        return render(request, 'yaksh/message.html', {
+            'user_room': user_room,
+            'room_messages': room_messages,
+            'user': user
+        })
+    first_room = user_rooms.first()
+    room_messages = first_room.messages.all()
+    return render(request, 'yaksh/message_box.html',{
+        'user_rooms': user_rooms,
+        'room_messages': room_messages
+    })

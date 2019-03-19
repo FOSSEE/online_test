@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/animate.min.css" type="text/css" />
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/font-awesome.css" type="text/css" />
   <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/ontop.css" type="text/css" />
-
+  <link rel="stylesheet" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/message_box.css">
 
   {% block meta %}
   <meta charset="utf-8">
@@ -41,8 +41,9 @@
   <script>
       new WOW().init();
   </script>
-  {% block script %}
-  {% endblock %}
+  <script>
+    {% block script %}
+    {% endblock %}
   </script>
 </head>
 
