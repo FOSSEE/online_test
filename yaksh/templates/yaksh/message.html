@@ -1,0 +1,21 @@
+<div class="msg_history">
+{% for message in room_messages %}
+<div class="incoming_msg">
+	<div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png"> </div>
+	<div class="received_msg">
+		<div class="received_withd_msg">
+		  <p>{{message.message}}</p>
+		  <small>{{message.sender}}</small>
+		  <span class="time_date">{{message.timestamp}}</span>
+		</div>
+	</div>
+</div>
+<br>
+{% endfor %}
+</div>
+<div class="type_msg">
+	<div class="input_msg_write">
+		<input type="text" class="write_msg" placeholder="Type a message" />
+		<button class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+	</div>
+</div>

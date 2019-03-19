@@ -2445,3 +2445,22 @@ class TestCaseOrder(models.Model):
     order = models.TextField()
 
 ##############################################################################
+class Room(models.Model):
+    user = models.ForeignKey(User, related_name='room_creator')
+    course = models.ForeignKey(Course, related_name='room_course')
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
+
+    def __str__(self):
+        return 'Room: {0}'.format(self.course)
+
+class Message(models.Model):
+    room = models.ForeignKey(Room, related_name='messages')
+    sender = models.ForeignKey(User, related_name='sender')
+    receiver = models.ForeignKey(User, related_name='receiver',
+                                     blank=True, null=True)
+
+    message = models.TextField()
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
+
+    def __str__(self):
+        return 'Room: {0}\n Message: {1}'.format(self.room, self.message)

@@ -211,4 +211,9 @@ urlpatterns = [
         views.download_course, name="download_course"),
     url(r'^download_course/(?P<course_id>\d+)/$',
         views.download_course, name="download_course"),
+    url(r'^send_message/(?P<course_id>\d+)/$',
+        views.send_message, name="send_message"),
+    url(r'^message_box/$',views.message_box, name='message_box'),
+    url(r'^message_box/view_message/(?P<room_id>\d+)/$',
+        views.message_box, name='message_box')
 ]
