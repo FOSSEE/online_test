@@ -716,17 +716,17 @@ class LearningModule(models.Model):
 
     def get_passing_status(self, user, course):
         course_status = CourseStatus.objects.filter(user=user, course=course)
-        state = "failed"
         if course_status.exists():
-            ordered_units = self.learning_unit.filter(type='quiz').order_by("order")
+            learning_units_with_quiz = self.learning_unit.filter(type='quiz')
+            ordered_units = learning_units_with_quiz.order_by("order")
 
-        status_list = [unit.quiz.get_answerpaper_passing_status(user, course)
+        statuses = [unit.quiz.get_answerpaper_passing_status(user, course)
                        for unit in ordered_units]
 
-        if not status_list:
+        if not statuses:
             status = False
         else:
-            status = all(status_list)
+            status = all(statuses)
         return status
 
     def is_prerequisite_passed(self, user, course):

@@ -478,8 +478,11 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
 
     if learning_module.check_prerequisite_passes:
         if not learning_module.is_prerequisite_passed(user, course):
-            msg = "You have not successfully passed the module previous to {0}".format(
+            msg = (
+                "You have not successfully passed the module"
+                " previous to {0}".format(
                 learning_module.name)
+            )
             return course_modules(request, course_id, msg)
 
     # is user enrolled in the course
@@ -2436,8 +2439,11 @@ def show_lesson(request, lesson_id, module_id, course_id):
             return view_module(request, module_id, course_id, msg)
     if learn_module.check_prerequisite_passes:
         if not learn_module.is_prerequisite_passed(user, course):
-            msg = "You have not successfully passed the module previous to {0}".format(
+            msg = (
+                "You have not successfully passed the module"
+                " previous to {0}".format(
                 learn_module.name)
+            )
             return view_module(request, module_id, course_id, msg)
 
     # update course status with current unit
@@ -2759,8 +2765,11 @@ def view_module(request, module_id, course_id, msg=None):
 
     if learning_module.check_prerequisite_passes:
         if not learning_module.is_prerequisite_passed(user, course):
-            msg = "You have not successfully passed the module previous to {0}".format(
+            msg = (
+                "You have not successfully passed the module"
+                " previous to {0}".format(
                 learning_module.name)
+            )
             return course_modules(request, course_id, msg)
 
     learning_units = learning_module.get_learning_units()
