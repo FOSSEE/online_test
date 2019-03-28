@@ -25,12 +25,12 @@
 		  {% for room in user_rooms %}
 		    <div class="chat_list">
 		      <div class="chat_people">
-				<a href="#" class="view_message" data-catid="{{ room.id }}">
+				<a href="#" class="view_message" data-catid="{{ room.id }}" course-id="{{ room.course.id }}">
 			        <div class="chat_img"> <img src="https://ptetutorials.com/images/user-profile.png"> </div>
 			        <div class="chat_ib">
 			          <h5>{{room.course}} <span class="chat_date">{{room.timestamp}}</span></h5>
 			          <p>{{room.messages.last.message}}</p>
-			          <small>by <strong>{{room.messages.last.sender}}</strong></small>
+			          <small>by <strong>{{room.user}}</strong></small>
 			        </div>
 				</a>
 		      </div>
@@ -39,32 +39,33 @@
 		  </div>
 		</div>
 
-		<div class="mesgs">
-		  {% include 'yaksh/message.html' %}
+		<div class="mesgs" id="mesgs">
 		</div>
 	</div>
+
 </div>
 </div>
 
 </div>
 {% endblock %}
 {% block script %}
+	var room_id;
+	var course_id;
 	$(document).ready(function(){
 		$('.view_message').on('click', function(e){
-			var room_id = $(this).attr("data-catid");
-			console.log(room_id);
+			room_id = $(this).attr("data-catid");
+			course_id = $(this).attr("course-id");
 			$.ajax({
 				url: '{% url 'yaksh:message_box' %}',
 				method: 'GET',
 				data: {
-					room_id: room_id
+					room_id: room_id,
 				},
 				success: function(data){
 					$('.mesgs').html(data);
 				},
 				error: function(data){
 					console.log(data);
-					alert(data);
 				}
 			});
 		});
