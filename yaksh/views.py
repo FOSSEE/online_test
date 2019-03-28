@@ -2928,34 +2928,52 @@ def download_course(request, course_id):
     response.write(zip_file.read())
     return response
 
+
+@csrf_exempt
 @login_required
 @email_verified
 @require_POST
-def send_message(request, course_id=None):
-    receivers = []
+def send_message(request, course_id=None, room_id=None):
     user = request.user
-    message = request.POST.get("message")
-    course_name = Course.objects.get(id=course_id)
-    course_creator = course_name.creator
-    course_teachers = course_name.teachers
-    if course_teachers.exists():
-        receivers = list(chain(course_creator, course_teachers))
+    if request.is_ajax():
+        course_id = request.POST.get("course_id")
+        room_id = request.POST.get("room_id")
+        message = request.POST.get("the_post")
+        course_name = Course.objects.get(id=course_id)
+        room = Room.objects.get(id=room_id)
+        course_creator = course_name.creator
+        receiver = course_creator
+        if room_id:
+            message = Message.objects.create(room=room,
+                                             sender=user,
+                                             receiver=receiver,
+                                             message=message)
+            room_messages = Message.objects.filter(room=room_id)
+            user_rooms = user.room_creator.all().order_by('-timestamp')
+            html = render_to_string('yaksh/message.html',{
+                'room_messages': room_messages,
+                'user_rooms': user_rooms
+            })
+            return HttpResponse(html)
     else:
-        receivers.append(course_creator)
-    try:
-        room = Room.objects.get(user=user, course__name=course_name)
-    except Room.DoesNotExist:
-        room = Room.objects.create(user=user, course=course_name)
 
-    for receiver in receivers:
-        message = Message.objects.create(room=room,
-                                         sender=user,
-                                         receiver=receiver,
-                                         message=message)
-        message.save()
-    return redirect('yaksh:course_modules', course_id=course_id)
+        message = request.POST.get("message")
+        course_name = Course.objects.get(id=course_id)
+        course_creator = course_name.creator
+        receiver = course_creator
+        if room_id is None:
+            room, created = Room.objects.get_or_create(user=user,
+                                                       course=course_name)
+            message = Message.objects.create(room=room,
+                                             sender=user,
+                                             receiver=receiver,
+                                             message=message)
+            message.save()
+
+            return redirect('yaksh:message_box')
 
 
+@csrf_exempt
 @login_required
 @email_verified
 def message_box(request, room_id=None):
@@ -2970,7 +2988,7 @@ def message_box(request, room_id=None):
             if request.is_ajax():
                 html = render_to_string('yaksh/message.html',{
                     'user_rooms': all_rooms,
-                    'room_messages': room_messages
+                    'room_messages': room_messages,
                 })
                 return HttpResponse(html)
         else:
@@ -2978,7 +2996,7 @@ def message_box(request, room_id=None):
             room_messages = first_room.messages.all()
             return render(request, 'yaksh/message_box.html',{
                 'user_rooms': all_rooms,
-                'room_messages': room_messages
+                'room_messages': room_messages,
             })
     user_rooms = user.room_creator.all().order_by('-timestamp')
     if room_id is not None:
