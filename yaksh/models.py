@@ -2444,6 +2444,7 @@ class TestCaseOrder(models.Model):
     # Order of the test case for a question.
     order = models.TextField()
 
+
 ##############################################################################
 class Room(models.Model):
     user = models.ForeignKey(User, related_name='room_creator')
@@ -2453,11 +2454,12 @@ class Room(models.Model):
     def __str__(self):
         return 'Room: {0}'.format(self.course)
 
+
 class Message(models.Model):
     room = models.ForeignKey(Room, related_name='messages')
     sender = models.ForeignKey(User, related_name='sender')
     receiver = models.ForeignKey(User, related_name='receiver',
-                                     blank=True, null=True)
+                                 blank=True, null=True)
 
     message = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
