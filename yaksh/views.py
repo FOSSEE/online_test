@@ -2980,7 +2980,7 @@ def send_message(request, course_id=None, room_id=None):
                                              message=message)
             room_messages = Message.objects.filter(room=room_id)
             user_rooms = user.room_creator.all().order_by('-timestamp')
-            html = render_to_string('yaksh/message.html',{
+            html = render_to_string('yaksh/message.html', {
                 'room_messages': room_messages,
                 'user_rooms': user_rooms
             })
@@ -3016,7 +3016,7 @@ def message_box(request, room_id=None):
             room_messages = Message.objects.filter(room=room_id)
 
             if request.is_ajax():
-                html = render_to_string('yaksh/message.html',{
+                html = render_to_string('yaksh/message.html', {
                     'user_rooms': all_rooms,
                     'room_messages': room_messages,
                 })
@@ -3024,7 +3024,7 @@ def message_box(request, room_id=None):
         else:
             first_room = all_rooms.first()
             room_messages = first_room.messages.all()
-            return render(request, 'yaksh/message_box.html',{
+            return render(request, 'yaksh/message_box.html', {
                 'user_rooms': all_rooms,
                 'room_messages': room_messages,
             })
@@ -3039,7 +3039,7 @@ def message_box(request, room_id=None):
         })
     first_room = user_rooms.first()
     room_messages = first_room.messages.all()
-    return render(request, 'yaksh/message_box.html',{
+    return render(request, 'yaksh/message_box.html', {
         'user_rooms': user_rooms,
         'room_messages': room_messages
     })
