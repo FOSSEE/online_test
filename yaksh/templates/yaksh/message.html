@@ -1,7 +1,7 @@
 <div class="msg_history">
 {% for message in room_messages %}
 <div class="incoming_msg">
-	<div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png"> </div>
+	<div class="incoming_msg_img"> <img src="{{ URL_ROOT }}/static/yaksh/images/user-profile.png"> </div>
 	<div class="received_msg">
 		<div class="received_withd_msg">
 		  <p>{{message.message}}</p>

@@ -26,7 +26,7 @@
 		    <div class="chat_list">
 		      <div class="chat_people">
 				<a href="#" class="view_message" data-catid="{{ room.id }}" course-id="{{ room.course.id }}">
-			        <div class="chat_img"> <img src="https://ptetutorials.com/images/user-profile.png"> </div>
+			        <div class="chat_img"> <img src="{{ URL_ROOT }}/static/yaksh/images/user-profile.png"> </div>
 			        <div class="chat_ib">
 			          <h5>{{room.course}} <span class="chat_date">{{room.timestamp}}</span></h5>
 			          <p>{{room.messages.last.message}}</p>
