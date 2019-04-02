@@ -548,7 +548,7 @@ class Quiz(models.Model):
             user=user, course=course, question_paper=qp
         ).order_by("-attempt_number")
         if ans_ppr.exists():
-            return ans_ppr.first().passed
+            return any([paper.passed for paper in ans_ppr])
         return False
 
     def _create_quiz_copy(self, user):
