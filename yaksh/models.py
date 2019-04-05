@@ -1103,7 +1103,7 @@ class Profile(models.Model):
     def get_user_dir(self):
         """Return the output directory for the user."""
 
-        user_dir = join(settings.OUTPUT_DIR, str(self.user.username))
+        user_dir = join(settings.OUTPUT_DIR, str(self.user.id))
         if not exists(user_dir):
             os.makedirs(user_dir)
             os.chmod(user_dir, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
