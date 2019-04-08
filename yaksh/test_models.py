@@ -153,25 +153,35 @@ class LearningModuleTestCases(unittest.TestCase):
         self.course_status = CourseStatus.objects.get(
             course=self.course, user=self.student)
 
-        self.prereq_course = Course.objects.create(name="Prerequisite Course",
-            enrollment="Enroll Request", creator=self.creator)
-
+        self.prereq_course = Course.objects.create(
+            name="Prerequisite Course",
+            enrollment="Enroll Request", creator=self.creator
+        )
 
         self.prereq_learning_module = LearningModule.objects.create(
             name='LM3', description='module one', creator=self.creator
-            )
+        )
         self.test_learning_module = LearningModule.objects.create(
-            name='LM4', description='module two', creator=self.creator, order=1
-            )
+            name='LM4', description='module two',
+            creator=self.creator, order=1
+        )
         course_status = CourseStatus.objects.create(
             course=self.prereq_course, user=self.student
         )
-        lesson = Lesson.objects.create(name='P1', description='Video Lesson',
-                                       creator=self.creator)
-        learning_unit_lesson = LearningUnit.objects.create(order=2, lesson=lesson,
-                                                           type='lesson')
-        learning_unit_quiz = LearningUnit.objects.create(order=1, quiz=self.quiz,
-                                                         type='quiz')
+        lesson = Lesson.objects.create(
+            name='P1', description='Video Lesson',
+            creator=self.creator
+        )
+        learning_unit_lesson = LearningUnit.objects.create(
+            order=2,
+            lesson=lesson,
+            type='lesson'
+        )
+        learning_unit_quiz = LearningUnit.objects.create(
+            order=1,
+            quiz=self.quiz,
+            type='quiz'
+        )
         self.prereq_learning_module.learning_unit.add(learning_unit_quiz)
         self.prereq_learning_module.learning_unit.add(learning_unit_lesson)
         self.prereq_learning_module.save()

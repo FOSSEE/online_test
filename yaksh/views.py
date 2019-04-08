@@ -480,8 +480,7 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
         if not learning_module.is_prerequisite_passed(user, course):
             msg = (
                 "You have not successfully passed the module"
-                " previous to {0}".format(
-                learning_module.name)
+                " previous to {0}".format(learning_module.name)
             )
             return course_modules(request, course_id, msg)
 
@@ -2441,8 +2440,7 @@ def show_lesson(request, lesson_id, module_id, course_id):
         if not learn_module.is_prerequisite_passed(user, course):
             msg = (
                 "You have not successfully passed the module"
-                " previous to {0}".format(
-                learn_module.name)
+                " previous to {0}".format(learn_module.name)
             )
             return view_module(request, module_id, course_id, msg)
 
@@ -2767,8 +2765,7 @@ def view_module(request, module_id, course_id, msg=None):
         if not learning_module.is_prerequisite_passed(user, course):
             msg = (
                 "You have not successfully passed the module"
-                " previous to {0}".format(
-                learning_module.name)
+                " previous to {0}".format(learning_module.name)
             )
             return course_modules(request, course_id, msg)
 
