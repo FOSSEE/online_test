@@ -146,13 +146,51 @@ class LearningModuleTestCases(unittest.TestCase):
         self.learning_module_two = LearningModule.objects.get(name='LM2')
         self.creator = User.objects.get(username='creator')
         self.student = User.objects.get(username='course_user')
-        self.learning_unit_one = LearningUnit.objects.get(order=1)
-        self.learning_unit_two = LearningUnit.objects.get(order=2)
+        self.learning_unit_one = LearningUnit.objects.get(id=1)
+        self.learning_unit_two = LearningUnit.objects.get(id=2)
         self.quiz = Quiz.objects.get(description='demo quiz 1')
         self.lesson = Lesson.objects.get(name='L1')
         self.course = Course.objects.get(name='Python Course')
         self.course_status = CourseStatus.objects.get(
             course=self.course, user=self.student)
+
+        self.prereq_course = Course.objects.create(
+            name="Prerequisite Course",
+            enrollment="Enroll Request", creator=self.creator
+        )
+
+        self.prereq_learning_module = LearningModule.objects.create(
+            name='LM3', description='module one', creator=self.creator
+        )
+        self.test_learning_module = LearningModule.objects.create(
+            name='LM4', description='module two',
+            creator=self.creator, order=1
+        )
+        course_status = CourseStatus.objects.create(
+            course=self.prereq_course, user=self.student
+        )
+        lesson = Lesson.objects.create(
+            name='P1', description='Video Lesson',
+            creator=self.creator
+        )
+        learning_unit_lesson = LearningUnit.objects.create(
+            order=2,
+            lesson=lesson,
+            type='lesson'
+        )
+        learning_unit_quiz = LearningUnit.objects.create(
+            order=1,
+            quiz=self.quiz,
+            type='quiz'
+        )
+        self.prereq_learning_module.learning_unit.add(learning_unit_quiz)
+        self.prereq_learning_module.learning_unit.add(learning_unit_lesson)
+        self.prereq_learning_module.save()
+        self.prereq_course.learning_module.add(self.prereq_learning_module)
+        self.prereq_course.learning_module.add(self.test_learning_module)
+        self.prereq_course.students.add(self.student)
+        self.prereq_course.save()
+
 
     def tearDown(self):
         # Remove unit from course status completed units
@@ -164,6 +202,13 @@ class LearningModuleTestCases(unittest.TestCase):
         self.assertEqual(self.learning_module.creator, self.creator)
         self.assertTrue(self.learning_module.check_prerequisite)
         self.assertEqual(self.learning_module.order, 0)
+
+    def test_prerequisite_passes(self):
+        self.assertFalse(
+            self.test_learning_module.is_prerequisite_passed(
+                self.student, self.prereq_course
+            )
+        )
 
     def test_get_quiz_units(self):
         # Given

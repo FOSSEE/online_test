@@ -1937,7 +1937,7 @@ class TestCourses(TestCase):
         # Create a learning module to add to course
         self.learning_module = LearningModule.objects.create(
             order=0, name="test module", description="module",
-            check_prerequisite=False, creator=self.teacher)
+            check_prerequisite=True, creator=self.teacher)
 
         self.user1_course = Course.objects.create(
             name="Python Course",
