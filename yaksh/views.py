@@ -2216,18 +2216,14 @@ def _read_user_csv(reader, course):
         if users.exists():
             user = users[0]
             if remove.strip().lower() == 'true':
-                if _remove_from_course(user, course):
-                    upload_details.append("{0} -- {1} -- User rejected".format(
-                                          counter, user.username))
-                    continue
+                _remove_from_course(user, course)
+                upload_details.append("{0} -- {1} -- User rejected".format(
+                                      counter, user.username))
             else:
-                if _add_to_course(user, course):
-                    upload_details.append("{0} -- {1} -- User rejected".format(
-                                          counter, user.username))
-            if user not in course.get_enrolled():
-                upload_details.append("{0} -- {1} not added to course".format(
-                    counter, user))
-                continue
+                _add_to_course(user, course)
+                upload_details.append("{0} -- {1} -- User Added Successfully".format(
+                                      counter, user.username))
+            continue
         user_defaults = {'email': email, 'first_name': first_name,
                          'last_name': last_name}
         user, created = _create_or_update_user(username, password,
@@ -2277,13 +2273,15 @@ def _get_csv_values(row, fields):
 def _remove_from_course(user, course):
     if user in course.get_enrolled():
         course.reject(True, user)
-        return True
+    else:
+        course.rejected.add(user)
 
 
 def _add_to_course(user, course):
     if user in course.get_rejected():
         course.enroll(True, user)
-        return True
+    else:
+        course.students.add(user)
 
 
 def _create_or_update_user(username, password, defaults):
