@@ -2582,7 +2582,6 @@ class TestCourseDetail(TestCase):
         self.assertIn(uploaded_user.first(), self.user1_course.students.all())
         self.assertTemplateUsed(response, 'yaksh/course_detail.html')
 
-
     def test_upload_existing_user(self):
         # Given
         self.client.login(
@@ -2593,8 +2592,9 @@ class TestCourseDetail(TestCase):
         csv_file.close()
 
         # When
-        response = self.client.post(reverse('yaksh:upload_users',
-            kwargs={'course_id': self.user1_course.id}),
+        response = self.client.post(
+            reverse('yaksh:upload_users',
+                    kwargs={'course_id': self.user1_course.id}),
             data={'csv_file': upload_file})
 
         # Then
@@ -2602,7 +2602,6 @@ class TestCourseDetail(TestCase):
         self.assertIn('upload_details', response.context)
         self.assertTemplateUsed(response, 'yaksh/course_detail.html')
         self.assertIn(self.user2, self.user1_course.students.all())
-
 
     def test_upload_same_user_multiple_course(self):
         # Given
@@ -2617,14 +2616,14 @@ class TestCourseDetail(TestCase):
 
         # When
         response1 = self.client.post(
-                reverse('yaksh:upload_users',
+            reverse('yaksh:upload_users',
                     kwargs={'course_id': self.user1_course.id}),
-                data={'csv_file': upload_file1})
+            data={'csv_file': upload_file1})
 
         response2 = self.client.post(
-                reverse('yaksh:upload_users',
+            reverse('yaksh:upload_users',
                     kwargs={'course_id': self.user1_othercourse.id}),
-                data={'csv_file': upload_file2})
+            data={'csv_file': upload_file2})
 
         # Then
         uploaded_users = User.objects.filter(email='abc@xyz.com')
@@ -2637,7 +2636,6 @@ class TestCourseDetail(TestCase):
         self.assertIn(uploaded_users.first(), self.user1_course.students.all())
         self.assertIn(uploaded_users.first(),
                       self.user1_othercourse.students.all())
-
 
     def test_upload_users_add_update_reject(self):
         # Given
@@ -2666,7 +2664,6 @@ class TestCourseDetail(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('upload_details', response.context)
         self.assertTemplateUsed(response, 'yaksh/course_detail.html')
-
 
     def test_upload_users_with_wrong_csv(self):
         # Given

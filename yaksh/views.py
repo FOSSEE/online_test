@@ -2221,8 +2221,9 @@ def _read_user_csv(reader, course):
                                       counter, user.username))
             else:
                 _add_to_course(user, course)
-                upload_details.append("{0} -- {1} -- User Added Successfully".format(
-                                      counter, user.username))
+                upload_details.append(
+                    "{0} -- {1} -- User Added Successfully".format(
+                        counter, user.username))
             continue
         user_defaults = {'email': email, 'first_name': first_name,
                          'last_name': last_name}
