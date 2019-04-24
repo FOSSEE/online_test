@@ -6,10 +6,10 @@
 {% block css %}
 {% endblock %}
 {% block script %}
-<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-1.9.1.min.js"></script>
+<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-3.3.1.min.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/add_quiz.js"></script>
 {% endblock %}
-{% block onload %} onload="javascript:test();"  {% endblock %}
+{% block onload %} window.onload="javascript:test();"  {% endblock %}
 {% block content %}
 <div class="yakshwell container">
 <form name=frm id=frm action="" method="post" >
