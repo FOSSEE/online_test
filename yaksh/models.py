@@ -2528,6 +2528,7 @@ class TestCaseOrder(models.Model):
 ##############################################################################
 class Room(models.Model):
     user = models.ForeignKey(User, related_name='room_creator')
+    title = models.CharField(max_length=256, blank=False)
     course = models.ForeignKey(Course, related_name='room_course')
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
 
@@ -2541,7 +2542,7 @@ class Message(models.Model):
     receiver = models.ForeignKey(User, related_name='receiver',
                                  blank=True, null=True)
 
-    message = models.TextField()
+    message = models.TextField(null=False, blank=False)
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
 
     def __str__(self):

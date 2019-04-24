@@ -1,4 +1,4 @@
-<div class="msg_history">
+<div class="msg_history col-md-12">
 {% for message in room_messages %}
 <div class="incoming_msg">
 	<div class="incoming_msg_img"> <img src="{{ URL_ROOT }}/static/yaksh/images/user-profile.png"> </div>
@@ -14,10 +14,10 @@
 {% endfor %}
 </div>
 <div class="type_msg">
-	<div class="input_msg_write">
+	<div class="input_msg_write col-md-12">
 		<form method="POST" id="post-form">
 			<input id="post-text" type="text" class="write_msg" placeholder="Type a message" required />
-			<button class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+			<button class="msg_send_btn" type="submit"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
 		</form>
 	</div>
 </div>
@@ -25,6 +25,8 @@
 	$(document).ready(function(e){
 		function post_message(){
 			console.log($('#post-text').val());
+			var the_post = $('#post-text').val();
+			var content = $('#mesgs');
 			$.ajax({
 				url:"{% url 'yaksh:send_message' %}",
 				method:'POST',
@@ -33,8 +35,13 @@
 					course_id: course_id,
 					the_post: $('#post-text').val(),
 				},
-				success: function(json){
+				success: function(data){
 					$('#post-text').val(''); // remove the value from the input
+					$('.mesgs').html(data);
+					setTimeout(function(){
+						var content = $('.msg_history');
+						content.scrollTop(content[0].scrollHeight);
+					},1);
 				},
 				error: function(xhr, errmsg, err){
 					console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console.

@@ -916,12 +916,13 @@ def _update_paper(request, uid, result):
 def quit(request, reason=None, attempt_num=None, questionpaper_id=None,
          course_id=None, module_id=None):
     """Show the quit page when the user logs out."""
+    course = get_object_or_404(Course, id=course_id)
     paper = AnswerPaper.objects.get(user=request.user,
                                     attempt_number=attempt_num,
                                     question_paper=questionpaper_id,
                                     course_id=course_id)
     context = {'paper': paper, 'message': reason, 'course_id': course_id,
-               'module_id': module_id}
+               'module_id': module_id, 'course': course}
     return my_render_to_response(request, 'yaksh/quit.html', context)
 
 
@@ -954,7 +955,8 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None,
         message = reason or "Quiz has been submitted"
         context = {'message': message, 'paper': paper,
                    'module_id': learning_module.id,
-                   'course_id': course_id, 'learning_unit': learning_unit}
+                   'course_id': course_id, 'learning_unit': learning_unit,
+                   'course': course}
         if is_moderator(user):
             context['user'] = "moderator"
         return my_render_to_response(request, 'yaksh/complete.html', context)
@@ -2966,41 +2968,34 @@ def download_course(request, course_id):
 def send_message(request, course_id=None, room_id=None):
     user = request.user
     if request.is_ajax():
-        course_id = request.POST.get("course_id")
-        room_id = request.POST.get("room_id")
-        message = request.POST.get("the_post")
+        course_id = request.POST.get("course_id", None)
+        room_id = request.POST.get("room_id", None)
+        message = request.POST.get("the_post", None)
         course_name = Course.objects.get(id=course_id)
-        room = Room.objects.get(id=room_id)
         course_creator = course_name.creator
         receiver = course_creator
-        if room_id:
+        if room_id is None:
+            room, created = Room.objects.get_or_create(
+                user=user,course=course_name
+            )
+            message = Message.objects.create(
+                room=room, sender=user, receiver=receiver, message=message
+            )
+            return redirect('yaksh:message_box')
+        else:
+            room = Room.objects.get(id=room_id)
             message = Message.objects.create(room=room,
                                              sender=user,
                                              receiver=receiver,
                                              message=message)
             room_messages = Message.objects.filter(room=room_id)
-            user_rooms = user.room_creator.all().order_by('-timestamp')
+            user_rooms = user.room_creator.order_by('-timestamp')
             html = render_to_string('yaksh/message.html', {
                 'room_messages': room_messages,
-                'user_rooms': user_rooms
+                'user_rooms': user_rooms,
+                'room_id': room_id
             })
             return HttpResponse(html)
-    else:
-
-        message = request.POST.get("message")
-        course_name = Course.objects.get(id=course_id)
-        course_creator = course_name.creator
-        receiver = course_creator
-        if room_id is None:
-            room, created = Room.objects.get_or_create(user=user,
-                                                       course=course_name)
-            message = Message.objects.create(room=room,
-                                             sender=user,
-                                             receiver=receiver,
-                                             message=message)
-            message.save()
-
-            return redirect('yaksh:message_box')
 
 
 @csrf_exempt
@@ -3009,9 +3004,9 @@ def send_message(request, course_id=None, room_id=None):
 def message_box(request, room_id=None):
     rooms = []
     user = request.user
-    room_id = request.GET.get('room_id')
+    room_id = request.GET.get('room_id', None)
     if is_moderator(user):
-        all_rooms = Room.objects.all().order_by('-timestamp')
+        all_rooms = Room.objects.order_by('-timestamp')
         if room_id is not None:
             room_messages = Message.objects.filter(room=room_id)
 
@@ -3028,18 +3023,28 @@ def message_box(request, room_id=None):
                 'user_rooms': all_rooms,
                 'room_messages': room_messages,
             })
-    user_rooms = user.room_creator.all().order_by('-timestamp')
+    user_rooms = user.room_creator.order_by('-timestamp')
+    room_messages = None
     if room_id is not None:
         user_room = user_rooms.get(id=room_id)
+        courses = user.students.order_by('-id')
+        course_id = user_room.course.id
         room_messages = user_room.messages.all()
         return render(request, 'yaksh/message.html', {
             'user_room': user_room,
             'room_messages': room_messages,
-            'user': user
+            'user': user,
+            'courses': courses,
+            'course_id': course_id,
         })
-    first_room = user_rooms.first()
-    room_messages = first_room.messages.all()
+    if user_rooms:
+        first_room = user_rooms.first()
+        courses = user.students.order_by('-id')
+        course_id = first_room.course.id
+        room_messages = first_room.messages.all()
     return render(request, 'yaksh/message_box.html', {
         'user_rooms': user_rooms,
-        'room_messages': room_messages
+        'room_messages': room_messages,
+        'courses': courses,
+        'course_id': 'course_id',
     })
