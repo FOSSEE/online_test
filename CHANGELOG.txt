@@ -1,3 +1,21 @@
+=== 0.10.0 (24-04-2019) ===
+
+* Upgraded Django version from 1.10 to 1.11.18.
+* Upgraded JQuery-UI version from 1.9.1 to 1.12.1
+* Changed UI to show alert on clicking "Undo changes" button on programming questions in quiz.
+* Fixed download link for files in questions
+* Added Preview Questionpaper to Edit Quiz interface
+* Added a toggle option to allow moderator to hide grades
+* Changed UI on Student Dashboard
+* Added a link to edit Question while designing Question Paper
+* Removed custom Fonts used in new UI
+* Changed UI on View Module screen and Quiz screen interface for students
+* Add Download Course button in Course Module template
+* Fixed the bug that prevented students from opening a quiz if status is inprogress
+* Changed UI on Course Status Page and Monitor Page
+* Added functionality to restrict access to next module based on passing previous module
+* Fixed the CSV upload bug that preventeduser from being added to a new course in case the user was aready enrolled in another course
+
 === 0.9.1 (07-02-2019) ===
 
 * Changed routing so that opening the base URL will redirect user to /exam
