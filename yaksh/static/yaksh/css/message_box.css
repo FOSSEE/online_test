@@ -135,7 +135,7 @@ img{ max-width:100%;}
 }
 
 .feedback-button {
-  height: 40px;
+/*  height: 40px;
   border: solid 3px #CCCCCC;
   background: #333;
   width: 100px;
@@ -150,7 +150,31 @@ img{ max-width:100%;}
   font-size: 17px;
   position: fixed;
   right: -40px;
-  top: 45%;
+  top: 40%;
   font-family: "Roboto", helvetica, arial, sans-serif;
-  z-index: 999;
+  z-index: 999;*/
+  position: fixed;
+  top: 50%;
+  right: -82px;
+  width: 100px;
+  height: 40px;
+  text-align:right;
+  z-index:999;
+  margin-top:-15px;
+  transform: rotate(-90deg);
+  -webkit-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  -o-transform: rotate(-90deg);
+  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+  display: block;
+  border: solid 3px #CCCCCC;
+  background: #333;
+  text-align:right;
+  height: 40px;
+  width: 195px;
+  padding: 6px 20px;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 17px;
+  font-weight: bold;
 }

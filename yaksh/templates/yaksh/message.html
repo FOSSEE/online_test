@@ -1,6 +1,6 @@
 <div class="msg_history col-md-12">
 {% for message in room_messages %}
-<div class="incoming_msg">
+<div class="incoming_msg content">
 	<div class="incoming_msg_img"> <img src="{{ URL_ROOT }}/static/yaksh/images/user-profile.png"> </div>
 	<div class="received_msg">
 		<div class="received_withd_msg">
@@ -21,6 +21,7 @@
 		</form>
 	</div>
 </div>
+
 <script type="text/javascript">
 	$(document).ready(function(e){
 		function post_message(){
@@ -54,5 +55,8 @@
 			e.preventDefault();
 			post_message();
 		});
+	});
+	$(window).scroll(function(){
+		console.log('hallo');
 	});
 </script>

@@ -933,6 +933,11 @@ class Course(models.Model):
     def get_teachers(self):
         return self.teachers.all()
 
+    def get_staff(self):
+        staff = list(self.get_teachers().values_list("id", flat=True))
+        staff.append(self.creator.id)
+        return staff
+
     def remove_teachers(self, *teachers):
         self.teachers.remove(*teachers)
 
@@ -2539,8 +2544,7 @@ class Room(models.Model):
 class Message(models.Model):
     room = models.ForeignKey(Room, related_name='messages')
     sender = models.ForeignKey(User, related_name='sender')
-    receiver = models.ForeignKey(User, related_name='receiver',
-                                 blank=True, null=True)
+    receiver = models.ManyToManyField(User, related_name='receiver')
 
     message = models.TextField(null=False, blank=False)
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)

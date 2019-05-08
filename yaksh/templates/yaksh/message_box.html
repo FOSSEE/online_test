@@ -4,54 +4,52 @@
 {% endblock %}
 {% block main %}
 <div class="container">
-	<h3 class=" text-center">Messaging</h3>
-	<div class="messaging">
-		<div class="inbox_msg">
-		<div class="inbox_people">
-			  <div class="headind_srch">
-			    <div class="recent_heading">
-			      <h4>Recent</h4>
-			    </div>
-			    <div class="srch_bar">
-			      <div class="stylish-input-group">
-			        <input type="text" class="search-bar"  placeholder="Search" >
-			        <span class="input-group-addon">
-			        <button type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
-			        </span>
-			      </div>
-			    </div>
-			  </div>
-			  <div class="inbox_chat">
-			  {% for room in user_rooms %}
-			    <div class="chat_list">
-			      <div class="chat_people">
-					<a href="#" class="view_message" id = "view_message_{{room.id}}" data-catid="{{ room.id }}" course-id="{{ room.course.id }}">
-				        <div class="chat_img"> <img src="{{ URL_ROOT }}/static/yaksh/images/user-profile.png"> </div>
-				        <div class="chat_ib">
-				          <h5>{{room.course}} <span class="chat_date">{{room.timestamp}}</span></h5>
-				          <p>{{room.messages.last.message}}</p>
-				          <small>by <strong>{{room.user}}</strong></small>
-				        </div>
-					</a>
-			      </div>
-			    </div>
-			  {% endfor %}
-			  </div>
-		</div>
-
-		<div class="mesgs" id="mesgs">
-			{% include 'yaksh/message.html' %}
-		</div>
-	</div>
-
+	<h3 class=" text-center">{% if user_rooms %}Messaging {% else %} No Messages {% endif %}</h3>
+	{% if user_rooms %}
+			<div class="messaging">
+				<div class="inbox_msg">
+					<div class="inbox_people">
+						  <div class="headind_srch">
+						    <div class="recent_heading">
+						      <h4>Rooms</h4>
+						    </div>
+							<button type="button" class="float-right btn" data-toggle="modal" data-target="#myModal"><i class="fa fa-question-circle" aria-hidden="true"></i> Create Issue</button>
+						  </div>
+						  <div class="inbox_chat">
+						  {% for room in user_rooms %}
+						    <div class="chat_list {{active}}">
+						      <div class="chat_people">
+								<a href="#" class="view_message" id = "view_message_{{room.id}}" data-catid="{{ room.id }}" course-id="{{ room.course.id }}">
+							        <div class="chat_img"> <img src="{{ URL_ROOT }}/static/yaksh/images/user-profile.png"> </div>
+							        <div class="chat_ib">
+							          <h5 id="room_title">{{room.title}} <span class="chat_date">{{room.timestamp}}</span></h5>
+							          <p>{{room.messages.last.message}}</p>
+							          <small>by <strong>{{room.user}}</strong></small>
+							        </div>
+								</a>
+						      </div>
+						    </div>
+						  {% endfor %}
+						  </div>
+					</div>
+					<div class="headind_srch">
+					    <div class="recent_heading">
+					      <h4 class="message_header"></h4>
+					    </div>
+					</div>
+					<div class="mesgs" id="mesgs">
+						{% include 'yaksh/message.html' %}
+						{{user_rooms.0.id}}
+					</div>
+				</div>
+			</div>
+	{% endif %}
 </div>
-</div>
 
-</div>
 {% endblock %}
 {% block script %}
-	var room_id;
-	var course_id;
+	var room_id = "{{ user_rooms.0.id }}";
+	var course_id = "";
 	$(document).ready(function(){
 		var URL = window.location.href.split('#')[0];
 		var arr = URL.split("/");
