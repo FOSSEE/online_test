@@ -2968,101 +2968,88 @@ def download_course(request, course_id):
 def send_message(request, course_id=None, room_id=None, room_title=None):
     user = request.user
     send_all = request.POST.get("send_to_all", None) == 'on'
-    print(send_all)
     if request.method == "POST":
         if request.is_ajax():
             room_id = request.POST.get("room_id", None)
             course_id = request.POST.get("course_id", None)
             message = request.POST.get("the_post", None)
             course = Course.objects.get(id=course_id)
+
             room = Room.objects.get(id=room_id)
-            # receiver = course.creator
-            #rec = list(course.teachers.all()) + list(course.creator)
-            # send_all = request.POST.get("send_to_all", None)
-            # print(send_all)
-            # if send_all == "send_to_all":
-            # 	receiver = list(
-            # 		course.get_enrolled().values_list("id", flat=True))
-            # else:
-            # 	receiver = course.get_staff()
             receiver = course.get_staff()
             message = Message.objects.create(room=room,
                                              sender=user,
-                                             #receiver=receiver,
                                              message=message)
             message.receiver.add(*receiver)
             room_messages = Message.objects.filter(room=room_id)
             user_rooms = user.room_creator.order_by('-timestamp')
-            html = render_to_string('yaksh/message.html', {
+
+            return render(request, 'yaksh/message.html', {
                 'room_messages': room_messages,
                 'user_rooms': user_rooms,
                 'room_id': room_id
             })
-            return HttpResponse(html)
         else:
             course_id = request.POST.get("my_courses", None)
-            room_id = request.POST.get("room_title", None)
             message = request.POST.get("message", None)
             course = Course.objects.get(id=course_id)
-            # receiver = course.get_staff()
-            if send_all:
-            	receiver = list(
-            		course.get_enrolled().values_list("id", flat=True))
-            	print('receiver: if send_all ', receiver)
-            else:
-            	receiver = course.get_staff()
-            	print('receiver: ',receiver)
-            if room_id is None:
-                room_title = request.POST.get("room_title_value", None)
-                room, created = Room.objects.get_or_create(
-                    user=user, title=room_title, course=course
-                )
-                message = Message.objects.create(
-                    room=room, sender=user, message=message
-                )
-                message.receiver.add(*receiver)
-                return redirect('yaksh:message_box', room_id=room.id)
-            else:
-                room = Room.objects.get(id=room_id)
-                message = Message.objects.create(room=room, sender=user, 
-                                                 message=message)
-                message.receiver.add(*receiver)
-                return redirect('yaksh:message_box', room_id=room.id)
+
+            receiver = course.get_staff()
+
+            # if room_id is None:
+            room_title = request.POST.get("room_title_value", None)
+            room, created = Room.objects.get_or_create(user=user,
+                                                       title=room_title,
+                                                       course=course)
+            message = Message.objects.create(room=room,
+                                             sender=user,
+                                             message=message)
+            print('receiver', receiver)
+            message.receiver.add(*receiver)
+            return redirect('yaksh:message_box', room_id=room.id)
 
 
 @csrf_exempt
 @login_required
 @email_verified
 def message_box(request, room_id=None):
-    rooms = []
     user = request.user
+    if not user.is_authenticated():
+        return my_redirect("/exam/login/")
+
     room_messages = None
-    room_id = request.GET.get('room_id', None)
+    room_id = request.GET.get('room_id')
     user_rooms = user.room_creator.order_by('-timestamp')
-    courses = user.students.order_by('-id')
+    base_template = 'user.html'
+
     if is_moderator(user):
+        base_template = 'manage.html'
+        # filter by current user
+        courses = Course.objects.all()
         all_rooms = Room.objects.order_by('-timestamp')
         if room_id is not None:
             room_messages = Message.objects.filter(room=room_id)
             if request.is_ajax():
-                html = render_to_string('yaksh/message.html', {
+                return render(request, 'yaksh/message.html', {
                     'user_rooms': all_rooms,
                     'room_messages': room_messages,
-                    'room_id': room_id,
+                    'room_id': room_id,    
                 })
-                return HttpResponse(html)
         else:
             first_room = all_rooms.first()
             if first_room:
-            	room_messages = first_room.messages.all()
+                room_messages = first_room.messages.all()
             else:
-            	room_messages = None
+                room_messages = None
             return render(request, 'yaksh/message_box.html', {
+                'base_template': base_template,
                 'user_rooms': all_rooms,
                 'room_messages': room_messages,
                 'room_id': room_id,
                 'courses': courses
             })
+    else:
+        courses = user.students.order_by('-id')
     if room_id is not None:
         user_room = user_rooms.get(id=room_id)
         course_id = user_room.course.id
@@ -3078,10 +3065,10 @@ def message_box(request, room_id=None):
         })
     if user_rooms:
         first_room = user_rooms.first()
-        courses = user.students.order_by('-id')
         course_id = first_room.course.id
         room_messages = first_room.messages.all()
     return render(request, 'yaksh/message_box.html', {
+        'base_template': base_template,
         'user_rooms': user_rooms,
         'room_messages': room_messages,
         'courses': courses,

@@ -1,33 +1,52 @@
-<div class="msg_history col-md-12">
+<div class="msg_history col-md-12" id="msg_history">
 {% for message in room_messages %}
+
+{% if message.sender != user %}
 <div class="incoming_msg content">
-	<div class="incoming_msg_img"> <img src="{{ URL_ROOT }}/static/yaksh/images/user-profile.png"> </div>
+	<div class="incoming_msg_img"></div>
 	<div class="received_msg">
 		<div class="received_withd_msg">
 		  <p>{{message.message}}</p>
-		  <small>{{message.sender}}</small>
+		  <small id="received_message_sender">{{message.sender}}</small>
 		  <span class="time_date">{{message.timestamp}}</span>
 		</div>
 	</div>
 </div>
+{% else %}
+<div class="outgoing_msg">
+	<div class="sent_msg">
+		<div class="outgoing_msg_img"></div>
+		<p>{{message.message}}</p>
+		<small id="message_sender">{{message.sender}}</small>
+		<span class="time_date">{{message.timestamp}}</span>
+	</div>
+</div>
+
+{% endif %}
 <br>
 {% endfor %}
 </div>
 <div class="type_msg">
 	<div class="input_msg_write col-md-12">
 		<form method="POST" id="post-form">
-			<input id="post-text" type="text" class="write_msg" placeholder="Type a message" required />
-			<button class="msg_send_btn" type="submit"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+			<input id="post-text" type="text" class="write_msg" placeholder="Type a message" autocomplete="off" required />
+			<button class="msg_send_btn btn btn-primary" type="submit">Send</button>
 		</form>
 	</div>
 </div>
 
 <script type="text/javascript">
 	$(document).ready(function(e){
+		function scroll_chat_window(){
+			//scroll div to the bottom of the page
+			var messageHistory = document.querySelector('#msg_history');
+			messageHistory.scrollTop = messageHistory.scrollHeight;
+		}
+
 		function post_message(){
 			console.log($('#post-text').val());
 			var the_post = $('#post-text').val();
-			var content = $('#mesgs');
+
 			$.ajax({
 				url:"{% url 'yaksh:send_message' %}",
 				method:'POST',
@@ -39,9 +58,10 @@
 				success: function(data){
 					$('#post-text').val(''); // remove the value from the input
 					$('.mesgs').html(data);
+					// $('div.outgoing_msg_img div.sent_msg').html($('#post-text').val());
+
 					setTimeout(function(){
-						var content = $('.msg_history');
-						content.scrollTop(content[0].scrollHeight);
+						scroll_chat_window();
 					},1);
 				},
 				error: function(xhr, errmsg, err){
@@ -55,8 +75,18 @@
 			e.preventDefault();
 			post_message();
 		});
-	});
-	$(window).scroll(function(){
-		console.log('hallo');
+
+		var receiver_firstName, sender_firstName, initials, incoming_msg_img, outgoing_msg_img;
+
+		receiver_firstName = $('#received_message_sender').text();
+		initials = receiver_firstName.charAt(0).toUpperCase();
+		incoming_msg_img = $('.incoming_msg_img').text(initials);
+
+		sender_firstName = $('#message_sender').text()
+		initials = sender_firstName.charAt(0).toUpperCase();
+		outgoing_msg_img = $('.outgoing_msg_img').text(initials);
+
+		scroll_chat_window();
+
 	});
 </script>

@@ -38,11 +38,16 @@ img{ max-width:100%;}
 .srch_bar .input-group-addon { margin: 0 0 0 -27px;}
 
 .chat_ib h5{ font-size:15px; color:#464646; margin:0 0 8px 0;}
-.chat_ib h5 span{ font-size:13px; float:right;}
 .chat_ib p{ font-size:14px; color:#989898; margin:auto}
 .chat_img {
   float: left;
   width: 11%;
+  border-radius: 50%;
+  background: #512DA8;
+  font-size: 20px;
+  color: #fff;
+  text-align: center;
+  line-height: 45px;
 }
 .chat_ib {
   float: left;
@@ -60,10 +65,18 @@ img{ max-width:100%;}
 
 .active_chat{ background:#ebebeb;}
 
-.incoming_msg_img {
-  display: inline-block;
-  width: 6%;
+.incoming_msg_img, .outgoing_msg_img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #512DA8;
+  font-size: 20px;
+  color: #fff;
+  text-align: center;
+  line-height: 50px;
+  margin: 12px 2px;
 }
+
 .received_msg {
   display: inline-block;
   padding: 0 0 0 10px;
@@ -111,22 +124,21 @@ img{ max-width:100%;}
   color: #4c4c4c;
   font-size: 15px;
   min-height: 48px;
-  width: 100%;
+  width: 90%;
 }
 
 .type_msg {border-top: 1px solid #c4c4c4;position: relative;}
 .msg_send_btn {
   background: #05728f none repeat scroll 0 0;
   border: medium none;
-  border-radius: 50%;
   color: #fff;
   cursor: pointer;
   font-size: 17px;
-  height: 33px;
+  height: 35px;
   position: absolute;
   right: 0;
-  top: 11px;
-  width: 33px;
+  top: 7px;
+  width: 75px;
 }
 .messaging { padding: 0 0 50px 0;}
 .msg_history {
@@ -135,24 +147,6 @@ img{ max-width:100%;}
 }
 
 .feedback-button {
-/*  height: 40px;
-  border: solid 3px #CCCCCC;
-  background: #333;
-  width: 100px;
-  line-height: 32px;
-  -webkit-transform: rotate(-90deg);
-  font-weight: 600;
-  color: white;
-  transform: rotate(-90deg);
-  -ms-transform: rotate(-90deg);
-  -moz-transform: rotate(-90deg);
-  text-align: center;
-  font-size: 17px;
-  position: fixed;
-  right: -40px;
-  top: 40%;
-  font-family: "Roboto", helvetica, arial, sans-serif;
-  z-index: 999;*/
   position: fixed;
   top: 50%;
   right: -82px;

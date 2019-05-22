@@ -67,7 +67,9 @@
      </div>
       {{user.room_creator.all}}
       {{courses}}
-       <button type="button" class="feedback-button" data-toggle="modal" data-target="#myModal"><i class="fa fa-question-circle" aria-hidden="true"></i> Talk to teacher</button>
+      {% if not user.profile.is_moderator and user.is_authenticated %}
+         <button type="button" class="feedback-button" data-toggle="modal" data-target="#myModal"><i class="fa fa-question-circle" aria-hidden="true"></i> Talk to teacher</button>
+       {% endif %}
 <!-- Modal -->
 <div id="myModal" class="modal fade" role="dialog">
     <div class="modal-dialog">
@@ -83,7 +85,7 @@
                     <p>Send your message in the form below and we will get back to you as early as possible.</p>
                     <div class="form-group">
                         <label for="">What do you need help with?</label>
-                        <input type="text" name="room_title_value" class="form-control" id="room_title_value"  placeholder="Create new issue subject" required>
+                        <input type="text" name="room_title_value" class="form-control" id="room_title_value"  placeholder="Create new Thread" required>
 
                         <label for="course_name">Course: </label>
 
@@ -106,9 +108,9 @@
                         {% endif %}
 
                         <label for="message">Message:</label>
-                        <input type="text" name="message" class="form-control" id="message" placeholder="Tell us little about what you need help with. :D" required>
+                        <textarea type="text" name="message" class="form-control" id="message" placeholder="Tell us little about what you need help with. :D" rows="4" cols="50" required></textarea>
                         {% if user.profile.is_moderator %}
-                          <input type="radio" name="send_to_all" id="send_to_all"> Send to everyone of above selected course.
+                          <input type="checkbox" name="send_to_all" id="send_to_all"> Send to everyone of above selected course.
                         {% endif %}
                     </div>
                     <button type="submit" class="btn btn-lg btn-success btn-block" id="btnMessage">Send →</button>
