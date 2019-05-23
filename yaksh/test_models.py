@@ -5,7 +5,7 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
-    create_group, legend_display_types
+    create_group, legend_display_types, Message, Room
 from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
@@ -2195,3 +2195,79 @@ class FileUploadTestCases(unittest.TestCase):
         if os.path.isfile(self.file_upload.file.path):
             os.remove(self.file_upload.file.path)
         self.file_upload.delete()
+
+
+class RoomMessageTestCases(unittest.TestCase):
+
+    def setUp(self):
+
+        self.user1 = User.objects.create(username='bart',
+            password='bart', email='bart@test.com')
+        Profile.objects.create(user=self.user1, roll_number=2,
+            institute='IIT', department='Chemical', position='Student')
+
+        self.moderator = User.objects.create(username='moderator',
+            password='moderator', email='moderator@test.com')
+        Profile.objects.create(user=self.moderator, roll_number=3,
+            is_moderator=True, department='Chemical', position='Teacher')
+
+        self.teacher = User.objects.create_user(username='teacher_profile',
+            password='teacher_profile', email='teacher_profile@test.com')
+        Profile.objects.create(
+            user=self.teacher, roll_number=123, institute='IIT',
+            is_moderator=True, department='Chemical', position='Teacher'
+        )
+
+        self.course = Course.objects.create(name='Python Course',
+            enrollment="Enroll Request", creator=self.user1)
+
+        Room.objects.create(user=self.user1, title='room1',
+            course=self.course,
+            timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc))
+
+        self.message_before_count = Message.objects.count()
+
+    def test_create_room(self):
+        room = Room.objects.get(id=1)
+        self.assertEquals(room.title, 'room1')
+        self.assertEquals(room.user.username, 'bart')
+        self.assertEquals(room.course.name, 'Python Course')
+
+    def test_room_message_from_user(self):
+        room = Room.objects.get(title='room1')
+        receiver = self.course.get_staff()
+        msg = Message.objects.create(room=room, sender=self.user1,
+            message='message from user1',
+            timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc))
+        msg.receiver.add(*receiver)
+        message_count = Message.objects.count()
+        self.assertEquals(msg.message, 'message from user1')
+        self.assertEquals(msg.room.title, 'room1')
+        self.assertEquals(msg.sender.username, 'bart')
+        self.assertNotEqual(self.message_before_count, message_count)
+
+    def test_room_message_from_moderator(self):
+        room = Room.objects.get(title='room1')
+        receiver = self.course.get_staff()
+        msg1 = Message.objects.create(room=room, sender=self.user1,
+            message='message from user1',
+            timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc))
+        msg2 = Message.objects.create(room=room, sender=self.teacher,
+            message='reply from teacher',
+            timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc))
+        msg1.receiver.add(*receiver)
+        msg1.receiver.add(*receiver)
+        message_count = Message.objects.count()
+        self.assertEquals(msg1.message, 'message from user1')
+        self.assertEquals(msg2.message, 'reply from teacher')
+        self.assertNotEqual(self.message_before_count, message_count)
+
+
+    def tearDown(self):
+        self.user1.profile.delete()
+        self.user1.delete()
+        self.moderator.profile.delete()
+        self.moderator.delete()
+        self.teacher.profile.delete()
+        self.teacher.delete()
+        self.course.delete()
