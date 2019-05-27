@@ -2229,9 +2229,11 @@ class RoomMessageTestCases(unittest.TestCase):
 
     def test_create_room(self):
         room = Room.objects.get(id=1)
+
         self.assertEquals(room.title, 'room1')
         self.assertEquals(room.user.username, 'bart')
         self.assertEquals(room.course.name, 'Python Course')
+        self.assertEquals(str(room.course), room.course.name)
 
     def test_room_message_from_user(self):
         room = Room.objects.get(title='room1')
@@ -2241,10 +2243,12 @@ class RoomMessageTestCases(unittest.TestCase):
             timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc))
         msg.receiver.add(*receiver)
         message_count = Message.objects.count()
+
         self.assertEquals(msg.message, 'message from user1')
         self.assertEquals(msg.room.title, 'room1')
         self.assertEquals(msg.sender.username, 'bart')
         self.assertNotEqual(self.message_before_count, message_count)
+        self.assertEquals(str(msg), msg.room.title + " --> " +msg.message)
 
     def test_room_message_from_moderator(self):
         room = Room.objects.get(title='room1')

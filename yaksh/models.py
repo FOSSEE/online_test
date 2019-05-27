@@ -2538,7 +2538,7 @@ class Room(models.Model):
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
 
     def __str__(self):
-        return 'Room: {0}'.format(self.course)
+        return self.course
 
 
 class Message(models.Model):
@@ -2550,4 +2550,4 @@ class Message(models.Model):
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
 
     def __str__(self):
-        return 'Room: {0}\n Message: {1}'.format(self.room, self.message)
+        return self.room.title + " --> " + self.message
