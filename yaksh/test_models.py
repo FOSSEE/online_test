@@ -2228,7 +2228,7 @@ class RoomMessageTestCases(unittest.TestCase):
         self.message_before_count = Message.objects.count()
 
     def test_create_room(self):
-        room = Room.objects.get(id=1)
+        room = Room.objects.get(title='room1')
 
         self.assertEquals(room.title, 'room1')
         self.assertEquals(room.user.username, 'bart')
@@ -2242,7 +2242,7 @@ class RoomMessageTestCases(unittest.TestCase):
             message='message from user1',
             timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc))
         msg.receiver.add(*receiver)
-        message_count = Message.objects.count()
+        message_count = room.messages.count()
 
         self.assertEquals(msg.message, 'message from user1')
         self.assertEquals(msg.room.title, 'room1')
@@ -2261,7 +2261,7 @@ class RoomMessageTestCases(unittest.TestCase):
             timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc))
         msg1.receiver.add(*receiver)
         msg1.receiver.add(*receiver)
-        message_count = Message.objects.count()
+        message_count = room.messages.count()
         self.assertEquals(msg1.message, 'message from user1')
         self.assertEquals(msg2.message, 'reply from teacher')
         self.assertNotEqual(self.message_before_count, message_count)
