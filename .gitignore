@@ -42,3 +42,4 @@ wsgi.log
 *.sqlite3
 data/
 _build/
+yaksh_data/
