@@ -15,13 +15,17 @@
 
 {% block content %}
 <div class="yakshwell container">
+{% if question.id %}
 <form action="{{ URL_ROOT }}/exam/manage/addquestion/{{ question.id }}/" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
+{% else %}
+<form action="{{ URL_ROOT }}/exam/manage/addquestion/" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
+{% endif %}
   {% csrf_token %}
   <center><table class="table table-responsive-sm">
   <tr><td>Summary: <td>{{ qform.summary }}{{ qform.summary.errors }}
   <tr><td> Language: <td> {{qform.language}}{{qform.language.errors}}
   <tr><td> Type: <td> {{ qform.type }}{{qform.type.errors}}
-  <tr><td>Points:<td><button class="btn-mini" type="button" onClick="increase(frm);">+</button>{{qform.points }}<button class="btn-mini" type="button" onClick="decrease(frm);">-</button>{{ qform.points.errors }} 
+  <tr><td>Points:<td><button class="btn-mini" type="button" onClick="increase(frm);">+</button>{{qform.points }}<button class="btn-mini" type="button" onClick="decrease(frm);">-</button>{{ qform.points.errors }}
     <tr><td><strong>Rendered: </strong><td><p id='my'></p>
   <tr><td>Description: <td>{{ qform.description}}  {{qform.description.errors}}
   <tr><td>Tags: <td>{{ qform.tags }}

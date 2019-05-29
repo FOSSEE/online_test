@@ -211,9 +211,9 @@ def add_question(request, question_id=None):
     user = request.user
     test_case_type = None
 
+    question = None
     if question_id is None:
         question = Question(user=user)
-        question.save()
     else:
         question = Question.objects.get(id=question_id)
 
