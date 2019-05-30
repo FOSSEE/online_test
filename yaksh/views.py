@@ -211,7 +211,6 @@ def add_question(request, question_id=None):
     user = request.user
     test_case_type = None
 
-    question = None
     if question_id is None:
         question = Question(user=user)
     else:
@@ -230,17 +229,6 @@ def add_question(request, question_id=None):
         files = request.FILES.getlist('file_field')
         extract_files_id = request.POST.getlist('extract')
         hide_files_id = request.POST.getlist('hide')
-        if files:
-            for file in files:
-                FileUpload.objects.get_or_create(question=question, file=file)
-        if extract_files_id:
-            files = FileUpload.objects.filter(id__in=extract_files_id)
-            for file in files:
-                file.set_extract_status()
-        if hide_files_id:
-            files = FileUpload.objects.filter(id__in=hide_files_id)
-            for file in files:
-                file.toggle_hide_status()
         formsets = []
         for testcase in TestCase.__subclasses__():
             formset = inlineformset_factory(Question, testcase, extra=0,
@@ -261,6 +249,17 @@ def add_question(request, question_id=None):
                 if formset.is_valid():
                     formset.save()
             test_case_type = request.POST.get('case_type', None)
+            if files:
+                for file in files:
+                    FileUpload.objects.get_or_create(question=question, file=file)
+            if extract_files_id:
+                files = FileUpload.objects.filter(id__in=extract_files_id)
+                for file in files:
+                    file.set_extract_status()
+            if hide_files_id:
+                files = FileUpload.objects.filter(id__in=hide_files_id)
+                for file in files:
+                    file.toggle_hide_status()
         else:
             context = {
                 'qform': qform,
