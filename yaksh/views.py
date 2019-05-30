@@ -212,9 +212,11 @@ def add_question(request, question_id=None):
     test_case_type = None
 
     if question_id is None:
-        question = Question(user=user)
+        question = None
+        uploaded_files = []
     else:
         question = Question.objects.get(id=question_id)
+        uploaded_files = FileUpload.objects.filter(question_id=question.id)
 
     if request.method == "POST" and 'delete_files' in request.POST:
         remove_files_id = request.POST.getlist('clear')
@@ -237,8 +239,7 @@ def add_question(request, question_id=None):
                 request.POST, request.FILES, instance=question
                 )
             )
-        files = request.FILES.getlist('file_field')
-        uploaded_files = FileUpload.objects.filter(question_id=question.id)
+            
         if qform.is_valid():
             question = qform.save(commit=False)
             question.user = user
@@ -274,7 +275,6 @@ def add_question(request, question_id=None):
 
     qform = QuestionForm(instance=question)
     fileform = FileForm()
-    uploaded_files = FileUpload.objects.filter(question_id=question.id)
     formsets = []
     for testcase in TestCase.__subclasses__():
         if test_case_type == testcase.__name__.lower():

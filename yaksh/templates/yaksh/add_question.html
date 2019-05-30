@@ -15,10 +15,10 @@
 
 {% block content %}
 <div class="yakshwell container">
-{% if question.id %}
-<form action="{{ URL_ROOT }}/exam/manage/addquestion/{{ question.id }}/" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
+{% if question %}
+<form action="{% url 'yaksh:add_question' question.id %}" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
 {% else %}
-<form action="{{ URL_ROOT }}/exam/manage/addquestion/" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
+<form action="{% url 'yaksh:add_question' %}" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
 {% endif %}
   {% csrf_token %}
   <center><table class="table table-responsive-sm">

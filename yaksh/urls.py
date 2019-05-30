@@ -1,6 +1,7 @@
 from django.conf.urls import url
 from yaksh import views
 
+app_name = 'yaksh'
 urlpatterns = [
     url(r'^$', views.index),
     url(r'^login/$', views.user_login, name='login'),
