@@ -1,13 +1,15 @@
 {% load custom_filters %}
 <html>
-<link rel="stylesheet" href="../../static/css/bootstrap.css">
-<link rel="stylesheet" href="../../static/css/bootstrap.min.css">
-<link rel="stylesheet" href="../../static/css/offline.css">
-<link rel="stylesheet" href="../../static/css/video-js.css">
-<script src="../../static/js/jquery-3.3.1.min.js"></script>
-<script src="../../static/js/bootstrap.min.js"></script>
-<script src="../../static/js/video.js"></script>
-<nav class="navbar navbar-inverse navbar-fixed-top">
+<head>
+    <link rel="stylesheet" href="../../static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../static/css/offline.css">
+    <link rel="stylesheet" href="../../static/css/video-js.css">
+    <title>
+            {% block pagetitle %} {{module.name}} {% endblock %}        
+    </title>
+</head>
+<body>
+<nav class="navbar bg-dark navbar-dark">
     <div class="container-fluid">
         <div class="navbar-header">
             <a class="navbar-brand" href="#">
@@ -69,4 +71,8 @@
         <p align="center">Developed by FOSSEE group, IIT Bombay</p>
     </div>
 </footer>
+</body>
+<script src="../../static/js/jquery-3.3.1.min.js"></script>
+<script src="../../static/js/bootstrap.min.js"></script>
+<script src="../../static/js/video.js"></script>
 </html>

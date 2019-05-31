@@ -1,0 +1,73 @@
+{% load custom_filters %}
+<html>
+<head>
+    <link rel="stylesheet" href="../../static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../static/css/offline.css">
+    <link rel="stylesheet" href="../../static/css/video-js.css">
+    <title>
+        {% block pagetitle %} {{course.name}} {% endblock %}
+    </title>
+</head>
+<body>
+<nav class="navbar bg-dark navbar-dark">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">
+                <img src="../../static/images/yaksh_banner.png" alt="YAKSH">
+                </img>
+            </a>
+        </div>
+    </div>
+</nav>
+<div class="container" style="margin-top:50px">
+    <center>
+        <h1>
+            {% block subtitle %}
+                {{course.name}}
+            {% endblock %}
+        </h1>
+    <hr>
+    </center>
+    {% block content %}
+        <center><h2>{{module.name}}</h2></center>
+        <hr>
+        <div id="status"></div>
+        <hr>
+        <h3>{{unit.description}}</h3>
+        <a href="http://127.0.0.1:8000/exam/start/{{quiz.questionpaper_set.get.id}}/{{module.id}}/{{course.id}}" target="_blank">{{quiz.description}}</a>
+        <br>
+         
+        {% if unit.type == 'lesson' %}
+        <a href="{{unit.lesson.name|replace_spaces}}/{{unit.lesson.name|replace_spaces}}.html" target="_blank" class="list-group-item">
+            {{unit.lesson.name}}
+        </a>
+        {% else %}
+        <a href="{{unit.quiz.description|replace_spaces}}/{{unit.quiz.description|replace_spaces}}.html" target="_blank" class="list-group-item">
+            {{unit.quiz.description}}
+        </a> 
+        {% endif %}
+
+    {% endblock %}
+</div>
+<footer class="footer" id="footer_div">
+    <div class="container">
+        <p align="center">Developed by FOSSEE group, IIT Bombay</p>
+    </div>
+</footer>
+</body>
+<script src="../../static/js/jquery-3.3.1.min.js"></script>
+<script src="../../static/js/bootstrap.min.js"></script>
+<script src="../../static/js/video.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){
+    var online = navigator.onLine;
+    if(online){
+        var status = document.getElementById("status").innerHTML = "<span class='badge badge-success'>User is online</span>";
+
+    }else{
+        document.getElementById("status").innerHTML = "<span class='badge badge-danger'>User is offline</span>";
+    }
+});
+</script>
+</html>    
