@@ -27,32 +27,36 @@
             {% endblock %}
         </center>
     </h1>
-    {% block content %}
-        <table class="table">
-            {% for module in modules %}
-            <tr>
-            <td>
-                {{module.name}}
-                <div id="{{module.id}}" class="collapse">
-                    <ul class="list">
-                    {% for lesson in module.get_lesson_units %}
-                        <li>{{lesson.name}}</li>
+    <div class="row justify-content-md-center">
+        <div class="col-md-10">
+            {% block content %}
+                <table class="table">
+                    {% for module in modules %}
+                    <tr>
+                    <td>
+                        {{module.name}}
+                        <div id="{{module.id}}" class="collapse">
+                            <ul class="list">
+                            {% for lesson in module.get_lesson_units %}
+                                <li>{{lesson.name}}</li>
+                            {% endfor %}
+                            </ul>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-info" data-toggle="collapse" data-target="#{{module.id}}">
+                            View Lessons
+                        </button>
+                    </td>
+                    <td>
+                        <a href="{{module.name|replace_spaces}}/{{module.name|replace_spaces}}.html" target="_blank" class="btn btn-primary">Go to Module</a>
+                    </td>
+                    </tr>
                     {% endfor %}
-                    </ul>
-                </div>
-            </td>
-            <td>
-                <button class="btn btn-info" data-toggle="collapse" data-target="#{{module.id}}">
-                    View Lessons
-                </button>
-            </td>
-            <td>
-                <a href="{{module.name|replace_spaces}}/{{module.name|replace_spaces}}.html" target="_blank" class="btn btn-primary">Go to Module</a>
-            </td>
-            </tr>
-            {% endfor %}
-        </table>
-    {% endblock %}
+                </table>
+            {% endblock %}            
+        </div>
+    </div>
 </div>
 <footer class="footer" id="footer_div">
     <div class="container">

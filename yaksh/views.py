@@ -2943,7 +2943,8 @@ def download_course(request, course_id):
     static_files = {"js": ["bootstrap.min.js",
                            "jquery-3.3.1.min.js", "video.js"],
                     "css": ["bootstrap.min.css",
-                            "video-js.css", "offline.css"],
+                            "video-js.css", "offline.css",
+                            "yakshcustom.css"],
                     "images": ["yaksh_banner.png"]}
     zip_file = course.create_zip(current_dir, static_files)
     zip_file.seek(0)
