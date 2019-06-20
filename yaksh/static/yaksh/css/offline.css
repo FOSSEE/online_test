@@ -71,6 +71,15 @@
   text-transform: uppercase;
 }
 
+section{
+  padding: 2rem;
+}
+
+.bg-grey{
+  background-color:#dbf9f2;
+}
+
+
 /*.footer {
     position: fixed;
     left: 0;

@@ -30,30 +30,32 @@
     <div class="row justify-content-md-center">
         <div class="col-md-10">
             {% block content %}
-                <table class="table">
-                    {% for module in modules %}
-                    <tr>
-                    <td>
-                        {{module.name}}
-                        <div id="{{module.id}}" class="collapse">
-                            <ul class="list">
-                            {% for lesson in module.get_lesson_units %}
-                                <li>{{lesson.name}}</li>
-                            {% endfor %}
-                            </ul>
+                {% for module in modules %}
+                    <section class="bg-grey text-center">
+                        <div class="row">
+                            <div class="col">
+                                {{module.name}}
+                            </div>
+                            <div class="col">
+                                <button class="btn btn-info" data-toggle="collapse" data-target="#{{module.id}}">
+                                    View Lessons
+                                </button>
+                            </div>
+                            <div class="col">
+                                <a href="{{module.name|replace_spaces}}/{{module.name|replace_spaces}}.html" target="_blank" class="btn btn-primary">Go to Module</a>
+                            </div>
                         </div>
-                    </td>
-                    <td>
-                        <button class="btn btn-info" data-toggle="collapse" data-target="#{{module.id}}">
-                            View Lessons
-                        </button>
-                    </td>
-                    <td>
-                        <a href="{{module.name|replace_spaces}}/{{module.name|replace_spaces}}.html" target="_blank" class="btn btn-primary">Go to Module</a>
-                    </td>
-                    </tr>
-                    {% endfor %}
-                </table>
+                    </section>
+                    <br>
+                    <div id="{{module.id}}" class="collapse">
+                        <ul class="list-group">
+                            {% for lesson in module.get_lesson_units %}
+                                <li class="list-group-item">{{lesson.name}}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <br>
+                {% endfor %}
             {% endblock %}            
         </div>
     </div>
