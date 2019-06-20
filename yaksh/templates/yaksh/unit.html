@@ -31,24 +31,28 @@
                 <a class="nav-link active" href="#">
                   {{ module.name }}
                 </a>
-              </li>                
-            <!-- loop -->
-            {% for unit in module.get_learning_units %}
-            {% if unit.type == 'lesson' %}
-              <li class="nav-item">
-                <a class="nav-link" href="../{{unit.lesson.name|replace_spaces}}/{{unit.lesson.name|replace_spaces}}.html">
-                  {{unit.lesson.name}}
-                </a>
               </li>
-            {% else %}
-              <li class="nav-item">
-                <a class="nav-link" href="../{{unit.quiz.description|replace_spaces}}/{{unit.quiz.description|replace_spaces}}.html">
-                  {{unit.quiz.description}}
-                </a>
-              </li>            
-            {% endif %}
-            {% endfor %}
-            <!-- End of loop -->
+              <div class="sidebar-submenu">
+                <ul>
+                    <!-- loop -->
+                    {% for unit in module.get_learning_units %}
+                    {% if unit.type == 'lesson' %}
+                      <li class="nav-item">
+                        <a class="nav-link" href="../{{unit.lesson.name|replace_spaces}}/{{unit.lesson.name|replace_spaces}}.html">
+                          {{unit.lesson.name}}
+                        </a>
+                      </li>
+                    {% else %}
+                      <li class="nav-item">
+                        <a class="nav-link" href="../{{unit.quiz.description|replace_spaces}}/{{unit.quiz.description|replace_spaces}}.html">
+                          {{unit.quiz.description}}
+                        </a>
+                      </li>
+                    {% endif %}
+                    {% endfor %}
+                    <!-- End of loop -->
+                </ul>
+              </div>
             </ul>
           </div>
         </nav>
