@@ -3,7 +3,7 @@ from yaksh.models import (
 )
 from api.serializers import (
     QuestionSerializer, QuizSerializer, QuestionPaperSerializer,
-    AnswerPaperSerializer
+    AnswerPaperSerializer, CourseSerializer
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -29,6 +29,49 @@ class QuestionList(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CourseList(APIView):
+    """ List all courses """
+
+    def get(self, request, format=None):
+        courses = Course.objects.filter(students=request.user)
+        serializer = CourseSerializer(courses, many=True)
+        return Response(serializer.data)
+
+
+class StartQuiz(APIView):
+    """ Retrieve Answerpaper. If does not exists then create one """
+
+    def get_quiz(self, pk, user):
+        try:
+            return Quiz.objects.get(pk=pk)
+        except Quiz.DoesNotExist:
+            raise Http404
+
+    def get(self, request, course_id, quiz_id,  format=None):
+        user = request.user
+        quiz = self.get_quiz(quiz_id, user)
+        questionpaper = quiz.questionpaper_set.first()
+
+        last_attempt = AnswerPaper.objects.get_user_last_attempt(
+            questionpaper, user, course_id)
+        if last_attempt and last_attempt.is_attempt_inprogress():
+            serializer = AnswerPaperSerializer(last_attempt)
+            return Response(serializer.data)
+
+        can_attempt, msg = questionpaper.can_attempt_now(user, course_id)
+        if not can_attempt:
+            return Response({'message': msg})
+        if not last_attempt:
+            attempt_number = 1
+        else:
+            attempt_number = last_attempt.attempt_number + 1
+        ip = request.META['REMOTE_ADDR']
+        answerpaper = questionpaper.make_answerpaper(user, ip, attempt_number,
+                                                     course_id)
+        serializer = AnswerPaperSerializer(answerpaper)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class QuestionDetail(APIView):
