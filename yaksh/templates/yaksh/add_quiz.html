@@ -27,17 +27,25 @@
   <br/><br/>
   </center>
 
+
+  {% if quiz == None or quiz.creator == user or perm_type == "write" %}
+
   <center><button class="btn btn-success" type="submit" id="submit" name="questionpaper"> Save
   </button>
 
   <button class="btn btn-danger" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button> </center>
+
+  {% endif %}
+  
   
 </form>
 <br>
 {% if quiz and course_id %}
     {% if quiz.questionpaper_set.get.id %}
     <center>
+    {% if quiz.creator == user or perm_type == "write" %}
       <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/{{course_id}}" class="btn btn-primary">Edit Question Paper</a>
+    {% endif %}
       <a href="{{URL_ROOT}}/exam/manage/preview_questionpaper/{{quiz.questionpaper_set.get.id}}" class="btn btn-primary" target="_blank">
         Preview Question Paper
       </a>

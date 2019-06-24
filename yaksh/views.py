@@ -48,6 +48,8 @@ from .send_emails import (send_user_mail,
                           generate_activation_key, send_bulk_mail)
 from .decorators import email_verified, has_profile
 
+from permissions.utils import check_permission
+
 
 def my_redirect(url):
     """An overridden redirect to deal with URL_ROOT-ing. See settings.py
@@ -304,31 +306,52 @@ def add_question(request, question_id=None):
 def add_quiz(request, quiz_id=None, course_id=None):
     """To add a new quiz in the database.
     Create a new quiz and store it."""
+
+
     user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this course !')
+    context = {}
+    permission = None
+    TAG = 'ADD_QUIZ/' + str(user)
+    # if not is_moderator(user):
+    #     raise Http404('You are not allowed to view this course !')
     if quiz_id:
         quiz = get_object_or_404(Quiz, pk=quiz_id)
-        if quiz.creator != user and not course_id:
-            raise Http404('This quiz does not belong to you')
+        # if quiz.creator != user and not course_id:
+        #     raise Http404('This quiz does not belong to you')
     else:
         quiz = None
     if course_id:
         course = get_object_or_404(Course, pk=course_id)
-        if not course.is_creator(user) and not course.is_teacher(user):
-            raise Http404('This quiz does not belong to you')
+        # if not course.is_creator(user) and not course.is_teacher(user):
+        #     raise Http404('This quiz does not belong to you')
 
-    context = {}
-    if request.method == "POST":
-        form = QuizForm(request.POST, instance=quiz)
-        if form.is_valid():
-            if quiz is None:
-                form.instance.creator = user
-            form.save()
-            if not course_id:
-                return my_redirect("/exam/manage/courses/all_quizzes/")
+        # Get team which are related to course
+        if quiz.creator != user:
+            
+            permission = check_permission(course, quiz, user)
+
+            if permission:
+                print(TAG, permission)
+                context["perm_type"] = permission.perm_type
             else:
-                return my_redirect("/exam/manage/courses/")
+                print(TAG, "No perm")
+                raise Http404("Insufficient permissions")
+
+
+    if request.method == "POST":
+
+        if quiz is None or (quiz.creator == user or permission.perm_type == "write"):
+            form = QuizForm(request.POST, instance=quiz)
+            if form.is_valid():
+                if quiz is None:
+                    form.instance.creator = user
+                form.save()
+                if not course_id:
+                    return my_redirect("/exam/manage/courses/all_quizzes/")
+                else:
+                    return my_redirect("/exam/manage/courses/")
+        else:
+            raise Http404("You don't have write access")
 
     else:
         form = QuizForm(instance=quiz)
@@ -2365,58 +2388,89 @@ def download_yaml_template(request):
 @email_verified
 def edit_lesson(request, lesson_id=None, course_id=None):
     user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
+    permission = None
+    course = None
+
     if lesson_id:
         lesson = Lesson.objects.get(id=lesson_id)
-        if not lesson.creator == user and not course_id:
-            raise Http404('This Lesson does not belong to you')
-    else:
-        lesson = None
+
     if course_id:
-        course = get_object_or_404(Course, id=course_id)
-        if not course.is_creator(user) and not course.is_teacher(user):
-            raise Http404('This Lesson does not belong to you')
+        course = Course.objects.get(id=course_id)
         redirect_url = "/exam/manage/courses/"
     else:
         redirect_url = "/exam/manage/courses/all_lessons/"
-    context = {}
-    if request.method == "POST":
-        if "Save" in request.POST:
-            lesson_form = LessonForm(request.POST, request.FILES,
-                                     instance=lesson)
-            lesson_file_form = LessonFileForm(request.POST, request.FILES)
-            lessonfiles = request.FILES.getlist('Lesson_files')
-            clear = request.POST.get("video_file-clear")
-            video_file = request.FILES.get("video_file")
-            if (clear or video_file) and lesson:
-                # Remove previous video file if new file is uploaded or
-                # if clear is selected
-                lesson.remove_file()
-            if lesson_form.is_valid():
-                if lesson is None:
-                    lesson_form.instance.creator = user
-                lesson = lesson_form.save()
-                lesson.html_data = get_html_text(lesson.description)
-                lesson.save()
-                if lessonfiles:
-                    for les_file in lessonfiles:
-                        LessonFile.objects.get_or_create(
-                            lesson=lesson, file=les_file
-                        )
-                return my_redirect(redirect_url)
-            else:
-                context['lesson_form'] = lesson_form
-                context['error'] = lesson_form["video_file"].errors
-                context['lesson_file_form'] = lesson_file_form
 
-        if 'Delete' in request.POST:
-            remove_files_id = request.POST.getlist('delete_files')
-            if remove_files_id:
-                files = LessonFile.objects.filter(id__in=remove_files_id)
-                for file in files:
-                    file.remove()
-            return my_redirect(redirect_url)
+
+    # if not is_moderator(user):
+    #     raise Http404('You are not allowed to view this page!')
+    # if lesson_id:
+    #     lesson = Lesson.objects.get(id=lesson_id)
+    #     if not lesson.creator == user and not course_id:
+    #         raise Http404('This Lesson does not belong to you')
+    # else:
+    #     lesson = None
+    # if course_id:
+    #     course = get_object_or_404(Course, id=course_id)
+    #     if not course.is_creator(user) and not course.is_teacher(user):
+    #         raise Http404('This Lesson does not belong to you')
+    #     redirect_url = "/exam/manage/courses/"
+    # else:
+    #     redirect_url = "/exam/manage/courses/all_lessons/"
+
+    TAG = "LESSON/{}".format(user)
+    context = {}
+
+    if lesson and course:
+        if lesson.creator != user:
+
+            permission = check_permission(course, lesson, user)
+
+            if permission:
+                print(TAG, permission)
+                context["perm_type"] = permission.perm_type
+            else:
+                print(TAG, "No perm")
+                raise Http404("Insufficient permissions")
+
+    if request.method == "POST":
+        if lesson is None or lesson.creator == user or permission.perm_type == "write":
+            if "Save" in request.POST:
+                lesson_form = LessonForm(request.POST, request.FILES,
+                                        instance=lesson)
+                lesson_file_form = LessonFileForm(request.POST, request.FILES)
+                lessonfiles = request.FILES.getlist('Lesson_files')
+                clear = request.POST.get("video_file-clear")
+                video_file = request.FILES.get("video_file")
+                if (clear or video_file) and lesson:
+                    # Remove previous video file if new file is uploaded or
+                    # if clear is selected
+                    lesson.remove_file()
+                if lesson_form.is_valid():
+                    if lesson is None:
+                        lesson_form.instance.creator = user
+                    lesson = lesson_form.save()
+                    lesson.html_data = get_html_text(lesson.description)
+                    lesson.save()
+                    if lessonfiles:
+                        for les_file in lessonfiles:
+                            LessonFile.objects.get_or_create(
+                                lesson=lesson, file=les_file
+                            )
+                    return my_redirect(redirect_url)
+                else:
+                    context['lesson_form'] = lesson_form
+                    context['error'] = lesson_form["video_file"].errors
+                    context['lesson_file_form'] = lesson_file_form
+
+            if 'Delete' in request.POST:
+                remove_files_id = request.POST.getlist('delete_files')
+                if remove_files_id:
+                    files = LessonFile.objects.filter(id__in=remove_files_id)
+                    for file in files:
+                        file.remove()
+                return my_redirect(redirect_url)
+        else:
+            raise Http404("You don't have write access")
 
     lesson_files = LessonFile.objects.filter(lesson=lesson)
     lesson_files_form = LessonFileForm()
@@ -2425,6 +2479,8 @@ def edit_lesson(request, lesson_id=None, course_id=None):
     context['lesson_file_form'] = lesson_files_form
     context['lesson_files'] = lesson_files
     context['course_id'] = course_id
+    if lesson:
+        context['lesson_creator'] = lesson.creator
     return my_render_to_response(request, 'yaksh/add_lesson.html', context)
 
 

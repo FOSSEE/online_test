@@ -17,6 +17,9 @@
             <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/monitor">Monitor</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_root }}/exam/manage/grader"> Regrade </a></li>
+            {% if user.profile.is_moderator %}
+            <li class="nav-item"><a class="nav-link" href="{{ url_root }}/permissions"> Permissions </a></li>
+            {% endif %}
             <li class="nav-item dropdown">
               <a class="dropdown-toggle nav-link" id="user_dropdown" data-toggle="dropdown" href="#"> {{user.get_full_name|title}}</a>
               <div class="dropdown-menu">

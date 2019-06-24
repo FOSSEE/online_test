@@ -54,8 +54,11 @@
     {% endif %}
     <br><br>
     <center>
+    {% if lesson_creator == None or lesson_creator == user or perm_type == "write" %}
     <button class="btn btn-success" type="submit" id="submit" name="Save"> Save
     </button>
+    {% endif %}
+    
     {% if lesson_files %}
     <button class="btn btn-danger" type="submit" id="submit" name="Delete"> Delete Files
     </button>
