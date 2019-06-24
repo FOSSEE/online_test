@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block nav %}
+<div class="container-fluid yakshnav">
+<nav class="navbar fixed-top navbar-expand-lg yakshheading yakshnav">
+  <div class="container">
+    <button class="navbar-toggler navbar-dark" type="button" data-toggle="collapse" data-target="#myNavbar" aria-controls="myNavbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon" style="color: white"></span>
+    </button>
+    <a class="navbar-brand" href="{{ URL_ROOT }}/exam/">
+    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH" style="margin-top: -3px; margin-left:-15px">
+    </img>
+    </a>    
+    <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav nav-pills ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/questions">Questions</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/courses">Courses</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/monitor">Monitor</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_root }}/exam/manage/grader"> Regrade </a></li>
+            {% if user.profile.is_moderator %}
+            <li class="nav-item"><a class="nav-link" href="{{ url_root }}/permissions"> Permissions </a></li>
+            {% endif %}
+            <li class="nav-item dropdown">
+              <a class="dropdown-toggle nav-link" id="user_dropdown" data-toggle="dropdown" href="#"> {{user.get_full_name|title}}</a>
+              <div class="dropdown-menu">
+                <a class="dropdown-item" href="{{ URL_ROOT }}/exam/viewprofile/"><i class="fa fa-user"></i>  My Profile</a>
+                <div class="dropdown-divider"></div>
+                {% if user.profile.is_moderator %}
+                <a class="dropdown-item" href="{{URL_ROOT}}/exam/toggle_moderator/"><i class="fa fa-exchange"></i>
+                  Switch To Student
+                </a>
+                <div class="dropdown-divider"></div>
+                {% endif %}
+                <a class="dropdown-item" href="{{ URL_ROOT }}/exam/reset/changepassword/"><i class="fa fa-key"></i> Change Password</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" id="user_logout" href="{{URL_ROOT}}/exam/logout/"><i class="fa fa-sign-out"></i> Logout</a>
+              </div>
+            </li>
+        </ul>
+    </div>
+  </div>
+</nav>
+</div>
+{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+        <h2 class="text-center">Permissions</h2>
+        <hr>
+
+        <div class="row">
+            <!-- TEAM ADD FORM -->
+            <div class="col-md-6">
+                <form action="{% url 'permissions:create_team' %}" method="POST">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="team_name">Team name</label>
+                        <input type="text" class="form-control" id="team_name" name="team_name" required>
+                    </div>
+
+                    <!-- TODO Better search -->
+                    <div class="form-group">
+                        <label for="members">Members</label>
+                        <select name="members" id="members" class="form-control" multiple>
+                        {% for s_user in users %}
+                            <option value="{{s_user}}">{{s_user}}</option>
+                        {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="courses">Courses</label>
+                        <select name="courses" id="courses" class="form-control" multiple>
+                        {% for course in courses %}
+                            <option value="{{course.id}}">{{course}}</option>
+                        {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="text-center">
+                        <input type="submit" value="Add team" class="btn btn-primary">
+                    </div>    
+                </form>
+            </div>
+
+            <div class="col-md-2"></div>
+            <!-- TEAMS -->
+            <div class="col-md-4">
+                <div>
+                    <h4>My Teams</h4>
+
+                    <table class="table">
+                        <thead>
+                            <th>Sr. No</th>
+                            <th>Team name</th>
+                            <th>Created by</th>
+                        </thead>
+                        <tbody>
+                            {% for team in teams %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <a href="{% url 'permissions:team_detail' team.id %}">{{team}}</a>
+                                    </td>
+                                    <td>{{ team.created_by | title }}</td>
+                                </tr>
+                            {% endfor %}
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    
+    </div>
+
+
+
+{% endblock content %}
