@@ -5,11 +5,11 @@ from django.contrib.auth.models import User
 
 from yaksh.models import Course
 
+
 # # Course, Quiz same as yaksh
 
 
 class GroupMixin(models.Model):
-
     class Meta:
         abstract = True
 
@@ -42,9 +42,11 @@ class Permission(models.Model):
 
     perm_type = models.CharField(max_length=20, choices=type_choices)
     team = models.ForeignKey(
-        Team, on_delete=models.CASCADE, null=True, related_name="permission_team")
+        Team, on_delete=models.CASCADE, null=True,
+        related_name="permission_team")
     content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE, related_name="custom_permission", null=True)
+        ContentType, on_delete=models.CASCADE,
+        related_name="custom_permission", null=True)
     object_id = models.PositiveIntegerField(null=True)
     content_object = GenericForeignKey('content_type', 'object_id')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True)

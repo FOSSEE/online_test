@@ -7,7 +7,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('yaksh', '0015_release_0_10_0'),
         ('permissions', '0005_team_courses'),
@@ -17,6 +16,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='permission',
             name='course',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='yaksh.Course'),
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to='yaksh.Course'),
         ),
     ]

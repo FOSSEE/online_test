@@ -8,7 +8,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -19,18 +18,27 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Permission',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('perm_type', models.CharField(choices=[('read', 'read'), ('write', 'write')], max_length=20)),
+                ('id', models.AutoField(auto_created=True, primary_key=True,
+                                        serialize=False, verbose_name='ID')),
+                ('perm_type', models.CharField(
+                    choices=[('read', 'read'), ('write', 'write')],
+                    max_length=20)),
                 ('entity', models.CharField(max_length=20)),
             ],
         ),
         migrations.CreateModel(
             name='Role',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, primary_key=True,
+                                        serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50)),
-                ('created_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='role_creator', to=settings.AUTH_USER_MODEL)),
-                ('members', models.ManyToManyField(to=settings.AUTH_USER_MODEL)),
+                ('created_by',
+                 models.ForeignKey(
+                     on_delete=django.db.models.deletion.CASCADE,
+                     related_name='role_creator',
+                     to=settings.AUTH_USER_MODEL)),
+                ('members',
+                 models.ManyToManyField(to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'abstract': False,
@@ -39,10 +47,17 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Team',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, primary_key=True,
+                                        serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50)),
-                ('created_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='team_creator', to=settings.AUTH_USER_MODEL)),
-                ('members', models.ManyToManyField(related_name='team_members', to=settings.AUTH_USER_MODEL)),
+                ('created_by',
+                 models.ForeignKey(
+                     on_delete=django.db.models.deletion.CASCADE,
+                     related_name='team_creator',
+                     to=settings.AUTH_USER_MODEL)),
+                ('members',
+                 models.ManyToManyField(related_name='team_members',
+                                        to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'abstract': False,
@@ -51,7 +66,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='role',
             name='team',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='permissions.Team'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to='permissions.Team'),
         ),
         migrations.AddField(
             model_name='permission',

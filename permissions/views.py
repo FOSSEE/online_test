@@ -160,8 +160,8 @@ def add_permission(request):
 
 
 def delete_permission(request, permission_id, team_id):
-    ''' 
-    Delete permission. 
+    '''
+    Delete permission.
     Only team creator can delete
     '''
 
@@ -195,8 +195,9 @@ def get_modules(request):
                 units.append({"key": "quiz_{}".format(learning_unit.quiz.id),
                               "name": learning_unit.quiz.description})
             else:
-                units.append({"key": "lesson_{}".format(learning_unit.lesson.id),
-                              "name": learning_unit.lesson.name})
+                units.append(
+                    {"key": "lesson_{}".format(learning_unit.lesson.id),
+                     "name": learning_unit.lesson.name})
 
     data = {
         "units": units

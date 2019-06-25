@@ -3,6 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from online_test import views
+
 admin.autodiscover()
 
 urlpatterns = [
@@ -18,6 +19,7 @@ urlpatterns = [
     url(r'^grades/', include('grades.urls', namespace='grades',
                              app_name='grades')),
     url(r'^permissions/', include('permissions.urls',
-                                  namespace='permissions', app_name='permissions'))
+                                  namespace='permissions',
+                                  app_name='permissions'))
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

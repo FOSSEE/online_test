@@ -7,7 +7,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('contenttypes', '0002_remove_content_type_name'),
         ('permissions', '0001_initial'),
@@ -21,7 +20,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='permission',
             name='content_type',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='custom_permission', to='contenttypes.ContentType'),
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='custom_permission',
+                to='contenttypes.ContentType'),
         ),
         migrations.AddField(
             model_name='permission',
@@ -31,6 +34,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='permission',
             name='perm_type',
-            field=models.CharField(choices=[('read', 'Read'), ('write', 'Write')], max_length=20),
+            field=models.CharField(
+                choices=[('read', 'Read'), ('write', 'Write')],
+                max_length=20),
         ),
     ]
