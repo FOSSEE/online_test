@@ -2431,7 +2431,8 @@ def edit_lesson(request, lesson_id=None, course_id=None):
                 raise Http404("Insufficient permissions")
 
     if request.method == "POST":
-        if lesson is None or lesson.creator == user or permission.perm_type == "write":
+        if lesson is None or lesson.creator == user or \
+                permission.perm_type == "write":
             if "Save" in request.POST:
                 lesson_form = LessonForm(request.POST, request.FILES,
                                          instance=lesson)
