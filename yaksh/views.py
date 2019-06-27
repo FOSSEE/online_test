@@ -161,7 +161,7 @@ def quizlist_user(request, enrolled=None, msg=None):
     if request.method == "POST":
         course_code = request.POST.get('course_code')
         hidden_courses = Course.objects.get_hidden_courses(code=course_code)
-        courses = hidden_courses if hidden_courses else None
+        courses = hidden_courses
         title = 'Search'
 
     elif enrolled is not None:
