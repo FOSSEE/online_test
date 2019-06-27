@@ -9,5 +9,3 @@ selenium==2.53.6
 coverage
 ruamel.yaml==0.15.23
 markdown==2.6.9
-beautifulsoup4==4.7.1
-lxml==4.3.3

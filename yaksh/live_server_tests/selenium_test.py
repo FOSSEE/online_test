@@ -9,7 +9,6 @@ import argparse
 from time import sleep
 from yaksh.models import Question, StandardTestCase
 
-from bs4 import BeautifulSoup
 import json
 
 from django.conf import settings
@@ -471,14 +470,11 @@ class SeleniumTest():
 
     def check_enroll(self, username):
         # Check whether the student is enrolled or not
-        WebDriverWait(
+        user = WebDriverWait(
             self.driver, 10).until(
             EC.presence_of_element_located(
                 (By.XPATH, "//*[@id='enrolled_table']/tbody/tr/td[3]")))
-        soup = BeautifulSoup(self.driver.page_source, features="lxml")
-        cell = soup.find("table").find(
-            "tbody").find_all("tr")[0].find_all("td")[2]
-        return (cell.get_text().lower().strip() == username)
+        return (user.text.lower().strip() == username)
 
     def submit(self):
         self.driver.find_element_by_id("submit").click()
