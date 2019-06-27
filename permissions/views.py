@@ -197,8 +197,8 @@ def get_modules(request):
 
         units = quiz_units_data + lesson_units_data
 
-    data = {
+    context = {
         "units": units
     }
 
-    return JsonResponse(data)
+    return render(request, 'units_form.html', context)

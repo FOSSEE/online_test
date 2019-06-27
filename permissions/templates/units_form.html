@@ -1,0 +1,7 @@
+<label for="units">Units</label>
+<select name="units" id="units" class="form-control" multiple>
+    <option disabled selected>No unit selected</option>
+    {% for unit in units %}
+        <option value={{unit.key}}>{{unit.name}}</option>
+    {% endfor %}
+</select>
