@@ -15,10 +15,11 @@ from .utils import format_perm
 
 @login_required
 def home(request):
+    user = request.user
     # Get users
-    users = User.objects.all().exclude(username=request.user.username)
-    teams = request.user.team_members.all()
-    courses = Course.objects.filter(creator=request.user)
+    users = User.objects.all().exclude(username=user.username)
+    teams = user.team_members.all()
+    courses = Course.objects.filter(creator=user)
 
     context = {
         "users": users,
@@ -32,6 +33,7 @@ def home(request):
 @require_POST
 @login_required
 def create_team(request):
+    user = request.user
     team_name = request.POST.get("team_name")
     members_list = request.POST.getlist("members")
     courses_list = request.POST.getlist("courses")
@@ -39,17 +41,15 @@ def create_team(request):
     if len(team_name) > 0:
         team = Team.objects.create(
             name=team_name,
-            created_by=request.user
+            created_by=user
         )
 
-        for member in members_list:
-            team.members.add(User.objects.get(username=member))
+        members = User.objects.filter(username__in=members_list)
+        team.members.add(*members)
+        team.members.add(user)
 
-        for course_id in courses_list:
-            team.courses.add(Course.objects.get(pk=course_id))
-
-        # Add creator to members
-        team.members.add(request.user)
+        courses = Course.objects.filter(id__in=courses_list)
+        team.courses.add(*courses)
 
         team.save()
 
@@ -58,9 +58,6 @@ def create_team(request):
 
 @login_required()
 def team_detail(request, team_id):
-    print("REQUEST PATH", request.path)
-    print("REQUEST INFO", request.path_info)
-
     users = User.objects.all()
 
     context = {
@@ -86,7 +83,6 @@ def team_detail(request, team_id):
         context["role_map"] = role_map
 
     except Team.DoesNotExist:
-        print("Team doesn't exist")
         return redirect("permissions:home")
 
     return render(request, "team_page.html", context)
@@ -97,11 +93,10 @@ def team_detail(request, team_id):
 def create_role(request):
     team_id = request.POST.get("team_id")
     role_name = request.POST.get("role_name")
-    members = request.POST.getlist("members")
+    members_list = request.POST.getlist("members")
 
     try:
         team = Team.objects.get(id=team_id)
-
         role = Role(
             name=role_name,
             created_by=request.user,
@@ -110,13 +105,12 @@ def create_role(request):
 
         role.save()
 
-        for member in members:
-            role.members.add(User.objects.get(username=member))
+        members = User.objects.filter(username__in=members_list)
+        role.members.add(*members)
 
         role.save()
     except Team.DoesNotExist:
-        print("Team doesn't exist")
-        pass
+        return redirect('permissions:home')
 
     return redirect('permissions:team_detail', team_id)
 
@@ -159,6 +153,7 @@ def add_permission(request):
     return redirect('permissions:team_detail', team_id)
 
 
+@login_required
 def delete_permission(request, permission_id, team_id):
     '''
     Delete permission.
@@ -172,10 +167,8 @@ def delete_permission(request, permission_id, team_id):
             Permission.objects.get(pk=permission_id).delete()
 
             return redirect('permissions:team_detail', team_id)
-
     except Team.DoesNotExist:
-        print("Team doesn't exist")
-        pass
+        return redirect('permissions:home')
 
 
 @login_required
@@ -189,15 +182,20 @@ def get_modules(request):
     units = []
 
     for module in modules:
-        learning_units = module.learning_unit.all()
-        for learning_unit in learning_units:
-            if learning_unit.type == "quiz":
-                units.append({"key": "quiz_{}".format(learning_unit.quiz.id),
-                              "name": learning_unit.quiz.description})
-            else:
-                units.append(
-                    {"key": "lesson_{}".format(learning_unit.lesson.id),
-                     "name": learning_unit.lesson.name})
+        quiz_units = module.get_quiz_units()
+        lesson_units = module.get_lesson_units()
+
+        quiz_units_data = [
+            {"key": "quiz_{}".format(quiz_unit.id),
+             "name": quiz_unit.description} for quiz_unit in quiz_units
+        ]
+
+        lesson_units_data = [
+            {"key": "lesson_{}".format(lesson_unit.id),
+             "name": lesson_unit.name} for lesson_unit in lesson_units
+        ]
+
+        units = quiz_units_data + lesson_units_data
 
     data = {
         "units": units

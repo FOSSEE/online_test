@@ -310,7 +310,6 @@ def add_quiz(request, quiz_id=None, course_id=None):
     user = request.user
     context = {}
     permission = None
-    TAG = 'ADD_QUIZ/' + str(user)
     # if not is_moderator(user):
     #     raise Http404('You are not allowed to view this course !')
     if quiz_id:
@@ -330,10 +329,8 @@ def add_quiz(request, quiz_id=None, course_id=None):
             permission = check_permission(course, quiz, user)
 
             if permission:
-                print(TAG, permission)
                 context["perm_type"] = permission.perm_type
             else:
-                print(TAG, "No perm")
                 raise Http404("Insufficient permissions")
 
     if request.method == "POST":
@@ -2415,7 +2412,6 @@ def edit_lesson(request, lesson_id=None, course_id=None):
     # else:
     #     redirect_url = "/exam/manage/courses/all_lessons/"
 
-    TAG = "LESSON/{}".format(user)
     context = {}
 
     if lesson and course:
@@ -2424,10 +2420,8 @@ def edit_lesson(request, lesson_id=None, course_id=None):
             permission = check_permission(course, lesson, user)
 
             if permission:
-                print(TAG, permission)
                 context["perm_type"] = permission.perm_type
             else:
-                print(TAG, "No perm")
                 raise Http404("Insufficient permissions")
 
     if request.method == "POST":

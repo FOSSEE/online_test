@@ -1,8 +1,8 @@
 def check_permission(course, unit, user):
     ''' Check if user has permissions for a given unit '''
 
-    teams = list(course.team_set.all())
-    user_team_count = user.team_members.filter(name__in=teams).count()
+    teams = course.team_set.values_list('id', flat=True)
+    user_team_count = user.team_members.filter(id__in=teams).count()
 
     if user_team_count:
 
@@ -20,8 +20,6 @@ def check_permission(course, unit, user):
 
             if len(object_perms):
                 return object_perms[0]
-
-    return None
 
 
 def format_perm(permissions):

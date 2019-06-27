@@ -4,7 +4,6 @@ const courseFormGroup = $(".form-group").eq(3);
 courseSelectField.change(function(e) {
   const { value } = e.target;
   const data = { course_id: value };
-  console.log(value);
 
   $.ajax({
     data,
