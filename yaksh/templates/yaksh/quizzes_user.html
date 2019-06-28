@@ -101,7 +101,7 @@
                             {% if user in course.data.requests.all %} <span class="badge badge-warning">Request Pending </span>
                             {% elif user in course.data.rejected.all %}<span class="badge badge-danger">Request Rejected</span>
                             {% elif user in course.data.students.all %}
-                                <a class="btn btn-success" href="{{URL_ROOT}}/exam/course_modules/{{course.data.id}}" >
+                                <a id="id_start" class="btn btn-success" href="{{URL_ROOT}}/exam/course_modules/{{course.data.id}}" >
                                 {% if course.completion_percentage > 0 %}
                                     CONTINUE
                                 {% else %}
@@ -112,9 +112,9 @@
                                 {% if course.data.active %}
                                     {% if course.data.is_active_enrollment %}
                                         {% if course.data.is_self_enroll %}
-                                            <a class="btn btn-success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.data.id }}">ENROLL</a>
+                                            <a id="id_enroll" class="btn btn-success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.data.id }}">ENROLL</a>
                                         {% else %}
-                                            <a class="btn btn-success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.data.id }}">ENROLL</a>
+                                            <a id="id_enroll" class="btn btn-success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.data.id }}">ENROLL</a>
                                         {% endif %}
                                     {% else %}
                                         <span class="btn btn-danger disabled" style="font-size: 15px">

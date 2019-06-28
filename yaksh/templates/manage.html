@@ -9,11 +9,11 @@
     <a class="navbar-brand" href="{{ URL_ROOT }}/exam/">
     <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH" style="margin-top: -3px; margin-left:-15px">
     </img>
-    </a>    
+    </a>
     <div class="collapse navbar-collapse" id="myNavbar">
         <ul class="nav nav-pills ml-auto">
-            <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/questions">Questions</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/courses">Courses</a></li>
+            <li class="nav-item"><a id="id_questions" class="nav-link" href="{{ URL_ROOT }}/exam/manage/questions">Questions</a></li>
+            <li class="nav-item"><a id="id_courses" class="nav-link" href="{{ URL_ROOT }}/exam/manage/courses">Courses</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/monitor">Monitor</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_root }}/exam/manage/grader"> Regrade </a></li>
@@ -23,7 +23,7 @@
                 <a class="dropdown-item" href="{{ URL_ROOT }}/exam/viewprofile/"><i class="fa fa-user"></i>  My Profile</a>
                 <div class="dropdown-divider"></div>
                 {% if user.profile.is_moderator %}
-                <a class="dropdown-item" href="{{URL_ROOT}}/exam/toggle_moderator/"><i class="fa fa-exchange"></i>
+                <a id="switch_to_student" class="dropdown-item" href="{{URL_ROOT}}/exam/toggle_moderator/"><i class="fa fa-exchange"></i>
                   Switch To Student
                 </a>
                 <div class="dropdown-divider"></div>
@@ -82,7 +82,7 @@
 {% endblock %}
 
 {% block footer %}
-  <!--footer-->   
+  <!--footer-->
   <footer class="container-fluid yakshfooter text-center ">
     <div class="row justify-content-center">
     <div class="col-sm-5 ">

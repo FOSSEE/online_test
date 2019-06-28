@@ -4,7 +4,7 @@ from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 
 # Local imports
-from yaksh.models import User, Profile, Course, create_group
+from yaksh.models import User, Profile, Course
 from yaksh.code_server import ServerPool
 from yaksh import settings
 from yaksh.live_server_tests.selenium_test import SeleniumTest
@@ -30,7 +30,20 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
 
         app_label = 'yaksh'
         group_name = 'moderator'
-        cls.group = create_group(group_name, app_label)
+
+        try:
+            cls.group = Group.objects.get(name=group_name)
+        except Group.DoesNotExist:
+            cls.group = Group(name=group_name)
+            cls.group.save()
+            # Get the models for the given app
+            content_types = ContentType.objects.filter(app_label=app_label)
+            # Get list of permissions for the models
+            permission_list = Permission.objects.filter(
+                content_type__in=content_types)
+            cls.group.permissions.add(*permission_list)
+            cls.group.save()
+
         if cls.group and isinstance(cls.group, Group):
             print('Moderator group added successfully')
 

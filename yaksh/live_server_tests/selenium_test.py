@@ -119,10 +119,9 @@ class SeleniumTest():
 
     def open_quiz(self):
         # open module link
-        self.driver.find_elements_by_partial_link_text(
-            'START')[0].click()
+        self.driver.find_element_by_id("id_start").click()
         WebDriverWait(self.driver, 5).until(
-            EC.presence_of_element_located((By.LINK_TEXT, "Start"))
+            EC.presence_of_element_located((By.ID, "id_start"))
         ).click()
         # open quiz link
         WebDriverWait(self.driver, 10).until(
@@ -207,16 +206,15 @@ class SeleniumTest():
 
     def open_questions(self):
         # Open questions page
-        self.driver.find_element_by_link_text("Questions").click()
+        self.driver.find_element_by_id("id_questions").click()
 
         test_file = open(os.path.join(TEST_DIR, 'test_questions.json'), 'r')
         test_questions = json.loads(test_file.read())
         test_file.close()
-        id = 1
-        for test_question in test_questions:
+
+        for (id, test_question) in enumerate(test_questions, start=1):
             question = self.get_demo_question(test_question, id)
             self.add_question(question=question)
-            id += 1
 
             # Go back to questions page
             self.driver.find_element_by_name(
@@ -253,17 +251,15 @@ class SeleniumTest():
         min_time = self.driver.find_element_by_id("id_min_time")
         min_time.send_keys(question.min_time)
 
-        id = 0
-        for test_case in question.testcase:
+        for (id, test_case) in enumerate(question.testcase):
             # Select testcase type
             self.drp_select("case_type", test_case.type)
 
             # Add testcase
             summary = self.driver.find_element_by_id(
-                "id_" + test_case.type + "_set-" + str(id) + "-test_case")
+                "id_{0}_set-{1}-test_case".format(test_case.type, str(id)))
             summary.send_keys(test_case.test_case)
 
-            id += 1
 
         # Save question
         self.driver.find_element_by_name(
@@ -272,29 +268,28 @@ class SeleniumTest():
 
     def open_courses(self):
         # Open courses page
-        self.driver.find_element_by_link_text("Courses").click()
+        self.driver.find_element_by_id("id_courses").click()
         self.open_quizzes()
 
     def open_quizzes(self):
         # Open all quizes page
-        self.driver.find_element_by_link_text("Add/View Quizzes").click()
+        self.driver.find_element_by_id("id_add_quiz").click()
 
         # Create list of questions to add
         questions = []
         test_file = open(os.path.join(TEST_DIR, 'test_questions.json'), 'r')
         test_questions = json.loads(test_file.read())
         test_file.close()
-        id = 1
-        for test_question in test_questions:
+
+        for (id, test_question) in enumerate(test_questions, start=1):
             question = self.get_demo_question(test_question, id)
             questions.append(question)
-            id += 1
 
         self.add_quiz(questions)
 
     def add_quiz(self, questions):
         # Click add new quiz button
-        self.driver.find_element_by_link_text("Add New Quiz").click()
+        self.driver.find_element_by_id("id_add_new_quiz").click()
 
         # Fill description
         self.set_description("demo_quiz")
@@ -303,7 +298,7 @@ class SeleniumTest():
         self.submit()
 
         # Click add button to add questions to the quiz
-        self.driver.find_element_by_link_text("Add").click()
+        self.driver.find_element_by_id("id_add_paper").click()
 
         for question in questions:
             # Select question type
@@ -332,12 +327,12 @@ class SeleniumTest():
 
     def open_modules(self):
         # Open all modules page
-        self.driver.find_element_by_link_text("Add/View Modules").click()
+        self.driver.find_element_by_id("id_add_module").click()
         self.add_module()
 
     def add_module(self):
         # Click add new module button
-        self.driver.find_element_by_link_text("Add new Module").click()
+        self.driver.find_element_by_id("id_add_new_module").click()
 
         # Fill name
         self.set_name("demo_module")
@@ -361,12 +356,12 @@ class SeleniumTest():
         self.submit()
 
         # Get back to modules page
-        self.driver.find_element_by_link_text(
-            "Back to Learning Modules").click()
+        self.driver.find_element_by_id(
+            "id_back_to_modules").click()
 
     def add_course(self):
         # Open add new course page
-        self.driver.find_element_by_link_text("Add New Course").click()
+        self.driver.find_element_by_id("id_add_course").click()
 
         # Fill name
         self.set_name(self.course_name)
@@ -386,7 +381,7 @@ class SeleniumTest():
 
     def design_course(self):
         # Open design course section
-        self.driver.find_element_by_link_text("Design Course").click()
+        self.driver.find_element_by_id("id_design_course").click()
 
         # Select module to add to the course
         module_check_box = WebDriverWait(
@@ -400,14 +395,14 @@ class SeleniumTest():
         self.driver.find_element_by_id("Add").click()
 
         # Get back to the courses page
-        self.driver.find_element_by_link_text("Back to Courses").click()
+        self.driver.find_element_by_id("id_back_to_courses").click()
 
     def add_lesson(self):
         # Open lessons page
-        self.driver.find_element_by_link_text("Add/View Lessons").click()
+        self.driver.find_element_by_id("id_add_lesson").click()
 
         # Click add new lesson button
-        self.driver.find_element_by_link_text("Add new Lesson").click()
+        self.driver.find_element_by_id("id_add_new_lesson").click()
 
         # Fill name
         self.set_name("demo_lesson")
@@ -419,7 +414,7 @@ class SeleniumTest():
         self.submit()
 
         # Open all courses page
-        self.driver.find_element_by_link_text("View all Courses").click()
+        self.driver.find_element_by_id("id_view_courses").click()
 
         # Open design learning module page
         self.driver.find_element_by_partial_link_text(
@@ -436,13 +431,13 @@ class SeleniumTest():
         self.submit()
 
         # Get back to courses page
-        self.driver.find_element_by_link_text(
-            "Back to Learning Modules").click()
+        self.driver.find_element_by_id(
+            "id_back_to_modules").click()
 
     def switch_to_student(self):
         # Switch to student
         self.driver.find_element_by_id("user_dropdown").click()
-        self.driver.find_element_by_link_text("Switch To Student").click()
+        self.driver.find_element_by_id("switch_to_student").click()
 
     def search_course(self, course_code):
         # Search the course
@@ -454,14 +449,14 @@ class SeleniumTest():
 
     def enroll(self):
         # Click enroll
-        self.driver.find_element_by_link_text("ENROLL").click()
+        self.driver.find_element_by_id("id_enroll").click()
 
     def switch_to_moderator(self):
         # Switch to moderator
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "user_dropdown"))
         ).click()
-        self.driver.find_element_by_link_text("Switch To Moderator").click()
+        self.driver.find_element_by_id("switch_to_moderator").click()
 
     def open_course_detail(self):
         WebDriverWait(self.driver, 10).until(
