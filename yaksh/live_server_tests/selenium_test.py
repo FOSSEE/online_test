@@ -260,7 +260,6 @@ class SeleniumTest():
                 "id_{0}_set-{1}-test_case".format(test_case.type, str(id)))
             summary.send_keys(test_case.test_case)
 
-
         # Save question
         self.driver.find_element_by_name(
             "save_question"
@@ -361,7 +360,11 @@ class SeleniumTest():
 
     def add_course(self):
         # Open add new course page
-        self.driver.find_element_by_id("id_add_course").click()
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located(
+                (By.ID, "id_add_course")
+            )
+        ).click()
 
         # Fill name
         self.set_name(self.course_name)
