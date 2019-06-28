@@ -17,7 +17,7 @@ CHECK_FILE = 'server_running.txt'
 CHECK_FILE_PATH = os.path.join(SCRIPT_DIR, 'yaksh_data', CHECK_FILE)
 OS_NAME = sys.platform
 
-python_version="python" if sys.version_info[0] < 3 else "python3"
+python_version = "python" if sys.version_info[0] < 3 else "python3"
 
 def create_dir(path):
     if not os.path.exists(path):
