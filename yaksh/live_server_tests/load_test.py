@@ -1,6 +1,6 @@
 from threading import Thread
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 
 # Local imports
@@ -28,21 +28,9 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
         cls.code_server_thread = t = Thread(target=code_server_pool.run)
         t.start()
 
-        app_label = 'yaksh'
         group_name = 'moderator'
 
-        try:
-            cls.group = Group.objects.get(name=group_name)
-        except Group.DoesNotExist:
-            cls.group = Group(name=group_name)
-            cls.group.save()
-            # Get the models for the given app
-            content_types = ContentType.objects.filter(app_label=app_label)
-            # Get list of permissions for the models
-            permission_list = Permission.objects.filter(
-                content_type__in=content_types)
-            cls.group.permissions.add(*permission_list)
-            cls.group.save()
+        cls.group = Group.objects.get_or_create(name=group_name)
 
         if cls.group and isinstance(cls.group, Group):
             print('Moderator group added successfully')
