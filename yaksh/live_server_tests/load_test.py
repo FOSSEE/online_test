@@ -30,7 +30,7 @@ class YakshSeleniumTests(StaticLiveServerTestCase):
 
         group_name = 'moderator'
 
-        cls.group = Group.objects.get_or_create(name=group_name)
+        cls.group = Group.objects.get_or_create(name=group_name)[0]
 
         if cls.group and isinstance(cls.group, Group):
             print('Moderator group added successfully')
