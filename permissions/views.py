@@ -38,7 +38,7 @@ def create_team(request):
     members_list = request.POST.getlist("members")
     courses_list = request.POST.getlist("courses")
 
-    if len(team_name) > 0:
+    if team_name:
         team = Team.objects.create(
             name=team_name,
             created_by=user
@@ -50,8 +50,6 @@ def create_team(request):
 
         courses = Course.objects.filter(id__in=courses_list)
         team.courses.add(*courses)
-
-        team.save()
 
     return redirect("permissions:home")
 
@@ -81,7 +79,6 @@ def team_detail(request, team_id):
             role_map[member.username] = ",".join(member_roles)
 
         context["role_map"] = role_map
-
     except Team.DoesNotExist:
         return redirect("permissions:home")
 
@@ -107,8 +104,6 @@ def create_role(request):
 
         members = User.objects.filter(username__in=members_list)
         role.members.add(*members)
-
-        role.save()
     except Team.DoesNotExist:
         return redirect('permissions:home')
 
@@ -148,8 +143,6 @@ def add_permission(request):
 
         permission.role.add(role)
 
-        permission.save()
-
     return redirect('permissions:team_detail', team_id)
 
 
@@ -161,9 +154,9 @@ def delete_permission(request, permission_id, team_id):
     '''
 
     try:
-        team = Team.objects.get(pk=team_id)
+        team = Team.objects.get(pk=team_id,created_by=request.user)
 
-        if team.created_by == request.user:
+        if team:
             Permission.objects.get(pk=permission_id).delete()
 
             return redirect('permissions:team_detail', team_id)
@@ -182,20 +175,7 @@ def get_modules(request):
     units = []
 
     for module in modules:
-        quiz_units = module.get_quiz_units()
-        lesson_units = module.get_lesson_units()
-
-        quiz_units_data = [
-            {"key": "quiz_{}".format(quiz_unit.id),
-             "name": quiz_unit.description} for quiz_unit in quiz_units
-        ]
-
-        lesson_units_data = [
-            {"key": "lesson_{}".format(lesson_unit.id),
-             "name": lesson_unit.name} for lesson_unit in lesson_units
-        ]
-
-        units = quiz_units_data + lesson_units_data
+        units.extend(module.get_formatted_units())
 
     context = {
         "units": units
