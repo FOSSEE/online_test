@@ -16,8 +16,7 @@ SRC_IMAGE_NAME = 'fossee/yaksh_codeserver'
 CHECK_FILE = 'server_running.txt'
 CHECK_FILE_PATH = os.path.join(SCRIPT_DIR, 'yaksh_data', CHECK_FILE)
 OS_NAME = sys.platform
-
-python_version = "python" if sys.version_info[0] < 3 else "python3"
+PYTHON_VERSION = "python" if sys.version_info[0] < 3 else "python3"
 
 def create_dir(path):
     if not os.path.exists(path):
@@ -52,22 +51,22 @@ def get_cmd(run_as_cmd, base_cmd):
 @task
 def setupdb(ctx):
     print("** Setting up & migrating database **")
-    ctx.run("{} manage.py makemigrations".format(python_version))
-    ctx.run("{} manage.py migrate".format(python_version))
+    ctx.run("{} manage.py makemigrations".format(PYTHON_VERSION))
+    ctx.run("{} manage.py migrate".format(PYTHON_VERSION))
     print("** Done! Migrations complete **")
 
 
 @task
 def loadfixtures(ctx):
     print("** Loading fixtures into database **")
-    ctx.run("{} manage.py loaddata demo_fixtures.json".format(python_version))
+    ctx.run("{} manage.py loaddata demo_fixtures.json".format(PYTHON_VERSION))
     print("** Done! Loaded fixtures into database **")
 
 
 @task(setupdb, loadfixtures)
 def serve(ctx):
     print("** Running the Django web server. Press Ctrl-C to Exit **")
-    ctx.run("{} manage.py runserver".format(python_version))
+    ctx.run("{} manage.py runserver".format(PYTHON_VERSION))
 
 
 @task
@@ -103,7 +102,7 @@ def start(ctx, ports=SERVER_POOL_PORT, image=SRC_IMAGE_NAME, unsafe=False,
     if unsafe:
         with ctx.cd(SCRIPT_DIR):
             print("** Initializing local code server **")
-            base_cmd = "{} -m yaksh.code_server".format(python_version)
+            base_cmd = "{} -m yaksh.code_server".format(PYTHON_VERSION)
             run_as_cmd = run_as(OS_NAME)
             cmd = get_cmd(run_as_cmd, base_cmd)
             ctx.run(cmd)
@@ -218,19 +217,19 @@ def deploy(ctx, fixtures=False, static=True):
 
     print("** Setting up & migrating database **")
     base_make_migrate_cmd = "docker exec -i yaksh_django " \
-        " {} manage.py makemigrations".format(python_version)
+        " {} manage.py makemigrations".format(PYTHON_VERSION)
     cmd = get_cmd(run_as_cmd, base_make_migrate_cmd)
     ctx.run(cmd)
 
     base_migrate_cmd = "docker exec -i yaksh_django " \
-        "{} manage.py migrate".format(python_version)
+        "{} manage.py migrate".format(PYTHON_VERSION)
     cmd = get_cmd(run_as_cmd, base_migrate_cmd)
     ctx.run(cmd)
     print("** Done! Migrations complete **")
 
     if fixtures:
         base_fixture_cmd = "docker exec -i yaksh_django " \
-            "{} manage.py loaddata demo_fixtures.json".format(python_version)
+            "{} manage.py loaddata demo_fixtures.json".format(PYTHON_VERSION)
         cmd = get_cmd(run_as_cmd, base_fixture_cmd)
         print("** Loading fixtures into database **")
         ctx.run(cmd)
@@ -238,7 +237,7 @@ def deploy(ctx, fixtures=False, static=True):
 
     if static:
         base_static_cmd = "docker exec -i yaksh_django " \
-            "{} manage.py collectstatic".format(python_version)
+            "{} manage.py collectstatic".format(PYTHON_VERSION)
         cmd = get_cmd(run_as_cmd, base_static_cmd)
         print("** Setting up static assets **")
         ctx.run(cmd)
