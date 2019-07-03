@@ -21,7 +21,7 @@
 						  {% for room in user_rooms %}
 						    <div class="chat_list room_id_{{room.id}}" id="room_id_{{room.id}}">
 						      <div class="chat_people">
-								<a href="#" class="view_message" id = "view_message_{{room.id}}" data-catid="{{ room.id }}" room-title="{{room.title}}" course-id="{{ room.course.id }}">
+								<a href="#{{room.id}}" class="view_message" id = "view_message_{{room.id}}" data-catid="{{ room.id }}" room-title="{{room.title}}" course-id="{{ room.course.id }}">
 							        <div class="chat_img"></div>
 							        <div class="chat_ib">
 							          <p class="text-info"><span class="title_room ">{{room.title}}</span></p>
@@ -82,6 +82,16 @@
 				}
 			});
 		});
+
+		$('a').on('click', function(event){
+			localStorage.setItem('lastRoom', $(this).attr('href'));
+		});
+
+		var lastRoom = localStorage.getItem('lastRoom');
+		if(lastRoom){
+			console.log(lastRoom);
+			 $('[href="' + lastRoom + '"]').click();
+		}
 
 		var firstName = $('#message_sender').text();
 		var initials = firstName.charAt(0).toUpperCase();
