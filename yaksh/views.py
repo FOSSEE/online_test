@@ -2954,4 +2954,3 @@ def download_course(request, course_id):
     )
     response.write(zip_file.read())
     return response
-    # return HttpResponse("Success")

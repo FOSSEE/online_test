@@ -575,16 +575,6 @@ class Quiz(models.Model):
         sub_folder_name = os.sep.join((
             course_name, module_name, quiz_name
             ))
-        # lesson_files = self.get_files()
-        # if self.video_file:
-        #     video_file = os.sep.join((sub_folder_name, os.path.basename(
-        #                 self.video_file.name)))
-        #     zip_file.writestr(video_file, self.video_file.read())
-        # for lesson_file in lesson_files:
-        #     if os.path.exists(lesson_file.file.path):
-        #         filename = os.sep.join((sub_folder_name, os.path.basename(
-        #             lesson_file.file.name)))
-        #         zip_file.writestr(filename, lesson_file.file.read())
         unit_file_path = os.sep.join((
             path, "templates", "yaksh", "quiz.html"
             ))
