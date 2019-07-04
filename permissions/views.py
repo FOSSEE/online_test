@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import JsonResponse
+from django.http import Http404
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.http import require_POST
 
@@ -54,6 +54,17 @@ def create_team(request):
     return redirect("permissions:home")
 
 
+@login_required
+def delete_team(request, team_id):
+    try:
+        team = Team.objects.get(pk=team_id, created_by=request.user)
+        team.delete()
+
+        return redirect('permissions:home')
+    except Team.DoesNotExist:
+        raise Http404("Only creator can delete team")
+
+
 @login_required()
 def team_detail(request, team_id):
     users = User.objects.all()
@@ -92,8 +103,10 @@ def create_role(request):
     role_name = request.POST.get("role_name")
     members_list = request.POST.getlist("members")
 
+    user = request.user
+
     try:
-        team = Team.objects.get(id=team_id)
+        team = Team.objects.get(id=team_id, created_by=user)
         role = Role(
             name=role_name,
             created_by=request.user,
@@ -105,7 +118,7 @@ def create_role(request):
         members = User.objects.filter(username__in=members_list)
         role.members.add(*members)
     except Team.DoesNotExist:
-        return redirect('permissions:home')
+        raise Http404('Only team creator can assign roles')
 
     return redirect('permissions:team_detail', team_id)
 
@@ -154,7 +167,7 @@ def delete_permission(request, permission_id, team_id):
     '''
 
     try:
-        team = Team.objects.get(pk=team_id,created_by=request.user)
+        team = Team.objects.get(pk=team_id, created_by=request.user)
 
         if team:
             Permission.objects.get(pk=permission_id).delete()
@@ -175,7 +188,13 @@ def get_modules(request):
     units = []
 
     for module in modules:
-        units.extend(module.get_formatted_units())
+        learning_unit_data = module.get_learning_units().values(
+            'quiz__id',
+            'quiz__description',
+            'lesson__id',
+            'lesson__name')
+
+        units.extend(learning_unit_data)
 
     context = {
         "units": units

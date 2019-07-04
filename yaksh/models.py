@@ -652,23 +652,6 @@ class LearningModule(models.Model):
     def get_learning_units(self):
         return self.learning_unit.order_by("order")
 
-    def get_formatted_units(self):
-        units = []
-
-        for unit in self.get_learning_units():
-            if unit.type == "quiz":
-                units.append({
-                    "key" : "quiz_{}".format(unit.quiz.id),
-                    "name" : unit.quiz.description
-                })
-            elif unit.type == "lesson":
-                units.append({
-                    "key" : "lesson_{}".format(unit.lesson.id),
-                    "name" : unit.lesson.name
-                })
-
-        return units
-
     def get_added_quiz_lesson(self):
         learning_units = self.learning_unit.order_by("order")
         added_quiz_lessons = []

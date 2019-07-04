@@ -2,6 +2,10 @@
 <select name="units" id="units" class="form-control" multiple>
     <option disabled selected>No unit selected</option>
     {% for unit in units %}
-        <option value={{unit.key}}>{{unit.name}}</option>
+        {% if unit.quiz__id %}
+            <option value="quiz_{{ unit.quiz__id }}">{{ unit.quiz__description }}</option>
+        {% else %}
+            <option value="lesson_{{ unit.lesson__id }}">{{ unit.lesson__name }}</option>
+        {% endif %}
     {% endfor %}
 </select>
