@@ -191,7 +191,6 @@ class LearningModuleTestCases(unittest.TestCase):
         self.prereq_course.students.add(self.student)
         self.prereq_course.save()
 
-
     def tearDown(self):
         # Remove unit from course status completed units
         self.course_status.completed_units.remove(self.learning_unit_one)
@@ -2202,28 +2201,39 @@ class RoomMessageTestCases(unittest.TestCase):
     def setUp(self):
 
         self.user1 = User.objects.create(username='bart',
-            password='bart', email='bart@test.com')
+                                         password='bart',
+                                         email='bart@test.com')
         Profile.objects.create(user=self.user1, roll_number=2,
-            institute='IIT', department='Chemical', position='Student')
+                               institute='IIT', department='Chemical',
+                               position='Student')
 
         self.moderator = User.objects.create(username='moderator',
-            password='moderator', email='moderator@test.com')
+                                             password='moderator',
+                                             email='moderator@test.com')
         Profile.objects.create(user=self.moderator, roll_number=3,
-            is_moderator=True, department='Chemical', position='Teacher')
+                               is_moderator=True, department='Chemical',
+                               position='Teacher')
 
-        self.teacher = User.objects.create_user(username='teacher_profile',
-            password='teacher_profile', email='teacher_profile@test.com')
+        self.teacher = User.objects.create_user(
+            username='teacher_profile',
+            password='teacher_profile',
+            email='teacher_profile@test.com'
+        )
         Profile.objects.create(
             user=self.teacher, roll_number=123, institute='IIT',
             is_moderator=True, department='Chemical', position='Teacher'
         )
 
         self.course = Course.objects.create(name='Python Course',
-            enrollment="Enroll Request", creator=self.user1)
+                                            enrollment="Enroll Request",
+                                            creator=self.user1)
 
-        Room.objects.create(user=self.user1, title='room1',
+        Room.objects.create(
+            user=self.user1,
+            title='room1',
             course=self.course,
-            timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc))
+            timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc)
+        )
 
         self.message_before_count = Message.objects.count()
 
@@ -2238,9 +2248,12 @@ class RoomMessageTestCases(unittest.TestCase):
     def test_room_message_from_user(self):
         room = Room.objects.get(title='room1')
         receiver = self.course.get_staff()
-        msg = Message.objects.create(room=room, sender=self.user1,
+        msg = Message.objects.create(
+            room=room,
+            sender=self.user1,
             message='message from user1',
-            timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc))
+            timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc)
+        )
         msg.receiver.add(*receiver)
         message_count = room.messages.count()
 
@@ -2248,24 +2261,29 @@ class RoomMessageTestCases(unittest.TestCase):
         self.assertEquals(msg.room.title, 'room1')
         self.assertEquals(msg.sender.username, 'bart')
         self.assertNotEqual(self.message_before_count, message_count)
-        self.assertEquals(str(msg), msg.room.title + " --> " +msg.message)
+        self.assertEquals(str(msg), msg.room.title + " --> " + msg.message)
 
     def test_room_message_from_moderator(self):
         room = Room.objects.get(title='room1')
         receiver = self.course.get_staff()
-        msg1 = Message.objects.create(room=room, sender=self.user1,
+        msg1 = Message.objects.create(
+            room=room,
+            sender=self.user1,
             message='message from user1',
-            timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc))
-        msg2 = Message.objects.create(room=room, sender=self.teacher,
+            timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc)
+        )
+        msg2 = Message.objects.create(
+            room=room,
+            sender=self.teacher,
             message='reply from teacher',
-            timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc))
+            timestamp=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc)
+        )
         msg1.receiver.add(*receiver)
         msg1.receiver.add(*receiver)
         message_count = room.messages.count()
         self.assertEquals(msg1.message, 'message from user1')
         self.assertEquals(msg2.message, 'reply from teacher')
         self.assertNotEqual(self.message_before_count, message_count)
-
 
     def tearDown(self):
         self.user1.profile.delete()
