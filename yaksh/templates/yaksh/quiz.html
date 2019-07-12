@@ -22,7 +22,7 @@
     </div>
 </nav>
 <div class="container" style="margin-top:50px">
-    
+
     <div class="row">
         <nav class="col-md-2 d-none d-md-block bg-light sidebar">
           <div class="sidebar-sticky">
@@ -74,7 +74,7 @@
                     <br>
                     <div class="text-center">
                         <!-- Change Yaksh TODO -->
-                        <a class="btn btn-success" href="http://127.0.0.1:8000/exam/start/{{quiz.questionpaper_set.get.id}}/{{module.id}}/{{course.id}}" target="_blank">{{quiz.description}}</a>
+                        <a class="btn btn-success" href="http://yaksh.fossee.in/exam/start/{{quiz.questionpaper_set.get.id}}/{{module.id}}/{{course.id}}" target="_blank">{{quiz.description}}</a>
                         {% if next_unit.type == 'lesson' %}
                         <a class="btn btn-info" href="../{{next_unit.lesson.name|replace_spaces}}/{{next_unit.lesson.name|replace_spaces}}.html">
                             Next
@@ -111,4 +111,4 @@ $(document).ready(function(){
     }
 });
 </script>
-</html>    
+</html>
