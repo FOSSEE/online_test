@@ -578,11 +578,12 @@ class Quiz(models.Model):
         unit_file_path = os.sep.join((
             path, "templates", "yaksh", "quiz.html"
             ))
-        quiz_data = {"course": course, "module": module, 
-            "quiz": self, "next_unit": next_unit}
+        quiz_data = {"course": course, "module": module,
+                     "quiz": self, "next_unit": next_unit}
 
         write_templates_to_zip(zip_file, unit_file_path, quiz_data,
                                quiz_name, sub_folder_name)
+
 
 ##########################################################################
 class LearningUnit(models.Model):
@@ -798,9 +799,17 @@ class LearningModule(models.Model):
         for idx, unit in enumerate(units):
             next_unit = units[(idx + 1) % len(units)]
             if unit.type == 'lesson':
-                unit.lesson._add_lesson_to_zip(next_unit, self, course, zip_file, path)
+                unit.lesson._add_lesson_to_zip(next_unit,
+                                               self,
+                                               course,
+                                               zip_file,
+                                               path)
             else:
-                unit.quiz._add_quiz_to_zip(next_unit, self, course, zip_file, path)
+                unit.quiz._add_quiz_to_zip(next_unit,
+                                           self,
+                                           course,
+                                           zip_file,
+                                           path)
 
         module_file_path = os.sep.join((
             path, "templates", "yaksh", "module.html"
@@ -1068,7 +1077,6 @@ class Course(models.Model):
     def create_zip(self, path, static_files):
         zip_file_name = string_io()
         with zipfile.ZipFile(zip_file_name, "a") as zip_file:
-            # print("HELLOOOOOOO - - - -- - - -- ")
             course_name = self.name.replace(" ", "_")
             modules = self.get_learning_modules()
             file_path = os.sep.join((path, "templates", "yaksh", "index.html"))
