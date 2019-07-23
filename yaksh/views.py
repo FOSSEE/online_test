@@ -165,7 +165,7 @@ def quizlist_user(request, enrolled=None, msg=None):
         title = 'Search'
 
     elif enrolled is not None:
-        courses = user.students.all().order_by('-id')
+        courses = user.students.filter(is_trial=False).order_by('-id')
         title = 'Enrolled Courses'
     else:
         courses = Course.objects.filter(
