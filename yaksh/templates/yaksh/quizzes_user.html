@@ -14,7 +14,7 @@
     {% endif %}
 
     {% block navtab %}
-        {% if 'Enrolled Courses' not in title%} 
+        {% if 'Enrolled Courses' not in title%}
             <div class="container">
                 <div class="nav nav-tabs yakshnavtab">
                   <li class="nav-item" >
@@ -25,13 +25,13 @@
                   </li>
                 </div>
             </div>
-            <div class="row justify-content-center yakshwell"> 
+            <div class="row justify-content-center yakshwell">
             <div class="col-md-6">
                 <div class="yakshwell">
                         <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" >
                             {% csrf_token %}
                             <div class="col-md-12">
-                                <div class="input-group"> 
+                                <div class="input-group">
                                     <div class="input-group-prepend">
                                     <span class="input-group-text" id="basic-addon1">Search Course</span>
                                     </div>
@@ -63,7 +63,7 @@
     {% if not courses %}
         <center><div class="col-md-8 alert alert-warning animated flash" role="alert">
             No Courses to display
-        </div></center>    
+        </div></center>
     {% endif %}
 
     <div class="row justify-content-md-center align-items-center" >
@@ -89,46 +89,44 @@
                         {{course.data.days_before_start}} day(s) to start
                     </span>
                     {% endif %}
-                    
+
                 </div>
-                <div class="container col-sm-4 offset-sm-2">
-                    <span class="row align-items-center">
-                        <span class="col-sm-4" >   
-                        <a class="btn btn-primary" data-toggle="collapse" href="#collapsedetails{{course.data.id}}" role="button" aria-expanded="false" aria-controls="#collapsedetails{{course.data.id}}">DETAILS</a>
-                        </span>
-                        
-                        <span class="col-sm-auto">
-                            {% if user in course.data.requests.all %} <span class="badge badge-warning">Request Pending </span>
-                            {% elif user in course.data.rejected.all %}<span class="badge badge-danger">Request Rejected</span>
-                            {% elif user in course.data.students.all %}
-                                <a class="btn btn-success" href="{{URL_ROOT}}/exam/course_modules/{{course.data.id}}" >
-                                {% if course.completion_percentage > 0 %}
-                                    CONTINUE
+                <div class="container-fluid">
+                    <a class="btn btn-primary" data-toggle="collapse" href="#collapsedetails{{course.data.id}}" role="button" aria-expanded="false" aria-controls="#collapsedetails{{course.data.id}}">DETAILS</a>
+                    {% if user in course.data.requests.all %} <span class="badge badge-warning">Request Pending </span>
+                    {% elif user in course.data.rejected.all %}<span class="badge badge-danger">Request Rejected</span>
+                    {% elif user in course.data.students.all %}
+                    {% if course.data.has_lessons %}
+                        <a href="{% url 'yaksh:download_course' course.data.id %}" data-toggle="tooltip" title="Download course content" class="btn btn-primary">
+                            Download Course
+                        </a>
+                    {% endif %}
+                    <a class="btn btn-success" href="{{URL_ROOT}}/exam/course_modules/{{course.data.id}}" >
+                        {% if course.completion_percentage > 0 %}
+                            CONTINUE
+                        {% else %}
+                            START
+                        {% endif %}
+                    </a>
+                    {% else %}
+                        {% if course.data.active %}
+                            {% if course.data.is_active_enrollment %}
+                                {% if course.data.is_self_enroll %}
+                                    <a class="btn btn-success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.data.id }}">ENROLL</a>
                                 {% else %}
-                                    START
+                                    <a class="btn btn-success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.data.id }}">ENROLL</a>
                                 {% endif %}
-                                </a>
                             {% else %}
-                                {% if course.data.active %}
-                                    {% if course.data.is_active_enrollment %}
-                                        {% if course.data.is_self_enroll %}
-                                            <a class="btn btn-success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.data.id }}">ENROLL</a>
-                                        {% else %}
-                                            <a class="btn btn-success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.data.id }}">ENROLL</a>
-                                        {% endif %}
-                                    {% else %}
-                                        <span class="btn btn-danger disabled" style="font-size: 15px">
-                                            Enrollment Closed
-                                        </span>
-                                    {% endif %}
-                                {% else %}
-                                    <span class="badge badge-danger" style="font-size: 15px">
-                                        Inactive Course
-                                    </span>
-                                {% endif %}
+                                <span class="btn btn-danger disabled" style="font-size: 15px">
+                                    Enrollment Closed
+                                </span>
                             {% endif %}
-                        </span>
-                    </span>
+                        {% else %}
+                            <span class="badge badge-danger" style="font-size: 15px">
+                                Inactive Course
+                            </span>
+                        {% endif %}
+                    {% endif %}
                 </div>
                      <!-- About course-->
              <div class="collapse container-fluid" id="collapsedetails{{course.data.id}}">
@@ -147,7 +145,7 @@
                                     {% for module in course.data.get_learning_modules %}
                                     <li>{{module.name|title}}</li>
                                     {% endfor %}
-                                </ul>    
+                                </ul>
                             </p>
                         {% endif %}
                         <p> <span class="yakshred yakshheading">Instructor</span><br>
@@ -178,8 +176,8 @@
                         </div>
                         <div class="row my-3">
                                 <div class="progress-bar bg-success" role="progressbar" style="width:{{course.completion_percentage}}%"; color: black;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">{{course.completion_percentage}} % completed
-                                </div>
-                        </div>                            
+                        </div>
+                        </div>
                     </div>
                 </div>
               </div>
