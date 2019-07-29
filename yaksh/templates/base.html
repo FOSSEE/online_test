@@ -41,10 +41,8 @@
   <script>
       new WOW().init();
   </script>
-  <script>
-    {% block script %}
-    {% endblock %}
-  </script>
+  {% block script %}
+  {% endblock %}
 </head>
 
 <body {% block onload %} {% endblock %} class="yaksh">
