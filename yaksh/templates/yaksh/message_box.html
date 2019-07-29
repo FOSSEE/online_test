@@ -53,7 +53,7 @@
 
 {% endblock %}
 {% block script %}
-
+<script type="text/javascript">
 	var room_id = "{{ user_rooms.0.id }}";
 	var course_id = "{{user_rooms.0.course.id}}";
 	var room_title = "{{user_rooms.0.title}}";
@@ -98,4 +98,5 @@
 		var incoming_msg_img = $('.chat_img').text(initials);
 		$('.room_title').html(room_title);
 	});
+</script>
 {% endblock %}

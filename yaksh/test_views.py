@@ -26,7 +26,7 @@ from yaksh.models import (
     User, Profile, Question, Quiz, QuestionPaper, AnswerPaper, Answer, Course,
     AssignmentUpload, McqTestCase, IntegerTestCase, StringTestCase,
     FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,
-    LessonFile, CourseStatus, dict_to_yaml
+    LessonFile, CourseStatus, dict_to_yaml, Room, Message
 )
 from yaksh.views import add_as_moderator
 from yaksh.decorators import user_has_profile
@@ -6217,3 +6217,132 @@ class TestLessons(TestCase):
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['data'], '<p>test description</p>')
+
+
+class TestFeedback(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
+
+        # Create a moderator
+        self.user = User.objects.create_user(username='demo_user',
+                                             password='demo',
+                                             first_name='first_name',
+                                             last_name='last_name',
+                                             email='demo@test.com')
+
+        Profile.objects.create(user=self.user, roll_number=10, institute='IIT',
+                               department='Chemical', position='Moderator',
+                               timezone='UTC', is_moderator=True)
+
+        # create a student
+        self.student = User.objects.create_user(username='demo_student',
+                                                password='demo_student',
+                                                first_name='first_name',
+                                                last_name='last_name',
+                                                email='demo@student.com')
+
+        Profile.objects.create(user=self.student, roll_number=10,
+                               institute='IIT', department='Chemical',
+                               position='student', timezone='UTC')
+
+        # create a teacher to add to the course
+        self.teacher = User.objects.create_user(username='demo_teacher',
+                                                password='demo_teacher',
+                                                first_name='first_name',
+                                                last_name='last_name',
+                                                email='demo@student.com')
+
+        Profile.objects.create(user=self.teacher, roll_number=10,
+                               institute='IIT', department='Chemical',
+                               position='Moderator', timezone='UTC',
+                               is_moderator=True)
+
+         # Add to moderator group
+        self.mod_group.user_set.add(self.user)
+        self.mod_group.user_set.add(self.teacher)
+
+        self.course = Course.objects.create(name="Python Course",
+                                            enrollment="Open Enrollment",
+                                            creator=self.user)
+
+        self.lesson = Lesson.objects.create(name="test lesson",
+                                            description="test description",
+                                            creator=self.user)
+
+        self.lesson2 = Lesson.objects.create(name="test lesson2",
+                                             description="test description2",
+                                             creator=self.user)
+
+        self.learning_unit = LearningUnit.objects.create(order=0,
+                                                         type="lesson",
+                                                         lesson=self.lesson)
+
+        self.learning_unit2 = LearningUnit.objects.create(order=0,
+                                                          type="lesson",
+                                                          lesson=self.lesson2)
+
+        self.learning_module = LearningModule.objects.create(
+            order=0, name="test module", description="module",
+            check_prerequisite=False, creator=self.user
+            )
+
+        self.learning_module2 = LearningModule.objects.create(
+            order=1, name="test module 2", description="module 2",
+            check_prerequisite=True, creator=self.user
+            )
+
+        self.learning_module.learning_unit.add(self.learning_unit.id)
+        self.learning_module2.learning_unit.add(self.learning_unit2.id)
+        self.course.learning_module.add(*[
+            self.learning_module.id, self.learning_module2.id])
+        self.course.teachers.add(self.teacher.id)
+
+        self.room = Room.objects.create(
+            course=self.course1,
+            title="test_room",
+            user=self.student,
+            timestamp=timezone.now()
+        )
+
+        def test_create_new_room_with_message(self):
+            self.client.login(
+                username=self.student.username,
+                password=self.student.password
+            )
+            data = {
+                "room_title_value":"Test Room",
+                "course_id":self.course.id,
+                "the_post": "Test message",
+            }
+            response = self.client.get('yaksh:send_messasge', data=data)
+            self.assertEqual(response.status_code, 200)
+
+        def test_create_message_for_already_created_room(self):
+            self.client.login(
+                username=self.user.username,
+                password=self.user_plaintext_pass
+            )
+
+            data = {
+                "room_title": self.room.title,
+                "course_id": self.room.course,
+                "the_post": "Test message",
+            }
+
+            response = self.client.get('yaksh:send_message', data=data)
+            self.assertEqual(response.status_code, 200)
+
+
+        def tearDown(self):
+            self.user.delete()
+            self.student.delete()
+            self.teacher.delete()
+            self.course.delete()
+            self.learning_unit.delete()
+            self.learning_unit2.delete()
+            self.learning_module.delete()
+            self.learning_module2.delete()
+            self.lesson.delete()
+            self.lesson2.delete()
+            self.mod_group.delete()

@@ -2986,7 +2986,6 @@ def send_message(request, course_id=None, room_id=None, room_title=None):
                 'room_id': room_id
             })
         else:
-            # if room_id is None:
             room_title = request.POST.get("room_title_value", None)
             room, created = Room.objects.get_or_create(user=user,
                                                        title=room_title,
