@@ -298,7 +298,7 @@ class Lesson(models.Model):
             if os.path.exists(file_path):
                 os.remove(file_path)
 
-    def _add_lesson_to_zip(self, module, course, zip_file, path):
+    def _add_lesson_to_zip(self, next_unit, module, course, zip_file, path):
         lesson_name = self.name.replace(" ", "_")
         course_name = course.name.replace(" ", "_")
         module_name = module.name.replace(" ", "_")
@@ -319,7 +319,8 @@ class Lesson(models.Model):
             path, "templates", "yaksh", "unit.html"
             ))
         lesson_data = {"course": course, "module": module,
-                       "lesson": self, "lesson_files": lesson_files}
+                       "lesson": self, "next_unit": next_unit,
+                       "lesson_files": lesson_files}
         write_templates_to_zip(zip_file, unit_file_path, lesson_data,
                                lesson_name, sub_folder_name)
 
@@ -567,6 +568,22 @@ class Quiz(models.Model):
         return '%s: on %s for %d minutes' % (desc, self.start_date_time,
                                              self.duration)
 
+    def _add_quiz_to_zip(self, next_unit, module, course, zip_file, path):
+        quiz_name = self.description.replace(" ", "_")
+        course_name = course.name.replace(" ", "_")
+        module_name = module.name.replace(" ", "_")
+        sub_folder_name = os.sep.join((
+            course_name, module_name, quiz_name
+            ))
+        unit_file_path = os.sep.join((
+            path, "templates", "yaksh", "quiz.html"
+            ))
+        quiz_data = {"course": course, "module": module,
+                     "quiz": self, "next_unit": next_unit}
+
+        write_templates_to_zip(zip_file, unit_file_path, quiz_data,
+                               quiz_name, sub_folder_name)
+
 
 ##########################################################################
 class LearningUnit(models.Model):
@@ -576,6 +593,9 @@ class LearningUnit(models.Model):
     lesson = models.ForeignKey(Lesson, null=True, blank=True)
     quiz = models.ForeignKey(Quiz, null=True, blank=True)
     check_prerequisite = models.BooleanField(default=True)
+
+    def get_lesson_or_quiz(self):
+        return self.lesson if self.lesson else self.quiz
 
     def toggle_check_prerequisite(self):
         if self.check_prerequisite:
@@ -774,12 +794,27 @@ class LearningModule(models.Model):
         course_name = course.name.replace(" ", "_")
         folder_name = os.sep.join((course_name, module_name))
         lessons = self.get_lesson_units()
-        for lesson in lessons:
-            lesson._add_lesson_to_zip(self, course, zip_file, path)
+
+        units = self.get_learning_units()
+        for idx, unit in enumerate(units):
+            next_unit = units[(idx + 1) % len(units)]
+            if unit.type == 'lesson':
+                unit.lesson._add_lesson_to_zip(next_unit,
+                                               self,
+                                               course,
+                                               zip_file,
+                                               path)
+            else:
+                unit.quiz._add_quiz_to_zip(next_unit,
+                                           self,
+                                           course,
+                                           zip_file,
+                                           path)
+
         module_file_path = os.sep.join((
             path, "templates", "yaksh", "module.html"
             ))
-        module_data = {"course": course, "module": self, "lessons": lessons}
+        module_data = {"course": course, "module": self, "units": units}
         write_templates_to_zip(zip_file, module_file_path, module_data,
                                module_name, folder_name)
 

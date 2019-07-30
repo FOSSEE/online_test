@@ -62,7 +62,7 @@
         <b style="color: black;">{{course_percentage}}% Completed</b>
         </div>
     </div>
-        
+
         {% for module, percent in modules %}
         <div class="yakshwell">
             <div class="row yakshlabel align-items-center">
@@ -72,14 +72,14 @@
 
                 <div class="col-md-1">
                     <a data-toggle="collapse" data-target="#learning_units{{module.id}}{{course.id}}" onclick="view_unit('learning_units{{module.id}}{{course.id}}');">
-                    <div class="btn yakshred"> 
+                    <div class="btn yakshred">
                     <span class="fa fa-caret-down fa-2x" id="learning_units{{module.id}}{{course.id}}_down" >
                     </span>
                     <span class="fa fa-caret-right fa-2x" id="learning_units{{module.id}}{{course.id}}_up" style="display: none; ">
                     </span>
                     </div>
                     </a>
-                    
+
                 </div>
                 <div class="col-md-5 ml-auto">
                     <div class="row align-items-center justify-content-md-end">
@@ -122,7 +122,7 @@
             </div>
             <div id="learning_units{{module.id}}{{course.id}}" class="collapse">
                         <table class="table yakshwell">
-                        
+
                         {% for unit in module.get_learning_units %}
                         <tr>
                             <td>
@@ -143,7 +143,7 @@
                                 {{unit.lesson.name}}
                             {% endif %}
                             </td>
-                            
+
                             <td>
                             {% get_unit_status course module unit user as status %}
                             {% if status == "completed" %}

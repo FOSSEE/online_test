@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="../../static/css/yakshcustom.css" type="text/css" />
 
     <title>
-            {% block pagetitle %} {{module.name}} {% endblock %}        
+        {% block pagetitle %} {{course.name}} {% endblock %}
     </title>
 </head>
 <body>
@@ -33,7 +33,7 @@
                 </a>
               </li>
               <div class="sidebar-submenu">
-                <ul>
+                  <ul>
                     <!-- loop -->
                     {% for unit in module.get_learning_units %}
                     {% if unit.type == 'lesson' %}
@@ -51,12 +51,11 @@
                     {% endif %}
                     {% endfor %}
                     <!-- End of loop -->
-                </ul>
+                  </ul>
               </div>
             </ul>
           </div>
         </nav>
-
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
             <div class="col-md-10">
                 <center>
@@ -70,43 +69,12 @@
                 {% block content %}
                     <center><h2>{{module.name}}</h2></center>
                     <hr>
-                    <h3>{{lesson.name}}</h3>
-                    {% if lesson.video_file %}
-                        <video id="lesson_video" height="500" class="video-js" controls preload="auto" data-setup='{"playbackRates": [0.5, 1, 1.5, 2]}'>
-                            <source src="{{lesson.video_file.name|file_title}}">
-                        </video>
-                    {% endif %}
+                    <div id="status"></div>
+                    <hr>
                     <br>
-                    <table class="table">
-                        <tr>
-                            <td>
-                            {{lesson.html_data|safe}}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                            {% if lesson_files %}
-                                <h4><strong>Lesson Files (Click on lesson file to download)
-                                </strong></h4>
-                                <ul class="list-group">
-                                {% for file in lesson_files %}
-                                    <a href="{{file.file.name|file_title}}" class="list-group-item">
-                                        {{file.file.name|file_title}}
-                                    </a>
-                                {% endfor %}
-                                </ul>
-                            {% else %}
-                                <ul class="list-group">
-                                    <li class="list-group-item">
-                                        <h4>No files for {{lesson.name}}</h4>
-                                    </li>
-                                </ul>
-                            {% endif %}
-                            </td>
-                        </tr>
-                    </table>
                     <div class="text-center">
                         <!-- Change Yaksh TODO -->
+                        <a class="btn btn-success" href="http://yaksh.fossee.in/exam/start/{{quiz.questionpaper_set.get.id}}/{{module.id}}/{{course.id}}" target="_blank">{{quiz.description}}</a>
                         {% if next_unit.type == 'lesson' %}
                         <a class="btn btn-info" href="../{{next_unit.lesson.name|replace_spaces}}/{{next_unit.lesson.name|replace_spaces}}.html">
                             Next
@@ -117,6 +85,7 @@
                         </a>
                         {% endif %}
                     </div>
+
                 {% endblock %}
             </div>
         </main>
@@ -130,4 +99,16 @@
 <script src="../../static/js/jquery-3.3.1.min.js"></script>
 <script src="../../static/js/bootstrap.min.js"></script>
 <script src="../../static/js/video.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){
+    var online = navigator.onLine;
+    if(online){
+        var status = document.getElementById("status").innerHTML = "<span class='badge badge-success'>User is online</span>";
+
+    }else{
+        document.getElementById("status").innerHTML = "<span class='badge badge-danger'>User is offline</span>";
+    }
+});
+</script>
 </html>
