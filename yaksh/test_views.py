@@ -519,6 +519,24 @@ class TestMonitor(TestCase):
             timezone='UTC'
         )
 
+        self.user1_plaintext_pass = 'demo'
+        self.user1 = User.objects.create_user(
+            username='demo_user1',
+            password=self.user1_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user1,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
         # Add to moderator group
         self.mod_group.user_set.add(self.user)
 
@@ -6219,130 +6237,85 @@ class TestLessons(TestCase):
         self.assertEqual(response.json()['data'], '<p>test description</p>')
 
 
-class TestFeedback(TestCase):
+class TestFeedbackMessages(TestCase):
     def setUp(self):
         self.client = Client()
         self.mod_group = Group.objects.create(name='moderator')
-
-        # Create a moderator
+        tzone = pytz.timezone('UTC')
+        # Create Moderator with profile
+        self.user_plaintext_pass = 'demo'
         self.user = User.objects.create_user(username='demo_user',
-                                             password='demo',
+                                             password=self.user_plaintext_pass,
                                              first_name='first_name',
                                              last_name='last_name',
                                              email='demo@test.com')
 
-        Profile.objects.create(user=self.user, roll_number=10, institute='IIT',
-                               department='Chemical', position='Moderator',
-                               timezone='UTC', is_moderator=True)
-
-        # create a student
-        self.student = User.objects.create_user(username='demo_student',
-                                                password='demo_student',
-                                                first_name='first_name',
-                                                last_name='last_name',
-                                                email='demo@student.com')
-
-        Profile.objects.create(user=self.student, roll_number=10,
-                               institute='IIT', department='Chemical',
-                               position='student', timezone='UTC')
-
-        # create a teacher to add to the course
-        self.teacher = User.objects.create_user(username='demo_teacher',
-                                                password='demo_teacher',
-                                                first_name='first_name',
-                                                last_name='last_name',
-                                                email='demo@student.com')
-
-        Profile.objects.create(user=self.teacher, roll_number=10,
+        Profile.objects.create(user=self.user, roll_number=10,
                                institute='IIT', department='Chemical',
                                position='Moderator', timezone='UTC',
                                is_moderator=True)
 
-         # Add to moderator group
-        self.mod_group.user_set.add(self.user)
-        self.mod_group.user_set.add(self.teacher)
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student', password=self.student_plaintext_pass,
+            first_name='student_first_name', last_name='student_last_name',
+            email='demo_student@test.com')
 
-        self.course = Course.objects.create(name="Python Course",
-                                            enrollment="Open Enrollment",
-                                            creator=self.user)
-
-        self.lesson = Lesson.objects.create(name="test lesson",
-                                            description="test description",
-                                            creator=self.user)
-
-        self.lesson2 = Lesson.objects.create(name="test lesson2",
-                                             description="test description2",
-                                             creator=self.user)
-
-        self.learning_unit = LearningUnit.objects.create(order=0,
-                                                         type="lesson",
-                                                         lesson=self.lesson)
-
-        self.learning_unit2 = LearningUnit.objects.create(order=0,
-                                                          type="lesson",
-                                                          lesson=self.lesson2)
-
-        self.learning_module = LearningModule.objects.create(
-            order=0, name="test module", description="module",
-            check_prerequisite=False, creator=self.user
-            )
-
-        self.learning_module2 = LearningModule.objects.create(
-            order=1, name="test module 2", description="module 2",
-            check_prerequisite=True, creator=self.user
-            )
-
-        self.learning_module.learning_unit.add(self.learning_unit.id)
-        self.learning_module2.learning_unit.add(self.learning_unit2.id)
-        self.course.learning_module.add(*[
-            self.learning_module.id, self.learning_module2.id])
-        self.course.teachers.add(self.teacher.id)
-
-        self.room = Room.objects.create(
-            course=self.course1,
-            title="test_room",
-            user=self.student,
-            timestamp=timezone.now()
+        Profile.objects.create(user=self.student, roll_number=10,
+                               institute='IIT', department='Chemical',
+                               position='Moderator', timezone='UTC'
         )
 
-        def test_create_new_room_with_message(self):
-            self.client.login(
-                username=self.student.username,
-                password=self.student.password
-            )
-            data = {
-                "room_title_value":"Test Room",
-                "course_id":self.course.id,
-                "the_post": "Test message",
-            }
-            response = self.client.get('yaksh:send_messasge', data=data)
-            self.assertEqual(response.status_code, 200)
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user)
 
-        def test_create_message_for_already_created_room(self):
-            self.client.login(
-                username=self.user.username,
-                password=self.user_plaintext_pass
+        self.course1 = Course.objects.create(name="Python Course",
+                                             enrollment="Open Enrollment",
+                                             creator=self.user)
+
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='demo quiz', pass_criteria=40,
             )
 
-            data = {
-                "room_title": self.room.title,
-                "course_id": self.room.course,
-                "the_post": "Test message",
-            }
+        self.course2 = Course.objects.create(name="Demo Course",
+                                             enrollment="Open Enrollment",
+                                             creator=self.user)
 
-            response = self.client.get('yaksh:send_message', data=data)
-            self.assertEqual(response.status_code, 200)
+        self.room = Room.objects.create(course=self.course1, title="test_room",
+                                        user=self.student,
+                                        timestamp=timezone.now())
 
+    def test_send_message(self):
+        self.client.login(username=self.student.username,
+                          password=self.student.password)
+        response = self.client.post(reverse('yaksh:send_message'), {
+            'room_title_value': "Test Room",
+            'course_id': self.course1.id,
+            'the_post': "The post"
+        }, follow=True)
 
-        def tearDown(self):
-            self.user.delete()
-            self.student.delete()
-            self.teacher.delete()
-            self.course.delete()
-            self.learning_unit.delete()
-            self.learning_unit2.delete()
-            self.learning_module.delete()
-            self.learning_module2.delete()
-            self.lesson.delete()
-            self.lesson2.delete()
-            self.mod_group.delete()
+        self.assertEqual(response.status_code, 200)
+
+    def test_message_box(self):
+        self.client.login(username=self.student.username,
+                          password=self.student.password)
+        response = self.client.get(reverse('yaksh:message_box'), follow=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_select_room_in_message_box(self):
+        self.client.login(username=self.student.username,
+                          password=self.student.password)
+
+        response = self.client.post(reverse('yaksh:message_box'), {
+            "room_id": self.room.id
+        })
+        self.assertEqual(response.status_code, 302)
+
+    def tearDown(self):
+        Room.objects.all().delete()
+        User.objects.all().delete()
+        Course.objects.all().delete()
