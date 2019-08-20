@@ -16,7 +16,7 @@ SRC_IMAGE_NAME = 'fossee/yaksh_codeserver'
 CHECK_FILE = 'server_running.txt'
 CHECK_FILE_PATH = os.path.join(SCRIPT_DIR, 'yaksh_data', CHECK_FILE)
 OS_NAME = sys.platform
-PYTHON_COMMAND = "python2" if sys.version_info[0] < 3 else "python3"
+PYTHON_COMMAND = "python{0}".format(".".join(map(str, sys.version_info[:2])))
 
 def create_dir(path):
     if not os.path.exists(path):
