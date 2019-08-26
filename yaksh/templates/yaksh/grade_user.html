@@ -6,7 +6,7 @@
 {% block pagetitle %} Grade User {% endblock pagetitle %}
 
 {% block content %}
-<div class="yakshwell container">
+<div class="yakshwell">
 {% block script %}
 <script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
 <script src="{{ URL_ROOT }}/static/yaksh/js/mathjax/MathJax.js?config=TeX-MML-AM_CHTML"></script>
@@ -14,6 +14,9 @@
 $(document).ready(function()
 {
   $("#marks_table").tablesorter({sortList: [[2,1]]});
+  $(".nav-tabs a").click(function(){
+    $(this).tab("show");
+  });
 });
 
 </script>
@@ -29,20 +32,22 @@ $(document).ready(function()
 
     {% for course in course_details %}
     <tr>
-    <td><ul class="list-group">{{course.name}} </td>
-
-    {% if course.get_quizzes %}
     <td>
-    {% for quiz in course.get_quizzes %}
-     <li class="list-group-item"><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}/{{course.id}}/">
-     {{quiz.description}}
-     </a></li>
-    {% endfor %}
+      <ul class="list-group">{{course.name}}
+      {% if course.get_quizzes %}
+      <td>
+      {% for quiz in course.get_quizzes %}
+       <li class="list-group-item"><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz.id}}/{{course.id}}/">
+       {{quiz.description}}
+       </a></li>
+      {% endfor %}
+      </td>
+      {% else %}
+      <td> No quiz</td>
+      {% endif %}
+      </ul>
     </td>
-    {% else %}
-    <td> No quiz</td>
-    {% endif %}
-    </ul></tr>
+  </tr>
     {% endfor %}
     </table>
   </div>
@@ -53,14 +58,15 @@ $(document).ready(function()
 {% if users %}
     <div id = "student" class="col-md-2">
     {% for user in users %}
-    <p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}/{{course_id}}/" class="btn btn-primary">
+    <p><a href = "{{URL_ROOT}}/exam/manage/gradeuser/{{quiz_id}}/{{user.user__id}}/{{course_id}}/">
     {{user.user__first_name}} {{user.user__last_name}}</a></p>
     {% endfor %}
     </div>
 {% else %}
 <center>
   <div class="alert-warning alert animated flash">
-<h4>No Users Found for {{ quiz.description }}</h4>
+    <h4>No Users Found for {{ quiz.description }}</h4>
+  </div>
 </center>
 {% endif %}
 {% endif %}
@@ -75,14 +81,14 @@ $(document).ready(function()
 {% if data %}
 
 
-<p> <h3> <center> Showing paper for {{data.user.get_full_name.title}} </center></h3>
-<p><b>Name:</b> {{ data.user.get_full_name.title }}
+<p> <h3> <center> Showing paper for {{data.user.get_full_name.title}} </center></h3></p>
+<p><b>Name:</b> {{ data.user.get_full_name.title }}</p>
 {% if data.profile %}
 
-<p><b> Roll number:</b> {{ data.profile.roll_number }}
-<p><b>Position: </b> {{ data.profile.position }}
-<p><b>Department: </b>{{ data.profile.department }} 
-<p><b>Institute: </b>{{ data.profile.institute }}
+<p><b> Roll number:</b> {{ data.profile.roll_number }}</p>
+<p><b>Position: </b> {{ data.profile.position }}</p>
+<p><b>Department: </b>{{ data.profile.department }} </p>
+<p><b>Institute: </b>{{ data.profile.institute }}</p>
 {% endif %}
 
 {% if data.papers %}
@@ -197,6 +203,40 @@ Status : <b style="color: red;"> Failed </b><br/>
         </div>
     </div>
     <h5>Student answer: </h5>
+    {% if question.type == "code" %}
+    <h5>Diff</h5>
+    {% endif %}
+    <div>
+      <div id="diff_{{question.id}}" class="container"> <br>
+        <form method="POST" class="form-group row" action=".">
+          {% csrf_token %}
+          {% if question.type == "code" %}
+            <p>Old Code Attempt: </p> <br>
+            <select class="form-control" name="recent_code_id">
+              {% if answers %}
+                {% for ans in answers %}
+                  <option value="{{ans.answer.id}}">{{forloop.counter}}</option>
+                {% endfor %}
+              {% endif %}
+            </select>
+            <p>Recent Code Attempt:</p><br>
+            <select class="form-control" name="old_code_id">
+              {% if answers %}
+                {% for ans in answers %}
+                  <option value="{{ans.answer.id}}">{{forloop.counter}}</option>
+                {% endfor %}
+              {% endif %}
+            </select>
+            <button type="submit" class="btn btn-primary">GET DIFF</button>
+          {% endif %}
+        </form>
+      </div>
+      {% if question_id == question.id %}
+        {{diff|safe}}
+      {% endif %}
+    </div>
+    <h5>Answers</h5>
+    <div class="answers_{{question.id}}" class="container">
     {% if question.type == "upload" %}
     {% if has_user_assignments %}
         <a href="{{URL_ROOT}}/exam/manage/download/user_assignment/{{question.id}}/{{data.user.id}}/{{paper.question_paper.quiz.id}}/{{course_id}}">
@@ -255,6 +295,7 @@ Status : <b style="color: red;"> Failed </b><br/>
           <th><center>User output</center></th>
           <th><center>Status</center></th>
           </tr>
+          <tr>
           {% for expected,user in error.expected_output|zip:error.user_output %}
           <td> {{forloop.counter}} </td>
           <td>{{expected|default:""}} </td>
@@ -354,12 +395,14 @@ Status : <b style="color: red;"> Failed </b><br/>
         </div>
         {% endfor %}
     {% endif %}
+  </div>
     {% with answers|last as answer %}
     Marks: <input id="q{{ question.id }}" type="text" 
         name="q{{ question.id }}_marks" size="4"
         value="{{ answer.answer.marks }}"><br><br>
     {% endwith %}
     <hr/>
+
     </div>
 
     {% endfor %} {# for question, answers ... #}

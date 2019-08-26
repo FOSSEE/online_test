@@ -1,5 +1,6 @@
 import os
 import csv
+import difflib
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
@@ -1688,6 +1689,18 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             }
     if request.method == "POST":
         papers = data['papers']
+        recent_code_id = request.POST.get("recent_code_id")
+        old_code_id = request.POST.get("old_code_id")
+        if recent_code_id and old_code_id:
+            recent_code = Answer.objects.get(id=recent_code_id)
+            old_code = Answer.objects.get(id=old_code_id)
+            question_id = recent_code.question.id
+            diff = difflib.HtmlDiff().make_table(
+                                                recent_code.answer.split("\n"),
+                                                old_code.answer.split("\n")
+                                                )
+            context["diff"] = diff
+            context["question_id"] = question_id
         for paper in papers:
             for question, answers in six.iteritems(
                     paper.get_question_answers()):
