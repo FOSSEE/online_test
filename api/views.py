@@ -174,13 +174,19 @@ class AnswerValidator(APIView):
             raise Http404
 
     def post(self, request, answerpaper_id, question_id, format=None):
+        print("validator")
         try:
             user_answer = request.data['answer']
+
         except KeyError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+
         user = request.user
         answerpaper = self.get_answerpaper(answerpaper_id, user)
         question = self.get_question(question_id, answerpaper)
+
         # save answer uid
         answer = Answer.objects.create(question=question, answer=user_answer)
         answerpaper.answers.add(answer)
