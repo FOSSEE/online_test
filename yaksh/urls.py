@@ -132,6 +132,8 @@ urlpatterns = [
         name="questions_filter"),
     url(r'^editprofile/$', views.edit_profile, name='edit_profile'),
     url(r'^viewprofile/$', views.view_profile, name='view_profile'),
+    url(r'^viewprofile/(?P<user_id>\d+)/$', views.view_profile,
+        name='view_profile'),
     url(r'^manage/enroll/(?P<course_id>\d+)/$', views.enroll,
         name="enroll_users"),
     url(r'manage/enroll/rejected/(?P<course_id>\d+)/$',

@@ -1710,9 +1710,12 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
 @login_required
 @has_profile
 @email_verified
-def view_profile(request):
+def view_profile(request, user_id=None):
     """ view moderators and users profile """
-    user = request.user
+    if user_id:
+        user = User.objects.get(id=user_id)
+    else:
+        user = request.user
     if is_moderator(user):
         template = 'manage.html'
     else:

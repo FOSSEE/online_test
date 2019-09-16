@@ -104,7 +104,7 @@
                                             <tr>
                                             <td><input type="checkbox" name="check" value="{{ enrolled.id }}"></td>
                                             <td>{{ forloop.counter }}.</td>
-                                            <td> {{ enrolled.get_full_name|title }} </td>
+                                            <td> <a href="{% url 'yaksh:view_profile' enrolled.id %}">{{ enrolled.get_full_name|title }}</a></td>
                                             <td> {{enrolled.email}}</td>
                                             <td> {{enrolled.profile.roll_number}}</td>
                                             <td> {{enrolled.profile.institute}}</td>
@@ -220,7 +220,7 @@
                                                 <tr>
                                                 <td><input type="checkbox" name="check" value="{{ request.id }}"></td>
                                                 <td>{{ forloop.counter }}.</td>
-                                                <td>{{request.get_full_name}}</td>
+                                                <td><a href="{% url 'yaksh:view_profile' request.id %}">{{request.get_full_name}}</a></td>
                                                 <td> {{request.email}}</td>
                                                 <td> {{request.profile.roll_number}}</td>
                                                 <td> {{request.profile.institute}}</td>
@@ -272,7 +272,8 @@
                                             <tr>
                                             <td><input type="checkbox" name="check" value="{{ enrolled.id }}"></td>
                                             <td>{{ forloop.counter }}.</td>
-                                            <td> {{ enrolled.get_full_name|title }} </td>
+                                            {{enrolled.id}}
+                                            <td><a href="{% url 'yaksh:view_profile' enrolled.id %}">{{ enrolled.get_full_name|title }} </a></td>
                                             <td> {{enrolled.email}}</td>
                                             <td> {{enrolled.profile.roll_number}}</td>
                                             <td> {{enrolled.profile.institute}}</td>
