@@ -1,0 +1,252 @@
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>
+      Quiz
+    </title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <link rel="stylesheet" href="https://getbootstrap.com/docs/4.1/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://blackrockdigital.github.io/startbootstrap-simple-sidebar/css/simple-sidebar.css">
+  <!-- https://getbootstrap.com/docs/4.1/examples/dashboard/dashboard.css -->
+</head>
+<body>
+    <div class="container" id="app">
+    <div id="page-content-wrapper">
+      <nav class="navbar navbar-expand-lg navbar-light ">
+        <a class="navbar-brand" href="#">Yaksh</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav mr-auto">
+
+            <li class="nav-item">
+              <a class="nav-link" href="#">Quit</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+    <div class="btn-group" role="group" aria-label="Basic example">
+      <button type="button" class="btn btn-secondary" v-for="(question, index) in results.questions" v-on:click="set_curr_question(question)">{{ index }}</button>
+    </div>
+
+    <div class="card">
+      <h5 class="card-header">Quiz</h5>
+      <div class="card-body">
+        <h5 class="card-title">{{ curr_question.summary }}</h5>
+        <p class="card-text">{{ curr_question.description }}</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <!-- If question is code type -->
+      <div class="card-body" v-if='curr_question.type == "code"'>
+        <form v-on:submit="submit_answer" method="post" action="">
+          <textarea v-model="answer"></textarea>
+          <button class="btn btn-primary">Check</button>
+        </form>
+      </div>
+
+      <!-- If question is mcq type -->
+      <div class="card-body" v-else-if='curr_question.type == "mcq"'>
+        <form action="">
+          <input type="radio" value="male">Male<br>
+        </form>
+      </div>
+
+      <!-- If question is mcc type -->
+      <div class="card-body" v-else-if='curr_question.type == "mcc"'>
+        <form action="">
+          <input type="checkbox" value="male">female<br>
+        </form>
+      </div>
+      </div>
+      <div class="card" v-html="code_result">>
+      </div>
+
+      </div>
+    </div>
+  </div>
+</body>
+
+<script src="https://unpkg.com/vue"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<script>
+  const url = "http://localhost:8000/api/start_quiz/1/1/" // /api/start_quiz/course-id/quiz-id
+  const validate_url = "http://localhost:8000/api/validate/"
+  const token = "d88812ee582e2ab6bb0cdd93faa600541a2bcb39"
+
+  const vm = new Vue({
+    el: '#app',
+    data: {
+      results: [],
+      curr_question: null,
+      answer: "",
+      checker: {},
+      code_result: ""
+    },
+
+    computed: {
+        // // a computed getter
+        // reversedMessage: function () {
+        //   // `this` points to the vm instance
+        //   return this.message.split('').reverse().join('')
+        // }
+        checkEmpty: function () {
+          Object.keys(this.checker).length === 0 && this.checker.constructor === Object
+        }
+    },
+
+    mounted() {
+      axios.get(url, {
+       headers: {
+         Authorization: 'Token ' + token //the token is a variable which holds the token
+       }
+      }).then(response => {
+        this.results = response.data
+        console.log(this.results)
+        this.set_curr_question(this.results.questions[0])
+      })
+    },
+
+    methods: {
+      set_curr_question: function (question) {
+        console.log(question.id)
+        return this.curr_question = question
+      },
+
+      // render_answer: function (question) {
+      //   // do stuff here
+      //   console.log(question.type)
+      //   var code_answer = `
+      //   <form v-on:submit="submit_answer">
+      //   <input type="text" v-model="answer">
+      //   <a class="btn btn-primary">Check</a>
+      //   </form>`
+      //   var mcq_answer = `<form action="">
+      //     <input type="radio" value="{{ }}">Male<br>
+      //   </form>`
+      //   var mcc_answer = `<form action="">
+      //     <input type="checkbox" value="{{ }}">Male<br>
+      //   </form>`
+
+      //   if (question.type == 'code') {
+      //     this.answerhtml = code_answer
+      //   } else if (question.type == 'mcc') {
+      //     this.answerhtml = mcc_answer
+      //   } else if (question.type == 'mcq') {
+      //     this.answerhtml = mcq_answer
+      //   }
+
+      // },
+
+      // check_answer: function () {
+      //   data = {
+      //     answerpaper_id: this.results.id,
+      //     question_id: this.curr_question.id
+      //   }
+      //   console.log(validate_url + this.results.id + "/" + this.curr_question.id)
+      //   axios.post(validate_url + this.results.id + "/" + this.curr_question.id + '/', data, {
+      //    headers: {
+      //      Authorization: 'Token ' + token //the token is a variable which holds the token
+      //    },
+
+      //   }).then(response => {
+      //     this.ans_response = response.data
+      //   })
+      // },
+
+      check_answer_status(result) {
+        console.log("Checking answer status")
+          axios.get(validate_url + result.uid + "/",
+            {
+              headers: {
+                Authorization: 'Token ' + token // token holds Django token
+            },
+          }).then(response => {
+
+              console.log("After initial answer check fetching result")
+              if (response.data.status == 'done') {
+                vm.checker = JSON.parse(response.data.result)
+                this.render_code_output()
+              }
+          })
+          .catch(function (error) {
+            //do something
+              // this.output = error;
+            console.log(error)
+          });
+      },
+
+      submit_answer(event) {
+          console.log("Submitting answer")
+          event.preventDefault();
+
+          axios.post(validate_url + this.results.id + "/" + this.curr_question.id + '/', {
+              answer: this.answer
+            },
+            {
+              headers: {
+                Authorization: 'Token ' + token // token holds Django token
+            },
+          }).then(function (response) {
+              this.inter_output = response.data;
+              if (this.inter_output.status == 'running') {
+                vm.check_answer_status(this.inter_output)
+              }
+          })
+          .catch(function (error) {
+              // this.output = error;
+              console.log("error")
+              // console.log(this.output)
+          });
+
+      },
+
+      render_code_output: function(response) {
+        if (Object.keys(this.checker).length === 0 && this.checker.constructor === Object) {
+          this.code_result = ""
+        } else if (this.checker.success == false) {
+          this.code_result = `<div class="card-body">
+            <h5 class="card-title">
+              Incorrect Answer
+            </h5>
+            <p class="card-text">
+              Exception: ${this.checker.error[0].exception}: ${this.checker.error[0].message }<br>
+              Traceback: ${this.checker.error[0].traceback}<br>
+            </p>
+            </div>`
+        } else {
+            this.code_result = `<div class="card-body">
+            <h5 class="card-title">
+              Correct Answer
+            </h5>
+            </div>`
+        }
+      },
+
+      next_question: function (event) {
+        // do stuff here
+      },
+
+      quit: function (event) {
+        // do stuff here
+      },
+
+      update_time: function (event) {
+        // do stuff
+      },
+
+      update_clock: function (event) {
+        // do stuff
+      },
+    },
+  });
+
+</script>
