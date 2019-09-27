@@ -78,7 +78,7 @@
     color: black;
     border-left: 0;
     border-right: 0;
-    border-color: transparent; 
+    border-color: transparent;
 }
 
 #sidebar .list-group-item:hover {
@@ -133,6 +133,11 @@
 html {
   position: relative;
   min-height: 100%;
+  overflow-x: hidden;
+}
+
+body{
+    overflow-x: hidden;
 }
 
 .question-nav-bg {
