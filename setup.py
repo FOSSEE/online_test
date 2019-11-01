@@ -16,7 +16,7 @@ def get_version():
 
 
 install_requires = [
-    'django==1.11.21',
+    'django==1.11.23',
     'django-taggit==0.18.1',
     'pytz==2016.4',
     'requests-oauthlib>=0.6.1',
