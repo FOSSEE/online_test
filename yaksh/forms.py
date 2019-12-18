@@ -3,6 +3,7 @@ from yaksh.models import (
     get_model_class, Profile, Quiz, Question, Course, QuestionPaper, Lesson,
     LearningModule
 )
+from grades.models import GradingSystem
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -268,6 +269,13 @@ class QuestionFilterForm(forms.Form):
 
 class CourseForm(forms.ModelForm):
     """ course form for moderators """
+    class Meta:
+        model = Course
+        fields = [
+            'name', 'enrollment', 'active', 'code', 'instructions',
+            'start_enroll_time', 'end_enroll_time', 'grading_system',
+            'view_grade'
+        ]
 
     def save(self, commit=True, *args, **kwargs):
         instance = super(CourseForm, self).save(commit=False)
@@ -280,13 +288,15 @@ class CourseForm(forms.ModelForm):
             instance.save()
         return instance
 
-    class Meta:
-        model = Course
-        fields = [
-            'name', 'enrollment', 'active', 'code', 'instructions',
-            'start_enroll_time', 'end_enroll_time', 'grading_system',
-            'view_grade'
-        ]
+    def __init__(self, user, *args, **kwargs):
+        super(CourseForm, self).__init__(*args, **kwargs)
+        if self.instance.id and self.instance.teachers.filter(id=user.id).exists():
+            self.fields['grading_system'].widget.attrs['disabled'] = True
+        else:
+            grading_choices = GradingSystem.objects.filter(
+                creator=user
+            )
+            self.fields['grading_system'].queryset = grading_choices 
 
 
 class ProfileForm(forms.ModelForm):
