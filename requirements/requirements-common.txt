@@ -9,3 +9,4 @@ selenium==2.53.6
 coverage
 ruamel.yaml==0.15.23
 markdown==2.6.9
+pygments==2.2.0

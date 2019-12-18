@@ -311,7 +311,9 @@ Status : <b style="color: red;"> Failed </b><br/>
         
         <div class="card-body">
         {% if question.type == "code" %}
-        <pre><code>{{ ans.answer.answer.strip }}</code></pre>
+        {% pygmentise_user_answer question.language ans.answer.answer.strip as user_answer %}
+          <style type="text/css">{{user_answer.1}}</style>
+          <pre><code>{{user_answer.0|safe}}</code></pre>
         {% elif question.type == "mcc"%}
         <div class="card">
           <div class="card-body">
@@ -346,7 +348,7 @@ Status : <b style="color: red;"> Failed </b><br/>
         {% else %}
          <div class="card">
             <div class="card-body">
-          {{ ans.answer.answer.strip }}
+          {{ ans.answer.answer.strip|safe }}
           </div>
         </div>
         {% endif %}
