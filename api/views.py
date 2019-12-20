@@ -174,10 +174,8 @@ class AnswerValidator(APIView):
             raise Http404
 
     def post(self, request, answerpaper_id, question_id, format=None):
-        print("validator")
         try:
             user_answer = request.data['answer']
-
         except KeyError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -199,7 +197,9 @@ class AnswerValidator(APIView):
 
         # updaTE RESult
         if question.type not in ['code', 'upload']:
+            print('Non CODE', user_answer)
             if result.get('success'):
+                print('success')
                 answer.correct = True
                 answer.marks = question.points
                 answer.error = json.dumps(result.get('error'))

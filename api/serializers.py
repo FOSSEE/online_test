@@ -1,15 +1,20 @@
 from rest_framework import serializers
 from yaksh.models import (
     Question, Quiz, QuestionPaper, AnswerPaper, Course,
-    LearningModule, LearningUnit, Lesson
+    LearningModule, LearningUnit, Lesson, TestCase
 )
 
 
 class QuestionSerializer(serializers.ModelSerializer):
+    test_cases = serializers.SerializerMethodField()
+
+    def get_test_cases(self, obj):
+        test_cases = obj.get_test_cases_as_dict()
+        return test_cases
+
     class Meta:
         model = Question
         fields = '__all__'
-
 
 class QuizSerializer(serializers.ModelSerializer):
     class Meta:

@@ -32,14 +32,14 @@
       </nav>
 
     <div class="btn-group" role="group" aria-label="Basic example">
-      <button type="button" class="btn btn-secondary" v-for="(question, index) in results.questions" v-on:click="set_curr_question(question)">{{ index }}</button>
+      <button type="button" class="btn btn-secondary" v-for="(question, index) in results.questions" v-on:click="set_curr_question(question)">{{ index+1 }}</button>
     </div>
 
     <div class="card">
       <h5 class="card-header">Quiz</h5>
       <div class="card-body">
         <h5 class="card-title">{{ curr_question.summary }}</h5>
-        <p class="card-text">{{ curr_question.description }}</p>
+        <p class="card-text" v-html="curr_question.description" ></p>
       </div>
     </div>
 
@@ -52,17 +52,55 @@
         </form>
       </div>
 
+      <!-- If question is integer type -->
+      <div class="card-body" v-if='curr_question.type == "integer"'>
+        <form v-on:submit="submit_answer" method="post" action="">
+          <input v-model="answer"/>
+          <button class="btn btn-primary">Check</button>
+        </form>
+      </div>
+
+      <!-- If question is string type -->
+      <div class="card-body" v-if='curr_question.type == "string"'>
+        <form v-on:submit="submit_answer" method="post" action="">
+          <textarea v-model="answer"></textarea>
+          <button class="btn btn-primary">Check</button>
+        </form>
+      </div>
+
+      <!-- If question is integer type -->
+      <div class="card-body" v-if='curr_question.type == "float"'>
+        <form v-on:submit="submit_answer" method="post" action="">
+          <input v-model="answer"/>
+          <button class="btn btn-primary">Check</button>
+        </form>
+      </div>
+
+          <!-- If question is integer type -->
+      <div class="card-body" v-if='curr_question.type == "upload"'>
+        <input type="file" id="file" ref="file" v-on:change="handleFileUpload()"/>
+        <button class="btn btn-primary" v-on:click="submitFile()" >Upload</button>
+      </div>
+
+
+
       <!-- If question is mcq type -->
       <div class="card-body" v-else-if='curr_question.type == "mcq"'>
-        <form action="">
-          <input type="radio" value="male">Male<br>
+        <form v-on:submit="submit_answer" method="post" action="">
+          <div v-for="tt in curr_question.test_cases">
+            <input type="option" v-model="mcqanswer"/> {{tt.options}}
+          </div>  
+          <button class="btn btn-primary">Check</button>
         </form>
       </div>
 
       <!-- If question is mcc type -->
       <div class="card-body" v-else-if='curr_question.type == "mcc"'>
-        <form action="">
-          <input type="checkbox" value="male">female<br>
+        <form v-on:submit="submit_answer" method="post" action="">
+          <div v-for="(tt, index) in curr_question.test_cases">
+              <input type="checkbox" :id="'answer_'+'index'" v-model="mccanswer" :value="tt.id"/> {{tt.options}}
+          </div>
+          <button class="btn btn-primary">Check</button>
         </form>
       </div>
       </div>
@@ -76,11 +114,11 @@
 
 <script src="https://unpkg.com/vue"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 <script>
   const url = "http://localhost:8000/api/start_quiz/1/1/" // /api/start_quiz/course-id/quiz-id
   const validate_url = "http://localhost:8000/api/validate/"
-  const token = "d88812ee582e2ab6bb0cdd93faa600541a2bcb39"
+  const token = "8ebb5a54048458a8bd73da259391a092c6627f1d" //"d88812ee582e2ab6bb0cdd93faa600541a2bcb39"
 
   const vm = new Vue({
     el: '#app',
@@ -88,21 +126,18 @@
       results: [],
       curr_question: null,
       answer: "",
+      mcqanswer: "",
+      mccanswer: [],
       checker: {},
-      code_result: ""
+      code_result: "",
+      file: '',
+      errors: []
     },
-
     computed: {
-        // // a computed getter
-        // reversedMessage: function () {
-        //   // `this` points to the vm instance
-        //   return this.message.split('').reverse().join('')
-        // }
         checkEmpty: function () {
           Object.keys(this.checker).length === 0 && this.checker.constructor === Object
         }
     },
-
     mounted() {
       axios.get(url, {
        headers: {
@@ -110,86 +145,76 @@
        }
       }).then(response => {
         this.results = response.data
-        console.log(this.results)
+        // console.log(this.results)
         this.set_curr_question(this.results.questions[0])
       })
     },
 
     methods: {
+
+      handleFileUpload(){
+        this.file = this.$refs.file.files[0];
+      },
+  
+      submitFile(){
+        // console.log(this.file)
+        let formData = new FormData();
+        formData.append('file', this.file);
+        axios.post(validate_url + this.results.id + "/" + this.curr_question.id + '/',{
+              answer: formData,
+            },
+            {
+            headers: {
+                Authorization: 'Token ' + token, // token holds Django token
+            }
+          }
+        ).then(function(){
+          console.log('SUCCESS!!');
+        })
+        .catch(function(){
+          console.log('FAILURE!!');
+        });
+      },
+
       set_curr_question: function (question) {
-        console.log(question.id)
+        // console.log(question.id)
         return this.curr_question = question
       },
 
-      // render_answer: function (question) {
-      //   // do stuff here
-      //   console.log(question.type)
-      //   var code_answer = `
-      //   <form v-on:submit="submit_answer">
-      //   <input type="text" v-model="answer">
-      //   <a class="btn btn-primary">Check</a>
-      //   </form>`
-      //   var mcq_answer = `<form action="">
-      //     <input type="radio" value="{{ }}">Male<br>
-      //   </form>`
-      //   var mcc_answer = `<form action="">
-      //     <input type="checkbox" value="{{ }}">Male<br>
-      //   </form>`
-
-      //   if (question.type == 'code') {
-      //     this.answerhtml = code_answer
-      //   } else if (question.type == 'mcc') {
-      //     this.answerhtml = mcc_answer
-      //   } else if (question.type == 'mcq') {
-      //     this.answerhtml = mcq_answer
-      //   }
-
-      // },
-
-      // check_answer: function () {
-      //   data = {
-      //     answerpaper_id: this.results.id,
-      //     question_id: this.curr_question.id
-      //   }
-      //   console.log(validate_url + this.results.id + "/" + this.curr_question.id)
-      //   axios.post(validate_url + this.results.id + "/" + this.curr_question.id + '/', data, {
-      //    headers: {
-      //      Authorization: 'Token ' + token //the token is a variable which holds the token
-      //    },
-
-      //   }).then(response => {
-      //     this.ans_response = response.data
-      //   })
-      // },
-
       check_answer_status(result) {
-        console.log("Checking answer status")
-          axios.get(validate_url + result.uid + "/",
-            {
+        // console.log("Checking answer status")
+          axios.get(validate_url + result.uid + "/", {
               headers: {
                 Authorization: 'Token ' + token // token holds Django token
             },
           }).then(response => {
-
-              console.log("After initial answer check fetching result")
+              // console.log("After initial answer check fetching result")
               if (response.data.status == 'done') {
                 vm.checker = JSON.parse(response.data.result)
                 this.render_code_output()
               }
           })
           .catch(function (error) {
-            //do something
-              // this.output = error;
             console.log(error)
           });
       },
-
       submit_answer(event) {
           console.log("Submitting answer")
           event.preventDefault();
-
+          if(this.curr_question.type == "code"){
+            ans = this.answer
+          } else if(this.curr_question.type == "mcq"){
+            ans = this.mcqanswer
+          } else if(this.curr_question.type == "mcc"){
+            ans = []
+            this.mccanswer.forEach((answer) => {
+              ans.push(String(answer))
+            })
+            console.log(ans)
+          }
+          console.log('this.results',this.results.id)
           axios.post(validate_url + this.results.id + "/" + this.curr_question.id + '/', {
-              answer: this.answer
+              answer: ans,
             },
             {
               headers: {
@@ -206,22 +231,48 @@
               console.log("error")
               // console.log(this.output)
           });
-
       },
-
       render_code_output: function(response) {
+        // console.log(this.checker.error)
+        this.checker.error.forEach((error) => {
+          this.errors.push(error.exception)
+        })
+        console.log(this.errors)
         if (Object.keys(this.checker).length === 0 && this.checker.constructor === Object) {
           this.code_result = ""
         } else if (this.checker.success == false) {
-          this.code_result = `<div class="card-body">
-            <h5 class="card-title">
+          this.code_result = `
+          <div class="">
+            <h5 class="">
               Incorrect Answer
             </h5>
             <p class="card-text">
               Exception: ${this.checker.error[0].exception}: ${this.checker.error[0].message }<br>
               Traceback: ${this.checker.error[0].traceback}<br>
             </p>
-            </div>`
+            </div>
+            
+            <div class="card-header alert-danger" >Error No.  </div>
+              <div class="card-body">
+                <p> <b>The following error took place: </b></p>
+                <table class="table  table-borderless border border-danger table-responsive-sm" width="100%" id='assertion'>
+                <col width="30%">
+                    <tr class = "bg-light">
+                      <td><b>Exception Name: </b></td>
+                      <td><span class="text-danger"></span></td>
+                  </tr>
+                  <tr>
+                    <td><b>Exception Message: </b></td><td>${this.checker.error[0].message}</td>
+                  </tr>
+                  <tr>
+                    <input type="hidden" id="err_lineno" value="{{error.line_no}}">
+                    <td><b>Full Traceback: </b></td>
+                    <td><pre>${this.checker.error[0].traceback}</pre></td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+            `
         } else {
             this.code_result = `<div class="card-body">
             <h5 class="card-title">
@@ -230,23 +281,7 @@
             </div>`
         }
       },
-
-      next_question: function (event) {
-        // do stuff here
-      },
-
-      quit: function (event) {
-        // do stuff here
-      },
-
-      update_time: function (event) {
-        // do stuff
-      },
-
-      update_clock: function (event) {
-        // do stuff
-      },
-    },
+    }
   });
 
 </script>
