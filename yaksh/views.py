@@ -14,6 +14,7 @@ from django.utils import timezone
 from django.core.exceptions import (
     MultipleObjectsReturned, ObjectDoesNotExist
 )
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from taggit.models import Tag
 import json
 import six
@@ -395,8 +396,19 @@ def prof_manage(request, msg=None):
         return my_redirect('/exam/login')
     if not is_moderator(user):
         return my_redirect('/exam/')
-    courses = Course.objects.filter(Q(creator=user) | Q(teachers=user),
-                                    is_trial=False).distinct()
+    courses = Course.objects.get_queryset().filter(
+        Q(creator=user) | Q(teachers=user),
+        is_trial=False).distinct().order_by("-id")
+    paginator = Paginator(courses, 10)
+    page = request.GET.get('page')
+    try:
+        courses = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        courses = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        courses = paginator.page(paginator.num_pages)
     trial_paper = AnswerPaper.objects.filter(
         user=user, question_paper__quiz__is_trial=True,
         course__is_trial=True
@@ -416,7 +428,7 @@ def prof_manage(request, msg=None):
                 else:
                     answerpaper.delete()
 
-    context = {'user': user, 'courses': courses,
+    context = {'user': user, 'objects': courses,
                'trial_paper': trial_paper, 'msg': msg
                }
     return my_render_to_response(

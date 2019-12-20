@@ -55,6 +55,9 @@ attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
 days_between_attempts = ((j, j) for j in range(401))
 
+# Add bootstrap class separated by space
+form_input_class = "form-control"
+
 
 def get_object_form(model, exclude_fields=None):
     model_class = get_model_class(model)
@@ -72,25 +75,51 @@ class UserRegisterForm(forms.Form):
     a new user to the system"""
 
     username = forms.CharField(max_length=30, help_text='Letters, digits,\
-                period and underscores only.')
-    email = forms.EmailField()
-    password = forms.CharField(max_length=30, widget=forms.PasswordInput())
+                period and underscores only.',
+                widget=forms.TextInput(
+                    {'class': form_input_class, 'placeholder': "Username"})
+                )
+    email = forms.EmailField(widget=forms.TextInput(
+        {'class': form_input_class, 'placeholder': "Email"}
+        ))
+    password = forms.CharField(max_length=30,
+        widget=forms.PasswordInput(
+            {'class': form_input_class, 'placeholder': "Password"}))
     confirm_password = forms.CharField(
-        max_length=30, widget=forms.PasswordInput())
-    first_name = forms.CharField(max_length=30)
-    last_name = forms.CharField(max_length=30)
+        max_length=30, widget=forms.PasswordInput(
+            {'class': form_input_class, 'placeholder': "Confirm Password"}
+            ))
+    first_name = forms.CharField(max_length=30, widget=forms.TextInput(
+        {'class': form_input_class, 'placeholder': "First Name"}
+        ))
+    last_name = forms.CharField(max_length=30, widget=forms.TextInput(
+        {'class': form_input_class, 'placeholder': "Last Name"}
+        ))
     roll_number = forms.CharField(
-        max_length=30, help_text="Use a dummy if you don't have one.")
+        max_length=30, help_text="Use a dummy if you don't have one.",
+        widget=forms.TextInput(
+        {'class': form_input_class, 'placeholder': "Roll Number"}
+        ))
     institute = forms.CharField(
-        max_length=128, help_text='Institute/Organization')
+        max_length=128, help_text='Institute/Organization',
+        widget=forms.TextInput(
+        {'class': form_input_class, 'placeholder': "Institute"}
+        ))
     department = forms.CharField(
-        max_length=64, help_text='Department you work/study at')
+        max_length=64, help_text='Department you work/study at',
+        widget=forms.TextInput(
+        {'class': form_input_class, 'placeholder': "Department"}
+        ))
     position = forms.CharField(
         max_length=64,
-        help_text='Student/Faculty/Researcher/Industry/Fellowship/etc.')
+        help_text='Student/Faculty/Researcher/Industry/Fellowship/etc.',
+        widget=forms.TextInput(
+        {'class': form_input_class, 'placeholder': "Position"}
+        ))
     timezone = forms.ChoiceField(
         choices=[(tz, tz) for tz in pytz.common_timezones],
-        help_text='Course timings are shown based on the selected timezone',
+        help_text='All timings are shown based on the selected timezone',
+        widget=forms.Select({'class': 'custom-select'}),
         initial=pytz.country_timezones['IN'][0])
 
     def clean_username(self):
@@ -158,8 +187,18 @@ class UserRegisterForm(forms.Form):
 class UserLoginForm(forms.Form):
     """Creates a form which will allow the user to log into the system."""
 
-    username = forms.CharField(max_length=30)
-    password = forms.CharField(max_length=30, widget=forms.PasswordInput())
+    username = forms.CharField(
+        max_length=30,
+        widget=forms.TextInput(
+            attrs={'class': form_input_class, 'placeholder': 'Username'}
+        )
+    )
+    password = forms.CharField(
+        max_length=30,
+        widget=forms.PasswordInput(
+            attrs={'class': form_input_class, 'placeholder': 'Password'}
+        )
+    )
 
     def clean(self):
         super(UserLoginForm, self).clean()
@@ -297,8 +336,10 @@ class ProfileForm(forms.ModelForm):
         fields = ['first_name', 'last_name', 'institute',
                   'department', 'roll_number', 'position', 'timezone']
 
-    first_name = forms.CharField(max_length=30)
-    last_name = forms.CharField(max_length=30)
+    first_name = forms.CharField(max_length=30, widget=forms.TextInput(
+                    {'class': form_input_class, 'placeholder': "First Name"}))
+    last_name = forms.CharField(max_length=30, widget=forms.TextInput(
+                    {'class': form_input_class, 'placeholder': "Last Name"}))
 
     def __init__(self, *args, **kwargs):
         if 'user' in kwargs:
@@ -306,7 +347,23 @@ class ProfileForm(forms.ModelForm):
         super(ProfileForm, self).__init__(*args, **kwargs)
         self.fields['first_name'].initial = user.first_name
         self.fields['last_name'].initial = user.last_name
-
+        self.fields['institute'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['department'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['roll_number'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['position'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['timezone'] = forms.ChoiceField(
+            choices=[(tz, tz) for tz in pytz.common_timezones],
+            help_text='All timings are shown based on the selected timezone',
+            widget=forms.Select({'class': 'custom-select'})
+            )
 
 class UploadFileForm(forms.Form):
     file = forms.FileField()
