@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block nav %}
 <nav class="navbar navbar-expand-sm navbar-dark bg-primary fixed-top">
-    <a class="navbar-brand" href="{{ URL_ROOT }}/exam/">
-    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH">
+    <a class="navbar-brand" href="{% url 'yaksh:index' %}">
+    <img src="{% static 'yaksh/images/yaksh_banner.png' %}" alt="YAKSH">
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -11,32 +12,32 @@
 
     <div class="collapse navbar-collapse" id="navbarColor01">
     <ul class="navbar-nav mr-auto">
-        <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/questions">Questions</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/courses">Courses</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/monitor">Monitor</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/manage/gradeuser">Grade User</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_root }}/exam/manage/grader"> Regrade </a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'yaksh:show_questions' %}">Questions</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'yaksh:courses' %}">Courses</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'yaksh:monitor' %}">Monitor</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'yaksh:grade_user' %}">Grade User</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'yaksh:grader' %}"> Regrade </a></li>
     </ul>
     <ul class="navbar-nav ml-auto">
         <li class="nav-item dropdown my-lg-0" style="font-size: 1.2rem">
             <a class="dropdown-toggle nav-link" id="user_dropdown" data-toggle="dropdown" href="#">{{user.get_full_name|title}}
             </a>
             <div class="dropdown-menu dropdown-menu-right">
-            <a class="dropdown-item" href="{{ URL_ROOT }}/exam/editprofile/">
+            <a class="dropdown-item" href="{% url 'yaksh:edit_profile' %}">
                 <i class="fa fa-user"></i>  My Profile
             </a>
             <div class="dropdown-divider"></div>
             {% if user.profile.is_moderator %}
-                <a class="dropdown-item" href="{{URL_ROOT}}/exam/toggle_moderator/"><i class="fa fa-exchange"></i>
+                <a class="dropdown-item" href="{% url 'yaksh:toggle_moderator' %}"><i class="fa fa-exchange"></i>
                     Switch To Student
                 </a>
                 <div class="dropdown-divider"></div>
             {% endif %}
-            <a class="dropdown-item" href="{{ URL_ROOT }}/exam/reset/changepassword/">
+            <a class="dropdown-item" href="{% url 'password_change' %}">
                 <i class="fa fa-key"></i> Change Password
             </a>
             <div class="dropdown-divider"></div>
-                <a class="dropdown-item" id="user_logout" href="{{URL_ROOT}}/exam/logout/">
+                <a class="dropdown-item" id="user_logout" href="{% url 'yaksh:logout' %}">
                     <i class="fa fa-sign-out"></i> Logout
                 </a>
             </div>

@@ -1,12 +1,13 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %} Register {% endblock %}
 
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-  <a class="navbar-brand" href="{{ URL_ROOT }}/exam/">
-    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH">
-  </a>
+    <a class="navbar-brand" href="{% url 'yaksh:index' %}">
+        <img src="{% static 'yaksh/images/yaksh_banner.png' %}" alt="YAKSH">
+    </a>
 </nav>
 {% endblock %}
 
@@ -25,14 +26,18 @@
                             {% for field in form %}
                                 {% for error in field.errors %}
                                     <div class="alert alert-dismissible alert-danger">
-                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                        <button type="button" class="close" data-dismiss="alert">
+                                            <i class="fa fa-close"></i>
+                                        </button>
                                         <strong>{{ error|escape }}</strong>
                                     </div>
                                 {% endfor %}
                             {% endfor %}
                             {% for error in form.non_field_errors %}
                                 <div class="alert alert-dismissible alert-danger">
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    <button type="button" class="close" data-dismiss="alert">
+                                        <i class="fa fa-close"></i>
+                                    </button>
                                     <strong>{{ error|escape }}</strong>
                                 </div>
                             {% endfor %}
@@ -44,8 +49,14 @@
                         <br>
                         <br>
                     </center>
-                    <center class="yakshwell"><button class="btn btn-success btn-lg" type="submit">Register</button>&nbsp;&nbsp;
-                    <a href="{{URL_ROOT}}/exam" class="btn btn-primary btn-lg">Cancel</a></center>
+                    <center>
+                        <button class="btn btn-success btn-lg" type="submit">
+                            Register
+                        </button>
+                        <a href="{% url 'yaksh:index' %}" class="btn btn-primary btn-lg">
+                            Cancel
+                        </a>
+                    </center>
                 </fieldset>
             </form>
         </div>

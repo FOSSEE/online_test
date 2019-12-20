@@ -1,3 +1,4 @@
+{% load static %}
 <!doctype html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
@@ -14,12 +15,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/bootstrap.min.css">
-
-  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/custom.css" type="text/css" />
-  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/animate.min.css" type="text/css" />
-  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/font-awesome.css" type="text/css" />
-  <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/ontop.css" type="text/css" />
+  <link rel="stylesheet" href="{% static 'yaksh/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'yaksh/css/custom.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'yaksh/css/animate.min.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'yaksh/css/font-awesome.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'yaksh/css/ontop.css' %}" type="text/css" />
 
 
   {% block meta %}
@@ -33,10 +33,10 @@
 
  
 
-  <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/popper.min.js"></script>
-  <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/jquery-3.3.1.min.js"></script>
-  <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/bootstrap.min.js"></script>
-  <script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/wow.min.js"></script>
+  <script language="JavaScript" type="text/javascript" src="{% static 'yaksh/js/popper.min.js' %}"></script>
+  <script language="JavaScript" type="text/javascript" src="{% static 'yaksh/js/jquery-3.3.1.min.js' %}"></script>
+  <script language="JavaScript" type="text/javascript" src="{% static 'yaksh/js/bootstrap.min.js' %}"></script>
+  <script language="JavaScript" type="text/javascript" src="{% static 'yaksh/js/wow.min.js' %}"></script>
  
   <script>
       new WOW().init();

@@ -2,9 +2,9 @@ from django.conf.urls import url
 from yaksh import views
 
 urlpatterns = [
-    url(r'^$', views.index),
+    url(r'^$', views.index, name="index"),
     url(r'^login/$', views.user_login, name='login'),
-    url(r'^logout/$', views.user_logout),
+    url(r'^logout/$', views.user_logout, name="logout"),
     url(r'^update_email/$', views.update_email, name="update_email"),
     url(r'^activate/(?P<key>.+)$', views.activate_user, name="activate"),
     url(r'^new_activation/$', views.new_activation, name='new_activation'),
@@ -144,9 +144,9 @@ urlpatterns = [
     url(r'^manage/remove_teachers/(?P<course_id>\d+)/$', views.remove_teachers,
         name='remove_teacher'),
     url(r'^manage/download_questions/$', views.show_all_questions,
-        name="show_questions"),
+        name="download_questions"),
     url(r'^manage/upload_questions/$', views.show_all_questions,
-        name="show_questions"),
+        name="upload_questions"),
     url(r'^manage/grader/$', views.grader, name='grader'),
     url(r'^manage/regrade/question/(?P<course_id>\d+)/(?P<question_id>\d+)/$',
         views.regrade, name='regrade'),
@@ -160,7 +160,8 @@ urlpatterns = [
         views.regrade, name='regrade'),
     url(r'^manage/(?P<mode>godmode|usermode)/(?P<quiz_id>\d+)/'
         '(?P<course_id>\d+)/$', views.test_quiz),
-    url(r'^manage/create_demo_course/$', views.create_demo_course),
+    url(r'^manage/create_demo_course/$', views.create_demo_course,
+        name="create_demo_course"),
     url(r'^manage/courses/download_course_csv/(?P<course_id>\d+)/$',
         views.download_course_csv, name="download_course_csv"),
     url(r'^manage/download/user_assignment/(?P<question_id>\d+)/'

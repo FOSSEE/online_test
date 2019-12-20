@@ -1,12 +1,13 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %} Login {% endblock %}
 
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-  <a class="navbar-brand" href="{{ URL_ROOT }}/exam/">
-    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH">
-  </a>
+    <a class="navbar-brand" href="{% url 'yaksh:index' %}">
+        <img src="{% static 'yaksh/images/yaksh_banner.png' %}" alt="YAKSH">
+    </a>
 </nav>
 {% endblock %}
 
@@ -30,14 +31,18 @@
                                 {% for field in form %}
                                     {% for error in field.errors %}
                                         <div class="alert alert-dismissible alert-danger">
-                                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                            <button type="button" class="close" data-dismiss="alert">
+                                                <i class="fa fa-close"></i>
+                                            </button>
                                             <strong>{{ error|escape }}</strong>
                                         </div>
                                     {% endfor %}
                                 {% endfor %}
                                 {% for error in form.non_field_errors %}
                                     <div class="alert alert-dismissible alert-danger">
-                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                        <button type="button" class="close" data-dismiss="alert">
+                                            <i class="fa fa-close"></i>
+                                        </button>
                                         <strong>{{ error|escape }}</strong>
                                     </div>
                                 {% endfor %}
@@ -49,10 +54,12 @@
                         </center>
                         <div class="row justify-content-center">
                             <button class="btn btn-lg btn-success btn-block" type="submit" id="login-btn">Login</button>
-                            <a href="{{URL_ROOT}}/exam/register/" class="btn btn-lg btn-primary btn-block" id="signup-btn">
+                            <a href="{% url 'yaksh:register' %}" class="btn btn-lg btn-primary btn-block" id="signup-btn">
                                 NEW USER? SIGN UP
                             </a>
-                            <a class="btn btn-lg btn-primary btn-block" href="{{URL_ROOT}}/exam/reset/forgotpassword/" id="forgot-btn">Forgot Password?</a>
+                            <a class="btn btn-lg btn-primary btn-block" href="{% url 'password_reset' %}" id="forgot-btn">
+                                Forgot Password?
+                            </a>
                         </div>
                         <hr>
                         <center><h1> OR </h1></center>
@@ -72,25 +79,3 @@
     </div>
 </div>     
 {% endblock content %}
-
-
-{% block footer %}
-  <!--footer-->   
-  <!-- <footer class="container-fluid yakshfooter text-center" id="contact">
-       {% block info %}
-       {% endblock %}
-       Developed by FOSSEE team, IIT Bombay
-       <hr style="background-color: white"> 
-       <nav class="nav nav-pills nav-fill col-lg-12"> 
-
-            <li class="nav-item">
-                <a class = "btn btn-social-icon btn-github nav-link" href ="https://github.com/fossee/online_test">
-                Fork us at: <span class="fa fa-github" style="font-size:20px;"></span>
-                </a>
-            </li>
-                <li class="nav-item"><span class="nav-link"> Email : info@fossee.in</span></li>
-                <li class="nav-item"><a href="https://fossee.in" class="nav-link">FOSSEE website</a></li>
-            </nav>
-  </footer> -->
-  <!--footer end-->
-{% endblock %}
