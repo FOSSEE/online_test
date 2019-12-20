@@ -1,19 +1,15 @@
 {% extends "base.html" %}
 
 {% block nav %}
-<div class="container-fluid yakshnav">
-  <nav class="navbar fixed-top navbar-expand-lg yakshheading yakshnav">
-    <div class="container">
-      <a class="navbar-brand">
-          <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH">
-          </img>
-       </a>
-    </div><!-- /.container -->
-  </nav><!-- /.navbar -->
-</div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+  <a class="navbar-brand" href="{{ URL_ROOT }}/exam/">
+    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH">
+  </a>
+</nav>
 {% endblock %}
 
 {% block content %}
+<br>
 {% if module_id and not paper.question_paper.quiz.is_trial %}
 <center>
     <div class="alert alert-info col-md-8 animated flash">
@@ -52,7 +48,12 @@
         </div>
         </center>
     {% endif %}
-	<center class="yakshwell container-fluid"><h5 class="yakshwell"><span class="alert alert-success animated flash">{{message}}</span></h5></center>
+    <br><br>
+	<center class="container-fluid">
+        <h5>
+            <span class="alert alert-success">{{message}}</span>
+        </h5>
+    </center>
     <center>
     <br>
     {% if module_id and not paper.question_paper.quiz.is_trial %}
@@ -68,7 +69,7 @@
             </a>
         {% endif %}
     {% else %}
-        <a href="{{URL_ROOT}}/exam/" id="home" class="btn btn-success"> Home </a>
+        <a href="{{URL_ROOT}}/exam/" id="home" class="btn btn-primary btn-lg"> Home </a>
     {% endif %}
     </center>
 {% endblock content %}
