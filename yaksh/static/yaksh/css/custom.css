@@ -1,0 +1,29 @@
+.yakshfooter {
+    background-color: #142624;
+    padding-top: 1%;
+    padding-left: 10%;
+    padding-right: 10%;
+    padding-bottom: 1%;
+    color: white;
+    bottom: 0;
+    width: 100%;
+    position: absolute;
+    text-align: center;
+}
+
+.yakshfooter .nav-pills>li>a, .yakshfooter .nav-pills .nav-link,.yakshnav .nav-pills>li>a {
+    color: white;
+}
+
+.yakshfooter .nav-pills>li>a:hover, .yakshnav .nav-pills>li>a:hover {
+    color: black;
+    background-color: white;
+}
+
+body, .dropdown-menu {
+    font-size: 1.25rem;
+}
+
+#login-btn, #signup-btn, #forgot-btn{
+    width: 75%;
+}
