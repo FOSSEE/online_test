@@ -16,6 +16,8 @@
     });
     </script>
     {% if questions %}
+    {% include "yaksh/paginator.html" %}
+
         <h5 class="highlight"><input type="checkbox" id="checkall">
             Select All
         </h5>
@@ -36,7 +38,7 @@
                 <td>
                 <input type="checkbox" name="question" value="{{ question.id }}">
                 </td>
-                <td><a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{question.summary|capfirst}}</a></td>
+                <td><a href="{% url 'yaksh:add_question' question.id %}">{{question.summary|capfirst}}</a></td>
                 <td>{{question.language|capfirst}}</td>
                 <td>{{question.type|capfirst}}</td>
                 <td>{{question.points}}</td>
@@ -45,5 +47,6 @@
             </tbody>
             </table>
         </ul>
+    {% include "yaksh/paginator.html" %}
     {% endif %}
 </div>

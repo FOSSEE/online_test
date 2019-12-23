@@ -399,7 +399,7 @@ class ProfileForm(forms.ModelForm):
             )
 
 class UploadFileForm(forms.Form):
-    file = forms.FileField(widget=forms.FileInput(attrs={'class':'upload'}))
+    file = forms.FileField(widget=forms.FileInput(attrs={'class': 'upload'}))
 
 
 class QuestionPaperForm(forms.ModelForm):

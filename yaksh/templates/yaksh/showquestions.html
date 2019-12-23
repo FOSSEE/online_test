@@ -46,7 +46,7 @@
         </p>
       </div>
       <div class="card-body">
-        <div><a class="btn btn-primary" href="{% url 'yaksh:download_yaml_template' %}">Download Template</a></div>
+        <div><a class="btn btn-lg btn-primary" href="{% url 'yaksh:download_yaml_template' %}">Download Template</a></div>
         <br/>
         <h4> Or </h4>
         <form action="" method="post"  enctype="multipart/form-data">
@@ -59,7 +59,7 @@
               </div>
             </div>
           <h4>And</h4>
-          <button class="btn btn-success" type="submit" name="upload" value="upload">Upload File</button>
+          <a class="btn btn-lg btn-success" type="submit" name="upload" value="upload">Upload File</a>
         </form>
       </div>
     </div>
@@ -72,19 +72,19 @@
         {% if message %}
           {%if message == "Questions Uploaded Successfully"%}
             <div class="alert alert-success alert-dismissable">
-              <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+              <a href="#" class="close" data-dismiss="alert" aria-label="close"><span class="fa fa-window-close"></span></a>
                 {{ message }}
             </div>
           {%else %}
             <div class="alert alert-danger alert-dismissable">
-              <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+              <a href="#" class="close" data-dismiss="alert" aria-label="close"><span class="fa fa-window-close"></span></a>
               {{ message }}
             </div>
           {% endif %}
         {% endif %}
         {% if msg %}
           <div class="alert alert-danger alert-dismissable animated flash">
-            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            <a href="#" class="close" data-dismiss="alert" aria-label="close"><span class="fa fa-window-close"></span></a>
             {{ msg }}
           </div>
         {% endif %}
@@ -112,7 +112,7 @@
                     </div>
                     <input type="text" name="question_tags" id="question_tags" class="form-control" type="search"  placeholder="Search using comma separated Tags">
                     <span class="input-group-append">
-                      <button class="btn btn-outline-secondary" type="submit"><i class="fa fa-search yakshred"></i></button>
+                      <a class="btn btn-outline-secondary" type="submit"><i class="fa fa-search yakshred"></i></a>
                     </span>
                   </div>
                 </div>
@@ -133,13 +133,14 @@
               </div>
             </div>
             <br/>
-            <button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>
-             Clear Filters</button>
+            <a class="btn btn-lg btn-primary" type="button" onClick='location.replace("{% url 'yaksh:show_questions' %}");'>
+             Clear Filters</a>
           </div>
         </div>
         <div id="filtered-questions">
           {% if questions %}
             <div>
+              {% include "yaksh/paginator.html" %}
               <br>
               <h5><input id="checkall" type="checkbox"> Select All </h5>
                <div class="table-wrapper-2">
@@ -159,7 +160,7 @@
                         <td>
                          <input type="checkbox" name="question" value="{{ question.id }}">
                         </td>
-                        <td><a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{question.summary|capfirst}}</a></td>
+                        <td><a href="{% url 'yaksh:add_question' question.id %}">{{question.summary|capfirst}}</a></td>
                         <td>{{question.language|capfirst}}</td>
                         <td>{{question.type|capfirst}}</td>
                         <td>{{question.points}}</td>
@@ -169,16 +170,17 @@
                   </table>
                 </div>
             </div>
+          {% include "yaksh/paginator.html" %}
           {% endif %}
         </div>
-        {% include "yaksh/paginator.html" %}
         <center>
-          <button class="btn btn-primary" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question</button>
+          <a class="btn btn-lg btn-primary" type="button" onclick='location.replace("{% url 'yaksh:add_question' %}");'>Add Question</a>
+
           {% if questions %}
-            <button class="btn btn-primary" type="submit" name='download' value='download'>Download Selected</button>
-            <button class="btn btn-primary" type="submit" name="test" value="test">Test Selected</button>
+            <a class="btn btn-lg btn-primary" type="submit" name='download' value='download'>Download Selected</a>
+            <a class="btn btn-lg btn-primary" type="submit" name="test" value="test">Test Selected</a>
           {% endif %}
-          <button class="btn btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>
+          <a class="btn btn-lg btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</a>
         </center>
       </form>
     </div>
