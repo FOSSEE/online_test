@@ -59,7 +59,7 @@
               </div>
             </div>
           <h4>And</h4>
-          <a class="btn btn-lg btn-success" type="submit" name="upload" value="upload">Upload File</a>
+          <button class="btn btn-lg btn-success" type="submit" name="upload" value="upload">Upload File</button>
         </form>
       </div>
     </div>
@@ -133,13 +133,14 @@
               </div>
             </div>
             <br/>
-            <a class="btn btn-lg btn-primary" type="button" onClick='location.replace("{% url 'yaksh:show_questions' %}");'>
+            <a class="btn btn-lg btn-primary" href="{% url 'yaksh:show_questions' %}">
              Clear Filters</a>
           </div>
         </div>
         <div id="filtered-questions">
           {% if questions %}
             <div>
+              <br>
               {% include "yaksh/paginator.html" %}
               <br>
               <h5><input id="checkall" type="checkbox"> Select All </h5>
@@ -174,13 +175,13 @@
           {% endif %}
         </div>
         <center>
-          <a class="btn btn-lg btn-primary" type="button" onclick='location.replace("{% url 'yaksh:add_question' %}");'>Add Question</a>
+          <a class="btn btn-lg btn-primary" href="{% url 'yaksh:add_question' %}">Add Question</a>
 
           {% if questions %}
-            <a class="btn btn-lg btn-primary" type="submit" name='download' value='download'>Download Selected</a>
-            <a class="btn btn-lg btn-primary" type="submit" name="test" value="test">Test Selected</a>
+            <button class="btn btn-lg btn-primary" type="submit" name='download' value='download'>Download Selected</button>
+            <button class="btn btn-lg btn-primary" type="submit" name="test" value="test">Test Selected</button>
           {% endif %}
-          <a class="btn btn-lg btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</a>
+          <button class="btn btn-lg btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>
         </center>
       </form>
     </div>
