@@ -46,6 +46,7 @@ class PythonStdIOEvaluator(BaseEvaluator):
         if self.file_paths:
             self.files = copy_files(self.file_paths)
         submitted = compile(self.user_answer, '<string>', mode='exec')
+        self.expected_output = self.expected_output.replace('\r', '')
         if self.expected_input:
             self.expected_input = self.expected_input.replace('\r', '')
             input_buffer = StringIO()
@@ -55,7 +56,7 @@ class PythonStdIOEvaluator(BaseEvaluator):
         with redirect_stdout() as output_buffer:
             exec_scope = {}
             exec(submitted, exec_scope)
-        self.output_value = output_buffer.getvalue().rstrip("\n")
+        self.output_value = output_buffer.getvalue()
         return self.output_value
 
     def check_code(self):

@@ -50,7 +50,9 @@
 
       {% for form in formset %}
         <div class="link-formset well">
+            {% autoescape off %}
             {{ form.as_p }}
+            {% endautoescape %}
         </div>
       {% endfor %}
 

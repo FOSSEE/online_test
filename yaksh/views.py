@@ -6,10 +6,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.template import Context, Template
 from django.http import Http404
 from django.db.models import Max, Q, F
+from django.db import models
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.forms.models import inlineformset_factory
+from django.forms import fields
 from django.utils import timezone
 from django.core.exceptions import (
     MultipleObjectsReturned, ObjectDoesNotExist
@@ -95,6 +97,13 @@ CSV_FIELDS = ['name', 'username', 'roll_number', 'institute', 'department',
 def get_html_text(md_text):
     """Takes markdown text and converts it to html"""
     return Markdown().convert(md_text)
+
+
+def formfield_callback(field):
+    if (isinstance(field, models.TextField) and field.name == 'expected_output'
+            or field.name == 'expected_input'):
+        return fields.CharField(strip=False)
+    return field.formfield()
 
 
 @email_verified
@@ -243,8 +252,12 @@ def add_question(request, question_id=None):
                 file.toggle_hide_status()
         formsets = []
         for testcase in TestCase.__subclasses__():
-            formset = inlineformset_factory(Question, testcase, extra=0,
-                                            fields='__all__')
+
+            formset = inlineformset_factory(
+                                Question, testcase, extra=0,
+                                fields='__all__',
+                                formfield_callback=formfield_callback
+                                )
             formsets.append(formset(
                 request.POST, request.FILES, instance=question
                 )
@@ -929,10 +942,9 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None,
     """Show a page to inform user that the quiz has been completed."""
     user = request.user
     if questionpaper_id is None:
-        message = (
-            reason or "An Unexpected Error occurred."
-            " Please contact your instructor/administrator."
-        )
+        message = reason or ("An Unexpected Error occurred. Please "
+                             "contact your instructor/administrator."
+                             )
         context = {'message': message}
         return my_render_to_response(request, 'yaksh/complete.html', context)
     else:

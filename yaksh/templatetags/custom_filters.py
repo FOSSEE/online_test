@@ -101,3 +101,15 @@ def pygmentise_user_answer(language, answer):
     style = formatter.get_style_defs('.highlight')
     result = highlight(answer, lexer, formatter)
     return result, style
+
+
+@register.simple_tag
+def course_grade(course, user):
+    return course.get_grade(user)
+
+
+@register.filter(name='highlight_spaces')
+def highlight_spaces(text):
+    return text.replace(
+        " ", '<span style="background-color:#ffb6db">&nbsp</span>'
+        )

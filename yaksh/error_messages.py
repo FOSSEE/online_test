@@ -34,8 +34,7 @@ def _get_incorrect_user_lines(exp_lines, user_lines):
     err_line_numbers = []
     for line_no, (expected_line, user_line) in \
             enumerate(zip_longest(exp_lines, user_lines)):
-        if (not user_line or not expected_line or
-                user_line.strip() != expected_line.strip()):
+        if user_line != expected_line:
             err_line_numbers.append(line_no)
     return err_line_numbers
 
