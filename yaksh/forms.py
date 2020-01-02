@@ -308,6 +308,30 @@ class QuestionFilterForm(forms.Form):
 class CourseForm(forms.ModelForm):
     """ course form for moderators """
 
+    def __init__(self, *args, **kwargs):
+        super(CourseForm, self).__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Course Name'}
+        )
+        self.fields['enrollment'].widget.attrs.update(
+            {'class': 'custom-select'}
+        )
+        self.fields['code'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Course Code'}
+        )
+        self.fields['instructions'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Course instructions'}
+        )
+        self.fields['start_enroll_time'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Course Start DateTime'}
+        )
+        self.fields['end_enroll_time'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Course End DateTime'}
+        )
+        self.fields['grading_system'].widget.attrs.update(
+            {'class': 'custom-select'}
+        )
+
     def save(self, commit=True, *args, **kwargs):
         instance = super(CourseForm, self).save(commit=False)
         if instance.code:
@@ -346,18 +370,24 @@ class ProfileForm(forms.ModelForm):
             user = kwargs.pop('user')
         super(ProfileForm, self).__init__(*args, **kwargs)
         self.fields['first_name'].initial = user.first_name
+        self.fields['first_name'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'First Name'}
+        )
         self.fields['last_name'].initial = user.last_name
+        self.fields['last_name'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Last Name'}
+        )
         self.fields['institute'].widget.attrs.update(
-            {'class': form_input_class}
+            {'class': form_input_class, 'placeholder': 'Institute'}
         )
         self.fields['department'].widget.attrs.update(
-            {'class': form_input_class}
+            {'class': form_input_class, 'placeholder': 'Department'}
         )
         self.fields['roll_number'].widget.attrs.update(
-            {'class': form_input_class}
+            {'class': form_input_class, 'placeholder': 'Roll Number'}
         )
         self.fields['position'].widget.attrs.update(
-            {'class': form_input_class}
+            {'class': form_input_class, 'placeholder': 'Position'}
         )
         self.fields['timezone'] = forms.ChoiceField(
             choices=[(tz, tz) for tz in pytz.common_timezones],

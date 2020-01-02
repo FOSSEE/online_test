@@ -109,6 +109,8 @@ urlpatterns = [
     url(r'^manage/duplicate_course/(?P<course_id>\d+)/$',
         views.duplicate_course, name='duplicate_course'),
     url(r'manage/courses/$', views.courses, name='courses'),
+    url(r'manage/allotted/courses/$', views.allotted_courses,
+        name='allotted_courses'),
     url(r'manage/add_course/$', views.add_course, name='add_course'),
     url(r'manage/edit_course/(?P<course_id>\d+)$', views.add_course,
         name='edit_course'),

@@ -5,7 +5,7 @@
 <div class="container">
     <center><h2> My Profile </h2></center>
     <br>
-    <form action="{{URL_ROOT}}/exam/editprofile/" method="post" >
+    <form action="{% url 'yaksh:edit_profile'%}" method="post" >
       {% csrf_token %}
       <center>
         <div class="row justify-content-center form-group">
@@ -18,14 +18,18 @@
                             {% for field in form %}
                                 {% for error in field.errors %}
                                     <div class="alert alert-dismissible alert-danger">
-                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                        <button type="button" class="close" data-dismiss="alert">
+                                            <i class="fa fa-close"></i>
+                                        </button>
                                         <strong>{{ error|escape }}</strong>
                                     </div>
                                 {% endfor %}
                             {% endfor %}
                             {% for error in form.non_field_errors %}
                                 <div class="alert alert-dismissible alert-danger">
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    <button type="button" class="close" data-dismiss="alert">
+                                        <i class="fa fa-close"></i>
+                                    </button>
                                     <strong>{{ error|escape }}</strong>
                                 </div>
                             {% endfor %}
@@ -38,7 +42,7 @@
                         <br>
                     </center>
                     <button class="btn btn-success btn-lg" type="submit">Update</button>&nbsp;&nbsp;
-                    <a href="{{URL_ROOT}}/exam" class="btn btn-primary btn-lg">Cancel</a></center>
+                    <a href="{% url 'yaksh:index' %}" class="btn btn-primary btn-lg">Cancel</a></center>
                 </fieldset>
             </form>
         </div>

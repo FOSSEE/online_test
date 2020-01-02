@@ -15,6 +15,7 @@ from django.core.exceptions import (
     MultipleObjectsReturned, ObjectDoesNotExist
 )
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.contrib import messages
 from taggit.models import Tag
 import json
 import six
@@ -1040,11 +1041,40 @@ def courses(request):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     courses = Course.objects.filter(
-        creator=user, is_trial=False).order_by('-active', '-id')
+        creator=user, is_trial=False).order_by('-id')
+    paginator = Paginator(courses, 20)
+    page = request.GET.get('page')
+    try:
+        courses = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        courses = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        courses = paginator.page(paginator.num_pages)
+    context = {'objects': courses, 'created': True}
+    return my_render_to_response(request, 'yaksh/courses.html', context)
+
+
+@login_required
+@email_verified
+def allotted_courses(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
     allotted_courses = Course.objects.filter(
-        teachers=user, is_trial=False).order_by('-active', '-id')
-    context = {'courses': courses, "allotted_courses": allotted_courses,
-               "type": "courses"}
+        teachers=user, is_trial=False).order_by('-id')
+    paginator = Paginator(allotted_courses, 20)
+    page = request.GET.get('page')
+    try:
+        allotted_courses = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        allotted_courses = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        allotted_courses = paginator.page(paginator.num_pages)
+    context = {'allotted': True, "objects": allotted_courses}
     return my_render_to_response(request, 'yaksh/courses.html', context)
 
 
@@ -1166,9 +1196,12 @@ def toggle_course_status(request, course_id):
 
     if course.active:
         course.deactivate()
+        message = '{0} deactivated successfully'.format(course.name)
     else:
         course.activate()
+        message = '{0} activated successfully'.format(course.name)
     course.save()
+    messages.info(request, message)
     return my_redirect("/exam/manage/courses")
 
 

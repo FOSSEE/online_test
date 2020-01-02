@@ -1,18 +1,19 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %} Profile {% endblock %}
 
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-  <a class="navbar-brand" href="{{ URL_ROOT }}/exam/">
-    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH">
-  </a>
+    <a class="navbar-brand" href="{% url 'yaksh:index' %}">
+        <img src="{% static 'yaksh/images/yaksh_banner.png' %}" alt="YAKSH">
+    </a>
 </nav>
 {% endblock %}
 <!DOCTYPE html>
 
 {% block script %}
 <script>
-    window.setTimeout(function(){ location.href="{{ URL_ROOT }}/exam/" }, 2000);
+    window.setTimeout(function(){ location.href="{% url 'yaksh:index' %}" }, 2000);
 </script>
 {% endblock script %}
 {% block content %}
@@ -24,7 +25,7 @@
                 <h3>Redirecting...</h3>
             </div>
         </div>
-        <div class="col"><img src="{{ URL_ROOT }}/static/yaksh/images/profile_change.gif/"></div>
+        <div class="col"><img src="{% static 'yaksh/images/profile_change.gif' %}"></div>
     </div>
 </center>
 {% endblock content %}
