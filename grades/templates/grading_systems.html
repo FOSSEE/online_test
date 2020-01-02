@@ -1,8 +1,50 @@
 {% extends "manage.html" %}
+{% block title %} View Grading Systems {% endblock %}
 {% block main %}
 <html>
-    <a href="{% url 'grades:add_grade' %}" class="btn btn-primary"> Add a Grading System </a>
-    <a href="{% url 'yaksh:courses' %}" class="btn btn-danger"> Back to Courses </a>
+    <br><br><br>
+    <div class="row">
+        <div class="col-md-8">
+            <ul class="nav nav-pills" id="course_tabs">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'yaksh:courses' %}">
+                        My Courses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'yaksh:allotted_courses' %}">
+                        Allotted Courses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'yaksh:add_course' %}">
+                        Add New Course
+                    </a>
+                </li>
+                <li class="nav-item dropdown hide">
+                    <a class="nav-link dropdown-toggle active" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="true">More</a>
+                    <div class="dropdown-menu hide" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 37px, 0px); top: 0px; left: 0px; will-change: transform;">
+                    <a class="dropdown-item" href="{% url 'yaksh:show_all_quizzes' %}">
+                        View Quizzes
+                    </a>
+                    <a class="dropdown-item" href="{% url 'yaksh:show_all_lessons' %}">
+                        View Lessons
+                    </a>
+                    <a class="dropdown-item" href="{% url 'yaksh:show_all_modules' %}">
+                        View Modules
+                    </a>
+                    <a href="{% url 'grades:grading_systems'%}" class="dropdown-item active" >
+                        View Grading Systems
+                    </a>
+                </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <hr>
+    <a href="{% url 'grades:add_grade' %}" class="btn btn-success btn-lg">
+        <span class=" fa fa-plus-circle"></span>&nbsp;Add a Grading System
+    </a>
     <br><br>
     <b> Available Grading Systems: </b>
     <table class="table">

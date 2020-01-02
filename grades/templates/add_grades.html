@@ -1,9 +1,51 @@
 {% extends "manage.html" %}
+{% load custom_filters %}
+{% block title %} Add/Edit Grading {% endblock %}
 {% block main %}
 <html>
-<a href="{% url 'grades:grading_systems'%}" class="btn btn-danger"> Back to Grading Systems </a>
-<br><br>
-<p><b>Note: For grade range lower limit is inclusive and upper limit is exclusive</b></p>
+<br><br><br>
+<div class="row">
+    <div class="col-md-8">
+        <ul class="nav nav-pills" id="course_tabs">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'yaksh:courses' %}">
+                    My Courses
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'yaksh:allotted_courses' %}">
+                    Allotted Courses
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'yaksh:add_course' %}">
+                    Add New Course
+                </a>
+            </li>
+            <li class="nav-item dropdown hide">
+                <a class="nav-link dropdown-toggle active" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="true">More</a>
+                <div class="dropdown-menu hide" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 37px, 0px); top: 0px; left: 0px; will-change: transform;">
+                <a class="dropdown-item" href="{% url 'yaksh:show_all_quizzes' %}">
+                    View Quizzes
+                </a>
+                <a class="dropdown-item" href="{% url 'yaksh:show_all_lessons' %}">
+                    View Lessons
+                </a>
+                <a class="dropdown-item" href="{% url 'yaksh:show_all_modules' %}">
+                    View Modules
+                </a>
+                <a href="{% url 'grades:grading_systems'%}" class="dropdown-item active" >
+                    View Grading Systems
+                </a>
+            </div>
+            </li>
+        </ul>
+    </div>
+</div>
+<hr>
+<div class="alert alert-info">
+    Note: For grade range lower limit is inclusive and upper limit is exclusive
+</div>
 <br>
 {% if not system_id  %}
     <form action="{% url 'grades:add_grade' %}" method="POST">
@@ -12,24 +54,39 @@
 {% endif %}
     {% csrf_token %}
     <table class="table">
-      {{ grade_form }}
+        {% for field in grade_form %}
+            {{ field }}
+            <hr>
+        {% endfor %}
+        {{ formset.management_form }}
+        <br>
+        <div class="col-md-4">
+            {% for form in formset %}
+                {% for hidden in form.hidden_fields %}
+                    {{ hidden }}
+                {% endfor %}
+                <b><u>Grade Range {{forloop.counter}}.</u></b>
+                <br>
+                {% for field in form.visible_fields %}
+                     {% if field.field.widget|is_checkbox %}
+                        {{field.label}}
+                     {% endif %}
+                     {{ field }}
+                    <hr>
+                {% endfor %}
+                <br>
+            {% endfor %}
+        </div>
     </table>
-      {{ formset.management_form }}
-      <br>
-      <b><u>Grade Ranges</u></b>
-      <hr>
-      {% for form in formset %}
-      <div>
-            {{ form }}
-      </div>
-      <hr>
-      {% endfor %}
-  {% if not is_default %}
-      <input type="submit" id="add" name="add" value="Add" class="btn btn-info">
-      <input type="submit" id="save" name="save" value="Save" class="btn btn-success">
-  {% else %}
-    <p><b>Note: This is a default grading system. You cannot change this.</b></p>
-  {% endif %}
+    {% if not is_default %}
+        <input type="submit" id="add" name="add" value="Add/Delete Grade Range" class="btn btn-info btn-lg">
+        <input type="submit" id="save" name="save" value="Save" class="btn btn-success btn-lg">
+    {% else %}
+        <div class="alert alert-warning">
+            Note: This is a default grading system. You cannot change this.
+        </div>
+    {% endif %}
+    <br><br>
 </form>
 </html>
 {% endblock %}
