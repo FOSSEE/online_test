@@ -163,6 +163,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'social_django.context_processors.backends',
                 'social_django.context_processors.login_redirect',
+                'django.contrib.messages.context_processors.messages',
             ],
             'debug': False,
         }
@@ -187,3 +188,4 @@ SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id, name, email'
 }
+
