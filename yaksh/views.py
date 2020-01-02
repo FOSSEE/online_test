@@ -1324,10 +1324,21 @@ def ajax_questions_filter(request):
 
     if language:
         filter_dict['language'] = str(language)
-    questions = Question.objects.filter(**filter_dict)
-
+    questions = Question.objects.get_queryset().filter(
+                **filter_dict).order_by('id')
+    paginator = Paginator(questions, 10)
+    page = request.GET.get('page')
+    try:
+        questions = paginator.page(page)
+    except PageNotAnInteger:
+        questions = paginator.page(1)
+    except EmptyPage:
+        questions = paginator.page(paginator.num_pages)
     return my_render_to_response(
-        request, 'yaksh/ajax_question_filter.html', {'questions': questions}
+        request, 'yaksh/ajax_question_filter.html', {
+            'questions': questions,
+            'objects': questions
+        }
     )
 
 
@@ -1492,12 +1503,22 @@ def show_all_questions(request):
     if not is_moderator(user):
         raise Http404("You are not allowed to view this page !")
 
-    questions = Question.objects.filter(user_id=user.id, active=True)
+    questions = Question.objects.get_queryset().filter(
+                user_id=user.id, active=True).order_by('id')
     form = QuestionFilterForm(user=user)
     user_tags = questions.values_list('tags', flat=True).distinct()
     all_tags = Tag.objects.filter(id__in=user_tags)
     upload_form = UploadFileForm()
+    paginator = Paginator(questions, 10)
+    page = request.GET.get('page')
+    try:
+        questions = paginator.page(page)
+    except PageNotAnInteger:
+        questions = paginator.page(1)
+    except EmptyPage:
+        questions = paginator.page(paginator.num_pages)
     context['questions'] = questions
+    context['objects'] = questions
     context['all_tags'] = all_tags
     context['papers'] = []
     context['question'] = None

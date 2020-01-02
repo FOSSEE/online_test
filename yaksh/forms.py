@@ -295,13 +295,16 @@ class QuestionFilterForm(forms.Form):
         points_options = [(None, 'Select Marks')]
         points_options.extend([(point, point) for point in points_list])
         self.fields['marks'] = forms.FloatField(
-            widget=forms.Select(choices=points_options)
+            widget=forms.Select(choices=points_options,
+                                attrs={'class': 'custom-select'})
         )
         self.fields['marks'].required = False
     language = forms.CharField(
-        max_length=8, widget=forms.Select(choices=languages))
+        max_length=8, widget=forms.Select(choices=languages,
+                                          attrs={'class': 'custom-select'}))
     question_type = forms.CharField(
-        max_length=8, widget=forms.Select(choices=question_types)
+        max_length=8, widget=forms.Select(choices=question_types,
+                                          attrs={'class': 'custom-select'})
     )
 
 
@@ -396,7 +399,7 @@ class ProfileForm(forms.ModelForm):
             )
 
 class UploadFileForm(forms.Form):
-    file = forms.FileField()
+    file = forms.FileField(widget=forms.FileInput(attrs={'class': 'upload'}))
 
 
 class QuestionPaperForm(forms.ModelForm):
