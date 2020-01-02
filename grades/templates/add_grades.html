@@ -60,21 +60,24 @@
         {% endfor %}
         {{ formset.management_form }}
         <br>
-        <div class="col-md-4">
+        <div class="col">
             {% for form in formset %}
                 {% for hidden in form.hidden_fields %}
                     {{ hidden }}
                 {% endfor %}
                 <b><u>Grade Range {{forloop.counter}}.</u></b>
-                <br>
-                {% for field in form.visible_fields %}
-                     {% if field.field.widget|is_checkbox %}
-                        {{field.label}}
-                     {% endif %}
-                     {{ field }}
-                    <hr>
-                {% endfor %}
-                <br>
+                <div class="container">
+                    <div class="row">
+                    {% for field in form.visible_fields  %}
+                      <div class="col-sm-3">
+                        {% if field.field.widget|is_checkbox %}
+                            {{ field.label_tag }}
+                        {% endif %}
+                        {{ field }}
+                      </div>
+                    {% endfor %}
+                    </div>
+                </div>
             {% endfor %}
         </div>
     </table>

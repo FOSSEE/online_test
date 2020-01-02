@@ -33,12 +33,12 @@
         {% endif %}
     </center>
     {% with objects as courses %}
+    <br>
     {% if not courses %}
         <div class="alert alert-secondary">
           No Courses found. Add a new course or Create demo course
         </div>
     {% else %}
-        <br>
         {% include "yaksh/paginator.html" %}
         <br>
         <div id="accordion">
