@@ -165,7 +165,7 @@ TEMPLATES = [
                 'social_django.context_processors.login_redirect',
                 'django.contrib.messages.context_processors.messages',
             ],
-            'debug': False,
+            'debug': True, # make this False in production
         }
     },
 ]
