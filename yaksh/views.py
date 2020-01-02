@@ -1497,7 +1497,16 @@ def show_all_questions(request):
     user_tags = questions.values_list('tags', flat=True).distinct()
     all_tags = Tag.objects.filter(id__in=user_tags)
     upload_form = UploadFileForm()
+    paginator = Paginator(questions, 10)
+    page = request.GET.get('page')
+    try:
+        questions = paginator.page(page)
+    except PageNotAnInteger:
+        questions = paginator.page(1)
+    except EmptyPage:
+        questions = paginator.page(paginator.num_pages)
     context['questions'] = questions
+    context['objects'] = questions
     context['all_tags'] = all_tags
     context['papers'] = []
     context['question'] = None

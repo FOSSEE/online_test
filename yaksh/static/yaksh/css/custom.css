@@ -24,6 +24,15 @@ body, .dropdown-menu {
     font-size: 1.25rem;
 }
 
+.base-content {
+    padding-top: 5em;
+    padding-bottom: 5em;
+}
+
 #login-btn, #signup-btn, #forgot-btn{
     width: 75%;
+}
+
+.dropdown {
+    display: flex;
 }
