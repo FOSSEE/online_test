@@ -1,8 +1,6 @@
 {% extends "manage.html" %}
 {% load static %}
 
-{% block title %}Add Course{% endblock %}
-
 {% block css %}
 <link rel="stylesheet" href="{% static 'yaksh/css/jquery.datetimepicker.css' %}">
 {% endblock %}
@@ -11,9 +9,9 @@
 <script type="text/javascript" src="{% static 'yaksh/js/jquery.datetimepicker.full.min.js' %}">
 </script>
 {% endblock %}
-
+{% block title %} Add Course {% endblock %}
+{% block pagetitle %} Add Course {% endblock %}
 {% block content %}
-<br><br><br>
 <div class="container">
     <div class="row">
         <div class="col-md-8">

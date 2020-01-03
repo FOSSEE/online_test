@@ -1500,6 +1500,7 @@ def show_all_questions(request):
 
     user = request.user
     context = {}
+    message = None
     if not is_moderator(user):
         raise Http404("You are not allowed to view this page !")
 
@@ -1534,6 +1535,7 @@ def show_all_questions(request):
                 for question in questions:
                     question.active = False
                     question.save()
+            message = "Questions deleted successfully"
 
         if request.POST.get('upload') == 'upload':
             form = UploadFileForm(request.POST, request.FILES)
@@ -1543,14 +1545,13 @@ def show_all_questions(request):
                 ques = Question()
                 if file_extension == "zip":
                     files, extract_path = extract_files(questions_file)
-                    context['message'] = ques.read_yaml(extract_path, user,
+                    message = ques.read_yaml(extract_path, user,
                                                         files)
                 elif file_extension in ["yaml", "yml"]:
                     questions = questions_file.read()
-                    context['message'] = ques.load_questions(questions, user)
+                    message = ques.load_questions(questions, user)
                 else:
                     message = "Please Upload a ZIP file"
-                    context['message'] = message
 
         if request.POST.get('download') == 'download':
             question_ids = request.POST.getlist('question')
@@ -1565,7 +1566,7 @@ def show_all_questions(request):
                 response.write(zip_file.read())
                 return response
             else:
-                context['msg'] = ("Please select atleast" +
+                message = ("Please select atleast " +
                                   "one question to download")
 
         if request.POST.get('test') == 'test':
@@ -1578,13 +1579,13 @@ def show_all_questions(request):
                 return my_redirect("/exam/start/1/{0}/{1}/{2}".format(
                     trial_module.id, trial_paper.id, trial_course.id))
             else:
-                context["msg"] = "Please select atleast one question to test"
+                message = "Please select atleast one question to test"
 
         if request.POST.get('question_tags'):
             question_tags = request.POST.getlist("question_tags")
             search_result = _get_questions_from_tags(question_tags, user)
             context['questions'] = search_result
-
+    messages.info(request, message)
     return my_render_to_response(request, 'yaksh/showquestions.html', context)
 
 

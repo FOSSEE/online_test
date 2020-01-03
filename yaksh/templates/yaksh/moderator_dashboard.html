@@ -1,13 +1,12 @@
 {% extends "manage.html" %}
 {% load custom_filters %}
 
-{% block title %} Moderartor Dashboard {% endblock %}
+{% block title %} My Dashboard {% endblock %}
+{% block pagetitle %} <h2>My Dashboard</h2> {% endblock %}
 
 {% block content %}
-<br><br>
 <div class="container">
     <center>
-        {% block pagetitle %} <h2>My Dashboard</h2> {% endblock %}
         <h4>
             List of quizzes! Click on the given links to have a look at answer papers for a quiz
         </h4>
@@ -44,7 +43,7 @@
         <div id="accordion">
             {% for course in courses %}
                 <div class="card">
-                    <div class="card-header" style="height: 100px">
+                    <div class="card-header">
                         <div class="row">
                             <div class="col-md-4">
                                 <h4 data-toggle="tooltip" title="{{course.name}}">

@@ -46,20 +46,31 @@
         </p>
       </div>
       <div class="card-body">
-        <div><a class="btn btn-lg btn-primary" href="{% url 'yaksh:download_yaml_template' %}">Download Template</a></div>
-        <br/>
-        <h4> Or </h4>
         <form action="" method="post"  enctype="multipart/form-data">
           {% csrf_token %}
-            <div class="form-group">
-              <div class="input-group mb-3">
-                <div class="custom-file">
-                  {{ upload_form.as_p }}
+            <div class="form-group col-md-6">
+                <a class="btn btn-lg btn-primary" href="{% url 'yaksh:download_yaml_template' %}">Download Template</a>
+                <br><br>
+                <h4> Or </h4>
+                <br>
+                <div class="input-group mb-3">
+                    <div class="custom-file">
+                        {{ upload_form }}
+                        <label class="custom-file-label" for="id_file">
+                            Choose file
+                        </label>
+                    </div>
                 </div>
-              </div>
+                <button class="btn btn-lg btn-success" type="submit" name="upload" value="upload">Upload File</button>
             </div>
-          <h4>And</h4>
-          <button class="btn btn-lg btn-success" type="submit" name="upload" value="upload">Upload File</button>
+            <script>
+                $('#id_file').on('change',function(){
+                    //get the file name
+                    var fileName = $(this).val();
+                    //replace the "Choose a file" label
+                    $(this).next('.custom-file-label').html(fileName);
+                })
+            </script>
         </form>
       </div>
     </div>
@@ -67,36 +78,32 @@
 
     <!-- Show questions -->
     <div id="show" class="tab-pane fade show active" role="tabpanel" aria-labelledby="showbar">
-      <form name=frm action="" method="post">
-        {% csrf_token %}
-        {% if message %}
-          {%if message == "Questions Uploaded Successfully"%}
-            <div class="alert alert-success alert-dismissable">
-              <a href="#" class="close" data-dismiss="alert" aria-label="close"><span class="fa fa-window-close"></span></a>
-                {{ message }}
-            </div>
-          {%else %}
-            <div class="alert alert-danger alert-dismissable">
-              <a href="#" class="close" data-dismiss="alert" aria-label="close"><span class="fa fa-window-close"></span></a>
-              {{ message }}
-            </div>
-          {% endif %}
-        {% endif %}
-        {% if msg %}
-          <div class="alert alert-danger alert-dismissable animated flash">
-            <a href="#" class="close" data-dismiss="alert" aria-label="close"><span class="fa fa-window-close"></span></a>
-            {{ msg }}
-          </div>
-        {% endif %}
-      </form>
-      <form name=frm action="" method="post">
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-dismissible alert-info">
+            <button type="button" class="close" data-dismiss="alert">
+                <i class="fa fa-close"></i>
+            </button>
+            <strong>{{ message }}</strong>
+        </div>
+        {% endfor %}
+    {% endif %}
+    <form name=frm action="" method="post">
         <div class="card">
           <div class="card-body">
             <!-- Filtering Questions  -->
             <div id="selectors">
               <h4>Filters Questions: </h4>
               <div class="dropdown">
-                  {{ form.question_type }} {{ form.language }} {{ form.marks }}
+                    <div class="col-md-4">
+                    {{ form.question_type }}
+                    </div>
+                    <div class="col-md-4">
+                    {{ form.language }}
+                    </div>
+                    <div class="col-md-4">
+                    {{ form.marks }}
+                    </div>
               </div>
             </div>
             <hr>
@@ -174,6 +181,7 @@
           {% include "yaksh/paginator.html" %}
           {% endif %}
         </div>
+        <br>
         <center>
           <a class="btn btn-lg btn-primary" href="{% url 'yaksh:add_question' %}">Add Question</a>
 
@@ -183,10 +191,10 @@
           {% endif %}
           <button class="btn btn-lg btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>
         </center>
-      </form>
+    </form>
     </div>
     <!-- End of Show questions -->
-  </div>
+    </div>
 </div>
 {% endblock %}
 

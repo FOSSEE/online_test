@@ -1,9 +1,8 @@
 {% extends template  %}
 {% block title %} Edit Profile {% endblock %}
+{% block pagetitle %} My Profile {% endblock %}
 {% block main %}
-<br><br><br>
 <div class="container">
-    <center><h2> My Profile </h2></center>
     <br>
     <form action="{% url 'yaksh:edit_profile'%}" method="post" >
       {% csrf_token %}

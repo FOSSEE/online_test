@@ -398,8 +398,11 @@ class ProfileForm(forms.ModelForm):
             widget=forms.Select({'class': 'custom-select'})
             )
 
+
 class UploadFileForm(forms.Form):
-    file = forms.FileField(widget=forms.FileInput(attrs={'class': 'upload'}))
+    file = forms.FileField(
+        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+    )
 
 
 class QuestionPaperForm(forms.ModelForm):

@@ -1,9 +1,9 @@
 {% extends "manage.html" %}
 {% load custom_filters %}
 {% block title %} Add/Edit Grading {% endblock %}
+{% block pagetitle %} Add/Edit Grading {% endblock %}
 {% block main %}
 <html>
-<br><br><br>
 <div class="row">
     <div class="col-md-8">
         <ul class="nav nav-pills" id="course_tabs">
@@ -43,6 +43,10 @@
     </div>
 </div>
 <hr>
+<a href="{% url 'grades:grading_systems'%}" class="btn btn-primary btn-lg">
+    View Grading Systems
+</a>
+<br><br>
 <div class="alert alert-info">
     Note: For grade range lower limit is inclusive and upper limit is exclusive
 </div>
