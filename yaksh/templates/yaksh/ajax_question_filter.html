@@ -15,6 +15,11 @@
         });
     });
     </script>
+    <br>
+    <a class="btn btn-lg btn-success" href="{% url 'yaksh:add_question' %}">
+        <i class="fa fa-plus-circle"></i>&nbsp;Add Question
+    </a>
+    <br><br>
     {% if questions %}
     {% include "yaksh/paginator.html" %}
 

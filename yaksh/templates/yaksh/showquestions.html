@@ -49,7 +49,8 @@
         <form action="" method="post"  enctype="multipart/form-data">
           {% csrf_token %}
             <div class="form-group col-md-6">
-                <a class="btn btn-lg btn-primary" href="{% url 'yaksh:download_yaml_template' %}">Download Template</a>
+                <a class="btn btn-lg btn-primary" href="{% url 'yaksh:download_yaml_template' %}">
+                  <i class="fa fa-download"></i>&nbsp;Download Template</a>
                 <br><br>
                 <h4> Or </h4>
                 <br>
@@ -61,7 +62,7 @@
                         </label>
                     </div>
                 </div>
-                <button class="btn btn-lg btn-success" type="submit" name="upload" value="upload">Upload File</button>
+                <button class="btn btn-lg btn-success" type="submit" name="upload" value="upload"><i class="fa fa-upload"></i>&nbsp;Upload File</button>
             </div>
             <script>
                 $('#id_file').on('change',function(){
@@ -145,6 +146,9 @@
           </div>
         </div>
         <div id="filtered-questions">
+          <br>
+          <a class="btn btn-lg btn-success" href="{% url 'yaksh:add_question' %}">
+            <i class="fa fa-plus-circle"></i>&nbsp;Add Question</a>
           {% if questions %}
             <div>
               <br>
@@ -183,13 +187,12 @@
         </div>
         <br>
         <center>
-          <a class="btn btn-lg btn-primary" href="{% url 'yaksh:add_question' %}">Add Question</a>
-
           {% if questions %}
-            <button class="btn btn-lg btn-primary" type="submit" name='download' value='download'>Download Selected</button>
+            <button class="btn btn-lg btn-primary" type="submit" name='download' value='download'><i class="fa fa-download"></i>&nbsp;Download Selected</button>
             <button class="btn btn-lg btn-primary" type="submit" name="test" value="test">Test Selected</button>
           {% endif %}
-          <button class="btn btn-lg btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected</button>
+          <button class="btn btn-lg btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>
+          <i class="fa fa-trash"></i>&nbsp;Delete Selected</button>
         </center>
     </form>
     </div>
