@@ -982,7 +982,7 @@ def add_course(request, course_id=None):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     if request.method == 'POST':
-        form = CourseForm(request.POST, instance=course)
+        form = CourseForm(user, request.POST, instance=course)
         if form.is_valid():
             new_course = form.save(commit=False)
             if course_id is None:
@@ -994,7 +994,7 @@ def add_course(request, course_id=None):
                 request, 'yaksh/add_course.html', {'form': form}
             )
     else:
-        form = CourseForm(instance=course)
+        form = CourseForm(user, instance=course)
         return my_render_to_response(
             request, 'yaksh/add_course.html', {'form': form}
         )
