@@ -4,19 +4,19 @@
 {% block pagetitle %} Add Question {% endblock pagetitle %}
 
 {% block css %}
-<link rel="stylesheet" type="text/css" href="{% static 'yaksh/css/autotaggit.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'yaksh/css/autotaggit.css' %}">
 {% endblock %}
 
 {% block script %}
-<script type="text/javascript" src="{% static 'yaksh/js/add_question.js' %}"></script>
-<script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js?config=TeX-MML-AM_CHTML' %}"></script>
+  <script type="text/javascript" src="{% static 'yaksh/js/add_question.js' %}"></script>
+  <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
 {% endblock %}
 
 {% block onload %} onload='javascript:textareaformat();' {% endblock %}
 
 {% block content %}
 <div class="yakshwell container">
-  <form action="{% url 'yaksh:add_question' question.id %}" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
+  <form action="{% if question %}{% url 'yaksh:add_question' question.id %}{% endif %}" method="post" name=frm onSubmit="return autosubmit();" enctype="multipart/form-data">
     {% csrf_token %}
     <center>
       {{qform.instance.language}}
@@ -71,18 +71,45 @@
     </div>
     {% endfor %}
       <div class="form-group">
-        <label for="case_type">Add Test Case:</label>
-        <select id="case_type" class="form-control w-auto" name="case_type" onchange="frm.submit()">
-          <option value="" selected="selected">---------</option>
-          <option value="standardtestcase">Standard </option>
-          <option value="stdiobasedtestcase">StdIO </option>
-          <option value="mcqtestcase">MCQ/MCC </option>
-          <option value="hooktestcase">Hook </option>
-          <option value="integertestcase">Integer </option>
-          <option value="stringtestcase"> String </option>
-          <option value="floattestcase"> Float </option>
-          <option value="arrangetestcase">Arrange options </option>
-        </select>
+        {% if question %}    
+          <label for="case_type">Add Test Case:</label>
+            {% if question.type == "code" %}
+              {% if qform.instance.language == "bash" %}
+                <select id="case_type" class="form-control w-auto" name="case_type" onchange="frm.submit()">
+                  <option value="" selected="selected">---------</option>
+                  <option value="standardtestcase">Standard </option>
+                  <option value="stdiobasedtestcase">StdIO </option>
+                  <option value="hooktestcase">Hook </option>
+                </select>
+              {% elif qform.instance.language == "scilab" %}
+                <select id="case_type" class="form-control w-auto" name="case_type" onchange="frm.submit()">
+                  <option value="" selected="selected">---------</option>
+                  <option value="standardtestcase">Standard </option>
+                  <option value="hooktestcase">Hook </option>
+                </select>
+              {% else %}
+                <select id="case_type" class="form-control w-auto" name="case_type" onchange="frm.submit()">
+                  <option value="" selected="selected">---------</option>
+                  <option value="standardtestcase">Standard </option>
+                  <option value="stdiobasedtestcase">StdIO </option>
+                  <option value="hooktestcase">Hook </option>
+                  <option value="easystandardtestcase">Easy Standard </option>
+                </select>
+              {% endif %}
+            {% else %}
+              <select id="case_type" class="form-control w-auto" name="case_type" onchange="frm.submit()">
+                <option value="" selected="selected">---------</option>
+                <option value="standardtestcase">Standard </option>
+                <option value="stdiobasedtestcase">StdIO </option>
+                <option value="mcqtestcase">MCQ/MCC </option>
+                <option value="hooktestcase">Hook </option>
+                <option value="integertestcase">Integer </option>
+                <option value="stringtestcase"> String </option>
+                <option value="floattestcase"> Float </option>
+                <option value="arrangetestcase">Arrange options </option>
+              </select>
+            {% endif %}
+        {% endif %}
       </div>
     <center>
       <button class="btn btn-lg btn-success" type="submit" name="save_question">Save</button>
