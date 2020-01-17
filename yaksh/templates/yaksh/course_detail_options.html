@@ -1,0 +1,47 @@
+<ul class="nav nav-pills list-group">
+    <li class="nav-item">
+        <a href="{% url 'yaksh:courses' %}" class="nav-link list-group-item" title="View all the courses" data-placement="top" data-toggle="tooltip">
+            Back to Courses
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'yaksh:course_students' course.id %}" id="enroll-students" class="nav-link list-group-item {% if is_students %} active {% endif %}" title="View the course requested, rejected and added students" data-placement="top" data-toggle="tooltip">
+            Enroll Students
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'yaksh:send_mail' course.id %}" class="nav-link list-group-item {% if is_mail %} active {% endif %}" title="Send mail to course students" data-placement="top" data-toggle="tooltip">
+            Send Mail
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'yaksh:course_status' course.id %}" class="nav-link list-group-item {% if is_progress %} active {% endif %}" title="View Students course progress" data-placement="top" data-toggle="tooltip">
+            Course Progress
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link list-group-item" href="{% url 'yaksh:duplicate_course' course.id %}" data-toggle="tooltip" title="Creates copy of this course and all its contents" data-placement="top">
+        Clone Course
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link list-group-item {% if is_design_course %} active {% endif %}" href="{% url 'yaksh:design_course' course.id %}" title="Add modules to this course" data-placement="top" data-toggle="tooltip">
+        Design Course
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link list-group-item {% if is_modules %} active {% endif %}" href="{% url 'yaksh:get_course_modules' course.id %}" title="View modules added to the course" data-placement="top" data-toggle="tooltip">
+        Course Modules
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link list-group-item {% if is_add_teacher %} active {% endif %}" href="{% url 'yaksh:search_teacher' course.id %}" data-toggle="tooltip" title="Add Teachers/TAs to this course" data-placement="top">
+        Add Teachers/TAs
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link list-group-item {% if is_teachers %} active {% endif %}" href="{% url 'yaksh:course_teachers' course.id %}" data-toggle="tooltip" title="View all the Teachers/TAs for this course" data-placement="top">
+        Current Teachers/TAs
+        </a>
+    </li>
+</ul>

@@ -63,6 +63,7 @@
                             </div>
                             <div class="col-md-3">
                                 <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary btn-lg">
+                                    <i class="fa fa-tasks"></i>
                                     Manage Course
                                 </a>
                             </div>
@@ -115,6 +116,11 @@
         <br>
     {% endif %}
     {% endwith %}
+    {% if trial_paper %}
+        {% for paper in trial_paper %}
+            <a href="{% url 'yaksh:grade_user' paper.question_paper.quiz.id paper.course.id %}">{{paper.question_paper.quiz.description}}</a>
+        {% endfor %}
+    {% endif %}
 </div>
 {% endblock %}
 

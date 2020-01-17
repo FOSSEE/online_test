@@ -119,17 +119,20 @@
                                 <hr>
                                 <div class="row">
                                     <div class="col-md-4">
-                                        <a href="{{URL_ROOT}}/exam/manage/edit_course/{{course.id}}" class="btn btn-primary">
+                                        <a href="{% url 'yaksh:edit_course' course.id %}" class="btn btn-info">
+                                            <i class="fa fa-edit"></i>
                                             Edit Course
                                         </a>
                                     </div>
                                     <div class="col-md-4">
-                                        <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-info">
+                                        <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
+                                            <i class="fa fa-tasks"></i>
                                             Manage Course
                                         </a>
                                     </div>
                                     <div class="col-md-4">
-                                        <a href="{{URL_ROOT}}/exam/manage/courses/download_course_csv/{{course.id}}" class="btn btn-secondary">
+                                        <a href="{% url 'yaksh:download_course_csv' course.id %}" class="btn btn-secondary">
+                                            <i class="fa fa-download"></i>
                                             Download CSV
                                         </a>
                                     </div>
