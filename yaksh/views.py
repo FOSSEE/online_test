@@ -17,6 +17,7 @@ from django.core.exceptions import (
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from taggit.models import Tag
+from django.urls import reverse
 import json
 import six
 from textwrap import dedent
@@ -410,28 +411,8 @@ def prof_manage(request, msg=None):
     except EmptyPage:
         # If page is out of range (e.g. 9999), deliver last page of results.
         courses = paginator.page(paginator.num_pages)
-    trial_paper = AnswerPaper.objects.filter(
-        user=user, question_paper__quiz__is_trial=True,
-        course__is_trial=True
-    )
-    if request.method == "POST":
-        delete_paper = request.POST.getlist('delete_paper')
-        for answerpaper_id in delete_paper:
-            answerpaper = AnswerPaper.objects.get(id=answerpaper_id)
-            qpaper = answerpaper.question_paper
-            answerpaper.course.remove_trial_modules()
-            answerpaper.course.delete()
-            if qpaper.quiz.is_trial:
-                qpaper.quiz.delete()
-            else:
-                if qpaper.answerpaper_set.count() == 1:
-                    qpaper.quiz.delete()
-                else:
-                    answerpaper.delete()
 
-    context = {'user': user, 'objects': courses,
-               'trial_paper': trial_paper, 'msg': msg
-               }
+    context = {'user': user, 'objects': courses}
     return my_render_to_response(
         request, 'yaksh/moderator_dashboard.html', context
     )
@@ -1109,7 +1090,8 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
             ' please contact your '
             'instructor/administrator.'
         )
-        return complete(request, msg, attempt_num=None, questionpaper_id=None)
+        messages.warning(request, msg)
+        return my_redirect(reverse('yaksh:course_students', args=[course_id]))
 
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
@@ -1119,12 +1101,13 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
     else:
         enroll_ids = [user_id]
     if not enroll_ids:
-        return my_render_to_response(
-            request, 'yaksh/course_detail.html', {'course': course}
-        )
+        messages.warning(request, "Please select atleast one student")
+        return my_redirect(reverse('yaksh:course_students', args=[course_id]))
+
     users = User.objects.filter(id__in=enroll_ids)
     course.enroll(was_rejected, *users)
-    return course_detail(request, course_id)
+    messages.success(request, "Enrolled student(s) successfully")
+    return my_redirect(reverse('yaksh:course_students', args=[course_id]))
 
 
 @login_required
@@ -1150,9 +1133,10 @@ def send_mail(request, course_id, user_id=None):
             message = send_bulk_mail(
                 subject, email_body, recipients, attachments
             )
+            messages.info(request, message)
     context = {
-        'course': course, 'message': message,
-        'state': 'mail'
+        'course': course, 'message': message, 
+        'enrolled': course.get_enrolled(), 'is_mail': True
     }
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
@@ -1173,14 +1157,13 @@ def reject(request, course_id, user_id=None, was_enrolled=False):
     else:
         reject_ids = [user_id]
     if not reject_ids:
-        message = "Please select atleast one User"
-        return my_render_to_response(
-            request, 'yaksh/course_detail.html',
-            {'course': course, 'message': message},
-        )
+        messages.warning(request, "Please select atleast one student")
+        return my_redirect(reverse('yaksh:course_students', args=[course_id]))
+
     users = User.objects.filter(id__in=reject_ids)
     course.reject(was_enrolled, *users)
-    return course_detail(request, course_id)
+    messages.success(request, "Rejected students successfully")
+    return my_redirect(reverse('yaksh:course_students', args=[course_id]))
 
 
 @login_required
@@ -1858,7 +1841,8 @@ def search_teacher(request, course_id):
             )
             context['success'] = True
             context['teachers'] = teachers
-    return my_render_to_response(request, 'yaksh/addteacher.html', context)
+    context['is_add_teacher'] = True
+    return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
 
 @login_required
@@ -1908,7 +1892,9 @@ def add_teacher(request, course_id):
         course.add_teachers(*teachers)
         context['status'] = True
         context['teachers_added'] = teachers
-    return my_render_to_response(request, 'yaksh/addteacher.html', context)
+        messages.success(request, "Added teachers successfully")
+    context['is_add_teacher'] = True    
+    return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
 
 @login_required
@@ -1924,9 +1910,13 @@ def remove_teachers(request, course_id):
 
     if request.method == "POST":
         teacher_ids = request.POST.getlist('remove')
-        teachers = User.objects.filter(id__in=teacher_ids)
-        course.remove_teachers(*teachers)
-    return my_redirect('/exam/manage/courses')
+        if teacher_ids:
+            teachers = User.objects.filter(id__in=teacher_ids)
+            course.remove_teachers(*teachers)
+            messages.success(request, "Removed teachers successfully")
+        else:
+            messages.warning(request, "Please select atleast one teacher")
+    return course_teachers(request, course_id)
 
 
 def test_mode(user, godmode=False, questions_list=None, quiz_id=None,
@@ -2237,66 +2227,60 @@ def upload_users(request, course_id):
     context = {'course': course}
 
     if not (course.is_teacher(user) or course.is_creator(user)):
-        msg = 'You do not have permissions to this course.'
-        return complete(request, reason=msg)
+        raise Http404('You are not allowed to view this page!')
     if request.method == 'POST':
         if 'csv_file' not in request.FILES:
-            context['message'] = "Please upload a CSV file."
-            return my_render_to_response(
-                request, 'yaksh/course_detail.html', context
-            )
+            messages.warning(request, "Please upload a CSV file.")
+            return my_redirect(reverse('yaksh:course_students',
+                                      args=[course_id]))
         csv_file = request.FILES['csv_file']
         is_csv_file, dialect = is_csv(csv_file)
         if not is_csv_file:
-            context['message'] = "The file uploaded is not a CSV file."
-            return my_render_to_response(
-                request, 'yaksh/course_detail.html', context
-            )
+            messages.warning(request, "The file uploaded is not a CSV file.")
+            return my_redirect(reverse('yaksh:course_students',
+                                      args=[course_id]))
         required_fields = ['firstname', 'lastname', 'email']
         try:
             reader = csv.DictReader(
                 csv_file.read().decode('utf-8').splitlines(),
                 dialect=dialect)
         except TypeError:
-            context['message'] = "Bad CSV file"
-            return my_render_to_response(
-                request, 'yaksh/course_detail.html', context
-            )
+            messages.warning(request, "Bad CSV file")
+            return my_redirect(reverse('yaksh:course_students',
+                                      args=[course_id]))
         stripped_fieldnames = [
             field.strip().lower() for field in reader.fieldnames]
         for field in required_fields:
             if field not in stripped_fieldnames:
-                context['message'] = "The CSV file does not contain the"\
-                    " required headers"
-                return my_render_to_response(
-                    request, 'yaksh/course_detail.html', context
-                )
+                msg = "The CSV file does not contain the required headers"
+                messages.warning(request, msg)
+                return my_redirect(reverse('yaksh:course_students',
+                                          args=[course_id]))
         reader.fieldnames = stripped_fieldnames
-        context['upload_details'] = _read_user_csv(reader, course)
-    return my_render_to_response(request, 'yaksh/course_detail.html', context)
+        _read_user_csv(request, reader, course)
+    return my_redirect(reverse('yaksh:course_students', args=[course_id]))
 
 
-def _read_user_csv(reader, course):
+def _read_user_csv(request, reader, course):
     fields = reader.fieldnames
-    upload_details = ["Upload Summary:"]
     counter = 0
     for row in reader:
         counter += 1
         (username, email, first_name, last_name, password, roll_no, institute,
          department, remove) = _get_csv_values(row, fields)
         if not email or not first_name or not last_name:
-            upload_details.append("{0} -- Missing Values".format(counter))
+            messages.info(request, "{0} -- Missing Values".format(counter))
             continue
         users = User.objects.filter(username=username)
         if users.exists():
             user = users[0]
             if remove.strip().lower() == 'true':
                 _remove_from_course(user, course)
-                upload_details.append("{0} -- {1} -- User rejected".format(
-                                      counter, user.username))
+                messages.info(request, "{0} -- {1} -- User rejected".format(
+                              counter, user.username))
             else:
                 _add_to_course(user, course)
-                upload_details.append(
+                messages.info(request,
                     "{0} -- {1} -- User Added Successfully".format(
                         counter, user.username))
             continue
@@ -2313,11 +2297,10 @@ def _read_user_csv(reader, course):
             course.students.add(user)
         else:
             state = "Updated"
-        upload_details.append("{0} -- {1} -- User {2} Successfully".format(
-                              counter, user.username, state))
+        messages.info(request, "{0} -- {1} -- User {2} Successfully".format(
+                      counter, user.username, state))
     if counter == 0:
-        upload_details.append("No rows in the CSV file")
-    return upload_details
+        messages.warning(request, "No rows in the CSV file")
 
 
 def _get_csv_values(row, fields):
@@ -2557,9 +2540,10 @@ def design_module(request, module_id, course_id=None):
     learning_module = LearningModule.objects.get(id=module_id)
     if request.method == "POST":
         if "Add" in request.POST:
-            add_values = request.POST.get("chosen_list").split(',')
+            add_values = request.POST.get("chosen_list")
             to_add_list = []
             if add_values:
+                add_values = add_values.split(',')
                 ordered_units = learning_module.get_learning_units()
                 if ordered_units.exists():
                     start_val = ordered_units.last().order + 1
@@ -2577,29 +2561,56 @@ def design_module(request, module_id, course_id=None):
                             type=type)
                     to_add_list.append(learning_unit)
                 learning_module.learning_unit.add(*to_add_list)
+                messages.success(request, "Lesson/Quiz added successfully")
+            else:
+                messages.warning(request, "Please select a lesson/quiz to add")
 
         if "Change" in request.POST:
-            order_list = request.POST.get("ordered_list").split(",")
-            for order in order_list:
-                learning_unit, learning_order = order.split(":")
-                if learning_order:
-                    learning_unit = learning_module.learning_unit.get(
-                        id=learning_unit)
-                    learning_unit.order = learning_order
-                    learning_unit.save()
+            order_list = request.POST.get("ordered_list")
+            print(order_list)
+            if order_list:
+                order_list = order_list.split(",")
+                for order in order_list:
+                    learning_unit, learning_order = order.split(":")
+                    if learning_order:
+                        learning_unit = learning_module.learning_unit.get(
+                            id=learning_unit)
+                        learning_unit.order = learning_order
+                        learning_unit.save()
+                messages.success(request, "Order changed successfully")
+            else:
+                messages.warning(
+                    request, "Please select a lesson/quiz to change"
+                )
 
         if "Remove" in request.POST:
             remove_values = request.POST.getlist("delete_list")
             if remove_values:
                 learning_module.learning_unit.remove(*remove_values)
                 LearningUnit.objects.filter(id__in=remove_values).delete()
+                messages.success(
+                    request, "Lessons/quizzes delected successfully"
+                )
+            else:
+                messages.warning(
+                    request, "Please select a lesson/quiz to remove"
+                )
 
         if "Change_prerequisite" in request.POST:
             unit_list = request.POST.getlist("check_prereq")
-            for unit in unit_list:
-                learning_unit = learning_module.learning_unit.get(id=unit)
-                learning_unit.toggle_check_prerequisite()
-                learning_unit.save()
+            if unit_list:
+                for unit in unit_list:
+                    learning_unit = learning_module.learning_unit.get(id=unit)
+                    learning_unit.toggle_check_prerequisite()
+                    learning_unit.save()
+                messages.success(
+                    request, "Changed prerequisite status successfully"
+                )
+            else:
+                messages.warning(
+                    request,
+                    "Please select a lesson/quiz to change prerequisite"
+                )
 
     added_quiz_lesson = learning_module.get_added_quiz_lesson()
     quizzes = [("quiz", quiz) for quiz in Quiz.objects.filter(
@@ -2621,12 +2632,12 @@ def add_module(request, module_id=None, course_id=None):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    redirect_url = "/exam/manage/courses/all_learning_module/"
+    redirect_url = reverse("yaksh:show_all_modules")
     if course_id:
         course = Course.objects.get(id=course_id)
         if not course.is_creator(user) and not course.is_teacher(user):
             raise Http404('This course does not belong to you')
-        redirect_url = "/exam/manage/courses/"
+        redirect_url = reverse("yaksh:get_course_modules", args=[course_id])
     if module_id:
         module = LearningModule.objects.get(id=module_id)
         if not module.creator == user and not course_id:
@@ -2816,9 +2827,10 @@ def design_course(request, course_id):
     learning_modules = set(all_learning_modules) - set(added_learning_modules)
     context['added_learning_modules'] = added_learning_modules
     context['learning_modules'] = learning_modules
-    context['course_id'] = course_id
+    context['course'] = course
+    context['is_design_course'] = True
     return my_render_to_response(
-        request, 'yaksh/design_course_session.html', context
+        request, 'yaksh/course_detail.html', context
     )
 
 
@@ -2908,7 +2920,7 @@ def course_status(request, course_id):
                      course.get_current_unit(student)) for student in students]
     context = {
         'course': course, 'student_details': stud_details,
-        'state': 'course_status'
+        'course_status': True, 'is_progress': True
     }
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
@@ -2995,6 +3007,8 @@ def get_user_data(request, course_id, student_id):
 @email_verified
 def download_course(request, course_id):
     user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
     course = get_object_or_404(Course, pk=course_id)
     if (not course.is_creator(user) and not course.is_teacher(user) and not
             course.is_student(user)):
@@ -3021,3 +3035,51 @@ def download_course(request, course_id):
                                             )
     response.write(zip_file.read())
     return response
+
+
+@login_required
+@email_verified
+def course_students(request, course_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404("You are not allowed to view {0}".format(
+            course.name))
+    enrolled = course.get_enrolled()
+    requested = course.get_requests()
+    rejected = course.get_rejected()
+    context = {"enrolled": enrolled, "requested": requested, "course": course,
+               "rejected": rejected, "is_students": True}
+    return my_render_to_response(request, 'yaksh/course_detail.html', context)
+
+
+@login_required
+@email_verified
+def course_teachers(request, course_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404("You are not allowed to view {0}".format(
+            course.name))
+    teachers = course.get_teachers()
+    context = {"teachers": teachers, "is_teachers": True, "course": course}
+    return my_render_to_response(request, 'yaksh/course_detail.html', context)
+
+
+@login_required
+@email_verified
+def get_course_modules(request, course_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404("You are not allowed to view {0}".format(
+            course.name))
+    modules = course.get_learning_modules()
+    context = {"modules": modules, "is_modules": True, "course": course}
+    return my_render_to_response(request, 'yaksh/course_detail.html', context)

@@ -36,3 +36,12 @@ body, .dropdown-menu {
 .dropdown {
     display: flex;
 }
+
+.course-detail {
+    table-layout: fixed;
+    width: 100%;   
+}
+
+.course-detail > th, td {
+    word-wrap: break-word;
+}
