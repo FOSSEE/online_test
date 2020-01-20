@@ -62,13 +62,13 @@
                                 {% endif %}
                             </div>
                             <div class="col-md-3">
-                                <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary btn-lg">
+                                <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
                                     <i class="fa fa-tasks"></i>
                                     Manage Course
                                 </a>
                             </div>
                             <div class="col-md">
-                                <a class="card-link btn btn-info btn-lg" data-toggle="collapse" href="#collapse{{course.id}}">
+                                <a class="card-link btn btn-info" data-toggle="collapse" href="#collapse{{course.id}}">
                                     Details
                                     <i class="fa fa-toggle-down" id="toggle_course_{{course.id}}"></i>
                                 </a>

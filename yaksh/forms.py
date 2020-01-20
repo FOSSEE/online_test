@@ -228,6 +228,34 @@ class QuizForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(QuizForm, self).__init__(*args, **kwargs)
 
+        self.fields['start_date_time'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['end_date_time'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['duration'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['attempts_allowed'].widget.attrs.update(
+            {'class': 'custom-select'}
+        )
+        self.fields['time_between_attempts'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['instructions'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['weightage'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['pass_criteria'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+
         self.fields["instructions"].initial = dedent("""\
             <p>
             This examination system has been developed with the intention of
@@ -415,9 +443,15 @@ class LessonForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(LessonForm, self).__init__(*args, **kwargs)
         des_msg = "Enter Lesson Description as Markdown text"
-        name_msg = "Enter Lesson Name"
-        self.fields['description'].widget.attrs['placeholder'] = des_msg
-        self.fields['name'].widget.attrs['placeholder'] = name_msg
+        self.fields['name'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Lesson Name'}
+        )
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': des_msg}
+        )
+        self.fields['video_file'].widget.attrs.update(
+            {'class': "custom-file-input"}
+        )
 
     class Meta:
         model = Lesson
@@ -438,16 +472,21 @@ class LessonForm(forms.ModelForm):
 
 class LessonFileForm(forms.Form):
     Lesson_files = forms.FileField(widget=forms.ClearableFileInput(
-                                attrs={'multiple': True}),
+                                attrs={'multiple': True,
+                                'class': "custom-file-input"}),
                                 required=False)
 
 
 class LearningModuleForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(LearningModuleForm, self).__init__(*args, **kwargs)
-        name_msg = "Enter Learning Module Name"
-        self.fields['name'].widget.attrs['placeholder'] = name_msg
         self.fields['name'].widget.attrs['size'] = 30
+        self.fields['name'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Module Name'}
+        )
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Module Description'}
+        )
 
     class Meta:
         model = LearningModule

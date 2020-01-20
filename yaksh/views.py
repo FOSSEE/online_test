@@ -328,15 +328,11 @@ def add_quiz(request, quiz_id=None, course_id=None):
             if quiz is None:
                 form.instance.creator = user
             form.save()
-            if not course_id:
-                return my_redirect("/exam/manage/courses/all_quizzes/")
-            else:
-                return my_redirect("/exam/manage/courses/")
-
+            messages.success(request, "Quiz saved successfully")
     else:
         form = QuizForm(instance=quiz)
-        context["course_id"] = course_id
-        context["quiz"] = quiz
+    context["course_id"] = course_id
+    context["quiz"] = quiz
     context["form"] = form
     return my_render_to_response(request, 'yaksh/add_quiz.html', context)
 
@@ -970,6 +966,9 @@ def add_course(request, course_id=None):
             if course_id is None:
                 new_course.creator = user
             new_course.save()
+            messages.success(
+                request, "Saved {0} successfully".format(new_course.name)
+                )
             return my_redirect('/exam/manage/courses')
         else:
             return my_render_to_response(
@@ -2427,9 +2426,9 @@ def edit_lesson(request, lesson_id=None, course_id=None):
         course = get_object_or_404(Course, id=course_id)
         if not course.is_creator(user) and not course.is_teacher(user):
             raise Http404('This Lesson does not belong to you')
-        redirect_url = "/exam/manage/courses/"
+        redirect_url = reverse("yaksh:get_course_modules", args=[course_id])
     else:
-        redirect_url = "/exam/manage/courses/all_lessons/"
+        redirect_url = reverse("yaksh:show_all_lessons")
     context = {}
     if request.method == "POST":
         if "Save" in request.POST:
@@ -2454,7 +2453,9 @@ def edit_lesson(request, lesson_id=None, course_id=None):
                         LessonFile.objects.get_or_create(
                             lesson=lesson, file=les_file
                         )
-                return my_redirect(redirect_url)
+                messages.success(
+                    request, "Saved {0} successfully".format(lesson.name)
+                )
             else:
                 context['lesson_form'] = lesson_form
                 context['error'] = lesson_form["video_file"].errors
@@ -2466,7 +2467,13 @@ def edit_lesson(request, lesson_id=None, course_id=None):
                 files = LessonFile.objects.filter(id__in=remove_files_id)
                 for file in files:
                     file.remove()
-            return my_redirect(redirect_url)
+                messages.success(
+                    request, "Deleted files successfully"
+                )
+            else:
+                messages.warning(
+                    request, "Please select atleast one file to delete"
+                )
 
     lesson_files = LessonFile.objects.filter(lesson=lesson)
     lesson_files_form = LessonFileForm()
@@ -2589,7 +2596,7 @@ def design_module(request, module_id, course_id=None):
                 learning_module.learning_unit.remove(*remove_values)
                 LearningUnit.objects.filter(id__in=remove_values).delete()
                 messages.success(
-                    request, "Lessons/quizzes delected successfully"
+                    request, "Lessons/quizzes deleted successfully"
                 )
             else:
                 messages.warning(
@@ -2654,7 +2661,10 @@ def add_module(request, module_id=None, course_id=None):
                 module = module_form.save()
                 module.html_data = get_html_text(module.description)
                 module.save()
-                return my_redirect(redirect_url)
+                messages.success(
+                    request,
+                    "Saved {0} successfully".format(module.name)
+                )
             else:
                 context['module_form'] = module_form
 
@@ -2695,8 +2705,8 @@ def show_all_modules(request):
         raise Http404('You are not allowed to view this page!')
     learning_modules = LearningModule.objects.filter(
         creator=user, is_trial=False)
-    context = {"learning_modules": learning_modules, "type": "learning_module"}
-    return my_render_to_response(request, 'yaksh/courses.html', context)
+    context = {"modules": learning_modules}
+    return my_render_to_response(request, 'yaksh/course_added_modules.html', context)
 
 
 @login_required
@@ -2914,13 +2924,26 @@ def course_status(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
-    students = course.get_only_students()
+    students = course.students.order_by("-id")
+    students_no = students.count()
+    paginator = Paginator(students, 100)
+    page = request.GET.get('page')
+    try:
+        students = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        students = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        students = paginator.page(paginator.num_pages)
+
     stud_details = [(student, course.get_grade(student),
                      course.get_completion_percent(student),
-                     course.get_current_unit(student)) for student in students]
+                     course.get_current_unit(student))
+                     for student in students.object_list]
     context = {
-        'course': course, 'student_details': stud_details,
-        'course_status': True, 'is_progress': True
+        'course': course, 'objects': students, 'is_progress': True,
+        'student_details': stud_details, 'students_no': students_no
     }
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
 

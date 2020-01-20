@@ -162,7 +162,7 @@ urlpatterns = [
     url(r'^manage/regrade/paper/(?P<course_id>\d+)/(?P<answerpaper_id>\d+)/$',
         views.regrade, name='regrade'),
     url(r'^manage/(?P<mode>godmode|usermode)/(?P<quiz_id>\d+)/'
-        '(?P<course_id>\d+)/$', views.test_quiz),
+        '(?P<course_id>\d+)/$', views.test_quiz, name="test_quiz"),
     url(r'^manage/create_demo_course/$', views.create_demo_course,
         name="create_demo_course"),
     url(r'^manage/courses/download_course_csv/(?P<course_id>\d+)/$',
