@@ -129,7 +129,7 @@
                                                 <input type="checkbox" name="questions" data-qid="{{question.id}}" value={{question.id}}>
                                                 <span>
                                                     {% if user == question.user %}
-                                                        <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}" target="_blank">{{ question.summary }}</a>
+                                                        <a href="{% url 'yaksh:add_question' question.id %}" target="_blank">{{ question.summary }}</a>
                                                     {% else %}
                                                         {{question.summary}}
                                                     {% endif %}
@@ -159,7 +159,7 @@
                                             data-qid="{{question.id}}" value={{question.id}}>
                                             <span>
                                                 {% if user == question.user %}
-                                                    <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}" target="_blank">{{ question.summary }}</a>
+                                                    <a href="{% url 'yaksh:add_question' question.id %}" target="_blank">{{ question.summary }}</a>
                                                 {% else %}
                                                     {{question.summary}}
                                                 {% endif %}
@@ -208,7 +208,7 @@
                                                 <input type="checkbox" name="random_questions" data-qid="{{question.id}}" value={{question.id}}>
                                                 <span>
                                                     {% if user == question.user %}
-                                                        <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}" target="_blank">{{ question.summary }}</a>
+                                                        <a href="{% url 'yaksh:add_question' question.id %}" target="_blank">{{ question.summary }}</a>
                                                     {% else %}
                                                         {{question.summary}}
                                                     {% endif %}</span>
@@ -242,7 +242,7 @@
                                             <label>
                                                 <span>
                                                     {% if user == question.user %}
-                                                        <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}" target="_blank">{{ question.summary }}</a>
+                                                        <a href="{% url 'yaksh:add_question' question.id %}" target="_blank">{{ question.summary }}</a>
                                                     {% else %}
                                                         {{question.summary}}
                                                     {% endif %}</span>
