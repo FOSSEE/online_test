@@ -2399,15 +2399,21 @@ def duplicate_course(request, course_id):
     if course.is_teacher(user) or course.is_creator(user):
         # Create new entries of modules, lessons/quizzes
         # from current course to copied course
-        course.create_duplicate_course(user)
+        duplicate_course = course.create_duplicate_course(user)
+        msg = dedent(
+            '''\
+            Course duplication successful with the name {0} , please check
+            the courses page.'''.format(duplicate_course.name)
+        )
+        messages.success(request, msg)
     else:
         msg = dedent(
             '''\
             You do not have permissions to clone {0} course, please contact
             your instructor/administrator.'''.format(course.name)
         )
-        return complete(request, msg, attempt_num=None, questionpaper_id=None)
-    return my_redirect('/exam/manage/courses/')
+        messages.warning(request, msg)
+    return my_redirect(reverse('yaksh:course_detail', args=[course_id]))
 
 
 @login_required

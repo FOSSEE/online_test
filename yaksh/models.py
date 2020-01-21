@@ -879,6 +879,7 @@ class Course(models.Model):
             copy_module_name = "Copy of {0}".format(module.name)
             new_module = module._create_module_copy(user, copy_module_name)
             new_course.learning_module.add(new_module)
+        return new_course
 
     def request(self, *users):
         self.requests.add(*users)
