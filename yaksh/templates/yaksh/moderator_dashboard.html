@@ -19,16 +19,16 @@
         <a href="{% url 'yaksh:create_demo_course' %}" class="btn btn-primary btn-lg">
             Create Demo Course
         </a>
-        <br>
-        {% if msg %}
-        <div class="container">
-            <div class="alert alert-dismissible alert-info">
+        <br><br>
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-dismissible alert-{{ message.tags }}">
                 <button type="button" class="close" data-dismiss="alert">
                     <i class="fa fa-close"></i>
                 </button>
-                <strong>{{ msg }}</strong>
+                <strong>{{ message }}</strong>
             </div>
-        </div>
+            {% endfor %}
         {% endif %}
     </center>
     {% with objects as courses %}

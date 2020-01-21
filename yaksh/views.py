@@ -407,7 +407,7 @@ def prof_manage(request, msg=None):
     except EmptyPage:
         # If page is out of range (e.g. 9999), deliver last page of results.
         courses = paginator.page(paginator.num_pages)
-
+    messages.info(request, msg)
     context = {'user': user, 'objects': courses}
     return my_render_to_response(
         request, 'yaksh/moderator_dashboard.html', context
@@ -1413,19 +1413,26 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
                 question_paper.fixed_question_order = questions_order
                 question_paper.save()
                 question_paper.fixed_questions.add(*questions)
+                messages.success(request, "Questions added successfully")
+            else:
+                messages.warning(request, "Please select atleast one question")
 
         if 'remove-fixed' in request.POST:
             question_ids = request.POST.getlist('added-questions', None)
-            if question_paper.fixed_question_order:
-                que_order = question_paper.fixed_question_order.split(",")
-                for qid in question_ids:
-                    que_order.remove(qid)
-                if que_order:
-                    question_paper.fixed_question_order = ",".join(que_order)
-                else:
-                    question_paper.fixed_question_order = ""
-                question_paper.save()
-            question_paper.fixed_questions.remove(*question_ids)
+            if question_ids:
+                if question_paper.fixed_question_order:
+                    que_order = question_paper.fixed_question_order.split(",")
+                    for qid in question_ids:
+                        que_order.remove(qid)
+                    if que_order:
+                        question_paper.fixed_question_order = ",".join(que_order)
+                    else:
+                        question_paper.fixed_question_order = ""
+                    question_paper.save()
+                question_paper.fixed_questions.remove(*question_ids)
+                messages.success(request, "Questions removed successfully")
+            else:
+                messages.warning(request, "Please select atleast one question")
 
         if 'add-random' in request.POST:
             question_ids = request.POST.getlist('random_questions', None)
@@ -1437,14 +1444,21 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
                 random_ques = Question.objects.filter(id__in=question_ids)
                 random_set.questions.add(*random_ques)
                 question_paper.random_questions.add(random_set)
+                messages.success(request, "Questions removed successfully")
+            else:
+                messages.warning(request, "Please select atleast one question")
 
         if 'remove-random' in request.POST:
             random_set_ids = request.POST.getlist('random_sets', None)
-            question_paper.random_questions.remove(*random_set_ids)
+            if random_set_ids:
+                question_paper.random_questions.remove(*random_set_ids)
+                messages.success(request, "Questions removed successfully")
+            else:
+                messages.warning(request,"Please select question set")
 
         if 'save' in request.POST or 'back' in request.POST:
             qpaper_form.save()
-            return my_redirect('/exam/manage/courses/all_quizzes/')
+            messages.success(request, "Question Paper saved successfully")
 
         if marks:
             questions = _get_questions(user, question_type, marks)
@@ -1956,6 +1970,10 @@ def test_quiz(request, mode, quiz_id, course_id=None):
     current_user = request.user
     quiz = Quiz.objects.get(id=quiz_id)
     if (quiz.is_expired() or not quiz.active) and not godmode:
+        messages.warning(
+            request,
+            "{0} is either expired or inactive".format(quiz.description)
+        )
         return my_redirect('/exam/manage')
 
     trial_questionpaper, trial_course, trial_module = test_mode(
