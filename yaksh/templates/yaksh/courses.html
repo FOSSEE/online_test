@@ -53,16 +53,47 @@
     <a href="#sidebar" data-toggle="collapse" id="sidebaricon"><i class="fa fa-navicon fa-lg"></i></a>
     <!-- End of side bar -->
     <main class="tab-content col" id="sidebarbody">
-        
         <div class="tab-pane fade show active container-fluid yakshwell" role="tabpanel" aria-labelledby="sidebar-tab">
-            
             {% if type == "courses" %}
-            <div id="created_courses">
+                <form name=frm action="" method="post">
+                    {% csrf_token %}
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="col-md-12">
+                            <input type="text" name="course_tags" id="course_tags" class="form-control" type="search"  placeholder="Search Courses">
+                            <br>
+                            <div class="row col-md-12">
+                                <h6>Filter Courses: </h6>
+                                <div name="course_status" id="course_status" style="margin-left: 20px;">
+                                    {{ form.course_status }}
+                                </div>
+                            </div>
+                            <br>
+                            <button class="btn btn-primary" type="submit">Search</button>
+
+                            <button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>
+                                Clear Search
+                            </button>
+                        </div>
+                      </div>
+                    </div>
+                </form>
+                <br>
+                <div id="created_courses">
                 {% if not courses %}
-                    <center><h4> No new Courses created </h4></center>
+                        <center><h4> No courses found </h4></center>
                 {% else %}
-            <div class="col-md-offset-2 main">
-                <center><h3 class="yakshlabel"> Course(s) Created</h3></center>
+                    <div class="col-md-offset-2 main">
+                        {% if courses_found %}
+                            {% if courses_found == 1 %}
+                                <center><h4> {{ courses_found }} Course found </h4></center>
+                            {% else %}
+                                <center><h4> {{ courses_found }} Courses found </h4></center>
+                            {% endif %}
+                        {% else %}
+                            <center><h4> Courses </h4></center>
+                {% endif %}
+
                  <div class="table-wrapper-2">
                 <table id="course-details" class="table table-bordered table-responsive-sm">
                 <tr class="text-center yakshred bg-light">
@@ -334,13 +365,46 @@
             <div id="all_quizzes" >
             <div class="col-md-offset-2 main">
             {% if type == "quiz" %}
+                <form name=frm action="" method="post">
+                    {% csrf_token %}
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="col-md-12">
+                            <input type="text" name="quiz_tags" id="quiz_tags" class="form-control" type="search"  placeholder="Search Quizzes">
+                            <br>
+                            <div class="row col-md-12">
+                                <h6>Filter Quizzes: </h6>
+                                <div name="quiz_status" id="quiz_status" style="margin-left: 20px;">
+                                    {{ form.quiz_status }}
+                                </div>
+                            </div>
+                            <br>
+                            <button class="btn btn-primary" type="submit">Search</button>
+                            <button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>
+                                Clear Search
+                            </button>
+                        </div>
+                      </div>
+                    </div>
+                </form>
+                <br>
+
                 <a href="{{URL_ROOT}}/exam/manage/addquiz/" class="btn btn-primary">Add New Quiz</a>
                 <a href="{{URL_ROOT}}/exam/manage/add_exercise/" class="btn btn-primary">Add New Exercise</a>
                 {% if not quizzes %}
-                    <center><h4> No new Quiz added</h4></center>
+                    <center><h4> No quizzes found.</h4></center>
                     <br><br>
                 {% else %}
-                    <center><h3> Quizzes </h3></center>
+                    {% if quizzes_found %}
+                        {% if quizzes_found == 1 %}
+                            <center><h4> {{ quizzes_found }} Quiz found </h4></center>
+                          {% else %}
+                            <center><h4> {{ quizzes_found }} Quizzes found </h4></center>
+                        {% endif %}
+                {% else %}
+                    <center><h4> Quizzes </h4></center>
+                {% endif %}
+
                     <div class="table-wrapper-2">
                     <table id="course-details" class="table table-bordered table-responsive-sm">
                     <tr>
@@ -394,12 +458,45 @@
             <div id="all_lessons">
                 <div class="col-md-offset-2 main">
             {% if type == "lesson" %}
+                <form name=frm action="" method="post">
+                    {% csrf_token %}
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="col-md-12">
+                            <input type="text" name="lesson_tags" id="lesson_tags" class="form-control" type="search"  placeholder="Search Lessons">
+                            <br>
+                            <div class="row col-md-12">
+                                <h6>Filter Lessons: </h6>
+                                <div name="lesson_status" id="lesson_status" style="margin-left: 20px;">
+                                    {{ form.lesson_status }}
+                                </div>
+                            </div>
+                            <br>
+                            <button class="btn btn-primary" type="submit">Search</button>
+                            <button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>
+                                Clear Search
+                            </button>
+                        </div>
+                      </div>
+                    </div>
+                </form>
+                <br>
+
                 <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/" class="btn btn-primary">Add new Lesson</a>
                 {% if not lessons %}
-                    <center><h4> No new Lessons added</h4></center>
+                    <center><h4> No lessons found.</h4></center>
                     <br><br>
                 {% else %}
-                    <center><h3> Lessons </h3></center>
+                    {% if lessons_found %}
+                        {% if lessons_found == 1 %}
+                            <center><h4> {{ lessons_found }} Lesson found </h4></center>
+                        {% else %}
+                            <center><h4> {{ lessons_found }} Lessons found </h4></center>
+                        {% endif %}
+                {% else %}
+                    <center><h4> Lessons </h4></center>
+                {% endif %}
+
                     <div class="table-wrapper-2">
                     <table id="course-details" class="table table-bordered table-responsive-sm">
                     <tr>
@@ -434,13 +531,46 @@
                 <div class="col-md-offset-2 main">
             <div id="all_modules">
             {% if type == "learning_module" %}
+                <form name=frm action="" method="post">
+                    {% csrf_token %}
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="col-md-12">
+                            <input type="text" name="module_tags" id="module_tags" class="form-control" type="search"  placeholder="Search Modules">
+                            <br>
+                            <div class="row col-md-12">
+                                <h6>Filter Modules: </h6>
+                                <div name="module_status" id="module_status" style="margin-left: 20px;">
+                                    {{ form.module_status }}
+                                </div>
+                            </div>
+                            <br>
+                            <button class="btn btn-primary" type="submit">Search</button>
+                            <button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>
+                                Clear Search
+                            </button>
+                        </div>
+                      </div>
+                    </div>
+                </form>
+                <br>
+
                 <a href="{{URL_ROOT}}/exam/manage/courses/add_module/" class="btn btn-primary">
                 Add new Module</a>
                 {% if not learning_modules %}
-                    <center><h4> No new learning modules added</h4></center>
+                    <center><h4> No learning modules found.</h4></center>
                     <br><br>
                 {% else %}
-                    <center><h3> Learning Modules </h3></center>
+                    {% if modules_found %}
+                        {% if modules_found == 1 %}
+                            <center><h4> {{ modules_found }} Learning Module found </h4></center>
+                        {% else %}
+                            <center><h4> {{ modules_found }} Learning Modules found </h4></center>
+                        {% endif %}
+                    {% else %}
+                        <center><h4> Learning Modules </h4></center>
+                    {% endif %}
+                    <br>
                     <table id="course-details" class="table table-bordered table-responsive-sm">
                     <tr>
                     <th>Sr.No</th>

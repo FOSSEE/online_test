@@ -39,7 +39,8 @@ from yaksh.models import (
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
-    QuestionFilterForm, CourseForm, ProfileForm,
+    QuestionFilterForm, CourseForm, CourseFilterForm, QuizFilterForm, LessonFilterForm,
+    ModuleFilterForm, ProfileForm,
     UploadFileForm, FileForm, QuestionPaperForm, LessonForm,
     LessonFileForm, LearningModuleForm, ExerciseForm
 )
@@ -49,7 +50,6 @@ from .file_utils import extract_files, is_csv
 from .send_emails import (send_user_mail,
                           generate_activation_key, send_bulk_mail)
 from .decorators import email_verified, has_profile
-
 
 def my_redirect(url):
     """An overridden redirect to deal with URL_ROOT-ing. See settings.py
@@ -1043,8 +1043,30 @@ def courses(request):
         creator=user, is_trial=False).order_by('-active', '-id')
     allotted_courses = Course.objects.filter(
         teachers=user, is_trial=False).order_by('-active', '-id')
-    context = {'courses': courses, "allotted_courses": allotted_courses,
-               "type": "courses"}
+
+    form = CourseFilterForm(user=user)
+
+    context = {}
+    if request.method == 'POST':
+        course_tags = request.POST.get('course_tags')
+        course_status = request.POST.get('course_status')
+
+        if course_status == 'select' :
+            courses = courses.filter(
+                name__contains=course_tags)
+        elif course_status == 'active' :
+            courses = courses.filter(
+                name__contains=course_tags, active=True)
+        elif course_status == 'closed':
+            courses = courses.filter(
+                name__contains=course_tags, active=False)
+        context["courses_found"] = courses.count()
+    print("courses_found: ", context)
+
+    context["courses"] = courses
+    context["allotted_courses"] = allotted_courses
+    context["type"] = "courses"
+    context["form"] = form
     return my_render_to_response(request, 'yaksh/courses.html', context)
 
 
@@ -2606,7 +2628,26 @@ def show_all_quizzes(request):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     quizzes = Quiz.objects.filter(creator=user, is_trial=False)
-    context = {"quizzes": quizzes, "type": "quiz"}
+
+    form = QuizFilterForm(user=user)
+
+    context = {}
+    if request.method == 'POST':
+        quiz_tags = request.POST.get('quiz_tags')
+        quiz_status = request.POST.get('quiz_status')
+
+        if quiz_status == 'select':
+            quizzes = quizzes.filter(description__contains=quiz_tags)
+        elif quiz_status == 'active':
+            quizzes = quizzes.filter(description__contains=quiz_tags, active=True)
+        elif quiz_status == 'closed':
+            quizzes = quizzes.filter(description__contains=quiz_tags, active=False)
+        context["quizzes_found"] = len(quizzes)
+
+    context["quizzes"] = quizzes
+    context["type"] = "quiz"
+    context['form'] = form
+
     return my_render_to_response(request, 'yaksh/courses.html', context)
 
 
@@ -2617,7 +2658,26 @@ def show_all_lessons(request):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     lessons = Lesson.objects.filter(creator=user)
-    context = {"lessons": lessons, "type": "lesson"}
+
+    form = LessonFilterForm(user=user)
+
+    context = {}
+    if request.method == 'POST':
+        lesson_tags = request.POST.get('lesson_tags')
+        lesson_status = request.POST.get('lesson_status')
+
+        if lesson_status == 'select':
+            lessons = lessons.filter(description__contains=lesson_tags)
+        elif lesson_status == 'active':
+            lessons = lessons.filter(description__contains=lesson_tags, active=True)
+        elif lesson_status == 'closed':
+            lessons = lessons.filter(description__contains=lesson_tags, active=False)
+        context["lessons_found"] = len(lessons)
+
+    context["lessons"] = lessons
+    context["type"] =  "lesson"
+    context['form'] = form
+
     return my_render_to_response(request, 'yaksh/courses.html', context)
 
 
@@ -2629,7 +2689,26 @@ def show_all_modules(request):
         raise Http404('You are not allowed to view this page!')
     learning_modules = LearningModule.objects.filter(
         creator=user, is_trial=False)
-    context = {"learning_modules": learning_modules, "type": "learning_module"}
+
+    form = ModuleFilterForm(user=user)
+
+    context = {}
+    if request.method == 'POST':
+        module_tags = request.POST.get('module_tags')
+        module_status = request.POST.get('module_status')
+
+        if module_status == 'select':
+            learning_modules = learning_modules.filter(name__contains=module_tags)
+        elif module_status == 'active':
+            learning_modules = learning_modules.filter(name__contains=module_tags, active=True)
+        elif module_status == 'closed':
+            learning_modules = learning_modules.filter(name__contains=module_tags, active=False)
+        context["modules_found"] = len(learning_modules)
+
+    context["learning_modules"] = learning_modules
+    context["type"] = "learning_module"
+    context["form"] = form
+
     return my_render_to_response(request, 'yaksh/courses.html', context)
 
 

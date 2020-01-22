@@ -267,6 +267,54 @@ class QuestionFilterForm(forms.Form):
     )
 
 
+class CourseFilterForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user")
+        super(CourseFilterForm, self).__init__(*args, **kwargs)
+
+    course_status = forms.CharField(max_length=16, widget=forms.Select(choices=(
+        ('select','Select Course Status'),
+        ('active', 'Active'),
+        ('closed', 'Closed'),))
+         )
+
+
+class QuizFilterForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user")
+        super(QuizFilterForm, self).__init__(*args, **kwargs)
+
+    quiz_status = forms.CharField(max_length=16, widget=forms.Select(choices=(
+        ('select','Select Quiz Status'),
+        ('active', 'Active'),
+        ('closed', 'Closed'),))
+         )
+
+
+class LessonFilterForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user")
+        super(LessonFilterForm, self).__init__(*args, **kwargs)
+
+    lesson_status = forms.CharField(max_length=16, widget=forms.Select(choices=(
+    ('select','Select Lesson Status'),
+    ('active', 'Active'),
+    ('closed', 'Closed'),))
+     )
+
+
+class ModuleFilterForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user")
+        super(ModuleFilterForm, self).__init__(*args, **kwargs)
+
+    module_status = forms.CharField(max_length=16, widget=forms.Select(choices=(
+    ('select','Select Module Status'),
+    ('active', 'Active'),
+    ('closed', 'Closed'),))
+     )
+
+
 class CourseForm(forms.ModelForm):
     """ course form for moderators """
     class Meta:
