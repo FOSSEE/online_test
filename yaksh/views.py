@@ -1061,7 +1061,6 @@ def courses(request):
             courses = courses.filter(
                 name__contains=course_tags, active=False)
         context["courses_found"] = courses.count()
-    print("courses_found: ", context)
 
     context["courses"] = courses
     context["allotted_courses"] = allotted_courses
@@ -2642,7 +2641,7 @@ def show_all_quizzes(request):
             quizzes = quizzes.filter(description__contains=quiz_tags, active=True)
         elif quiz_status == 'closed':
             quizzes = quizzes.filter(description__contains=quiz_tags, active=False)
-        context["quizzes_found"] = len(quizzes)
+        context["quizzes_found"] = quizzes.count()
 
     context["quizzes"] = quizzes
     context["type"] = "quiz"
@@ -2672,7 +2671,7 @@ def show_all_lessons(request):
             lessons = lessons.filter(description__contains=lesson_tags, active=True)
         elif lesson_status == 'closed':
             lessons = lessons.filter(description__contains=lesson_tags, active=False)
-        context["lessons_found"] = len(lessons)
+        context["lessons_found"] = lessons.count()
 
     context["lessons"] = lessons
     context["type"] =  "lesson"
@@ -2703,7 +2702,7 @@ def show_all_modules(request):
             learning_modules = learning_modules.filter(name__contains=module_tags, active=True)
         elif module_status == 'closed':
             learning_modules = learning_modules.filter(name__contains=module_tags, active=False)
-        context["modules_found"] = len(learning_modules)
+        context["modules_found"] = learning_modules.count()
 
     context["learning_modules"] = learning_modules
     context["type"] = "learning_module"
