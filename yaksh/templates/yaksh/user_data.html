@@ -310,7 +310,9 @@
                               {% endfor %}
                             {% endwith %}
                             {% if question.type == "code" %}
-                            <pre><code>{{ ans.answer.answer.strip }}</code></pre>
+                            {% pygmentise_user_answer question.language ans.answer.answer.strip as user_answer %}
+                              <style type="text/css">{{user_answer.1}}</style>
+                              <pre><code>{{user_answer.0|safe}}</code></pre>
                             {% elif question.type == "mcc" or question.type == "mcq" %}
                               {% for testcases in question.get_test_cases %}
                                 {% if testcases.id|stringformat:"i" in ans.answer.answer.strip %}
@@ -339,7 +341,7 @@
                 <div class="col-md-2">
                   <label class="col-form-label" for="q{{ question.id }}">Marks:</label>
                   {% with answers|last as answer %}
-                  <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answer.answer.marks }}"><br><br>
+                  <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answer.answer.marks }}" readonly=""><br><br>
                   {% endwith %}
                 </div>
               </div>
@@ -348,7 +350,7 @@
               <div class="form-group">
                 <h3>Teacher comments: </h3>
                 <textarea id="comments_{{paper.question_paper.id}}" class="form-control"
-                  name="comments_{{ paper.question_paper.id }}">{{ paper.comments }}</textarea>
+                  name="comments_{{ paper.question_paper.id }}" readonly="">{{ paper.comments }}</textarea>
               </div>
           </div>
         </div>
