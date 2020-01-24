@@ -15,11 +15,15 @@ body, .dropdown-menu {
     display: flex;
 }
 
-.course-detail {
+.course-detail, #result-table {
     table-layout: fixed;
     width: 100%;   
 }
 
-.course-detail > th, td {
+.course-detail, #result-table > th, td {
     word-wrap: break-word;
+}
+
+#rendered_text{
+	width: 550px;
 }

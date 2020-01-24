@@ -3,24 +3,29 @@
 {% block pagetitle %} Statistics for {{ quiz.description }}{% endblock pagetitle %}
 
 {% block content %}
-<div class="yakshwell container">
-<div class="row">
-    <div class="col-md-2">
-{% for attempt in attempts %}
-    <p><a href="{{URL_ROOT}}/exam/manage/statistics/question/{{questionpaper_id}}/{{attempt}}/{{course_id}}">Attempt {{ attempt }}</a></p>
-    {% endfor %}
-</div>
-<div class="col-md-9">
-{% if question_stats %}
-    <p><b>Total number of participants: {{ total }}</b></p>
-    <table class="table table-bordered table-responsive-sm">
-        <tr class="bg-light yakshred"><th>Question</th><th>Type</th><th>Total</th><th>Answered</th></tr>
-        {% for question, value in question_stats.items  %}
-        <tr><td>{{ question.summary }}</td><td>{{ question.type }}</td><td>{{value.1}}</td><td>{{ value.0 }} ({% widthratio value.0 value.1 100 %}%)</td></tr>
-        {% endfor %}
-    </table>
-    {% endif %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-2">
+            <ul class="list-group">
+                {% for attempt in attempts %}
+                <li class="list-group-item">
+                    <a href="{% url 'yaksh:show_statistics' questionpaper_id attempt course_id %}">Attempt {{ attempt }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-9">
+            {% if question_stats %}
+                <p><b>Total number of participants: {{ total }}</b></p>
+                <table class="table table-bordered table-responsive-sm">
+                    <tr class="bg-light yakshred"><th>Question</th><th>Type</th><th>Total</th><th>Answered</th></tr>
+                    {% for question, value in question_stats.items  %}
+                    <tr><td>{{ question.summary }}</td><td>{{ question.type }}</td><td>{{value.1}}</td><td>{{ value.0 }} ({% widthratio value.0 value.1 100 %}%)</td></tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+        </div>
     </div>
-</div>
 </div>
 {% endblock %}

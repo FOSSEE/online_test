@@ -1,0 +1,90 @@
+{% extends "manage.html" %}
+{% load static %}
+{% block title %} My Lessons {% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <ul class="nav nav-pills" id="course_tabs">
+                <li class="nav-item">
+                    <a class="nav-link {% if created %}active{% endif %}" href="{% url 'yaksh:courses' %}">
+                        My Courses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if allotted %}active{% endif %}" href="{% url 'yaksh:allotted_courses' %}">
+                        Allotted Courses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'yaksh:add_course' %}">
+                        Add New Course
+                    </a>
+                </li>
+                <li class="nav-item dropdown hide">
+                    <a class="nav-link dropdown-toggle active" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="true">More</a>
+                    <div class="dropdown-menu hide" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 37px, 0px); top: 0px; left: 0px; will-change: transform;">
+                    <a class="dropdown-item" href="{% url 'yaksh:show_all_quizzes' %}">
+                        Add/View Quizzes
+                    </a>
+                    <a class="dropdown-item active" href="{% url 'yaksh:show_all_lessons' %}">
+                        Add/View Lessons
+                    </a>
+                    <a class="dropdown-item" href="{% url 'yaksh:show_all_modules' %}">
+                        Add/View Modules
+                    </a>
+                    <a href="{% url 'grades:grading_systems'%}" class="dropdown-item" >
+                        Add/View Grading Systems
+                    </a>
+                </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<br>
+<div class="container">
+    <a href="{% url 'yaksh:edit_lesson' %}" class="btn btn-primary btn-lg">
+        <i class="fa fa-plus-circle"></i>&nbsp;Add new Lesson
+    </a>
+    {% if not lessons %}
+        <br><br>
+        <center><h4> No new Lessons added</h4></center>
+        <br><br>
+    {% else %}
+        <center><h3> Lessons </h3></center>
+        <table id="course-details" class="table table-bordered table-responsive-sm">
+        <tr>
+        <th>Sr.No</th>
+        <th>Lesson</th>
+        </tr>
+
+        {% for lesson in lessons %}
+        <tr>
+        <td width="2%">{{forloop.counter}}</td>
+        <td width="30%">
+            <div class="row">
+                <div class="col-md-8">
+                    <a href="{% url 'yaksh:edit_lesson' lesson.id %}">
+                        {{ lesson.name }}
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    {% if lesson.active %}
+                        <span class="badge badge-success badge-pill">
+                            Active
+                        </span>
+                    {% else %}
+                        <span class="badge badge-danger badge-pill">
+                            Closed
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </td>
+        {% endfor %} <!-- end for lessons -->
+        </tr>
+        </table>
+    {% endif %}
+</div>
+{% endblock %}

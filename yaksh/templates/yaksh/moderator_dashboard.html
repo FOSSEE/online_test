@@ -116,11 +116,6 @@
         <br>
     {% endif %}
     {% endwith %}
-    {% if trial_paper %}
-        {% for paper in trial_paper %}
-            <a href="{% url 'yaksh:grade_user' paper.question_paper.quiz.id paper.course.id %}">{{paper.question_paper.quiz.description}}</a>
-        {% endfor %}
-    {% endif %}
 </div>
 {% endblock %}
 

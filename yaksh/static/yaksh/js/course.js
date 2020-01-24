@@ -125,7 +125,7 @@ $(document).ready(function(){
     $('[data-toggle="tab"]').tooltip({
         trigger: 'hover',
         placement: 'top',
-        animate: true,
+        animate: false,
         container: 'body'
     });
 }); // end document ready

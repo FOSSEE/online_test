@@ -35,7 +35,7 @@
         Back
       </a>
   {% else %}
-      <a class="btn btn-primary" href="{% url 'yaksh:show_all_lessons' %}">
+      <a class="btn btn-primary" href="{% url 'yaksh:show_all_quizzes' %}">
         <i class="fa fa-arrow-left"></i>
         Back
       </a>
@@ -69,23 +69,19 @@
         </a>
         <br>
         <br>
-      <h4>You can check the quiz by attempting it in the following modes:</h4>
-        <a class="btn btn-outline-info" name="button" href="{% url 'yaksh:test_quiz' 'usermode' quiz.id course_id %}" target="blank">
-          User Mode
-        </a>
+        <h4>You can check the quiz by attempting it in the following modes:</h4>
+          <a class="btn btn-outline-info" name="button" href="{% url 'yaksh:test_quiz' 'usermode' quiz.id course_id %}" target="blank">
+            User Mode
+          </a>
 
-        <a class="btn btn-outline-info" name="button" href="{% url 'yaksh:test_quiz' 'godmode' quiz.id course_id %}" target="blank">
-          God Mode
-        </a>
-      <a data-toggle="modal" data-target="#help">
-      <span class="text-info"><i class="fa fa-info-circle"></i> Help</span></a>
+          <a class="btn btn-outline-info" name="button" href="{% url 'yaksh:test_quiz' 'godmode' quiz.id course_id %}" target="blank">
+            God Mode
+          </a>
+        <a data-toggle="modal" data-target="#help">
+        <span class="text-info"><i class="fa fa-info-circle"></i> Help</span></a>
+      </center>
       {% endif %}
   {% endif %}
-  <style type="text/css">
-     #rendered_text{
-      width: 550px;
-     }
-  </style>
 </div>
 <div class="modal" id="help">
   <div class="modal-dialog" role="document">

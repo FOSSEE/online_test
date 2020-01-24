@@ -35,16 +35,16 @@
                         <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="true">More</a>
                         <div class="dropdown-menu hide" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 37px, 0px); top: 0px; left: 0px; will-change: transform;">
                         <a class="dropdown-item" href="{% url 'yaksh:show_all_quizzes' %}">
-                            View Quizzes
+                            Add/View Quizzes
                         </a>
                         <a class="dropdown-item" href="{% url 'yaksh:show_all_lessons' %}">
-                            View Lessons
+                            Add/View Lessons
                         </a>
                         <a class="dropdown-item" href="{% url 'yaksh:show_all_modules' %}">
-                            View Modules
+                            Add/View Modules
                         </a>
                         <a href="{% url 'grades:grading_systems'%}" class="dropdown-item" >
-                            View Grading Systems
+                            Add/View Grading Systems
                         </a>
                     </div>
                     </li>
@@ -62,7 +62,7 @@
             <hr>
             {% if messages %}
                 {% for message in messages %}
-                <div class="alert alert-dismissible alert-info">
+                <div class="alert alert-dismissible alert-{{ message.tags }}">
                     <button type="button" class="close" data-dismiss="alert">
                         <i class="fa fa-close"></i>
                     </button>

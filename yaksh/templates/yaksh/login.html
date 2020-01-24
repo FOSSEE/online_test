@@ -52,9 +52,11 @@
                             </table>
                         </center>
                         <div class="row justify-content-center">
-                            <button class="btn btn-lg btn-success btn-block" type="submit" id="login-btn">Login</button>
+                            <button class="btn btn-lg btn-success btn-block" type="submit" id="login-btn">
+                                <i class="fa fa-sign-in"></i>&nbsp;Login
+                            </button>
                             <a href="{% url 'yaksh:register' %}" class="btn btn-lg btn-primary btn-block" id="signup-btn">
-                                NEW USER? SIGN UP
+                                <i class="fa fa-user-plus"></i>&nbsp;NEW USER? SIGN UP
                             </a>
                             <a class="btn btn-lg btn-primary btn-block" href="{% url 'password_reset' %}" id="forgot-btn">
                                 Forgot Password?

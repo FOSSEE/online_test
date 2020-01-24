@@ -24,7 +24,7 @@
     </a>
 {% else %}
     <form action="{% url 'yaksh:designquestionpaper' qpaper.quiz.id qpaper.id %}" method="POST" id="design_q">
-    <a href="{% url 'yaksh:show_all_quizzes' %}" class="btn btn-danger">
+    <a href="{% url 'yaksh:show_all_quizzes' %}" class="btn btn-primary">
         <i class="fa fa-arrow-left"></i>&nbsp;Back
     </a>
 {% endif %}

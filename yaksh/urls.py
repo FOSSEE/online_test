@@ -91,7 +91,7 @@ urlpatterns = [
         views.user_data, name="user_data"),
     url(r'^manage/user_data/(?P<user_id>\d+)/$', views.user_data),
     url(r'^manage/quiz/designquestionpaper/(?P<quiz_id>\d+)/$',
-        views.design_questionpaper, name='design_questionpaper'),
+        views.design_questionpaper, name='designquestionpaper'),
     url(r'^manage/designquestionpaper/(?P<quiz_id>\d+)/'
         '(?P<questionpaper_id>\d+)/$',
         views.design_questionpaper, name='designquestionpaper'),

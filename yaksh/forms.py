@@ -216,6 +216,13 @@ class UserLoginForm(forms.Form):
 
 
 class ExerciseForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(ExerciseForm, self).__init__(*args, **kwargs)
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder':"Exercise Description"}
+        )
+
     class Meta:
         model = Quiz
         fields = ['description', 'view_answerpaper', 'active']

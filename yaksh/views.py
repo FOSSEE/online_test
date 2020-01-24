@@ -369,12 +369,9 @@ def add_exercise(request, quiz_id=None, course_id=None):
             quiz.duration = 1000
             quiz.pass_criteria = 0
             quiz.save()
-
-            if not course_id:
-                return my_redirect("/exam/manage/courses/all_quizzes/")
-            else:
-                return my_redirect("/exam/manage/courses/")
-
+            messages.success(
+                request, "{0} saved successfully".format(quiz.description)
+            )
     else:
         form = ExerciseForm(instance=quiz)
         context["exercise"] = quiz
@@ -1228,17 +1225,26 @@ def monitor(request, quiz_id=None, course_id=None):
     """Monitor the progress of the papers taken so far."""
 
     user = request.user
-    if not user.is_authenticated() or not is_moderator(user):
+    if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
     if quiz_id is None:
-        course_details = Course.objects.filter(
+        courses = Course.objects.filter(
             Q(creator=user) | Q(teachers=user),
             is_trial=False
-        ).distinct()
+        ).order_by("-id").distinct()
+        paginator = Paginator(courses, 20)
+        page = request.GET.get('page')
+        try:
+            courses = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            courses = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            courses = paginator.page(paginator.num_pages)
         context = {
-            "papers": [], "course_details": course_details,
-            "msg": "Monitor"
+            "papers": [], "objects": courses, "msg": "Monitor"
         }
         return my_render_to_response(request, 'yaksh/monitor.html', context)
     # quiz_id is not None.
@@ -1506,7 +1512,7 @@ def show_all_questions(request):
     user_tags = questions.values_list('tags', flat=True).distinct()
     all_tags = Tag.objects.filter(id__in=user_tags)
     upload_form = UploadFileForm()
-    paginator = Paginator(questions, 10)
+    paginator = Paginator(questions, 30)
     page = request.GET.get('page')
     try:
         questions = paginator.page(page)
@@ -1590,7 +1596,7 @@ def show_all_questions(request):
 def user_data(request, user_id, questionpaper_id=None, course_id=None):
     """Render user data."""
     current_user = request.user
-    if not current_user.is_authenticated() or not is_moderator(current_user):
+    if not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
     user = User.objects.get(id=user_id)
     data = AnswerPaper.objects.get_user_data(user, questionpaper_id, course_id)
@@ -1693,12 +1699,22 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
     and update all their marks and also give comments for each paper.
     """
     current_user = request.user
-    if not current_user.is_authenticated() or not is_moderator(current_user):
+    if not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
-    course_details = Course.objects.filter(Q(creator=current_user) |
-                                           Q(teachers=current_user),
-                                           is_trial=False).distinct()
-    context = {"course_details": course_details}
+    if not course_id:
+        courses = Course.objects.filter(
+            Q(creator=current_user) | Q(teachers=current_user), is_trial=False
+            ).order_by("-id").distinct()
+        paginator = Paginator(courses, 20)
+        page = request.GET.get('page')
+        try:
+            courses = paginator.page(page)
+        except PageNotAnInteger:
+            courses = paginator.page(1)
+        except EmptyPage:
+            courses = paginator.page(paginator.num_pages)
+        context = {"objects": courses}
+
     if quiz_id is not None:
         questionpaper_id = QuestionPaper.objects.filter(
             quiz_id=quiz_id
@@ -1762,6 +1778,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             paper.comments = request.POST.get(
                 'comments_%d' % paper.question_paper.id, 'No comments')
             paper.save()
+        messages.success(request, "Student data saved successfully")
 
         course_status = CourseStatus.objects.filter(course=course, user=user)
         if course_status.exists():
@@ -2706,8 +2723,8 @@ def show_all_quizzes(request):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     quizzes = Quiz.objects.filter(creator=user, is_trial=False)
-    context = {"quizzes": quizzes, "type": "quiz"}
-    return my_render_to_response(request, 'yaksh/courses.html', context)
+    context = {"quizzes": quizzes}
+    return my_render_to_response(request, 'yaksh/quizzes.html', context)
 
 
 @login_required
@@ -2717,8 +2734,8 @@ def show_all_lessons(request):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
     lessons = Lesson.objects.filter(creator=user)
-    context = {"lessons": lessons, "type": "lesson"}
-    return my_render_to_response(request, 'yaksh/courses.html', context)
+    context = {"lessons": lessons}
+    return my_render_to_response(request, 'yaksh/lessons.html', context)
 
 
 @login_required
@@ -2730,7 +2747,9 @@ def show_all_modules(request):
     learning_modules = LearningModule.objects.filter(
         creator=user, is_trial=False)
     context = {"modules": learning_modules}
-    return my_render_to_response(request, 'yaksh/course_added_modules.html', context)
+    return my_render_to_response(
+        request, 'yaksh/modules.html', context
+    )
 
 
 @login_required
