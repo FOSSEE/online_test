@@ -26,7 +26,8 @@ class JavaStdIOEvaluator(StdIOEvaluator):
         self.weight = test_case_data.get('weight')
 
     def teardown(self):
-        os.remove(self.submit_code_path)
+        if os.path.exists(self.submit_code_path):
+            os.remove(self.submit_code_path)
         if self.files:
             delete_files(self.files)
 
