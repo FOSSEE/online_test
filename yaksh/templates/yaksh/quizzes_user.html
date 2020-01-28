@@ -108,9 +108,9 @@
                                     {% if course.data.active %}
                                         {% if course.data.is_active_enrollment %}
                                             {% if course.data.is_self_enroll %}
-                                                <a class="btn btn-primary" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.data.id }}">Enroll</a>
+                                                <a class="btn btn-primary" href="{% url 'yaksh:self_enroll' course.data.id %}">Enroll</a>
                                             {% else %}
-                                                <a class="btn btn-primary" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.data.id }}">Enroll</a>
+                                                <a class="btn btn-primary" href="{% url 'yaksh:enroll_request' course.data.id %}">Enroll</a>
                                             {% endif %}
                                         {% else %}
                                             <span class="badge badge-danger badge-pill">
