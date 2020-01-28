@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-  <a class="navbar-brand" href="{{ URL_ROOT }}/exam/">
-    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH">
-  </a>
+    <a class="navbar-brand" href="{% url 'yaksh:index' %}">
+        <img src="{% static 'yaksh/images/yaksh_banner.png' %}" alt="YAKSH">
+    </a>
 </nav>
 {% endblock %}
 
@@ -12,7 +12,7 @@
 <br>
 {% if module_id and not paper.question_paper.quiz.is_trial %}
 <center>
-    <div class="alert alert-info col-md-8 animated flash">
+    <div class="alert alert-info col-md-8">
         Note:- Please Click on the Next button to submit the quiz. Please do not close the browser without clicking Next.
     </div>
 </center>
@@ -20,11 +20,11 @@
 {% csrf_token %}
     {% if paper.questions_answered.all or paper.questions_unanswered.all %}
         <center>
-        <div class="col-md-8 yakshwell">
+        <div class="col-md-8">
             <h3>Submission Status</h3>
             <table class="table table-bordered table-responsive-sm" >
                 <thead>
-                    <tr class="yakshred text-center">
+                    <tr class="text-center">
                         <th> Question</th>
                         <th> Status </th>
                     </tr>
@@ -37,7 +37,7 @@
                             <td> {{ question.summary }} </td>
                             <td> Attempted </td>
                         {% else %}
-                            <tr class="table-danger">
+                            <tr class="table-warning">
                             <td> {{ question }} </td>
                             <td> Not completed </td>
                         {% endif %}
@@ -56,20 +56,20 @@
     </center>
     <center>
     <br>
-    {% if module_id and not paper.question_paper.quiz.is_trial %}
+    {% if module_id and not paper.course.is_trial %}
         {% if first_unit %}
-            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}/1" class="btn btn-info" id="Next"> Next
+            <a href="{% url 'yaksh:next_unit' course_id module_id learning_unit.id '1' %}" class="btn btn-info btn-lg" id="Next"> Next
                 <span class="fa fa-step-forward">
                 </span>
             </a>
         {% else %}
-            <a href="{{URL_ROOT}}/exam/next_unit/{{course_id}}/{{module_id}}/{{learning_unit.id}}" class="btn btn-info" id="Next"> Next
+            <a href="{% url 'yaksh:next_unit' course_id module_id learning_unit.id %}" class="btn btn-info btn-lg" id="Next"> Next
                 <span class="fa fa-step-forward">
                 </span>
             </a>
         {% endif %}
     {% else %}
-        <a href="{{URL_ROOT}}/exam/" id="home" class="btn btn-primary btn-lg"> Home </a>
+        <a href="{% url 'yaksh:index' %}" id="home" class="btn btn-primary btn-lg"> Home </a>
     {% endif %}
     </center>
 {% endblock content %}

@@ -354,7 +354,18 @@ class CourseForm(forms.ModelForm):
             'view_grade'
         ]
 
-    def __init__(self, *args, **kwargs):
+    def save(self, commit=True, *args, **kwargs):
+        instance = super(CourseForm, self).save(commit=False)
+        if instance.code:
+            instance.hidden = True
+        else:
+            instance.hidden = False
+
+        if commit:
+            instance.save()
+        return instance
+
+    def __init__(self, user, *args, **kwargs):
         super(CourseForm, self).__init__(*args, **kwargs)
         self.fields['name'].widget.attrs.update(
             {'class': form_input_class, 'placeholder': 'Course Name'}
@@ -377,20 +388,6 @@ class CourseForm(forms.ModelForm):
         self.fields['grading_system'].widget.attrs.update(
             {'class': 'custom-select'}
         )
-
-    def save(self, commit=True, *args, **kwargs):
-        instance = super(CourseForm, self).save(commit=False)
-        if instance.code:
-            instance.hidden = True
-        else:
-            instance.hidden = False
-
-        if commit:
-            instance.save()
-        return instance
-
-    def __init__(self, user, *args, **kwargs):
-        super(CourseForm, self).__init__(*args, **kwargs)
         if self.instance.id and self.instance.teachers.filter(id=user.id).exists():
             self.fields['grading_system'].widget.attrs['disabled'] = True
         else:

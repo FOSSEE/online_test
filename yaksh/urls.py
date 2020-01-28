@@ -15,14 +15,17 @@ urlpatterns = [
         name='quizlist_user'),
     url(r'^results/$', views.results_user),
     url(r'^start/(?P<questionpaper_id>\d+)/(?P<module_id>\d+)/'
-        '(?P<course_id>\d+)/$', views.start),
+        '(?P<course_id>\d+)/$', views.start, name="start_quiz"),
     url(r'^start/(?P<attempt_num>\d+)/(?P<module_id>\d+)/'
-        '(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$', views.start),
+        '(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$', views.start,
+        name="start_quiz"),
     url(r'^quit/(?P<attempt_num>\d+)/(?P<module_id>\d+)/'
-        '(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$', views.quit),
-    url(r'^complete/$', views.complete),
+        '(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$', views.quit,
+        name="quit_quiz"),
+    url(r'^complete/$', views.complete, name="complete"),
     url(r'^complete/(?P<attempt_num>\d+)/(?P<module_id>\d+)/'
-        '(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$', views.complete),
+        '(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$', views.complete,
+        name="complete"),
     url(r'^register/$', views.user_register, name="register"),
     url(r'^(?P<q_id>\d+)/check/$', views.check, name="check"),
     url(r'^get_result/(?P<uid>\d+)/(?P<course_id>\d+)/(?P<module_id>\d+)/$',
@@ -32,10 +35,10 @@ urlpatterns = [
         views.check, name="check"),
     url(r'^(?P<q_id>\d+)/skip/(?P<attempt_num>\d+)/(?P<module_id>\d+)/'
         '(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$',
-        views.skip),
+        views.skip, name="skip_question"),
     url(r'^(?P<q_id>\d+)/skip/(?P<next_q>\d+)/(?P<attempt_num>\d+)/'
         '(?P<module_id>\d+)/(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$',
-        views.skip),
+        views.skip, name="skip_question"),
     url(r'^enroll_request/(?P<course_id>\d+)/$', views.enroll_request,
         name='enroll_request'),
     url(r'^self_enroll/(?P<course_id>\d+)/$', views.self_enroll,

@@ -4,166 +4,164 @@
 {% block title %} {{ learning_module.name }} {% endblock %}
     
 
-
 {% block main %}
-
-<div class="row">
-
-    <!-- Side bar -->
-    <div class="col-md-3 yakshlabel collapse" id="sidebar">
-        <center><h4><a class="text-dark" href="{{ URL_ROOT }}/exam/course_modules/{{course.id}}"><i class="fa fa-caret-left"></i> {{course.name}}</h4></center>
-        {% for module in all_modules %}
-        <div class="list-group">         
-    
-            <a href="{{URL_ROOT}}/exam/quizzes/view_module/{{module.id}}/{{course.id}}" id="menu1" class="list-group-item bg-light" data-parent="#sidebar">
-                    {% if module.id == learning_module.id %}
-                        <i class="fa fa-toggle-on yakshred" data-toggle="tooltip" title="Currently on">
-                        </i>
-                    {% else %}
-                        <i class="fa fa-toggle-off" data-toggle="tooltip" title="Currently off"></i>
-                    {% endif %}                
-                {{module}}
+<div class="wrapper">
+    <!-- Sidebar  -->
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <a class="text-light" href="{% url 'yaksh:course_modules' course.id %}">
+                {{course.name}}
             </a>
-            {% for unit in module.get_learning_units %}
-                {% get_unit_status course module unit user as status %}
-                <span id="menudrop">
-                    {% if unit.type == "quiz" %}
-                        <a href="{{ URL_ROOT }}/exam/start/{{unit.quiz.questionpaper_set.get.id}}/{{module.id}}/{{course.id}}" class="list-group-item" data-parent="#menu1">
-                            {% if status == "completed" %}
-                              <i class="fa fa-check-square yakshgreen"></i>
-                            {% else %}
-                              <i class="fa fa-square-o"></i>
-                            {% endif %}
-                        {{ unit.quiz.description }}
-                            {% if unit.id == current_unit.id %}
-                                <i class="fa fa-thumb-tack yakshred" data-toggle="tooltip" title="Currently on">
-                                </i>
-                            {% endif %}
-                        </a>
-                    {% else %}
-                        <a href="{{ URL_ROOT }}/exam/show_lesson/{{unit.lesson.id}}/{{module.id}}/{{course.id}}" class="list-group-item" data-parent="#menu1">
-                            {% if status == "completed" %}
-                              <i class="fa fa-check-square yakshgreen"></i>
-                            {% else %}
-                              <i class="fa fa-square-o"></i>
-                            {% endif %}
-                        {{ unit.lesson.name }}
-                            {% if unit.id == current_unit.id %}
-                                <i class="fa fa-thumb-tack yakshred" data-toggle="tooltip" title="Currently on">
-                                </i>
-                            {% endif %}
-                        </a>
-                    {% endif %}
-                </span>
-            {% endfor %}          
-
         </div>
-        {% endfor %}
-    </div>
-     <a href="#sidebar" data-toggle="collapse" id="sidebaricon"><i class="fa fa-navicon fa-lg"></i></a>
-    <!-- End of sidebar-->
-
-    <main class="col" id="sidebarbody">
-
-    <div class="container-fluid yakshwell">
-            <div class="yakshwell bg-light">
-            <div class="row align-items-center ">
-                <div class="col h3 text-center">
-                 {{ learning_module.name }}
-                {% if state == "lesson" %}
-                    : {{lesson.name}}
-                {% endif %}
-                </div>
-            </div>
-            </div>
-            
-           
-            {% if msg %}
-            <center>
-                <div class="col-md-8 yakshwell">
-                    <div class="alert alert-warning animated flash">{{msg}}</div>
-                </div>
-            </center>
-            {% endif %}
-
-            <div class="col-md-12 main">
-        {% if state == "module" %}  <!-- Module instructions body -->
-            <div class="row yakshwell">
-                <div class="col-md-8 ">
-                    {{learning_module.html_data|safe}}
-                    {% if learning_module.html_data%}
-                    {% endif %}
-                </div>
-            </div>
-            <div class="yakshwell text-center">
-                {% if first_unit %}
-                    <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{first_unit.id}}/1" class="btn btn-success">Start
-                        <i class="fa fa-play">
-                        </i>
-                    </a>
-                {% else %}
-                    <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}" class="btn btn-success">Next
-                        <i class="fa fa-step-forward">
-                        </i>
-                    </a>
-                {% endif %}
-            </div>
-            </div>
-        {% else %}    <!--  Lesson body   -->
-            
-            <div class="yakshwell">
-                <div class="yakshwell text-center ">
-                    {{lesson.html_data|safe}}
-                </div>
-                {% if lesson.get_files %}
-                    <div class="yakshwell col-md-5">
-                        <div class="card yakshwell">
-                        <span class="h4"> Files for this lesson </span> <hr>
-                        <span  class="col-md-2">
-                        {% for f in lesson.get_files %}
-                            <div class="yakshwell">
-                                <a href="{{f.file.url}}" class="btn btn-outline-secondary"><b>{{forloop.counter}}.</b> {{ f.file.name|file_title }}</a>
-                                <br>
+        {% for module in all_modules %}
+            <div id="accordian">
+                <div class="card">
+                    <div class="card-header" style="height: 120px">
+                        <div class="row">
+                            <div class="col-md-10">
+                                <a href="{% url 'yaksh:view_module' module.id course.id %}">
+                                    {{module.name}}
+                                    {% if module.id == learning_module.id %}
+                                        <i class="fa fa-thumb-tack" data-toggle="tooltip" title="Currently on"></i>
+                                    {% endif %}
+                                </a>
                             </div>
-                        {% endfor %}
-                        </span>
+                            <div class="col-md-2">
+                                <a class="card-link" data-toggle="collapse" href="#collapse{{module.id}}">
+                                    <i class="fa fa-angle-down"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
-                {% endif %}
+                    <div id="collapse{{module.id}}" class="collapse hide" data-parent="#accordion">
+                        <div class="card-body">
+                            {% for unit in module.get_learning_units %}
+                                {% get_unit_status course module unit user as status %}
+                                {% if unit.type == "quiz" %}
+                                    <a href="{% url 'yaksh:start_quiz' unit.quiz.questionpaper_set.get.id module.id course.id %}" class="list-group-item">
+                                        {% if status == "completed" %}
+                                          <i class="fa fa-check-square"></i>
+                                        {% else %}
+                                          <i class="fa fa-square-o"></i>
+                                        {% endif %}
+                                        {{ unit.quiz.description }}
+                                        {% if unit.id == current_unit.id %}
+                                            <i class="fa fa-thumb-tack" data-toggle="tooltip" title="Currently on">
+                                            </i>
+                                        {% endif %}
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'yaksh:show_lesson' unit.lesson.id module.id course.id %}" class="list-group-item">
+                                        {% if status == "completed" %}
+                                          <i class="fa fa-check-square"></i>
+                                        {% else %}
+                                          <i class="fa fa-square-o"></i>
+                                        {% endif %}
+                                        {{ unit.lesson.name }}
+                                        {% if unit.id == current_unit.id %}
+                                            <i class="fa fa-thumb-tack" data-toggle="tooltip" title="Currently on">
+                                            </i>
+                                        {% endif %}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="yakshwell text-center">
-                <a href="{{ URL_ROOT }}/exam/next_unit/{{course.id}}/{{learning_module.id}}/{{current_unit.id}}" class="btn btn-info" >Next
+        {% endfor %}
+    </nav>
+
+    <!-- Page Content  -->
+    <div id="content">
+
+        <button type="button" id="sidebarCollapse" class="btn btn-outline-info">
+            <i class="fa fa-times fa-lg"></i>
+        </button>
+
+        <br><br>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'yaksh:course_modules' course.id %}">
+                    {{course.name}}
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'yaksh:view_module' learning_module.id course.id %}">
+                    {{ learning_module.name }}
+                </a>
+            </li>
+            {% if state == "lesson" %}
+                <li class="breadcrumb-item active">{{lesson.name}}</li>
+            {% endif %}
+        </ol>
+        <br>
+
+        {% if msg %}
+            <center>
+                <div class="alert alert-dismissible alert-warning">
+                    <button type="button" class="close" data-dismiss="alert">
+                        <i class="fa fa-close"></i>
+                    </button>
+                    <strong>{{ msg }}</strong>
+                </div>
+            </center>
+        {% endif %}
+
+        {% if state == "module" %}  <!-- Module instructions body -->
+            {% if first_unit %}
+                <a href="{% url 'yaksh:next_unit' course.id learning_module.id first_unit.id '1' %}" class="btn btn-success">Start
+                    <i class="fa fa-play">
+                    </i>
+                </a>
+            {% else %}
+                <a href="{% url 'yaksh:next_unit' course.id learning_module.id %}" class="btn btn-success">Next
                     <i class="fa fa-step-forward">
                     </i>
                 </a>
-            </div>
+            {% endif %}
+            <br><br>
+            {% if learning_module.html_data %}
+                {{learning_module.html_data|safe}}
+            {% else %}
+                No Module information
+            {% endif %}
+        {% else %}    <!--  Lesson body   -->
+            <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info" >
+                Next&nbsp;<i class="fa fa-step-forward"></i>
+            </a>
+            <br><br>
+            {{lesson.html_data|safe}}
+            <br>
+            {% with lesson.get_files as lesson_files %}
+                {% if lesson_files %}
+                    <div class="col-md-7">
+                        <div class="card">
+                            <div class="card-header">
+                                Files for this lesson
+                            </div>
+                            <div class="card-body">
+                                {% for f in lesson_files %}
+                                    <a href="{{f.file.url}}" class="list-group-item">
+                                        {{forloop.counter}}.{{ f.file.name|file_title }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                {% endif %}
+            {% endwith %}
         {% endif %}
-        </div>
     </div>
-    </main>
 </div>
-{% endblock %}
-
-
-{% block footer %}
-  <!--footer-->   
-  <footer class="container-fluid yakshsidebarfooter text-center">
-    <div class="row justify-content-center">
-    <div class="col-sm-5 ">
-      {% if user %}
-         {% block info %}
-         <b>{{user.get_full_name|title}}</b> with Roll no. <b>{{user.profile.roll_number}}</b> is logged in as <b>{{user.username}}</b>
-         {% endblock %}
-         {% endif %}
-    </div>
-    <div class="col-sm-2">
-      |
-    </div>
-    <div class="col-sm-4 text-left">
-     <b>Any Queries?</b> Email : info@fossee.in
-    </div>
-  </div>
-  </footer>
-  <!--footer end-->
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#sidebarCollapse').on('click', function () {
+            $(this).find('i').toggleClass('fa-times fa-navicon')
+            $('#sidebar').toggleClass('active');
+        });
+    });
+</script>
 {% endblock %}
 

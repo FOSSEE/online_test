@@ -175,7 +175,6 @@ def quizlist_user(request, enrolled=None, msg=None):
         hidden_courses = Course.objects.get_hidden_courses(code=course_code)
         courses = hidden_courses
         title = 'Search'
-
     elif enrolled is not None:
         courses = user.students.filter(is_trial=False).order_by('-id')
         title = 'Enrolled Courses'
@@ -188,7 +187,7 @@ def quizlist_user(request, enrolled=None, msg=None):
         title = 'All Courses'
 
     for course in courses:
-        if user in course.students.all():
+        if course.students.filter(id=user.id).exists():
             _percent = course.get_completion_percent(user)
         else:
             _percent = None
@@ -500,14 +499,14 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     # is user enrolled in the course
     if not course.is_enrolled(user):
         msg = 'You are not enrolled in {0} course'.format(course.name)
-        if is_moderator(user):
+        if is_moderator(user) and course.is_trial:
             return prof_manage(request, msg=msg)
         return quizlist_user(request, msg=msg)
 
     # if course is active and is not expired
     if not course.active or not course.is_active_enrollment():
         msg = "{0} is either expired or not active".format(course.name)
-        if is_moderator(user):
+        if is_moderator(user) and course.is_trial:
             return prof_manage(request, msg=msg)
         return quizlist_user(request, msg=msg)
 
@@ -515,7 +514,7 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     if quest_paper.quiz.is_expired() or not quest_paper.quiz.active:
         msg = "{0} is either expired or not active".format(
             quest_paper.quiz.description)
-        if is_moderator(user):
+        if is_moderator(user) and course.is_trial:
             return prof_manage(request, msg=msg)
         return view_module(request, module_id=module_id, course_id=course_id,
                            msg=msg)
@@ -525,7 +524,7 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
         if not learning_unit.is_prerequisite_complete(
                 user, learning_module, course):
             msg = "You have not completed the previous Lesson/Quiz/Exercise"
-            if is_moderator(user):
+            if is_moderator(user) and course.is_trial:
                 return prof_manage(request, msg=msg)
             return view_module(request, module_id=module_id,
                                course_id=course_id, msg=msg)
@@ -2784,7 +2783,7 @@ def get_next_unit(request, course_id, module_id, current_unit_id=None,
     user = request.user
     course = Course.objects.prefetch_related("learning_module").get(
         id=course_id)
-    if user not in course.students.all():
+    if not course.students.filter(id=user.id).exists():
         raise Http404('You are not enrolled for this course!')
     learning_module = course.learning_module.prefetch_related(
         "learning_unit").get(id=module_id)

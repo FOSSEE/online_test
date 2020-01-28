@@ -7,186 +7,182 @@
 
 {% block main %}
 <div class="container">
-    {% if msg %}
-         <center><div class="col-md-8 alert alert-warning animated flash" role="alert">
-           {{ msg }}
-        </div></center>
-    {% endif %}
-
     {% block navtab %}
         {% if 'Enrolled Courses' not in title%}
             <div class="container">
-                <div class="nav nav-tabs yakshnavtab">
+                <div class="nav nav-pills">
                   <li class="nav-item" >
-                    <a class="active nav-link bg-light" href="{{ URL_ROOT }}/exam/quizzes/" id="yakshactive">ALL COURSES</a>
+                    <a class="active nav-link" href="{% url 'yaksh:quizlist_user' %}">
+                        All Courses
+                    </a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" href="{{ URL_ROOT }}/exam/quizzes/enrolled/">ENROLLED COURSES</a>
+                    <a class="nav-link" href="{% url 'yaksh:quizlist_user' 'enrolled' %}">
+                        Enrolled Courses
+                    </a>
                   </li>
                 </div>
             </div>
-            <div class="row justify-content-center yakshwell">
-            <div class="col-md-6">
-                <div class="yakshwell">
-                        <form action="{{ URL_ROOT }}/exam/quizzes/" method="post" id="custom-search-form" >
-                            {% csrf_token %}
-                            <div class="col-md-12">
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                    <span class="input-group-text" id="basic-addon1">Search Course</span>
-                                    </div>
-                                    <input type="text" name="course_code" class="form-control" type="search"  placeholder="Enter Course-Code">
-                                    <span class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="submit"><i class="fa fa-search yakshred"></i></button>
-                                        <button class="btn btn-outline-secondary" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/quizzes/");'>Go Back</button>
-                                    </span>
-                                </div>
+            <hr>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <form action="{% url 'yaksh:quizlist_user' %}" method="post" id="custom-search-form" >
+                        {% csrf_token %}
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" name="course_code" class="form-control" type="search"  placeholder="Enter course code to search">
+                                <span class="input-group-append">
+                                    <button class="btn btn-outline-primary" type="submit"><i class="fa fa-search"></i>&nbsp;Search</button>
+                                </span>
                             </div>
-                        </form>
+                        </div>
+                    </form>
                 </div>
-            </div>
             </div>
         {% else %}
         <div class="container">
-                <div class="nav nav-tabs yakshnavtab">
-                  <li class="nav-item" >
-                    <a class="nav-link" href="{{ URL_ROOT }}/exam/quizzes/">ALL COURSES</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="active nav-link bg-light" href="{{ URL_ROOT }}/exam/quizzes/enrolled/" id="yakshactive">ENROLLED COURSES</a>
-                  </li>
-                </div>
+            <div class="nav nav-pills">
+              <li class="nav-item" >
+                <a class="nav-link" href="{% url 'yaksh:quizlist_user' %}">
+                    All Courses
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="active nav-link" href="{% url 'yaksh:quizlist_user' 'enrolled' %}">
+                    Enrolled Courses
+                </a>
+              </li>
             </div>
+        </div>
+        <hr>
         {% endif %}
     {% endblock %}
-
+    <br>
+    {% if msg %}
+        <div class="alert alert-dismissible alert-warning">
+            <button type="button" class="close" data-dismiss="alert">
+                <i class="fa fa-close"></i>
+            </button>
+            <strong>{{ msg }}</strong>
+        </div>
+    {% endif %}
+    <br>
     {% if not courses %}
-        <center><div class="col-md-8 alert alert-warning animated flash" role="alert">
+        <center><div class="col-md-8 alert alert-warning" role="alert">
             No Courses to display
         </div></center>
     {% endif %}
-
     <div class="row justify-content-md-center align-items-center" >
-    <div class="col col-sm-10 yakshwell">
-    {% for course in courses %}
-        <div class="yakshwell">
-            <div class="row yakshlabel align-items-center">
-                <div class="col">
-                    <a data-toggle="collapse" href="#collapsedetails{{course.data.id}}" role="button" aria-expanded="false" aria-controls="#collapsedetails{{course.data.id}}">
-                        <h4><b>
-                            {{ course.data.name }} by {{ course.data.creator.get_full_name }}
-                        </b></h4>
-                    </a>
-                    {% if course.data.is_active_enrollment %}
-                        <div class="text-left">
-                            <span class="yakshgreen">{{course.data.start_enroll_time}}</span>&nbsp;&nbsp; to &nbsp;&nbsp;<span class="yakshgreen">{{course.data.end_enroll_time}}</span>
-                        </div>
-                    {% endif %}
-                </div>
-                <div class="col-sm-auto">
-                    {% if course.data.days_before_start != 0 %}
-                    <span class="label label-info" style="font-size: 15px">
-                        {{course.data.days_before_start}} day(s) to start
-                    </span>
-                    {% endif %}
-
-                </div>
-                <div class="container-fluid">
-                    <a class="btn btn-primary" data-toggle="collapse" href="#collapsedetails{{course.data.id}}" role="button" aria-expanded="false" aria-controls="#collapsedetails{{course.data.id}}">DETAILS</a>
-                    {% if user in course.data.requests.all %} <span class="badge badge-warning">Request Pending </span>
-                    {% elif user in course.data.rejected.all %}<span class="badge badge-danger">Request Rejected</span>
-                    {% elif user in course.data.students.all %}
-                    {% if course.data.has_lessons %}
-                        <a href="{% url 'yaksh:download_course' course.data.id %}" data-toggle="tooltip" title="Download course content" class="btn btn-primary">
-                            Download Course
-                        </a>
-                    {% endif %}
-                    <a class="btn btn-success" href="{{URL_ROOT}}/exam/course_modules/{{course.data.id}}" >
-                        {% if course.completion_percentage > 0 %}
-                            CONTINUE
-                        {% else %}
-                            START
-                        {% endif %}
-                    </a>
-                    {% else %}
-                        {% if course.data.active %}
-                            {% if course.data.is_active_enrollment %}
-                                {% if course.data.is_self_enroll %}
-                                    <a class="btn btn-success" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.data.id }}">ENROLL</a>
+        <div class="col-md-12">
+            <div id="accordian">
+            {% for course in courses %}
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-7">{{course.data.name}}</div>
+                            <div class="col-md-2">
+                                <a class="card-link btn btn-info" data-toggle="collapse" href="#collapse{{course.data.id}}">
+                                    Details&nbsp;<i class="fa fa-toggle-down" id="toggle_course_{{course.id}}"></i>
+                                </a>
+                            </div>
+                            <div class="col-md-2">
+                                {% if user in course.data.requests.all %}
+                                    <span class="badge badge-warning badge-pill">
+                                        Request Pending
+                                    </span>
+                                {% elif user in course.data.rejected.all %}
+                                    <span class="badge badge-danger badge-pill">
+                                        Request Rejected
+                                    </span>
+                                {% elif user in course.data.students.all %}
+                                    {% if course.completion_percentage > 0 %}
+                                        <a class="btn btn-primary" href="{% url 'yaksh:course_modules' course.data.id %}" >
+                                            Continue
+                                        </a>
+                                    {% else %}
+                                        <a class="btn btn-success" href="{% url 'yaksh:course_modules' course.data.id %}">
+                                            Start
+                                        </a>
+                                    {% endif %}
                                 {% else %}
-                                    <a class="btn btn-success" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.data.id }}">ENROLL</a>
+                                    {% if course.data.active %}
+                                        {% if course.data.is_active_enrollment %}
+                                            {% if course.data.is_self_enroll %}
+                                                <a class="btn btn-primary" href="{{ URL_ROOT }}/exam/self_enroll/{{ course.data.id }}">Enroll</a>
+                                            {% else %}
+                                                <a class="btn btn-primary" href="{{ URL_ROOT }}/exam/enroll_request/{{ course.data.id }}">Enroll</a>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge badge-danger badge-pill">
+                                                Enrollment Closed
+                                            </span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge badge-danger">
+                                            Inactive Course
+                                        </span>
+                                    {% endif %}
                                 {% endif %}
-                            {% else %}
-                                <span class="btn btn-danger disabled" style="font-size: 15px">
-                                    Enrollment Closed
-                                </span>
-                            {% endif %}
-                        {% else %}
-                            <span class="badge badge-danger" style="font-size: 15px">
-                                Inactive Course
-                            </span>
-                        {% endif %}
-                    {% endif %}
-                </div>
-                     <!-- About course-->
-             <div class="collapse container-fluid" id="collapsedetails{{course.data.id}}">
-              <div class="card card-body ">
-                <h4>{{ course.data.name }} by {{ course.data.creator.get_full_name }}</h4><hr>
-                <div class="row">
-                    <div class="col-md-7">
-                        {% if course.data.description %}
-                            <p> <span class="yakshred yakshheading">About the course</span><br>
-                               {{ course.data.description }}
-                            </p>
-                        {% endif %}
-                        {% if course.data.get_learning_modules %}
-                            <p> <span class="yakshred yakshheading">What you'll learn</span>
-                                <ul>
-                                    {% for module in course.data.get_learning_modules %}
-                                    <li>{{module.name|title}}</li>
-                                    {% endfor %}
-                                </ul>
-                            </p>
-                        {% endif %}
-                        <p> <span class="yakshred yakshheading">Instructor</span><br>
-                            {{ course.data.creator.get_full_name }}
-                        </p>
-                        {% if course.data.instructions %}
-                        <p> <span class="yakshred yakshheading">Instructions</span><br>
-                            {{ course.data.instructions|safe }}
-                        </p>
-                        {% endif %}
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="row my-3">
-                            <div class="col-md-5">
-                                STARTS ON
+                    <div id="collapse{{course.data.id}}" class="collapse hide" data-parent="#accordion">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <p><b>Instructor:</b> {{course.data.creator.get_full_name|title}}</p>
+                                    {% with course.data.get_learning_modules as modules %}
+                                        {% if modules %}
+                                            <p> <span class="badge badge-pill badge-primary">
+                                                What you'll learn</span>
+                                                <ul>
+                                                    {% for module in modules %}
+                                                        <li>{{module.name|title}}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </p>
+                                        {% endif %}
+                                    {% endwith %}
+                                    {% if course.data.instructions %}
+                                        <p> <span class="badge badge-pill badge-primary">
+                                            Instructions</span><br>
+                                            {{ course.data.instructions|safe }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <p><b>Starts On:</b> {{course.data.start_enroll_time}}</p>
+                                    <p><b>Ends On:</b> {{course.data.end_enroll_time}}</p>
+                                    {% with course.completion_percentage as percent %}
+                                    <p><b>Course Progress:</b></p>
+                                    <div class="progress">
+                                        {% if percent %}
+                                            {% if percent <= 50 %}
+                                                <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="{{percent}}"
+                                                aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                            {% elif percent <= 75 %}
+                                                <div class="progress-bar bg-warning" role="progressbar" aria-valuenow="{{percent}}"
+                                                aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                            {% else %}
+                                                <div class="progress-bar bg-success" role="progressbar" aria-valuenow="{{percent}}"
+                                                aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                            {% endif %}
+                                            <b style="color: white;">{{percent}}% completed</b>
+                                            </div>
+                                        {% else %}
+                                            <b style="color: black;">0% completed</b>
+                                        {% endif %}
+                                    </div>
+                                    {% endwith %}
+                                </div>
                             </div>
-                            <div class="col-md-7">
-                                {{course.data.start_enroll_time}}
-                            </div>
-                        </div>
-                        <div class="row my-3">
-                            <div class="col-md-5">
-                                ENDS ON
-                            </div>
-                            <div class="col-md-7">
-                                {{course.data.end_enroll_time}}
-                            </div>
-                        </div>
-                        <div class="row my-3">
-                                <div class="progress-bar bg-success" role="progressbar" style="width:{{course.completion_percentage}}%"; color: black;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">{{course.completion_percentage}} % completed
-                        </div>
                         </div>
                     </div>
                 </div>
-              </div>
-            </div>
-               <!-- End of About course-->
+                <br>
+            {% endfor %}
             </div>
         </div>
-    {% endfor %}
-    </div>
     </div>
 </div>
 
