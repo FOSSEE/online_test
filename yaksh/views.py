@@ -1324,12 +1324,12 @@ def _remove_already_present(questionpaper_id, questions):
     return questions
 
 
-def _get_questions_from_tags(question_tags, user):
+def _get_questions_from_tags(question_tags, user, active=True):
     search_tags = []
     for tags in question_tags:
         search_tags.extend(re.split('[; |, |\*|\n]', tags))
     return Question.objects.filter(tags__name__in=search_tags,
-                                   user=user).distinct()
+                                   user=user, active=active).distinct()
 
 
 @login_required
