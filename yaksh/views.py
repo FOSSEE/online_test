@@ -1000,14 +1000,14 @@ def enroll_request(request, course_id):
             'instructor/administrator.'
         )
         messages.warning(request, msg)
-
-    course.request(user)
-    messages.success(
-        request,
-        "Enrollment request sent for {0} by {1}".format(
-            course.name, course.creator.get_full_name()
+    else:
+        course.request(user)
+        messages.success(
+            request,
+            "Enrollment request sent for {0} by {1}".format(
+                course.name, course.creator.get_full_name()
+            )
         )
-    )
     if is_moderator(user):
         return my_redirect('/exam/manage/courses')
     else:
