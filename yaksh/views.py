@@ -999,9 +999,15 @@ def enroll_request(request, course_id):
             'Unable to add enrollments for this course, please contact your '
             'instructor/administrator.'
         )
-        return complete(request, msg, attempt_num=None, questionpaper_id=None)
+        messages.warning(request, msg)
 
     course.request(user)
+    messages.success(
+        request,
+        "Enrollment request sent for {0} by {1}".format(
+            course.name, course.creator.get_full_name()
+        )
+    )
     if is_moderator(user):
         return my_redirect('/exam/manage/courses')
     else:
@@ -1016,6 +1022,12 @@ def self_enroll(request, course_id):
     if course.is_self_enroll():
         was_rejected = False
         course.enroll(was_rejected, user)
+    messages.success(
+        request,
+        "Enrolled in {0} by {1}".format(
+            course.name, course.creator.get_full_name()
+        )
+    )
     if is_moderator(user):
         return my_redirect('/exam/manage/')
     else:
