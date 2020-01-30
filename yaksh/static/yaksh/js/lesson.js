@@ -44,9 +44,9 @@ $(document).ready(function(){
     $("#embed").click(function() {
         $("#dialog_iframe").toggle();
         $("#dialog_iframe").dialog({
-            resizable: false,
-            height: '300',
-            width: '450'
+            resizable: true,
+            height: '450',
+            width: '640'
         });
     });
 
@@ -77,6 +77,15 @@ $(document).ready(function(){
     });
 
     $('#id_video_file').on('change',function(){
+        //get the file name
+        var files = [];
+        for (var i = 0; i < $(this)[0].files.length; i++) {
+            files.push($(this)[0].files[i].name);
+        }
+        $(this).next('.custom-file-label').html(files.join(', '));
+    });
+
+    $('#id_Lesson_files').on('change',function(){
         //get the file name
         var files = [];
         for (var i = 0; i < $(this)[0].files.length; i++) {

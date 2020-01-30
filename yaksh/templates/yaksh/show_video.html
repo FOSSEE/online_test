@@ -2,7 +2,6 @@
 {% load custom_filters %}
 
 {% block title %} {{ learning_module.name }} {% endblock %}
-    
 
 {% block main %}
 <div class="wrapper">
@@ -82,14 +81,10 @@
         <br><br>
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a href="{% url 'yaksh:course_modules' course.id %}">
-                    {{course.name}}
-                </a>
+                {{course.name}}
             </li>
             <li class="breadcrumb-item">
-                <a href="{% url 'yaksh:view_module' learning_module.id course.id %}">
-                    {{ learning_module.name }}
-                </a>
+                {{ learning_module.name }}
             </li>
             {% if state == "lesson" %}
                 <li class="breadcrumb-item active">{{lesson.name}}</li>
@@ -108,30 +103,38 @@
             </center>
         {% endif %}
 
+
         {% if state == "module" %}  <!-- Module instructions body -->
-            {% if first_unit %}
-                <a href="{% url 'yaksh:next_unit' course.id learning_module.id first_unit.id '1' %}" class="btn btn-success">Start
-                    <i class="fa fa-play">
-                    </i>
-                </a>
-            {% else %}
-                <a href="{% url 'yaksh:next_unit' course.id learning_module.id %}" class="btn btn-success">Next
-                    <i class="fa fa-step-forward">
-                    </i>
-                </a>
-            {% endif %}
-            <br><br>
             {% if learning_module.html_data %}
-                {{learning_module.html_data|safe}}
+            <div></div>
+                <center>
+                    {{learning_module.html_data|safe}}
+                    <br>
+                    {% if first_unit %}
+                        <a href="{% url 'yaksh:next_unit' course.id learning_module.id first_unit.id '1' %}" class="btn btn-success btn-lg">Start
+                            <i class="fa fa-play">
+                            </i>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'yaksh:next_unit' course.id learning_module.id %}" class="btn btn-success btn-lg">Next
+                            <i class="fa fa-step-forward">
+                            </i>
+                        </a>
+                    {% endif %}
+                </center>
             {% else %}
                 No Module information
             {% endif %}
         {% else %}    <!--  Lesson body   -->
-            <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info" >
-                Next&nbsp;<i class="fa fa-step-forward"></i>
-            </a>
-            <br><br>
-            {{lesson.html_data|safe}}
+            <div>
+                <center>
+                {{lesson.html_data|safe}}
+                <br>
+                <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
+                    Next&nbsp;<i class="fa fa-step-forward"></i>
+                </a>
+                </center>
+            </div>
             <br>
             {% with lesson.get_files as lesson_files %}
                 {% if lesson_files %}

@@ -53,18 +53,9 @@
             <form name=frm id=frm action="" method="post" enctype="multipart/form-data">
                 <fieldset>
                     {% csrf_token %}
-                        {% if lesson_form.errors %}
-                            {% for field in lesson_form %}
-                                {% for error in field.errors %}
-                                    <div class="alert alert-dismissible alert-danger">
-                                        <button type="button" class="close" data-dismiss="alert">
-                                            <i class="fa fa-close"></i>
-                                        </button>
-                                        <strong>{{ error|escape }}</strong>
-                                    </div>
-                                {% endfor %}
-                            {% endfor %}
-                            {% for error in form.non_field_errors %}
+                    {% if lesson_form.errors %}
+                        {% for field in lesson_form %}
+                            {% for error in field.errors %}
                                 <div class="alert alert-dismissible alert-danger">
                                     <button type="button" class="close" data-dismiss="alert">
                                         <i class="fa fa-close"></i>
@@ -72,36 +63,45 @@
                                     <strong>{{ error|escape }}</strong>
                                 </div>
                             {% endfor %}
-                        {% endif %}
-                        {{lesson_form.name}}
-                        <br>
-                        {{lesson_form.description}}
-                        <br>
-                        Active:&nbsp;{{lesson_form.active}}
-                        <br><br>
-                        Video File:
-                        <span class="badge badge-info">
-                            {{lesson_form.video_file.help_text}}
-                        </span>
-                        <div class="input-group mb-3">
-                            <div class="custom-file">
-                                {{lesson_form.video_file}}
-                                <label class="custom-file-label" for="id_video_file">
-                                    Choose file
-                                </label>
+                        {% endfor %}
+                        {% for error in lesson_form.non_field_errors %}
+                            <div class="alert alert-dismissible alert-danger">
+                                <button type="button" class="close" data-dismiss="alert">
+                                    <i class="fa fa-close"></i>
+                                </button>
+                                <strong>{{ error|escape }}</strong>
                             </div>
+                        {% endfor %}
+                    {% endif %}
+                    {{lesson_form.name}}
+                    <br>
+                    {{lesson_form.description}}
+                    <br>
+                    Active:&nbsp;{{lesson_form.active}}
+                    <br><br>
+                    Video File:
+                    <span class="badge badge-info">
+                        {{lesson_form.video_file.help_text}}
+                    </span>
+                    <div class="input-group mb-3">
+                        <div class="custom-file">
+                            {{lesson_form.video_file}}
+                            <label class="custom-file-label" for="id_video_file">
+                                Choose file
+                            </label>
                         </div>
-                        <br>
-                        Lesson Files:
-                        <div class="input-group mb-3">
-                            <div class="custom-file">
-                                {{lesson_file_form.Lesson_files}}
-                                <label class="custom-file-label" for="id_video_file">
-                                    Choose file
-                                </label>
-                            </div>
+                    </div>
+                    <br>
+                    Lesson Files:
+                    <div class="input-group mb-3">
+                        <div class="custom-file">
+                            {{lesson_file_form.Lesson_files}}
+                            <label class="custom-file-label" for="id_video_file">
+                                Choose file
+                            </label>
                         </div>
-                        <br>
+                    </div>
+                    <br>
                     {% if lesson_files %}
                     <center>
                     <div class="alert alert-info">
