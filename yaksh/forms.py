@@ -221,7 +221,7 @@ class ExerciseForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ExerciseForm, self).__init__(*args, **kwargs)
         self.fields['description'].widget.attrs.update(
-            {'class': form_input_class, 'placeholder':"Exercise Description"}
+            {'class': form_input_class, 'placeholder': "Exercise Description"}
         )
 
     class Meta:
@@ -388,13 +388,14 @@ class CourseForm(forms.ModelForm):
         self.fields['grading_system'].widget.attrs.update(
             {'class': 'custom-select'}
         )
-        if self.instance.id and self.instance.teachers.filter(id=user.id).exists():
+        if (self.instance.id and
+            self.instance.teachers.filter(id=user.id).exists()):
             self.fields['grading_system'].widget.attrs['disabled'] = True
         else:
             grading_choices = GradingSystem.objects.filter(
                 creator=user
             )
-            self.fields['grading_system'].queryset = grading_choices 
+            self.fields['grading_system'].queryset = grading_choices
 
 
 class ProfileForm(forms.ModelForm):
@@ -485,10 +486,10 @@ class LessonForm(forms.ModelForm):
 
 
 class LessonFileForm(forms.Form):
-    Lesson_files = forms.FileField(widget=forms.ClearableFileInput(
-                                attrs={'multiple': True,
-                                'class': "custom-file-input"}),
-                                required=False)
+    Lesson_files = forms.FileField(
+        widget=forms.ClearableFileInput(
+            attrs={'multiple': True, 'class': "custom-file-input"}),
+        required=False)
 
 
 class LearningModuleForm(forms.ModelForm):

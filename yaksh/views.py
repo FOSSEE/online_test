@@ -1154,7 +1154,7 @@ def send_mail(request, course_id, user_id=None):
             )
             messages.info(request, message)
     context = {
-        'course': course, 'message': message, 
+        'course': course, 'message': message,
         'enrolled': course.get_enrolled(), 'is_mail': True
     }
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
@@ -1261,10 +1261,8 @@ def monitor(request, quiz_id=None, course_id=None):
         try:
             courses = paginator.page(page)
         except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
             courses = paginator.page(1)
         except EmptyPage:
-            # If page is out of range (e.g. 9999), deliver last page of results.
             courses = paginator.page(paginator.num_pages)
         context = {
             "papers": [], "objects": courses, "msg": "Monitor"
@@ -1454,7 +1452,8 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
                     for qid in question_ids:
                         que_order.remove(qid)
                     if que_order:
-                        question_paper.fixed_question_order = ",".join(que_order)
+                        question_paper.fixed_question_order = ",".join(
+                            que_order)
                     else:
                         question_paper.fixed_question_order = ""
                     question_paper.save()
@@ -1483,7 +1482,7 @@ def design_questionpaper(request, quiz_id, questionpaper_id=None,
                 question_paper.random_questions.remove(*random_set_ids)
                 messages.success(request, "Questions removed successfully")
             else:
-                messages.warning(request,"Please select question set")
+                messages.warning(request, "Please select question set")
 
         if 'save' in request.POST or 'back' in request.POST:
             qpaper_form.save()
@@ -1946,7 +1945,7 @@ def add_teacher(request, course_id):
         context['status'] = True
         context['teachers_added'] = teachers
         messages.success(request, "Added teachers successfully")
-    context['is_add_teacher'] = True    
+    context['is_add_teacher'] = True
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
 
@@ -2289,13 +2288,13 @@ def upload_users(request, course_id):
         if 'csv_file' not in request.FILES:
             messages.warning(request, "Please upload a CSV file.")
             return my_redirect(reverse('yaksh:course_students',
-                                      args=[course_id]))
+                                       args=[course_id]))
         csv_file = request.FILES['csv_file']
         is_csv_file, dialect = is_csv(csv_file)
         if not is_csv_file:
             messages.warning(request, "The file uploaded is not a CSV file.")
             return my_redirect(reverse('yaksh:course_students',
-                                      args=[course_id]))
+                                       args=[course_id]))
         required_fields = ['firstname', 'lastname', 'email']
         try:
             reader = csv.DictReader(
@@ -2304,7 +2303,7 @@ def upload_users(request, course_id):
         except TypeError:
             messages.warning(request, "Bad CSV file")
             return my_redirect(reverse('yaksh:course_students',
-                                      args=[course_id]))
+                                       args=[course_id]))
         stripped_fieldnames = [
             field.strip().lower() for field in reader.fieldnames]
         for field in required_fields:
@@ -2312,7 +2311,7 @@ def upload_users(request, course_id):
                 msg = "The CSV file does not contain the required headers"
                 messages.warning(request, msg)
                 return my_redirect(reverse('yaksh:course_students',
-                                          args=[course_id]))
+                                           args=[course_id]))
         reader.fieldnames = stripped_fieldnames
         _read_user_csv(request, reader, course)
     return my_redirect(reverse('yaksh:course_students', args=[course_id]))
@@ -3006,7 +3005,7 @@ def course_status(request, course_id):
     stud_details = [(student, course.get_grade(student),
                      course.get_completion_percent(student),
                      course.get_current_unit(student))
-                     for student in students.object_list]
+                    for student in students.object_list]
     context = {
         'course': course, 'objects': students, 'is_progress': True,
         'student_details': stud_details, 'students_no': students_no
