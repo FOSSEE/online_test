@@ -90,8 +90,7 @@ $(document).ready(function(){
         student_id = data.split("+")[1];
         var status_div = $("#show_status_"+course_id+"_"+student_id);
         if(!status_div.is(":visible")){
-            var get_url = window.location.protocol + "//" + window.location.host +
-                      "/exam/manage/get_user_status/" + course_id + "/" + student_id;
+            var get_url = $("#url-"+student_id).attr("data-url");
             $.ajax({
                 url: get_url,
                 timeout: 8000,
@@ -99,8 +98,8 @@ $(document).ready(function(){
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
                 success: function(data) {
-                        status_div.toggle();
-                        status_div.html(data.user_data);
+                    status_div.toggle();
+                    status_div.html(data.user_data);
                     },
                 error: function(jqXHR, textStatus) {
                     alert("Unable to get user data. Please Try again later.");

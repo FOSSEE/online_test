@@ -13,8 +13,8 @@
     </button>
 
     <div class="collapse navbar-collapse" id="navbarColor01">
-      <div class="row ml-auto my-lg-0">
-        <div class="col-md-4">
+      <div class="row ml-auto">
+        <div class="col-md-6">
           <span class="time-div nav-item" id="time_left"></span>
         </div>
         <div class="col-md-6">
@@ -26,7 +26,7 @@
               {% else %}
                 Finish {{ quiz_type }}
               {% endif %}
-            <span class="fa fa-power-off"></span></button></span>
+            <i class="fa fa-power-off"></i></button></span>
           </form>
         </div>
       </div>
@@ -38,13 +38,13 @@
 <div class="container-fluid">
   <div class="row">
     <!-- Side Component -->
-    <div class="col-md-3 bg-secondary">
+    <div class="col-md-3 bg-secondary" style="overflow-x: scroll;">
       <br>
       <center>
         <b>{{course.name}}</b><br>
         {{ paper.question_paper.quiz.description }}</h4>
-        <hr>
       </center>
+      <hr>
       <center><p>Question Navigator</p></center>
       <div class="justify-content-center">
         {% for qid in paper.get_all_ordered_questions %}
@@ -83,7 +83,7 @@
       </div>
       <br>
       <div>
-          <table class="table-bordered table-responsive-sm">
+          <table class="table table-bordered table-responsive-sm">
             <thead>
               <tr>
                 <th>Category</th>

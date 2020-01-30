@@ -234,21 +234,21 @@ question_type = "{{ question.type }}"
           <!-- Integer type question -->
           {% if question.type == "integer" %}
             Enter Integer:<br/>
-            <input autofocus name="answer" type="number" id="integer" value="{{ last_attempt|safe }}" />
+            <input autofocus class="form-control" name="answer" type="number" id="integer" value="{{ last_attempt|safe }}" />
             <br><br>
           {% endif %}
 
           <!-- String type question -->
           {% if question.type == "string" %}
             Enter Text:<br/>
-            <textarea autofocus name="answer" id="string">{{ last_attempt|safe }}</textarea>
+            <textarea autofocus name="answer" id="string" class="form-control" style="width: 100%">{{ last_attempt|safe }}</textarea>
             <br/><br/>
           {% endif %}
 
           <!-- Float type question -->
           {% if question.type == "float" %}
             Enter Decimal Value :<br/>
-            <input autofocus name="answer" type="number" step="any" id="float" value="{{ last_attempt|safe }}" />
+            <input autofocus class="form-control" name="answer" type="number" step="any" id="float" value="{{ last_attempt|safe }}" />
             <br/><br/>
           {% endif %}
 
@@ -320,15 +320,16 @@ question_type = "{{ question.type }}"
             {% else %}
               {% if question in paper.get_questions_unanswered or quiz.is_exercise %}
                 <button class="btn btn-success" type="submit" name="check" id="check" >
-                  Check Answer <span class="glyphicon glyphicon-cog"></span>
+                  Check Answer
                 </button>
               {% endif %}
             {% endif %}
             {% if quiz.is_exercise %}
               {% if can_skip %}
-                 <button id="skip_ex" class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip"> Next <span class="glyphicon glyphicon-arrow-right"></span></button>
+                 <button id="skip_ex" class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip"> Next <span class="fa fa-step-forward"></span></button>
               {% else %}
-                 <button id="skip_ex" class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" style="visibility:hidden"> Next <span class="fa fa-step-forward"></span></button>
+                 <button id="skip_ex" class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" style="visibility:hidden"> Next <span class="fa fa-step-forward"></span>
+                 </button>
               {% endif %}
             {% endif %}
 

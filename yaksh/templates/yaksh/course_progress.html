@@ -28,6 +28,7 @@
                         {{ student.profile.roll_number}}
                     </td>
                     <td width="50%">
+                        <input type="hidden" id="url-{{student.id}}" data-url="{% url 'yaksh:get_user_data' course.id student.id %}">
                         <a class="user_data" data-item-id="{{course.id}}+{{student.id}}" data-toggle="tooltip" title="Click to view Overall Course progress" data-placement="top">
                             {{ student.get_full_name|title}}
                             <i class="fa fa-caret-down"></i>
