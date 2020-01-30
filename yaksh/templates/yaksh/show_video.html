@@ -15,13 +15,13 @@
         {% for module in all_modules %}
             <div id="accordian">
                 <div class="card">
-                    <div class="card-header" style="height: 120px">
+                    <div class="card-header">
                         <div class="row">
                             <div class="col-md-10">
                                 <a href="{% url 'yaksh:view_module' module.id course.id %}">
                                     {{module.name}}
-                                    {% if module.id == learning_module.id %}
-                                        <i class="fa fa-thumb-tack" data-toggle="tooltip" title="Currently on"></i>
+                                    {% if learning_module.id == module.id %}
+                                    <i class="fa fa-edit"></i>
                                     {% endif %}
                                 </a>
                             </div>
@@ -32,7 +32,11 @@
                             </div>
                         </div>
                     </div>
-                    <div id="collapse{{module.id}}" class="collapse hide" data-parent="#accordion">
+                    {% if learning_module.id == module.id %}
+                        <div id="collapse{{module.id}}" class="collapse show" data-parent="#accordion">
+                    {% else %}
+                        <div id="collapse{{module.id}}" class="collapse hide" data-parent="#accordion">
+                    {% endif %}
                         <div class="card-body">
                             {% for unit in module.get_learning_units %}
                                 {% get_unit_status course module unit user as status %}
@@ -44,10 +48,6 @@
                                           <i class="fa fa-square-o"></i>
                                         {% endif %}
                                         {{ unit.quiz.description }}
-                                        {% if unit.id == current_unit.id %}
-                                            <i class="fa fa-thumb-tack" data-toggle="tooltip" title="Currently on">
-                                            </i>
-                                        {% endif %}
                                     </a>
                                 {% else %}
                                     <a href="{% url 'yaksh:show_lesson' unit.lesson.id module.id course.id %}" class="list-group-item">
@@ -58,7 +58,7 @@
                                         {% endif %}
                                         {{ unit.lesson.name }}
                                         {% if unit.id == current_unit.id %}
-                                            <i class="fa fa-thumb-tack" data-toggle="tooltip" title="Currently on">
+                                            <i class="fa fa-play-circle" data-toggle="tooltip" title="Currently on">
                                             </i>
                                         {% endif %}
                                     </a>
@@ -75,7 +75,7 @@
     <div id="content">
 
         <button type="button" id="sidebarCollapse" class="btn btn-outline-info">
-            <i class="fa fa-times fa-lg"></i>
+            <i class="fa fa-navicon fa-lg"></i>
         </button>
 
         <br><br>
@@ -106,62 +106,55 @@
 
         {% if state == "module" %}  <!-- Module instructions body -->
             {% if learning_module.html_data %}
-            <div></div>
-                <center>
-                    {{learning_module.html_data|safe}}
-                    <br>
-                    {% if first_unit %}
-                        <a href="{% url 'yaksh:next_unit' course.id learning_module.id first_unit.id '1' %}" class="btn btn-success btn-lg">Start
-                            <i class="fa fa-play">
-                            </i>
-                        </a>
-                    {% else %}
-                        <a href="{% url 'yaksh:next_unit' course.id learning_module.id %}" class="btn btn-success btn-lg">Next
-                            <i class="fa fa-step-forward">
-                            </i>
-                        </a>
-                    {% endif %}
-                </center>
+                {{learning_module.html_data|safe}}
             {% else %}
                 No Module information
             {% endif %}
-        {% else %}    <!--  Lesson body   -->
-            <div>
-                <center>
-                {{lesson.html_data|safe}}
-                <br>
-                <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
-                    Next&nbsp;<i class="fa fa-step-forward"></i>
+            <br>
+            {% if first_unit %}
+                <a href="{% url 'yaksh:next_unit' course.id learning_module.id first_unit.id '1' %}" class="btn btn-success btn-lg">Start
+                    <i class="fa fa-play">
+                    </i>
                 </a>
-                </center>
+            {% else %}
+                <a href="{% url 'yaksh:next_unit' course.id learning_module.id %}" class="btn btn-success btn-lg">Next
+                    <i class="fa fa-step-forward">
+                    </i>
+                </a>
+            {% endif %}
+        {% else %}    <!--  Lesson body   -->
+            <div class="col-md-6" style="width: 100%">
+            {{lesson.html_data|safe}}
+            <br>
+            <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
+                Next&nbsp;<i class="fa fa-step-forward"></i>
+            </a>
             </div>
             <br>
+            <div class="col-md-7">
             {% with lesson.get_files as lesson_files %}
                 {% if lesson_files %}
-                    <div class="col-md-7">
-                        <div class="card">
-                            <div class="card-header">
-                                Files for this lesson
-                            </div>
-                            <div class="card-body">
-                                {% for f in lesson_files %}
-                                    <a href="{{f.file.url}}" class="list-group-item">
-                                        {{forloop.counter}}.{{ f.file.name|file_title }}
-                                    </a>
-                                {% endfor %}
-                            </div>
+                    <div class="card">
+                        <div class="card-header">
+                            Files for this lesson
+                        </div>
+                        <div class="card-body">
+                            {% for f in lesson_files %}
+                                <a href="{{f.file.url}}" class="list-group-item">
+                                    {{forloop.counter}}.{{ f.file.name|file_title }}
+                                </a>
+                            {% endfor %}
                         </div>
                     </div>
-                    <br>
                 {% endif %}
             {% endwith %}
+            </div>
         {% endif %}
     </div>
 </div>
 <script type="text/javascript">
     $(document).ready(function () {
         $('#sidebarCollapse').on('click', function () {
-            $(this).find('i').toggleClass('fa-times fa-navicon')
             $('#sidebar').toggleClass('active');
         });
     });

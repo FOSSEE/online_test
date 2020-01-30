@@ -2,6 +2,7 @@
 {% load custom_filters %}
 {% load static %}
 
+{% block title %} View Answer paper {% endblock %}
 {% block pagetitle %} Answer Paper  for {{ quiz.description }}{% endblock pagetitle %}
 
 {% block script %}
@@ -18,13 +19,7 @@
   <br><br>
   {% if data.papers %}
     <p class="text-center">
-    {% for paper in data.papers %}
-      {% if forloop.counter == 2 and data.questionpaperid %}
-        <hr>
-        <u>
-          <h2> Previous attempts </h2>
-        </u>
-      {% endif %}
+    {% with data.papers.0 as paper %}
       <div class="card">
         <div class="card-header">
           Course Details
@@ -34,35 +29,41 @@
             <div class="col-md-6">
               <p><b>Course:</b> {{ paper.course.name }}</p>
               <p><b>Quiz:</b> {{ paper.question_paper.quiz.description }}</p>
-              <p><b>Start time:</b> {{ paper.start_time }}</p>
-              <p><b>End time:</b> {{ paper.end_time }}</p>
-              <p><b>Status:</b>
-              {% if paper.passed %}
-                <span class="badge badge-pill badge-success"> Passed </span>
-              {% else %}
-                <span class="badge badge-pill badge-danger"> Failed </span>
-              {% endif %}
-              </p>
             </div>
             <div class="col-md-6">
-              <p><b>Total Marks:</b> {{ paper.question_paper.total_marks }}</p>
-              <p><b>Marks obtained:</b> {{ paper.marks_obtained }}</p>
-              {% if paper.percent %}
-                <p><b>Percentage obtained:</b> {{paper.percent}}%</p>
-              {% endif %}
-              <p><b>Total attempts at questions:</b> {{ paper.answers.count }}</p>
-              <p>
-                <b>Attempt Number:</b>
-                <span class="badge badge-pill badge-info">
-                  {{paper.attempt_number}}
-                </span>
-              </p>
-              <p><b>User IP address:</b> {{ paper.user_ip }}</p>
+              <p><b>Start time:</b> {{ paper.start_time }}</p>
+              <p><b>End time:</b> {{ paper.end_time }}</p>
             </div>
           </div>
         </div>
       </div>
-      <hr>
+    {% endwith %}
+    {% for paper in data.papers %}
+      <br>
+      <h3><b><u>Attempt Number:</u></b>&nbsp;<span class="badge badge-pill badge-info">
+        {{paper.attempt_number}}
+      </span></h3>
+      <div class="card">
+        <div class="card-header">
+          Scorecard
+        </div>
+        <div class="card-body">
+          <p><b>Status:</b>
+          {% if paper.passed %}
+            <span class="badge badge-pill badge-success"> Passed </span>
+          {% else %}
+            <span class="badge badge-pill badge-danger"> Failed </span>
+          {% endif %}
+          </p>
+          <p><b>Total Marks:</b> {{ paper.question_paper.total_marks }}</p>
+          <p><b>Marks obtained:</b> {{ paper.marks_obtained }}</p>
+          {% if paper.percent %}
+            <p><b>Percentage obtained:</b> {{paper.percent}}%</p>
+          {% endif %}
+          <p><b>Total attempts at questions:</b> {{ paper.answers.count }}</p>
+        </div>
+      </div>
+      <br>
       {% if paper.answers.count %}
         <div class="card">
           <div class="card-header">
@@ -330,7 +331,12 @@
               </div>
           </div>
         </div>
+      {% else %}
+        <div class="alert alert-warning">
+          No submissions found
+        </div>
       {% endif %} {# if paper.answers.count #}
+      <hr>
     {% endfor %} {# for paper in data.papers #}
   {% else %}
     <br>
