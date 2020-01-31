@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
+
+{% block title %} Complete Quiz {% endblock %}
+
 {% block nav %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
     <a class="navbar-brand" href="{% url 'yaksh:index' %}">
@@ -10,7 +13,7 @@
 
 {% block content %}
 <br>
-{% if module_id and not paper.question_paper.quiz.is_trial %}
+{% if module_id and not paper.course.is_trial %}
 <center>
     <div class="alert alert-info col-md-8">
         Note:- Please Click on the Next button to submit the quiz. Please do not close the browser without clicking Next.

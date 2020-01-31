@@ -1,24 +1,33 @@
 {% extends "base.html" %}
 
+{% block title %} Preview Question paper {% endblock title %}
 {% block pagetitle %} Quiz: {{ paper.quiz.description }} {% endblock pagetitle %}
 
 {% block content %}
-<div class="yakshwell container">
+<div class="container">
 <div class="card">
-	<div class="col-md-12 card-body">
-		<div class="col-md-6">Maximum Mark(s): {{ paper.total_marks }}</div>
-		<div class="col-md-6"><span class="pull-right">Total Time: {{ paper.quiz.duration }} minutes</span></div>
-	</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">Maximum Mark(s): {{ paper.total_marks }}</div>
+            <div class="col-md-6">
+                <span class="pull-right">
+                    Total Time: {{ paper.quiz.duration }} minutes
+                </span>
+            </div>
+        </div>
+    </div>
 </div>
+<br>
 <div class="card">
-	<div class="card-heading">Instructions</div>
-	<div class="card-body" id="instructions">
-		{{ paper.quiz.instructions|safe }}
-	</div>
+    <div class="card-header">Instructions</div>
+    <div class="card-body" id="instructions">
+        {{ paper.quiz.instructions|safe }}
+    </div>
 </div>
+<br>
 {% for question in questions %}
     <div class="card">
-        <div class="card-heading yakshlabel">
+        <div class="card-header">
             <strong> {{forloop.counter}}. {{ question.summary }} 
             <span class="marks pull-right"> Mark(s): {{ question.points }} </span>
             </strong>
@@ -39,6 +48,7 @@
             
         </div>
     </div>
+    <br>
 {% endfor %}
 </div>
 {% endblock %}

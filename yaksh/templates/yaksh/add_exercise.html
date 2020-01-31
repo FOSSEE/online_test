@@ -1,6 +1,7 @@
 {% extends "manage.html" %}
 {% load static %}
 
+{% block title %}Add Exercise{% endblock %}
 {% block subtitle %}Add Exercise{% endblock %}
 
 {% block css %}
@@ -48,6 +49,7 @@
             </button>
         </center>
     </form>
+    <br>
     {% if exercise and course_id %}
         {% if exercise.questionpaper_set.get.id %}
         <center>

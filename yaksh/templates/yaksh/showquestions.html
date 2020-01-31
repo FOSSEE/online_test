@@ -14,9 +14,9 @@
 {% block content %}
 <div class="container">
   <!-- Side bar -->
-  <div class="nav nav-pills" id="sidebar" role="tablist" aria-orientation="vertical">
+  <div class="nav nav-pills" role="tablist" aria-orientation="vertical">
     <a href="#show" id="showbar" class="nav-link active"  data-toggle="pill" role="tab" aria-controls="show" aria-selected="true"> Show all Questions</a>
-    <a href="#updown" id="updownbar" class="nav-link" data-toggle="pill" role="tab" aria-controls="updown" aria-selected="false" > Upload and Download Questions</a>
+    <a href="#updown" id="updownbar" class="nav-link" data-toggle="pill" role="tab" aria-controls="updown" aria-selected="false" > Upload Questions</a>
   </div>
   <!-- End of side bar -->
   <div class="tab-content">
@@ -49,7 +49,7 @@
         <form action="" method="post"  enctype="multipart/form-data">
           {% csrf_token %}
             <div class="form-group col-md-6">
-                <a class="btn btn-lg btn-primary" href="{% url 'yaksh:download_yaml_template' %}">
+                <a class="btn btn-info" href="{% url 'yaksh:download_yaml_template' %}">
                   <i class="fa fa-download"></i>&nbsp;Download Template</a>
                 <br><br>
                 <h4> Or </h4>
@@ -61,8 +61,10 @@
                             Choose file
                         </label>
                     </div>
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-primary" type="submit" name="upload" value="upload"><i class="fa fa-upload"></i>&nbsp;Upload File</button>
+                    </div>
                 </div>
-                <button class="btn btn-lg btn-success" type="submit" name="upload" value="upload"><i class="fa fa-upload"></i>&nbsp;Upload File</button>
             </div>
             <script>
                 $('#id_file').on('change',function(){
@@ -138,11 +140,14 @@
                     {% endif %}
                   </select>
                 </div>
+                <br><br>
+                <div class="col-md-6">
+                  <a class="btn btn-primary" href="{% url 'yaksh:show_questions' %}">
+                    Clear Filters
+                  </a>
+                </div>
               </div>
             </div>
-            <br/>
-            <a class="btn btn-lg btn-primary" href="{% url 'yaksh:show_questions' %}">
-             Clear Filters</a>
           </div>
         </div>
         <div id="filtered-questions">

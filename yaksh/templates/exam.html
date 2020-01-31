@@ -14,17 +14,17 @@
 
     <div class="collapse navbar-collapse" id="navbarColor01">
       <div class="row ml-auto">
-        <div class="col-md-6">
+        <div class="col-md-4">
           <span class="time-div nav-item" id="time_left"></span>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-7">
           <form id="logout" action="{% url 'yaksh:quit_quiz' paper.attempt_number module.id paper.question_paper.id course.id %}" method="post" class="ml-auto">
             {% csrf_token %}
             <span class="nav-item"><button class="btn btn-danger btn-lg" type="submit" name="quit">
               {% if paper.questions_unanswered.all %}
-                Quit {{ quiz_type }}
+                Quit {{quiz_type}}
               {% else %}
-                Finish {{ quiz_type }}
+                Finish {{quiz_type}}
               {% endif %}
             <i class="fa fa-power-off"></i></button></span>
           </form>
@@ -45,38 +45,43 @@
         {{ paper.question_paper.quiz.description }}</h4>
       </center>
       <hr>
-      <center><p>Question Navigator</p></center>
+      <center><p><b><u>Question Navigator</b></u></p></center>
+      <br>
       <div class="justify-content-center">
         {% for qid in paper.get_all_ordered_questions %}
           {% if paper.question_paper.quiz.allow_skip %}
             {% if qid in paper.get_questions_unanswered %}
               {% if qid.id == question.id %}
               <a class="active btn btn-outline-primary " href="#"data-toggle="tooltip"
-                  title="{{ qid.description|striptags }}" style="width: 50px"
+                  title="{{ qid.description|striptags|truncatechars:100 }}" style="width: 50px"
                   onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')">{{ forloop.counter }}</a>
               {% else %}
-              <a class=" btn btn-outline-primary " href="#" data-toggle="tooltip" title="{{ qid.description|striptags }}" style="width: 50px"
+              <a class=" btn btn-outline-primary " href="#" data-toggle="tooltip" title="{{ qid.description|striptags|truncatechars:100 }}" style="width: 50px"
                   onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')">{{ forloop.counter }}</a>
               {% endif %}
             {% endif %}
             {% if qid in paper.get_questions_answered %}
-            <a class="btn btn-info" href="#" data-toggle="tooltip" style="width: 50px"
+            <a class="btn btn-success" href="#" data-toggle="tooltip" style="width: 50px"
             onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')"
-            title="{{ qid.description }}">{{ forloop.counter }}</a>
+            title="{{ qid.description|striptags|truncatechars:100 }}">{{ forloop.counter }}</a>
             {% endif %}
           {% else %}
             {% if qid.id == question.id %}
-            <a class="active btn btn-outline-primary" data-toggle="tooltip" title="{{ qid.description|striptags }}" style="width: 50px">{{ forloop.counter }}</a>
+            <a class="active btn btn-outline-primary" data-toggle="tooltip" title="{{ qid.description|striptags|truncatechars:100 }}" style="width: 50px">{{ forloop.counter }}</a>
             {% elif qid in paper.get_questions_answered %}
-            <a class="btn btn-outline-primary" href="#" data-toggle="tooltip" style="width: 50px"
+            <a class="btn btn-success" href="#" data-toggle="tooltip" style="width: 50px"
             onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')"
-            title="{{ qid.description }}">{{ forloop.counter }}</a>
+            title="{{ qid.description|striptags|truncatechars:100 }}">{{ forloop.counter }}</a>
             {% else %}
-            <a class="btn btn-outline-primary" style="width: 50px" data-toggle="tooltip" title="{{ qid.description|striptags }}">{{ forloop.counter }}</a>
+            <a class="btn btn-outline-primary" style="width: 50px" data-toggle="tooltip" title="{{ qid.description|striptags|truncatechars:100 }}">{{ forloop.counter }}</a>
             {% endif %}
           {% endif %}
         {% endfor %}
       </div>
+      <br>
+      <p><span class="btn btn-success"></span> Attempted question(s)</p>
+      <p><span class="btn btn-primary"></span> Current question</p>
+      <p><span class="btn btn-outline-primary"></span> Unattempted question(s)</p>
       <br>
       <div>
         <p class="text-center">Question(s) left: <b>{{ paper.questions_left }}</b></p>

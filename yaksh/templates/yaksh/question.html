@@ -205,11 +205,12 @@ question_type = "{{ question.type }}"
         {% if quiz.is_exercise %}
           <div>
             {% if can_skip %}
-              <div class = "card col-md-8" id="solution">
+              <div id="solution">
             {% else %}
               <div id="solution" style="display:none">
             {% endif %}
             {% if question.solution %}
+            <br>
             <h4><u> Solution by teacher</u></h4>
             {% endif %}
             <font size=3 face=arial> {{ question.solution|safe }} </font>
@@ -296,7 +297,7 @@ question_type = "{{ question.type }}"
           {% if question.type == "code" %}
             <div class="row align-items-center">
               <div class="col-md-9">
-                <h5>Write your program below:</h5>
+                <h4>Write your program below:</h4>
               </div>
               <div class="col-md-3 ml-auto">
                 <a href="#answer" class=" btn btn-outline-primary" onclick="confirm()" name="reset" id="reset">Undo Changes&nbsp;<span class="fa fa-refresh"></span></a>
