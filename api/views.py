@@ -8,8 +8,11 @@ from api.serializers import (
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework import permissions
+from rest_framework.authtoken.models import Token
 from django.http import Http404
+from django.contrib.auth import authenticate
 from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 import json
@@ -53,12 +56,15 @@ class StartQuiz(APIView):
         user = request.user
         quiz = self.get_quiz(quiz_id, user)
         questionpaper = quiz.questionpaper_set.first()
+        context = {}
 
         last_attempt = AnswerPaper.objects.get_user_last_attempt(
             questionpaper, user, course_id)
         if last_attempt and last_attempt.is_attempt_inprogress():
             serializer = AnswerPaperSerializer(last_attempt)
-            return Response(serializer.data)
+            context["time_left"] = last_attempt.time_left()
+            context["answerpaper"] = serializer.data
+            return Response(context)
 
         can_attempt, msg = questionpaper.can_attempt_now(user, course_id)
         if not can_attempt:
@@ -71,7 +77,9 @@ class StartQuiz(APIView):
         answerpaper = questionpaper.make_answerpaper(user, ip, attempt_number,
                                                      course_id)
         serializer = AnswerPaperSerializer(answerpaper)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        context["time_left"] = answerpaper.time_left()
+        context["answerpaper"] = serializer.data
+        return Response(context, status=status.HTTP_201_CREATED)
 
 
 class QuestionDetail(APIView):
@@ -378,3 +386,28 @@ class QuestionPaperDetail(APIView):
         questionpaper = self.get_questionpaper(pk, request.user)
         questionpaper.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ICourse(APIView):
+    def get(self, request, pk, format=None):
+        course = Course.objects.get(id=pk)
+        serializer = CourseSerializer(course)
+        return Response(serializer.data)
+    
+
+@api_view(['POST'])
+@authentication_classes(())
+@permission_classes(())
+def login(request):
+    print(request)
+    data = {}
+    if request.method == "POST":
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
+        if user is not None and user.is_authenticated:
+            token, created = Token.objects.get_or_create(user=user)
+            data = {
+                'token': token.key
+            }
+    return Response(data, status=status.HTTP_201_CREATED)

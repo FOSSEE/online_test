@@ -22,6 +22,9 @@ urlpatterns = [
         views.AnswerValidator.as_view(), name='validators'),
     url(r'validate/(?P<uid>[0-9]+)/$',
         views.AnswerValidator.as_view(), name='validator'),
+    url(r'course/(?P<pk>[0-9]+)/$',
+        views.ICourse.as_view(), name='get_course'),
+    url(r'login/$', views.login, name='login')
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

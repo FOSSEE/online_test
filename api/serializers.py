@@ -50,6 +50,7 @@ class LearningUnitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LearningUnit
+        ordering = ['order']
         fields = '__all__'
 
 
@@ -59,6 +60,7 @@ class LearningModuleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LearningModule
+        ordering = ['order']
         fields = '__all__'
 
 
