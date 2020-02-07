@@ -2278,6 +2278,179 @@ class TestCourses(TestCase):
         self.user1_course.learning_module.remove(self.learning_module1)
 
 
+class TestSearchFilters(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        # Create moderator group
+        self.mod_group = Group.objects.create(name="moderator")
+
+        #Create user1 with profile
+        self.user1_plaintext_pass = "demo1"
+        self.user1 = User.objects.create_user(
+            username='demo_user1',
+            password=self.user1_plaintext_pass,
+            first_name='user1_first_name',
+            last_name='user1_last_name',
+            email='demo1@test.com'
+        )
+        Profile.objects.create(
+            user=self.user1,
+            roll_number=10,
+            institute="IIT",
+            department="Chemical",
+            position="moderator",
+            timezone="UTC",
+            is_moderator=True
+            )
+
+        # Add user1 to moderator group
+        self.mod_group.user_set.add(self.user1)
+
+        # Create courses for user1
+        self.user1_course1 = Course.objects.create(
+            name="Demo Course",
+            enrollment="Enroll Request", creator=self.user1)
+        self.user1_course2 = Course.objects.create(
+            name="Test Course",
+            enrollment="Enroll Request", creator=self.user1)
+
+        # Create learning modules for user1
+        self.learning_module1 = LearningModule.objects.create(
+            order=0, name="Demo Module", description="Demo Module",
+            check_prerequisite=False, creator=self.user1)
+        self.learning_module2 = LearningModule.objects.create(
+            order=0, name="Test Module", description="Test Module",
+            check_prerequisite=False, creator=self.user1)
+
+        # Create quizzes for user1
+        self.quiz1 = Quiz.objects.create(
+            time_between_attempts=0, description='Demo Quiz',
+            creator=self.user1)
+        self.question_paper1 = QuestionPaper.objects.create(
+            quiz=self.quiz1, total_marks=1.0)
+
+        self.quiz2 = Quiz.objects.create(
+            time_between_attempts=0, description='Test Quiz',
+            creator=self.user1)
+        self.question_paper2 = QuestionPaper.objects.create(
+            quiz=self.quiz2, total_marks=1.0)
+
+        # Create lessons for user1
+        self.lesson1 = Lesson.objects.create(
+            name="Demo Lesson", description="Demo Lession",
+            creator=self.user1)
+        self.lesson2 = Lesson.objects.create(
+            name="Test Lesson", description="Test Lesson",
+            creator=self.user1)
+
+        # Create units for lesson and quiz
+        self.lesson_unit1 = LearningUnit.objects.create(
+            order=1, type="lesson", lesson=self.lesson1)
+        self.lesson_unit2 = LearningUnit.objects.create(
+            order=1, type="lesson", lesson=self.lesson2)
+        self.quiz_unit1 = LearningUnit.objects.create(
+            order=2, type="quiz", quiz=self.quiz1)
+        self.quiz_unit2 = LearningUnit.objects.create(
+            order=2, type="quiz", quiz=self.quiz2)
+
+        # Add units to module
+        self.learning_module1.learning_unit.add(self.lesson_unit1)
+        self.learning_module1.learning_unit.add(self.quiz_unit1)
+        self.learning_module2.learning_unit.add(self.lesson_unit2)
+        self.learning_module2.learning_unit.add(self.quiz_unit2)
+
+    def test_print_data(self):
+        print("\nUSERS")
+        for u in User.objects.all().values():
+            print(u)
+
+        print("\nPROFILES")
+        for p in Profile.objects.all().values():
+            print(p)
+
+        print("\nCOURSES")
+        for c in Course.objects.all().values():
+            print(c)
+
+        print("\nLESSONS")
+        for l in Lesson.objects.all().values():
+            print(l)
+
+        print("\nQUIZZES")
+        for q in Quiz.objects.all().values():
+            print(q)
+
+        print("\nLEARNING_MODULES")
+        for lm in LearningModule.objects.all().values():
+            print(lm)
+
+    def tearDown(self):
+        self.client.logout()
+        self.user1.delete()
+        self.mod_group.delete()
+
+    def test_courses_search_filter(self):
+        """ Test to check if courses are obtained with tags and status """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.post(
+            reverse('yaksh:courses'),
+            data={'course_tags': 'demo', 'course_status': 'active'}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/courses.html')
+        self.assertIsNotNone(response.context['form'])
+        self.assertIn(self.user1_course1, response.context['courses'])
+
+    def test_quizzes_search_filter(self):
+        """ Test to check if quizzes are obtained with tags and status """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.post(
+            reverse('yaksh:show_all_quizzes'),
+            data={'quiz_tags': 'demo', 'quiz_status': 'active'}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/courses.html')
+        self.assertIsNotNone(response.context['form'])
+        self.assertIn(self.quiz1, response.context['quizzes'])
+
+    def test_lessons_search_filter(self):
+        """ Test to check if lessons are obtained with tags and status """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.post(
+            reverse('yaksh:show_all_lessons'),
+            data={'lesson_tags': 'demo', 'lesson_status': 'active'}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/courses.html')
+        self.assertIsNotNone(response.context['form'])
+        self.assertIn(self.lesson1, response.context['lessons'])
+
+    def test_learning_modules_search_filter(self):
+        """ Test to check if lessons are obtained with tags and status """
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.post(
+            reverse('yaksh:show_all_modules'),
+            data={'module_tags': 'demo', 'module_status': 'active'}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'yaksh/courses.html')
+        self.assertIsNotNone(response.context['form'])
+        self.assertIn(self.learning_module1, response.context['learning_modules'])
+
+
 class TestAddCourse(TestCase):
     def setUp(self):
         self.client = Client()
