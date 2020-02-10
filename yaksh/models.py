@@ -1162,7 +1162,9 @@ class CourseStatus(models.Model):
         self.save()
 
     def __str__(self):
-        return "{0} status for {1}".format(self.course.name, self.user.username)
+        return "{0} status for {1}".format(
+            self.course.name, self.user.username
+        )
 
 
 ###############################################################################

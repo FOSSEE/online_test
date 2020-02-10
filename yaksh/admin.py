@@ -20,7 +20,7 @@ class CourseStatusAdmin(admin.ModelAdmin):
 
 
 class CourseAdmin(admin.ModelAdmin):
-	list_filter = ['active', 'is_trial']
+    list_filter = ['active', 'is_trial']
 
 
 admin.site.register(Profile, ProfileAdmin)
