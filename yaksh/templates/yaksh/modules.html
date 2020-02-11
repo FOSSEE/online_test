@@ -13,11 +13,6 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if allotted %}active{% endif %}" href="{% url 'yaksh:allotted_courses' %}">
-                        Allotted Courses
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link" href="{% url 'yaksh:add_course' %}">
                         Add New Course
                     </a>
@@ -43,14 +38,16 @@
         </div>
     </div>
 </div>
-<br>
 <div class="container">
+    <hr>
     <a href="{% url 'yaksh:add_module' %}" class="btn btn-primary btn-lg">
         <i class="fa fa-plus-circle"></i>&nbsp;Add new Module
     </a>
     {% if not modules %}
-        <center><h4> No new learning modules added</h4></center>
         <br><br>
+        <div class="alert alert-info">
+            <center><h3> No new learning modules added</h3></center>
+        </div>
     {% else %}
         <center><h3> Learning Modules </h3></center>
         <table class="table table-bordered table-responsive-sm">

@@ -2,7 +2,7 @@
 {% load custom_filters %}
 {% load static %}
 {% block title %} Monitor {% endblock %}
-{% block pagetitle %} {{ msg }} {% endblock pagetitle %}
+{% block pagetitle %} Monitor {% endblock pagetitle %}
 
 {% block meta %} <meta http-equiv="refresh" content="30"/> {% endblock meta %}
 
@@ -87,8 +87,13 @@ $(document).ready(function()
         {% endfor %}
     </div>
     {% include "yaksh/paginator.html" %}
-    {% endif %}
 
+    {% elif msg == 'Monitor' and not objects %}
+      <br>
+      <div class="alert alert-info">
+        <center><h3>No courses to monitor</h3></center>
+      </div>
+    {% endif %}
     {# ############################################################### #}
     {# This is rendered when we are just viewing exam/monitor/quiz_num #}
     {% if msg != "Monitor" %}
@@ -176,7 +181,7 @@ $(document).ready(function()
               <!-- Modal content-->
               <div class="modal-content">
               <div class="modal-header">
-                <h3 class="modal-title">Uncheck unwanted columns</h3>
+                <h3 class="modal-title">Download CSV for {{quiz.description}} </h3>
                 <button type="button" class="close" data-dismiss="modal">
                   <i class="fa fa-close"></i>
                 </button>
@@ -184,13 +189,15 @@ $(document).ready(function()
               <form action="{% url 'yaksh:download_quiz_csv' course.id quiz.id %}" method="post">
               {% csrf_token %}
               <div class="modal-body">
+                <b>Uncheck unwanted columns</b>
+                <br>
                   {% for field in csv_fields %}
                   <div class="form-check form-check-inline">
                     <label class="form-check-label">
                         <input class="form-check-input" name="csv_fields" type="checkbox" value="{{ field }}" checked> {{ field }}
                     </label>
-                    <br>
                   </div>
+                  <br>
                   {% endfor %}
                   <b>Select Attempt Number: Default latest attempt</b>
                   <select class="form-control" name = "attempt_number">
@@ -204,7 +211,9 @@ $(document).ready(function()
                   </select>
               </div>
               <div class="modal-footer">
-                <button type="submit" class="btn btn-primary"> Download <span class="glyphicon glyphicon-save"></span></button>
+                <button type="submit" class="btn btn-success">
+                  <span class="fa fa-save"></span>&nbsp;Download
+                </button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">
                   Close
                 </button>
@@ -214,7 +223,13 @@ $(document).ready(function()
               </div>
           </div>
         {% else %}
-          <p> No answer papers found for {{ quiz.description }}</p>
+          <div class="col-md-12">
+            <div class="alert alert-warning">
+              <center>
+                <h4>No Users Found for {{ quiz.description }}</h4>
+              </center>
+            </div>
+          </div>
         {% endif %} {# if papers #}
       {% else %}
         <h4>No Quiz Found</h4>

@@ -22,11 +22,6 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if allotted %}active{% endif %}" href="{% url 'yaksh:allotted_courses' %}">
-                            Allotted Courses
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'yaksh:add_course' %}">
                             Add New Course
                         </a>
@@ -52,13 +47,13 @@
             </div>
         </div>
     </div>
-    {% if not objects %}
-        <center>
-            <h2> No Courses Found </h2>
-            <br>
-        </center>
-    {% else %}
-        <div class="container">
+    <div class="container">
+        {% if not objects %}
+            <br><br>
+            <div class="alert alert-info">
+                <center> <h3> No Courses Found </h3> </center>
+            </div>
+        {% else %}
             <hr>
             {% if messages %}
                 {% for message in messages %}
@@ -92,7 +87,18 @@
                                 </div>
                                 <hr>
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
+                                        {% if user.id != course.creator.id %}
+                                            <span class="badge badge-pill badge-secondary">
+                                                Allotted Course
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-pill badge-info">
+                                                Created Course
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-3">
                                         {% if course.active %}
                                             <span class="badge badge-pill badge-success">
                                             Active
@@ -103,8 +109,8 @@
                                             </span>
                                         {% endif %}
                                     </div>
-                                    <div class="col-md-6">
-                                        <a href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">
+                                    <div class="col-md-4">
+                                        <a href="{% url 'yaksh:toggle_course_status' course.id %}">
                                         {% if course.active %}
                                             <i class="fa fa-toggle-on fa-2x"></i>
                                         {% else %}

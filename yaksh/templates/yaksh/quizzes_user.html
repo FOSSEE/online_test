@@ -7,56 +7,32 @@
 
 {% block main %}
 <div class="container">
-    {% block navtab %}
-        {% if 'Enrolled Courses' not in title%}
-            <div class="container">
-                <div class="nav nav-pills">
-                  <li class="nav-item" >
-                    <a class="active nav-link" href="{% url 'yaksh:quizlist_user' %}">
-                        All Courses
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="{% url 'yaksh:quizlist_user' 'enrolled' %}">
-                        Enrolled Courses
-                    </a>
-                  </li>
+    <center>
+        <h2>All Courses</h2>
+    </center>
+    <hr>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <form action="{% url 'yaksh:quizlist_user' %}" method="post" id="custom-search-form" >
+                {% csrf_token %}
+                <div class="col-md-12">
+                    <div class="input-group">
+                        <input type="text" name="course_code" class="form-control" type="search"  placeholder="Enter course code to search" required="">
+                        <span class="input-group-append">
+                            <button class="btn btn-outline-info" type="submit"><i class="fa fa-search"></i>&nbsp;Search</button>
+                        </span>
+                    </div>
                 </div>
-            </div>
-            <hr>
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <form action="{% url 'yaksh:quizlist_user' %}" method="post" id="custom-search-form" >
-                        {% csrf_token %}
-                        <div class="col-md-12">
-                            <div class="input-group">
-                                <input type="text" name="course_code" class="form-control" type="search"  placeholder="Enter course code to search">
-                                <span class="input-group-append">
-                                    <button class="btn btn-outline-primary" type="submit"><i class="fa fa-search"></i>&nbsp;Search</button>
-                                </span>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        {% else %}
-        <div class="container">
-            <div class="nav nav-pills">
-              <li class="nav-item" >
-                <a class="nav-link" href="{% url 'yaksh:quizlist_user' %}">
-                    All Courses
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="active nav-link" href="{% url 'yaksh:quizlist_user' 'enrolled' %}">
-                    Enrolled Courses
-                </a>
-              </li>
-            </div>
+            </form>
         </div>
-        <hr>
+        {% if title == "Search" %}
+        <div class="col-md-4">
+            <a href="{% url 'yaksh:quizlist_user' %}" class="btn btn-primary">
+                <i class="fa fa-times"></i>&nbsp;Clear search
+            </a>
+        </div>
         {% endif %}
-    {% endblock %}
+    </div>
     <br>
     {% if messages %}
         {% for message in messages %}
@@ -66,18 +42,10 @@
             </button>
             <strong>{{ message }}</strong>
         </div>
+        <br>
         {% endfor %}
     {% endif %}
-    <br>
-    {% if msg %}
-        <div class="alert alert-dismissible alert-warning">
-            <button type="button" class="close" data-dismiss="alert">
-                <i class="fa fa-close"></i>
-            </button>
-            <strong>{{ msg }}</strong>
-        </div>
-    {% endif %}
-    <br>
+
     {% if not courses %}
         <center><div class="col-md-8 alert alert-warning" role="alert">
             No Courses to display

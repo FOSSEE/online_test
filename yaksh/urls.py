@@ -11,8 +11,6 @@ urlpatterns = [
     url(r'^toggle_moderator/$', views.toggle_moderator_role,
         name='toggle_moderator'),
     url(r'^quizzes/$', views.quizlist_user, name='quizlist_user'),
-    url(r'^quizzes/(?P<enrolled>\w+)/$', views.quizlist_user,
-        name='quizlist_user'),
     url(r'^results/$', views.results_user),
     url(r'^start/(?P<questionpaper_id>\d+)/(?P<module_id>\d+)/'
         '(?P<course_id>\d+)/$', views.start, name="start_quiz"),
@@ -112,8 +110,6 @@ urlpatterns = [
     url(r'^manage/duplicate_course/(?P<course_id>\d+)/$',
         views.duplicate_course, name='duplicate_course'),
     url(r'manage/courses/$', views.courses, name='courses'),
-    url(r'manage/allotted/courses/$', views.allotted_courses,
-        name='allotted_courses'),
     url(r'manage/add_course/$', views.add_course, name='add_course'),
     url(r'manage/edit_course/(?P<course_id>\d+)$', views.add_course,
         name='edit_course'),

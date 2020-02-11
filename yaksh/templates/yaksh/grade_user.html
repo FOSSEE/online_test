@@ -76,11 +76,16 @@ $(document).ready(function()
       {% endfor %}
     </div>
   {% include "yaksh/paginator.html" %}
+{% elif msg == 'grade' and not objects %}
+  <br>
+  <div class="alert alert-info">
+    <center><h3>No courses found to grade</h3></center>
+  </div>
 {% endif %}
 </div>
 <div class="container-fluid">
   <div class="row">
-    {% if not objects %}
+    {% if status == "grade" %}
       {% if users %}
         <div id="student" class="col-md-3">
           <ul class="nav nav-pills list-group">
@@ -149,7 +154,7 @@ $(document).ready(function()
         </div>
         <hr>
         {% if data.papers %}
-          {% for paper in data.papers %}
+          {% with data.papers.0 as paper %}
             <div class="card">
               <div class="card-header">
                 Course Details
@@ -159,8 +164,24 @@ $(document).ready(function()
                   <div class="col-md-6">
                     <p><b>Course:</b> {{ paper.course.name }}</p>
                     <p><b>Quiz:</b> {{ paper.question_paper.quiz.description }}</p>
+                  </div>
+                  <div class="col-md-6">
                     <p><b>Start time:</b> {{ paper.start_time }}</p>
                     <p><b>End time:</b> {{ paper.end_time }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endwith %}
+          {% for paper in data.papers %}
+            <hr>
+            <div class="card">
+              <div class="card-header">
+                Scorecard
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-4">
                     <p><b>Status:</b>
                     {% if paper.passed %}
                       <span class="badge badge-pill badge-success"> Passed </span>
@@ -168,16 +189,16 @@ $(document).ready(function()
                       <span class="badge badge-pill badge-danger"> Failed </span>
                     {% endif %}
                     </p>
-                  </div>
-                  <div class="col-md-6">
                     <p><b>Total Marks:</b> {{ paper.question_paper.total_marks }}</p>
                     <p><b>Marks obtained:</b> {{ paper.marks_obtained }}</p>
+                  </div>
+                  <div class="col-md-4">
                     {% if paper.percent %}
                       <p><b>Percentage obtained:</b> {{paper.percent}}%</p>
                     {% endif %}
                     <p><b>Total attempts at questions:</b> {{ paper.answers.count }}</p>
                     <p>
-                      <b>Attempt Number:</b>
+                      <b>Attempt Number:</b>&nbsp;
                       <span class="badge badge-pill badge-info">
                         {{paper.attempt_number}}
                       </span>

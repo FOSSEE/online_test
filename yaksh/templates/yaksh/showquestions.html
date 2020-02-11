@@ -188,6 +188,11 @@
                 </div>
             </div>
           {% include "yaksh/paginator.html" %}
+          {% else %}
+            <br><br>
+            <div class="alert alert-info">
+              <center><h3>No Questions created</h3></center>
+            </div>
           {% endif %}
         </div>
         <br>
@@ -195,9 +200,9 @@
           {% if questions %}
             <button class="btn btn-lg btn-primary" type="submit" name='download' value='download'><i class="fa fa-download"></i>&nbsp;Download Selected</button>
             <button class="btn btn-lg btn-primary" type="submit" name="test" value="test">Test Selected</button>
+            <button class="btn btn-lg btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>
+            <i class="fa fa-trash"></i>&nbsp;Delete Selected</button>
           {% endif %}
-          <button class="btn btn-lg btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>
-          <i class="fa fa-trash"></i>&nbsp;Delete Selected</button>
         </center>
     </form>
     </div>

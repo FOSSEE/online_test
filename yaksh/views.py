@@ -175,15 +175,16 @@ def quizlist_user(request, enrolled=None, msg=None):
         hidden_courses = Course.objects.get_hidden_courses(code=course_code)
         courses = hidden_courses
         title = 'Search'
-    elif enrolled is not None:
-        courses = user.students.filter(is_trial=False).order_by('-id')
-        title = 'Enrolled Courses'
     else:
-        courses = Course.objects.filter(
-            active=True, is_trial=False
+        courses = list(Course.objects.filter(
+            active=True, is_trial=False,
         ).exclude(
            ~Q(requests=user), ~Q(rejected=user), hidden=True
-        ).order_by('-id')
+        ).order_by('-id'))
+        enrolled_course = list(
+            user.students.filter(is_trial=False).order_by('-id')
+        )
+        courses.extend(enrolled_course)
         title = 'All Courses'
 
     for course in courses:
@@ -198,9 +199,10 @@ def quizlist_user(request, enrolled=None, msg=None):
             }
         )
 
+    messages.info(request, msg)
     context = {
         'user': user, 'courses': courses_data,
-        'title': title, 'msg': msg
+        'title': title
     }
 
     return my_render_to_response(request, "yaksh/quizzes_user.html", context)
@@ -405,8 +407,8 @@ def prof_manage(request, msg=None):
         return my_redirect('/exam/')
     courses = Course.objects.get_queryset().filter(
         Q(creator=user) | Q(teachers=user),
-        is_trial=False).distinct().order_by("-id")
-    paginator = Paginator(courses, 10)
+        is_trial=False).distinct().order_by("-active")
+    paginator = Paginator(courses, 30)
     page = request.GET.get('page')
     try:
         courses = paginator.page(page)
@@ -1041,8 +1043,9 @@ def courses(request):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     courses = Course.objects.filter(
-        creator=user, is_trial=False).order_by('-id')
-    paginator = Paginator(courses, 20)
+        Q(creator=user) | Q(teachers=user),
+        is_trial=False).order_by('-active').distinct()
+    paginator = Paginator(courses, 30)
     page = request.GET.get('page')
     try:
         courses = paginator.page(page)
@@ -1053,28 +1056,6 @@ def courses(request):
         # If page is out of range (e.g. 9999), deliver last page of results.
         courses = paginator.page(paginator.num_pages)
     context = {'objects': courses, 'created': True}
-    return my_render_to_response(request, 'yaksh/courses.html', context)
-
-
-@login_required
-@email_verified
-def allotted_courses(request):
-    user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page')
-    allotted_courses = Course.objects.filter(
-        teachers=user, is_trial=False).order_by('-id')
-    paginator = Paginator(allotted_courses, 20)
-    page = request.GET.get('page')
-    try:
-        allotted_courses = paginator.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        allotted_courses = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        allotted_courses = paginator.page(paginator.num_pages)
-    context = {'allotted': True, "objects": allotted_courses}
     return my_render_to_response(request, 'yaksh/courses.html', context)
 
 
@@ -1256,7 +1237,7 @@ def monitor(request, quiz_id=None, course_id=None):
             Q(creator=user) | Q(teachers=user),
             is_trial=False
         ).order_by("-id").distinct()
-        paginator = Paginator(courses, 20)
+        paginator = Paginator(courses, 30)
         page = request.GET.get('page')
         try:
             courses = paginator.page(page)
@@ -1727,7 +1708,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
         courses = Course.objects.filter(
             Q(creator=current_user) | Q(teachers=current_user), is_trial=False
             ).order_by("-id").distinct()
-        paginator = Paginator(courses, 20)
+        paginator = Paginator(courses, 30)
         page = request.GET.get('page')
         try:
             courses = paginator.page(page)
@@ -1735,7 +1716,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             courses = paginator.page(1)
         except EmptyPage:
             courses = paginator.page(paginator.num_pages)
-        context = {"objects": courses}
+        context = {"objects": courses, "msg": "grade"}
 
     if quiz_id is not None:
         questionpaper_id = QuestionPaper.objects.filter(
@@ -1758,7 +1739,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             "quiz_id": quiz_id,
             "quiz": quiz,
             "has_quiz_assignments": has_quiz_assignments,
-            "course_id": course_id
+            "course_id": course_id,
+            "status": "grade"
         }
         if user_id is not None:
             attempts = AnswerPaper.objects.get_user_all_attempts(
@@ -1785,7 +1767,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                 "user_id": user_id,
                 "has_user_assignments": has_user_assignments,
                 "has_quiz_assignments": has_quiz_assignments,
-                "course_id": course_id
+                "course_id": course_id,
+                "status": "grade"
             }
     if request.method == "POST":
         papers = data['papers']
