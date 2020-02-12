@@ -34,7 +34,7 @@ class LessonAdmin(admin.ModelAdmin):
 
 
 class QuizAdmin(admin.ModelAdmin):
-	list_filter = ['active', 'is_trial']
+    list_filter = ['active', 'is_trial']
 
 
 admin.site.register(Profile, ProfileAdmin)
