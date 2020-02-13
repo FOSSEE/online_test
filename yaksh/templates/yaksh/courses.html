@@ -66,39 +66,121 @@
                 {% endfor %}
             {% endif %}
             {% with objects as courses %}
-            {% include "yaksh/paginator.html" %}
             <div class="row">
-                <br>
-                {% for course in courses %}
-                    <div class="col-md-6">
-                        <div class="card border-primary">
-                            <div class="card-header" style="height: 150px">
-                                {{course.name}}
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col">
-                                        <strong>Starts On:</strong>
-                                        {{course.start_enroll_time}}
-                                        <br>
-                                        <strong>Ends On:</strong>
-                                        {{course.end_enroll_time}}
+                <div class="col-md-4">
+                    {% include "yaksh/paginator.html" %}
+                </div>
+                <div class="ml-auto">
+                    <div class="nav nav-pills" role="tablist" aria-orientation="vertical">
+                        <a href="#listview" id="listbtn" class="nav-link"  data-toggle="pill" role="tab" aria-controls="show" aria-selected="true"> <i class="fa fa-list"></i></a>
+                        <a href="#gridview" id="gridbtn" class="nav-link active" data-toggle="pill" role="tab" aria-controls="updown" aria-selected="false" > <i class="fa fa-columns"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content">
+                <div class="tab-pane active" id="gridview" role="tabpanel" aria-labelledby="gridbtn">
+                    <!-- GridView -->
+                    <br>
+                    <div class="row">
+                        <br>
+                        {% for course in courses %}
+                            <div class="col-md-6">
+                                <div class="card border-primary">
+                                    <div class="card-header" style="height: 150px">
+                                        {{course.name}}
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col">
+                                                <strong>Starts On:</strong>
+                                                {{course.start_enroll_time}}
+                                                <br>
+                                                <strong>Ends On:</strong>
+                                                {{course.end_enroll_time}}
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-md-5">
+                                                <span class="badge badge-pill badge-info">
+                                                    {% if user.id != course.creator.id %}
+                                                        Allotted Course
+                                                    {% else %}
+                                                        Created Course
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                {% if course.active %}
+                                                    <span class="badge badge-pill badge-success">
+                                                    Active
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge badge-pill badge-danger">
+                                                    Inactive
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-4">
+                                                <a href="{% url 'yaksh:toggle_course_status' course.id %}">
+                                                {% if course.active %}
+                                                    <i class="fa fa-toggle-on fa-2x"></i>
+                                                {% else %}
+                                                    <i class="fa fa-toggle-off fa-2x"></i>
+                                                {% endif %}
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <a href="{% url 'yaksh:edit_course' course.id %}" class="btn btn-info">
+                                                    <i class="fa fa-edit"></i>
+                                                    Edit Course
+                                                </a>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
+                                                    <i class="fa fa-tasks"></i>
+                                                    Manage Course
+                                                </a>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <a href="{% url 'yaksh:download_course_csv' course.id %}" class="btn btn-secondary">
+                                                    <i class="fa fa-download"></i>
+                                                    Download CSV
+                                                </a>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <hr>
+                                <br>
+                            </div>
+                        {% endfor %}
+                        <br>
+                    </div>
+                </div>
+                <div class="tab-pane" id="listview" role="tabpanel" aria-labelledby="gridbtn">
+                    <!-- ListView -->
+                    <br>
+                    {% for course in courses %}
+                        <div class="card">
+                            <div class="card-header">
                                 <div class="row">
                                     <div class="col-md-5">
-                                        {% if user.id != course.creator.id %}
-                                            <span class="badge badge-pill badge-secondary">
-                                                Allotted Course
-                                            </span>
-                                        {% else %}
-                                            <span class="badge badge-pill badge-info">
-                                                Created Course
-                                            </span>
-                                        {% endif %}
+                                        {{course.name}}  
                                     </div>
                                     <div class="col-md-3">
+                                        <span class="badge badge-pill badge-info">
+                                            {% if user.id != course.creator.id %}
+                                                Allotted Course
+                                            {% else %}
+                                                Created Course
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="col-md-2">
                                         {% if course.active %}
                                             <span class="badge badge-pill badge-success">
                                             Active
@@ -109,7 +191,7 @@
                                             </span>
                                         {% endif %}
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-2">
                                         <a href="{% url 'yaksh:toggle_course_status' course.id %}">
                                         {% if course.active %}
                                             <i class="fa fa-toggle-on fa-2x"></i>
@@ -117,6 +199,17 @@
                                             <i class="fa fa-toggle-off fa-2x"></i>
                                         {% endif %}
                                         </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <strong>Starts On:</strong>
+                                        {{course.start_enroll_time}}
+                                        <br>
+                                        <strong>Ends On:</strong>
+                                        {{course.end_enroll_time}}
                                     </div>
                                 </div>
                                 <hr>
@@ -143,13 +236,13 @@
                             </div>
                         </div>
                         <br>
-                    </div>
-                {% endfor %}
-                <br>
+                    {% endfor %}
+                    <br>
+                </div>
             </div>
             {% include "yaksh/paginator.html" %}
             {% endwith %}
-        </div>
-    {% endif %}
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
