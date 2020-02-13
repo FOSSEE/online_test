@@ -1161,6 +1161,11 @@ class CourseStatus(models.Model):
         self.current_unit = unit
         self.save()
 
+    def __str__(self):
+        return "{0} status for {1}".format(
+            self.course.name, self.user.username
+        )
+
 
 ###############################################################################
 class ConcurrentUser(models.Model):
