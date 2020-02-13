@@ -1,3 +1,14 @@
+=== 0.12.0 (04-02-2020) ===
+
+* Added syntax highlighting to the code answers in answerpaper
+* Added feature to allow adding newlines to Standard IO testcases
+* Added an evaluator to support R language
+* Fixed bug to only allow self created grading systems to show up in the course
+form
+* Fixed bug to hide deleted questions from search results
+* Fixed bug to check if residual files exist before teardown operations in
+JavaStdIOEvaluator
+
 === 0.11.0 (27-09-2019) ===
 
 * Upgraded python-social-auth 0.2.19 to social-auth-app-django 3.1.0
