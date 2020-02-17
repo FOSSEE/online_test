@@ -224,12 +224,12 @@ def add_question(request, question_id=None):
     user = request.user
     test_case_type = None
 
-    if question_id is None:
-        question = Question(user=user)
-        question.save()
-    else:
+    if question_id is not None:
         question = Question.objects.get(id=question_id)
-
+        uploaded_files = FileUpload.objects.filter(question_id=question.id)
+    else:
+        question = None
+        uploaded_files = []
     if request.method == "POST" and 'delete_files' in request.POST:
         remove_files_id = request.POST.getlist('clear')
         if remove_files_id:
@@ -267,7 +267,6 @@ def add_question(request, question_id=None):
                 )
             )
         files = request.FILES.getlist('file_field')
-        uploaded_files = FileUpload.objects.filter(question_id=question.id)
         if qform.is_valid():
             question = qform.save(commit=False)
             question.user = user
@@ -278,6 +277,7 @@ def add_question(request, question_id=None):
                 if formset.is_valid():
                     formset.save()
             test_case_type = request.POST.get('case_type', None)
+            uploaded_files = FileUpload.objects.filter(question_id=question.id)
         else:
             context = {
                 'qform': qform,
@@ -286,13 +286,10 @@ def add_question(request, question_id=None):
                 'formsets': formsets,
                 'uploaded_files': uploaded_files
             }
-            return my_render_to_response(
-                request, "yaksh/add_question.html", context
-            )
+            return render(request, "yaksh/add_question.html", context)
 
     qform = QuestionForm(instance=question)
     fileform = FileForm()
-    uploaded_files = FileUpload.objects.filter(question_id=question.id)
     formsets = []
     for testcase in TestCase.__subclasses__():
         if test_case_type == testcase.__name__.lower():
@@ -311,9 +308,8 @@ def add_question(request, question_id=None):
         )
     context = {'qform': qform, 'fileform': fileform, 'question': question,
                'formsets': formsets, 'uploaded_files': uploaded_files}
-    return my_render_to_response(
-        request, "yaksh/add_question.html", context
-    )
+
+    return render(request, "yaksh/add_question.html", context)
 
 
 @login_required

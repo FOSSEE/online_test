@@ -73,9 +73,9 @@ function replaceSelection (input, replaceString)
 
 function textareaformat()
 {
-	document.getElementById('id_type').setAttribute('class','select-type');
+	document.getElementById('id_type').setAttribute('class','custom-select');
 	document.getElementById('id_points').setAttribute('class','mini-text');
-    document.getElementById('id_tags').setAttribute('class','tag-text');
+    document.getElementById('id_tags').setAttribute('class','form-control');
     $("[id*="+'test_case_args'+"]").attr('placeholder',
                                          'Command Line arguments for bash only');
 
@@ -143,6 +143,13 @@ function textareaformat()
             $("#id_grade_assignment_upload").prop("disabled", true);
         }
    });
+
+    $('#id_file_field').on('change',function(){
+        //get the file name
+        var fileName = $(this).val();
+        //replace the "Choose a file" label
+        $(this).next('.custom-file-label').html(fileName);
+    })
 }
 
 function autosubmit()

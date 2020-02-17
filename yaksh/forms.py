@@ -300,6 +300,33 @@ class QuestionForm(forms.ModelForm):
     """Creates a form to add or edit a Question.
     It has the related fields and functions required."""
 
+    def __init__(self, *args, **kwargs):
+        super(QuestionForm, self).__init__(*args, **kwargs)
+        self.fields['summary'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Summary'}
+        )
+        self.fields['language'].widget.attrs.update(
+            {'class': 'custom-select'}
+        )
+        self.fields['type'].widget.attrs.update(
+            {'class': 'custom-select'}
+        )
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Description'}
+        )
+        self.fields['tags'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Tags'}
+        )
+        self.fields['solution'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Solution'}
+        )
+        self.fields['snippet'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Snippet'}
+        )
+        self.fields['min_time'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+
     class Meta:
         model = Question
         exclude = ['user', 'active']
@@ -307,7 +334,11 @@ class QuestionForm(forms.ModelForm):
 
 class FileForm(forms.Form):
     file_field = forms.FileField(widget=forms.ClearableFileInput(
-                                attrs={'multiple': True}),
+                                attrs={
+                                    'multiple': True,
+                                    'class': 'custom-file-input'
+                                    }
+                                ),
                                 required=False)
 
 
