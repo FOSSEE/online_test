@@ -76,6 +76,10 @@ function textareaformat()
     document.getElementById('id_tags').setAttribute('class','form-control');
     $("[id*="+'test_case_args'+"]").attr('placeholder',
                                          'Command Line arguments for bash only');
+    var desc_preview = "<p id='desc_preview' align='justify'></p>";
+    var sol_preview = "<p id='sol_preview' align='justify'></p>";
+    $(desc_preview).insertBefore("#id_description");
+    $(sol_preview).insertBefore("#id_solution");
 
     $('#id_snippet').bind('keydown', function( event ){
          if(navigator.userAgent.match("Gecko"))
@@ -105,11 +109,11 @@ function textareaformat()
       });
 
     $('#id_description').bind('keypress', function (event){
-        document.getElementById('rendered_text').innerHTML = document.getElementById('id_description').value ;
+        document.getElementById('desc_preview').innerHTML = document.getElementById('id_description').value ;
     });
 
     $('#id_solution').bind('keypress', function (event){
-        document.getElementById('rend_solution').innerHTML = document.getElementById('id_solution').value ;
+        document.getElementById('sol_preview').innerHTML = document.getElementById('id_solution').value ;
     });
 
     $('#id_type').bind('focus', function(event){
@@ -121,6 +125,10 @@ function textareaformat()
         var language = document.getElementById('id_language');
         language.style.border = '1px solid #ccc';
     });
+
+
+    document.getElementById('desc_preview').innerHTML = document.getElementById('id_description').value ; 
+    document.getElementById('sol_preview').innerHTML = document.getElementById('id_solution').value ;
 
     var question_type = document.getElementById('id_type').value
     if (document.getElementById('id_grade_assignment_upload').checked ||
