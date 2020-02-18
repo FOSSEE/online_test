@@ -1,6 +1,12 @@
 {% extends "manage.html" %}
+{% load static %}
 {% block title %} Courses {% endblock %}
 {% block pagetitle %} Courses {% endblock pagetitle %}
+
+{% block script %}
+<script type="text/javascript" src="{% static 'yaksh/js/show_courses.js' %}">
+</script>
+{% endblock %}
 
 {% block css %}
 <style>
@@ -72,8 +78,12 @@
                 </div>
                 <div class="ml-auto">
                     <div class="nav nav-pills" role="tablist" aria-orientation="vertical">
-                        <a href="#listview" id="listbtn" class="nav-link"  data-toggle="pill" role="tab" aria-controls="show" aria-selected="true"> <i class="fa fa-list"></i></a>
-                        <a href="#gridview" id="gridbtn" class="nav-link active" data-toggle="pill" role="tab" aria-controls="updown" aria-selected="false" > <i class="fa fa-columns"></i></a>
+                        <a  id="listbtn" class="nav-link"  data-toggle="pill" role="tab" aria-controls="show" aria-selected="true">
+                            <i class="fa fa-list"></i>
+                        </a>
+                        <a  id="gridbtn" class="nav-link" data-toggle="pill" role="tab" aria-controls="updown" aria-selected="false">
+                            <i class="fa fa-columns"></i>
+                        </a>
                     </div>
                 </div>
             </div>

@@ -127,4 +127,5 @@ $(document).ready(function(){
         animate: false,
         container: 'body'
     });
+
 }); // end document ready

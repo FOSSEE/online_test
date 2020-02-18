@@ -1,7 +1,7 @@
 from django import forms
 from yaksh.models import (
     get_model_class, Profile, Quiz, Question, Course, QuestionPaper, Lesson,
-    LearningModule
+    LearningModule, TestCase
 )
 from grades.models import GradingSystem
 from django.contrib.auth import authenticate
@@ -537,3 +537,15 @@ class LearningModuleForm(forms.ModelForm):
     class Meta:
         model = LearningModule
         fields = ['name', 'description', 'active']
+
+
+class TestcaseForm(forms.ModelForm):
+
+    type = forms.CharField(
+        widget=forms.TextInput(
+            attrs={'readonly': 'readonly', 'class': form_input_class})
+    )
+
+    class Meta:
+        model = TestCase
+        fields = ["type"]

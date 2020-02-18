@@ -1268,6 +1268,42 @@ class Question(models.Model):
     # Solution for the question.
     solution = models.TextField(blank=True)
 
+    tc_code_types = {
+        "python": [
+            ("standardtestcase", "Standard TestCase"),
+            ("stdiobasedtestcase", "StdIO TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ],
+        "c": [
+            ("standardtestcase", "Standard TestCase"),
+            ("stdiobasedtestcase", "StdIO TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ],
+        "cpp": [
+            ("standardtestcase", "Standard TestCase"),
+            ("stdiobasedtestcase", "StdIO TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ],
+        "java": [
+            ("standardtestcase", "Standard TestCase"),
+            ("stdiobasedtestcase", "StdIO TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ],
+        "r": [
+            ("standardtestcase", "Standard TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ],
+        "bash": [
+            ("standardtestcase", "Standard TestCase"),
+            ("stdiobasedtestcase", "StdIO TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ],
+        "scilab": [
+            ("standardtestcase", "Standard TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ]
+    }
+
     def consolidate_answer_data(self, user_answer, user=None):
         question_data = {}
         metadata = {}
@@ -1468,6 +1504,24 @@ class Question(models.Model):
         )
         files, extract_path = extract_files(zip_file_path)
         self.read_yaml(extract_path, user, files)
+
+    def get_test_case_options(self):
+        options = None
+        if self.type == "code":
+            options = self.tc_code_types.get(self.language)
+        elif self.type == "mcq" or self.type == "mcc":
+            options = [("mcqtestcase", "Mcq TestCase")]
+        elif self.type == "integer":
+            options = [("integertestcase", "Integer TestCase")]
+        elif self.type == "float":
+            options = [("floattestcase", "Float TestCase")]
+        elif self.type == "string":
+            options = [("stringtestcase", "String TestCase")]
+        elif self.type == "arrange":
+            options = [("arrangetestcase", "Arrange TestCase")]
+        elif self.type == "upload":
+            options = [("hooktestcase", "Hook TestCase")]
+        return options
 
     def __str__(self):
         return self.summary

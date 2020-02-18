@@ -44,7 +44,7 @@ from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
     QuestionFilterForm, CourseForm, ProfileForm,
     UploadFileForm, FileForm, QuestionPaperForm, LessonForm,
-    LessonFileForm, LearningModuleForm, ExerciseForm
+    LessonFileForm, LearningModuleForm, ExerciseForm, TestcaseForm
 )
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .settings import URL_ROOT
@@ -230,22 +230,21 @@ def add_question(request, question_id=None):
     else:
         question = None
         uploaded_files = []
-    if request.method == "POST" and 'delete_files' in request.POST:
-        remove_files_id = request.POST.getlist('clear')
-        if remove_files_id:
-            files = FileUpload.objects.filter(id__in=remove_files_id)
-            for file in files:
-                file.remove()
 
     if request.method == 'POST':
         qform = QuestionForm(request.POST, instance=question)
         fileform = FileForm(request.POST, request.FILES)
+        remove_files_id = request.POST.getlist('clear')
         files = request.FILES.getlist('file_field')
         extract_files_id = request.POST.getlist('extract')
         hide_files_id = request.POST.getlist('hide')
         if files:
             for file in files:
                 FileUpload.objects.get_or_create(question=question, file=file)
+        if remove_files_id:
+            files = FileUpload.objects.filter(id__in=remove_files_id)
+            for file in files:
+                file.remove()
         if extract_files_id:
             files = FileUpload.objects.filter(id__in=extract_files_id)
             for file in files:
@@ -256,10 +255,10 @@ def add_question(request, question_id=None):
                 file.toggle_hide_status()
         formsets = []
         for testcase in TestCase.__subclasses__():
-
             formset = inlineformset_factory(
                                 Question, testcase, extra=0,
                                 fields='__all__',
+                                form=TestcaseForm,
                                 formfield_callback=formfield_callback
                                 )
             formsets.append(formset(
@@ -278,6 +277,7 @@ def add_question(request, question_id=None):
                     formset.save()
             test_case_type = request.POST.get('case_type', None)
             uploaded_files = FileUpload.objects.filter(question_id=question.id)
+            messages.success(request, "Question saved successfully")
         else:
             context = {
                 'qform': qform,
@@ -286,6 +286,7 @@ def add_question(request, question_id=None):
                 'formsets': formsets,
                 'uploaded_files': uploaded_files
             }
+            messages.warning(request, "Unable to save the question")
             return render(request, "yaksh/add_question.html", context)
 
     qform = QuestionForm(instance=question)
@@ -294,11 +295,13 @@ def add_question(request, question_id=None):
     for testcase in TestCase.__subclasses__():
         if test_case_type == testcase.__name__.lower():
             formset = inlineformset_factory(
-                Question, testcase, extra=1, fields='__all__'
+                Question, testcase, extra=1, fields='__all__',
+                form=TestcaseForm
             )
         else:
             formset = inlineformset_factory(
-                Question, testcase, extra=0, fields='__all__'
+                Question, testcase, extra=0, fields='__all__',
+                form=TestcaseForm
             )
         formsets.append(
             formset(
@@ -308,6 +311,8 @@ def add_question(request, question_id=None):
         )
     context = {'qform': qform, 'fileform': fileform, 'question': question,
                'formsets': formsets, 'uploaded_files': uploaded_files}
+    if question is not None:
+        context["testcase_options"] = question.get_test_case_options()
 
     return render(request, "yaksh/add_question.html", context)
 
