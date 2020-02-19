@@ -174,7 +174,7 @@ def quizlist_user(request, enrolled=None, msg=None):
         course_code = request.POST.get('course_code')
         hidden_courses = Course.objects.get_hidden_courses(code=course_code)
         courses = hidden_courses
-        title = 'Search'
+        title = 'Search Results'
     else:
         courses = list(Course.objects.filter(
             active=True, is_trial=False,
@@ -2425,8 +2425,9 @@ def duplicate_course(request, course_id):
         duplicate_course = course.create_duplicate_course(user)
         msg = dedent(
             '''\
-            Course duplication successful with the name {0} , please check
-            the courses page.'''.format(duplicate_course.name)
+            Course duplication successful with the name {0}'''.format(
+                duplicate_course.name
+            )
         )
         messages.success(request, msg)
     else:
@@ -2436,7 +2437,7 @@ def duplicate_course(request, course_id):
             your instructor/administrator.'''.format(course.name)
         )
         messages.warning(request, msg)
-    return my_redirect(reverse('yaksh:course_detail', args=[course_id]))
+    return my_redirect(reverse('yaksh:courses'))
 
 
 @login_required

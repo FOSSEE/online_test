@@ -448,7 +448,7 @@ class TestStudentDashboard(TestCase):
         }
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
-        self.assertEqual(response.context['title'], 'Search')
+        self.assertEqual(response.context['title'], 'Search Results')
         self.assertEqual(response.context['courses'][0], courses_in_context)
 
 
@@ -2121,7 +2121,7 @@ class TestCourses(TestCase):
             follow=True
         )
         err_msg = "You do not have permissions"
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertIn(err_msg, messages[0])
 

@@ -144,23 +144,45 @@
                                         </div>
                                         <hr>
                                         <div class="row">
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <a href="{% url 'yaksh:edit_course' course.id %}" class="btn btn-info">
                                                     <i class="fa fa-edit"></i>
                                                     Edit Course
                                                 </a>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-5">
                                                 <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
                                                     <i class="fa fa-tasks"></i>
                                                     Manage Course
                                                 </a>
                                             </div>
-                                            <div class="col-md-4">
-                                                <a href="{% url 'yaksh:download_course_csv' course.id %}" class="btn btn-secondary">
-                                                    <i class="fa fa-download"></i>
-                                                    Download CSV
+                                        </div>
+                                        <br>
+                                        <div class="row">
+                                            <div class="col-md-5">
+                                                <a href="{% url 'yaksh:duplicate_course' course.id %}" class="btn btn-secondary">
+                                                    <i class="fa fa-clone"></i>
+                                                    Clone Course
                                                 </a>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+                                                <button type="button" class="btn btn-secondary">
+                                                    <i class="fa fa-download"></i>
+                                                    Download
+                                                </button>
+                                                <div class="btn-group" role="group">
+                                                <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                                <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
+                                                <a class="dropdown-item" href="{% url 'yaksh:download_course_csv' course.id %}">
+                                                    CSV
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'yaksh:download_course' course.id %}">
+                                                    Course
+                                                </a>
+                                                </div>
+                                                </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -224,22 +246,41 @@
                                 </div>
                                 <hr>
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <a href="{% url 'yaksh:edit_course' course.id %}" class="btn btn-info">
                                             <i class="fa fa-edit"></i>
                                             Edit Course
                                         </a>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
                                             <i class="fa fa-tasks"></i>
                                             Manage Course
                                         </a>
                                     </div>
-                                    <div class="col-md-4">
-                                        <a href="{% url 'yaksh:download_course_csv' course.id %}" class="btn btn-secondary">
-                                            <i class="fa fa-download"></i>
-                                            Download CSV
+                                    <div class="col-md-3">
+                                        <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+                                            <button type="button" class="btn btn-secondary">
+                                                <i class="fa fa-download"></i>
+                                                Download
+                                            </button>
+                                            <div class="btn-group" role="group">
+                                            <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                            <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
+                                            <a class="dropdown-item" href="{% url 'yaksh:download_course_csv' course.id %}">
+                                                CSV
+                                            </a>
+                                            <a class="dropdown-item" href="{% url 'yaksh:download_course' course.id %}">
+                                                Course
+                                            </a>
+                                            </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="{% url 'yaksh:duplicate_course' course.id %}" class="btn btn-secondary">
+                                            <i class="fa fa-clone"></i>
+                                            Clone Course
                                         </a>
                                     </div>
                                 </div>

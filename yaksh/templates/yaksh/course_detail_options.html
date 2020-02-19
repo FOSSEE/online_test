@@ -20,11 +20,6 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link list-group-item" href="{% url 'yaksh:duplicate_course' course.id %}" data-toggle="tooltip" title="Creates copy of this course and all its contents" data-placement="top">
-        Clone Course
-        </a>
-    </li>
-    <li class="nav-item">
         <a class="nav-link list-group-item {% if is_design_course %} active {% endif %}" href="{% url 'yaksh:design_course' course.id %}" title="Add modules to this course" data-placement="top" data-toggle="tooltip">
         Design Course
         </a>
