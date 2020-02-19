@@ -75,15 +75,17 @@ class UserRegisterForm(forms.Form):
     It has the various fields and functions required to register
     a new user to the system"""
 
-    username = forms.CharField(max_length=30, help_text='Letters, digits,\
+    username = forms.CharField(
+        max_length=30, help_text='Letters, digits,\
                 period and underscores only.',
-                widget=forms.TextInput(
-                    {'class': form_input_class, 'placeholder': "Username"})
-                )
+        widget=forms.TextInput(
+            {'class': form_input_class, 'placeholder': "Username"})
+        )
     email = forms.EmailField(widget=forms.TextInput(
         {'class': form_input_class, 'placeholder': "Email"}
         ))
-    password = forms.CharField(max_length=30,
+    password = forms.CharField(
+        max_length=30,
         widget=forms.PasswordInput(
             {'class': form_input_class, 'placeholder': "Password"}))
     confirm_password = forms.CharField(
@@ -99,23 +101,23 @@ class UserRegisterForm(forms.Form):
     roll_number = forms.CharField(
         max_length=30, help_text="Use a dummy if you don't have one.",
         widget=forms.TextInput(
-        {'class': form_input_class, 'placeholder': "Roll Number"}
+            {'class': form_input_class, 'placeholder': "Roll Number"}
         ))
     institute = forms.CharField(
         max_length=128, help_text='Institute/Organization',
         widget=forms.TextInput(
-        {'class': form_input_class, 'placeholder': "Institute"}
+            {'class': form_input_class, 'placeholder': "Institute"}
         ))
     department = forms.CharField(
         max_length=64, help_text='Department you work/study at',
         widget=forms.TextInput(
-        {'class': form_input_class, 'placeholder': "Department"}
+            {'class': form_input_class, 'placeholder': "Department"}
         ))
     position = forms.CharField(
         max_length=64,
         help_text='Student/Faculty/Researcher/Industry/Fellowship/etc.',
         widget=forms.TextInput(
-        {'class': form_input_class, 'placeholder': "Position"}
+            {'class': form_input_class, 'placeholder': "Position"}
         ))
     timezone = forms.ChoiceField(
         choices=[(tz, tz) for tz in pytz.common_timezones],
@@ -420,7 +422,7 @@ class CourseForm(forms.ModelForm):
             {'class': 'custom-select'}
         )
         if (self.instance.id and
-            self.instance.teachers.filter(id=user.id).exists()):
+                self.instance.teachers.filter(id=user.id).exists()):
             self.fields['grading_system'].widget.attrs['disabled'] = True
         else:
             grading_choices = GradingSystem.objects.filter(

@@ -589,6 +589,46 @@ class QuestionTestCases(unittest.TestCase):
             )
         self.assertEqual(msg, "Unable to parse test case data")
 
+    def test_get_test_case_options(self):
+        """
+            Test if test case options are selected based on
+            question type and language
+        """
+
+        # Given
+        question_types = [
+            "mcq", "integer", "float", "string", "arrange", "upload"
+        ]
+        que_list = []
+        for i, q_type in enumerate(question_types, 1):
+            que_list.append(Question.objects.create(
+                summary='Python Question {0}'.format(i), language='python',
+                type=q_type, active=True,
+                description='{0} Question'.format(q_type),
+                points=1.0, user=self.user1
+            ))
+
+        # When
+        expected_tc_options = [
+            ('standardtestcase', 'Standard TestCase'),
+            ('stdiobasedtestcase', 'StdIO TestCase'),
+            ('hooktestcase', 'Hook TestCase')
+        ]
+        other_tc_options = [
+            ('mcqtestcase', 'Mcq TestCase'),
+            ('integertestcase', 'Integer TestCase'),
+            ('floattestcase', 'Float TestCase'),
+            ('stringtestcase', 'String TestCase'),
+            ('arrangetestcase', 'Arrange TestCase'),
+            ('hooktestcase', 'Hook TestCase')
+        ]
+
+        # Then
+        obtained_tc_options = self.question2.get_test_case_options()
+        self.assertEqual(expected_tc_options, obtained_tc_options)
+        for que, tc_option in zip(que_list, other_tc_options):
+            self.assertEqual(que.get_test_case_options()[0], tc_option)
+
 
 ###############################################################################
 class QuizTestCases(unittest.TestCase):

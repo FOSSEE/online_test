@@ -1551,8 +1551,7 @@ def show_all_questions(request):
                 ques = Question()
                 if file_extension == "zip":
                     files, extract_path = extract_files(questions_file)
-                    message = ques.read_yaml(extract_path, user,
-                                                        files)
+                    message = ques.read_yaml(extract_path, user, files)
                 elif file_extension in ["yaml", "yml"]:
                     questions = questions_file.read()
                     message = ques.load_questions(questions, user)
@@ -1572,8 +1571,7 @@ def show_all_questions(request):
                 response.write(zip_file.read())
                 return response
             else:
-                message = ("Please select atleast " +
-                                  "one question to download")
+                message = "Please select atleast one question to download"
 
         if request.POST.get('test') == 'test':
             question_ids = request.POST.getlist("question")
@@ -2320,7 +2318,8 @@ def _read_user_csv(request, reader, course):
                               counter, user.username))
             else:
                 _add_to_course(user, course)
-                messages.info(request,
+                messages.info(
+                    request,
                     "{0} -- {1} -- User Added Successfully".format(
                         counter, user.username))
             continue

@@ -34,6 +34,7 @@ class GradeRangeForm(forms.ModelForm):
             {'class': "form-control",
              'placeholder': 'Description'}
         )
+
     class Meta:
         model = GradeRange
         fields = "__all__"

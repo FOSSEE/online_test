@@ -317,7 +317,8 @@ class Lesson(models.Model):
                     lesson_file.file.name)))
                 zip_file.writestr(filename, lesson_file.file.read())
         unit_file_path = os.sep.join((
-            path, "templates", "yaksh", "download_course_templates", "unit.html"
+            path, "templates", "yaksh", "download_course_templates",
+            "unit.html"
             ))
         lesson_data = {"course": course, "module": module,
                        "lesson": self, "next_unit": next_unit,
@@ -577,7 +578,8 @@ class Quiz(models.Model):
             course_name, module_name, quiz_name
             ))
         unit_file_path = os.sep.join((
-            path, "templates", "yaksh", "download_course_templates", "quiz.html"
+            path, "templates", "yaksh", "download_course_templates",
+            "quiz.html"
             ))
         quiz_data = {"course": course, "module": module,
                      "quiz": self, "next_unit": next_unit}
@@ -813,7 +815,8 @@ class LearningModule(models.Model):
                                            path)
 
         module_file_path = os.sep.join((
-            path, "templates", "yaksh", "download_course_templates", "module.html"
+            path, "templates", "yaksh", "download_course_templates",
+            "module.html"
             ))
         module_data = {"course": course, "module": self, "units": units}
         write_templates_to_zip(zip_file, module_file_path, module_data,
