@@ -161,6 +161,19 @@ function textareaformat()
         $(this).find('textarea').addClass("form-control");
         $(this).find('input[type=number]').addClass("form-control");
     });
+
+    $(function() {
+        tinymce.init({
+            selector: 'textarea#id_description',
+            setup : function(ed) {
+                  ed.on('change', function(e) {
+                     tinymce.triggerSave();
+                  });
+            },
+            max_height: 200,
+            height: 200
+        });
+    });
 }
 
 function autosubmit()
