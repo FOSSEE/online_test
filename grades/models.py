@@ -5,7 +5,8 @@ from django.contrib.auth.models import User
 class GradingSystem(models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(default='About the grading system!')
-    creator = models.ForeignKey(User, null=True, blank=True)
+    creator = models.ForeignKey(User, null=True, blank=True,
+                                on_delete=models.CASCADE)
 
     def get_grade(self, marks):
         ranges = self.graderange_set.all()
@@ -39,7 +40,7 @@ class GradingSystem(models.Model):
 
 
 class GradeRange(models.Model):
-    system = models.ForeignKey(GradingSystem)
+    system = models.ForeignKey(GradingSystem, on_delete=models.CASCADE)
     lower_limit = models.FloatField()
     upper_limit = models.FloatField()
     grade = models.CharField(max_length=10)

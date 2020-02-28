@@ -16,9 +16,9 @@ def get_version():
 
 
 install_requires = [
-    'django==1.11.21',
-    'django-taggit==0.18.1',
-    'pytz==2016.4',
+    'django==3.0.3',
+    'django-taggit==1.2.0',
+    'pytz==2019.3',
     'requests-oauthlib>=0.6.1',
     'python-social-auth==0.2.19',
     'tornado',
