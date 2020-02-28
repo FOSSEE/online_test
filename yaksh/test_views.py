@@ -20,6 +20,7 @@ from django.core import mail
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files import File
+from django.contrib.messages import get_messages
 
 
 from yaksh.models import (
@@ -429,29 +430,6 @@ class TestStudentDashboard(TestCase):
         self.assertEqual(response.context['title'], 'All Courses')
         self.assertEqual(response.context['courses'][0], courses_in_context)
 
-    def test_student_dashboard_enrolled_courses_get(self):
-        """
-            Check student dashboard for all courses in which student is
-            enrolled
-        """
-        self.client.login(
-            username=self.student.username,
-            password=self.student_plaintext_pass
-        )
-        self.course.students.add(self.student)
-        response = self.client.get(reverse('yaksh:quizlist_user',
-                                           kwargs={'enrolled': "enrolled"}),
-                                   follow=True
-                                   )
-        courses_in_context = {
-            'data': self.course,
-            'completion_percentage': 0,
-        }
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
-        self.assertEqual(response.context['title'], 'Enrolled Courses')
-        self.assertEqual(response.context['courses'][0], courses_in_context)
-
     def test_student_dashboard_hidden_courses_post(self):
         """
             Get courses for student based on the course code
@@ -470,7 +448,7 @@ class TestStudentDashboard(TestCase):
         }
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
-        self.assertEqual(response.context['title'], 'Search')
+        self.assertEqual(response.context['title'], 'Search Results')
         self.assertEqual(response.context['courses'][0], courses_in_context)
 
 
@@ -610,7 +588,7 @@ class TestMonitor(TestCase):
                                    )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/monitor.html")
-        self.assertEqual(response.context['course_details'][0], self.course)
+        self.assertEqual(response.context['objects'][0], self.course)
         self.assertEqual(response.context['msg'], "Monitor")
 
     def test_monitor_display_quiz_results(self):
@@ -796,7 +774,7 @@ class TestGradeUser(TestCase):
                                    )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/grade_user.html")
-        self.assertEqual(response.context['course_details'][0], self.course)
+        self.assertEqual(response.context['objects'][0], self.course)
 
     def test_grade_user_get_quiz_users(self):
         """
@@ -1209,9 +1187,6 @@ class TestAddQuiz(TestCase):
         self.assertEqual(updated_quiz.description, 'updated demo quiz')
         self.assertEqual(updated_quiz.pass_criteria, 40)
 
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/exam/manage/courses/all_quizzes/')
-
     def test_add_quiz_post_new_quiz(self):
         """
         POST request to add quiz should add new quiz if no quiz exists
@@ -1253,9 +1228,6 @@ class TestAddQuiz(TestCase):
         self.assertEqual(new_quiz.time_between_attempts, 2)
         self.assertEqual(new_quiz.description, 'new demo quiz')
         self.assertEqual(new_quiz.pass_criteria, 50)
-
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/exam/manage/courses/all_quizzes/')
 
     def test_add_exercise_denies_anonymous(self):
         """
@@ -1319,8 +1291,6 @@ class TestAddQuiz(TestCase):
         self.assertEqual(updated_exercise.description, 'updated demo exercise')
         self.assertEqual(updated_exercise.pass_criteria, 0)
         self.assertTrue(updated_exercise.is_exercise)
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/exam/manage/courses/all_quizzes/')
 
     def test_add_exercise_post_new_exercise(self):
         """
@@ -1346,8 +1316,6 @@ class TestAddQuiz(TestCase):
         self.assertEqual(new_exercise.description, 'Demo Exercise')
         self.assertEqual(new_exercise.pass_criteria, 0)
         self.assertTrue(new_exercise.is_exercise)
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/exam/manage/courses/all_quizzes/')
 
     def test_show_all_quizzes(self):
         self.client.login(
@@ -1359,9 +1327,8 @@ class TestAddQuiz(TestCase):
             follow=True
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['type'], "quiz")
         self.assertEqual(response.context['quizzes'][0], self.quiz)
-        self.assertTemplateUsed(response, "yaksh/courses.html")
+        self.assertTemplateUsed(response, "yaksh/quizzes.html")
 
 
 class TestAddAsModerator(TestCase):
@@ -1720,7 +1687,8 @@ class TestRemoveTeacher(TestCase):
             institute='IIT',
             department='Chemical',
             position='Moderator',
-            timezone='UTC'
+            timezone='UTC',
+            is_moderator=True
         )
 
         # Create Student
@@ -1836,16 +1804,10 @@ class TestRemoveTeacher(TestCase):
                     ),
             data={'remove': teacher_id_list}
         )
-
-        self.assertEqual(response.status_code, 302)
-        redirect_destination = '/exam/manage/courses'
-        self.assertRedirects(
-            response, redirect_destination, status_code=302,
-            target_status_code=301
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            self.course.teachers.filter(id__in=teacher_id_list).exists()
         )
-        for t_id in teacher_id_list:
-            teacher = User.objects.get(id=t_id)
-            self.assertNotIn(teacher, self.course.teachers.all())
 
 
 class TestCourses(TestCase):
@@ -2092,7 +2054,8 @@ class TestCourses(TestCase):
         )
         # Student is not allowed if not enrolled in the course
         err_msg = "You are not enrolled for this course!"
-        self.assertEqual(response.context['msg'], err_msg)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(messages[0], err_msg)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
 
@@ -2108,7 +2071,8 @@ class TestCourses(TestCase):
         )
         err_msg = "{0} is either expired or not active".format(
             self.user1_course.name)
-        self.assertEqual(response.context['msg'], err_msg)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(messages[0], err_msg)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
 
@@ -2158,8 +2122,8 @@ class TestCourses(TestCase):
         )
         err_msg = "You do not have permissions"
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "yaksh/complete.html")
-        self.assertIn(err_msg, response.context['message'])
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertIn(err_msg, messages[0])
 
         # Test clone/duplicate courses and create copies of modules and units
 
@@ -2577,10 +2541,10 @@ class TestCourseDetail(TestCase):
         # Then
         uploaded_user = User.objects.filter(email="abc@xyz.com")
         self.assertEqual(uploaded_user.count(), 1)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('upload_details', response.context)
+        self.assertEqual(response.status_code, 302)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertIn("abc@xyz.com", messages[0])
         self.assertIn(uploaded_user.first(), self.user1_course.students.all())
-        self.assertTemplateUsed(response, 'yaksh/course_detail.html')
 
     def test_upload_existing_user(self):
         # Given
@@ -2598,9 +2562,9 @@ class TestCourseDetail(TestCase):
             data={'csv_file': upload_file})
 
         # Then
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('upload_details', response.context)
-        self.assertTemplateUsed(response, 'yaksh/course_detail.html')
+        self.assertEqual(response.status_code, 302)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertIn("demo_user2", messages[0])
         self.assertIn(self.user2, self.user1_course.students.all())
 
     def test_upload_same_user_multiple_course(self):
@@ -2627,15 +2591,21 @@ class TestCourseDetail(TestCase):
 
         # Then
         uploaded_users = User.objects.filter(email='abc@xyz.com')
-        self.assertEqual(response1.status_code, 200)
-        self.assertIn('upload_details', response1.context)
-        self.assertTemplateUsed(response1, 'yaksh/course_detail.html')
-        self.assertEqual(response2.status_code, 200)
-        self.assertIn('upload_details', response2.context)
-        self.assertTemplateUsed(response2, 'yaksh/course_detail.html')
-        self.assertIn(uploaded_users.first(), self.user1_course.students.all())
-        self.assertIn(uploaded_users.first(),
-                      self.user1_othercourse.students.all())
+        self.assertEqual(response1.status_code, 302)
+        messages1 = [m.message for m in get_messages(response1.wsgi_request)]
+        self.assertIn('abc@xyz.com', messages1[0])
+        self.assertEqual(response2.status_code, 302)
+        messages2 = [m.message for m in get_messages(response2.wsgi_request)]
+        self.assertIn('abc@xyz.com', messages2[0])
+        self.assertIn('abc@xyz.com', messages2[1])
+        self.assertTrue(
+            self.user1_course.students.filter(
+                id=uploaded_users.first().id).exists()
+        )
+        self.assertTrue(
+            self.user1_othercourse.students.filter(
+                id=uploaded_users.first().id).exists()
+        )
 
     def test_upload_users_add_update_reject(self):
         # Given
@@ -2661,9 +2631,10 @@ class TestCourseDetail(TestCase):
         self.assertEqual(uploaded_user.count(), 1)
         self.assertEqual(user.first_name, "test2")
         self.assertIn(user, self.user1_course.get_rejected())
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('upload_details', response.context)
-        self.assertTemplateUsed(response, 'yaksh/course_detail.html')
+        self.assertEqual(response.status_code, 302)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertIn('test2', messages[2])
+        self.assertIn('User rejected', messages[2])
 
     def test_upload_users_with_wrong_csv(self):
         # Given
@@ -2684,11 +2655,9 @@ class TestCourseDetail(TestCase):
         csv_file.close()
 
         # Then
-        self.assertEqual(response.status_code, 200)
-        self.assertNotIn('upload_details', response.context)
-        self.assertIn('message', response.context)
-        self.assertEqual(response.context['message'], message)
-        self.assertTemplateUsed(response, 'yaksh/course_detail.html')
+        self.assertEqual(response.status_code, 302)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual('The file uploaded is not a CSV file.', messages[0])
 
     def test_upload_users_csv_with_missing_headers(self):
         # Given
@@ -2710,11 +2679,11 @@ class TestCourseDetail(TestCase):
         csv_file.close()
 
         # Then
-        self.assertEqual(response.status_code, 200)
-        self.assertNotIn('upload_details', response.context)
-        self.assertIn('message', response.context)
-        self.assertEqual(response.context['message'], message)
-        self.assertTemplateUsed(response, 'yaksh/course_detail.html')
+        self.assertEqual(response.status_code, 302)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertIn(
+            'The CSV file does not contain the required headers', messages[0]
+        )
 
     def test_upload_users_csv_with_no_values(self):
         # Given
@@ -2735,12 +2704,9 @@ class TestCourseDetail(TestCase):
         csv_file.close()
 
         # Then
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('upload_details', response.context)
-        self.assertNotIn('message', response.context)
-        self.assertIn("No rows in the CSV file",
-                      response.context['upload_details'])
-        self.assertTemplateUsed(response, 'yaksh/course_detail.html')
+        self.assertEqual(response.status_code, 302)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertIn("No rows in the CSV file", messages[0])
 
     def test_upload_users_csv_with_missing_values(self):
         '''
@@ -2776,10 +2742,9 @@ class TestCourseDetail(TestCase):
         # Then
         uploaded_user = User.objects.filter(email="dummy@xyz.com")
         self.assertEqual(uploaded_user.count(), 1)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('upload_details', response.context)
-        self.assertNotIn('message', response.context)
-        self.assertTemplateUsed(response, 'yaksh/course_detail.html')
+        self.assertEqual(response.status_code, 302)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertIn("Missing Values", messages[0])
 
     def test_course_detail_denies_anonymous(self):
         """
@@ -2862,7 +2827,7 @@ class TestCourseDetail(TestCase):
                             'user_id': self.student.id})
                     )
         enrolled_student = self.user1_course.students.all()
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         self.assertSequenceEqual([self.student], enrolled_student)
 
     def test_student_course_enroll_post(self):
@@ -2879,7 +2844,7 @@ class TestCourseDetail(TestCase):
             data={'check': self.student1.id}
             )
         enrolled_student = self.user1_course.students.all()
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         self.assertSequenceEqual([self.student1], enrolled_student)
 
     def test_student_course_reject_get(self):
@@ -2896,7 +2861,7 @@ class TestCourseDetail(TestCase):
                             'user_id': self.student.id})
                     )
         enrolled_student = self.user1_course.rejected.all()
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         self.assertSequenceEqual([self.student], enrolled_student)
 
     def test_student_course_reject_post(self):
@@ -2913,7 +2878,7 @@ class TestCourseDetail(TestCase):
             data={'check': self.student1.id}
             )
         enrolled_student = self.user1_course.rejected.all()
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         self.assertSequenceEqual([self.student1], enrolled_student)
 
     def test_toggle_course_status_get(self):
@@ -2991,7 +2956,7 @@ class TestCourseDetail(TestCase):
         )
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.context['course'], self.user1_course)
-        self.assertEqual(get_response.context['state'], 'mail')
+        self.assertTrue(get_response.context['is_mail'])
 
     def test_download_users_template(self):
         """ Test to check download users template """
@@ -3037,7 +3002,7 @@ class TestCourseDetail(TestCase):
         response = self.client.get(reverse('yaksh:course_status',
                                    kwargs={'course_id': self.user1_course.id}))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['state'], "course_status")
+        self.assertTrue(response.context['is_progress'])
         self.assertEqual(response.context['course'], self.user1_course)
         student_details = response.context['student_details'][0]
         student, grade, percent, current_unit = student_details
@@ -3052,7 +3017,7 @@ class TestCourseDetail(TestCase):
         response = self.client.get(reverse('yaksh:course_status',
                                    kwargs={'course_id': self.user1_course.id}))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['state'], "course_status")
+        self.assertTrue(response.context['is_progress'])
         self.assertEqual(response.context['course'], self.user1_course)
         student_details = response.context['student_details'][0]
         student, grade, percent, current_unit = student_details
@@ -4000,36 +3965,7 @@ class TestModeratorDashboard(TestCase):
         response = self.client.get(reverse('yaksh:manage'), follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/moderator_dashboard.html")
-        self.assertEqual(response.context['trial_paper'][0],
-                         self.trial_answerpaper)
         self.assertEqual(response.context['courses'][0], self.course)
-
-    def test_moderator_dashboard_delete_trial_papers(self):
-        """
-            Check moderator dashboard to delete trial papers
-        """
-        self.client.login(
-            username=self.user.username,
-            password=self.user_plaintext_pass
-        )
-        self.course.is_trial = True
-        self.course.save()
-        response = self.client.post(
-            reverse('yaksh:manage'),
-            data={'delete_paper': [self.trial_answerpaper.id]}
-            )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "yaksh/moderator_dashboard.html")
-        updated_answerpaper = AnswerPaper.objects.filter(user=self.user)
-        updated_quiz = Quiz.objects.filter(
-                        description=self.trial_question_paper.quiz.description
-                        )
-        updated_course = Course.objects.filter(
-                            name=self.trial_course.name)
-        self.assertSequenceEqual(updated_answerpaper, [])
-        self.assertSequenceEqual(updated_quiz, [])
-        self.assertSequenceEqual(updated_course, [])
 
 
 class TestUserLogin(TestCase):
@@ -4448,7 +4384,9 @@ class TestShowQuestions(TestCase):
             )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
-        self.assertIn("download", response.context['msg'])
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        err_msg = "Please select atleast one question to download"
+        self.assertIn(err_msg, messages[0])
 
     def test_upload_zip_questions(self):
         """
@@ -4490,7 +4428,8 @@ class TestShowQuestions(TestCase):
             )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
-        self.assertIn("ZIP file", response.context['message'])
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertIn("Please Upload a ZIP file", messages[0])
 
     def test_upload_yaml_questions(self):
         """
@@ -5392,7 +5331,7 @@ class TestQuestionPaper(TestCase):
 
         # Design question paper for a quiz
         response = self.client.post(
-            reverse('yaksh:design_questionpaper',
+            reverse('yaksh:designquestionpaper',
                     kwargs={"quiz_id": self.quiz_without_qp.id}),
             data={"marks": "1.0", "question_type": "code"})
         self.assertEqual(response.status_code, 200)
@@ -5710,8 +5649,7 @@ class TestLearningModule(TestCase):
                                           "description": "my test1",
                                           "Save": "Save"})
 
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, self.expected_url)
+        self.assertEqual(response.status_code, 200)
         learning_module = LearningModule.objects.get(name="test module1")
         self.assertEqual(learning_module.description, "my test1")
         self.assertEqual(learning_module.creator, self.user)
@@ -5734,8 +5672,7 @@ class TestLearningModule(TestCase):
                   "description": "my test2",
                   "Save": "Save"})
 
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, self.expected_url)
+        self.assertEqual(response.status_code, 200)
         learning_module = LearningModule.objects.get(name="test module2")
         self.assertEqual(learning_module.description, "my test2")
         self.assertEqual(learning_module.creator, self.user)
@@ -5751,9 +5688,7 @@ class TestLearningModule(TestCase):
         )
         response = self.client.get(reverse('yaksh:show_all_modules'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'yaksh/courses.html')
-        self.assertEqual(response.context['type'], "learning_module")
-        self.assertEqual(response.context['learning_modules'][0],
+        self.assertEqual(response.context['modules'][0],
                          self.learning_module)
 
     def test_teacher_can_edit_module(self):
@@ -5770,8 +5705,7 @@ class TestLearningModule(TestCase):
                   "description": "teacher module 2",
                   "Save": "Save"})
 
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, "/exam/manage/courses/")
+        self.assertEqual(response.status_code, 200)
         learning_module = LearningModule.objects.get(name="teacher module 2")
         self.assertEqual(learning_module.description, "teacher module 2")
         self.assertEqual(learning_module.creator, self.user)
@@ -6054,8 +5988,6 @@ class TestLessons(TestCase):
             self.learning_module.id, self.learning_module2.id])
         self.course.teachers.add(self.teacher.id)
 
-        self.expected_url = "/exam/manage/courses/"
-
     def tearDown(self):
         self.user.delete()
         self.student.delete()
@@ -6103,18 +6035,16 @@ class TestLessons(TestCase):
             )
 
         # Teacher edits existing lesson and adds file
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, self.expected_url)
+        self.assertEqual(response.status_code, 200)
         updated_lesson = Lesson.objects.get(name="updated lesson")
         self.assertEqual(updated_lesson.description, "updated description")
         self.assertEqual(updated_lesson.creator, self.user)
         self.assertEqual(updated_lesson.html_data,
                          Markdown().convert("updated description"))
-        self.assertEqual(os.path.basename(updated_lesson.video_file.name),
-                         "test.mp4")
+        self.assertIn("test", os.path.basename(updated_lesson.video_file.name))
         lesson_files = LessonFile.objects.filter(
             lesson=self.lesson).first()
-        self.assertIn("test.txt", lesson_files.file.name)
+        self.assertIn("test", lesson_files.file.name)
         lesson_file_path = lesson_files.file.path
         # Teacher removes the lesson file
         response = self.client.post(
@@ -6124,8 +6054,7 @@ class TestLessons(TestCase):
             data={"delete_files": [str(lesson_files.id)],
                   "Delete": "Delete"}
             )
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, self.expected_url)
+        self.assertEqual(response.status_code, 200)
         lesson_file_exists = LessonFile.objects.filter(
             lesson=self.lesson).exists()
         self.assertFalse(lesson_file_exists)
@@ -6200,8 +6129,7 @@ class TestLessons(TestCase):
         )
         response = self.client.get(reverse('yaksh:show_all_lessons'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "yaksh/courses.html")
-        self.assertEqual(response.context["type"], "lesson")
+        self.assertTemplateUsed(response, "yaksh/lessons.html")
         self.assertEqual(response.context["lessons"][0], self.lesson)
 
     def test_preview_lesson_description(self):

@@ -1,11 +1,12 @@
 {% extends "exam.html" %}
 {% load custom_filters %}
-
+{% load static %}
 
 {% block css %}
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/question.css" type="text/css" />
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/codemirror/lib/codemirror.css" type="text/css" />
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/exam.css" type="text/css" />
+
+<link rel="stylesheet" href="{% static 'yaksh/css/question.css' %}" type="text/css" />
+<link rel="stylesheet" href="{% static 'yaksh/css/codemirror/lib/codemirror.css' %}" type="text/css" />
+<link rel="stylesheet" href="{% static 'yaksh/css/exam.css' %}" type="text/css" />
 <style>
     .CodeMirror{
         border-style: groove;
@@ -18,13 +19,15 @@
 {% endblock %}
 
 {% block script %}
-<script src="{{ URL_ROOT }}/static/yaksh/js/requesthandler.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/lib/codemirror.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/python/python.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/clike/clike.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/codemirror/mode/shell/shell.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/mathjax/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-sortable.js"></script>
+
+
+<script src="{% static 'yaksh/js/requesthandler.js' %}"></script>
+<script src="{% static 'yaksh/js/codemirror/lib/codemirror.js' %}"></script>
+<script src="{% static 'yaksh/js/codemirror/mode/python/python.js' %}"></script>
+<script src="{% static 'yaksh/js/codemirror/mode/clike/clike.js' %}"></script>
+<script src="{% static 'yaksh/js/codemirror/mode/shell/shell.js' %}"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
+<script src="{% static 'yaksh/js/jquery-sortable.js' %}"></script>
 <script>
 init_val = '{{ last_attempt|escape_quotes|safe }}';
 lang = "{{ question.language }}"
@@ -34,9 +37,9 @@ is_exercise = "{{ quiz.is_exercise }}"
 can_skip = "{{ can_skip }}"
 delay_time = new Number("{{ delay_time }}")
 
-var time_left = {{ paper.time_left }}
+var time_left = "{{ paper.time_left }}"
 {% if quiz.is_exercise %}
-    time_left = {{ delay_time }}
+    time_left = "{{ delay_time }}"
 {% endif %}
 
 function getTimeRemaining(endtime){
@@ -115,252 +118,275 @@ question_type = "{{ question.type }}"
 
 
 {% block main %}
-        <form id="code" action="{{URL_ROOT}}/exam/{{ question.id }}/check/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type=hidden name="question_id" id="question_id" value={{ question.id }}></input>
-            <div class="yakshwell">
-                  <div class="card ">
-                    <div class="col-md-12 bg-light">
-                      <div class="row align-items-center ">
-                          <div class="col-md-6 yakshheading"> {{ question.summary }} </div>
-                          <div class="col-md-3 ml-auto yakshwell text-center">
-                               {% if question.type == "mcq" %}
-                               SINGLE CORRECT CHOICE
-                               {% elif question.type == "mcc" %}
-                               MULTIPLE CORRECT CHOICES
-                               {% elif question.type == "code" %}
-                               PROGRAMMING
-                               {% elif question.type == "upload" %}
-                               ASSIGNMENT UPLOAD
-                               {% elif question.type == "integer" %}
-                               FILL IN THE BLANKS WITH INTEGER ANSWER
-                               {% elif question.type == "string" %}
-                               FILL IN THE BLANKS WITH STRING ANSWER
-                                  {% if testcase.string_check == "lower" %}
-                                      <br>(CASE INSENSITIVE)
-                                  {% else %}
-                                      <br>(CASE SENSITIVE)
-                                  {% endif %}
-                               {% elif question.type == "float" %}
-                               FILL IN THE BLANKS WITH FLOAT ANSWER
-                               {% elif question.type == "arrange" %}
-                               ARRANGE THE OPTIONS IN CORRECT ORDER
-                               {% endif %}
-                          </div>
-                          <div class="col-md-2 ml-auto text-center">
-                            <div class="row">
-                              <div class="col-md-6">
-                                <h5>
-                                  <span class="badge badge-warning">
-                                    {{ question.points }} Marks
-                                  </span>
-                                </h5>
-                              </div>
-                            </div>
-                          </div>
-                      </div>
-                    </div>
-                    <div class="yakshwell">
-                        <font size=3 face=arial> {{ question.description|safe }} </font>
-                        {% if files %}
-                            <div class="yakshwell col-md-5">
-                                <div class="card yakshwell">
-                                <span> Files to download for this question </span> <hr>
-                                {% for f_name in files %}
-                                  <div class="yakshwell">
-                                    <a href="{{f_name.file.url}}" class="btn btn-outline-secondary btn-sm " target="_blank">{{f_name.get_filename}}</a>
-                                    <br>
-                                    </div>
-                                {% endfor %}
-                                </div>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-                <br/>
-      <center>
-        {% if notification %}
-          {% if question.type == "code" %}
-          <div id="notification" class="alert alert-success col-md-8 animated flash" role="alert">
-            <strong>Note:</strong> {{ notification }}
-          </div>
-          {% else %}
-          <div id="notification" class="alert alert-warning col-md-8 animated flash" role="alert">
-            <strong>Note:</strong> {{ notification }}
-          </div>
-          {% endif %}
+  <div>
+    <center>
+      {% if notification %}
+        {% if question.type == "code" %}
+        <div id="notification" class="alert alert-info col-md-8" role="alert">
+          <button type="button" class="close" data-dismiss="alert">
+            <i class="fa fa-close"></i>
+          </button>
+          <strong>Note:</strong> {{ notification }}
+        </div>
         {% else %}
-          <div id="notification" role="alert">
+        <div id="notification" class="alert alert-info col-md-8" role="alert">
+          <button type="button" class="close" data-dismiss="alert">
+            <i class="fa fa-close"></i>
+          </button>
+          <strong>Note:</strong> {{ notification }}
+        </div>
+        {% endif %}
+      {% else %}
+        <div id="notification" role="alert">
+        </div>
+      {% endif %}
+    </center>
+  </div>
+  <form id="code" action="{% url 'yaksh:check' question.id paper.attempt_number module.id paper.question_paper.id course.id %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type=hidden name="question_id" id="question_id" value="{{ question.id }}"></input>
+    <div class="card">
+      <div class="card-header">
+        <div class="row">
+          <div class="col-md-6">
+            {{ question.summary }}
+          </div>
+          <div class="col-md-4">
+            {% if question.type == "mcq" %}
+              SINGLE CORRECT CHOICE
+            {% elif question.type == "mcc" %}
+              MULTIPLE CORRECT CHOICES
+            {% elif question.type == "code" %}
+              PROGRAMMING
+            {% elif question.type == "upload" %}
+              ASSIGNMENT UPLOAD
+            {% elif question.type == "integer" %}
+              FILL IN THE BLANKS WITH INTEGER ANSWER
+            {% elif question.type == "string" %}
+              FILL IN THE BLANKS WITH STRING ANSWER
+              {% if testcase.string_check == "lower" %}
+                  <br>(CASE INSENSITIVE)
+              {% else %}
+                  <br>(CASE SENSITIVE)
+              {% endif %}
+            {% elif question.type == "float" %}
+              FILL IN THE BLANKS WITH FLOAT ANSWER
+            {% elif question.type == "arrange" %}
+              ARRANGE THE OPTIONS IN CORRECT ORDER
+            {% endif %}
+          </div>
+          <div class="col-md-2">
+            <span class="badge badge-info">
+              {{ question.points }} Marks
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div>
+          {{ question.description|safe }}
+        </div>
+        {% if files %}
+          <div class="col-md-5">
+              <div class="card">
+                <div class="card-header">
+                  <span> Files to download for this question </span>
+                </div>
+                <div class="card-body">
+                  {% for f_name in files %}
+                      <a href="{{f_name.file.url}}" class="list-group-item" target="_blank">{{f_name.get_filename}}
+                      </a>
+                  {% endfor %}
+                </div>
+              </div>
           </div>
         {% endif %}
-      </center>
-                        {% if quiz.is_exercise %}
-                            {% if can_skip %}
-                                <div class = "card col-md-8" id="solution">
-                            {% else %}
-                                <div id="solution" style="display:none">
-                            {% endif %}
-                                {% if question.solution %}
-                                <h4><u> Solution by teacher</u></h4>
-                                {% endif%}
-                                <font size=3 face=arial> {{ question.solution|safe }} </font>
-                                </div>
-                        {% endif %}
-                 <div class="card">
-                  <div class="yakshwell">
-                     {% if question.type == "mcq" %}
-                     {% for test_case in test_cases %}
-                     {% if last_attempt and last_attempt|safe == test_case.id|safe %}
-                     <input name="answer" type="radio" value="{{ test_case.id }}" checked />
-                        {{ test_case.options|safe }} <br/>
-                     {% else %}
-                     <input name="answer" type="radio" value="{{ test_case.id }}" />
-                        {{ test_case.options|safe }} <br/>
-                     {% endif %}
-                     {% endfor %}
-                     {% endif %}
 
-                     {% if question.type == "integer" %}
-                     Enter Integer:<br/>
-                     <input autofocus name="answer" type="number" id="integer" value="{{ last_attempt|safe }}" />
-                     <br/><br/>
-                     {% endif %}
-
-                     {% if question.type == "string" %}
-                     Enter Text:<br/>
-                     <textarea autofocus name="answer" id="string">{{ last_attempt|safe }}</textarea>
-                     <br/><br/>
-                     {% endif %}
-
-                     {% if question.type == "float" %}
-                     Enter Decimal Value :<br/>
-                     <input autofocus name="answer" type="number" step="any" id="float" value="{{ last_attempt|safe }}" />
-                     <br/><br/>
-                     {% endif %}
-
-                     {% if question.type == "mcc" %}
-                     {% for test_case in test_cases %}
-                     {% if last_attempt and test_case.id|safe in last_attempt|safe %}
-                     <input name="answer" type="checkbox" value="{{ test_case.id }}" checked/> {{ test_case.options| safe }}
-                     <br>
-                     {% else %}
-                     <input name="answer" type="checkbox" value="{{ test_case.id }}">
-                     {{ test_case.options| safe }}
-                     <br/>
-                     {% endif %}
-                     {% endfor %}
-                     {% endif %}
-                     {% if question.type == "upload" %}
-                     <p>Upload assignment file for the said question<p>
-                     <input type=file id="assignment" name="assignment" multiple="">
-                     {% endif %}
-
-                     {% if question.type == "arrange" %}
-                       {% if last_attempt %}
-                        {% get_answer_for_arrange_options last_attempt question as test_cases %}
-                       {% endif %}
-                       <input name="answer" type="hidden" id='arrange_order'/>
-                       <div class="list-group">
-                       <ol class="arrange ">                      
-                       {% for test_case in test_cases %}                     
-                        <li class="list-group-item yakshlight" id={{test_case.id}}>{{test_case.options| safe }}</li> {% endfor %}                    
-                        </ol>                      
-                      </div>
-                       <script type="text/javascript">
-                        var arrange = $("ol.arrange");
-                        var order_array = $(arrange).sortable(['serialize']);
-                       </script>
-                     {% endif %}
-
-
-                    {% if question.type == "code" %}
-                      <div class="row align-items-center">
-                           <div class="col-md-9">
-                               <h5>Write your program below:</h5>
-                           </div>
-                           <div class="col-md-3 ml-auto">
-                               <a href="#answer" class=" btn btn-outline-primary" onclick="confirm()" name="reset" id="reset">Undo Changes&nbsp;<span class="glyphicon glyphicon-refresh"></span></a>
-                               </div>
-                      </div>
-                      <div class="yakshwell">
-                       <textarea  autofocus name="answer" id="answer"></textarea>
-                      </div>
-                    {% endif %}
-                  </div>
-                  </div>
-        <div class="text-center yakshwell">
-
-         {% if question.type == "mcq" or  question.type == "mcc" or question.type == "integer" or question.type == "float" or question.type ==  "string" %}
-         <br><button class="btn btn-success" type="submit" name="check" id="check">Submit Answer</button>&nbsp;&nbsp;
-         {% elif question.type == "upload" %}
-         <br><button class="btn btn-success" type="submit" name="check" id="check" onClick="return validate();">Upload</button>&nbsp;&nbsp;
-         {% elif question.type == "arrange" %}
-         <br><button class="btn btn-success" type="submit" name="check" id="check" onClick="return user_arranged_options();">Submit Answer</button>&nbsp;&nbsp;
-
-
-         {% else %}
-           {% if question in paper.get_questions_unanswered or quiz.is_exercise %}
-           <button class="btn btn-success" type="submit" name="check" id="check" >Check Answer <span class="glyphicon glyphicon-cog"></span></button>&nbsp;&nbsp;
-           {% endif %}
-         {% endif %}
-         {% if quiz.is_exercise %}
-         {% if can_skip %}
-             <button id="skip_ex" class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip"> Next <span class="glyphicon glyphicon-arrow-right"></span></button>
-         {% else %}
-             <button id="skip_ex" class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" style="visibility:hidden"> Next <span class="fa fa-step-forward"></span></button>
+        {% if quiz.is_exercise %}
+          <div>
+            {% if can_skip %}
+              <div id="solution">
+            {% else %}
+              <div id="solution" style="display:none">
+            {% endif %}
+            {% if question.solution %}
+            <br>
+            <h4><u> Solution by teacher</u></h4>
+            {% endif %}
+            <font size=3 face=arial> {{ question.solution|safe }} </font>
+            </div>
+          </div>
         {% endif %}
-        {% endif %}
+        <br>
+        <div>
+          <!-- MCQ type question -->
+          {% if question.type == "mcq" %}
+            {% for test_case in test_cases %}
+              {% if last_attempt and last_attempt|safe == test_case.id|safe %}
+              <input name="answer" type="radio" value="{{ test_case.id }}" checked />
+                {{ test_case.options|safe }} <br/>
+              {% else %}
+              <input name="answer" type="radio" value="{{ test_case.id }}" />
+                {{ test_case.options|safe }} <br/>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
 
-         {% if paper.question_paper.quiz.allow_skip and not paper.get_questions_unanswered|length_is:"1" %}
-         {% if question in paper.get_questions_unanswered %}
-         <button class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" id="skip">Attempt Later <span class="fa fa-step-forward"></span></button>
-         {% endif %}
-         {% endif %}
-       </div>
-         </form>
-         
-     </div>
-   </div>
-   <br/>
-   <p id="status"></p>
+          <!-- Integer type question -->
+          {% if question.type == "integer" %}
+            Enter Integer:<br/>
+            <input autofocus class="form-control" name="answer" type="number" id="integer" value="{{ last_attempt|safe }}" />
+            <br><br>
+          {% endif %}
+
+          <!-- String type question -->
+          {% if question.type == "string" %}
+            Enter Text:<br/>
+            <textarea autofocus name="answer" id="string" class="form-control" style="width: 100%">{{ last_attempt|safe }}</textarea>
+            <br/><br/>
+          {% endif %}
+
+          <!-- Float type question -->
+          {% if question.type == "float" %}
+            Enter Decimal Value :<br/>
+            <input autofocus class="form-control" name="answer" type="number" step="any" id="float" value="{{ last_attempt|safe }}" />
+            <br/><br/>
+          {% endif %}
+
+          <!-- MCC type question -->
+          {% if question.type == "mcc" %}
+            {% for test_case in test_cases %}
+              {% if last_attempt and test_case.id|safe in last_attempt|safe %}
+              <input name="answer" type="checkbox" value="{{ test_case.id }}" checked/>
+                {{ test_case.options| safe }}
+              <br>
+              {% else %}
+              <input name="answer" type="checkbox" value="{{ test_case.id }}">
+                {{ test_case.options| safe }}
+              <br>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          <!-- Upload type question -->
+          {% if question.type == "upload" %}
+            <p>Upload assignment file for the said question<p>
+            <input type=file id="assignment" name="assignment" multiple="">
+          {% endif %}
+
+          <!-- Arrange type question -->
+          {% if question.type == "arrange" %}
+            {% if last_attempt %}
+              {% get_answer_for_arrange_options last_attempt question as test_cases %}
+            {% endif %}
+            <input name="answer" type="hidden" id='arrange_order'/>
+            <div class="list-group">
+            <ol class="arrange">
+            {% for test_case in test_cases %}
+            <li class="list-group-item yakshlight" id={{test_case.id}}>
+              {{test_case.options| safe }}</li> {% endfor %}
+            </ol>
+            </div>
+            <script type="text/javascript">
+              var arrange = $("ol.arrange");
+              var order_array = $(arrange).sortable(['serialize']);
+            </script>
+          {% endif %}
+
+          <!-- Code type question -->
+          {% if question.type == "code" %}
+            <div class="row align-items-center">
+              <div class="col-md-9">
+                <h4>Write your program below:</h4>
+              </div>
+              <div class="col-md-3 ml-auto">
+                <a href="#answer" class=" btn btn-outline-primary" onclick="confirm()" name="reset" id="reset">Undo Changes&nbsp;<span class="fa fa-refresh"></span></a>
+              </div>
+            </div>
+            <br>
+            <div>
+              <textarea  autofocus name="answer" id="answer"></textarea>
+            </div>
+          {% endif %}
+
+          <!-- Submit Buttons -->
+          <br>
+          <div>
+            {% if question.type == "mcq" or  question.type == "mcc" or question.type == "integer" or question.type == "float" or question.type ==  "string" %}
+              <br><button class="btn btn-success" type="submit" name="check" id="check">Submit Answer</button>
+            {% elif question.type == "upload" %}
+              <br><button class="btn btn-success" type="submit" name="check" id="check" onClick="return validate();">Upload</button>
+            {% elif question.type == "arrange" %}
+              <br><button class="btn btn-success" type="submit" name="check" id="check" onClick="return user_arranged_options();">Submit Answer</button>
+            {% else %}
+              {% if question in paper.get_questions_unanswered or quiz.is_exercise %}
+                <button class="btn btn-success" type="submit" name="check" id="check" >
+                  Check Answer
+                </button>
+              {% endif %}
+            {% endif %}
+            {% if quiz.is_exercise %}
+              {% if can_skip %}
+                 <button id="skip_ex" class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip"> Next <span class="fa fa-step-forward"></span></button>
+              {% else %}
+                 <button id="skip_ex" class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" style="visibility:hidden"> Next <span class="fa fa-step-forward"></span>
+                 </button>
+              {% endif %}
+            {% endif %}
+
+            {% if paper.question_paper.quiz.allow_skip and not paper.get_questions_unanswered|length_is:"1" %}
+              {% if question in paper.get_questions_unanswered %}
+              <button class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" id="skip">
+                Attempt Later <span class="fa fa-step-forward"></span>
+              </button>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- Errors for code questions -->
+  <p id="status"></p>
   {% if question.type == 'code' or question.type == 'upload' %}
-  <div class="row" id="error_panel"></div>
+  <div id="error_panel"></div>
   {% endif %}
          
-    <!-- Modal -->
-    <div class="modal" id="upload_alert" >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="myModalLabel">File not selected</h4>
-          </div>
-          <div id = "modal_body"class="modal-body">
-              <font color="brown"><b>Kindly attach a file and then click upload.</b></font>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
-          </div>
+  <!-- Modal -->
+  <div class="modal" id="upload_alert" >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="myModalLabel">File not selected</h4>
+        </div>
+        <div id = "modal_body"class="modal-body">
+            <font color="brown"><b>Kindly attach a file and then click upload.</b></font>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
         </div>
       </div>
-   </div>
+    </div>
+  </div>
 
-   <!-- UNDO CHANGES Modal -->
-    <div class="modal" id="undo_changes" >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="myModalLabel">Are you Sure?</h4>
-          </div>
-          <div id = "modal_body"class="modal-body">
-              <font color="brown"><b>Your code will be reset.</b></font>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-warning" onclick="reset_editor()">OK</button>
-            <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
-          </div>
+ <!-- UNDO CHANGES Modal -->
+  <div class="modal" id="undo_changes" >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="myModalLabel">Are you Sure?</h4>
+        </div>
+        <div id = "modal_body"class="modal-body">
+            <font color="brown"><b>Your code will be reset.</b></font>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-warning" onclick="reset_editor()">OK</button>
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
         </div>
       </div>
-   </div>
+    </div>
+  </div>
 
 {% endblock main %}
 

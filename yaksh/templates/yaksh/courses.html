@@ -1,29 +1,13 @@
 {% extends "manage.html" %}
+{% load static %}
 {% block title %} Courses {% endblock %}
 {% block pagetitle %} Courses {% endblock pagetitle %}
+
 {% block script %}
-<script>
-    $(document).ready(function(){
-        $('[data-toggle="tooltip"]').tooltip();
-        $("#link_created_courses").click(function() {
-            if ($("#allotted_courses").is(":visible")){
-                $("#allotted_courses").toggle();
-            }
-            if (!$("#created_courses").is(":visible")){
-                $("#created_courses").toggle();
-            }
-        });
-        $("#link_allotted_courses").click(function() {
-            if ($("#created_courses").is(":visible")){
-                $("#created_courses").toggle();
-            }
-            if (!$("#allotted_courses").is(":visible")){
-                $("#allotted_courses").toggle();
-            }
-        });
-    });
+<script type="text/javascript" src="{% static 'yaksh/js/show_courses.js' %}">
 </script>
 {% endblock %}
+
 {% block css %}
 <style>
     .test + .tooltip.top > .tooltip-inner {
@@ -33,482 +17,283 @@
 </style>
 {% endblock %}
 {% block content %}
-<div class="row">
-    <!-- Side bar -->
-    <div class="col-md-3 yakshlabel collapse" id="sidebar">
-        <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
-            {% if type == "courses" %}
-              <a href="#sidebarbody" id="link_created_courses" data-toggle="pill" class="nav-link active" role="tab" aria-controls="sidebarbody" aria-selected="true" >My Courses</a>
-              <a href="#sidebarbody" id="link_allotted_courses" class="nav-link" data-toggle="pill" role="tab" aria-controls="sidebarbody" aria-selected="flase" > Allotted Courses</a>
-              {% else %}
-              <a href="{{URL_ROOT}}/exam/manage/courses" class="nav-link"  >View all Courses</a>
-            {% endif %}
-            <a href="{{URL_ROOT}}/exam/manage/add_course" class="nav-link"  >Add New Course</a>
-            <a href="{{URL_ROOT}}/exam/manage/courses/all_quizzes/" class="nav-link" >Add/View Quizzes</a>
-            <a href="{{URL_ROOT}}/exam/manage/courses/all_lessons/" class="nav-link" >Add/View Lessons</a>
-            <a href="{{URL_ROOT}}/exam/manage/courses/all_learning_module" class="nav-link" >Add/View Modules</a>
-            <a href="{% url 'grades:grading_systems'%}" class="nav-link" > Add/View Grading Systems </a>
-       </div>
-    </div>
-    <a href="#sidebar" data-toggle="collapse" id="sidebaricon"><i class="fa fa-navicon fa-lg"></i></a>
-    <!-- End of side bar -->
-    <main class="tab-content col" id="sidebarbody">
-        
-        <div class="tab-pane fade show active container-fluid yakshwell" role="tabpanel" aria-labelledby="sidebar-tab">
-            
-            {% if type == "courses" %}
-            <div id="created_courses">
-                {% if not courses %}
-                    <center><h4> No new Courses created </h4></center>
-                {% else %}
-            <div class="col-md-offset-2 main">
-                <center><h3 class="yakshlabel"> Course(s) Created</h3></center>
-                 <div class="table-wrapper-2">
-                <table id="course-details" class="table table-bordered table-responsive-sm">
-                <tr class="text-center yakshred bg-light">
-                <th>Courses</th>
-                <th>Modules</th>
-                </tr>
-
-                {% for course in courses %}
-                <tr>
-                <td width="30%">
-                    <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}">{{ course.name }}
-                    </a>
-                    {% if course.active %}
-                        <span class="badge badge-success">Active</span>
-                    {% else %}
-                        <span class="badge badge-danger">Closed</span>
-                    {% endif %}
-                    <br><br>
-                    <center><b><u>Teacher(s) added to {{ course }}</u></b></center>
-                    <br>
-                    <form action="{{URL_ROOT}}/exam/manage/remove_teachers/{{ course.id }}/" method="post">
-                    {% if course.get_teachers %}
-                    <div align="left">
-                    {% csrf_token %}
-                    {% for teacher in course.get_teachers %}
-                    <div class="well">
-                        <div class="row">
-                            <div class="col-md-333" style="width: auto;">
-                                <input type="checkbox" name="remove" value="{{ teacher.id }}">&nbsp;{{ teacher.get_full_name }}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %} <!-- end for teachers -->
-                    <button class="btn btn-danger" type="submit" data-toggle="tooltip" title="Remove Selected Teachers from this course">Remove Teachers</button>
-                    </div>
-                    {% else %}
-                    <center><b>No Teacher(s) added</b></center>
-                    {% endif %}
-                    </form>
-                    <br><br>
-                    <ul>
-                        <li>
-                            <a href="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course.id}}/" data-toggle="tooltip" title="Add/Remove/Change course modules" data-placement="top">
-                                Design Course
-                            </a>
-                        </li>
-
-                        <br>
-                        <li>
-                            <a href="{{URL_ROOT}}/exam/manage/edit_course/{{course.id}}">Edit Course</a>
-                        </li>
-                        <br>
-                        <li>
-                            <a href="{{URL_ROOT}}/exam/manage/courses/download_course_csv/{{course.id}}">Download CSV
-                            </a>
-                        </li>
-                        <br>
-                        <li>
-                            <a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher</a>
-                        </li>
-                        <br>
-                        <li>
-                            <a href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">
-                            {% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}
-                            </a>
-                        </li>
-                        <br>
-                        <li>
-                            <a class="test" href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/" data-toggle="tooltip" title="Creates Copy of selected Course as well as its Modules, Lessons/Quizzes" data-placement="top">
-                            Clone Course</a>
-                        </li>
-                    </ul>
-                </td>
-                <td>
-                    <table id="course-details" class="table table-bordered table-responsive-sm">
-                    {% if course.get_learning_modules %}
-                        <tr class="yakshlight">
-                        <th>Module</th>
-                        <th>Module Design</th>
-                        <th>Lessons/Quizzes</th>
-                        </tr>
-                        {% for module in course.get_learning_modules %}
-                        <tr>
-                            <td>
-                            <a href="{{URL_ROOT}}/exam/manage/courses/add_module/{{module.id}}/{{course.id}}">
-                                {{module.name}}</a>
-                            </td>
-                            <td>
-                                <a href="{{URL_ROOT}}/exam/manage/courses/designmodule/{{module.id}}/{{course.id}}/">
-                                    Add Quizzes/Lessons for {{module.name}}
-                                </a>
-                            </td>
-                            <td>
-                                {% for unit in module.get_learning_units %}
-                                    <ul class="inputs-list">
-                                    <li>
-                                    {% if unit.type == "quiz" %}
-                                        {% if unit.quiz.is_exercise %}
-                                            <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{unit.quiz.id}}/{{course.id}}">
-                                            {{unit.quiz.description}}</a>
-                                        {% else %}
-                                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
-                                            {{unit.quiz.description}}</a>
-                                        {% endif %}
-                                    {% else %}
-                                        <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{unit.lesson.id}}/{{course.id}}">
-                                        {{unit.lesson.name}}</a>
-                                    {% endif %}
-                                    </li>
-                                    </ul>
-                                {% endfor %}
-                            </td>
-                        </tr>
-                        {% endfor %} <!-- end for modules -->
-                    {% else %}
-                         No learning modules
-                    {% endif %}
-                    </table>
-                </td>
-                </tr>
-                {% endfor %} <!-- end for courses -->
-                </table>
-            </div>
-            </div>
-            {% endif %}
-            </div>
-
-            <!-- Show Alotted courses -->
-            <div id="allotted_courses" style="display: none;">
-            {% if not allotted_courses %}
-                <center><h4> No new Courses allotted</h4></center>
-                <br><br>
-            {% else %}
-            <div class="col-md-offset-2 main">
-                <center><h3> Course(s) Allotted </h3></center>
-                 <div class="table-wrapper-2">
-                <table id="course-details" class="table table-bordered table-responsive-sm">
-                <tr class="text-center yakshred bg-light">
-                <th>Courses</th>
-                <th>Modules</th>
-                </tr>
-
-                {% for course in allotted_courses %}
-                <tr>
-                <td width="30%">
-                    <ul class="list-group">
-                    <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/">{{ course.name }}</a>
-                    {% if course.active %}
-                        <span class="badge badge-success">Active</span>
-                    {% else %}
-                        <span class="badge badge-danger">Closed</span>
-                    {% endif %}
-                    <br><br>
-                    <center><b><u> Course Creator</u></b><br>
-                        <h4>{{course.creator.get_full_name.title}}</h4>
-                    </center><br>
-                    <center><b><u>Teacher(s) added to {{ course }}</u></b></center>
-                    <br>
-                    <form action="{{URL_ROOT}}/exam/manage/remove_teachers/{{ course.id }}/" method="post">
-                    {% if course.get_teachers %}
-                    <div align="left">
-                    {% csrf_token %}
-                    {% for teacher in course.get_teachers %}
-                    <div class="well">
-                        <div class="row">
-                            <div class="col-md-333" style="width: auto;">
-                                <input type="checkbox" name="remove" value="{{ teacher.id }}">&nbsp;
-                                {{ teacher.get_full_name }}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %} <!-- end for teachers -->
-                    <button class="btn btn-danger" type="submit" data-toggle="tooltip" title="Remove Selected Teachers from this course">Remove Teachers</button>
-                    </div>
-                    {% else %}
-                    <center><b>No Teacher(s) added</b></center>
-                    {% endif %}
-                    </form>
-                    <br><br>
-                    <ul>
-                        <li>
-                            <a href="{{URL_ROOT}}/exam/manage/courses/designcourse/{{course.id}}/">Design Course
-                            </a>
-                        </li>
-                        <br>
-                        <li>
-                            <a href="{{URL_ROOT}}/exam/manage/edit_course/{{course.id}}">Edit Course</a>
-                        </li>
-                        <br>
-                        <li>
-                            <a href="{{URL_ROOT}}/exam/manage/courses/download_course_csv/{{course.id}}">Download CSV
-                            </a>
-                        </li>
-                        <br>
-                        <li>
-                            <a href="{{URL_ROOT}}/exam/manage/searchteacher/{{course.id}}/">Add Teacher
-                            </a>
-                        </li>
-                        <br>
-                        <li>
-                            <a href="{{URL_ROOT}}/exam/manage/toggle_status/{{ course.id }}/">
-                            {% if course.active %}Deactivate Course {% else %} Activate Course {% endif %}
-                            </a>
-                        </li>
-                        <br>
-                        <li>
-                            <a class="test" href="{{URL_ROOT}}/exam/manage/duplicate_course/{{ course.id }}/" data-toggle="tooltip" title="Creates Copy of selected Course as well as its Modules, Lessons/Quizzes" data-placement="top">
-                            Clone Course</a>
-                        </li>
-                    </ul>
-                </td>
-                <td>
-                    <table id="course-details" class="table table-bordered table-responsive-sm">
-                    {% if course.get_learning_modules %}
-                        <tr class="yakshlight">
-                        <th>Module</th>
-                        <th>Module Design</th>
-                        <th>Lessons/Quizzes</th>
-                        </tr>
-                        {% for module in course.get_learning_modules %}
-                        <tr>
-                            <td>
-                            <a href="{{URL_ROOT}}/exam/manage/courses/add_module/{{module.id}}/{{course.id}}">
-                                {{module.name}}</a>
-                            </td>
-                            <td>
-                                <a href="{{URL_ROOT}}/exam/manage/courses/designmodule/{{module.id}}/{{course.id}}/">
-                                    Add Quizzes/Lessons for {{module.name}}
-                                </a>
-                            </td>
-                            <td>
-                                {% for unit in module.get_learning_units %}
-                                    <ul class="inputs-list">
-                                    <li>
-                                    {% if unit.type == "quiz" %}
-                                        {% if unit.quiz.is_exercise %}
-                                            <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{unit.quiz.id}}/{{course.id}}">
-                                            {{unit.quiz.description}}</a>
-                                        {% else %}
-                                            <a href="{{URL_ROOT}}/exam/manage/addquiz/{{unit.quiz.id}}/{{course.id}}">
-                                            {{unit.quiz.description}}</a>
-                                        {% endif %}
-                                    {% else %}
-                                        <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{unit.lesson.id}}/{{course.id}}">
-                                        {{unit.lesson.name}}</a>
-                                    {% endif %}
-                                    </li>
-                                    </ul>
-                                {% endfor %}
-                            </td>
-                        </tr>
-                        {% endfor %} <!-- end for modules -->
-                    {% else %}
-                         No learning modules
-                    {% endif %}
-                    </table>
-                </td>
-                {% endfor %} <!-- end for courses -->
-                </tr>
-                </table>
-            </div>
-            </div>
-            {% endif %}
-            </div>
-            {% endif %}
-            <!-- End if all Courses  -->
-
-            <!-- Show all Quizzes -->
-            <div id="all_quizzes" >
-            <div class="col-md-offset-2 main">
-            {% if type == "quiz" %}
-                <a href="{{URL_ROOT}}/exam/manage/addquiz/" class="btn btn-primary">Add New Quiz</a>
-                <a href="{{URL_ROOT}}/exam/manage/add_exercise/" class="btn btn-primary">Add New Exercise</a>
-                {% if not quizzes %}
-                    <center><h4> No new Quiz added</h4></center>
-                    <br><br>
-                {% else %}
-                    <center><h3> Quizzes </h3></center>
-                    <div class="table-wrapper-2">
-                    <table id="course-details" class="table table-bordered table-responsive-sm">
-                    <tr>
-                    <th>Sr.No</th>
-                    <th>Quiz</th>
-                    <th>QuestionPaper</th>
-                    </tr>
-
-                    {% for quiz in quizzes %}
-                    <tr>
-                    <td>{{forloop.counter}}</td>
-                    <td width="30%">
-                        
-                        {% if quiz.is_exercise %}
-                            <a href="{{URL_ROOT}}/exam/manage/add_exercise/{{quiz.id}}/">{{ quiz.description }}</a>
-                        {% else %}
-                        <a href="{{URL_ROOT}}/exam/manage/addquiz/{{quiz.id}}/">{{ quiz.description }}</a>
-                        {% endif %}
-                        {% if quiz.active %}
-                            <span class="badge badge-success">Active</span>
-                        {% else %}
-                            <span class="badge badge-danger">Closed</span>
-                        {% endif %}
-                        
-                    </td>
-                    <td>
-                        {% if quiz.questionpaper_set.get %}
-                            <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ quiz.id }}/{{quiz.questionpaper_set.get.id}}/">
-                            Question Paper for {{ quiz.description }}</a>
-                            <a href="{{URL_ROOT}}/exam/manage/preview_questionpaper/{{quiz.questionpaper_set.get.id}}" class="btn btn-primary active btn-xs" target="_blank">
-                                    View
-                            </a>
-                            <br>
-                        {% else %}
-                            <p>No Question Paper 
-                            <a href="#" onClick='location.replace("{{URL_ROOT}}/exam/manage/quiz/designquestionpaper/{{ quiz.id }}/");'>Add</a>
-                            </p>
-                        {% endif %}
-                    </td>
-                    {% endfor %} <!-- end for quizzes -->
-                    </tr>
-                    </table>
-                </div>
-                </div>
-                {% endif %}
-            {% endif %}
-            </div>
-
-            <!-- Show all lessons -->
-
-            <div id="all_lessons">
-                <div class="col-md-offset-2 main">
-            {% if type == "lesson" %}
-                <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/" class="btn btn-primary">Add new Lesson</a>
-                {% if not lessons %}
-                    <center><h4> No new Lessons added</h4></center>
-                    <br><br>
-                {% else %}
-                    <center><h3> Lessons </h3></center>
-                    <div class="table-wrapper-2">
-                    <table id="course-details" class="table table-bordered table-responsive-sm">
-                    <tr>
-                    <th>Sr.No</th>
-                    <th>Lesson</th>
-                    </tr>
-
-                    {% for lesson in lessons %}
-                    <tr>
-                    <td width="2%">{{forloop.counter}}</td>
-                    <td width="30%">
-                        
-                        <a href="{{URL_ROOT}}/exam/manage/courses/edit_lesson/{{lesson.id}}/">
-                        {{ lesson.name }}</a>
-                        {% if lesson.active %}
-                            <span class="badge badge-success">Active</span>
-                        {% else %}
-                            <span class="badge badge-danger">Closed</span>
-                        {% endif %}
-                        
-                    </td>
-                    {% endfor %} <!-- end for lessons -->
-                    </tr>
-                    </table>
-                </div>
-                </div>
-                {% endif %}
-            {% endif %}
-            </div>
-
-            <!-- Show all learning modules -->
-                <div class="col-md-offset-2 main">
-            <div id="all_modules">
-            {% if type == "learning_module" %}
-                <a href="{{URL_ROOT}}/exam/manage/courses/add_module/" class="btn btn-primary">
-                Add new Module</a>
-                {% if not learning_modules %}
-                    <center><h4> No new learning modules added</h4></center>
-                    <br><br>
-                {% else %}
-                    <center><h3> Learning Modules </h3></center>
-                    <table id="course-details" class="table table-bordered table-responsive-sm">
-                    <tr>
-                    <th>Sr.No</th>
-                    <th>Learning Modules</th>
-                    <th>Design Module</th>
-                    <th>Learning Units</th>
-                    </tr>
-                    {% for module in learning_modules %}
-                    <tr>
-                    <td width="2%">{{forloop.counter}}</td>
-                    <td>
-                        <a href="{{URL_ROOT}}/exam/manage/courses/add_module/{{module.id}}/">
-                        {{ module.name }}</a>
-                        {% if module.active %}
-                            <span class="badge badge-success">Active</span>
-                        {% else %}
-                            <span class="badge badge-danger">Closed</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{{URL_ROOT}}/exam/manage/courses/designmodule/{{module.id}}">
-                            Add Quizzes/Lessons for {{module.name}}
+<div class="container-fluid">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <ul class="nav nav-pills" id="course_tabs">
+                    <li class="nav-item">
+                        <a class="nav-link {% if created %}active{% endif %}" href="{% url 'yaksh:courses' %}">
+                            My Courses
                         </a>
-                    </td>
-                    <td>
-                        {% if module.get_learning_units %}
-                            {% for unit in module.get_learning_units %}
-                                <ul class="list-group">
-                                {% if unit.type == 'quiz' %}
-                                    {{unit.quiz.description}}
-                                {% else %}
-                                    {{unit.lesson.name}}
-                                {% endif %}
-                                </ul>
-                            {% endfor %} <!-- end for learning units -->
-                        {% else %}
-                            No Learning units
-                        {% endif %}
-                    </td>
-                    {% endfor %} <!-- end for modules -->
-                    </tr>
-                    </table>
-                </div>
-                {% endif %}
-            {% endif %}
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'yaksh:add_course' %}">
+                            Add New Course
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown hide">
+                        <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="true">More</a>
+                        <div class="dropdown-menu hide" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 37px, 0px); top: 0px; left: 0px; will-change: transform;">
+                        <a class="dropdown-item" href="{% url 'yaksh:show_all_quizzes' %}">
+                            Add/View Quizzes
+                        </a>
+                        <a class="dropdown-item" href="{% url 'yaksh:show_all_lessons' %}">
+                            Add/View Lessons
+                        </a>
+                        <a class="dropdown-item" href="{% url 'yaksh:show_all_modules' %}">
+                            Add/View Modules
+                        </a>
+                        <a href="{% url 'grades:grading_systems'%}" class="dropdown-item" >
+                            Add/View Grading Systems
+                        </a>
+                    </div>
+                    </li>
+                </ul>
             </div>
         </div>
-    </main>
+    </div>
+    <div class="container">
+        {% if not objects %}
+            <br><br>
+            <div class="alert alert-info">
+                <center> <h3> No Courses Found </h3> </center>
+            </div>
+        {% else %}
+            <hr>
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-dismissible alert-{{ message.tags }}">
+                    <button type="button" class="close" data-dismiss="alert">
+                        <i class="fa fa-close"></i>
+                    </button>
+                    <strong>{{ message }}</strong>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% with objects as courses %}
+            <div class="row">
+                <div class="col-md-4">
+                    {% include "yaksh/paginator.html" %}
+                </div>
+                <div class="ml-auto">
+                    <div class="nav nav-pills" role="tablist" aria-orientation="vertical">
+                        <a  id="listbtn" class="nav-link"  data-toggle="pill" role="tab" aria-controls="show" aria-selected="true">
+                            <i class="fa fa-list"></i>
+                        </a>
+                        <a  id="gridbtn" class="nav-link" data-toggle="pill" role="tab" aria-controls="updown" aria-selected="false">
+                            <i class="fa fa-columns"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content">
+                <div class="tab-pane active" id="gridview" role="tabpanel" aria-labelledby="gridbtn">
+                    <!-- GridView -->
+                    <br>
+                    <div class="row">
+                        <br>
+                        {% for course in courses %}
+                            <div class="col-md-6">
+                                <div class="card border-primary">
+                                    <div class="card-header" style="height: 150px">
+                                        {{course.name}}
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col">
+                                                <strong>Starts On:</strong>
+                                                {{course.start_enroll_time}}
+                                                <br>
+                                                <strong>Ends On:</strong>
+                                                {{course.end_enroll_time}}
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-md-5">
+                                                <span class="badge badge-pill badge-info">
+                                                    {% if user.id != course.creator.id %}
+                                                        Allotted Course
+                                                    {% else %}
+                                                        Created Course
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                {% if course.active %}
+                                                    <span class="badge badge-pill badge-success">
+                                                    Active
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge badge-pill badge-danger">
+                                                    Inactive
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-4">
+                                                <a href="{% url 'yaksh:toggle_course_status' course.id %}">
+                                                {% if course.active %}
+                                                    <i class="fa fa-toggle-on fa-2x"></i>
+                                                {% else %}
+                                                    <i class="fa fa-toggle-off fa-2x"></i>
+                                                {% endif %}
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-md-5">
+                                                <a href="{% url 'yaksh:edit_course' course.id %}" class="btn btn-info">
+                                                    <i class="fa fa-edit"></i>
+                                                    Edit Course
+                                                </a>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
+                                                    <i class="fa fa-tasks"></i>
+                                                    Manage Course
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <br>
+                                        <div class="row">
+                                            <div class="col-md-5">
+                                                <a href="{% url 'yaksh:duplicate_course' course.id %}" class="btn btn-secondary">
+                                                    <i class="fa fa-clone"></i>
+                                                    Clone Course
+                                                </a>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+                                                <button type="button" class="btn btn-secondary">
+                                                    <i class="fa fa-download"></i>
+                                                    Download
+                                                </button>
+                                                <div class="btn-group" role="group">
+                                                <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                                <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
+                                                <a class="dropdown-item" href="{% url 'yaksh:download_course_csv' course.id %}">
+                                                    CSV
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'yaksh:download_course' course.id %}">
+                                                    Course
+                                                </a>
+                                                </div>
+                                                </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <br>
+                            </div>
+                        {% endfor %}
+                        <br>
+                    </div>
+                </div>
+                <div class="tab-pane" id="listview" role="tabpanel" aria-labelledby="gridbtn">
+                    <!-- ListView -->
+                    <br>
+                    {% for course in courses %}
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-md-5">
+                                        {{course.name}}  
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="badge badge-pill badge-info">
+                                            {% if user.id != course.creator.id %}
+                                                Allotted Course
+                                            {% else %}
+                                                Created Course
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="col-md-2">
+                                        {% if course.active %}
+                                            <span class="badge badge-pill badge-success">
+                                            Active
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-pill badge-danger">
+                                            Inactive
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="{% url 'yaksh:toggle_course_status' course.id %}">
+                                        {% if course.active %}
+                                            <i class="fa fa-toggle-on fa-2x"></i>
+                                        {% else %}
+                                            <i class="fa fa-toggle-off fa-2x"></i>
+                                        {% endif %}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <strong>Starts On:</strong>
+                                        {{course.start_enroll_time}}
+                                        <br>
+                                        <strong>Ends On:</strong>
+                                        {{course.end_enroll_time}}
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <a href="{% url 'yaksh:edit_course' course.id %}" class="btn btn-info">
+                                            <i class="fa fa-edit"></i>
+                                            Edit Course
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
+                                            <i class="fa fa-tasks"></i>
+                                            Manage Course
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+                                            <button type="button" class="btn btn-secondary">
+                                                <i class="fa fa-download"></i>
+                                                Download
+                                            </button>
+                                            <div class="btn-group" role="group">
+                                            <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                            <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
+                                            <a class="dropdown-item" href="{% url 'yaksh:download_course_csv' course.id %}">
+                                                CSV
+                                            </a>
+                                            <a class="dropdown-item" href="{% url 'yaksh:download_course' course.id %}">
+                                                Course
+                                            </a>
+                                            </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="{% url 'yaksh:duplicate_course' course.id %}" class="btn btn-secondary">
+                                            <i class="fa fa-clone"></i>
+                                            Clone Course
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                    {% endfor %}
+                    <br>
+                </div>
+            </div>
+            {% include "yaksh/paginator.html" %}
+            {% endwith %}
+        {% endif %}
+    </div>
 </div>
-{% endblock %}
-{% block footer %}
-  <!--footer-->   
-  <footer class="container-fluid yakshsidebarfooter text-center">
-    <div class="row justify-content-center">
-    <div class="col-sm-5 ">
-      {% if user %}
-         {% block info %}
-         <b>{{user.get_full_name|title}}</b> with Roll no. <b>{{user.profile.roll_number}}</b> is logged in as <b>{{user.username}}</b>
-         {% endblock %}
-         {% endif %}
-    </div>
-    <div class="col-sm-2">
-      |
-    </div>
-    <div class="col-sm-4 text-left">
-     <b>Any Queries?</b> Email : info@fossee.in
-    </div>
-  </div>
-  </footer>
-  <!--footer end-->
 {% endblock %}

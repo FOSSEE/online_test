@@ -1,8 +1,8 @@
 function test()
 {
 
-	document.getElementById('id_duration').setAttribute('class','mini-text');
-	document.getElementById('id_pass_criteria').setAttribute('class','mini-text');
+	document.getElementById('id_duration').setAttribute('class','mini-text form-control');
+	document.getElementById('id_pass_criteria').setAttribute('class','mini-text form-control');
     if (document.getElementById("id_description").value != "")
     {
         document.getElementById("submit").innerHTML = "Save";

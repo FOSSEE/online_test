@@ -1,39 +1,38 @@
 {% extends "manage.html" %}
+{% load staticfiles %}
 
 {% block title %} Questions {% endblock %}
 
 {% block pagetitle %} Questions {% endblock pagetitle %}
 
 {% block script %}
-<script src="{{ URL_ROOT }}/static/yaksh/js/show_question.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/question_filter.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/show_question.js' %}"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/question_filter.js' %}"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/jquery.tablesorter.min.js' %}"></script>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <!-- Side bar -->
-    <div class="col-md-3 yakshlabel collapse nav flex-column nav-pills" id="sidebar" role="tablist" aria-orientation="vertical">
-          <a href="#show" id="showbar" class="nav-link active"  data-toggle="pill" role="tab" aria-controls="show" aria-selected="true"> Show all Questions</a>
-          <a href="#updown" id="updownbar" class="nav-link" data-toggle="pill" role="tab" aria-controls="updown" aria-selected="false" > Upload and Download Questions</a>
-    </div>
-     <a href="#sidebar" data-toggle="collapse" id="sidebaricon"><i class="fa fa-navicon fa-lg"></i></a>
-    <!-- End of side bar -->
-    <main class="col  main" id="sidebarbody">
-     
-      <div class="yakshwell tab-content">
-      <!-- Upload Questions -->
-      <div id="updown"  class="card col-md-12 tab-pane fade" role="tabpanel" aria-labelledby="updownbar">
-        <div class="alert alert-info" role="alert">
-          <p>You can upload question files the following ways -
-            <li><b><u>Yaml File</u></b>
+<div class="container">
+  <!-- Side bar -->
+  <div class="nav nav-pills" role="tablist" aria-orientation="vertical">
+    <a href="#show" id="showbar" class="nav-link active"  data-toggle="pill" role="tab" aria-controls="show" aria-selected="true"> Show all Questions</a>
+    <a href="#updown" id="updownbar" class="nav-link" data-toggle="pill" role="tab" aria-controls="updown" aria-selected="false" > Upload Questions</a>
+  </div>
+  <!-- End of side bar -->
+  <div class="tab-content">
+    <br>
+    <!-- Upload Questions -->
+    <div id="updown" class="card tab-pane fade" role="tabpanel" aria-labelledby="updownbar">
+      <div class="col" role="alert">
+        <p>You can upload question files the following ways -
+          <li><b><u>Yaml File</u></b>
             <p>One can upload Yaml file with extensions .yaml or .yml. Please note
               that you cannot upload files associated to a question. Yaml file can
               have any name.
             </p>
-            </li>
-            <li><b><u>Zip File</u></b>
-             <p> One can also upload zip with the following zip structure -
+          </li>
+          <li><b><u>Zip File</u></b>
+           <p> One can also upload zip with the following zip structure - </p>
             <pre>
               .zip
               |-- .yaml or .yml
@@ -43,87 +42,92 @@
               |-- folder2
               |   |-- Files required by questions
             </pre>
-            </li>
-          </p>
-        </div>
-        <div class="card-body">
-        <div><a class="btn btn-primary" href="{{URL_ROOT}}/exam/manage/courses/download_yaml_template/"> Download Template</a> </div>
-        <br/>
-        <h4> Or </h4>
+          </li>
+        </p>
+      </div>
+      <div class="card-body">
         <form action="" method="post"  enctype="multipart/form-data">
-        {% csrf_token %}
-            {{ upload_form.as_p }}
-        <br/>
-        <h4> And </h4>
-        <button class="btn btn-success" type="submit" name="upload" value="upload">
-        Upload File <span class="glyphicon glyphicon-open"/></button>
+          {% csrf_token %}
+            <div class="form-group col-md-6">
+                <a class="btn btn-info" href="{% url 'yaksh:download_yaml_template' %}">
+                  <i class="fa fa-download"></i>&nbsp;Download Template</a>
+                <br><br>
+                <h4> Or </h4>
+                <br>
+                <div class="input-group mb-3">
+                    <div class="custom-file">
+                        {{ upload_form }}
+                        <label class="custom-file-label" for="id_file">
+                            Choose file
+                        </label>
+                    </div>
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-primary" type="submit" name="upload" value="upload"><i class="fa fa-upload"></i>&nbsp;Upload File</button>
+                    </div>
+                </div>
+            </div>
+            <script>
+                $('#id_file').on('change',function(){
+                    //get the file name
+                    var fileName = $(this).val();
+                    //replace the "Choose a file" label
+                    $(this).next('.custom-file-label').html(fileName);
+                })
+            </script>
         </form>
       </div>
-      </div>
-      <!-- End of upload questions -->
+    </div>
+    <!-- End of upload questions -->
 
-      <!-- Show questions -->
-        <div id="show" class="yakshwell tab-pane fade show active" role="tabpanel" aria-labelledby="showbar">
-          <form name=frm action="" method="post">
-          {% csrf_token %}
-          {% if message %}
-            {%if message == "Questions Uploaded Successfully"%}
-              <div class="alert alert-success alert-dismissable">
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                  {{ message }}
-              </div>
-            {%else %}
-              <div class="alert alert-danger alert-dismissable"> 
-                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                {{ message }}
-              </div>
-            {% endif %}
-          {% endif %}
-          {% if msg %}
-            <div class="alert alert-danger alert-dismissable animated flash"> 
-              <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-              {{ msg }}
-            </div>
-          {% endif %}
-          <br><br> 
-          <form name=frm action="" method="post">
-            <div class="card">
-              <div class="card-body">
+    <!-- Show questions -->
+    <div id="show" class="tab-pane fade show active" role="tabpanel" aria-labelledby="showbar">
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-dismissible alert-info">
+            <button type="button" class="close" data-dismiss="alert">
+                <i class="fa fa-close"></i>
+            </button>
+            <strong>{{ message }}</strong>
+        </div>
+        {% endfor %}
+    {% endif %}
+    <form name=frm action="" method="post">
+        <div class="card">
+          <div class="card-body">
             <!-- Filtering Questions  -->
-            <div class="row" id="selectors">
-                <h4 style="padding-left: 20px;">Filters Questions: </h4>
-                <div class="col-md-3">
+            <div id="selectors">
+              <h4>Filters Questions: </h4>
+              <div class="dropdown">
+                    <div class="col-md-4">
                     {{ form.question_type }}
-                </div>
-                <div class="col-md-3">
+                    </div>
+                    <div class="col-md-4">
                     {{ form.language }}
-                </div>
-                <div class="col-md-3">
+                    </div>
+                    <div class="col-md-4">
                     {{ form.marks }}
-                </div>
-                <br><br>
-                
+                    </div>
+              </div>
             </div>
             <hr>
             <h4 >Or Search using Tags: </h4>
             <!-- Searching Tags -->
             {% csrf_token %}
-              <div class="col-md-14">
-                <div class="input-group">
-                  <div class="col-md-6">
-                          <div class="input-group"> 
-                              <div class="input-group-prepend">
-                              <span class="input-group-text" id="basic-addon1">Search Questions</span>
-                              </div>
-                              <input type="text" name="question_tags" id="question_tags" class="form-control" type="search"  placeholder="Search using comma separated Tags">
-                              <span class="input-group-append">
-                                  <button class="btn btn-outline-secondary" type="submit"><i class="fa fa-search yakshred"></i></button>
-                              </span>
-                          </div>                     
+            <div class="col-md-14">
+              <div class="input-group">
+                <div class="col-md-6">
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="basic-addon1">Search Questions</span>
+                    </div>
+                    <input type="text" name="question_tags" id="question_tags" class="form-control" type="search"  placeholder="Search using comma separated Tags">
+                    <span class="input-group-append">
+                      <a class="btn btn-outline-secondary" type="submit"><i class="fa fa-search yakshred"></i></a>
+                    </span>
                   </div>
-
-                  <div class="col-md-6">
-                    <select class="form-control" id="sel1" onchange="append_tag(this);">
+                </div>
+                <div class="col-md-6">
+                  <select class="form-control" id="sel1" onchange="append_tag(this);">
                     {% if all_tags %}
                      <option value="" disabled selected>Available Tags</option>
                     {% for tag in all_tags %}
@@ -134,84 +138,76 @@
                     {% else %}
                      <option value="" disabled selected>No Available Tags</option>
                     {% endif %}
-                    </select>
-                  </div>
+                  </select>
                 </div>
-               </div>
-            <br><br>
-            <button class="btn btn-primary" type="button" onClick='location.replace("{{URL_ROOT}}");'>
-             Clear Filters</button>
-           </div>
-         </div>
-
-          <div id="filtered-questions">
+                <br><br>
+                <div class="col-md-6">
+                  <a class="btn btn-primary" href="{% url 'yaksh:show_questions' %}">
+                    Clear Filters
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="filtered-questions">
+          <br>
+          <a class="btn btn-lg btn-success" href="{% url 'yaksh:add_question' %}">
+            <i class="fa fa-plus-circle"></i>&nbsp;Add Question</a>
           {% if questions %}
-          <div class="yakshwell">
-            <h5><input id="checkall" type="checkbox"> Select All </h5>
-             <div class="table-wrapper-2">
-                <table id="questions-table" class="tablesorter table  table-striped table-responsive-sm">
+            <div>
+              <br>
+              {% include "yaksh/paginator.html" %}
+              <br>
+              <h5><input id="checkall" type="checkbox"> Select All </h5>
+               <div class="table-wrapper-2">
+                  <table id="questions-table" class="tablesorter table  table-striped table-responsive-sm">
                     <thead>
                       <tr class="yakshred">
-                      <th> Select </th>
-                      <th> Summary </th>
-                      <th> Language </th>
-                      <th> Type </th>  
-                      <th> Marks </th>
+                        <th> Select </th>
+                        <th> Summary&nbsp;<i class="fa fa-sort"></i> </th>
+                        <th> Language&nbsp;<i class="fa fa-sort"></i> </th>
+                        <th> Type&nbsp;<i class="fa fa-sort"></i> </th>
+                        <th> Marks&nbsp;<i class="fa fa-sort"></i> </th>
                       </tr>
                     </thead>
-                    <tbody>              
+                    <tbody>
                       {% for question in questions %}
                       <tr>
-                      <td>
-                      <input type="checkbox" name="question" value="{{ question.id }}">
-                      </td>
-                      <td><a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}">{{question.summary|capfirst}}</a></td>
-                      <td>{{question.language|capfirst}}</td>
-                      <td>{{question.type|capfirst}}</td>
-                      <td>{{question.points}}</td>
+                        <td>
+                         <input type="checkbox" name="question" value="{{ question.id }}">
+                        </td>
+                        <td><a href="{% url 'yaksh:add_question' question.id %}">{{question.summary|capfirst}}</a></td>
+                        <td>{{question.language|capfirst}}</td>
+                        <td>{{question.type|capfirst}}</td>
+                        <td>{{question.points}}</td>
                       </tr>
                       {% endfor %}
                     </tbody>
-                </table>
-              </div>
-          </div>
+                  </table>
+                </div>
+            </div>
+          {% include "yaksh/paginator.html" %}
+          {% else %}
+            <br><br>
+            <div class="alert alert-info">
+              <center><h3>No Questions created</h3></center>
+            </div>
           {% endif %}
-          </div>
-          <br>
-          <center>
-            <button class="btn btn-primary" type="button" onclick='location.replace("{{URL_ROOT}}/exam/manage/addquestion/");'>Add Question <span class="glyphicon glyphicon-plus"></span></button>&nbsp;&nbsp;
-            {% if questions %}
-            <button class="btn btn-primary" type="submit" name='download' value='download'>Download Selected <span class="glyphicon glyphicon-save"></span></button>&nbsp;&nbsp;
-            <button class="btn btn-primary" type="submit" name="test" value="test">Test Selected</button>&nbsp;&nbsp;
-            {% endif %}
-            <button class="btn btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>Delete Selected <span class="glyphicon glyphicon-minus"></span></button>
-          </center>
-        </form>
-      </div>
-      <!-- End of Show questions -->
+        </div>
+        <br>
+        <center>
+          {% if questions %}
+            <button class="btn btn-lg btn-primary" type="submit" name='download' value='download'><i class="fa fa-download"></i>&nbsp;Download Selected</button>
+            <button class="btn btn-lg btn-primary" type="submit" name="test" value="test">Test Selected</button>
+            <button class="btn btn-lg btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>
+            <i class="fa fa-trash"></i>&nbsp;Delete Selected</button>
+          {% endif %}
+        </center>
+    </form>
     </div>
-    </main>
+    <!-- End of Show questions -->
+    </div>
 </div>
 {% endblock %}
 
-{% block footer %}
-  <!--footer-->   
-  <footer class="container-fluid yakshsidebarfooter text-center">
-    <div class="row justify-content-center">
-    <div class="col-sm-5 ">
-      {% if user %}
-         {% block info %}
-         <b>{{user.get_full_name|title}}</b> with Roll no. <b>{{user.profile.roll_number}}</b> is logged in as <b>{{user.username}}</b>
-         {% endblock %}
-         {% endif %}
-    </div>
-    <div class="col-sm-2">
-      |
-    </div>
-    <div class="col-sm-4 text-left">
-     <b>Any Queries?</b> Email : info@fossee.in
-    </div>
-  </div>
-  </footer>
-  <!--footer end-->
-{% endblock %}

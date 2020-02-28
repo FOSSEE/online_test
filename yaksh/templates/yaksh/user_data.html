@@ -1,301 +1,354 @@
 {% extends "manage.html" %}
 {% load custom_filters %}
+{% load static %}
+{% block title %} User Data {% endblock %}
 {% block pagetitle %} Data for user {{ data.user.get_full_name.title }} {% endblock pagetitle %}
-{% block content %}
+
 {% block script %}
-<script src= "{{ URL_ROOT }}/static/yaksh/js/edit_question.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/mathjax/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/jquery.tablesorter.min.js' %}">
+</script>
+<script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
 {% endblock %}
-<div class="yakshwell container">
-   <div class="card col-md-4">
-      <p class="card-body">
-         Name: {{ data.user.get_full_name.title }} <br/>
-         Username: {{ data.user.username }} <br/>
-         {% if data.profile %}
-         Roll number: {{ data.profile.roll_number }} <br/>
-         Position: {{ data.profile.position }} <br/>
-         Department: {{ data.profile.department }} <br/>
-         Institute: {{ data.profile.institute }} <br/>
-         {% endif %}
-         Email: {{ data.user.email }} <br/>
-         Date joined: {{ data.user.date_joined }} <br/>
-         Last login: {{ data.user.last_login }}
-      </p>
-   </div>
-   {% if data.papers %}
-   <p class="text-center"><a href="{{URL_ROOT}}/exam/manage/gradeuser/{{data.papers.0.question_paper.quiz.id}}/{{ data.user.id }}/{{course_id}}/"  class="btn btn-info ">
-      Grade/correct paper</a>
-   </p>
-   {% for paper in data.papers %}
-   {% if forloop.counter == 2 and data.questionpaperid %}
-   <hr>
-   <u>
-      <h2> Previous attempts </h2>
-   </u>
-   {% endif %}
-   <h2> Quiz: {{ paper.question_paper.quiz.description }} </h2>
-   <p>
-      Attempt Number: {{ paper.attempt_number }}<br/>
-      Questions correctly answered: {{ paper.get_answered_str }} <br/>
-      Total attempts at questions: {{ paper.answers.count }} <br/>
-      Marks obtained: {{ paper.marks_obtained }} <br/>
-      Start time: {{ paper.start_time }} <br/>
-      User IP address: {{ paper.user_ip }}
-   </p>
-   {% if paper.answers.count %}
-   <div class="table-wrapper-2">
-         <h3> Answers </h3>
-         <br>
-         {% for question, answers in paper.get_question_answers.items %}
-         <div class = "yakshlabel">
-            <div class="card">
-               <div class="card-heading alert-info" id="question_{{question.id}}">
-                  <strong> Details: {{forloop.counter}}. {{ question.summary }}
-                  <a href="" onClick="grade_data('show_question{{question.id}}{{paper.attempt_number}}'); return false;"> Show Question </a>
-                  <span class="marks pull-right"> Mark(s): {{ question.points }} </span>
-                  </strong>
-               </div>
-               <div class="card-body" id="show_question{{question.id}}{{paper.attempt_number}}" style="display: none;">
-                  <h5><u>Question:</u></h5>
-                  <strong>{{ question.description|safe }}</strong>
-                  {% if question.type == "mcq" or question.type == "mcc" %}
-                  <h5> <u>Choices:</u></h5>
-                  {% for testcase in question.get_test_cases %}
-                  {% if testcase.correct %}
-                  <br/>
-                  <strong>{{ forloop.counter }}. {{ testcase.options|safe }}</strong>
-                  <span class="badge badge-success">Correct </span>
-                  {% else %}
-                  <br/><strong>
-                  {{ forloop.counter }}. {{ testcase.options|safe }}</strong>
-                  {% endif %}
-                  {% endfor %}
-                  {% elif question.type == "integer" or question.type == "string" or question.type == "float" %}
-                  <h5> <u>Correct Answer:</u></h5>
-                  {% for testcase in question.get_test_cases %}
-                  <strong>{{ testcase.correct|safe }}</strong>
-                  {% if testcase.error_margin %}
-                  <strong>{{ testcase.error_margin|safe }}</strong>
-                  {% endif %}
-                  {% endfor %}
-                  {% elif question.type == "arrange" %}
-                  <h5> <u>Correct Order:</u></h5>
-                  <div class="list-group" >
-                     {% for testcase in question.get_test_cases %}
-                     <li class="list-group-item"><strong>{{ testcase.options|safe }}</strong></li>
-                     {% endfor %}
-                  </div>
-                  {% else %}
-                  <h5> <u>Test cases: </u></h5>
-                  {% for testcase in question.get_test_cases %}
-                  <br/><strong>{{ forloop.counter }}. {{ testcase }}</strong>
-                  {% endfor %}
-                  {%endif%}
-               </div>
+{% block content %}
+<div class="container">
+  {% if data.papers %}
+    <p class="text-center">
+    {% with data.papers.0 as paper %}
+      <div class="card">
+        <div class="card-header">
+          Course Details
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p><b>Course:</b> {{ paper.course.name }}</p>
+              <p><b>Quiz:</b> {{ paper.question_paper.quiz.description }}</p>
             </div>
-            <h5>Student answer: </h5>
-            {% if question.type == "upload" %}
-            {% if has_user_assignments %}
-            <a href="{{URL_ROOT}}/exam/manage/download/user_assignment/{{question.id}}/{{data.user.id}}/{{paper.question_paper.quiz.id}}/{{course_id}}">
-               <div class="btn btn-outline-info text-center">
-                  Assignment File for {{ data.user.get_full_name.title }}
-               </div>
-            </a>
-            {% with answers|last as answer%}
-            {% if answer.answer.correct %}
-               <div class="card ">
-                  <div class="card-heading alert-success">Correct answer</div>
-               </div>
-               {% else %}
-               <div class="card ">
-                  <div class="card-heading alert-danger">Incorrect Answer</div>
-               </div>
-            {% endif %}
-            {% endwith %}
-            {% else %}
-            <center>
-               <div class="alert alert-warning  animated flash">
-                  <h5>No Assignment submitted by {{ data.user.get_full_name.title }}</h5>
-               </div>
-            </center>
-            {% endif %}
-            {% else %}
-            {% for ans in answers %}
-            {% if ans.answer.correct %}
-            <div class="card ">
-               <div class="card-heading alert-success">
-                  Correct answer:
+            <div class="col-md-6">
+              <p><b>Start time:</b> {{ paper.start_time }}</p>
+              <p><b>End time:</b> {{ paper.end_time }}</p>
+              <p><b>User IP:</b> {{paper.user_ip}} </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endwith %}
+    <br>
+      <a href="{% url 'yaksh:grade_user' data.papers.0.question_paper.quiz.id data.user.id course_id %}" class="btn btn-info">
+        Grade User
+      </a>
+    <br>
+    {% for paper in data.papers %}
+      <br>
+      <h3><b><u>Attempt Number:</u></b>&nbsp;<span class="badge badge-pill badge-info">
+        {{paper.attempt_number}}
+      </span></h3>
+      <div class="card">
+        <div class="card-header">
+          Scorecard
+        </div>
+        <div class="card-body">
+          <p><b>Status:</b>
+          {% if paper.passed %}
+            <span class="badge badge-pill badge-success"> Passed </span>
+          {% else %}
+            <span class="badge badge-pill badge-danger"> Failed </span>
+          {% endif %}
+          </p>
+          <p><b>Total Marks:</b> {{ paper.question_paper.total_marks }}</p>
+          <p><b>Marks obtained:</b> {{ paper.marks_obtained }}</p>
+          {% if paper.percent %}
+            <p><b>Percentage obtained:</b> {{paper.percent}}%</p>
+          {% endif %}
+          <p><b>Total attempts at questions:</b> {{ paper.answers.count }}</p>
+        </div>
+      </div>
+      <br>
+      {% if paper.answers.count %}
+        <div class="card">
+          <div class="card-header">
+            Submission Details
+          </div>
+          <div class="card-body">
+            <table class="tablesorter table table-striped table-bordered table-responsive-sm" id='marks_table'>
+              <thead>
+                <tr>
+                <th>Questions</th>
+                <th>Type</th>
+                <th>Marks Obtained</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for question, answers in paper.get_question_answers.items %}
+                  {% with answers|last as answer %}
+                      <tr>
+                      <td>
+                        <a href="#question_{{question.id}}">
+                          {{ question.summary }}
+                        </a>
+                      </td>
+                      <td>{{ question.type }}</td>
+                      <td>{{ answer.answer.marks }}</td>
+                      </tr>
+                  {% endwith %}
+                {% endfor %}
+                </tbody>
+            </table>
+            {% for question, answers in paper.get_question_answers.items %}
+              <div class="card" id="question_{{question.id}}">
+                <div class="card-header text-white bg-info">
+                  <strong>
+                    Details: {{forloop.counter}}. {{ question.summary }}
+                    <span class="marks pull-right"> Mark(s): {{ question.points }} </span>
+                  </strong>
+                </div>
+                <div class="card-body">
+                  <h5>
+                    <span class="badge badge-pill badge-primary">Question:</span>
+                  </h5>
+                  <strong>{{ question.description|safe }}</strong>
+                  <br><br>
+                  {% if question.type == "mcq" or question.type == "mcc" %}
+                    <h5>
+                      <span class="badge badge-pill badge-primary">Choices:</span>
+                    </h5>
+                    {% for testcase in question.get_test_cases %}
+                      {% if testcase.correct %}
+                        <strong>
+                          <span class="badge badge-pill badge-success">
+                            {{ forloop.counter }}.
+                          </span>
+                          {{ testcase.options|safe }}
+                        </strong>
+                        {% else %}
+                        <strong>
+                          <span class="badge badge-pill badge-secondary">
+                            {{ forloop.counter }}.
+                          </span>
+                          {{ testcase.options|safe }}
+                        </strong>
+                      {% endif %}
+                      <br>
+                    {% endfor %}
+                  {% elif question.type == "integer" or question.type == "string" or question.type == "float" %}
+                    <h5>
+                      <span class="badge badge-pill badge-primary">
+                        Correct Answer:
+                      </span>
+                    </h5>
+                    {% for testcase in question.get_test_cases %}
+                      <strong>{{ testcase.correct }}</strong>
+                      {% if testcase.error_margin %}
+                      <strong>{{ testcase.error_margin }}</strong>
+                      {% endif %}
+                    {% endfor %}
+                  {% elif question.type == "arrange" %}
+                    <h5>
+                      <span class="badge badge-pill badge-primary">
+                      Correct Order:</span>
+                    </h5>
+                    <div class="list-group" >
+                    {% for testcase in question.get_test_cases %}
+                        <li class="list-group-item">
+                          <strong>{{ testcase.options }}</strong>
+                        </li>
+                    {% endfor %}
+                    </div>
                   {% else %}
-                  <div class="card ">
-                     <div class="card-heading-heading alert-danger">
-                        Error:
+                    <h5>
+                      <span class="badge badge-pill badge-primary">Test cases:
+                      </span>
+                    </h5>
+                    {% for testcase in question.get_test_cases %}
+                        <strong>
+                          {{ forloop.counter }}. {{ testcase }}
+                        </strong>
+                        <br>
+                    {% endfor %}
+                  {% endif %}
+                  <br>
+                  <h5>
+                    <span class="badge badge-pill badge-primary">Student answer(s):
+                    </span>
+                  </h5>
+                  {% if question.type == "upload" %}
+                    {% if has_user_assignments %}
+                      <a href="{% url 'yaksh:download_user_assignment' question.id data.user.id paper.question_paper.quiz.id course_id %}">
+                      <div class="btn btn-outline-info text-center">
+                      Assignment File for {{ data.user.get_full_name.title }}
+                      </div>
+                      </a>
+                    {% else %}
+                      <center>
+                        <div class="alert alert-warning">
+                          <h5>
+                            Assignment not submitted by {{ data.user.get_full_name.title }}
+                          </h5>
+                        </div>
+                      </center>
+                    {% endif %} <!-- End has_user_assignments -->
+                  {% else %}
+                  {% for ans in answers %}
+                    <strong>
+                      Attempt Number: {{forloop.counter}}
+                    </strong>
+                    <div id="accordian">
+                      <div class="card">
+                        {% if ans.answer.correct %}
+                          <div class="card-header">
+                            <span class="badge badge-success">
+                              Correct answer:
+                            </span>
+                            <a class="card-link" data-toggle="collapse" href="#submitted_{{ans.answer.id}}">
+                              <span class="pull-right">
+                                Details&nbsp;<i class="fa fa-toggle-down"></i>
+                              </span>
+                            </a>
+                          </div>
+                        {% else %}
+                          <div class="card-header">
+                            <span class="badge badge-danger">
+                              Error:
+                            </span>
+                            <a class="card-link" data-toggle="collapse" href="#submitted_{{ans.answer.id}}">
+                              <span class="pull-right">
+                                Details&nbsp;<i class="fa fa-toggle-down"></i>
+                              </span>
+                            </a>
+                          </div>
                         {% endif %}
-                        {% with ans.error_list as err %}
-                        {% for error in err %}
-                        {% if error.type == 'stdio' %}
-                        <div class = "card">
-                           <div class="card-body">
-                              {% if error.given_input %}
-                              <table class="table table-bordered table-responsive-sm">
-                                 <col width="30%">
-                                 <tr class = "table-active">
-                                    <td> For given Input value(s):</td>
-                                    <td>{{error.given_input}}</td>
-                                 </tr>
-                              </table>
-                              {% endif %}
-                              <table class="table table-bordered table-responsive-sm" width="100%" id="output" style="table-layout: fixed">
-                                 <col width="10%">
-                                 <col width="40%">
-                                 <col width="40%">
-                                 <col width="10%">
-                                 <tr>
-                                    <th>
-                                       <center>Line No.</center>
-                                    </th>
-                                    <th>
-                                       <center>Expected Output</center>
-                                    </th>
-                                    <th>
-                                       <center>User output</center>
-                                    </th>
-                                    <th>
-                                       <center>Status</center>
-                                    </th>
-                                 </tr>
-                                 {% for expected,user in error.expected_output|zip:error.user_output %}
-                                 <tr>
+                        <div class="collapse hide" id="submitted_{{ans.answer.id}}" data-parent="#accordion">
+                          <div class="card-body">
+                            {% with ans.error_list as err %}
+                              {% for error in err %}
+                                {% if error.type == 'stdio' %}
+                                  {% if error.given_input %}
+                                    <table class="table table-bordered table-responsive-sm">
+                                      <tr class="table-active">
+                                      <td> For given Input value(s):</td>
+                                      <td>{{error.given_input}}</td>
+                                      </tr>
+                                    </table>
+                                  {% endif %}
+                                  <table id="course-detail" class="table table-bordered table-responsive-sm" width="100%" id="output">
+                                    <tr>
+                                    <th><center>Line No.</center></th>
+                                    <th><center>Expected Output</center></th>
+                                    <th><center>User output</center></th>
+                                    <th><center>Status</center></th>
+                                    </tr>
+                                    {% for expected,user in error.expected_output|zip:error.user_output %}
                                     <td> {{forloop.counter}} </td>
                                     <td>{{expected|default:""}} </td>
                                     <td>{{user|default:""}}</td>
                                     {% if forloop.counter0 in error.error_line_numbers or not expected or not user %}
-                                    <td><span class ="fa fa-times text-warning"></span></td>
+                                    <td><span class ="fa fa-times text-warning"/></td>
                                     {% else %}
-                                    <td><span class ="fa fa-check text-success"></span></td>
+                                    <td><span class ="fa fa-check text-success"/></td>
                                     {% endif %}
-                                 </tr>
-                                 {% endfor %}
-                              </table>
-                              <table width="100%" class="table table-bordered table-responsive-sm">
-                                 <col width="10">
-                                 <tr>
-                                    <td><b>Error:</b></td>
-                                    <td>{{error.error_msg}}</td>
-                                 </tr>
-                              </table>
-                           </div>
-                        </div>
-                        {% elif error.type == 'assertion' %}
-                        {% if error.test_case %}
-                        <strong> We tried you code with the following test case:</strong><br/></br>
-                        <pre><code><strong style="color:#d9534f">{{error.test_case}}</strong></code></pre>
-                        {% endif %}
-                        <p> <b>The following error took place: </b></p>
-                        <div class="card">
-                           <div class="card-body">
-                              <table class="table table-bordered table-responsive-sm" width="100%"  style="table-layout: fixed">
-                                 <col width="30%">
-                                 <tr class = "active">
-                                    <td><b>Exception Name: </b></td>
-                                    <td><span style="color: #d9534f">{{error.exception}}</span></td>
-                                 </tr>
-                                 <tr>
-                                    <td><b>Exception Message: </b></td>
-                                    <td>{{error.message}}</td>
-                                 </tr>
-                                 <tr>
-                                    {% if error.traceback %}
-                                    <td><b>Full Traceback: </b></td>
-                                    <td>
-                                       <pre>{{error.traceback}}</pre>
-                                    </td>
-                                    {% endif %}
-                                 </tr>
-                              </table>
-                           </div>
-                        </div>
-                        <!-- Closes card -->
-                        {% else %}
-                        <pre><code> {{error|safe}} </code></pre>
-                        {% endif %}
-                        {% endfor %}
-                        {% endwith %}
-                     </div>
-                     <div class="card-body">
-                        {% if question.type == "code" %}
-                          {% pygmentise_user_answer question.language answer.answer.answer.strip as user_answer %}
-                          <style type="text/css">{{user_answer.1}}</style>
-                          <pre><code>{{user_answer.0|safe}}</code></pre>
-                        {% elif question.type == "mcc"%}
-                        <div class="card">
-                           <div class="card-body">
-                              {% for testcases in question.get_test_cases %}
-                              {%if testcases.id|stringformat:"i" in ans.answer.answer.strip|safe %}
-                              <li>{{ testcases.options.strip|safe }}</li>
-                              {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                    </table>
+                                    <table width="100%" class="table table-bordered table-responsive-sm">
+                                      <col width="10">
+                                      <tr>
+                                        <td>Error:</td>
+                                        <td>{{error.error_msg}}</td>
+                                      </tr>
+                                  </table>
+                                {% elif error.type == 'assertion' %}
+                                  {% if error.test_case %}
+                                    <strong>
+                                      We tried you code with the following test case:
+                                    </strong><br><br>
+                                    <pre><code>
+                                      <strong>{{error.test_case}}</strong>
+                                    </code></pre>
+                                  {% endif %}
+                                  <p><b>The following error took place: </b></p>
+                                  <table id="course-detail" class="table table-bordered table-responsive-sm" width="100%">
+                                      <tr class = "active">
+                                      <td><b>Exception Name: </b></td>
+                                      <td><span>{{error.exception}}</span></td>
+                                    </tr>
+                                    <tr>
+                                      <td><b>Exception Message: </b></td><td>{{error.message}}</td>
+                                    </tr>
+                                    <tr>
+                                      {% if error.traceback %}
+                                      <td><b>Full Traceback: </b></td>
+                                      <td><pre>{{error.traceback}}</pre></td>
+                                      {% endif %}
+                                    </tr>
+                                  </table>
+                                {% else %}
+                                  <pre><code> {{error}} </code></pre>
+                                {% endif %}
                               {% endfor %}
-                           </div>
-                        </div>
-                        {% elif question.type == "mcq"%}
-                        <div class="card">
-                           <div class="card-body">
+                            {% endwith %}
+                            {% if question.type == "code" %}
+                            {% pygmentise_user_answer question.language ans.answer.answer.strip as user_answer %}
+                              <style type="text/css">{{user_answer.1}}</style>
+                              <pre><code>{{user_answer.0|safe}}</code></pre>
+                            {% elif question.type == "mcc" or question.type == "mcq" %}
                               {% for testcases in question.get_test_cases %}
-                              {%if testcases.id|stringformat:"i" == ans.answer.answer.strip|safe %}
-                              <li>{{ testcases.options.strip|safe }}</li>
-                              {% endif %}
+                                {% if testcases.id|stringformat:"i" in ans.answer.answer.strip %}
+                                 <li>{{ testcases.options.strip|safe }}</li>
+                                {% endif %}
                               {% endfor %}
-                           </div>
-                        </div>
-                        {% elif question.type == "arrange"%}
-                        <div class="card">
-                           <div class="card-body">
+                            {% elif question.type == "arrange"%}
                               {% get_answer_for_arrange_options ans.answer.answer question as tc_list %}
                               {% for testcases in tc_list %}
-                              <li>{{ testcases.options.strip|safe }}</li>
+                               <li>{{ testcases.options.strip }}</li>
                               {% endfor %}
-                           </div>
+                            {% else %}
+                              {{ ans.answer.answer.strip }}
+                            {% endif %}
+                          </div>
                         </div>
-                        {% else %}
-                        <div class="card">
-                           <div class="card-body">
-                              {{ ans.answer.answer.strip|safe }}
-                           </div>
-                        </div>
-                        {% endif %}
-                     </div>
-                  </div>
-                  {% endfor %}
-                  {% endif %}
+                      </div>
+                    </div>
+                    <br>
+                  {% endfor %} <!-- End for ans in answers -->
+                </div>
+              </div>
+              {% endif %}
+              <br>
+              <div class="form-group">
+                <div class="col-md-2">
+                  <label class="col-form-label" for="q{{ question.id }}">Marks:</label>
                   {% with answers|last as answer %}
-                  Marks: <input id="q{{ question.id }}" type="text" 
-                     name="q{{ question.id }}_marks" size="4"
-                     value="{{ answer.answer.marks }}"><br><br>
+                  <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answer.answer.marks }}" readonly=""><br><br>
                   {% endwith %}
-                  <hr/>
-         </div>
-
-               {% endfor %} {# for question, answers ... #}
-   </div>
-
-
-<h3>Teacher comments: </h3>
-{{ paper.comments|default:"None" }}
-{% endif %} {# if paper.answers.count #}
-{% endfor %} {# for paper in data.papers #}
-{% endif %} {# if data.papers #}
+                </div>
+              </div>
+              <hr/>
+              {% endfor %} {# for question, answers ... #}
+              <div class="form-group">
+                <h3>Teacher comments: </h3>
+                <textarea id="comments_{{paper.question_paper.id}}" class="form-control"
+                  name="comments_{{ paper.question_paper.id }}" readonly="">{{ paper.comments }}</textarea>
+              </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="alert alert-warning">
+          No submissions found
+        </div>
+      {% endif %} {# if paper.answers.count #}
+      <hr>
+    {% endfor %} {# for paper in data.papers #}
+  {% else %}
+    <br>
+    <center>
+      <div class="alert alert-warning">
+      {% if quiz.is_exercise %}
+        You have not attempted the Exercise {{ quiz.description }}
+      {% else %}
+        You have not attempted the quiz {{ quiz.description }}
+      {% endif %}
+      </div>
+    </center>
+  {% endif %} {# if data.papers #}
 </div>
-
-<br />
-<hr />
-{% with data.papers.0 as paper %}
-<a href="{{URL_ROOT}}/exam/manage/gradeuser/{{paper.question_paper.quiz.id}}/{{ data.user.id }}/{{course_id}}/">Grade/correct paper</a>
-{% endwith %}
-<br />
-{% if data.papers.count > 1 %}
-<a href="{{URL_ROOT}}/exam/manage/monitor/">Monitor quiz</a>
-{% else %}
-{% with data.papers.0 as paper %}
-<a href="{{URL_ROOT}}/exam/manage/monitor/{{paper.question_paper.id}}/">Monitor quiz</a>
-{% endwith %}
-{% endif %}
 {% endblock %}

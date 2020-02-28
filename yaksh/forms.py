@@ -1,7 +1,7 @@
 from django import forms
 from yaksh.models import (
     get_model_class, Profile, Quiz, Question, Course, QuestionPaper, Lesson,
-    LearningModule
+    LearningModule, TestCase
 )
 from grades.models import GradingSystem
 from django.contrib.auth import authenticate
@@ -56,6 +56,9 @@ attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
 days_between_attempts = ((j, j) for j in range(401))
 
+# Add bootstrap class separated by space
+form_input_class = "form-control"
+
 
 def get_object_form(model, exclude_fields=None):
     model_class = get_model_class(model)
@@ -72,26 +75,54 @@ class UserRegisterForm(forms.Form):
     It has the various fields and functions required to register
     a new user to the system"""
 
-    username = forms.CharField(max_length=30, help_text='Letters, digits,\
-                period and underscores only.')
-    email = forms.EmailField()
-    password = forms.CharField(max_length=30, widget=forms.PasswordInput())
+    username = forms.CharField(
+        max_length=30, help_text='Letters, digits,\
+                period and underscores only.',
+        widget=forms.TextInput(
+            {'class': form_input_class, 'placeholder': "Username"})
+        )
+    email = forms.EmailField(widget=forms.TextInput(
+        {'class': form_input_class, 'placeholder': "Email"}
+        ))
+    password = forms.CharField(
+        max_length=30,
+        widget=forms.PasswordInput(
+            {'class': form_input_class, 'placeholder': "Password"}))
     confirm_password = forms.CharField(
-        max_length=30, widget=forms.PasswordInput())
-    first_name = forms.CharField(max_length=30)
-    last_name = forms.CharField(max_length=30)
+        max_length=30, widget=forms.PasswordInput(
+            {'class': form_input_class, 'placeholder': "Confirm Password"}
+            ))
+    first_name = forms.CharField(max_length=30, widget=forms.TextInput(
+        {'class': form_input_class, 'placeholder': "First Name"}
+        ))
+    last_name = forms.CharField(max_length=30, widget=forms.TextInput(
+        {'class': form_input_class, 'placeholder': "Last Name"}
+        ))
     roll_number = forms.CharField(
-        max_length=30, help_text="Use a dummy if you don't have one.")
+        max_length=30, help_text="Use a dummy if you don't have one.",
+        widget=forms.TextInput(
+            {'class': form_input_class, 'placeholder': "Roll Number"}
+        ))
     institute = forms.CharField(
-        max_length=128, help_text='Institute/Organization')
+        max_length=128, help_text='Institute/Organization',
+        widget=forms.TextInput(
+            {'class': form_input_class, 'placeholder': "Institute"}
+        ))
     department = forms.CharField(
-        max_length=64, help_text='Department you work/study at')
+        max_length=64, help_text='Department you work/study at',
+        widget=forms.TextInput(
+            {'class': form_input_class, 'placeholder': "Department"}
+        ))
     position = forms.CharField(
         max_length=64,
-        help_text='Student/Faculty/Researcher/Industry/Fellowship/etc.')
+        help_text='Student/Faculty/Researcher/Industry/Fellowship/etc.',
+        widget=forms.TextInput(
+            {'class': form_input_class, 'placeholder': "Position"}
+        ))
     timezone = forms.ChoiceField(
         choices=[(tz, tz) for tz in pytz.common_timezones],
-        help_text='Course timings are shown based on the selected timezone',
+        help_text='All timings are shown based on the selected timezone',
+        widget=forms.Select({'class': 'custom-select'}),
         initial=pytz.country_timezones['IN'][0])
 
     def clean_username(self):
@@ -159,8 +190,18 @@ class UserRegisterForm(forms.Form):
 class UserLoginForm(forms.Form):
     """Creates a form which will allow the user to log into the system."""
 
-    username = forms.CharField(max_length=30)
-    password = forms.CharField(max_length=30, widget=forms.PasswordInput())
+    username = forms.CharField(
+        max_length=30,
+        widget=forms.TextInput(
+            attrs={'class': form_input_class, 'placeholder': 'Username'}
+        )
+    )
+    password = forms.CharField(
+        max_length=30,
+        widget=forms.PasswordInput(
+            attrs={'class': form_input_class, 'placeholder': 'Password'}
+        )
+    )
 
     def clean(self):
         super(UserLoginForm, self).clean()
@@ -178,6 +219,13 @@ class UserLoginForm(forms.Form):
 
 
 class ExerciseForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(ExerciseForm, self).__init__(*args, **kwargs)
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': "Exercise Description"}
+        )
+
     class Meta:
         model = Quiz
         fields = ['description', 'view_answerpaper', 'active']
@@ -189,6 +237,34 @@ class QuizForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(QuizForm, self).__init__(*args, **kwargs)
+
+        self.fields['start_date_time'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['end_date_time'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['duration'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['attempts_allowed'].widget.attrs.update(
+            {'class': 'custom-select'}
+        )
+        self.fields['time_between_attempts'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['instructions'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['weightage'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['pass_criteria'].widget.attrs.update(
+            {'class': form_input_class}
+        )
 
         self.fields["instructions"].initial = dedent("""\
             <p>
@@ -226,6 +302,33 @@ class QuestionForm(forms.ModelForm):
     """Creates a form to add or edit a Question.
     It has the related fields and functions required."""
 
+    def __init__(self, *args, **kwargs):
+        super(QuestionForm, self).__init__(*args, **kwargs)
+        self.fields['summary'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Summary'}
+        )
+        self.fields['language'].widget.attrs.update(
+            {'class': 'custom-select'}
+        )
+        self.fields['type'].widget.attrs.update(
+            {'class': 'custom-select'}
+        )
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Description'}
+        )
+        self.fields['tags'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Tags'}
+        )
+        self.fields['solution'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Solution'}
+        )
+        self.fields['snippet'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Snippet'}
+        )
+        self.fields['min_time'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+
     class Meta:
         model = Question
         exclude = ['user', 'active']
@@ -233,7 +336,11 @@ class QuestionForm(forms.ModelForm):
 
 class FileForm(forms.Form):
     file_field = forms.FileField(widget=forms.ClearableFileInput(
-                                attrs={'multiple': True}),
+                                attrs={
+                                    'multiple': True,
+                                    'class': 'custom-file-input'
+                                    }
+                                ),
                                 required=False)
 
 
@@ -257,13 +364,16 @@ class QuestionFilterForm(forms.Form):
         points_options = [(None, 'Select Marks')]
         points_options.extend([(point, point) for point in points_list])
         self.fields['marks'] = forms.FloatField(
-            widget=forms.Select(choices=points_options)
+            widget=forms.Select(choices=points_options,
+                                attrs={'class': 'custom-select'})
         )
         self.fields['marks'].required = False
     language = forms.CharField(
-        max_length=8, widget=forms.Select(choices=languages))
+        max_length=8, widget=forms.Select(choices=languages,
+                                          attrs={'class': 'custom-select'}))
     question_type = forms.CharField(
-        max_length=8, widget=forms.Select(choices=question_types)
+        max_length=8, widget=forms.Select(choices=question_types,
+                                          attrs={'class': 'custom-select'})
     )
 
 
@@ -290,13 +400,35 @@ class CourseForm(forms.ModelForm):
 
     def __init__(self, user, *args, **kwargs):
         super(CourseForm, self).__init__(*args, **kwargs)
-        if self.instance.id and self.instance.teachers.filter(id=user.id).exists():
+        self.fields['name'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Course Name'}
+        )
+        self.fields['enrollment'].widget.attrs.update(
+            {'class': 'custom-select'}
+        )
+        self.fields['code'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Course Code'}
+        )
+        self.fields['instructions'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Course instructions'}
+        )
+        self.fields['start_enroll_time'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Course Start DateTime'}
+        )
+        self.fields['end_enroll_time'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Course End DateTime'}
+        )
+        self.fields['grading_system'].widget.attrs.update(
+            {'class': 'custom-select'}
+        )
+        if (self.instance.id and
+                self.instance.teachers.filter(id=user.id).exists()):
             self.fields['grading_system'].widget.attrs['disabled'] = True
         else:
             grading_choices = GradingSystem.objects.filter(
                 creator=user
             )
-            self.fields['grading_system'].queryset = grading_choices 
+            self.fields['grading_system'].queryset = grading_choices
 
 
 class ProfileForm(forms.ModelForm):
@@ -307,19 +439,46 @@ class ProfileForm(forms.ModelForm):
         fields = ['first_name', 'last_name', 'institute',
                   'department', 'roll_number', 'position', 'timezone']
 
-    first_name = forms.CharField(max_length=30)
-    last_name = forms.CharField(max_length=30)
+    first_name = forms.CharField(max_length=30, widget=forms.TextInput(
+                    {'class': form_input_class, 'placeholder': "First Name"}))
+    last_name = forms.CharField(max_length=30, widget=forms.TextInput(
+                    {'class': form_input_class, 'placeholder': "Last Name"}))
 
     def __init__(self, *args, **kwargs):
         if 'user' in kwargs:
             user = kwargs.pop('user')
         super(ProfileForm, self).__init__(*args, **kwargs)
         self.fields['first_name'].initial = user.first_name
+        self.fields['first_name'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'First Name'}
+        )
         self.fields['last_name'].initial = user.last_name
+        self.fields['last_name'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Last Name'}
+        )
+        self.fields['institute'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Institute'}
+        )
+        self.fields['department'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Department'}
+        )
+        self.fields['roll_number'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Roll Number'}
+        )
+        self.fields['position'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Position'}
+        )
+        self.fields['timezone'] = forms.ChoiceField(
+            choices=[(tz, tz) for tz in pytz.common_timezones],
+            help_text='All timings are shown based on the selected timezone',
+            widget=forms.Select({'class': 'custom-select'})
+            )
 
 
 class UploadFileForm(forms.Form):
-    file = forms.FileField()
+    file = forms.FileField(
+        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+    )
 
 
 class QuestionPaperForm(forms.ModelForm):
@@ -332,9 +491,15 @@ class LessonForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(LessonForm, self).__init__(*args, **kwargs)
         des_msg = "Enter Lesson Description as Markdown text"
-        name_msg = "Enter Lesson Name"
-        self.fields['description'].widget.attrs['placeholder'] = des_msg
-        self.fields['name'].widget.attrs['placeholder'] = name_msg
+        self.fields['name'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Lesson Name'}
+        )
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': des_msg}
+        )
+        self.fields['video_file'].widget.attrs.update(
+            {'class': "custom-file-input"}
+        )
 
     class Meta:
         model = Lesson
@@ -354,18 +519,35 @@ class LessonForm(forms.ModelForm):
 
 
 class LessonFileForm(forms.Form):
-    Lesson_files = forms.FileField(widget=forms.ClearableFileInput(
-                                attrs={'multiple': True}),
-                                required=False)
+    Lesson_files = forms.FileField(
+        widget=forms.ClearableFileInput(
+            attrs={'multiple': True, 'class': "custom-file-input"}),
+        required=False)
 
 
 class LearningModuleForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(LearningModuleForm, self).__init__(*args, **kwargs)
-        name_msg = "Enter Learning Module Name"
-        self.fields['name'].widget.attrs['placeholder'] = name_msg
         self.fields['name'].widget.attrs['size'] = 30
+        self.fields['name'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Module Name'}
+        )
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Module Description'}
+        )
 
     class Meta:
         model = LearningModule
         fields = ['name', 'description', 'active']
+
+
+class TestcaseForm(forms.ModelForm):
+
+    type = forms.CharField(
+        widget=forms.TextInput(
+            attrs={'readonly': 'readonly', 'class': form_input_class})
+    )
+
+    class Meta:
+        model = TestCase
+        fields = ["type"]

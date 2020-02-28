@@ -1,32 +1,74 @@
 {% extends "manage.html" %}
-
-{% block subtitle %}Add Course{% endblock %}
+{% load static %}
 
 {% block css %}
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/jquery.datetimepicker.css" type="text/css" /> 
+<link rel="stylesheet" href="{% static 'yaksh/css/jquery.datetimepicker.css' %}">
 {% endblock %}
 
 {% block script %}
-<script src="{{ URL_ROOT }}/static/yaksh/js/jquery.datetimepicker.full.min.js"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/jquery.datetimepicker.full.min.js' %}">
+</script>
 {% endblock %}
-
+{% block title %} Add Course {% endblock %}
+{% block pagetitle %} Add Course {% endblock %}
 {% block content %}
-<div class="yakshwell container">
-<form name=frm id=frm action="" method="post" >
-  {% csrf_token %}
-  <center>
-  <table class="table table-bordered table-responsive-sm">
-  {{ form.as_table }}
-  </table>
-  <br/>
-  <script type="text/javascript">
-    $("#id_start_enroll_time").datetimepicker({format: 'Y-m-d H:i:s'});
-    $("#id_end_enroll_time").datetimepicker({format: 'Y-m-d H:i:s'});
-  </script>
-  </center>
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <ul class="nav nav-pills" id="course_tabs">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'yaksh:courses' %}">
+                        My Courses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'yaksh:add_course' %}">
+                        Add New Course
+                    </a>
+                </li>
+                <li class="nav-item dropdown hide">
+                    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="true">More</a>
+                    <div class="dropdown-menu hide" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 37px, 0px); top: 0px; left: 0px; will-change: transform;">
+                    <a class="dropdown-item" href="{% url 'yaksh:show_all_quizzes' %}">
+                        View Quizzes
+                    </a>
+                    <a class="dropdown-item" href="{% url 'yaksh:show_all_lessons' %}">
+                        View Lessons
+                    </a>
+                    <a class="dropdown-item" href="{% url 'yaksh:show_all_modules' %}">
+                        View Modules
+                    </a>
+                    <a href="{% url 'grades:grading_systems'%}" class="dropdown-item" >
+                        View Grading Systems
+                    </a>
+                </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <hr>
+    <form name=frm id=frm action="" method="post" >
+        {% csrf_token %}
+        <center>
+        <table class="table table-bordered table-responsive-sm">
+        {{ form.as_table }}
+        </table>
+        <br/>
+        <script type="text/javascript">
+            $("#id_start_enroll_time").datetimepicker({format: 'Y-m-d H:i:s'});
+            $("#id_end_enroll_time").datetimepicker({format: 'Y-m-d H:i:s'});
+        </script>
+        </center>
 
-  <center><button class="btn btn-success" type="submit" id="submit" name="questionpaper">Save</button>
-  <button class="btn btn-danger" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses");'>Cancel</button> </center>
-</form>
+        <center>
+            <button class="btn btn-success btn-lg" type="submit" id="submit" name="course">
+                <i class="fa fa-save"></i>&nbsp;Save
+            </button>
+            <a class="btn btn-danger btn-lg" name="button" href="{% url 'yaksh:courses' %}">
+                Cancel
+            </a>
+        </center>
+        <br>
+    </form>
 </div>
 {% endblock %}

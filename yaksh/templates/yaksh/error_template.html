@@ -1,19 +1,17 @@
-
+{% load static %}
 {% block css%}
-    <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
+  <link rel="stylesheet" href="{% static 'yaksh/css/dashboard.css' %}" type="text/css" />
 {% endblock %}
 {% block script %}
-  <script src="{{ URL_ROOT }}/static/yaksh/js/jquery-ui.js"></script>
+  <script src="{% static 'yaksh/js/jquery-ui.js' %}"></script>
 {% endblock %}
 
 {% load custom_filters %}
 {% if error_message %}
-<div class="container-fluid row justify-content-center">
     {% for error in error_message %}
-<div class="col-md-10 yakshwell">
       <div class="card ">
       <div class="card-header alert-danger">Error No. {{ forloop.counter }}</div>
-       <div class="card-body ">
+      <div class="card-body ">
       <div class="">
       {% if not error.type %}
         <pre><code> {{error|safe}} </code></pre>
@@ -92,7 +90,7 @@
         </div>
       </div>
       </div>
+      <br>
     </div>
-      {% endfor %}
-</div>
+    {% endfor %}
 {% endif %}

@@ -1,5 +1,6 @@
 from django import template
 from django.template.defaultfilters import stringfilter
+from django.forms.fields import CheckboxInput
 from ast import literal_eval
 import os
 try:
@@ -90,6 +91,11 @@ def replace_spaces(name):
 @register.simple_tag
 def course_grade(course, user):
     return course.get_grade(user)
+
+
+@register.filter(name='is_checkbox')
+def is_checkbox(value):
+    return isinstance(value, CheckboxInput)
 
 
 @register.simple_tag

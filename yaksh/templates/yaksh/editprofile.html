@@ -1,13 +1,52 @@
 {% extends template  %}
-{% block pagetitle %} Please fill in the following details {% endblock %}
+{% block title %} Edit Profile {% endblock %}
+{% block pagetitle %} My Profile {% endblock %}
 {% block main %}
-<form action="{{URL_ROOT}}/exam/editprofile/" method="post" >
-  {% csrf_token %}
-  <center>
-  <table class="table table-bordered table-responsive-sm">
-  {{ form.as_table }}
-  </table>
-  </center>
-  <button class="btn btn-primary pull-right" type="submit">Save Profile</button>
-</form>
+<div class="container">
+    <br>
+    <form action="{% url 'yaksh:edit_profile'%}" method="post" >
+      {% csrf_token %}
+      <center>
+        <div class="row justify-content-center form-group">
+        <div class="col-md-4 col-md-offset-4">
+            <form action="" method="post">
+                <fieldset>
+                    {% csrf_token %}
+                    <center>
+                        {% if form.errors %}
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <div class="alert alert-dismissible alert-danger">
+                                        <button type="button" class="close" data-dismiss="alert">
+                                            <i class="fa fa-close"></i>
+                                        </button>
+                                        <strong>{{ error|escape }}</strong>
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <div class="alert alert-dismissible alert-danger">
+                                    <button type="button" class="close" data-dismiss="alert">
+                                        <i class="fa fa-close"></i>
+                                    </button>
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        {% for field in form %}
+                            <td>{{ field }} <small>{{ field.help_text }}</small></td>
+                            <br>
+                        {% endfor %}
+                        <br>
+                        <br>
+                    </center>
+                    <button class="btn btn-success btn-lg" type="submit">Update</button>&nbsp;&nbsp;
+                    <a href="{% url 'yaksh:index' %}" class="btn btn-primary btn-lg">Cancel</a></center>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+    </center>
+    </form>
+</div>
 {% endblock main %}

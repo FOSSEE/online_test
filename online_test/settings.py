@@ -163,8 +163,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'social_django.context_processors.backends',
                 'social_django.context_processors.login_redirect',
+                'django.contrib.messages.context_processors.messages',
             ],
-            'debug': False,
+            'debug': True,  # make this False in production
         }
     },
 ]

@@ -1,383 +1,94 @@
 {% extends "manage.html" %}
+{% load static %}
 {% load custom_filters %}
 {% block title %} Course Details {% endblock title %}
 
-<div class="text-center col-md-offset-2">
-{% block pagetitle %} Course Details for {{ course.name|title }} {% endblock %}
-</div>
-
 {% block script %}
-<script language="JavaScript" type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/course.js"></script>
-<script type="text/javascript" src="{{ URL_ROOT }}/static/yaksh/js/tinymce/js/tinymce/tinymce.min.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-ui.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/course.js' %}"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/jquery-ui.js' %}"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/jquery.tablesorter.min.js' %}">
+</script>
 {% endblock %}
 {% block css %}
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/jquery-ui/jquery-ui.css">
-<style>
-    .user_data + .tooltip.top > .tooltip-inner {
-        padding: 12px;
-        font-size: 10px;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'yaksh/css/jquery-ui/jquery-ui.css' %}">
 {% endblock %}
+
+<div class="text-center">
+{% block pagetitle %} <h1>{{ course.name|title }}</h1> {% endblock %}
+</div>
+
 {% block content %}
-<div class="row">
-    <!-- Side bar -->
-    <div class="col-md-3 yakshlabel collapse" id="sidebar">
-        <div class="list-group">
-            {% if state == 'mail' or state == 'course_status' %}
-                <a href="{{URL_ROOT}}/exam/manage/course_detail/{{course.id}}/" class="list-group-item" data-parent="#sidebar"><i class="fa fa-caret-left"></i> Go to Course Details </a>
-            {% else %}
-                <a href="#student-requests" id="request" class="list-group-item" data-parent="#sidebar"> Requested Students  </a>
-                <a href="#enrolled-students" id="enroll-students" class="list-group-item" data-parent="#sidebar"> Enrolled Students</a>
-                <a href="#rejected-students" id="reject-students" class="list-group-item" data-parent="#sidebar"> Rejected Students </a>
-            {% endif %}
-                <a href="{{URL_ROOT}}/exam/manage/send_mail/{{ course.id }}/" class="list-group-item" data-parent="#sidebar"> Send Mail  </a>
-                <a href="{{URL_ROOT}}/exam/manage/course_status/{{ course.id }}/" class="list-group-item" data-parent="#sidebar"> View Course Status </a>
+<hr>
+<div id="dialog" title="Alert">
+    <p id="error_msg"></p>
+</div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-3">
+            {% include "yaksh/course_detail_options.html" %}
+        </div>
+        <div class="col-md-9">
+            <div class="tab-content">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-dismissible alert-{{ message.tags }}">
+                        <button type="button" class="close" data-dismiss="alert">
+                            <i class="fa fa-close"></i>
+                        </button>
+                        <strong>{{ message }}</strong>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+                {% if is_students %}
+                    {% include "yaksh/course_students.html" %}
+                {% elif is_mail %}
+                    {% include "yaksh/course_send_mail.html" %}
+                {% elif is_progress %}
+                    {% include "yaksh/course_progress.html" %}
+                {% elif is_modules %}
+                    {% include "yaksh/course_added_modules.html" %}
+                {% elif is_design_course %}
+                    {% include "yaksh/design_course_session.html" %}
+                {% elif is_add_teacher %}
+                    {% include "yaksh/addteacher.html" %}
+                {% elif is_teachers %}
+                    {% include "yaksh/course_teachers.html" %}
+                {% else %}
+                    <div class="jumbotron">
+                        <h1 class="display-4">Manage Course</h1>
+                        <hr class="my-4">
+                        <p>
+                            <ul>
+                                <li>
+                                    Students enrollments
+                                </li>
+                                <li>
+                                    Add and View Modules, Lessons and Quizzes
+                                </li>
+                                <li>
+                                    Send mail to the students
+                                </li>
+                                <li>
+                                    View Students course progress
+                                </li>
+                                <li>
+                                    Add and View Teachers/TAs
+                                </li>
+                            </ul>
+                        </p>
+                        <p class="lead">
+                            <a class="btn btn-primary btn-lg" href="https://yaksh.readthedocs.io/en/latest/moderator_docs/creating_course.html" role="button" target="blank">
+                                <i class="fa fa-info-circle"></i>
+                                Learn more
+                            </a>
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
-    <a href="#sidebar" data-toggle="collapse" id="sidebaricon"><i class="fa fa-navicon fa-lg"></i></a>
-    <!-- End of sidebar -->
-    <main class="col" id="sidebarbody">
-        <div class="container-fluid yakshwell">
-            
-            <form id="upload_users" action="{{ URL_ROOT }}/exam/manage/upload_users/{{course.id}}/"
-                method="POST" enctype="multipart/form-data" class="yakshwell">
-                {% csrf_token %}
-                <input type="file" name="csv_file" />
-                <button class="btn btn-outline-primary" type=submit> Upload Users <span class="glyphicon glyphicon-open"/></button>
-            </form>
-            <div class="card" role="alert">
-                <div class="card-body">
-                <p>
-                - The uploaded csv should have headers exactly same as mentioned below:<br />
-                <b>firstname, lastname, email, username, password, institute, roll_no, department,
-                   remove</b><br />
-                - Mandatory fields are <b> firstname, lastname and email. </b><br />
-                - Other fields are optional. <br />
-                - If username and password are not provided then
-                <b>Users created will have username and password same as their email</b>
-                </p>
-                <p>
-                <b> Click <a class="btn btn-success" href="{{ URL_ROOT }}/exam/manage/download_sample_csv/
-                    ">here</a> to download a sample CSV, edit and upload it</b>
-                </p>
-                </div>
-            </div>
-            <div class="yakshwell">
-                {% if message %}
-                    <center>
-                    <div class="alert alert-warning animated flash col-md-8" role="alert">        
-                    <strong> {{ message }} </strong>        
-                    </div>
-                    </center>
-                {% endif %}
-                {% if upload_details %}
-                    <div class="alert alert-info" role="info">
-                        {% for detail in upload_details %}
-                        <strong> {{ detail }} </strong><br>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-                
-                {% if state == 'mail' %}
-                    <div id="enrolled-students" >
-                        <center ><div class="yakshlabel"><h5>Send Mails to Students</h5></div></center><br>
-                        {% if course.get_enrolled %}
-                            <input type="checkbox" class="reject"/>&nbsp;<font class="text-info">Select all</font>
-                            <div id="reject" class="yakshwell">
-                            <form action="{{URL_ROOT}}/exam/manage/send_mail/{{ course.id }}/" method="post" id="send_mail_form">
-                                {% csrf_token %}
-                                <table id="mail_table" class="tablesorter table table-striped table-responsive-sm" data-sortlist="[1,0]">
-                                    <thead>
-                                        <th></th>
-                                        <th></th>
-                                        <th>Full Name</th>
-                                        <th>Email</th>
-                                        <th>Roll Number</th>
-                                        <th>Institute</th>
-                                        <th>Department</th>
-                                    </thead>
-                                    <tbody>
-                                        {% for enrolled in course.get_enrolled %}
-                                            <tr>
-                                            <td><input type="checkbox" name="check" value="{{ enrolled.id }}"></td>
-                                            <td>{{ forloop.counter }}.</td>
-                                            <td> {{ enrolled.get_full_name|title }} </td>
-                                            <td> {{enrolled.email}}</td>
-                                            <td> {{enrolled.profile.roll_number}}</td>
-                                            <td> {{enrolled.profile.institute}}</td>
-                                            <td> {{enrolled.profile.department}}</td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                                <br>
-                                <div class="card">
-                                    <textarea name="subject" id="subject" placeholder="Email Subject" cols="50"></textarea> 
-                                    <br><br>
-                                    <textarea name="body" id="email_body"></textarea><br>
-                                    <span class="yakshwell"> Attachments: <input type="file" name="email_attach" multiple=""></span>
-                                    <br>                                    
-                                </div>
-                                <div class="text-center yakshwell">
-                                <button class="btn btn-success" type="submit" name='send_mail' value='send_mail' id="send_mail">
-                                    Send Mail to Selected Students</button>
-                                </div>
-                            </form>
-                            </div>
-                        {% endif %}            
-                    </div>
-                {% elif state == "course_status" %}
-                    <div class="course_data">
-                        
-                        <center>
-                            <div class="row">
-                                <div class="col">
-                                    <h5>Course Status</h5>
-                                </div>
-                                <div class="col-md-8">
-                                    Number Of Students: {{ student_details | length }}
-                                </div>
-                                <div class="col">
-                                    <input type="hidden" id="course_name" value="{{course.name}}">
-                                    <a href="#" class="btn btn-outline-success" id="export">Export to CSV</a>
-                                </div>
-                            </div>
-                        </center>
-                        <div class="yakshwell">
-                        <table class="tablesorter table table-bordered table-responsive-sm" id="course_table" data-sortlist="[0,0]">
-                        <thead>
-                            <tr class="yakshlight">
-                            <th>Roll No.</th>
-                            <th>Name</th>
-                            <th>Current Unit</th>
-                            <th>Course Completion Percentage</th>
-                            <th>Grade</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for student, grade, percent, unit in student_details %}
-                                <tr>
-                                <td>
-                                    {{ student.profile.roll_number}}
-                                </td>                            
-                                <td width="50%">
-                                    <a class="user_data" data-item-id="{{course.id}}+{{student.id}}" data-toggle="tooltip" title="Click to view Overall Course progress" data-placement="top">
-                                        {{ student.get_full_name|title}}
-                                        <i class="fa fa-caret-down"></i>
-                                    </a>
-                                    <div id="show_status_{{course.id}}_{{student.id}}" style="display: None;">
-                                    </div>
-                                </td>
-                                <td>
-                                    {% if unit %}
-                                        {% if unit.type == 'quiz' %}
-                                            {{unit.quiz.description}}
-                                        {% else %}
-                                            {{unit.lesson.name}}
-                                        {% endif %}
-                                    {% else %}
-                                        NA
-                                    {% endif%}
-                                </td>
-                                <td>
-                                    {{ percent }} %
-                                </td>
-                                <td>
-                                    {{ grade }}
-                                </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                        </table>
-                    </div>
-                    </div>
-                {% else %}
-                    <div id="students_enrollment">
-                        <div id="student-requests" class="card">                            
-                            <center><div class="yakshlabel card-heading">Requests</div></center><br>
-                            <div class="card-body">
-                            {% if course.get_requests %}
-                                <input type="checkbox" class="checkall"/>&nbsp;<font size="2">Select all</font>
-                                <div id="enroll-all">
-                                    <form action="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/" method="post">
-                                        {% csrf_token %}
-                                        <table id="requested_table" class="tablesorter table table-striped table-responsive-sm" data-sortlist="[1,0]">
-                                            <thead>
-                                                <th></th>
-                                                <th></th>
-                                                <th>Full Name</th>
-                                                <th>Email</th>
-                                                <th>Roll Number</th>
-                                                <th>Institute</th>
-                                                <th>Department</th>
-                                                <th>Enroll/Reject</th>
-                                            </thead>
-                                            <tbody>
-                                                {% for request in course.get_requests %}
-                                                <tr>
-                                                <td><input type="checkbox" name="check" value="{{ request.id }}"></td>
-                                                <td>{{ forloop.counter }}.</td>
-                                                <td>{{request.get_full_name}}</td>
-                                                <td> {{request.email}}</td>
-                                                <td> {{request.profile.roll_number}}</td>
-                                                <td> {{request.profile.institute}}</td>
-                                                <td> {{request.profile.department}}</td>
-                                                <td>
-                                                    <a class="btn btn-success"
-                                                    href="{{URL_ROOT}}/exam/manage/enroll/{{ course.id }}/{{ request.id }}/">
-                                                    Enroll </a>
-                                                    <a class="btn btn-danger"
-                                                    href="{{URL_ROOT}}/exam/manage/reject/{{ course.id }}/{{ request.id }}/">
-                                                    Reject </a>
-                                                </td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                        <button class="btn btn-success pull-right" type="submit" name='enroll' value='enroll'>Enroll Selected</button> <br>
-                                    </form>                                   
-                                </div>
-                                {% else %}
-                                <center>
-                                    <span class="badge badge-warning"><big> No requests yet</big></span>
-                                </center>
-                             {% endif %}
-                         </div>
-                         </div>
-                        <br>
-                        <div id="enrolled-students" class="card">
-                            <center><div class="yakshlabel card-heading">Enrolled</div></center><br>
-                             <div class="card-body">
-                            {% if course.get_enrolled %}
-                            <input type="checkbox" class="reject"/>&nbsp;<font size="2">Select all</font>
-                            <div id="reject">
-                                <form action="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/" method="post" id="reject-form">
-                                    {% csrf_token %}
-                                    <table id="enrolled_table" class="tablesorter table table-striped table-responsive-sm" data-sortlist="[1,0]">
-                                        <thead>
-                                        <th></th>
-                                        <th></th>
-                                        <th>Full Name</th>
-                                        <th>Email</th>
-                                        <th>Roll Number</th>
-                                        <th>Institute</th>
-                                        <th>Department</th>
-                                        <th>Reject</th>
-                                        </thead>
-                                        <tbody>
-                                        {% for enrolled in course.get_enrolled %}
-                                            <tr>
-                                            <td><input type="checkbox" name="check" value="{{ enrolled.id }}"></td>
-                                            <td>{{ forloop.counter }}.</td>
-                                            <td> {{ enrolled.get_full_name|title }} </td>
-                                            <td> {{enrolled.email}}</td>
-                                            <td> {{enrolled.profile.roll_number}}</td>
-                                            <td> {{enrolled.profile.institute}}</td>
-                                            <td> {{enrolled.profile.department}}</td>
-                                            <td><a class="btn btn-danger"
-                                            href="{{URL_ROOT}}/exam/manage/enrolled/reject/{{ course.id }}/{{ enrolled.id }}/">
-                                            Reject </a>
-                                            </td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                    <button class="btn btn-danger pull-right" type="submit" name='reject' value='reject'>
-                                    Reject Selected</button> <br>
-                                </form>
-                            </div>
-                            {% else %}
-                                <center>
-                                    <span class="badge badge-warning"><big> No enrolled students yet</big></span>
-                                </center>
-                            {% endif %}   
-                            </div>                         
-                        </div>
-                        <br>
-                        <div id="rejected-students" class="card">
-                            <center><div class="yakshlabel card-heading">Rejected</div></center><br>
-                             <div class="card-body">
-                            {% if course.get_rejected %}
-                            <input type="checkbox" class="enroll"/>&nbsp;<font size="2">Select all</font>
-                            <div id="enroll">
-                                <form action="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/" method="post">
-                                    {% csrf_token %}
-                                    <table id="rejected_table" class="tablesorter table table-striped table-responsive-sm" data-sortlist="[1,0]">
-                                        <thead>
-                                            <th></th>
-                                            <th></th>
-                                            <th>Full Name</th>
-                                            <th>Email</th>
-                                            <th>Roll Number</th>
-                                            <th>Institute</th>
-                                            <th>Department</th>
-                                            <th>Enroll</th>
-                                        </thead>
-                                        <tbody>
-                                            {% for rejected in course.get_rejected %}
-                                                <tr>
-                                                <td><input type="checkbox" name="check" value="{{ rejected.id }}"></td>
-                                                <td>{{ forloop.counter }}.</td>
-                                                <td>{{rejected.get_full_name|title}}</td>
-                                                <td> {{rejected.email}}</td>
-                                                <td> {{rejected.profile.roll_number}}</td>
-                                                <td> {{rejected.profile.institute}}</td>
-                                                <td> {{rejected.profile.department}}</td>
-                                                <td>
-                                                    <a class="btn btn-success"
-                                                    href="{{URL_ROOT}}/exam/manage/enroll/rejected/{{ course.id }}/{{ rejected.id }}/">
-                                                    Enroll </a>
-                                                </td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                    <br>
-                                    <button class="btn btn-success pull-right" type="submit" name='enroll' value='enroll'>
-                                    Enroll Selected</button> <br>                         
-                                </form>
-                            </div>
-                            {% else %}
-                                <center>
-                                    <span class="badge badge-warning"><big> No rejected students yet</big></span>
-                                </center>
-                            {% endif %}  
-                            </div>                          
-                        </div>
-                    </div>
-                {% endif %}
-            </div>
-            <!-- Dialog to display error message -->
-            <div id="dialog" title="Alert">
-              <p id="error_msg"></p>
-            </div>
-        </div>
-    </main>
 </div>
 {% endblock %}
 
-{% block footer %}
-  <!--footer-->   
-  <footer class="container-fluid yakshsidebarfooter text-center">
-    <div class="row justify-content-center">
-    <div class="col-sm-5 ">
-      {% if user %}
-         {% block info %}
-         <b>{{user.get_full_name|title}}</b> with Roll no. <b>{{user.profile.roll_number}}</b> is logged in as <b>{{user.username}}</b>
-         {% endblock %}
-         {% endif %}
-    </div>
-    <div class="col-sm-2">
-      |
-    </div>
-    <div class="col-sm-4 text-left">
-     <b>Any Queries?</b> Email : info@fossee.in
-    </div>
-  </div>
-  </footer>
-  <!--footer end-->
-{% endblock %}
 

@@ -317,7 +317,8 @@ class Lesson(models.Model):
                     lesson_file.file.name)))
                 zip_file.writestr(filename, lesson_file.file.read())
         unit_file_path = os.sep.join((
-            path, "templates", "yaksh", "download_course_templates", "unit.html"
+            path, "templates", "yaksh", "download_course_templates",
+            "unit.html"
             ))
         lesson_data = {"course": course, "module": module,
                        "lesson": self, "next_unit": next_unit,
@@ -577,7 +578,8 @@ class Quiz(models.Model):
             course_name, module_name, quiz_name
             ))
         unit_file_path = os.sep.join((
-            path, "templates", "yaksh", "download_course_templates", "quiz.html"
+            path, "templates", "yaksh", "download_course_templates",
+            "quiz.html"
             ))
         quiz_data = {"course": course, "module": module,
                      "quiz": self, "next_unit": next_unit}
@@ -813,7 +815,8 @@ class LearningModule(models.Model):
                                            path)
 
         module_file_path = os.sep.join((
-            path, "templates", "yaksh", "download_course_templates", "module.html"
+            path, "templates", "yaksh", "download_course_templates",
+            "module.html"
             ))
         module_data = {"course": course, "module": self, "units": units}
         write_templates_to_zip(zip_file, module_file_path, module_data,
@@ -880,6 +883,7 @@ class Course(models.Model):
             copy_module_name = "Copy of {0}".format(module.name)
             new_module = module._create_module_copy(user, copy_module_name)
             new_course.learning_module.add(new_module)
+        return new_course
 
     def request(self, *users):
         self.requests.add(*users)
@@ -1267,6 +1271,42 @@ class Question(models.Model):
     # Solution for the question.
     solution = models.TextField(blank=True)
 
+    tc_code_types = {
+        "python": [
+            ("standardtestcase", "Standard TestCase"),
+            ("stdiobasedtestcase", "StdIO TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ],
+        "c": [
+            ("standardtestcase", "Standard TestCase"),
+            ("stdiobasedtestcase", "StdIO TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ],
+        "cpp": [
+            ("standardtestcase", "Standard TestCase"),
+            ("stdiobasedtestcase", "StdIO TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ],
+        "java": [
+            ("standardtestcase", "Standard TestCase"),
+            ("stdiobasedtestcase", "StdIO TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ],
+        "r": [
+            ("standardtestcase", "Standard TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ],
+        "bash": [
+            ("standardtestcase", "Standard TestCase"),
+            ("stdiobasedtestcase", "StdIO TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ],
+        "scilab": [
+            ("standardtestcase", "Standard TestCase"),
+            ("hooktestcase", "Hook TestCase")
+        ]
+    }
+
     def consolidate_answer_data(self, user_answer, user=None):
         question_data = {}
         metadata = {}
@@ -1467,6 +1507,24 @@ class Question(models.Model):
         )
         files, extract_path = extract_files(zip_file_path)
         self.read_yaml(extract_path, user, files)
+
+    def get_test_case_options(self):
+        options = None
+        if self.type == "code":
+            options = self.tc_code_types.get(self.language)
+        elif self.type == "mcq" or self.type == "mcc":
+            options = [("mcqtestcase", "Mcq TestCase")]
+        elif self.type == "integer":
+            options = [("integertestcase", "Integer TestCase")]
+        elif self.type == "float":
+            options = [("floattestcase", "Float TestCase")]
+        elif self.type == "string":
+            options = [("stringtestcase", "String TestCase")]
+        elif self.type == "arrange":
+            options = [("arrangetestcase", "Arrange TestCase")]
+        elif self.type == "upload":
+            options = [("hooktestcase", "Hook TestCase")]
+        return options
 
     def __str__(self):
         return self.summary
