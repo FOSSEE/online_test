@@ -1237,7 +1237,7 @@ def monitor(request, quiz_id=None, course_id=None):
         courses = Course.objects.filter(
             Q(creator=user) | Q(teachers=user),
             is_trial=False
-        ).order_by("-id").distinct()
+        ).order_by("-active").distinct()
         paginator = Paginator(courses, 30)
         page = request.GET.get('page')
         try:
@@ -1706,7 +1706,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
     if not course_id:
         courses = Course.objects.filter(
             Q(creator=current_user) | Q(teachers=current_user), is_trial=False
-            ).order_by("-id").distinct()
+            ).order_by("-active").distinct()
         paginator = Paginator(courses, 30)
         page = request.GET.get('page')
         try:
