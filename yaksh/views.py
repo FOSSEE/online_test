@@ -2171,7 +2171,7 @@ def new_activation(request, email=None):
     try:
         user = User.objects.get(email=email)
     except MultipleObjectsReturned:
-        context['email_err_msg'] = "Multiple entries found for this email"\
+        context['email_err_msg'] = "Multiple entries found for this email "\
                                     "Please change your email"
         return my_render_to_response(
             request, 'yaksh/activation_status.html', context
