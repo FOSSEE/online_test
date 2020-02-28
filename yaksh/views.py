@@ -409,7 +409,7 @@ def prof_manage(request, msg=None):
     courses = Course.objects.get_queryset().filter(
         Q(creator=user) | Q(teachers=user),
         is_trial=False).distinct().order_by("-active")
-    paginator = Paginator(courses, 30)
+    paginator = Paginator(courses, 20)
     page = request.GET.get('page')
     try:
         courses = paginator.page(page)
