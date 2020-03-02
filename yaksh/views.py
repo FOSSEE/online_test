@@ -409,7 +409,7 @@ def prof_manage(request, msg=None):
     courses = Course.objects.get_queryset().filter(
         Q(creator=user) | Q(teachers=user),
         is_trial=False).distinct().order_by("-active")
-    paginator = Paginator(courses, 30)
+    paginator = Paginator(courses, 20)
     page = request.GET.get('page')
     courses = paginator.get_page(page)
     messages.info(request, msg)
@@ -1223,7 +1223,7 @@ def monitor(request, quiz_id=None, course_id=None):
         courses = Course.objects.filter(
             Q(creator=user) | Q(teachers=user),
             is_trial=False
-        ).order_by("-id").distinct()
+        ).order_by("-active").distinct()
         paginator = Paginator(courses, 30)
         page = request.GET.get('page')
         courses = paginator.get_page(page)
@@ -1678,7 +1678,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
     if not course_id:
         courses = Course.objects.filter(
             Q(creator=current_user) | Q(teachers=current_user), is_trial=False
-            ).order_by("-id").distinct()
+            ).order_by("-active").distinct()
         paginator = Paginator(courses, 30)
         page = request.GET.get('page')
         courses = paginator.get_page(page)
@@ -2138,7 +2138,7 @@ def new_activation(request, email=None):
     try:
         user = User.objects.get(email=email)
     except MultipleObjectsReturned:
-        context['email_err_msg'] = "Multiple entries found for this email"\
+        context['email_err_msg'] = "Multiple entries found for this email "\
                                     "Please change your email"
         return my_render_to_response(
             request, 'yaksh/activation_status.html', context
