@@ -9,6 +9,14 @@ from django.contrib import admin
 class AnswerPaperAdmin(admin.ModelAdmin):
     search_fields = ['user__first_name', 'user__last_name', 'user__username',
                      "question_paper__quiz__description", "user_ip"]
+    list_filter = ['course__is_trial']
+    readonly_fields = ["course", "question_paper"]
+
+    def get_form(self, request, obj=None, **kwargs):
+        self.exclude = ("answers", "questions_unanswered",
+                        "questions_answered", "questions")
+        form = super(AnswerPaperAdmin, self).get_form(request, obj, **kwargs)
+        return form
 
 
 class ProfileAdmin(admin.ModelAdmin):

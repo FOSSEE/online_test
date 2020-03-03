@@ -1592,7 +1592,7 @@ class Answer(models.Model):
             self.marks = marks
 
     def __str__(self):
-        return self.answer
+        return "Answer for question {0}".format(self.question.summary)
 
 
 ###############################################################################
