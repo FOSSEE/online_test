@@ -127,7 +127,7 @@ def user_register(request):
     Create a user and corresponding profile and store roll_number also."""
 
     user = request.user
-    if user.is_authenticated():
+    if user.is_authenticated:
         return my_redirect("/exam/quizzes/")
     context = {}
     if request.method == "POST":
