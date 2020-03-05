@@ -17,11 +17,10 @@ install:
   - pip install -r requirements/requirements-common.txt
   - pip install codecov
   - python setup.py develop
+  - python manage.py migrate
 
 # command to run tests and coverage
 script:
-  - python manage.py makemigrations
-  - python manage.py migrate
   - coverage erase
   - coverage run -p manage.py test -v 2 --settings online_test.test_settings yaksh
   - coverage run -p manage.py test -v 2 --settings online_test.test_settings grades
@@ -36,7 +35,7 @@ sudo:
     required
 
 dist:
-    xenial
+    trusty
 
 addons:
   firefox: "46.0"
