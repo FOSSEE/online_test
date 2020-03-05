@@ -32,7 +32,7 @@ sudo:
     required
 
 dist:
-    trusty
+    xenial
 
 addons:
   firefox: "46.0"
