@@ -20,6 +20,8 @@ install:
 
 # command to run tests and coverage
 script:
+  - python manage.py makemigrations
+  - python manage.py migrate
   - coverage erase
   - coverage run -p manage.py test -v 2 --settings online_test.test_settings yaksh
   - coverage run -p manage.py test -v 2 --settings online_test.test_settings grades
