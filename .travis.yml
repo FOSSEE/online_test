@@ -34,7 +34,7 @@ after_success:
   - codecov
 
 dist:
-    trusty
+  xenial
 
 addons:
   firefox: "46.0"
