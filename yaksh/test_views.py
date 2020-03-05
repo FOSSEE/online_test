@@ -11,7 +11,7 @@ import shutil
 from markdown import Markdown
 from django.contrib.auth.models import Group
 from django.contrib.auth import authenticate
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import TestCase
 from django.test import Client
 from django.http import Http404
@@ -3740,7 +3740,7 @@ class TestPasswordReset(TestCase):
         # Then
         self.assertEqual(response.context['email'], self.user1.email)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/exam/reset/password_reset/mail_sent/')
+        self.assertRedirects(response, '/exam/reset/password_reset/done/')
 
     def test_password_change_post(self):
         """
