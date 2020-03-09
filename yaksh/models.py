@@ -648,6 +648,9 @@ class LearningUnit(models.Model):
                 order=self.order, type="lesson", lesson=new_lesson)
         return new_unit
 
+    def __str__(self):
+        return self.lesson.name if self.lesson else self.quiz.description
+
 
 ###############################################################################
 class LearningModule(models.Model):

@@ -3155,3 +3155,28 @@ def get_course_modules(request, course_id):
     modules = course.get_learning_modules()
     context = {"modules": modules, "is_modules": True, "course": course}
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
+
+
+@login_required
+@email_verified
+def download_course_progress(request, course_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    students = course.students.order_by("-id")
+    stud_details = [(student.get_full_name(), course.get_grade(student),
+                     course.get_completion_percent(student),
+                     course.get_current_unit(student))
+                     for student in students]
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(
+                                      (course.name).lower().replace(' ', '_'))
+    header = ['Name', 'Grade', 'Completion Percent', 'Current Unit']
+    writer = csv.writer(response)
+    writer.writerow(header)
+    for student in stud_details:
+        writer.writerow(student)
+    return response
