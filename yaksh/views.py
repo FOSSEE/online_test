@@ -2815,35 +2815,58 @@ def design_course(request, course_id):
                     learning_module.save()
                     to_add_list.append(learning_module)
                 course.learning_module.add(*to_add_list)
+                messages.success(request, "Modules added successfully")
+            else:
+                messages.warning(request, "Please select atleast one module")
 
         if "Change" in request.POST:
-            order_list = request.POST.get("ordered_list").split(",")
-            for order in order_list:
-                learning_unit, learning_order = order.split(":")
-                if learning_order:
-                    learning_module = course.learning_module.get(
-                        id=learning_unit)
-                    learning_module.order = learning_order
-                    learning_module.save()
+            order_list = request.POST.get("ordered_list")
+            if order_list:
+                order_list = order_list.split(",")
+                for order in order_list:
+                    learning_unit, learning_order = order.split(":")
+                    if learning_order:
+                        learning_module = course.learning_module.get(
+                            id=learning_unit)
+                        learning_module.order = learning_order
+                        learning_module.save()
+                messages.success(request, "Changed order successfully")
+            else:
+                messages.warning(request, "Please select atleast one module")
 
         if "Remove" in request.POST:
             remove_values = request.POST.getlist("delete_list")
             if remove_values:
                 course.learning_module.remove(*remove_values)
+                messages.success(request, "Modules removed successfully")
+            else:
+                messages.warning(request, "Please select atleast one module")
 
         if "change_prerequisite_completion" in request.POST:
             unit_list = request.POST.getlist("check_prereq")
-            for unit in unit_list:
-                learning_module = course.learning_module.get(id=unit)
-                learning_module.toggle_check_prerequisite()
-                learning_module.save()
+            if unit_list:
+                for unit in unit_list:
+                    learning_module = course.learning_module.get(id=unit)
+                    learning_module.toggle_check_prerequisite()
+                    learning_module.save()
+                messages.success(
+                    request, "Changed prerequisite check successfully"
+                )
+            else:
+                messages.warning(request, "Please select atleast one module")
 
         if "change_prerequisite_passing" in request.POST:
             unit_list = request.POST.getlist("check_prereq_passes")
-            for unit in unit_list:
-                learning_module = course.learning_module.get(id=unit)
-                learning_module.toggle_check_prerequisite_passes()
-                learning_module.save()
+            if unit_list:
+                for unit in unit_list:
+                    learning_module = course.learning_module.get(id=unit)
+                    learning_module.toggle_check_prerequisite_passes()
+                    learning_module.save()
+                messages.success(
+                    request, "Changed prerequisite check successfully"
+                )
+            else:
+                messages.warning(request, "Please select atleast one module")
 
     added_learning_modules = course.get_learning_modules()
     all_learning_modules = LearningModule.objects.filter(
