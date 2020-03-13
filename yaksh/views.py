@@ -390,7 +390,7 @@ def add_exercise(request, quiz_id=None, course_id=None):
     else:
         form = ExerciseForm(instance=quiz)
         context["exercise"] = quiz
-        context["course_id"] = course_id
+    context["course_id"] = course_id
     context["form"] = form
     return my_render_to_response(request, 'yaksh/add_exercise.html', context)
 
