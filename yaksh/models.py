@@ -14,6 +14,7 @@ from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
 from django.utils import timezone
 from django.core.files import File
+from django.template.defaultfilters import slugify
 import glob
 
 try:
@@ -230,6 +231,30 @@ def render_template(template_path, data=None):
         context = Context(data)
         render = template.render(context)
     return render
+
+
+def _create_yaml(obj, fields, fname, zip_file, obj_type, subitems=None):
+    file_name = '{0}.yaml'.format(fname)
+    course_dict = model_to_dict(obj,
+        fields= fields
+    )
+    relevant_dict = CommentedMap()
+    relevant_dict.update({'type': obj_type})
+    relevant_dict.update(
+            CommentedMap(sorted(course_dict.items(), key=lambda x: x[0])
+        )
+    )
+
+    # Add subitems
+    if subitems:
+        relevant_dict.update({'subitems': ['{0}.yaml'.format(s) for s in subitems]})
+    else:
+        relevant_dict.update({'subitems': []})
+
+    yaml_block = dict_to_yaml(relevant_dict)
+    with open(file_name, "a") as yaml_file:
+        yaml_file.write(yaml_block)
+    return file_name
 
 
 ###############################################################################
@@ -1129,6 +1154,113 @@ class Course(models.Model):
                 break
         return status
 
+    @classmethod
+    def _create_object_from_dict(cls, model_obj, model_type):
+        model_class = get_model_class(model_type)
+        new_obj, obj_create_status = model_class.objects.get_or_create(**model_obj)
+        return new_obj, obj_create_status
+
+    @classmethod
+    def load_yaml(cls, filepath, user):
+        file_list = {}
+        with zipfile.ZipFile(filepath,'r') as zfile:
+            for name in zfile.namelist():
+                file_content = zfile.read(name)
+                yaml_content = ruamel.yaml.safe_load(file_content)
+                if yaml_content.get('type') and yaml_content.get('type') == 'course':
+                    course = yaml_content
+                file_list.update(
+                    {name: yaml_content}
+                )
+        subitems = course.pop('subitems')
+        model_type = course.pop('type')
+        course.update({'creator': user})
+        new_course, course_create_status = cls._create_object_from_dict(course, 'course')
+        new_mod_list = []
+        for mod in subitems:
+            mod_dict = file_list[mod]
+            mod_sub_items = mod_dict.pop('subitems')
+            model_type = mod_dict.pop('type')
+            mod_dict.update({'creator': user})
+            new_mod, mod_create_status = cls._create_object_from_dict(mod_dict, 'learningmodule')
+            new_mod_list.append(new_mod)
+            new_unit_list = []
+            for unit in mod_sub_items:
+                unit_dict = file_list[unit]
+                unit_sub_items = unit_dict.pop('subitems')
+                model_type = unit_dict.pop('type')
+                lesson_data = unit_sub_items[0]
+                lesson_dict = file_list[lesson_data]
+                lesson_dict.pop('subitems')
+                lesson_dict.pop('type')
+                lesson_dict.update({'creator': user})
+                new_lesson, lesson_create_status = cls._create_object_from_dict(lesson_dict, 'lesson')
+                new_unit, unit_create_status = LearningUnit.objects.get_or_create(lesson=new_lesson, type='lesson', **unit_dict)
+                new_unit_list.append(new_unit)
+            new_mod.learning_unit.add(*new_unit_list)
+        new_course.learning_module.add(*new_mod_list)
+
+    def create_yaml(self, path=None):
+        if path:
+            dir_path = path
+        else:
+            dir_path = tempfile.mkdtemp()
+
+        zip_path = os.path.join(
+            dir_path, '{0}.zip'.format(slugify(self.name))
+        )
+        with zipfile.ZipFile(zip_path, "a") as zip_file:
+            fields = [
+                'name', 'enrollment', 'active', 'code',
+                'instructions', 'view_grade'
+            ]
+
+            mod_subitems = []
+            for module in self.get_learning_modules():
+                mod_fields = [
+                    'name', 'description', 'check_prerequisite',
+                    'check_prerequisite', 'check_prerequisite_passes',
+                    'html_data', 'active'
+                ]
+
+                unit_subitems = []
+                for unit in module.get_learning_units():
+                    if unit.type == 'lesson':
+                        unit_fields = ['order', 'check_prerequisite']
+                        lesson_fields = ['name', 'description', 'active']
+
+                        unitffname = slugify('{0} {1} {2}'.format(unit.id, 'unit', unit.lesson.name))
+                        lessonffname = slugify('{0} {1}'.format(unit.lesson.id, unit.lesson.name))
+                        lesson_yaml_path = _create_yaml(unit.lesson, lesson_fields, lessonffname, zip_file, 'lesson')
+                        zip_file.write(
+                            lesson_yaml_path
+                        )
+                        unit_yaml_path = _create_yaml(unit, unit_fields, unitffname, zip_file, 'learning_unit', [lessonffname])
+                        zip_file.write(
+                            unit_yaml_path
+                        )
+                        os.remove(unit_yaml_path)
+                        os.remove(lesson_yaml_path)
+                        unit_subitems.append(unitffname)
+
+                # Write the module yaml to file
+                modffname = slugify('{0} {1}'.format(module.id, module.name))
+                mod_yaml_file = _create_yaml(module, mod_fields, modffname, zip_file, 'module', unit_subitems)
+                zip_file.write(
+                    mod_yaml_file
+                )
+                os.remove(mod_yaml_file)
+                mod_subitems.append(modffname)
+
+            # Write the course yaml to file
+            cffname = slugify('{0} {1}'.format(self.id, self.name))
+            course_yaml_path = _create_yaml(self, fields, cffname, zip_file, 'course', mod_subitems)
+            zip_file.write(
+                course_yaml_path
+            )
+            os.remove(course_yaml_path)
+        return zip_path
+
     def __str__(self):
         return self.name
 
@@ -1499,7 +1631,6 @@ class Question(models.Model):
                                                      key=lambda x: x[0]
                                                      ))
                                  )
-
             yaml_block = dict_to_yaml(relevant_dict)
             with open(yaml_path, "a") as yaml_file:
                 yaml_file.write(yaml_block)

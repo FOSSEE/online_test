@@ -220,4 +220,8 @@ urlpatterns = [
         views.course_teachers, name="course_teachers"),
     url(r'^manage/download/course/progress/(?P<course_id>\d+)',
         views.download_course_progress, name="download_course_progress"),
+    url(r'^manage/download_course_yaml/(?P<course_id>\d+)/$',
+        views.download_course_yaml, name="download_course_yaml"),
+    url(r'^manage/upload_course_yaml/$',
+        views.upload_course_yaml, name="upload_course_yaml"),
 ]

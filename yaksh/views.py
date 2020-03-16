@@ -3237,3 +3237,51 @@ def download_course_progress(request, course_id):
     for student in stud_details:
         writer.writerow(student)
     return response
+
+
+@login_required
+@email_verified
+def download_course_yaml(request, course_id):
+    user = request.user
+    course = Course.objects.get(id=course_id)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to download this course !')
+    if not course.is_creator(user):
+        raise Http404('This course does not belong to you')
+
+    zip_file_path = course.create_yaml()
+
+    response = HttpResponse(content_type='application/zip')
+    response['Content-Disposition'] = dedent(
+        '''attachment; filename={0}_yaml.zip'''.format(course.name)
+    )
+    with open(zip_file_path, 'rb') as zip_file:
+        zip_file.seek(0)
+        response.write(zip_file.read())
+    return response
+
+
+@login_required
+@email_verified
+def upload_course_yaml(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to download this course !')
+
+    if request.method == "POST":
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            course_zip_file = request.FILES['file']
+            file_extension = course_zip_file.name.split('.')[-1]
+            if file_extension == "zip":
+                Course.load_yaml(course_zip_file, user)
+                message = "Course uploaded successfully"
+                messages.success(request, message)
+            else:
+                message = "Please upload a ZIP file"
+                messages.info(request, message)
+        else:
+            message = "An error occurred while uploading the file"
+            messages.warning(request, message)
+
+    return my_redirect('exam/manage/courses/')

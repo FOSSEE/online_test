@@ -32,6 +32,11 @@
                             Add/Edit Course
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-toggle="modal" data-target="#course_upload_modal">
+                            Upload YAML
+                        </a>
+                    </li>
                     <li class="nav-item dropdown hide">
                         <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="true">More</a>
                         <div class="dropdown-menu hide" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 37px, 0px); top: 0px; left: 0px; will-change: transform;">
@@ -206,6 +211,9 @@
                                                 <a class="dropdown-item" href="{% url 'yaksh:download_course' course.id %}">
                                                     Course
                                                 </a>
+                                                <a class="dropdown-item" href="{% url 'yaksh:download_course_yaml' course.id %}">
+                                                    YAML
+                                                </a>
                                                 </div>
                                                 </div>
                                                 </div>
@@ -316,6 +324,43 @@
                     {% endfor %}
                     <br>
                 </div>
+            </div>
+            <!-- Course YAML Upload Modal -->
+            <div class="modal" id="course_upload_modal">
+              <div class="modal-dialog">
+                <div class="modal-content">
+
+                  <!-- Modal Header -->
+                  <div class="modal-header">
+                    <h4 class="modal-title">Upload Course YAML</h4>
+                    <button type="button" class="close" data-dismiss="modal"><i class="fa fa-close"></i></button>
+                  </div>
+
+                  <!-- Modal body -->
+                  <div class="modal-body">
+                    <form action="{% url 'yaksh:upload_course_yaml' %}" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="input-group mb-3">
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" name="file"  required id="id_file"/>
+                                <label class="custom-file-label" for="id_file">Choose file</label>
+                            </div>
+                        </div>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-primary" type="submit" name="upload" value="upload"><i class="fa fa-upload"></i>&nbsp;Upload File</button>
+                        </div>
+                    </form>
+                    <script>
+                        $('#id_file').on('change',function(){
+                            //get the file name
+                            var fileName = $(this).val();
+                            //replace the "Choose a file" label
+                            $(this).next('.custom-file-label').html(fileName);
+                        })
+                    </script>
+                  </div>
+                </div>
+              </div>
             </div>
             {% include "yaksh/paginator.html" %}
             {% endwith %}
