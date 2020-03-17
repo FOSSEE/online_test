@@ -4211,6 +4211,24 @@ class TestDownloadCsv(TestCase):
         self.assertEqual(response.get('Content-Disposition'),
                          'attachment; filename="{0}"'.format(file_name))
 
+    def test_download_course_progress_csv(self):
+        """
+            Check for csv result of a course progress
+        """
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:download_course_progress',
+                    kwargs={'course_id': self.course.id}),
+            follow=True
+            )
+        file_name = "{0}.csv".format(self.course.name.lower().replace(" ", "_"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-Disposition'),
+                         'attachment; filename="{0}"'.format(file_name))
+
     def test_download_quiz_csv(self):
         """
             Check for csv result of a quiz

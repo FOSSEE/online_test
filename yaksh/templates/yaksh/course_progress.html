@@ -4,10 +4,19 @@
     {% if student_details %}
         <div class="text-center">
             <h3>Course Progress</h3>
-            <div class="col">
-                Number Of Students: {{ students_no }}
+            <br>
+            <div class="row">
+                <div class="col">
+                    Number Of Students: {{ students_no }}
+                </div>
+                <div class="col">
+                    <a href="{% url 'yaksh:download_course_progress' course.id %}" class="btn btn-info">
+                        <i class="fa fa-download"></i>&nbsp;Download Data
+                    </a>
+                </div>
             </div>
         </div>
+        <br>
         {% include "yaksh/paginator.html" %}
         <table class="tablesorter table table-bordered table-responsive-sm" id="course_table" data-sortlist="[0,0]">
         <thead>
