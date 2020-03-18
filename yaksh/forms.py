@@ -500,6 +500,10 @@ class LessonForm(forms.ModelForm):
         self.fields['video_file'].widget.attrs.update(
             {'class': "custom-file-input"}
         )
+        self.fields['video_path'].widget.attrs.update(
+            {'class': form_input_class,
+             'placeholder': "Relative video path for offline use only"}
+        )
 
     class Meta:
         model = Lesson
