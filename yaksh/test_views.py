@@ -2213,12 +2213,12 @@ class TestCourses(TestCase):
             follow=True
         )
         self.user1_course.learning_module.remove(self.learning_module)
-        self.assertEqual(response.status_code, 404)
-        lesson_file = SimpleUploadedFile("file1.txt", b"Test")
-        django_file = File(lesson_file)
-        lesson_file_obj = LessonFile()
-        lesson_file_obj.lesson = self.lesson
-        lesson_file_obj.file.save(lesson_file.name, django_file, save=True)
+        self.assertEqual(response.status_code, 200)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        err_msg = "{0} course does not have any lessons".format(
+            self.user1_course.name
+        )
+        self.assertIn(err_msg, messages)
         self.user1_course.learning_module.add(self.learning_module1)
         response = self.client.get(
             reverse('yaksh:download_course',
@@ -2231,12 +2231,7 @@ class TestCourses(TestCase):
         zipped_file = zipfile.ZipFile(zip_file, 'r')
         self.assertIsNone(zipped_file.testzip())
         files_in_zip = zipped_file.namelist()
-        module_path = os.path.join(course_name, "demo_module",
-                                   "demo_module.html")
-        lesson_path = os.path.join(course_name, "demo_module", "demo_lesson",
-                                   "demo_lesson.html")
-        self.assertIn(module_path, files_in_zip)
-        self.assertIn(lesson_path, files_in_zip)
+        self.assertIn("course_data.js", files_in_zip)
         zip_file.close()
         zipped_file.close()
         self.user1_course.learning_module.remove(self.learning_module1)
