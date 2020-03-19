@@ -61,6 +61,32 @@
             </div>
         {% else %}
             <hr>
+            <form name=frm action="" method="post">
+                {% csrf_token %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Search/Filter Courses</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.search_tags }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form.search_status }}
+                            </div>
+                        </div>
+                        <br>
+                        <button class="btn btn-success" type="submit">Search</button>
+                        <a class="btn btn-primary" href="{% url 'yaksh:courses' %}">
+                            Clear Search
+                        </a>
+                    </div>
+                </div>
+            </form>
+            <hr>
+            <center><h4 class="badge badge-success">{{ courses_found }} Course(s) Available</h4></center>
+
             {% if messages %}
                 {% for message in messages %}
                 <div class="alert alert-dismissible alert-{{ message.tags }}">
@@ -198,7 +224,7 @@
                     <br>
                     {% for course in courses %}
                         <div class="card">
-                            <div class="card-header">
+                            <div class="card-header bg-secondary">
                                 <div class="row">
                                     <div class="col-md-5">
                                         {{course.name}}  

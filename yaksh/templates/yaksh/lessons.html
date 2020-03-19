@@ -45,10 +45,36 @@
     {% if not lessons %}
         <br><br>
         <div class="alert alert-info">
-            <center><h3> No new Lessons added</h3></center>
+            <center><h3> No lessons found</h3></center>
         </div>
     {% else %}
-        <center><h3> Lessons </h3></center>
+        <hr>
+        <form name=frm action="" method="post">
+            {% csrf_token %}
+            <div class="card">
+                <div class="card-header">
+                    <h3> Search/Filter Lessons </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.search_tags }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.search_status }}
+                        </div>
+                    </div>
+                    <br>
+                    <button class="btn btn-success" type="submit">Search</button>
+                    <a class="btn btn-primary" href="{% url 'yaksh:show_all_lessons' %}">
+                        Clear Search
+                    </a>
+                </div>
+            </div>
+        </form>
+        <hr>
+        <center><h4 class="badge badge-success">{{ lessons_found }} Lesson(s) Available</h4></center>
+
         <table id="course-details" class="table table-bordered table-responsive-sm">
         <tr>
         <th>Sr.No</th>
