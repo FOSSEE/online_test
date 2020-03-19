@@ -1,3 +1,11 @@
+=== 0.13.0 (11-03-2020) ===
+
+* Revamped the UI and UX for the interface and standardised with Bootstrap 4 (Lumen theme from https://bootswatch.com/)
+* Fixed a bug that caused failure when pre-existing tags for Questions have first capital letter
+* Registered CourseStatus model so that it is available on the Django admin interface
+* Added filters in the Django admin for filtering courses
+* Modified admin.py to display only specific fields of AnswerPaper
+
 === 0.12.0 (04-02-2020) ===
 
 * Added syntax highlighting to the code answers in answerpaper

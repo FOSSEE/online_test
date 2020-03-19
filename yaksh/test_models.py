@@ -322,8 +322,12 @@ class LearningUnitTestCases(unittest.TestCase):
     def test_learning_unit(self):
         self.assertEqual(self.learning_unit_one.type, 'lesson')
         self.assertEqual(self.learning_unit_two.type, 'quiz')
-        self.assertEqual(self.learning_unit_one.lesson, self.lesson)
-        self.assertEqual(self.learning_unit_two.quiz, self.quiz)
+        self.assertEqual(
+            self.learning_unit_one.get_lesson_or_quiz(), self.lesson
+        )
+        self.assertEqual(
+            self.learning_unit_two.get_lesson_or_quiz(), self.quiz
+        )
         self.assertIsNone(self.learning_unit_one.quiz)
         self.assertIsNone(self.learning_unit_two.lesson)
         self.assertTrue(self.learning_unit_one.check_prerequisite)

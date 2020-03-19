@@ -601,7 +601,12 @@ class LearningUnit(models.Model):
     check_prerequisite = models.BooleanField(default=True)
 
     def get_lesson_or_quiz(self):
-        return self.lesson if self.lesson else self.quiz
+        unit = None
+        if self.type == 'lesson':
+            unit = self.lesson
+        else:
+            unit = self.quiz
+        return unit
 
     def toggle_check_prerequisite(self):
         if self.check_prerequisite:
@@ -652,6 +657,14 @@ class LearningUnit(models.Model):
             new_unit = LearningUnit.objects.create(
                 order=self.order, type="lesson", lesson=new_lesson)
         return new_unit
+
+    def __str__(self):
+        name = None
+        if self.type == 'lesson':
+            name = self.lesson.name
+        else:
+            name = self.quiz.description
+        return name
 
 
 ###############################################################################
