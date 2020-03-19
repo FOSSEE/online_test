@@ -10,4 +10,5 @@ coverage
 ruamel.yaml==0.15.23
 markdown==2.6.9
 djangorestframework==3.9.0
+django-cors-headers==3.1.0
 pygments==2.2.0
