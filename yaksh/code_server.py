@@ -25,7 +25,7 @@ import time
 import requests
 from tornado.ioloop import IOLoop
 from tornado.web import Application, RequestHandler
-from six.moves import urllib
+import urllib
 
 # Local imports
 from .settings import N_CODE_SERVERS, SERVER_POOL_PORT

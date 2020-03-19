@@ -21,7 +21,6 @@ from django.contrib import messages
 from taggit.models import Tag
 from django.urls import reverse
 import json
-import six
 from textwrap import dedent
 import zipfile
 from markdown import Markdown
@@ -1738,8 +1737,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
     if request.method == "POST":
         papers = data['papers']
         for paper in papers:
-            for question, answers in six.iteritems(
-                    paper.get_question_answers()):
+            for question, answers in paper.get_question_answers().items():
                 marks = float(request.POST.get('q%d_marks' % question.id, 0))
                 answer = answers[-1]['answer']
                 answer.set_marks(marks)
