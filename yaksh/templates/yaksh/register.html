@@ -1,63 +1,64 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %} Register {% endblock %}
+{% block pagetitle %} Registration {% endblock %}
 
 {% block nav %}
-<div class="container-fluid yakshnav">
-<nav class="navbar fixed-top navbar-expand-lg yakshheading yakshnav">
-  <div class="container">
-    <button class="navbar-toggler navbar-dark" type="button" data-toggle="collapse" data-target="#myNavbar" aria-controls="myNavbar" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon" style="color: white"></span>
-    </button>
-    <a class="navbar-brand" href="{{ URL_ROOT }}/exam/">
-    <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH" style="margin-top: -3px; margin-left:-15px">
-    </img>
-    </a>    
-    <div class="collapse navbar-collapse" id="myNavbar">
-        <ul class="nav nav-pills ml-auto">
-            <li class="nav-item"><a class="nav-link" href="{{ URL_ROOT }}/exam/">LOGIN INSTEAD?</a></li>
-        </ul>
-    </div>
-  </div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <a class="navbar-brand" href="{% url 'yaksh:index' %}">
+        <img src="{% static 'yaksh/images/yaksh_banner.png' %}" alt="YAKSH">
+    </a>
 </nav>
-</div>
 {% endblock %}
-
-{% block pagetitle %}<p class="yakshred"> Online Test Registration </p>{% endblock %}
 
 {% block content %}
-<div class="container-fluid row justify-content-center">
-<div class="col-md-10">
-<form action="" method="post">
-    {% csrf_token %}
-    <h5> Please fill in the following details:</h5>
-    <center>
-        <table class="table table-responsive-sm">
-    {{ form.as_table }}
-    </table></center>
-    <center class="yakshwell"><button class="btn btn-success" type="submit">Register</button>&nbsp;&nbsp;
-    <a href="{{URL_ROOT}}/exam" class="btn btn-danger">Cancel</a></center>
-</form>
+<div class="container-fluid">
+    <div class="row justify-content-center form-group">
+        <div class="col-md-4 col-md-offset-4">
+            <form action="" method="post">
+                <fieldset>
+                    {% csrf_token %}
+                    <h4> Please fill in the following details:</h4>
+                    <center>
+                        {% if form.errors %}
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <div class="alert alert-dismissible alert-danger">
+                                        <button type="button" class="close" data-dismiss="alert">
+                                            <i class="fa fa-close"></i>
+                                        </button>
+                                        <strong>{{ error|escape }}</strong>
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <div class="alert alert-dismissible alert-danger">
+                                    <button type="button" class="close" data-dismiss="alert">
+                                        <i class="fa fa-close"></i>
+                                    </button>
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        {% for field in form %}
+                            <td>{{ field }} <small>{{ field.help_text }}</small></td>
+                            <br>
+                        {% endfor %}
+                        <br>
+                        <br>
+                    </center>
+                    <center>
+                        <button class="btn btn-success btn-lg" type="submit">
+                            Register
+                        </button>
+                        <a href="{% url 'yaksh:index' %}" class="btn btn-primary btn-lg">
+                            Cancel
+                        </a>
+                    </center>
+                </fieldset>
+            </form>
+        </div>
+    </div>
 </div>
-</div>
-<br><br><br>
 {% endblock content %}
-
-{% block footer %}
-  <!--footer-->   
-  <footer class="container-fluid yakshfooter text-center" id="contact">
-       {% block info %}
-       {% endblock %}
-       Developed by FOSSEE team, IIT Bombay
-       <hr style="background-color: white"> 
-       <nav class="nav nav-pills nav-fill col-lg-12"> 
-
-            <li class="nav-item">
-                <a class = "btn btn-social-icon btn-github nav-link" href ="https://github.com/fossee/online_test"">Fork us at:
-                <span class="fa fa-github" style="font-size:20px;"></span>
-                </a>
-            </li>
-                <li class="nav-item"><span class="nav-link"> Email : info@fossee.in</span></li>
-                <li class="nav-item"><a href="#" class="nav-link">FOSSEE website</a></li>
-            </nav>
-  </footer>
-  <!--footer end-->
-{% endblock %}

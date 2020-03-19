@@ -1,0 +1,114 @@
+{% extends "manage.html" %}
+{% load static %}
+
+{% block title %} My Modules {% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <ul class="nav nav-pills" id="course_tabs">
+                <li class="nav-item">
+                    <a class="nav-link {% if created %}active{% endif %}" href="{% url 'yaksh:courses' %}">
+                        My Courses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'yaksh:add_course' %}">
+                        Add New Course
+                    </a>
+                </li>
+                <li class="nav-item dropdown hide">
+                    <a class="nav-link dropdown-toggle active" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="true">More</a>
+                    <div class="dropdown-menu hide" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 37px, 0px); top: 0px; left: 0px; will-change: transform;">
+                    <a class="dropdown-item" href="{% url 'yaksh:show_all_quizzes' %}">
+                        Add/View Quizzes
+                    </a>
+                    <a class="dropdown-item" href="{% url 'yaksh:show_all_lessons' %}">
+                        Add/View Lessons
+                    </a>
+                    <a class="dropdown-item active" href="{% url 'yaksh:show_all_modules' %}">
+                        Add/View Modules
+                    </a>
+                    <a href="{% url 'grades:grading_systems'%}" class="dropdown-item" >
+                        Add/View Grading Systems
+                    </a>
+                </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <hr>
+    <a href="{% url 'yaksh:add_module' %}" class="btn btn-primary btn-lg">
+        <i class="fa fa-plus-circle"></i>&nbsp;Add new Module
+    </a>
+    {% if not modules %}
+        <br><br>
+        <div class="alert alert-info">
+            <center><h3> No new learning modules added</h3></center>
+        </div>
+    {% else %}
+        <center><h3> Learning Modules </h3></center>
+        <table class="table table-bordered table-responsive-sm">
+        <tr>
+        <th>Sr.No</th>
+        <th>Learning Modules</th>
+        <th>Design Module</th>
+        <th>Lessons/Quizzes</th>
+        </tr>
+        {% for module in modules %}
+        <tr>
+        <td width="2%">{{forloop.counter}}</td>
+        <td width="30%">
+            <div class="row">
+                <div class="col-md-7">
+                <a href="{% url 'yaksh:edit_module' module.id %}">
+                    {{ module.name }}
+                </a>
+                </div>
+                <div class="col-md-4">
+                    {% if module.active %}
+                        <span class="badge badge-success badge-pill">
+                            Active
+                        </span>
+                    {% else %}
+                        <span class="badge badge-danger badge-pill">
+                            Closed
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </td>
+        <td width="40%">
+            <a href="{% url 'yaksh:design_module' module.id %}">
+                Add Quizzes/Lessons for {{module.name}}
+            </a>
+        </td>
+        <td width="30%">
+            {% with module.get_learning_units as units %}
+                {% if units %}
+                    <ul class="list-group">
+                        {% for unit in units %}
+                            <li class="list-group-item">
+                                {% if unit.type == 'quiz' %}
+                                    {{unit.quiz.description}}
+                                {% else %}
+                                    {{unit.lesson.name}}
+                                {% endif %}
+                            </li>
+                        {% endfor %} <!-- end for learning units -->
+                    </ul>
+                {% else %}
+                    <span class="badge badge-danger badge-pill">
+                        No Learning units
+                    </span>
+                {% endif %}
+            {% endwith %}
+        </td>
+        {% endfor %} <!-- end for modules -->
+        </tr>
+        </table>
+    {% endif %}
+</div>
+{% endblock %}

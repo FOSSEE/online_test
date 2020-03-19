@@ -1,83 +1,94 @@
 {% extends "base.html" %}
 {% load custom_filters %}
+{% load static %}
+
+{% block title %}{{ paper.question_paper.quiz.description }}{% endblock %}
+
 {% block nav %}
-<div class="container-fluid yakshnav">
-  <nav class="navbar fixed-top navbar-expand-lg yakshheading yakshnav">
-    <div class="container">
-      <button class="navbar-toggler navbar-dark" type="button" data-toggle="collapse" data-target="#myNavbar" aria-controls="myNavbar" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon" style="color: white"></span>
-      </button>
-      <a class="navbar-brand">
-          <img src="{{ URL_ROOT }}/static/yaksh/images/yaksh_banner.png" alt="YAKSH">
-          </img>
-       </a>    
-      <div class="collapse navbar-collapse col-md-6" id="myNavbar">
-          <div class="nav nav-pills nav-fill ml-auto">
-              <span class="time-div nav-item" id="time_left" ></span>
-              <form id="logout" action="{{URL_ROOT}}/exam/quit/{{ paper.attempt_number }}/{{module.id}}/{{ paper.question_paper.id }}/{{course.id}}/" method="post" class="ml-auto">
-              {% csrf_token %}
-              <span class="nav-item"><button class="nav-link  btn-danger" type="submit" name="quit">
-                {% if paper.questions_unanswered.all %}
-                  Quit {{ quiz_type }}
-                {% else %}
-                  Finish {{ quiz_type }}
-                {% endif %}
-              <span class="fa fa-power-off"></span></button></span>
-              </form>
-          </div>
-      </div><!-- /.navbar -->
-    </div><!-- /.container -->
-  </nav><!-- /.navbar -->
+<div class="container-fluid">
+  <nav class="navbar navbar-expand-sm navbar-dark bg-primary fixed-top">
+    <img src="{% static 'yaksh/images/yaksh_banner.png' %}" alt="YAKSH">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarColor01">
+      <div class="row ml-auto">
+        <div class="col-md-4">
+          <span class="time-div nav-item" id="time_left"></span>
+        </div>
+        <div class="col-md-7">
+          <form id="logout" action="{% url 'yaksh:quit_quiz' paper.attempt_number module.id paper.question_paper.id course.id %}" method="post" class="ml-auto">
+            {% csrf_token %}
+            <span class="nav-item"><button class="btn btn-danger btn-lg" type="submit" name="quit">
+              {% if paper.questions_unanswered.all %}
+                Quit {{quiz_type}}
+              {% else %}
+                Finish {{quiz_type}}
+              {% endif %}
+            <i class="fa fa-power-off"></i></button></span>
+          </form>
+        </div>
+      </div>
+    </div>
+  </nav>
 </div>
 {% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="row">
-      <!-- Side bar -->
-      <div class="col-md-3 yakshlabel collapse" id="sidebar">
-        <center>
-          <b class="yakshheading">{{course.name}}</b><br>
-          {{ paper.question_paper.quiz.description }}</h4>
-          <hr>
-        </center>
-          <div class="yakshwell">            
-              <p class="text-center">Question Navigator</p>
-                <div>
-                  {% for qid in paper.get_all_ordered_questions %}
-                {%if paper.question_paper.quiz.allow_skip %}
-                {% if qid in paper.get_questions_unanswered %}
-                {% if qid.id == question.id %}
-                <a class="active btn btn-outline-success " href="#"data-toggle="tooltip"
-                    title="{{ qid.description|striptags }}"
-                    onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')">{{ forloop.counter }}</a>
-                {% else %}
-                <a class=" btn btn-outline-success " href="#" data-toggle="tooltip" title="{{ qid.description|striptags }}"
-                    onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')">{{ forloop.counter }}</a>
-                {% endif %}
-                {% endif %}
-                {% if qid in paper.get_questions_answered %}
-                <a class="btn btn-outline-light question-nav-bg" href="#" data-toggle="tooltip"
-                onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')"
-                title="{{ qid.description }}">{{ forloop.counter }}</a>
-                {% endif %}
-                {% else %}
-                {% if qid.id == question.id %}
-                <a class="active btn btn-outline-success" data-toggle="tooltip" title="{{ qid.description|striptags }}">{{ forloop.counter }}</a>
-                {% elif qid in paper.get_questions_answered %}
-                <a class="btn btn-outline-success question-nav-bg" href="#" data-toggle="tooltip"
-                onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')"
-                title="{{ qid.description }}">{{ forloop.counter }}</a>
-                {% else %}
-                <a class="disabled btn btn-outline-success " data-toggle="tooltip" title="{{ qid.description|striptags }}">{{ forloop.counter }}</a>
-                {% endif %}
-                {% endif %}
-                {% endfor %}
-                </div>
-                <br>
-          <p class="text-center">Question(s) left: <b>{{ paper.questions_left }}</b></p>
-          </div>
-          <br>
-          <table class = "legend_table table-bordered table-sm">
+    <!-- Side Component -->
+    <div class="col-md-3 bg-secondary" style="overflow-x: scroll;">
+      <br>
+      <center>
+        <b>{{course.name}}</b><br>
+        {{ paper.question_paper.quiz.description }}</h4>
+      </center>
+      <hr>
+      <center><p><b><u>Question Navigator</b></u></p></center>
+      <br>
+      <div class="justify-content-center">
+        {% for qid in paper.get_all_ordered_questions %}
+          {% if paper.question_paper.quiz.allow_skip %}
+            {% if qid in paper.get_questions_unanswered %}
+              {% if qid.id == question.id %}
+              <a class="active btn btn-outline-primary " href="#"data-toggle="tooltip"
+                  title="{{ qid.description|striptags|truncatechars:100 }}" style="width: 50px"
+                  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')">{{ forloop.counter }}</a>
+              {% else %}
+              <a class=" btn btn-outline-primary " href="#" data-toggle="tooltip" title="{{ qid.description|striptags|truncatechars:100 }}" style="width: 50px"
+                  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')">{{ forloop.counter }}</a>
+              {% endif %}
+            {% endif %}
+            {% if qid in paper.get_questions_answered %}
+            <a class="btn btn-success" href="#" data-toggle="tooltip" style="width: 50px"
+            onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')"
+            title="{{ qid.description|striptags|truncatechars:100 }}">{{ forloop.counter }}</a>
+            {% endif %}
+          {% else %}
+            {% if qid.id == question.id %}
+            <a class="active btn btn-outline-primary" data-toggle="tooltip" title="{{ qid.description|striptags|truncatechars:100 }}" style="width: 50px">{{ forloop.counter }}</a>
+            {% elif qid in paper.get_questions_answered %}
+            <a class="btn btn-success" href="#" data-toggle="tooltip" style="width: 50px"
+            onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ qid.id }}/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')"
+            title="{{ qid.description|striptags|truncatechars:100 }}">{{ forloop.counter }}</a>
+            {% else %}
+            <a class="btn btn-outline-primary" style="width: 50px" data-toggle="tooltip" title="{{ qid.description|striptags|truncatechars:100 }}">{{ forloop.counter }}</a>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </div>
+      <br>
+      <p><span class="btn btn-success"></span> Attempted question(s)</p>
+      <p><span class="btn btn-primary"></span> Current question</p>
+      <p><span class="btn btn-outline-primary"></span> Unattempted question(s)</p>
+      <br>
+      <div>
+        <p class="text-center">Question(s) left: <b>{{ paper.questions_left }}</b></p>
+      </div>
+      <br>
+      <div>
+          <table class="table table-bordered table-responsive-sm">
             <thead>
               <tr>
                 <th>Category</th>
@@ -97,16 +108,15 @@
               {% endfor %}
             </tbody>
           </table>
-      </div> <!--end of sidebar -->
-      <a href="#sidebar" data-toggle="collapse" id="sidebaricon"><i class="fa fa-navicon fa-lg"></i></a>
-
-      <main class="col" id="sidebarbody">
-        <div class="container-fluid yakshwell">
-          
-            {% block main %}
-            {% endblock %}
-        </div>
-      </main>
+        <br>
+      </div>
+    </div>
+    <!-- Main Component -->
+    <div class="col-md-9">
+      <br>
+      {% block main %}
+      {% endblock %}
+    </div>
   </div>
 </div>
 

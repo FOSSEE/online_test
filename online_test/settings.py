@@ -47,8 +47,8 @@ INSTALLED_APPS = (
     'grades',
     'rest_framework',
     'api',
-    'corsheaders', #added
-    'rest_framework.authtoken' #added
+    'corsheaders',
+    'rest_framework.authtoken'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -168,8 +168,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'social_django.context_processors.backends',
                 'social_django.context_processors.login_redirect',
+                'django.contrib.messages.context_processors.messages',
             ],
-            'debug': False,
+            'debug': True,  # make this False in production
         }
     },
 ]
@@ -193,6 +194,7 @@ SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id, name, email'
 }
 
+
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
@@ -210,9 +212,5 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-# CORS_ORIGIN_WHITELIST = [
-#     '*',
-# ]
-# CORS_ORIGIN_REGEX_WHITELIST = [
-#     '*',
-# ]
+
+TAGGIT_CASE_INSENSITIVE = True

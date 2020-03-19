@@ -44,3 +44,6 @@ class GradeRange(models.Model):
     upper_limit = models.FloatField()
     grade = models.CharField(max_length=10)
     description = models.CharField(max_length=127, null=True, blank=True)
+
+    def __str__(self):
+        return self.system.name.title()

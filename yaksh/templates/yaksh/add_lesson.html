@@ -1,85 +1,161 @@
 {% extends "manage.html" %}
 {% load custom_filters %}
+{% load static %}
 
 {% block title %}Create/Edit Lesson{% endblock %}
 
 {% block script %}
-<script src="{{ URL_ROOT }}/static/yaksh/js/lesson.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-ui-1.12.1.js"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/lesson.js' %}">
+</script>
+<script type="text/javascript" src="{% static 'yaksh/js/jquery-ui.js' %}">
+</script>
 {% endblock %}
 
 {% block css %}
-<link rel="stylesheet" href="{{URL_ROOT}}/static/yaksh/css/jquery-ui/jquery-ui-1.12.1.css">
-<link rel="stylesheet" href="{{URL_ROOT}}/static/yaksh/css/lesson.css">
+<link rel="stylesheet" href="{% static 'yaksh/css/lesson.css' %}" type="text/css" />
+<link rel="stylesheet" href="{% static 'yaksh/css/jquery-ui/jquery-ui.css' %}" type="text/css" />
 {% endblock %}
 
 {% block content %}
-<div class="yakshwell container">
+<div class="container">
 {% if error %}
 <div class="alert alert-danger">
     {{error}}
 </div>
 {% endif %}
-<form name=frm id=frm action="" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <center>
-    <table class="table table-bordered table-responsive-sm">
-    {{ lesson_form.as_table }}
-    {{ lesson_file_form.as_table }}
-    </table>
-    </center>
-    <br><br>
-    {% if lesson_files %}
-    <center>
-    <div class="alert alert-success col-md-8 animated flash">
-        <h4>Files added to this lesson</h4>
-    </div>
-    </center>
-        {% for f in lesson_files %}
-            <li class="list-group-item">
-                <h4>
-                    <input type="checkbox" name="delete_files" value="{{f.id}}">
-                    </input>
-                    <a href="{{f.file.url}}">{{ f.file.name|file_title }}</a>
-                </h4>
-            </li>
-        {% endfor %}
-    {% else %}
-
-    <center>
-    <div class="alert alert-warning col-md-8 animated flash">
-        <h4 class="alert-warning">No Files added to this lesson</h4>
-    </div>
-    </center>
-    {% endif %}
-    <br><br>
-    <center>
-    <button class="btn btn-success" type="submit" id="submit" name="Save"> Save
-    </button>
-    {% if lesson_files %}
-    <button class="btn btn-danger" type="submit" id="submit" name="Delete"> Delete Files
-    </button>
-    {% endif %}
-    {% if course_id %}
-    <button class="btn btn-danger" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button>
-    {% else %}
-    <button class="btn btn-danger" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/all_lessons/");'>Cancel</button>
-    {% endif %}
-    </form>
-    <button class="btn btn-outline-primary" type="button" name="button" id="preview">Preview Lesson Description
-    </button>
-    <button class="btn btn-outline-primary" type="button" name="button" id="embed">
-        Embed Video link
-    </button>
-    </center>
-    <hr>
-    <div class="card" id="preview_text_div" style="display: none;">
-        <div class="card-heading">
-            <center>
-                <h3>Description Preview</h3>
-            </center>
-        </div>
-        <div class="card-body" id="description_body">
+<div class="container">
+    <div class="row justify-content-center form-group">
+        <div class="col-md-9 col-md-offset-4">
+            {% if course_id %}
+            <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
+                <i class="fa fa-arrow-left"></i>
+                Back
+            </a>
+            {% else %}
+            <a class="btn btn-primary" href="{% url 'yaksh:show_all_lessons' %}">
+                <i class="fa fa-arrow-left"></i>
+                Back
+            </a>
+            {% endif %}
+            <br>
+            {% if messages %}
+                <br>
+                {% for message in messages %}
+                <div class="alert alert-dismissible alert-{{ message.tags }}">
+                    <button type="button" class="close" data-dismiss="alert">
+                        <i class="fa fa-close"></i>
+                    </button>
+                    <strong>{{ message }}</strong>
+                </div>
+                {% endfor %}
+            {% endif %}
+            <br>
+            <form name=frm id=frm action="" method="post" enctype="multipart/form-data">
+                <fieldset>
+                    {% csrf_token %}
+                    {% if lesson_form.errors %}
+                        {% for field in lesson_form %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-dismissible alert-danger">
+                                    <button type="button" class="close" data-dismiss="alert">
+                                        <i class="fa fa-close"></i>
+                                    </button>
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in lesson_form.non_field_errors %}
+                            <div class="alert alert-dismissible alert-danger">
+                                <button type="button" class="close" data-dismiss="alert">
+                                    <i class="fa fa-close"></i>
+                                </button>
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    {{lesson_form.name}}
+                    <br>
+                    {{lesson_form.description}}
+                    <br>
+                    Active:&nbsp;{{lesson_form.active}}
+                    <br><br>
+                    Video File:
+                    <span class="badge badge-info">
+                        {{lesson_form.video_file.help_text}}
+                    </span>
+                    <div class="input-group mb-3">
+                        <div class="custom-file">
+                            {{lesson_form.video_file}}
+                            <label class="custom-file-label" for="id_video_file">
+                                Choose file
+                            </label>
+                        </div>
+                    </div>
+                    <br>
+                    Lesson Files:
+                    <div class="input-group mb-3">
+                        <div class="custom-file">
+                            {{lesson_file_form.Lesson_files}}
+                            <label class="custom-file-label" for="id_video_file">
+                                Choose file
+                            </label>
+                        </div>
+                    </div>
+                    <br>
+                    {% if lesson_files %}
+                    <center>
+                    <div class="alert alert-info">
+                        <h4>Files added to this lesson</h4>
+                    </div>
+                    </center>
+                        {% for f in lesson_files %}
+                            <li class="list-group-item">
+                                <h4>
+                                    <input type="checkbox" name="delete_files" value="{{f.id}}">
+                                    </input>
+                                    <a href="{{f.file.url}}">{{ f.file.name|file_title }}</a>
+                                </h4>
+                            </li>
+                        {% endfor %}
+                        <br>
+                    {% else %}
+                    <center>
+                        <div class="alert alert-warning">
+                            <h4 class="alert-warning">No Files added to this lesson</h4>
+                        </div>
+                    </center>
+                    {% endif %}
+                    <center>
+                        <button class="btn btn-success btn-lg" type="submit" id="submit" name="Save">
+                            <i class="fa fa-save"></i>
+                            Save
+                        </button>
+                        {% if lesson_files %}
+                        <button class="btn btn-danger btn-lg" type="submit" id="submit" name="Delete"> <i class="fa fa-trash"></i>&nbsp;Delete Files
+                        </button>
+                        {% endif %}
+                        <button class="btn btn-outline-primary btn-lg" type="button" name="button" id="preview">
+                            <i class="fa fa-eye"></i>
+                            Preview Description
+                        </button>
+                        <button class="btn btn-outline-primary btn-lg" type="button" name="button" id="embed">
+                            <i class="fa fa-angle-left"></i>&nbsp;<i class="fa fa-angle-right"></i>
+                            Embed Video link
+                        </button>
+                    </center>
+                    </form>
+                    <hr>
+                    <div class="card" id="preview_text_div" style="display: none;">
+                        <div class="card-heading">
+                            <center>
+                                <h3>Description Preview</h3>
+                            </center>
+                        </div>
+                        <div class="card-body" id="description_body">
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
         </div>
     </div>
 </div>

@@ -322,8 +322,12 @@ class LearningUnitTestCases(unittest.TestCase):
     def test_learning_unit(self):
         self.assertEqual(self.learning_unit_one.type, 'lesson')
         self.assertEqual(self.learning_unit_two.type, 'quiz')
-        self.assertEqual(self.learning_unit_one.lesson, self.lesson)
-        self.assertEqual(self.learning_unit_two.quiz, self.quiz)
+        self.assertEqual(
+            self.learning_unit_one.get_lesson_or_quiz(), self.lesson
+        )
+        self.assertEqual(
+            self.learning_unit_two.get_lesson_or_quiz(), self.quiz
+        )
         self.assertIsNone(self.learning_unit_one.quiz)
         self.assertIsNone(self.learning_unit_two.lesson)
         self.assertTrue(self.learning_unit_one.check_prerequisite)
@@ -588,6 +592,46 @@ class QuestionTestCases(unittest.TestCase):
             self.user1
             )
         self.assertEqual(msg, "Unable to parse test case data")
+
+    def test_get_test_case_options(self):
+        """
+            Test if test case options are selected based on
+            question type and language
+        """
+
+        # Given
+        question_types = [
+            "mcq", "integer", "float", "string", "arrange", "upload"
+        ]
+        que_list = []
+        for i, q_type in enumerate(question_types, 1):
+            que_list.append(Question.objects.create(
+                summary='Python Question {0}'.format(i), language='python',
+                type=q_type, active=True,
+                description='{0} Question'.format(q_type),
+                points=1.0, user=self.user1
+            ))
+
+        # When
+        expected_tc_options = [
+            ('standardtestcase', 'Standard TestCase'),
+            ('stdiobasedtestcase', 'StdIO TestCase'),
+            ('hooktestcase', 'Hook TestCase')
+        ]
+        other_tc_options = [
+            ('mcqtestcase', 'Mcq TestCase'),
+            ('integertestcase', 'Integer TestCase'),
+            ('floattestcase', 'Float TestCase'),
+            ('stringtestcase', 'String TestCase'),
+            ('arrangetestcase', 'Arrange TestCase'),
+            ('hooktestcase', 'Hook TestCase')
+        ]
+
+        # Then
+        obtained_tc_options = self.question2.get_test_case_options()
+        self.assertEqual(expected_tc_options, obtained_tc_options)
+        for que, tc_option in zip(que_list, other_tc_options):
+            self.assertEqual(que.get_test_case_options()[0], tc_option)
 
 
 ###############################################################################

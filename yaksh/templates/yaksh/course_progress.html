@@ -1,0 +1,79 @@
+<!-- Course Status -->
+{% if is_progress %}
+<div class="course_data">
+    {% if student_details %}
+        <div class="text-center">
+            <h3>Course Progress</h3>
+            <br>
+            <div class="row">
+                <div class="col">
+                    Number Of Students: {{ students_no }}
+                </div>
+                <div class="col">
+                    <a href="{% url 'yaksh:download_course_progress' course.id %}" class="btn btn-info">
+                        <i class="fa fa-download"></i>&nbsp;Download Data
+                    </a>
+                </div>
+            </div>
+        </div>
+        <br>
+        {% include "yaksh/paginator.html" %}
+        <table class="tablesorter table table-bordered table-responsive-sm" id="course_table" data-sortlist="[0,0]">
+        <thead>
+            <tr>
+                <th>Sr. No</th>
+                <th>Roll No.</th>
+                <th>Name</th>
+                <th>Current Unit</th>
+                <th>Completion Percentage</th>
+                <th>Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student, grade, percent, unit in student_details %}
+                <tr>
+                    <td>{{forloop.counter}}</td>
+                    <td>
+                        {{ student.profile.roll_number}}
+                    </td>
+                    <td width="50%">
+                        <input type="hidden" id="url-{{student.id}}" data-url="{% url 'yaksh:get_user_data' course.id student.id %}">
+                        <a class="user_data" data-item-id="{{course.id}}+{{student.id}}" data-toggle="tooltip" title="Click to view Overall Course progress" data-placement="top">
+                            {{ student.get_full_name|title}}
+                            <i class="fa fa-caret-down"></i>
+                        </a>
+                        <div id="show_status_{{course.id}}_{{student.id}}" style="display: None;">
+                        </div>
+                    </td>
+                    <td>
+                        {% if unit %}
+                            {% if unit.type == 'quiz' %}
+                                {{unit.quiz.description}}
+                            {% else %}
+                                {{unit.lesson.name}}
+                            {% endif %}
+                        {% else %}
+                            NA
+                        {% endif%}
+                    </td>
+                    <td>
+                        {{ percent }} %
+                    </td>
+                    <td>
+                        {{ grade }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+        {% include "yaksh/paginator.html" %}
+    {% else %}
+        <center>
+            <span class="badge badge-warning">
+                <big>No course data found</big>
+            </span>
+        </center>
+    {% endif %}
+</div>
+<!-- End Course Status -->
+{% endif %}

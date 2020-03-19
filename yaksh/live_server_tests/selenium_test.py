@@ -74,6 +74,7 @@ class SeleniumTest():
             submit_answer_elem.click()
             WebDriverWait(self.driver, 90).until(ElementDisplay(
                 (By.XPATH, "//*[@id='ontop']")))
+            self.driver.execute_script("scrollBy(0,-1000);")
 
     def test_c_question(self, question_label):
         # Incorrect Answer
@@ -127,7 +128,7 @@ class SeleniumTest():
         # open module link
         self.driver.find_elements_by_partial_link_text(
             'START')[0].click()
-        self.driver.find_element_by_link_text('Start').click()
+        self.driver.find_element_by_link_text('START').click()
         # open quiz link
         self.driver.find_element_by_link_text(self.quiz_name).click()
 

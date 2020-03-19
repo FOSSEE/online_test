@@ -1,0 +1,29 @@
+<center><h3>Teacher(s)/TA(s)</h3></center>
+<br>
+
+{% if teachers %}
+    <form action="{% url 'yaksh:remove_teacher' course.id %}" method="post">
+    {% csrf_token %}
+    <div class="container">
+        <table class="table table-responsive-sm course-detail">
+            <tr>
+                <th>Select</th>
+                <th>Name</th>
+            </tr>
+            {% for teacher in teachers %}
+                <tr>
+                    <td><input type="checkbox" name="remove" value="{{ teacher.id }}"></td>
+                    <td>{{ teacher.get_full_name }}</td>
+                </tr>
+            {% endfor %}
+        <table>
+    </div>
+    <br>
+    <button class="btn btn-danger" type="submit" data-toggle="tooltip" title="Remove Selected Teachers from this course">
+        <i class="fa fa-minus-square"></i>
+        Remove Teachers
+    </button>
+    </form>
+{% else %}
+    <center><b class="badge badge-warning">No Teacher(s) added</b></center>
+{% endif %}

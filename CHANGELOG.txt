@@ -1,3 +1,34 @@
+=== 0.13.0 (11-03-2020) ===
+
+* Revamped the UI and UX for the interface and standardised with Bootstrap 4 (Lumen theme from https://bootswatch.com/)
+* Fixed a bug that caused failure when pre-existing tags for Questions have first capital letter
+* Registered CourseStatus model so that it is available on the Django admin interface
+* Added filters in the Django admin for filtering courses
+* Modified admin.py to display only specific fields of AnswerPaper
+
+=== 0.12.0 (04-02-2020) ===
+
+* Added syntax highlighting to the code answers in answerpaper
+* Added feature to allow adding newlines to Standard IO testcases
+* Added an evaluator to support R language
+* Fixed bug to only allow self created grading systems to show up in the course
+form
+* Fixed bug to hide deleted questions from search results
+* Fixed bug to check if residual files exist before teardown operations in
+JavaStdIOEvaluator
+
+=== 0.11.0 (27-09-2019) ===
+
+* Upgraded python-social-auth 0.2.19 to social-auth-app-django 3.1.0
+* Moved all download related templates to a new subfolder and added homepage link to navbar logo
+* Fixed Python version used in command line installer
+* Fixed HTML/CSS to prevent browser from horizontal scrolling
+* Improved the download course functionality
+* Fixed Nonetype error due to incorrect if-else during course code search
+* Fixed course filter query to display only non trial courses on the dashboard
+* Upgrade Django version
+* Fixed multiple bugs in Offline and Online Yaksh interface
+
 === 0.10.0 (24-04-2019) ===
 
 * Upgraded Django version from 1.10 to 1.11.18.
@@ -14,7 +45,7 @@
 * Fixed the bug that prevented students from opening a quiz if status is inprogress
 * Changed UI on Course Status Page and Monitor Page
 * Added functionality to restrict access to next module based on passing previous module
-* Fixed the CSV upload bug that preventeduser from being added to a new course in case the user was aready enrolled in another course
+* Fixed the CSV upload bug that prevented user from being added to a new course in case the user was aready enrolled in another course
 
 === 0.9.1 (07-02-2019) ===
 

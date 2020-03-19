@@ -1,11 +1,15 @@
 from django import template
 from django.template.defaultfilters import stringfilter
+from django.forms.fields import CheckboxInput
 from ast import literal_eval
 import os
 try:
     from itertools import zip_longest
 except ImportError:
     from itertools import izip_longest as zip_longest
+from pygments import highlight
+from pygments.lexers import get_lexer_by_name
+from pygments.formatters import HtmlFormatter
 
 register = template.Library()
 
@@ -87,3 +91,31 @@ def replace_spaces(name):
 @register.simple_tag
 def course_grade(course, user):
     return course.get_grade(user)
+
+
+@register.filter(name='is_checkbox')
+def is_checkbox(value):
+    return isinstance(value, CheckboxInput)
+
+
+@register.simple_tag
+def pygmentise_user_answer(language, answer):
+    lexer = get_lexer_by_name(language, stripall=True)
+    formatter = HtmlFormatter(linenos="inline",
+                              cssclass="highlight",
+                              style="colorful")
+    style = formatter.get_style_defs('.highlight')
+    result = highlight(answer, lexer, formatter)
+    return result, style
+
+
+@register.simple_tag
+def course_grade(course, user):
+    return course.get_grade(user)
+
+
+@register.filter(name='highlight_spaces')
+def highlight_spaces(text):
+    return text.replace(
+        " ", '<span style="background-color:#ffb6db">&nbsp</span>'
+        )

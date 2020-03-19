@@ -1,0 +1,63 @@
+<!-- Send Mail -->
+{% if is_mail %}
+<div id="send-mail">
+    {% if enrolled %}
+    <form action="{% url 'yaksh:send_mail' course.id %}" method="post" id="send_mail_form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="card">
+            <div class="card-body">
+                <textarea name="subject" class="form-control" id="subject" placeholder="Email Subject"></textarea>
+                <br><br>
+                <textarea name="body" id="email_body"></textarea><br>
+                Attachments: 
+                <div class="input-group mb-3">
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" name="email_attach" id="upload" multiple="">
+                        <label class="custom-file-label" for="upload">Choose file</label>
+                    </div>
+                </div>
+                <br>
+            </div>
+        </div>
+        <br>
+        <input type="checkbox" class="send_check"/>&nbsp;
+        <font size="5">Select all</font>
+        <div id="sender_list">
+            <table id="mail_table" class="tablesorter table table-striped table-responsive-sm course-detail" data-sortlist="[1,0]">
+                <thead>
+                    <th></th>
+                    <th>Full Name&nbsp;<i class="fa fa-sort"></i></th>
+                    <th>Email&nbsp;<i class="fa fa-sort"></i></th>
+                    <th>Roll Number&nbsp;<i class="fa fa-sort"></i></th>
+                    <th>Institute&nbsp;<i class="fa fa-sort"></i></th>
+                </thead>
+                <tbody>
+                    {% for enroll in enrolled %}
+                        <tr>
+                        <td>
+                            {{ forloop.counter }}.
+                            <input type="checkbox" name="check" value="{{ enroll.id }}">
+                        </td>
+                        <td> {{ enroll.get_full_name|title }} </td>
+                        <td> {{enroll.email}}</td>
+                        {% with enroll.profile as user_profile %}
+                            <td> {{user_profile.roll_number}}</td>
+                            <td> {{user_profile.institute}}</td>
+                        {% endwith %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button class="btn btn-success btn-lg" type="submit" name='send_mail' value='send_mail' id="send_mail">
+                Send Mail
+            </button>
+        </div>
+    </form>
+    {% else %}
+        <center>
+            <span class="badge badge-warning"><big> No enrolled students yet</big></span>
+        </center>
+    {% endif %}
+</div>
+<!-- End send mail -->
+{% endif %}

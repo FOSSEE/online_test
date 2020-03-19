@@ -1,39 +1,36 @@
 {% extends "manage.html" %}
+{% load static %}
 
 {% block title %} Design Question Paper {% endblock title %}
 
 {% block subtitle %} Design Question Paper {% endblock %}
 
 {% block css %}
-    <link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/question_paper_creation.css" />
-<style>
-select
-{
-    width:auto;
-}
-</style>
+    <link rel="stylesheet" media="all" type="text/css" href="{% static 'yaksh/css/question_paper_creation.css' %}" />
 {% endblock %}
 
 {% block script %}
-    <script src="{{ URL_ROOT }}/static/yaksh/js/jquery-3.3.1.min.js"></script>
-    <script src="{{ URL_ROOT }}/static/yaksh/js/jquery-ui.js"></script>
-    <script src="{{ URL_ROOT }}/static/yaksh/js/bootstrap.min.js"></script>
-    <script src="{{ URL_ROOT }}/static/yaksh/js/question_paper_creation.js"></script>
+    <script src="{% static 'yaksh/js/jquery-ui.js' %}"></script>
+    <script src="{% static 'yaksh/js/question_paper_creation.js' %}"></script>
 {% endblock %}
 
 {% block content %}
-<div class="yakshwell container">
+<div class="container">
 <input type=hidden id="url_root" value={{ URL_ROOT }}>
 {% if course_id %}
-    <form action="{{ URL_ROOT }}/exam/manage/designquestionpaper/{{ qpaper.quiz.id }}/{{ qpaper.id }}/{{course_id}}/" method="POST" id="design_q">
-    <a href="{{URL_ROOT}}/exam/manage/courses" class="btn btn-danger">Cancel</a>
+    <form action="{% url 'yaksh:designquestionpaper' qpaper.quiz.id qpaper.id course_id %}" method="POST" id="design_q">
+    <a href="{% url 'yaksh:get_course_modules' course_id %}" class="btn btn-primary">
+        <i class="fa fa-arrow-left"></i>&nbsp;Back
+    </a>
 {% else %}
-    <form action="{{ URL_ROOT }}/exam/manage/designquestionpaper/{{ qpaper.quiz.id }}/{{ qpaper.id }}/" method="POST" id="design_q">
-    <a href="{{URL_ROOT}}/exam/manage/courses/all_quizzes" class="btn btn-danger">Cancel</a>
+    <form action="{% url 'yaksh:designquestionpaper' qpaper.quiz.id qpaper.id %}" method="POST" id="design_q">
+    <a href="{% url 'yaksh:show_all_quizzes' %}" class="btn btn-primary">
+        <i class="fa fa-arrow-left"></i>&nbsp;Back
+    </a>
 {% endif %}
     {% csrf_token %}
     <input type=hidden name="is_active" id="is_active" value="{{ state }}">
-<center><b>Manual mode to design the {{lang}}  Question Paper</center><br>
+    <center><b>Manual mode to design the {{lang}}  Question Paper</center><br>
     <div class = "tab-base">
         <ul class="nav nav-pills tabs">
         <li id="fixed-tab">
@@ -55,86 +52,105 @@ select
         </a></li>
     </ul>
     </div>
+    <br>
     <div>
-        <h3>Total Marks:  <span id="total_marks" class="well"> {{ qpaper.total_marks }} </span></h3>
+        <h3>Total Marks:
+            <span id="total_marks" class="well"> {{ qpaper.total_marks }}</span>
+        </h3>
     </div>
-<div class="tab-content">
-    <!-- common to fixed and random questions -->
-    <div class="row" id="selectors">
-        <div class = "col-md-8">
-            <h5>Please select Question type and Marks</h5>
+    <br>
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-dismissible alert-{{ message.tags }}">
+            <button type="button" class="close" data-dismiss="alert">
+                <i class="fa fa-close"></i>
+            </button>
+            <strong>{{ message }}</strong>
         </div>
-        <div class="col-md-6">
-            {{ filter_form.question_type }}
-        </div>
-        <div class="col-md-6">
-            {{ filter_form.marks }}
-        </div>
-    </div> <!-- /.row -->
-    <br><br>
-    {% csrf_token %}
-    <div class="tab-pane active" id="fixed-questions">
-        <h4>Or</h4>
-        <!-- Search questions using tags -->
-        <h4>Search using Tags: </h4>
-        <span class="input-group-addon" id="basic-addon1">Search Questions: </span>
-        <div class="col-md-14">
-        <div class="input-group">
-            <input type="text" id="question_tags" name="question_tags" class="form-control"
-             placeholder="Search using comma separated Tags">
-            <span class="input-group-btn">
-            <button class="btn btn-default" type="submit">Search</button>
-            </span>
-            <div class="col-md-6">
-            <select class="form-control" id="sel1" onchange="append_tag(this);">
-            {% if all_tags %}
-             <option value="" disabled selected>Available Tags</option>
-            {% for tag in all_tags %}
-            <option>
-                {{tag}}
-            </option>
-            {% endfor %}
-            {% else %}
-             <option value="" disabled selected>No Available Tags</option>
-            {% endif %}
-            </select>
+        {% endfor %}
+    {% endif %}
+    <div class="tab-content">
+        <!-- common to fixed and random questions -->
+        <div class="row" id="selectors">
+            <div class = "col-md-8">
+                <h5>Please select Question type and Marks</h5>
             </div>
-        </div>
-        </div>
-        <br><br>
-        <div class="row">
             <div class="col-md-6">
-                <div id="fixed-available-wrapper">
-                    <p><u>Select questions to add:</u></p>
-                    <div id="fixed-available">
-                        {% if state == "fixed"  or state == "None" %}
-                            <ul class="inputs-list">
-                               {% for question in questions %}
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" name="questions" data-qid="{{question.id}}" value={{question.id}}>
-                                            <span>
-                                                {% if user == question.user %}
-                                                    <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}" target="_blank">{{ question.summary }}</a>
-                                                {% else %}
-                                                    {{question.summary}}
-                                                {% endif %}
-                                            </span>
-                                            <span> {{ question.points }}</span>
-                                        </label>
-                                     </li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <br /><br />
-                    <button id="add-fixed" name="add-fixed" class="btn small btn-primary pull-right" type="submit">Add to paper</button>
+                {{ filter_form.question_type }}
+            </div>
+            <div class="col-md-6">
+                {{ filter_form.marks }}
+            </div>
+        </div> <!-- /.row -->
+        <br>
+        {% csrf_token %}
+        <div class="tab-pane active" id="fixed-questions">
+            <h4>Or</h4>
+            <!-- Search questions using tags -->
+            <h4>Search using Tags: </h4>
+            <span class="input-group-addon" id="basic-addon1">Search Questions: </span>
+            <div class="col-md-14">
+            <div class="input-group">
+                <input type="text" id="question_tags" name="question_tags" class="form-control"
+                 placeholder="Search using comma separated Tags">
+                <span class="input-group-btn">
+                <button class="btn btn-outline-primary" type="submit">
+                    <i class="fa fa-search"></i>&nbsp;Search
+                </button>
+                </span>
+                <div class="col-md-6">
+                <select class="form-control" id="sel1" onchange="append_tag(this);">
+                {% if all_tags %}
+                 <option value="" disabled selected>Available Tags</option>
+                {% for tag in all_tags %}
+                <option>
+                    {{tag}}
+                </option>
+                {% endfor %}
+                {% else %}
+                 <option value="" disabled selected>No Available Tags</option>
+                {% endif %}
+                </select>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div id="fixed-added-wrapper">
-                    <p><u>Fixed questions currently in paper:</u></p>
-                    <div id="fixed-added">
+            </div>
+            <br><br>
+            <br>
+            <div class="row">
+                <div class="col-md-6">
+                    <div id="fixed-available-wrapper">
+                        <p><u>Select questions to add:</u></p>
+                        <div id="fixed-available">
+                            {% if state == "fixed"  or state == "None" %}
+                                <ul class="inputs-list">
+                                   {% for question in questions %}
+                                        <li>
+                                            <label>
+                                                <input type="checkbox" name="questions" data-qid="{{question.id}}" value={{question.id}}>
+                                                <span>
+                                                    {% if user == question.user %}
+                                                        <a href="{% url 'yaksh:add_question' question.id %}" target="_blank">{{ question.summary }}</a>
+                                                    {% else %}
+                                                        {{question.summary}}
+                                                    {% endif %}
+                                                </span>
+                                                <span> {{ question.points }}</span>
+                                            </label>
+                                         </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <br />
+                    <button id="add-fixed" name="add-fixed" class="btn btn-success pull-right" type="submit">
+                        <i class="fa fa-plus-square"></i>&nbsp;Add to paper
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <div id="fixed-added-wrapper">
+                        <p><u>Fixed questions currently in paper:</u></p>
+                        <div id="fixed-added">
                             <ul class="inputs-list">
                                {% for question in fixed_questions %}
                                     <li>
@@ -143,7 +159,7 @@ select
                                             data-qid="{{question.id}}" value={{question.id}}>
                                             <span>
                                                 {% if user == question.user %}
-                                                    <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}" target="_blank">{{ question.summary }}</a>
+                                                    <a href="{% url 'yaksh:add_question' question.id %}" target="_blank">{{ question.summary }}</a>
                                                 {% else %}
                                                     {{question.summary}}
                                                 {% endif %}
@@ -153,119 +169,125 @@ select
                                      </li>
                                 {% endfor %}
                             </ul>
-                    </div>
-                     <br />
-                    <button id="remove-fixed" name="remove-fixed" class="btn btn-danger pull-right" type="submit"> Remove from paper</button>
-                </div>
-            </div>
-        </div> <!-- /.row -->
-        <br>
-        <div class="pull-right">
-            <a class="btn btn-info" id="fixed-next">Next &gt;</a>
-        </div>
-    </div> <!-- /#fixed-questions -->
-
-    <div class="tab-pane" id="random-questions">
-        <div class="row">
-            <div class="col-md-6">
-                <div id="random-available-wrapper">
-                    <p><u>Select questions to add to the pool:</u></p>
-                    <div id="random-available">
-                        {% if state == "random" %}
-                            <select id="num_of_questions" name="num_of_questions">
-                                <option value="1">Number of questions to be picked from the pool</option>
-                                    {% for q in questions %}
-                                        {% if forloop.counter0 != 0 %}
-                                             <option value={{forloop.counter0}}>{{ forloop.counter0}}</option>
-                                             {% endif %}
-                                         {% if questions|length == 1%}
-                                             <option value=1>1</option>
-                                         {% endif %}
-                                    {% endfor %}
-                            </select>
-                            <ul class="inputs-list">
-                               {% for question in questions %}
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" name="random_questions" data-qid="{{question.id}}" value={{question.id}}>
-                                            <span>
-                                                {% if user == question.user %}
-                                                    <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}" target="_blank">{{ question.summary }}</a>
-                                                {% else %}
-                                                    {{question.summary}}
-                                                {% endif %}</span>
-                                            <span> {{ question.points }} </span>
-                                        </label>
-                                     </li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <br /><br />
-                    <button id="add-random" name="add-random" class="btn btn-primary pull-right" type="submit">Add to paper</button>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div id="random-added-wrapper">
-                    <p><u>Pool of  questions currently in paper:</u></p>
-                    <div id="random-added">
-                            <ul class="inputs-list">
-                                {% for random_set in random_sets %}
-                                        <li>
-                                        <label>
-                                            <input type="checkbox" name="random_sets" data-qid="{{random_set.id}}" value={{random_set.id}}>
-                                            <span> Random Set {{ forloop.counter }}  (will take {{ random_set.num_questions }} randomly out of  {{ random_set.questions.count }})</span>
-                                        </label>
-                                        </li>
-                                    {% for question in random_set.questions.all %}
-                                        <li>
-                                        <label>
-                                            <span>
-                                                {% if user == question.user %}
-                                                    <a href="{{URL_ROOT}}/exam/manage/addquestion/{{ question.id }}" target="_blank">{{ question.summary }}</a>
-                                                {% else %}
-                                                    {{question.summary}}
-                                                {% endif %}</span>
-                                            <span> {{ question.points }} </span>
-                                        </label>
-                                        </li>
-                                    {% endfor %}
-                                {% endfor %}
-                            </ul>
+                        </div>
                     </div>
                     <br />
-                    <button id="remove-random" name="remove-random" class="btn btn-danger pull-right" type="submit"> Remove from paper</button>
+                    <button id="remove-fixed" name="remove-fixed" class="btn btn-danger pull-right" type="submit">
+                        <i class="fa fa-minus-square"></i>&nbsp;Remove from paper
+                    </button>
                 </div>
+            </div> <!-- /.row -->
+            <br>
+            <div class="pull-right">
+                <a class="btn btn-info" id="fixed-next">Next &gt;</a>
             </div>
-        </div> <!-- /.row -->
-        <br>
-        <div class="pull-left">
-            <a class="btn btn-info" id="random-prev">&lt; Previous</a>
-        </div>
-        <div class="pull-right">
-            <a class="btn btn-info" id="random-next">Next &gt;</a>
-        </div>
-   </div> <!-- /#random-questions -->
+        </div> <!-- /#fixed-questions -->
 
-    <div class="tab-pane" id="finish">
-        <center>
-            <h5><u>Almost finished creating your question paper</u></h5>
-            <label style="float: none;">
-                {{ qpaper_form.shuffle_questions }}
-                <span>Shuffle questions' order for each student</span>
-            </label> <br><br>
-            <label style="float: none;">
-                {{ qpaper_form.shuffle_testcases }}
-                <span>Shuffle MCQ/MCC options for each student</span>
-            </label> <br><br>
-            <input class ="btn btn-success" type="submit" name="save" id="save" value="Save question paper">
+        <div class="tab-pane" id="random-questions">
+            <div class="row">
+                <div class="col-md-6">
+                    <div id="random-available-wrapper">
+                        <p><u>Select questions to add to the pool:</u></p>
+                        <div id="random-available">
+                            {% if state == "random" %}
+                                <select id="num_of_questions" name="num_of_questions">
+                                    <option value="1">Number of questions to be picked from the pool</option>
+                                        {% for q in questions %}
+                                            {% if forloop.counter0 != 0 %}
+                                                 <option value={{forloop.counter0}}>{{ forloop.counter0}}</option>
+                                                 {% endif %}
+                                             {% if questions|length == 1%}
+                                                 <option value=1>1</option>
+                                             {% endif %}
+                                        {% endfor %}
+                                </select>
+                                <ul class="inputs-list">
+                                   {% for question in questions %}
+                                        <li>
+                                            <label>
+                                                <input type="checkbox" name="random_questions" data-qid="{{question.id}}" value={{question.id}}>
+                                                <span>
+                                                    {% if user == question.user %}
+                                                        <a href="{% url 'yaksh:add_question' question.id %}" target="_blank">{{ question.summary }}</a>
+                                                    {% else %}
+                                                        {{question.summary}}
+                                                    {% endif %}</span>
+                                                <span> {{ question.points }} </span>
+                                            </label>
+                                         </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <br>
+                    <button id="add-random" name="add-random" class="btn btn-success pull-right" type="submit">
+                        <i class="fa fa-plus-square"></i>&nbsp;Add to paper
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <div id="random-added-wrapper">
+                        <p><u>Pool of  questions currently in paper:</u></p>
+                        <div id="random-added">
+                                <ul class="inputs-list">
+                                    {% for random_set in random_sets %}
+                                            <li>
+                                            <label>
+                                                <input type="checkbox" name="random_sets" data-qid="{{random_set.id}}" value={{random_set.id}}>
+                                                <span> Random Set {{ forloop.counter }}  (will take {{ random_set.num_questions }} randomly out of  {{ random_set.questions.count }})</span>
+                                            </label>
+                                            </li>
+                                        {% for question in random_set.questions.all %}
+                                            <li>
+                                            <label>
+                                                <span>
+                                                    {% if user == question.user %}
+                                                        <a href="{% url 'yaksh:add_question' question.id %}" target="_blank">{{ question.summary }}</a>
+                                                    {% else %}
+                                                        {{question.summary}}
+                                                    {% endif %}</span>
+                                                <span> {{ question.points }} </span>
+                                            </label>
+                                            </li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                        </div>
+                    </div>
+                    <br />
+                    <button id="remove-random" name="remove-random" class="btn btn-danger pull-right" type="submit">
+                        <i class="fa fa-minus-square"></i>&nbsp;Remove from paper
+                    </button>
+                </div>
+            </div> <!-- /.row -->
             <br>
             <div class="pull-left">
-                <a class="btn btn-info" id="finish-prev">&lt; Previous</a>
+                <a class="btn btn-info" id="random-prev">&lt; Previous</a>
             </div>
-       </center>
-    </div> <!-- /#finish -->
-</div>
+            <div class="pull-right">
+                <a class="btn btn-info" id="random-next">Next &gt;</a>
+            </div>
+       </div> <!-- /#random-questions -->
+
+        <div class="tab-pane" id="finish">
+            <center>
+                <h5><u>Almost finished creating your question paper</u></h5>
+                <label style="float: none;">
+                    {{ qpaper_form.shuffle_questions }}
+                    <span>Shuffle questions' order for each student</span>
+                </label> <br><br>
+                <label style="float: none;">
+                    {{ qpaper_form.shuffle_testcases }}
+                    <span>Shuffle MCQ/MCC options for each student</span>
+                </label> <br><br>
+                <input class="btn btn-success btn-lg" type="submit" name="save" id="save" value="Save">
+                <br>
+                <div class="pull-left">
+                    <a class="btn btn-info" id="finish-prev">&lt; Previous</a>
+                </div>
+           </center>
+        </div> <!-- /#finish -->
+    </div>
 <!-- /.tab-content -->
 </form>
 <br>

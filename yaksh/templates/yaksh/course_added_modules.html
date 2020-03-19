@@ -1,0 +1,49 @@
+{% if is_modules %}
+    {% block pagetitle %} <center> <h3>Course Modules</h3> </center> {% endblock %}
+    {% if modules %}
+    <table class="table table-responsive">
+        <tr>
+        <th>Module</th>
+        <th>Module Design</th>
+        <th>Lessons/Quizzes</th>
+        </tr>
+        {% for module in modules %}
+        <tr>
+            <td>
+                <a href="{% url 'yaksh:edit_module' module.id course.id %}">
+                {{module.name}}</a>
+            </td>
+            <td>
+                <a href="{% url 'yaksh:design_module' module.id course.id %}">
+                    Add Quizzes/Lessons for {{module.name}}
+                </a>
+            </td>
+            <td>
+                {% for unit in module.get_learning_units %}
+                    <ul class="inputs-list">
+                    <li>
+                    {% if unit.type == "quiz" %}
+                        {% if unit.quiz.is_exercise %}
+                            <a href="{% url 'yaksh:edit_exercise' unit.quiz.id course.id %}">
+                            {{unit.quiz.description}}</a>
+                        {% else %}
+                            <a href="{% url 'yaksh:edit_quiz' unit.quiz.id course.id %}">
+                            {{unit.quiz.description}}</a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'yaksh:edit_lesson' unit.lesson.id course.id %}">
+                        {{unit.lesson.name}}</a>
+                    {% endif %}
+                    </li>
+                    </ul>
+                {% endfor %}
+            </td>
+        </tr>
+        {% endfor %} <!-- end for modules -->
+        </table>
+    {% else %}
+        <center>
+            <span class="badge badge-warning"><big>No learning modules</big></span>
+        </center>
+    {% endif %}
+{% endif %}

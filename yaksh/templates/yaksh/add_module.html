@@ -1,70 +1,125 @@
 {% extends "manage.html" %}
+{% load static %}
 {% block title %}Create/Edit Learning Module{% endblock %}
 
-{% block pagetitle %}<h4>Design Learning Module</h4>{% endblock %}
-
 {% block script %}
-<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-3.3.1.min.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/design_course.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/lesson.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-ui.js"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/jquery-3.3.1.min.js' %}">
+</script>
+<script type="text/javascript" src="{% static 'yaksh/js/design_course.js' %}">
+</script>
+<script type="text/javascript" src="{% static 'yaksh/js/lesson.js' %}">
+</script>
+<script type="text/javascript" src="{% static 'yaksh/js/jquery-ui.js' %}">
+</script>
 {% endblock %}
 
 {% block css %}
-<link rel="stylesheet" media="all" type="text/css" href="{{ URL_ROOT }}/static/yaksh/css/design_course.css" />
-<link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/jquery-ui/jquery-ui.css">
+<link rel="stylesheet" href="{% static 'yaksh/css/design_course.css' %}" type="text/css" />
+<link rel="stylesheet" href="{% static 'yaksh/css/jquery-ui/jquery-ui.css' %}" type="text/css" />
 {% endblock %}
 
 {% block content %}
-<div class="yaskhwell container">
-{% if course_id %}
-    <a href="{{URL_ROOT}}/exam/manage/courses/" class="btn btn-primary">
-    Back to Courses</a>
-{% else %}
-    <a href="{{URL_ROOT}}/exam/manage/courses/all_learning_module" class="btn btn-primary">
-    Back to Learning Modules</a>
-{% endif %}
-{% if status == "add" %}
-<form name=frm id=frm action="" method="post">
-    {% csrf_token %}
-    <br>
-    <center>
-    <table class="table table-bordered table-responsive-sm">
-    {{ module_form.as_table }}
-    </table>
-    </center>
-    <br><br>
-    <center>
-    <button class="btn btn-success" type="submit" id="submit" name="Save">
-        Save
-    </button>
-    <button class="btn btn-outline-primary" type="button" name="button" id="preview">
-        Preview Module Description
-    </button>
-    <button class="btn btn-outline-primary" type="button" name="button" id="embed">
-        Embed Video link
-    </button>
-    </center>
-</form>
-<hr>
-<div class="card" id="preview_text_div" style="display: none;">
-    <div class="card-heading">
-        <center>
-            <h3>Description Preview</h3>
-        </center>
+<div class="container">
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-dismissible alert-{{ message.tags }}">
+        <button type="button" class="close" data-dismiss="alert">
+            <i class="fa fa-close"></i>
+        </button>
+        <strong>{{ message }}</strong>
     </div>
-    <div class="card-body" id="description_body">
+    {% endfor %}
+{% endif %}
+{% if course_id %}
+    <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
+        <i class="fa fa-arrow-left"></i>
+        Back
+    </a>
+{% else %}
+    <a class="btn btn-primary" href="{% url 'yaksh:show_all_modules' %}">
+        <i class="fa fa-arrow-left"></i>
+        Back
+    </a>
+{% endif %}
+</div>
+<br>
+{% if status == "add" %}
+<div class="container">
+    <div class="row justify-content-center form-group">
+        <div class="col-md-9 col-md-offset-4">
+            <form name=frm id=frm action="" method="post">
+                <fieldset>
+                    {% csrf_token %}
+                    {% if module_form.errors %}
+                        {% for field in module_form %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-dismissible alert-danger">
+                                    <button type="button" class="close" data-dismiss="alert">
+                                        <i class="fa fa-close"></i>
+                                    </button>
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <div class="alert alert-dismissible alert-danger">
+                                <button type="button" class="close" data-dismiss="alert">
+                                    <i class="fa fa-close"></i>
+                                </button>
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    {{module_form.name}}
+                    <br>
+                    {{module_form.description}}
+                    <br>
+                    Active:&nbsp;{{module_form.active}}
+                    <br>
+                    <center>
+                        <button class="btn btn-success btn-lg" type="submit" id="submit" name="Save">
+                            <i class="fa fa-save"></i>
+                            Save
+                        </button>
+                        <button class="btn btn-outline-primary btn-lg" type="button" name="button" id="preview">
+                            <i class="fa fa-eye"></i>
+                            Preview Description
+                        </button>
+                        <button class="btn btn-outline-primary btn-lg" type="button" name="button" id="embed">
+                            <i class="fa fa-angle-left"></i>&nbsp;<i class="fa fa-angle-right"></i>
+                            Embed Video link
+                        </button>
+                    </center>
+                    </form>
+                    <hr>
+                    <div class="card" id="preview_text_div" style="display: none;">
+                        <div class="card-heading">
+                            <center>
+                                <h3>Description Preview</h3>
+                            </center>
+                        </div>
+                        <div class="card-body" id="description_body">
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
     </div>
 </div>
 {% endif %}
 <!-- Add learning Units -->
 {% if status == "design" %}
+<div class="container">
 <center><h3><u>Add/Edit Learning Units</h3></u></center>
-<form action="{{URL_ROOT}}/exam/manage/courses/designmodule/{{module_id}}/" method="POST" id="design_course_form">
+{% if course_id %}
+<form action="{% url 'yaksh:design_module' module_id course_id %}" method="POST" id="design_course_form">
+{% else %}
+<form action="{% url 'yaksh:design_module' module_id %}" method="POST" id="design_course_form">
+{% endif %}
 {% csrf_token %}
     <div class="tab-pane active" id="available-lesson-quiz">
         <div class="row">
-            <div class="col-md-8 available-list col-md-offset-2">
+            <div class="col-md-12 available-list">
                 <div id="fixed-available-wrapper">
                     <p><u><b>Available Lessons and quizzes: (Add Lessons and Quizzes)</b></u></p>
                     <div id="fixed-available">
@@ -87,13 +142,13 @@
                 </div>
                 <br>
                 <center>
-                <button class="btn btn-success" type="submit" id="submit" name="Add">
-                    Add to Module
+                <button class="btn btn-success" type="submit" id="submit" name="Add"><i class="fa fa-plus-square"></i>
+                    &nbsp;Add to Module
                 </button>
                 </center>
                 <br><br>
             </div>
-            <div class="col-md-8 col-md-offset-2">
+            <div class="col-md-12 col-md-offset-2">
                 <div id="fixed-added-wrapper">
                     <p><u><b>Chosen Lessons and quizzes:</b></u>
                     </p>
@@ -152,8 +207,8 @@
                 </div>
                 <br>
                 <center>
-                <button id="Remove" name="Remove" class="btn btn-danger" type="submit">Remove from Module</button>
-                <button id="Change" name="Change" class="btn btn-info" type="submit"> Change Order</button>
+                <button id="Remove" name="Remove" class="btn btn-danger" type="submit"> <i class="fa fa-minus-square"></i>&nbsp;Remove from Module</button>
+                <button id="Change" name="Change" class="btn btn-info" type="submit"><i class="fa fa-reorder"></i>&nbsp;Change Order</button>
                 <button id="Change" name="Change_prerequisite" class="btn btn-primary" type="submit"> Change Prerequisite</button>
                 </center>
             </div>

@@ -1,54 +1,101 @@
 {% extends "manage.html" %}
+{% load static %}
 
-
+{% block title %}Add Exercise{% endblock %}
 {% block subtitle %}Add Exercise{% endblock %}
 
 {% block css %}
 {% endblock %}
 {% block script %}
-<script src="{{ URL_ROOT }}/static/yaksh/js/jquery-3.3.1.min.js"></script>
-<script src="{{ URL_ROOT }}/static/yaksh/js/add_quiz.js"></script>
+<script src="{% static 'yaksh/js/jquery-3.3.1.min.js' %}"></script>
+<script src="{% static 'yaksh/js/add_quiz.js' %}"></script>
 {% endblock %}
 {% block onload %} window.onload="javascript:test();"  {% endblock %}
 {% block content %}
-<div class="yakshwell container">
-<form name=frm id=frm action="" method="post" >
-    {% csrf_token %}
-    <center>
-    <table class="span1 table table-responsive-sm">
-    {{ form.as_table }}
-    </table>
-    <br/><br/>
-    </center>
-    <center><button class="btn btn-success" type="submit" id="submit" name="save_exercise"> Save
-    </button>
-
-    <button class="btn btn-danger" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/courses/");'>Cancel</button> </center>
-</form>
-{% if exercise and course_id %}
-    {% if exercise.questionpaper_set.get.id %}
-    <center>
-    <h4>You can check the quiz by attempting it in the following modes:</h4>
-      <a href="{{URL_ROOT}}/exam/manage/designquestionpaper/{{ exercise.id }}/{{exercise.questionpaper_set.get.id}}/{{course_id}}" class="btn btn-primary">View Question Paper</a>
-      <button class="btn" type="button" name="button" onClick='usermode("{{URL_ROOT}}/exam/manage/usermode/{{exercise.id}}/{{course_id}}/");'>User Mode</button>
-
-      <button class="btn" type="button" name="button" onClick='location.replace("{{URL_ROOT}}/exam/manage/godmode/{{exercise.id}}/{{course_id}}/");'>
-      God Mode</button>
-    <a data-toggle="collapse" data-target="#help">
-    <span class="glyphicon glyphicon-info-sign">Help</span></a>
-    <div id="help" class="collapse">
-    <br/>
-    <ul>
-    <li><b>User Mode:</b> Attempt quiz the way normal users will attempt i.e. -
-    <ul>
-    <li><i>Quiz will have the same duration as that of the original quiz.</li>
-    <li>Quiz won't start if the course is inactive or the quiz time has expired.</li>
-    <li>You will be notified about quiz prerequisites.(You can still attempt the quiz though)</i></li>
-    </ul>
-    </p>
-    <li> <b>God Mode:</b> Attempt quiz without any time or eligibilty constraints.</p>
-    </div>
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-dismissible alert-{{ message.tags }}">
+            <button type="button" class="close" data-dismiss="alert">
+                <i class="fa fa-close"></i>
+            </button>
+            <strong>{{ message }}</strong>
+        </div>
+        {% endfor %}
     {% endif %}
-{% endif %}
+    {% if course_id %}
+      <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
+        <i class="fa fa-arrow-left"></i>
+        Back
+      </a>
+    {% else %}
+      <a class="btn btn-primary" href="{% url 'yaksh:show_all_quizzes' %}">
+        <i class="fa fa-arrow-left"></i>
+        Back
+      </a>
+    {% endif %}
+  <br><br>
+    <form name=frm id=frm action="" method="post" >
+        {% csrf_token %}
+        <center>
+        <table class="span1 table table-responsive-sm">
+        {{ form.as_table }}
+        </table>
+        <br/><br/>
+        </center>
+        <center>
+            <button class="btn btn-success btn-lg" type="submit" id="submit" name="save_exercise">
+                <i class="fa fa-save"></i>&nbsp;Save
+            </button>
+        </center>
+    </form>
+    <br>
+    {% if exercise and course_id %}
+        {% if exercise.questionpaper_set.get.id %}
+        <center>
+            <a href="{% url 'yaksh:designquestionpaper' exercise.id exercise.questionpaper_set.get.id course_id %}" class="btn btn-primary">
+              <i class="fa fa-edit"></i> Edit Question Paper
+            </a>
+            <a href="{% url 'yaksh:preview_questionpaper' exercise.questionpaper_set.get.id %}" class="btn btn-info" target="_blank">
+              <i class="fa fa-eye"></i> Preview Question Paper
+            </a>
+            <br>
+            <br>
+            <h4>You can check the quiz by attempting it in the following modes:</h4>
+              <a class="btn btn-outline-info" name="button" href="{% url 'yaksh:test_quiz' 'usermode' exercise.id course_id %}" target="blank">
+                User Mode
+              </a>
+
+              <a class="btn btn-outline-info" name="button" href="{% url 'yaksh:test_quiz' 'godmode' exercise.id course_id %}" target="blank">
+                God Mode
+              </a>
+            <a data-toggle="modal" data-target="#help">
+            <span class="text-info"><i class="fa fa-info-circle"></i> Help</span></a>
+          </center>
+        {% endif %}
+    {% endif %}
+</div>
+<div class="modal" id="help">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Quiz Test Modes</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true"><i class="fa fa-close"></i></span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>
+          <b>User Mode:</b> Attempt quiz the way normal users will attempt i.e. -
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item">Quiz will have the same duration as that of the original quiz.</li>
+                <li class="list-group-item">Quiz won't start if the course is inactive or the quiz time has expired.</li>
+                <li class="list-group-item">You will be notified about quiz prerequisites.(You can still attempt the quiz though)</li>
+              </ul>
+          <b>God Mode:</b> Attempt quiz without any time or eligibilty constraints.
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

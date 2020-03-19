@@ -1,79 +1,88 @@
 {% extends "base.html" %}
-
-{% block pagetitle %} Yaksh Account Activation {% endblock %}
-{% block title %} Yaksh Account Activation {% endblock %}
-{% block css%}
-    <link rel="stylesheet" href="{{ URL_ROOT }}/static/yaksh/css/dashboard.css" type="text/css" />
-{% endblock %}
+{% load static %}
+{% block pagetitle %} Account Activation {% endblock %}
+{% block title %} Account Activation {% endblock %}
 {% block nav %}
-<nav class="navbar navbar-fixed-top navbar-inverse">
-  <div class="container">
-    <div class= "collapse navbar-collapse" id="navbar">
-      <ul class="nav navbar-nav navbar-right">
-          <li><a href="{{ URL_ROOT }}/exam/viewprofile"> {{ user.get_full_name.title }} </a></li>
-          <li><a style='cursor:pointer' id='logout' onClick='location.replace("{{URL_ROOT}}/exam/logout/");'> 
-          <span class="glyphicon glyphicon-log-out">Logout </span></a></li>
-      </ul>
-    </div>
-  </div>
-</nav>
+<div class="container-fluid">
+    <nav class="navbar navbar-expand-sm navbar-dark bg-primary fixed-top">
+        <a class="navbar-brand" href="{% url 'yaksh:index' %}">
+        <img src="{% static 'yaksh/images/yaksh_banner.png' %}" alt="YAKSH">
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarColor01">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item dropdown my-lg-0" style="font-size: 1.2rem">
+                <a class="dropdown-toggle nav-link" id="user_dropdown" data-toggle="dropdown" href="#">{{user.get_full_name|title}}
+                </a>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <a class="dropdown-item" id="user_logout" href="{% url 'yaksh:logout' %}">
+                        <i class="fa fa-sign-out"></i> Logout
+                    </a>
+                </div>
+            </li>
+        </ul>
+        </div>
+    </nav>
+</div>
 {% endblock %}
 {% block content %}
-{% if success %}
-    <center>
-    <div class="alert alert-success" role="alert">
-        <strong> {{ msg }} </strong>
-    </div>
-    <a href="{{URL_ROOT}}/exam/"> Home </a>
-    </center>
-{% else %}
-    {% if msg %}
+<div class="container">
+    {% if success %}
         <center>
-        <div class="alert alert-warning" role="alert">
+        <div class="alert alert-success" role="alert">
             <strong> {{ msg }} </strong>
         </div>
+        <a href="{% url 'yaksh:index' %}"> Home </a>
         </center>
-        <form action="{{ URL_ROOT }}/exam/new_activation/" method="post">
-        {% csrf_token %}
-        <center>
-        Enter Email Address for verification: <input type="email" name="email" required><br><br>
-        <button class="btn" type="submit">Send Email</button>
-        </center>
-        </form>
+    {% else %}
+        {% if msg %}
+            <center>
+            <div class="alert alert-warning" role="alert">
+                <strong> {{ msg }} </strong>
+            </div>
+            </center>
+            <center>
+                <div class="col-md-6">
+                    <form action="{% url 'yaksh:new_activation' %}" method="post">
+                    {% csrf_token %}
+                    <input type="email" name="email" class="form-control" placeholder="Email address" required><br><br>
+                    <button class="btn btn-success btn-lg" type="submit">Send Email</button>
+                    </form>
+                </div>
+            </center>
+        {% endif %}
     {% endif %}
-{% endif %}
-<br/>
-{% if activation_msg %}
-    <center>
-    <div class="alert alert-info" role="alert">
-        <strong> {{ activation_msg }} </strong>
-    </div>
-    <a href="{{URL_ROOT}}/exam/"> Home </a>
-    </center>
-{% endif %}
+    <br/>
+    {% if activation_msg %}
+        <center>
+        <div class="alert alert-info" role="alert">
+            <strong> {{ activation_msg }} </strong>
+        </div>
+        <a href="{% url 'yaksh:index' %}"> Home </a>
+        </center>
+    {% endif %}
 
-{% if email_err_msg %}
-    <center>
-    <div class="alert alert-warning" role="alert">
-        <strong> {{ email_err_msg }} </strong>
-    </div>
-    </center>
-    <form action="{{ URL_ROOT }}/exam/update_email/" method="post">
-    {% csrf_token %}
-    <center>
-    <table>
-    <tr>
-    <td>Enter Username:</td>
-    <td><input type="text" name="username" required></td>
-    </tr>
-    <tr>
-    <td>Enter New Email Address:</td>
-    <td><input type="email" name="email" required></td>
-    </tr>
-    </table>
-    <br>
-    <button class="btn" type="submit">Submit</button>
-    </center>
-    </form>
-{% endif %}
+    {% if email_err_msg %}
+        <center>
+        <div class="alert alert-warning" role="alert">
+            <strong> {{ email_err_msg }} </strong>
+        </div>
+        </center>
+        <center>
+            <div class="col-md-6">
+                <form action="{% url 'yaksh:update_email' %}" method="post">
+                {% csrf_token %}
+                    <input type="text" name="username" required placeholder="Username" class="form-control" />
+                    <br>
+                    <input type="email" name="email" required placeholder="New email address" class="form-control" />
+                <br>
+                <button class="btn btn-success btn-lg" type="submit">Submit</button>
+                </form>
+            </div>
+        </center>
+    {% endif %}
+</div>
 {% endblock content %}
