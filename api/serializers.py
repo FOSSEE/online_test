@@ -14,12 +14,12 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = '__all__'
+        exclude = ('partial_grading', )
 
 class QuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
-        fields = '__all__'
+        exclude = ('view_answerpaper',)
 
 
 class QuestionPaperSerializer(serializers.ModelSerializer):
@@ -70,4 +70,9 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = '__all__'
+        exclude = ('teachers',
+                   'rejected',
+                   'requests',
+                   'students',
+                   'grading_system',
+                   'view_grade',)
