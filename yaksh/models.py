@@ -215,8 +215,8 @@ class Lesson(models.Model):
         )
 
     video_path = models.CharField(
-        max_length=255, default=None, help_text="Offline video path",
-        null=True, blank=True
+        max_length=255, default=None, null=True, blank=True,
+        help_text="Relative video path for offline use only",
         )
 
     def __str__(self):
