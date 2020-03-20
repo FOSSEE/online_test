@@ -1,15 +1,15 @@
 language: python
 
 python:
-  - "2.7"
-  - "3.5"
+  - "3.6"
+
+services:
+  - xvfb
 
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y scilab
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
-  - sleep 3 # give xvfb some time to start
+  - export DISPLAY=:99.0
 
 # command to install dependencies
 install:
@@ -17,23 +17,24 @@ install:
   - pip install codecov
   - python setup.py develop
 
+before_script:
+  - python manage.py migrate auth
+  - python manage.py migrate
+
 # command to run tests and coverage
 script:
   - coverage erase
-  - coverage run -p manage.py test -v 2 --settings online_test.test_settings yaksh
-  - coverage run -p manage.py test -v 2 --settings online_test.test_settings grades
-  - coverage run -p manage.py test -v 2 --settings online_test.test_settings yaksh.live_server_tests.load_test
+  - coverage run -p manage.py test -v 2 yaksh
+  - coverage run -p manage.py test -v 2 grades
+  - coverage run -p manage.py test -v 2 yaksh.live_server_tests.load_test
 
 after_success:
   - coverage combine
   - coverage report
   - codecov
 
-sudo:
-    required
-
 dist:
-    trusty
+  xenial
 
 addons:
   firefox: "46.0"

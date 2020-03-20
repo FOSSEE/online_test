@@ -21,7 +21,6 @@ from django.contrib import messages
 from taggit.models import Tag
 from django.urls import reverse
 import json
-import six
 from textwrap import dedent
 import zipfile
 from markdown import Markdown
@@ -115,7 +114,7 @@ def index(request, next_url=None):
     """The start page.
     """
     user = request.user
-    if user.is_authenticated():
+    if user.is_authenticated:
         if is_moderator(user):
             return my_redirect('/exam/manage/' if not next_url else next_url)
         return my_redirect("/exam/quizzes/" if not next_url else next_url)
@@ -128,7 +127,7 @@ def user_register(request):
     Create a user and corresponding profile and store roll_number also."""
 
     user = request.user
-    if user.is_authenticated():
+    if user.is_authenticated:
         return my_redirect("/exam/quizzes/")
     context = {}
     if request.method == "POST":
@@ -391,7 +390,7 @@ def add_exercise(request, quiz_id=None, course_id=None):
     else:
         form = ExerciseForm(instance=quiz)
         context["exercise"] = quiz
-        context["course_id"] = course_id
+    context["course_id"] = course_id
     context["form"] = form
     return my_render_to_response(request, 'yaksh/add_exercise.html', context)
 
@@ -403,7 +402,7 @@ def prof_manage(request, msg=None):
     """Take credentials of the user with professor/moderator
     rights/permissions and log in."""
     user = request.user
-    if not user.is_authenticated():
+    if not user.is_authenticated:
         return my_redirect('/exam/login')
     if not is_moderator(user):
         return my_redirect('/exam/')
@@ -412,14 +411,7 @@ def prof_manage(request, msg=None):
         is_trial=False).distinct().order_by("-active")
     paginator = Paginator(courses, 20)
     page = request.GET.get('page')
-    try:
-        courses = paginator.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        courses = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        courses = paginator.page(paginator.num_pages)
+    courses = paginator.get_page(page)
     messages.info(request, msg)
     context = {'user': user, 'objects': courses}
     return my_render_to_response(
@@ -432,7 +424,7 @@ def user_login(request):
 
     user = request.user
     context = {}
-    if user.is_authenticated():
+    if user.is_authenticated:
         return index(request)
 
     next_url = request.GET.get('next')
@@ -1066,14 +1058,7 @@ def courses(request):
 
     paginator = Paginator(courses, 30)
     page = request.GET.get('page')
-    try:
-        courses = paginator.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        courses = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        courses = paginator.page(paginator.num_pages)
+    courses = paginator.get_page(page)
     courses_found = courses.object_list.count()
     context = {'objects': courses, 'created': True,
                'form': form, 'courses_found': courses_found}
@@ -1260,12 +1245,7 @@ def monitor(request, quiz_id=None, course_id=None):
         ).order_by("-active").distinct()
         paginator = Paginator(courses, 30)
         page = request.GET.get('page')
-        try:
-            courses = paginator.page(page)
-        except PageNotAnInteger:
-            courses = paginator.page(1)
-        except EmptyPage:
-            courses = paginator.page(paginator.num_pages)
+        courses = paginator.get_page(page)
         context = {
             "papers": [], "objects": courses, "msg": "Monitor"
         }
@@ -1290,9 +1270,10 @@ def monitor(request, quiz_id=None, course_id=None):
         else:
             attempt_numbers = []
         latest_attempts = []
-        papers = AnswerPaper.objects.filter(question_paper=q_paper,
-                                            course_id=course_id).order_by(
-            'user__profile__roll_number'
+        papers = AnswerPaper.objects.filter(
+            question_paper_id=q_paper.first().id,
+            course_id=course_id).order_by(
+                'user__profile__roll_number'
         )
         users = papers.values_list('user').distinct()
         for auser in users:
@@ -1337,14 +1318,9 @@ def ajax_questions_filter(request):
         filter_dict['language'] = str(language)
     questions = Question.objects.get_queryset().filter(
                 **filter_dict).order_by('id')
-    paginator = Paginator(questions, 10)
+    paginator = Paginator(questions, 30)
     page = request.GET.get('page')
-    try:
-        questions = paginator.page(page)
-    except PageNotAnInteger:
-        questions = paginator.page(1)
-    except EmptyPage:
-        questions = paginator.page(paginator.num_pages)
+    questions = paginator.get_page(page)
     return my_render_to_response(
         request, 'yaksh/ajax_question_filter.html', {
             'questions': questions,
@@ -1538,12 +1514,7 @@ def show_all_questions(request):
     upload_form = UploadFileForm()
     paginator = Paginator(questions, 30)
     page = request.GET.get('page')
-    try:
-        questions = paginator.page(page)
-    except PageNotAnInteger:
-        questions = paginator.page(1)
-    except EmptyPage:
-        questions = paginator.page(paginator.num_pages)
+    questions = paginator.get_page(page)
     context['questions'] = questions
     context['objects'] = questions
     context['all_tags'] = all_tags
@@ -1729,12 +1700,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             ).order_by("-active").distinct()
         paginator = Paginator(courses, 30)
         page = request.GET.get('page')
-        try:
-            courses = paginator.page(page)
-        except PageNotAnInteger:
-            courses = paginator.page(1)
-        except EmptyPage:
-            courses = paginator.page(paginator.num_pages)
+        courses = paginator.get_page(page)
         context = {"objects": courses, "msg": "grade"}
 
     if quiz_id is not None:
@@ -1749,9 +1715,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
         if not course.is_creator(current_user) and not \
                 course.is_teacher(current_user):
             raise Http404('This course does not belong to you')
-
         has_quiz_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id=questionpaper_id
+                                question_paper_id__in=questionpaper_id
                                 ).exists()
         context = {
             "users": user_details,
@@ -1771,7 +1736,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             except IndexError:
                 raise Http404('No attempts for paper')
             has_user_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id=questionpaper_id,
+                                question_paper_id__in=questionpaper_id,
                                 user_id=user_id
                                 ).exists()
             user = User.objects.get(id=user_id)
@@ -1792,8 +1757,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
     if request.method == "POST":
         papers = data['papers']
         for paper in papers:
-            for question, answers in six.iteritems(
-                    paper.get_question_answers()):
+            for question, answers in paper.get_question_answers().items():
                 marks = float(request.POST.get('q%d_marks' % question.id, 0))
                 answer = answers[-1]['answer']
                 answer.set_marks(marks)
@@ -1804,7 +1768,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             paper.save()
         messages.success(request, "Student data saved successfully")
 
-        course_status = CourseStatus.objects.filter(course=course, user=user)
+        course_status = CourseStatus.objects.filter(
+            course_id=course.id, user_id=user.id)
         if course_status.exists():
             course_status.first().set_grade()
 
@@ -2641,7 +2606,6 @@ def design_module(request, module_id, course_id=None):
 
         if "Change" in request.POST:
             order_list = request.POST.get("ordered_list")
-            print(order_list)
             if order_list:
                 order_list = order_list.split(",")
                 for order in order_list:
@@ -2926,35 +2890,58 @@ def design_course(request, course_id):
                     learning_module.save()
                     to_add_list.append(learning_module)
                 course.learning_module.add(*to_add_list)
+                messages.success(request, "Modules added successfully")
+            else:
+                messages.warning(request, "Please select atleast one module")
 
         if "Change" in request.POST:
-            order_list = request.POST.get("ordered_list").split(",")
-            for order in order_list:
-                learning_unit, learning_order = order.split(":")
-                if learning_order:
-                    learning_module = course.learning_module.get(
-                        id=learning_unit)
-                    learning_module.order = learning_order
-                    learning_module.save()
+            order_list = request.POST.get("ordered_list")
+            if order_list:
+                order_list = order_list.split(",")
+                for order in order_list:
+                    learning_unit, learning_order = order.split(":")
+                    if learning_order:
+                        learning_module = course.learning_module.get(
+                            id=learning_unit)
+                        learning_module.order = learning_order
+                        learning_module.save()
+                messages.success(request, "Changed order successfully")
+            else:
+                messages.warning(request, "Please select atleast one module")
 
         if "Remove" in request.POST:
             remove_values = request.POST.getlist("delete_list")
             if remove_values:
                 course.learning_module.remove(*remove_values)
+                messages.success(request, "Modules removed successfully")
+            else:
+                messages.warning(request, "Please select atleast one module")
 
         if "change_prerequisite_completion" in request.POST:
             unit_list = request.POST.getlist("check_prereq")
-            for unit in unit_list:
-                learning_module = course.learning_module.get(id=unit)
-                learning_module.toggle_check_prerequisite()
-                learning_module.save()
+            if unit_list:
+                for unit in unit_list:
+                    learning_module = course.learning_module.get(id=unit)
+                    learning_module.toggle_check_prerequisite()
+                    learning_module.save()
+                messages.success(
+                    request, "Changed prerequisite check successfully"
+                )
+            else:
+                messages.warning(request, "Please select atleast one module")
 
         if "change_prerequisite_passing" in request.POST:
             unit_list = request.POST.getlist("check_prereq_passes")
-            for unit in unit_list:
-                learning_module = course.learning_module.get(id=unit)
-                learning_module.toggle_check_prerequisite_passes()
-                learning_module.save()
+            if unit_list:
+                for unit in unit_list:
+                    learning_module = course.learning_module.get(id=unit)
+                    learning_module.toggle_check_prerequisite_passes()
+                    learning_module.save()
+                messages.success(
+                    request, "Changed prerequisite check successfully"
+                )
+            else:
+                messages.warning(request, "Please select atleast one module")
 
     added_learning_modules = course.get_learning_modules()
     all_learning_modules = LearningModule.objects.filter(
@@ -3054,14 +3041,7 @@ def course_status(request, course_id):
     students_no = students.count()
     paginator = Paginator(students, 100)
     page = request.GET.get('page')
-    try:
-        students = paginator.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        students = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        students = paginator.page(paginator.num_pages)
+    students = paginator.get_page(page)
 
     stud_details = [(student, course.get_grade(student),
                      course.get_completion_percent(student),

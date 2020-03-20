@@ -6,7 +6,7 @@ except ImportError:
     from queue import Queue
 from threading import Thread
 import unittest
-from six.moves import urllib
+import urllib
 
 from yaksh.code_server import ServerPool, SERVER_POOL_PORT, submit, get_result
 from yaksh import settings

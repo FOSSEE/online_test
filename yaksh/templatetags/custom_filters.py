@@ -24,12 +24,12 @@ def escape_quotes(value):
     return escape_single_and_double_quotes
 
 
-@register.assignment_tag(name="completed")
+@register.simple_tag(name="completed")
 def completed(answerpaper):
     return answerpaper.filter(status="completed").count()
 
 
-@register.assignment_tag(name="inprogress")
+@register.simple_tag(name="inprogress")
 def inprogress(answerpaper):
     return answerpaper.filter(status="inprogress").count()
 
