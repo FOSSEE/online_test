@@ -14,6 +14,12 @@
 <script src="{% static 'yaksh/js/jquery-3.3.1.min.js' %}"></script>
 <script src="{% static 'yaksh/js/add_quiz.js' %}"></script>
 <script src="{% static 'yaksh/js/jquery.datetimepicker.full.min.js' %}"></script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $("#id_start_date_time").datetimepicker({format: 'Y-m-d H:i:s'});
+    $("#id_end_date_time").datetimepicker({format: 'Y-m-d H:i:s'});
+  });
+</script>
 
 {% endblock %}
 {% block onload %} onload="javascript:test();"  {% endblock %}
@@ -44,13 +50,9 @@
   <form name=frm id=frm action="" method="post" >
     {% csrf_token %}
     <center>
-      <table class="table">
+      <table class="table table-responsive-sm">
       {{ form.as_table }}
       </table>
-      <script type="text/javascript">
-        $("#id_start_date_time").datetimepicker({format: 'Y-m-d H:i:s'});
-        $("#id_end_date_time").datetimepicker({format: 'Y-m-d H:i:s'});
-      </script>
       <br/>
       <button class="btn btn-success btn-lg" id="submit" name="questionpaper">
         <i class="fa fa-save">&nbsp;Save</i>

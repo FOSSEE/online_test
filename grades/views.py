@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.forms import inlineformset_factory
+from django.contrib import messages
 from grades.forms import GradingSystemForm, GradeRangeForm
 from grades.models import GradingSystem, GradeRange
 
@@ -30,12 +31,13 @@ def add_grading_system(request, system_id=None):
         formset = GradeRangeFormSet(request.POST, instance=grading_system)
         grade_form = GradingSystemForm(request.POST, instance=grading_system)
         if grade_form.is_valid():
-            system = grade_form.save(commit=False)
-            system.creator = user
-            system.save()
-            system_id = system.id
-        if formset.is_valid():
-            formset.save()
+            grading_system = grade_form.save(commit=False)
+            grading_system.creator = user
+            grading_system.save()
+            system_id = grading_system.id
+            if formset.is_valid():
+                formset.save()
+            messages.success(request, "Grading system saved successfully")
         if 'add' in request.POST:
             GradeRangeFormSet = inlineformset_factory(
                 GradingSystem, GradeRange, GradeRangeForm, extra=1

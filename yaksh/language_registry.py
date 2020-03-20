@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import importlib
-import six
 
 # Local imports
 from .settings import code_evaluators
@@ -27,7 +26,7 @@ def create_evaluator_instance(metadata, test_case):
 class _LanguageRegistry(object):
     def __init__(self):
         self._register = {}
-        for language, module in six.iteritems(code_evaluators):
+        for language, module in code_evaluators.items():
             self._register[language] = None
 
     # Public Protocol ##########
