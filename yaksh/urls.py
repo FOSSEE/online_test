@@ -218,4 +218,6 @@ urlpatterns = [
         views.get_course_modules, name="get_course_modules"),
     url(r'^manage/course/teachers/(?P<course_id>\d+)',
         views.course_teachers, name="course_teachers"),
+    url(r'^manage/download/course/progress/(?P<course_id>\d+)',
+        views.download_course_progress, name="download_course_progress"),
 ]

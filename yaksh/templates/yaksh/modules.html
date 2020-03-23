@@ -14,7 +14,7 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'yaksh:add_course' %}">
-                        Add New Course
+                        Add/Edit Course
                     </a>
                 </li>
                 <li class="nav-item dropdown hide">
@@ -46,10 +46,36 @@
     {% if not modules %}
         <br><br>
         <div class="alert alert-info">
-            <center><h3> No new learning modules added</h3></center>
+            <center><h3> No learning modules found</h3></center>
         </div>
     {% else %}
-        <center><h3> Learning Modules </h3></center>
+        <hr>
+        <form name=frm action="" method="post">
+            {% csrf_token %}
+            <div class="card">
+                <div class="card-header">
+                    <h3> Search/Filter Learning Modules </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.search_tags }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.search_status }}
+                        </div>
+                    </div>
+                    <br>
+                    <button class="btn btn-success" type="submit">Search</button>
+                    <a class="btn btn-primary" href="{% url 'yaksh:show_all_modules' %}">
+                        Clear Search
+                    </a>
+                </div>
+            </div>
+        </form>
+        <hr>
+        <center><h4 class="badge badge-success">{{ modules_found }} Learning Module(s) Available</h4></center>
+
         <table class="table table-bordered table-responsive-sm">
         <tr>
         <th>Sr.No</th>

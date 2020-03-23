@@ -10,12 +10,11 @@ urlpatterns = [
     # url(r'^$', 'online_test.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
 
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', admin.site.urls),
     url(r'^$', views.index, name='index'),
-    url(r'^exam/', include('yaksh.urls', namespace='yaksh', app_name='yaksh')),
-    url(r'^exam/reset/', include('yaksh.urls_password_reset')),
+    url(r'^exam/', include(('yaksh.urls', 'yaksh'))),
+    url(r'^exam/reset/', include('django.contrib.auth.urls')),
     url(r'^', include('social_django.urls', namespace='social')),
-    url(r'^grades/', include('grades.urls', namespace='grades',
-                             app_name='grades')),
+    url(r'^grades/', include(('grades.urls', 'grades'))),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

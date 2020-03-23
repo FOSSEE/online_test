@@ -20,6 +20,13 @@ class OneSessionPerUserMiddleware(object):
           Link: https://docs.djangoproject.com/en/1.5/topics/auth/customizing/
           #extending-the-existing-user-model
     """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        return self.get_response(request)
+
     def process_request(self, request):
         """
             # Documentation:

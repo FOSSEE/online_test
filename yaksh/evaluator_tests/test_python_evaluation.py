@@ -523,7 +523,6 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                                 "weight": 0.0
                                 }]
         user_answer = dedent("""
-                                from six.moves import input
                                 input_a = input()
                                 input_b = input()
                                 a = [int(i) for i in input_a.split(',')]
@@ -557,9 +556,8 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
             "weight": 0.0
             }]
         user_answer = dedent("""
-                                from six.moves import input
-                                a = str(input())
-                                b = str(input())
+                                a = input()
+                                b = input()
                                 print(a.count(b))
                              """
                              )

@@ -14,7 +14,7 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'yaksh:add_course' %}">
-                    Add New Course
+                    Add/Edit Course
                 </a>
             </li>
             <li class="nav-item dropdown hide">
@@ -46,13 +46,44 @@
     Note: For grade range lower limit is inclusive and upper limit is exclusive
 </div>
 <br>
+{% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-dismissible alert-{{ message.tags }}">
+          <button type="button" class="close" data-dismiss="alert">
+              <i class="fa fa-close"></i>
+          </button>
+          <strong>{{ message }}</strong>
+      </div>
+    {% endfor %}
+    <br>
+{% endif %}
 {% if not system_id  %}
     <form action="{% url 'grades:add_grade' %}" method="POST">
 {% else %}
     <form action="{% url 'grades:edit_grade' system_id %}" method="POST">
 {% endif %}
     {% csrf_token %}
-    <table class="table">
+    <table class="table table-responsive-sm">
+        {% if grade_form.errors %}
+            {% for field in grade_form %}
+                {% for error in field.errors %}
+                    <div class="alert alert-dismissible alert-danger">
+                        <button type="button" class="close" data-dismiss="alert">
+                            <i class="fa fa-close"></i>
+                        </button>
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+            {% for error in grade_form.non_field_errors %}
+                <div class="alert alert-dismissible alert-danger">
+                    <button type="button" class="close" data-dismiss="alert">
+                        <i class="fa fa-close"></i>
+                    </button>
+                    <strong>{{ error|escape }}</strong>
+                </div>
+            {% endfor %}
+        {% endif %}
         {% for field in grade_form %}
             {{ field }}
             <hr>

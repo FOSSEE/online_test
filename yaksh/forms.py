@@ -49,6 +49,12 @@ test_case_types = (
     ("floattestcase", "Float Testcase"),
 )
 
+status_types = (
+    ('select','Select Status'),
+    ('active', 'Active'),
+    ('closed', 'Inactive'),
+    )
+
 UNAME_CHARS = letters + "._" + digits
 PWD_CHARS = letters + punctuation + digits
 
@@ -375,6 +381,19 @@ class QuestionFilterForm(forms.Form):
         max_length=8, widget=forms.Select(choices=question_types,
                                           attrs={'class': 'custom-select'})
     )
+
+
+class SearchFilterForm(forms.Form):
+    search_tags = forms.CharField(
+        label='Search Tags',
+        widget=forms.TextInput(attrs={'placeholder': 'Search',
+                                      'class': form_input_class,}),
+        required=False
+        )
+    search_status = forms.CharField(max_length=16, widget=forms.Select(
+        choices=status_types,
+        attrs={'class': 'custom-select'}),
+        )
 
 
 class CourseForm(forms.ModelForm):
