@@ -205,9 +205,7 @@ class AnswerValidator(APIView):
 
         # updaTE RESult
         if question.type not in ['code', 'upload']:
-            print('Non CODE', user_answer)
             if result.get('success'):
-                print('success')
                 answer.correct = True
                 answer.marks = question.points
                 answer.error = json.dumps(result.get('error'))
@@ -399,7 +397,6 @@ class ICourse(APIView):
 @authentication_classes(())
 @permission_classes(())
 def login(request):
-    print(request)
     data = {}
     if request.method == "POST":
         username = request.data.get('username')
