@@ -17,6 +17,7 @@ from django.core.exceptions import (
     MultipleObjectsReturned, ObjectDoesNotExist
 )
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.template.defaultfilters import slugify
 from django.contrib import messages
 from taggit.models import Tag
 from django.urls import reverse
@@ -3243,7 +3244,7 @@ def download_course_progress(request, course_id):
 @email_verified
 def download_course_yaml(request, course_id):
     user = request.user
-    course = Course.objects.get(id=course_id)
+    course = get_object_or_404(Course, pk=course_id)
     if not is_moderator(user):
         raise Http404('You are not allowed to download this course !')
     if not course.is_creator(user):
@@ -3253,7 +3254,7 @@ def download_course_yaml(request, course_id):
 
     response = HttpResponse(content_type='application/zip')
     response['Content-Disposition'] = dedent(
-        '''attachment; filename={0}_yaml.zip'''.format(course.name)
+        '''attachment; filename={0}_yaml.zip'''.format(slugify(course.name))
     )
     with open(zip_file_path, 'rb') as zip_file:
         zip_file.seek(0)
@@ -3266,7 +3267,7 @@ def download_course_yaml(request, course_id):
 def upload_course_yaml(request):
     user = request.user
     if not is_moderator(user):
-        raise Http404('You are not allowed to download this course !')
+        raise Http404('You are not allowed to upload this course !')
 
     if request.method == "POST":
         form = UploadFileForm(request.POST, request.FILES)
@@ -3279,9 +3280,9 @@ def upload_course_yaml(request):
                 messages.success(request, message)
             else:
                 message = "Please upload a ZIP file"
-                messages.info(request, message)
+                messages.warning(request, message)
         else:
             message = "An error occurred while uploading the file"
             messages.warning(request, message)
 
-    return my_redirect('exam/manage/courses/')
+    return my_redirect(reverse('yaksh:courses'))

@@ -238,20 +238,20 @@ def _create_yaml(obj, fields, fname, zip_file, obj_type, subitems=None):
     course_dict = model_to_dict(obj,
         fields= fields
     )
-    relevant_dict = CommentedMap()
-    relevant_dict.update({'type': obj_type})
-    relevant_dict.update(
+    relevant_data = CommentedMap()
+    relevant_data.update({'type': obj_type})
+    relevant_data.update(
             CommentedMap(sorted(course_dict.items(), key=lambda x: x[0])
         )
     )
 
     # Add subitems
     if subitems:
-        relevant_dict.update({'subitems': ['{0}.yaml'.format(s) for s in subitems]})
+        relevant_data.update({'subitems': ['{0}.yaml'.format(s) for s in subitems]})
     else:
-        relevant_dict.update({'subitems': []})
+        relevant_data.update({'subitems': []})
 
-    yaml_block = dict_to_yaml(relevant_dict)
+    yaml_block = dict_to_yaml(relevant_data)
     with open(file_name, "a") as yaml_file:
         yaml_file.write(yaml_block)
     return file_name
@@ -1162,43 +1162,43 @@ class Course(models.Model):
 
     @classmethod
     def load_yaml(cls, filepath, user):
-        file_list = {}
+        all_files = {}
         with zipfile.ZipFile(filepath,'r') as zfile:
             for name in zfile.namelist():
                 file_content = zfile.read(name)
                 yaml_content = ruamel.yaml.safe_load(file_content)
                 if yaml_content.get('type') and yaml_content.get('type') == 'course':
                     course = yaml_content
-                file_list.update(
+                all_files.update(
                     {name: yaml_content}
                 )
         subitems = course.pop('subitems')
         model_type = course.pop('type')
         course.update({'creator': user})
         new_course, course_create_status = cls._create_object_from_dict(course, 'course')
-        new_mod_list = []
+        new_modules = []
         for mod in subitems:
-            mod_dict = file_list[mod]
+            mod_dict = all_files[mod]
             mod_sub_items = mod_dict.pop('subitems')
             model_type = mod_dict.pop('type')
             mod_dict.update({'creator': user})
             new_mod, mod_create_status = cls._create_object_from_dict(mod_dict, 'learningmodule')
-            new_mod_list.append(new_mod)
-            new_unit_list = []
+            new_modules.append(new_mod)
+            new_units = []
             for unit in mod_sub_items:
-                unit_dict = file_list[unit]
+                unit_dict = all_files[unit]
                 unit_sub_items = unit_dict.pop('subitems')
                 model_type = unit_dict.pop('type')
                 lesson_data = unit_sub_items[0]
-                lesson_dict = file_list[lesson_data]
+                lesson_dict = all_files[lesson_data]
                 lesson_dict.pop('subitems')
                 lesson_dict.pop('type')
                 lesson_dict.update({'creator': user})
                 new_lesson, lesson_create_status = cls._create_object_from_dict(lesson_dict, 'lesson')
                 new_unit, unit_create_status = LearningUnit.objects.get_or_create(lesson=new_lesson, type='lesson', **unit_dict)
-                new_unit_list.append(new_unit)
-            new_mod.learning_unit.add(*new_unit_list)
-        new_course.learning_module.add(*new_mod_list)
+                new_units.append(new_unit)
+            new_mod.learning_unit.add(*new_units)
+        new_course.learning_module.add(*new_modules)
 
     def create_yaml(self, path=None):
         if path:
