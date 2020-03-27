@@ -95,14 +95,13 @@ class RAssertionEvaluationTestCase(EvaluatorBaseTest):
             '''
         )
         err = ['Error: input == output is not TRUE\nExecution halted\n']
-        kwargs = {
-            'metadata': {
-            'user_answer': user_answer,
-            'file_paths': self.file_paths,
-            'partial_grading': False,
-            'language': 'r'
-            }, 'test_case_data': self.test_case_data,
-        }
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'r'},
+                  'test_case_data': self.test_case_data,
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -121,14 +120,13 @@ class RAssertionEvaluationTestCase(EvaluatorBaseTest):
             }
             '''
         )
-        kwargs = {
-            'metadata': {
-            'user_answer': user_answer,
-            'file_paths': self.file_paths,
-            'partial_grading': False,
-            'language': 'r'
-            }, 'test_case_data': self.test_case_data,
-        }
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'r'},
+                  'test_case_data': self.test_case_data,
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -147,14 +145,13 @@ class RAssertionEvaluationTestCase(EvaluatorBaseTest):
             }
             '''
         )
-        kwargs = {
-            'metadata': {
-            'user_answer': user_answer,
-            'file_paths': self.file_paths,
-            'partial_grading': False,
-            'language': 'r'
-            }, 'test_case_data': self.test_case_data,
-        }
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'r'},
+                  'test_case_data': self.test_case_data,
+                  }
 
         # When
         grader = Grader(self.in_dir)
@@ -176,14 +173,13 @@ class RAssertionEvaluationTestCase(EvaluatorBaseTest):
             }
             '''
         )
-        kwargs = {
-            'metadata': {
-            'user_answer': user_answer,
-            'file_paths': self.file_paths,
-            'partial_grading': False,
-            'language': 'r'
-            }, 'test_case_data': self.test_case_data,
-        }
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'r'},
+                  'test_case_data': self.test_case_data,
+                  }
 
         # When
         grader = Grader(self.in_dir)
