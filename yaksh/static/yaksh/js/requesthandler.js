@@ -160,7 +160,8 @@ $(document).ready(function(){
     'cpp': 'text/x-c++src',
     'java': 'text/x-java',
     'bash': 'text/x-sh',
-    'scilab': 'text/x-csrc'
+    'scilab': 'text/x-csrc',
+    'r':'text/x-rsrc',
   }
 
   // Code mirror Options
