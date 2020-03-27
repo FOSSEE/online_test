@@ -103,8 +103,9 @@ def get_html_text(md_text):
 
 
 def formfield_callback(field):
-    if (isinstance(field, models.TextField) and field.name == 'expected_output'
-            or field.name == 'expected_input'):
+    if (isinstance(field, models.TextField) and field.name == 'expected_input'):
+        return fields.CharField(strip=False, required = False)
+    if (isinstance(field, models.TextField) and field.name == 'expected_output'):
         return fields.CharField(strip=False)
     return field.formfield()
 
