@@ -319,7 +319,7 @@ def add_question(request, question_id=None):
 
 @login_required
 @email_verified
-def add_quiz(request, quiz_id=None, course_id=None):
+def add_quiz(request, course_id=None, module_id=None, quiz_id=None):
     """To add a new quiz in the database.
     Create a new quiz and store it."""
     user = request.user
@@ -331,6 +331,8 @@ def add_quiz(request, quiz_id=None, course_id=None):
             raise Http404('This quiz does not belong to you')
     else:
         quiz = None
+    if module_id:
+        module = get_object_or_404(LearningModule, id=module_id)
     if course_id:
         course = get_object_or_404(Course, pk=course_id)
         if not course.is_creator(user) and not course.is_teacher(user):
@@ -342,8 +344,16 @@ def add_quiz(request, quiz_id=None, course_id=None):
         if form.is_valid():
             if quiz is None:
                 form.instance.creator = user
-            form.save()
+            added_quiz = form.save()
+            unit, created = LearningUnit.objects.get_or_create(
+                    type="quiz", quiz=added_quiz, order=1
+                )
+            module.learning_unit.add(unit.id)
             messages.success(request, "Quiz saved successfully")
+            return redirect(
+                reverse("yaksh:edit_quiz",
+                        args=[course_id, module_id, added_quiz.id])
+            )
     else:
         form = QuizForm(instance=quiz)
     context["course_id"] = course_id
@@ -354,7 +364,7 @@ def add_quiz(request, quiz_id=None, course_id=None):
 
 @login_required
 @email_verified
-def add_exercise(request, quiz_id=None, course_id=None):
+def add_exercise(request, course_id=None, module_id=None, quiz_id=None):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this course !')
@@ -364,6 +374,8 @@ def add_exercise(request, quiz_id=None, course_id=None):
             raise Http404('This quiz does not belong to you')
     else:
         quiz = None
+    if module_id:
+        module = get_object_or_404(LearningModule, id=module_id)
     if course_id:
         course = get_object_or_404(Course, pk=course_id)
         if not course.is_creator(user) and not course.is_teacher(user):
@@ -384,8 +396,16 @@ def add_exercise(request, quiz_id=None, course_id=None):
             quiz.duration = 1000
             quiz.pass_criteria = 0
             quiz.save()
+            unit, created = LearningUnit.objects.get_or_create(
+                    type="quiz", quiz=quiz, order=1
+                )
+            module.learning_unit.add(unit.id)
             messages.success(
                 request, "{0} saved successfully".format(quiz.description)
+            )
+            return redirect(
+                reverse("yaksh:edit_exercise",
+                        args=[course_id, module_id, quiz.id])
             )
     else:
         form = ExerciseForm(instance=quiz)
@@ -1365,8 +1385,7 @@ def _get_questions_from_tags(question_tags, user, active=True):
 
 @login_required
 @email_verified
-def design_questionpaper(request, quiz_id, questionpaper_id=None,
-                         course_id=None):
+def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
     user = request.user
     que_tags = Question.objects.filter(
         active=True, user=user).values_list('tags', flat=True).distinct()
@@ -2444,7 +2463,7 @@ def download_yaml_template(request):
 
 @login_required
 @email_verified
-def edit_lesson(request, lesson_id=None, course_id=None):
+def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
@@ -2454,6 +2473,8 @@ def edit_lesson(request, lesson_id=None, course_id=None):
             raise Http404('This Lesson does not belong to you')
     else:
         lesson = None
+    if module_id:
+        module = get_object_or_404(LearningModule, id=module_id)
     if course_id:
         course = get_object_or_404(Course, id=course_id)
         if not course.is_creator(user) and not course.is_teacher(user):
@@ -2485,8 +2506,16 @@ def edit_lesson(request, lesson_id=None, course_id=None):
                         LessonFile.objects.get_or_create(
                             lesson=lesson, file=les_file
                         )
+                unit, created = LearningUnit.objects.get_or_create(
+                    type="lesson", lesson=lesson, order=1
+                )
+                module.learning_unit.add(unit.id)
                 messages.success(
                     request, "Saved {0} successfully".format(lesson.name)
+                )
+                return redirect(
+                    reverse("yaksh:edit_lesson",
+                            args=[course_id, module_id, lesson.id])
                 )
             else:
                 context['lesson_form'] = lesson_form
@@ -2591,14 +2620,14 @@ def design_module(request, module_id, course_id=None):
                 for order, value in enumerate(add_values, start_val):
                     learning_id, type = value.split(":")
                     if type == "quiz":
-                        learning_unit = LearningUnit.objects.create(
+                        unit, status = LearningUnit.objects.get_or_create(
                             order=order, quiz_id=learning_id,
                             type=type)
                     else:
-                        learning_unit = LearningUnit.objects.create(
+                        unit = LearningUnit.objects.get_or_create(
                             order=order, lesson_id=learning_id,
                             type=type)
-                    to_add_list.append(learning_unit)
+                    to_add_list.append(unit)
                 learning_module.learning_unit.add(*to_add_list)
                 messages.success(request, "Lesson/Quiz added successfully")
             else:
@@ -2666,7 +2695,7 @@ def design_module(request, module_id, course_id=None):
 
 @login_required
 @email_verified
-def add_module(request, module_id=None, course_id=None):
+def add_module(request, course_id=None, module_id=None):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
@@ -2692,6 +2721,7 @@ def add_module(request, module_id=None, course_id=None):
                 module = module_form.save()
                 module.html_data = get_html_text(module.description)
                 module.save()
+                course.learning_module.add(module.id)
                 messages.success(
                     request,
                     "Saved {0} successfully".format(module.name)
@@ -2704,99 +2734,6 @@ def add_module(request, module_id=None, course_id=None):
     context['course_id'] = course_id
     context['status'] = "add"
     return my_render_to_response(request, "yaksh/add_module.html", context)
-
-
-@login_required
-@email_verified
-def show_all_quizzes(request):
-    user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-    quizzes = Quiz.objects.filter(creator=user, is_trial=False)
-
-    form = SearchFilterForm()
-
-    if request.method == 'POST':
-        quiz_tags = request.POST.get('search_tags')
-        quiz_status = request.POST.get('search_status')
-
-        if quiz_status == 'select' :
-            quizzes = quizzes.filter(
-                description__contains=quiz_tags)
-        elif quiz_status == 'active' :
-            quizzes = quizzes.filter(
-                description__contains=quiz_tags, active=True)
-        elif quiz_status == 'closed':
-            quizzes = quizzes.filter(
-                description__contains=quiz_tags, active=False)
-    quizzes_found = quizzes.count()
-
-    context = {"quizzes": quizzes, "form": form,
-               "quizzes_found": quizzes_found}
-    return my_render_to_response(request, 'yaksh/quizzes.html', context)
-
-
-@login_required
-@email_verified
-def show_all_lessons(request):
-    user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-    lessons = Lesson.objects.filter(creator=user)
-
-    form = SearchFilterForm()
-
-    if request.method == 'POST':
-        lesson_tags = request.POST.get('search_tags')
-        lesson_status = request.POST.get('search_status')
-
-        if lesson_status == 'select' :
-            lessons = lessons.filter(
-                description__contains=lesson_tags)
-        elif lesson_status == 'active' :
-            lessons = lessons.filter(
-                description__contains=lesson_tags, active=True)
-        elif lesson_status == 'closed':
-            lessons = lessons.filter(
-                description__contains=lesson_tags, active=False)
-    lessons_found = lessons.count()
-
-    context = {"lessons": lessons, "form": form,
-               "lessons_found": lessons_found}
-    return my_render_to_response(request, 'yaksh/lessons.html', context)
-
-
-@login_required
-@email_verified
-def show_all_modules(request):
-    user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-    learning_modules = LearningModule.objects.filter(
-        creator=user, is_trial=False)
-
-    form = SearchFilterForm()
-
-    if request.method == 'POST':
-        module_tags = request.POST.get('search_tags')
-        module_status = request.POST.get('search_status')
-
-        if module_status == 'select' :
-            learning_modules = learning_modules.filter(
-                name__contains=module_tags)
-        elif module_status == 'active' :
-            learning_modules = learning_modules.filter(
-                name__contains=module_tags, active=True)
-        elif module_status == 'closed':
-            learning_modules = learning_modules.filter(
-                name__contains=module_tags, active=False)
-    learning_modules_found = learning_modules.count()
-
-    context = {"modules": learning_modules, "form": form,
-               "modules_found": learning_modules_found}
-    return my_render_to_response(
-        request, 'yaksh/modules.html', context
-    )
 
 
 @login_required
@@ -2885,10 +2822,12 @@ def design_course(request, course_id):
                 else:
                     start_val = 1
                 for order, value in enumerate(add_values, start_val):
-                    learning_module = LearningModule.objects.get(id=int(value))
-                    learning_module.order = order
-                    learning_module.save()
-                    to_add_list.append(learning_module)
+                    module, created = LearningModule.objects.get_or_create(
+                        id=int(value)
+                    )
+                    module.order = order
+                    module.save()
+                    to_add_list.append(module)
                 course.learning_module.add(*to_add_list)
                 messages.success(request, "Modules added successfully")
             else:
