@@ -15,7 +15,9 @@
         {% for module in modules %}
             <div class="card">
                 <div class="card-header">
-                    {{module.name}}
+                    <a href="{% url 'yaksh:edit_module' course.id module.id %}">
+                        <i class="fa fa-edit"></i>&nbsp;{{module.name}}
+                    </a>
                 </div>
                 <div class="card-body">
                     <div class="row">

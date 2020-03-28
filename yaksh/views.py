@@ -2479,9 +2479,7 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
         course = get_object_or_404(Course, id=course_id)
         if not course.is_creator(user) and not course.is_teacher(user):
             raise Http404('This Lesson does not belong to you')
-        redirect_url = reverse("yaksh:get_course_modules", args=[course_id])
-    else:
-        redirect_url = reverse("yaksh:show_all_lessons")
+
     context = {}
     if request.method == "POST":
         if "Save" in request.POST:
@@ -2516,7 +2514,7 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
                 return redirect(
                     reverse("yaksh:edit_lesson",
                             args=[course_id, module_id, lesson.id])
-                )
+                    )
             else:
                 context['lesson_form'] = lesson_form
                 context['error'] = lesson_form["video_file"].errors
@@ -2699,12 +2697,10 @@ def add_module(request, course_id=None, module_id=None):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    redirect_url = reverse("yaksh:show_all_modules")
     if course_id:
         course = Course.objects.get(id=course_id)
         if not course.is_creator(user) and not course.is_teacher(user):
             raise Http404('This course does not belong to you')
-        redirect_url = reverse("yaksh:get_course_modules", args=[course_id])
     if module_id:
         module = LearningModule.objects.get(id=module_id)
         if not module.creator == user and not course_id:
