@@ -9,7 +9,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import (
+    api_view, authentication_classes, permission_classes
+)
 from django.http import Http404
+from django.contrib.auth import authenticate
 from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 import json
@@ -50,6 +55,7 @@ class StartQuiz(APIView):
             raise Http404
 
     def get(self, request, course_id, quiz_id,  format=None):
+        context = {}
         user = request.user
         quiz = self.get_quiz(quiz_id, user)
         questionpaper = quiz.questionpaper_set.first()
@@ -58,7 +64,9 @@ class StartQuiz(APIView):
             questionpaper, user, course_id)
         if last_attempt and last_attempt.is_attempt_inprogress():
             serializer = AnswerPaperSerializer(last_attempt)
-            return Response(serializer.data)
+            context["time_left"] = last_attempt.time_left()
+            context["answerpaper"] = serializer.data
+            return Response(context)
 
         can_attempt, msg = questionpaper.can_attempt_now(user, course_id)
         if not can_attempt:
@@ -71,7 +79,9 @@ class StartQuiz(APIView):
         answerpaper = questionpaper.make_answerpaper(user, ip, attempt_number,
                                                      course_id)
         serializer = AnswerPaperSerializer(answerpaper)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        context["time_left"] = answerpaper.time_left()
+        context["answerpaper"] = serializer.data
+        return Response(context, status=status.HTTP_201_CREATED)
 
 
 class QuestionDetail(APIView):
@@ -175,7 +185,7 @@ class AnswerValidator(APIView):
 
     def post(self, request, answerpaper_id, question_id, format=None):
         try:
-            user_answer = request.data['answer']
+            user_answer = str(request.data['answer'])
         except KeyError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         user = request.user
@@ -196,8 +206,8 @@ class AnswerValidator(APIView):
             if result.get('success'):
                 answer.correct = True
                 answer.marks = question.points
-                answer.error = json.dumps(result.get('error'))
-                answer.save()
+            answer.error = json.dumps(result.get('error'))
+            answer.save()
             answerpaper.update_marks(state='inprogress')
         return Response(result)
 
@@ -208,11 +218,11 @@ class AnswerValidator(APIView):
         # update result
         if result['status'] == 'done':
             final_result = json.loads(result.get('result'))
-            answer.error = json.dumps(result.get('error'))
+            answer.error = json.dumps(final_result.get('error'))
             if final_result.get('success'):
                 answer.correct = True
                 answer.marks = answer.question.points
-                answer.save()
+            answer.save()
             answerpaper = answer.answerpaper_set.get()
             answerpaper.update_marks(state='inprogress')
         return Response(result)
@@ -372,3 +382,42 @@ class QuestionPaperDetail(APIView):
         questionpaper = self.get_questionpaper(pk, request.user)
         questionpaper.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ICourse(APIView):
+    def get(self, request, pk, format=None):
+        course = Course.objects.get(id=pk)
+        serializer = CourseSerializer(course)
+        return Response(serializer.data)
+
+
+@api_view(['POST'])
+@authentication_classes(())
+@permission_classes(())
+def login(request):
+    data = {}
+    if request.method == "POST":
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
+        if user is not None and user.is_authenticated:
+            token, created = Token.objects.get_or_create(user=user)
+            data = {
+                'token': token.key
+            }
+    return Response(data, status=status.HTTP_201_CREATED)
+
+
+class QuitQuiz(APIView):
+    def get_answerpaper(self, answerpaper_id):
+        try:
+            return AnswerPaper.objects.get(id=answerpaper_id)
+        except AnswerPaper.DoesNotExist:
+            raise Http404
+
+    def get(self, request, answerpaper_id, format=None):
+        answerpaper = self.get_answerpaper(answerpaper_id)
+        answerpaper.status = 'completed'
+        answerpaper.save()
+        serializer = AnswerPaperSerializer(answerpaper)
+        return Response(serializer.data)
