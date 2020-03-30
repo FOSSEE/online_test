@@ -2,6 +2,7 @@ from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
 from api import views
 
+app_name = 'api'
 
 urlpatterns = [
     url(r'questions/$', views.QuestionList.as_view(), name='questions'),

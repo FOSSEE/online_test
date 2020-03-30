@@ -1,6 +1,8 @@
 from django.conf.urls import url
 from grades import views
 
+app_name = 'grades'
+
 urlpatterns = [
     url(r'^$', views.grading_systems, name="grading_systems_home"),
     url(r'^grading_systems/$', views.grading_systems, name="grading_systems"),
