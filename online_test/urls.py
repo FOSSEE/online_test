@@ -16,5 +16,7 @@ urlpatterns = [
     url(r'^exam/reset/', include('django.contrib.auth.urls')),
     url(r'^', include('social_django.urls', namespace='social')),
     url(r'^grades/', include(('grades.urls', 'grades'))),
+    url(r'^api/', include('api.urls', namespace='api')),
+
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
