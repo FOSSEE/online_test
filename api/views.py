@@ -205,6 +205,7 @@ class AnswerValidator(APIView):
 
         # updaTE RESult
         if question.type not in ['code', 'upload']:
+            print('Non Code: ', user_answer)
             if result.get('success'):
                 answer.correct = True
                 answer.marks = question.points
@@ -408,3 +409,18 @@ def login(request):
                 'token': token.key
             }
     return Response(data, status=status.HTTP_201_CREATED)
+
+
+class QuitQuiz(APIView):
+    def get_answerpaper(self, answerpaper_id):
+        try:
+            return AnswerPaper.objects.get(id=answerpaper_id)
+        except AnswerPaper.DoesNotExist:
+            raise Http404
+
+    def get(self, request, answerpaper_id, format=None):
+        answerpaper = self.get_answerpaper(answerpaper_id)
+        answerpaper.status = 'completed'
+        answerpaper.save()
+        serializer = AnswerPaperSerializer(answerpaper)
+        return Response(serializer.data)
