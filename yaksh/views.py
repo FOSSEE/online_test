@@ -2688,6 +2688,7 @@ def design_module(request, module_id, course_id=None):
     context['status'] = 'design'
     context['module_id'] = module_id
     context['course_id'] = course_id
+    context['module'] = learning_module
     return my_render_to_response(request, 'yaksh/add_module.html', context)
 
 

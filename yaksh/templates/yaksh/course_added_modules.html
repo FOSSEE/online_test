@@ -45,6 +45,7 @@
                     <br>
                     {% with module.get_learning_units as units %}
                         {% if units %}
+                            <p><b><u>Lessons/Quizzes/Exercise</u></b><p>
                             <table class="table table-responsive-sm">
                                 {% for unit in units %}
                                     <tr>
@@ -80,6 +81,17 @@
                                         {% else %}
                                             -------
                                         {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if unit.type == "quiz" %}
+                                                {% if unit.quiz.is_exercise %}
+                                                    Exercise
+                                                {% else %}
+                                                    Quiz
+                                                {% endif %}
+                                            {% else %}
+                                                Lesson
+                                            {% endif %}
                                         </td>
                                     </tr>
                                 {% endfor %}
