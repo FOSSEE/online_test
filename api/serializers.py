@@ -6,15 +6,21 @@ from yaksh.models import (
 
 
 class QuestionSerializer(serializers.ModelSerializer):
+    test_cases = serializers.SerializerMethodField()
+
+    def get_test_cases(self, obj):
+        test_cases = obj.get_test_cases_as_dict()
+        return test_cases
+
     class Meta:
         model = Question
-        fields = '__all__'
+        exclude = ('partial_grading', )
 
 
 class QuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
-        fields = '__all__'
+        exclude = ('view_answerpaper', )
 
 
 class QuestionPaperSerializer(serializers.ModelSerializer):
@@ -63,4 +69,11 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = '__all__'
+        exclude = (
+            'teachers',
+            'rejected',
+            'requests',
+            'students',
+            'grading_system',
+            'view_grade',
+        )
