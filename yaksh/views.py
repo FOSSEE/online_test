@@ -176,15 +176,14 @@ def quizlist_user(request, enrolled=None, msg=None):
         courses = hidden_courses
         title = 'Search Results'
     else:
-        courses = list(Course.objects.filter(
-            active=True, is_trial=False,
+        enrolled_courses = user.students.filter(is_trial=False).order_by('-id')
+        remaining_courses = list(Course.objects.filter(
+            active=True, is_trial=False, hidden=False
         ).exclude(
-           ~Q(requests=user), ~Q(rejected=user), hidden=True
-        ).order_by('-id'))
-        enrolled_course = list(
-            user.students.filter(is_trial=False).order_by('-id')
-        )
-        courses.extend(enrolled_course)
+            id__in=enrolled_courses.values_list("id", flat=True)
+            ).order_by('-id'))
+        courses = list(enrolled_courses)
+        courses.extend(remaining_courses)
         title = 'All Courses'
 
     for course in courses:
