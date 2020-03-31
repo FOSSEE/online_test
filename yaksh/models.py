@@ -841,6 +841,15 @@ class LearningModule(models.Model):
         write_templates_to_zip(zip_file, module_file_path, module_data,
                                module_name, folder_name)
 
+    def get_unit_order(self, type, unit):
+        if type == "lesson":
+            order = self.get_learning_units().get(
+                type=type, lesson=unit).order
+        else:
+            order = self.get_learning_units().get(
+                type=type, quiz=unit).order
+        return order
+
     def __str__(self):
         return self.name
 

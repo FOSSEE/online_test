@@ -1103,6 +1103,12 @@ class TestAddQuiz(TestCase):
             is_exercise=True, description='demo exercise', creator=self.user
         )
 
+        unit1 = LearningUnit.objects.create(
+            type="quiz", quiz=self.quiz, order=1)
+        unit2 = LearningUnit.objects.create(
+            type="quiz", quiz=self.exercise, order=2)
+        self.module.learning_unit.add(*[unit1.id, unit2.id])
+
     def tearDown(self):
         self.client.logout()
         self.user.delete()

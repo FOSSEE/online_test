@@ -343,10 +343,14 @@ def add_quiz(request, course_id=None, module_id=None, quiz_id=None):
         form = QuizForm(request.POST, instance=quiz)
         if form.is_valid():
             if quiz is None:
+                last_unit = module.get_learning_units().last()
+                order = last_unit.order + 1 if last_unit else 1
                 form.instance.creator = user
+            else:
+                order = module.get_unit_order("quiz", quiz)
             added_quiz = form.save()
             unit, created = LearningUnit.objects.get_or_create(
-                    type="quiz", quiz=added_quiz, order=1
+                    type="quiz", quiz=added_quiz, order=order
                 )
             module.learning_unit.add(unit.id)
             messages.success(request, "Quiz saved successfully")
@@ -386,7 +390,11 @@ def add_exercise(request, course_id=None, module_id=None, quiz_id=None):
         form = ExerciseForm(request.POST, instance=quiz)
         if form.is_valid():
             if quiz is None:
+                last_unit = module.get_learning_units().last()
+                order = last_unit.order + 1 if last_unit else 1
                 form.instance.creator = user
+            else:
+                order = module.get_unit_order("quiz", quiz)
             quiz = form.save(commit=False)
             quiz.is_exercise = True
             quiz.time_between_attempts = 0
@@ -397,7 +405,7 @@ def add_exercise(request, course_id=None, module_id=None, quiz_id=None):
             quiz.pass_criteria = 0
             quiz.save()
             unit, created = LearningUnit.objects.get_or_create(
-                    type="quiz", quiz=quiz, order=1
+                    type="quiz", quiz=quiz, order=order
                 )
             module.learning_unit.add(unit.id)
             messages.success(
@@ -2495,7 +2503,11 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
                 lesson.remove_file()
             if lesson_form.is_valid():
                 if lesson is None:
+                    last_unit = module.get_learning_units().last()
+                    order = last_unit.order + 1 if last_unit else 1
                     lesson_form.instance.creator = user
+                else:
+                    order = module.get_unit_order("lesson", lesson)
                 lesson = lesson_form.save()
                 lesson.html_data = get_html_text(lesson.description)
                 lesson.save()
@@ -2505,7 +2517,7 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
                             lesson=lesson, file=les_file
                         )
                 unit, created = LearningUnit.objects.get_or_create(
-                    type="lesson", lesson=lesson, order=1
+                    type="lesson", lesson=lesson, order=order
                 )
                 module.learning_unit.add(unit.id)
                 messages.success(
@@ -2622,7 +2634,7 @@ def design_module(request, module_id, course_id=None):
                             order=order, quiz_id=learning_id,
                             type=type)
                     else:
-                        unit = LearningUnit.objects.get_or_create(
+                        unit, status = LearningUnit.objects.get_or_create(
                             order=order, lesson_id=learning_id,
                             type=type)
                     to_add_list.append(unit)
@@ -2714,7 +2726,10 @@ def add_module(request, course_id=None, module_id=None):
             module_form = LearningModuleForm(request.POST, instance=module)
             if module_form.is_valid():
                 if module is None:
+                    last_module = course.get_learning_modules().last()
                     module_form.instance.creator = user
+                    if last_module:
+                        module_form.instance.order = last_module.order + 1
                 module = module_form.save()
                 module.html_data = get_html_text(module.description)
                 module.save()
