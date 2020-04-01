@@ -384,7 +384,7 @@ class QuestionPaperDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ICourse(APIView):
+class GetCourse(APIView):
     def get(self, request, pk, format=None):
         course = Course.objects.get(id=pk)
         serializer = CourseSerializer(course)
