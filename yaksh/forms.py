@@ -1,7 +1,7 @@
 from django import forms
 from yaksh.models import (
     get_model_class, Profile, Quiz, Question, Course, QuestionPaper, Lesson,
-    LearningModule, TestCase
+    LearningModule, TestCase, languages, question_types
 )
 from grades.models import GradingSystem
 from django.contrib.auth import authenticate
@@ -17,27 +17,9 @@ from string import punctuation, digits
 import pytz
 from .send_emails import generate_activation_key
 
-languages = (
-    ("select", "Select Language"),
-    ("python", "Python"),
-    ("bash", "Bash"),
-    ("c", "C Language"),
-    ("cpp", "C++ Language"),
-    ("java", "Java Language"),
-    ("scilab", "Scilab"),
-)
+languages = (("select", "Select Language"),) + languages
 
-question_types = (
-    ("select", "Select Question Type"),
-    ("mcq", "Multiple Choice"),
-    ("mcc", "Multiple Correct Choices"),
-    ("code", "Code"),
-    ("upload", "Assignment Upload"),
-    ("integer", "Answer in Integer"),
-    ("string", "Answer in String"),
-    ("float", "Answer in Float"),
-    ("arrange", "Arrange in Correct Order"),
-)
+question_types = (("select", "Select Question Type"),) + question_types
 
 test_case_types = (
     ("standardtestcase", "Standard Testcase"),

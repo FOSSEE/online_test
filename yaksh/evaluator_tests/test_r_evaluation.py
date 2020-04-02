@@ -94,7 +94,7 @@ class RAssertionEvaluationTestCase(EvaluatorBaseTest):
             }
             '''
         )
-        err = ['Error: input == output is not TRUE\nExecution halted\n']
+        err = 'input == output is not TRUE\nExecution halted\n'
         kwargs = {'metadata': {
                   'user_answer': user_answer,
                   'file_paths': self.file_paths,
@@ -109,7 +109,7 @@ class RAssertionEvaluationTestCase(EvaluatorBaseTest):
         errors = result.get('error')
         # Then
         self.assertFalse(result.get('success'))
-        self.assertEqual(errors, err)
+        self.assertEqual(errors[0]['message'], err)
 
     def test_error_code(self):
         # Given
@@ -135,7 +135,7 @@ class RAssertionEvaluationTestCase(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertIn("object 'a' not found", errors[0])
+        self.assertIn("object 'a' not found", errors[0]['message'])
 
     def test_empty_function(self):
         # Given
@@ -160,7 +160,8 @@ class RAssertionEvaluationTestCase(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assertIn("Error: is.null(obj) == FALSE is not TRUE", errors[0])
+        err = errors[0]['message']
+        self.assertIn("is.null(obj) == FALSE is not TRUE", err)
 
     def test_infinite_loop(self):
         # Given
