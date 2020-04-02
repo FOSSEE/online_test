@@ -351,7 +351,8 @@ def add_quiz(request, course_id=None, module_id=None, quiz_id=None):
             unit, created = LearningUnit.objects.get_or_create(
                     type="quiz", quiz=added_quiz, order=order
                 )
-            module.learning_unit.add(unit.id)
+            if created:
+                module.learning_unit.add(unit.id)
             messages.success(request, "Quiz saved successfully")
             return redirect(
                 reverse("yaksh:edit_quiz",
@@ -406,7 +407,8 @@ def add_exercise(request, course_id=None, module_id=None, quiz_id=None):
             unit, created = LearningUnit.objects.get_or_create(
                     type="quiz", quiz=quiz, order=order
                 )
-            module.learning_unit.add(unit.id)
+            if created:
+                module.learning_unit.add(unit.id)
             messages.success(
                 request, "{0} saved successfully".format(quiz.description)
             )
@@ -2518,7 +2520,8 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
                 unit, created = LearningUnit.objects.get_or_create(
                     type="lesson", lesson=lesson, order=order
                 )
-                module.learning_unit.add(unit.id)
+                if created:
+                    module.learning_unit.add(unit.id)
                 messages.success(
                     request, "Saved {0} successfully".format(lesson.name)
                 )
