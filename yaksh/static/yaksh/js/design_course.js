@@ -20,7 +20,11 @@ $(document).ready(function(){
         $(this).append('<input type="hidden" name="ordered_list" value='+order_list+'>');
         return true;
     });
-    var msg = "Check Prerequisite is set to Yes by default \n" + 
-              "To change, select the Change checkbox and Click Change Prerequisite button \n";
-    $("#prereq_msg").attr("title", msg);
+    var completion_msg = "This will check if the previous module is completed " +
+                         "before viewing the next module."
+    $("#prereq_msg").attr("title", completion_msg);
+    $("#prereq_msg").tooltip();
+    var completion_msg = "This will check if the previous module is completed " +
+                         "before viewing the next module based on quiz passing status."
+    $("#prereq_passing_msg").attr("title", completion_msg);
 });

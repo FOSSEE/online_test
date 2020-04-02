@@ -26,17 +26,9 @@
 <div class="container">
     <div class="row justify-content-center form-group">
         <div class="col-md-9 col-md-offset-4">
-            {% if course_id %}
             <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
-                <i class="fa fa-arrow-left"></i>
-                Back
+                <i class="fa fa-arrow-left"></i>&nbsp;Back
             </a>
-            {% else %}
-            <a class="btn btn-primary" href="{% url 'yaksh:show_all_lessons' %}">
-                <i class="fa fa-arrow-left"></i>
-                Back
-            </a>
-            {% endif %}
             <br>
             {% if messages %}
                 <br>

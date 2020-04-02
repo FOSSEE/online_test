@@ -5,13 +5,18 @@
         </a>
     </li>
     <li class="nav-item">
-        <a href="{% url 'yaksh:course_students' course.id %}" id="enroll-students" class="nav-link list-group-item {% if is_students %} active {% endif %}" title="View the course requested, rejected and added students" data-placement="top" data-toggle="tooltip">
+        <a href="{% url 'yaksh:course_students' course.id %}" id="enroll-students" class="nav-link list-group-item {% if is_students %} active {% endif %}" title="View the course requested, rejected and enrolled students" data-placement="top" data-toggle="tooltip">
             Enroll Students
         </a>
     </li>
     <li class="nav-item">
-        <a href="{% url 'yaksh:send_mail' course.id %}" class="nav-link list-group-item {% if is_mail %} active {% endif %}" title="Send mail to course students" data-placement="top" data-toggle="tooltip">
-            Send Mail
+        <a class="nav-link list-group-item {% if is_modules %} active {% endif %}" href="{% url 'yaksh:get_course_modules' course.id %}" title="View modules added to the course" data-placement="top" data-toggle="tooltip">
+        Course Modules
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link list-group-item {% if is_design_course %} active {% endif %}" href="{% url 'yaksh:design_course' course.id %}" title="Additional course settings" data-placement="top" data-toggle="tooltip">
+        Design Course
         </a>
     </li>
     <li class="nav-item">
@@ -20,13 +25,8 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link list-group-item {% if is_design_course %} active {% endif %}" href="{% url 'yaksh:design_course' course.id %}" title="Add modules to this course" data-placement="top" data-toggle="tooltip">
-        Design Course
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link list-group-item {% if is_modules %} active {% endif %}" href="{% url 'yaksh:get_course_modules' course.id %}" title="View modules added to the course" data-placement="top" data-toggle="tooltip">
-        Course Modules
+        <a href="{% url 'yaksh:send_mail' course.id %}" class="nav-link list-group-item {% if is_mail %} active {% endif %}" title="Send mail to course students" data-placement="top" data-toggle="tooltip">
+            Send Mail
         </a>
     </li>
     <li class="nav-item">

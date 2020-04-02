@@ -110,7 +110,7 @@
 <!-- Add learning Units -->
 {% if status == "design" %}
 <div class="container">
-<center><h3><u>Add/Edit Learning Units</h3></u></center>
+<center><h2><u>{{module.name}}</u></h2></center>
 {% if course_id %}
 <form action="{% url 'yaksh:design_module' module_id course_id %}" method="POST" id="design_course_form">
 {% else %}
@@ -161,8 +161,7 @@
                         <th width="25%" colspan="2">Check Prerequisite
                             <br>
                             <a href="#" data-toggle="tooltip" id="prereq_msg">
-                                <span class="glyphicon glyphicon-question-sign">
-                                </span> What's This
+                                What's This&nbsp;<i class="fa fa-question-circle"></i>
                             </a>
                         </th>
                         </tr>

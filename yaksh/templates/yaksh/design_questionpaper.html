@@ -17,17 +17,10 @@
 {% block content %}
 <div class="container">
 <input type=hidden id="url_root" value={{ URL_ROOT }}>
-{% if course_id %}
-    <form action="{% url 'yaksh:designquestionpaper' qpaper.quiz.id qpaper.id course_id %}" method="POST" id="design_q">
+    <form action="{% url 'yaksh:designquestionpaper' course_id qpaper.quiz.id qpaper.id %}" method="POST" id="design_q">
     <a href="{% url 'yaksh:get_course_modules' course_id %}" class="btn btn-primary">
         <i class="fa fa-arrow-left"></i>&nbsp;Back
     </a>
-{% else %}
-    <form action="{% url 'yaksh:designquestionpaper' qpaper.quiz.id qpaper.id %}" method="POST" id="design_q">
-    <a href="{% url 'yaksh:show_all_quizzes' %}" class="btn btn-primary">
-        <i class="fa fa-arrow-left"></i>&nbsp;Back
-    </a>
-{% endif %}
     {% csrf_token %}
     <input type=hidden name="is_active" id="is_active" value="{{ state }}">
     <center><b>Manual mode to design the {{lang}}  Question Paper</center><br>
