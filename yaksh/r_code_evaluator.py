@@ -49,7 +49,7 @@ class RCodeEvaluator(BaseEvaluator):
         # Throw message if there are commmands that terminates scilab
         add_err = ""
         if terminate_commands:
-            add_err = "Please do not use quit() in your\
+            add_err = "Please do not use quit() q() in your\
                         code.\n Otherwise your code will not be evaluated\
                         correctly.\n"
 
@@ -79,7 +79,8 @@ class RCodeEvaluator(BaseEvaluator):
         new_string = ""
         terminate_commands = False
         for line in string.splitlines():
-            new_line = re.sub(r"quit.*$", "", line)
+            new_line = re.sub(r'quit(.*$)', "", line)
+            new_line = re.sub(r'q(.*$)', "", new_line)
             if line != new_line:
                 terminate_commands = True
             new_string = new_string + '\n' + new_line
