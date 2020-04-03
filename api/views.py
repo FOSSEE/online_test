@@ -184,13 +184,23 @@ class AnswerValidator(APIView):
             raise Http404
 
     def post(self, request, answerpaper_id, question_id, format=None):
-        try:
-            user_answer = str(request.data['answer'])
-        except KeyError:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
         user = request.user
         answerpaper = self.get_answerpaper(answerpaper_id, user)
         question = self.get_question(question_id, answerpaper)
+        try:
+            if question.type == 'mcq' or question.type == 'mcc':
+                user_answer = request.data['answer']
+            elif question.type == 'integer':
+                user_answer = int(request.data['answer'][0])
+            elif question.type == 'float':
+                user_answer = float(request.data['answer'][0])
+            elif question.type == 'string':
+                user_answer = request.data['answer']
+                print(user_answer)
+            else:
+                user_answer = request.data['answer']
+        except KeyError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         # save answer uid
         answer = Answer.objects.create(question=question, answer=user_answer)
         answerpaper.answers.add(answer)
