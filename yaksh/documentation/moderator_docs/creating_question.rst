@@ -23,9 +23,7 @@ Setting up questions
 
     * **Points** - Points is the marks for a question.
 
-    * **Description** - The actual question description in HTML format.
-
-        .. note::  To add code snippets in questions please use html <code> and <br> tags.
+    * **Description** - The actual question description.
 
     * **Tags** - Type of label or metadata tag making it easier to find specific type of questions.
 
@@ -55,7 +53,9 @@ Setting up questions
 
 How to write Test cases
 -----------------------
-    
+    After saving the question with the necessary details, you will be able to add
+    the test cases. A drop down **Add Test case** will be available to add the test case in the Test Cases section.
+
     The following explains different methods to write test cases.
 
     * **Create Standard Test Case**
@@ -200,10 +200,54 @@ How to write Test cases
                           2. Each argument should be separated by **space**.
                           3. This field can be left blank.
 
+        * **For Scilab**
+            .. image:: ../images/scilab_standard_testcase.jpg
+                :width: 80%
 
-        Check Delete Field if a test case is to be removed.
+            Consider a Program to add two numbers.
+            The code in the Test case Field should be as follows: ::
 
-        Finally click on Save to save the test case.
+                mode(-1)
+                exec("function.sci",-1);
+                i = 0
+                p = add(3,5);
+                correct = (p == 8);
+                if correct then
+                 i=i+1
+                end
+                disp("Input submitted 3 and 5")
+                disp("Expected output 8 got " + string(p))
+                p = add(22,-20);
+                correct = (p==2);
+                if correct then
+                 i=i+1
+                end
+                disp("Input submitted 22 and -20")
+                disp("Expected output 2 got " + string(p))
+                p =add(91,0);
+                correct = (p==91);
+                if correct then
+                 i=i+1
+                end
+                disp("Input submitted 91 and 0")
+                disp("Expected output 91 got " + string(p))
+                if i==3 then
+                 exit(5);
+                else
+                 exit(3);
+                end
+
+            Assuming Students answer to be as below: ::
+
+                funcprot(0)
+                function[c]=add(a,b)
+                c=a+b;
+                endfunction
+
+
+        Check **Delete** Field if a test case is to be removed.
+
+        Finally click on **Save** to save the test case.
 
 
     * **Create Standard Input/Output Based Test Case**
@@ -221,23 +265,7 @@ How to write Test cases
 
             Setting up Standard Input/Output Based questions is same for all languages.
 
-    * **Create MCQ or MCC Based Test Case**
-
-        Select MCQ/MCC from Add Test Case field.
-
-            Fig (a) showing MCQ based testcase
-
-            .. image:: ../images/mcq_testcase.jpg
-                :width: 80%
-
-            Fig (b) showing MCC based testcase
-
-            .. image:: ../images/mcc_testcase.jpg
-                :width: 80%
-
-        In Options Field type the option check the correct checkbox if the current option is correct and click on Save button to save each option.
-
-        For MCC based question, check the correct checkbox for multiple correct options.
+            .. note:: Standard Input/Output Based questions is available only for the languages Python, C, C++, Java, Bash.
 
     * **Create Hook based Test Case**
 
@@ -285,6 +313,24 @@ How to write Test cases
 
         .. image:: ../images/hook_testcase.jpg
                 :width: 80%
+
+    * **Create MCQ or MCC Based Test Case**
+
+        Select MCQ/MCC from Add Test Case field.
+
+            Fig (a) showing MCQ based testcase
+
+            .. image:: ../images/mcq_testcase.jpg
+                :width: 80%
+
+            Fig (b) showing MCC based testcase
+
+            .. image:: ../images/mcc_testcase.jpg
+                :width: 80%
+
+        In Options Field type the option check the correct checkbox if the current option is correct and click on Save button to save each option.
+
+        For MCC based question, check the correct checkbox for multiple correct options.
 
     * **Create Integer Based Test Case**
 
@@ -340,7 +386,7 @@ Features in Question
 
     * **Upload Questions**
             
-            Click on the **Upload and Download questions** tab in the
+            Click on the **Upload Questions** tab in the
             **Question Page**.
             One can upload Yaml file with extensions .yaml or .yml.
             Please note that you cannot upload files associated to a question.
@@ -363,7 +409,7 @@ Features in Question
             
             Select questions from the list of question displayed on the Questions page. Click on Test selected button. This will take you to a quiz with the selected questions. 
 
-            .. Note:: This will not create an actual quiz but a trial quiz. This quiz is hidden from the students and only for moderator to view. You can delete the quiz from moderator's dashboard.
+            .. Note:: This will not create an actual quiz but a trial quiz. This quiz is hidden from the students and only for moderator to view.
 
     * **Filter Questions**
             
@@ -376,5 +422,5 @@ Features in Question
 
             1. You can search the questions by tags added during question creation.
             2. Click on the Available tags to view all the available tags. Select any tag from available tags and click **Search**.
-            3. Enter the tag in the search bar and click on **Search** respective questions will be displayed.
+            3. Enter the tag in the search bar and click on **Search Icon** respective questions will be displayed.
 
