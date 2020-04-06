@@ -12,4 +12,3 @@ markdown==2.6.9
 pygments==2.2.0
 djangorestframework==3.11.0
 django-cors-headers==3.1.0
-mysqlclient
