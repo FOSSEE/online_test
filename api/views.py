@@ -196,7 +196,6 @@ class AnswerValidator(APIView):
                 user_answer = float(request.data['answer'][0])
             elif question.type == 'string':
                 user_answer = request.data['answer']
-                print(user_answer)
             else:
                 user_answer = request.data['answer']
         except KeyError:
