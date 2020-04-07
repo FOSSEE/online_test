@@ -7,6 +7,7 @@ import re
 # Local imports
 from .base_evaluator import BaseEvaluator
 from .file_utils import copy_files, delete_files
+from .error_messages import prettify_exceptions
 
 
 class RCodeEvaluator(BaseEvaluator):
@@ -49,9 +50,8 @@ class RCodeEvaluator(BaseEvaluator):
         # Throw message if there are commmands that terminates scilab
         add_err = ""
         if terminate_commands:
-            add_err = "Please do not use quit() q() in your\
-                        code.\n Otherwise your code will not be evaluated\
-                        correctly.\n"
+            add_err = "Please do not use quit() q() in your code.\
+                        \n Otherwise your code will not be evaluated.\n"
 
         cmd = 'Rscript main.r'
         ret = self._run_command(cmd, shell=True, stdout=subprocess.PIPE,
@@ -66,10 +66,12 @@ class RCodeEvaluator(BaseEvaluator):
                 success, err = True, None
                 mark_fraction = 1.0 if self.partial_grading else 0.0
             else:
-                err = add_err + stdout
+                err = stdout + add_err
         else:
-            err = add_err + stderr
-
+            err = stderr + add_err
+        if err:
+            err = re.sub(r'.*?: ', '', err, count=1)
+            err = prettify_exceptions('Error', err)
         return success, err, mark_fraction
 
     def _remove_r_quit(self, string):
