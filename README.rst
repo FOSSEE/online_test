@@ -42,9 +42,6 @@ Installation
 ============
 
 
-Installation
-^^^^^^^^^^^^
-
 If Python 3.6 and above is not available in the system, then we recommend using
 miniconda. Download miniconda with Python 3.6 and above.
 
