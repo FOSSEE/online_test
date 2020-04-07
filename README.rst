@@ -29,11 +29,9 @@ Features
 -  Scales to over 500+ simultaneous users.
 -  Distributed under the BSD license.
 
-Installation
-============
 
 Requirements
-^^^^^^^^^^^^
+============
 
 Python 3.6, 3.7, 3.8
 
@@ -41,10 +39,14 @@ Django 3.0.3
 
 
 Installation
+============
+
+
+Installation
 ^^^^^^^^^^^^
 
 If Python 3.6 and above is not available in the system, then we recommend using
-miniconda
+miniconda. Download miniconda with Python 3.6 and above.
 
 **Installing Miniconda**
 
@@ -78,7 +80,7 @@ miniconda
 
     ::
 
-        pip install -r requirements/requirements-common.txt
+        pip3 install -r requirements/requirements-common.txt
 
   * Install Code Server dependencies
 
@@ -86,6 +88,7 @@ miniconda
 
         sudo pip3 install -r requirements/requirements-codeserver.txt
 
+**Note**: Currently, only Linux and MacOS is supported for the project.
 
 Quick Start
 ^^^^^^^^^^^
