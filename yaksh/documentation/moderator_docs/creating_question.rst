@@ -244,6 +244,43 @@ How to write Test cases
                 c=a+b;
                 endfunction
 
+        * **For R**
+            .. image:: ../images/r_standard_testcase.jpg
+                :width: 80%
+
+            Consider a Program to print even or odd number.
+            The code in the Test case Field should be as follows: ::
+
+                source("function.r")
+                check_empty = function(obj){
+                    stopifnot(is.null(obj) == FALSE)
+                }
+                check = function(input, output){
+                stopifnot(input == output)
+                }
+                is_correct = function(){
+                if (count == 3){
+                    quit("no", 31)
+                }
+                }
+                check_empty(odd_or_even(3))
+                check(odd_or_even(6), "EVEN")
+                check(odd_or_even(1), "ODD")
+                check(odd_or_even(10), "EVEN")
+                check(odd_or_even(777), "ODD")
+                check(odd_or_even(778), "EVEN")
+                count = 3
+                is_correct()
+
+            Assuming Students answer to be as below: ::
+
+                odd_or_even <- function(n){
+                  if(n %% 2 == 0){
+                    return("EVEN")
+                  }
+                  return("ODD")
+                }
+
 
         Check **Delete** Field if a test case is to be removed.
 
