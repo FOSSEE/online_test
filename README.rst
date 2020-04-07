@@ -29,41 +29,66 @@ Features
 -  Scales to over 500+ simultaneous users.
 -  Distributed under the BSD license.
 
-Quick Start
-===========
+Installation
+============
 
-Pre-Requisites
-^^^^^^^^^^^^^^
+Requirements
+^^^^^^^^^^^^
 
-1. Ensure you have Python available.
-2. Ensure `pip <https://pip.pypa.io/en/latest/installing.html>`__ is
-   installed.
+Python 3.6, 3.7, 3.8
+
+Django 3.0.3
+
 
 Installation
 ^^^^^^^^^^^^
 
-1. Install yaksh
+If Python 3.6 and above is not available in the system, then we recommend using
+miniconda
 
-   -  Clone the repository
+**Installing Miniconda**
 
-      ::
+1. Download miniconda from https://docs.conda.io/en/latest/miniconda.html according to the OS version.
 
-          $ git clone https://github.com/FOSSEE/online_test.git
+2. Follow the installation instructions as given in https://conda.io/projects/conda/en/latest/user-guide/install/index.html#regular-installation
 
-   -  Go to the online\_test directory
+3. Restart the Terminal.
 
-      ::
+**Pre-Requisite**
 
-          $ cd ./online_test
+* Ensure  `pip <https://pip.pypa.io/en/latest/installing.html>`_ is installed
 
-   -  Install the dependencies for local setup
+**Installing Yaksh**
 
-        ::
+* **Clone the repository**
 
-            $ pip install -r ./requirements/requirements-common.txt
+  ::
 
-Short instructions
-^^^^^^^^^^^^^^^^^^
+      git clone https://github.com/FOSSEE/online_test.git
+
+* **Go to the online_test directory**
+
+  ::
+
+      cd online_test
+
+* **Install the dependencies**:
+
+  * Install Django and dependencies
+
+    ::
+
+        pip install -r requirements/requirements-common.txt
+
+  * Install Code Server dependencies
+
+    ::
+
+        sudo pip3 install -r requirements/requirements-codeserver.txt
+
+
+Quick Start
+^^^^^^^^^^^
 
 1. Start up the code server that executes the user code safely:
 
