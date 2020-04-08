@@ -1385,7 +1385,7 @@ class Question(models.Model):
                 testcases.append(case.get_field_value())
             q_dict['testcase'] = testcases
             q_dict['files'] = file_names
-            q_dict['tags'] = [tags.tag.name for tags in q_dict['tags']]
+            q_dict['tags'] = [tag.name for tag in q_dict['tags']]
             questions_dict.append(q_dict)
         question._add_yaml_to_zip(zip_file, questions_dict)
         return zip_file_name

@@ -1,7 +1,7 @@
 <ul class="pagination pagination">
     {% if objects.has_previous %}
     <li class="page-item">
-        <a class="page-link" href="?page=1" aria-label="Previous">
+        <a class="page-link" href="?page=1{% if request.GET.question_type %}&question_type={{ request.GET.question_type }}{% endif %}{% if request.GET.language %}&language={{ request.GET.language }}{% endif %}{% if request.GET.marks %}&marks={{ request.GET.marks }}{% endif %}{% if request.GET.question_tags %}&question_tags={{ request.GET.question_tags }}{% endif %}" aria-label="Previous">
             <span aria-hidden="true">
                 <i class="fa fa-angle-double-left"></i>
             </span>
@@ -16,13 +16,13 @@
                 <span class="page-link">{{ n }}<span class="sr-only">(current)</span></span>
             </li>
         {% elif n > objects.number|add:'-5' and n < objects.number|add:'5' %}
-            <li class="page-item"><a class="page-link" href="?page={{ n }}">{{ n }}</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ n }}{% if request.GET.question_type %}&question_type={{ request.GET.question_type }}{% endif %}{% if request.GET.language %}&language={{ request.GET.language }}{% endif %}{% if request.GET.marks %}&marks={{ request.GET.marks }}{% endif %}{% if request.GET.question_tags %}&question_tags={{ request.GET.question_tags }}{% endif %}">{{ n }}</a></li>
         {% endif %}
     {% endfor %}
 
     {% if objects.has_next %}
         <li class="page-item">
-            <a class="page-link" href="?page={{ objects.paginator.num_pages }}" aria-label="Next">
+            <a class="page-link" href="?page={{ objects.paginator.num_pages }}{% if request.GET.question_type %}&question_type={{ request.GET.question_type }}{% endif %}{% if request.GET.language %}&language={{ request.GET.language }}{% endif %}{% if request.GET.marks %}&marks={{ request.GET.marks }}{% endif %}{% if request.GET.question_tags %}&question_tags={{ request.GET.question_tags }}{% endif %}" aria-label="Next">
                 <span aria-hidden="true">
                     <i class="fa fa-angle-double-right"></i>
                 </span>

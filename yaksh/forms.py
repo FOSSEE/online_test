@@ -17,9 +17,9 @@ from string import punctuation, digits
 import pytz
 from .send_emails import generate_activation_key
 
-languages = (("select", "Select Language"),) + languages
+languages = (("", "Select Language"),) + languages
 
-question_types = (("select", "Select Question Type"),) + question_types
+question_types = (("", "Select Question Type"),) + question_types
 
 test_case_types = (
     ("standardtestcase", "Standard Testcase"),
@@ -357,11 +357,14 @@ class QuestionFilterForm(forms.Form):
         )
         self.fields['marks'].required = False
     language = forms.CharField(
-        max_length=8, widget=forms.Select(choices=languages,
-                                          attrs={'class': 'custom-select'}))
+        max_length=8, widget=forms.Select(
+            choices=languages, attrs={'class': 'custom-select'}),
+        required=False
+        )
     question_type = forms.CharField(
-        max_length=8, widget=forms.Select(choices=question_types,
-                                          attrs={'class': 'custom-select'})
+        max_length=8, widget=forms.Select(
+            choices=question_types, attrs={'class': 'custom-select'}),
+        required=False
     )
 
 
