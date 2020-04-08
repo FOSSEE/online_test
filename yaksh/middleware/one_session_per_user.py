@@ -25,14 +25,8 @@ class OneSessionPerUserMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
-        return self.get_response(request)
-
-    def process_request(self, request):
-        """
-            # Documentation:
-            # https://docs.djangoproject.com/en/1.5/topics/auth/customizing/
-            #extending-the-existing-user-model
-        """
+        # Code to be executed for each request before
+        # the view (and later middleware) are called.
         if isinstance(request.user, User):
             current_key = request.session.session_key
             if hasattr(request.user, 'concurrentuser'):
@@ -46,3 +40,8 @@ class OneSessionPerUserMiddleware(object):
                     concurrent_user=request.user,
                     session_key=current_key,
                 )
+
+        response = self.get_response(request)
+        # Code to be executed for each request/response after
+        # the view is called.
+        return response

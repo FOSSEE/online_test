@@ -2,33 +2,50 @@
 Installation
 ============
 
+Requirements
+------------
+
+Python 3.6, 3.7, 3.8
+
+Django 3.0.3
+
 Installing Yaksh
 ----------------
 
+If Python 3.6 and above is not available in the system, then we recommend using
+miniconda
+
+**Installing Miniconda**
+
+1. Download miniconda from https://docs.conda.io/en/latest/miniconda.html according to the OS version.
+
+2. Follow the installation instructions as given in https://conda.io/projects/conda/en/latest/user-guide/install/index.html#regular-installation
+
+3. Restart the Terminal.
 
 **Pre-Requisite**
 
 * Ensure  `pip <https://pip.pypa.io/en/latest/installing.html>`_ is installed
 
-**For installing Yaksh**
+**Installing Yaksh**
 
     1. **Clone the repository**::
 
-            $ git clone https://github.com/FOSSEE/online_test.git
+            git clone https://github.com/FOSSEE/online_test.git
 
     2. **Go to the online_test directory**::
 
-            $ cd ./online_test
+            cd ./online_test
 
-    3. **Install the dependencies** -
-        * For Python 2 use::
+    3. **Install the dependencies**:
 
-            $ pip install -r ./requirements/requirements-py2.txt
+        * Install Django and dependencies::
 
-        * For Python 3 (recommended) use::
+            pip install -r ./requirements/requirements-common.txt
 
-            $ pip install -r ./requirements/requirements-py3.txt
+        * Install Code Server dependencies::
 
+            sudo pip3 install -r requirements/requirements-codeserver.txt
 
 Quick Start
 -----------
@@ -93,9 +110,7 @@ Production Deployment
            
            ::
 
-               pip install -r requirements/requirements-py2.txt # For Python 2
-
-               pip3 install -r requirements/requirements-py3.txt # For Python 3
+               pip3 install -r requirements/requirements-py3.txt # For Python 3.x
 
         3. Install MySql Server
         4. Install Python MySql support
@@ -156,9 +171,6 @@ Production Deployment
            executed in a safe environment. Do this like so:
 
            ::
-
-               $ sudo python -m yaksh.code_server # For Python 2.x
-
 
                $ sudo python3 -m yaksh.code_server # For Python 3.x
 
@@ -298,25 +310,14 @@ Production Deployment
 
 * **Additional commands available**
 
-    We provide several convenient commands for you to use:
+    * **create_moderator** : Use this command to make a user as moderator.
 
-    -  load\_exam : load questions and a quiz from a python file. See
-       docs/sample\_questions.py
+      ::
 
-    -  load\_questions\_xml : load questions from XML file, see
-       docs/sample\_questions.xml use of this is deprecated in favor of
-       load\_exam.
+        python manage.py create_moderator <username>
 
-    -  results2csv : Dump the quiz results into a CSV file for further
-       processing.
-
-    -  dump\_user\_data : Dump out relevalt user data for either all users
-       or specified users.
-
-    For more information on these do this:
+    For more information on the command:
 
     ::
 
-            $ python manage.py help [command]
-
-    where [command] is one of the above.
+      python manage.py help [command-name]

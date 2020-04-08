@@ -716,6 +716,45 @@ class LearningModule(models.Model):
             new_module.learning_unit.add(new_unit)
         return new_module
 
+    def _add_module_to_zip(self, course, zip_file, path):
+        module_name = self.name.replace(" ", "_")
+        course_name = course.name.replace(" ", "_")
+        folder_name = os.sep.join((course_name, module_name))
+        lessons = self.get_lesson_units()
+
+        units = self.get_learning_units()
+        for idx, unit in enumerate(units):
+            next_unit = units[(idx + 1) % len(units)]
+            if unit.type == 'lesson':
+                unit.lesson._add_lesson_to_zip(next_unit,
+                                               self,
+                                               course,
+                                               zip_file,
+                                               path)
+            else:
+                unit.quiz._add_quiz_to_zip(next_unit,
+                                           self,
+                                           course,
+                                           zip_file,
+                                           path)
+
+        module_file_path = os.sep.join((
+            path, "templates", "yaksh", "download_course_templates",
+            "module.html"
+            ))
+        module_data = {"course": course, "module": self, "units": units}
+        write_templates_to_zip(zip_file, module_file_path, module_data,
+                               module_name, folder_name)
+
+    def get_unit_order(self, type, unit):
+        if type == "lesson":
+            order = self.get_learning_units().get(
+                type=type, lesson=unit).order
+        else:
+            order = self.get_learning_units().get(
+                type=type, quiz=unit).order
+        return order
+
     def __str__(self):
         return self.name
 

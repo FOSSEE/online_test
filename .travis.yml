@@ -9,6 +9,7 @@ services:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y scilab
+  - sudo apt-get install -y r-base
   - export DISPLAY=:99.0
 
 # command to install dependencies

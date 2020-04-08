@@ -1,46 +1,113 @@
 {% if is_modules %}
     {% block pagetitle %} <center> <h3>Course Modules</h3> </center> {% endblock %}
+        <a href="{% url 'yaksh:add_module' course.id %}" class="btn btn-primary btn-lg">
+            <i class="fa fa-plus-circle"></i>&nbsp;Add Module
+        </a>
+        <br><br>
     {% if modules %}
-    <table class="table table-responsive">
-        <tr>
-        <th>Module</th>
-        <th>Module Design</th>
-        <th>Lessons/Quizzes</th>
-        </tr>
+        <center>
+            <div class="alert alert-dismissible alert-info">
+                <strong>
+                    For additional module settings, Click on Design Module
+                </strong>
+            </div>
+        </center>
         {% for module in modules %}
-        <tr>
-            <td>
-                <a href="{% url 'yaksh:edit_module' module.id course.id %}">
-                {{module.name}}</a>
-            </td>
-            <td>
-                <a href="{% url 'yaksh:design_module' module.id course.id %}">
-                    Add Quizzes/Lessons for {{module.name}}
-                </a>
-            </td>
-            <td>
-                {% for unit in module.get_learning_units %}
-                    <ul class="inputs-list">
-                    <li>
-                    {% if unit.type == "quiz" %}
-                        {% if unit.quiz.is_exercise %}
-                            <a href="{% url 'yaksh:edit_exercise' unit.quiz.id course.id %}">
-                            {{unit.quiz.description}}</a>
+            <div class="card">
+                <div class="card-header">
+                    <a href="{% url 'yaksh:edit_module' course.id module.id %}">
+                        <i class="fa fa-edit"></i>&nbsp;{{module.name}}
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <a href="{% url 'yaksh:edit_lesson' course.id module.id %}" class="btn btn-info">
+                                <i class="fa fa-plus-circle"></i>&nbsp;Add Lesson
+                            </a>
+                        </div>
+                        <div class="col">
+                            <a href="{% url 'yaksh:add_quiz' course.id module.id %}" class="btn btn-success">
+                                <i class="fa fa-plus-circle"></i>&nbsp;Add Quiz
+                            </a>
+                        </div>
+                        <div class="col">
+                            <a href="{% url 'yaksh:add_exercise' course.id module.id %}" class="btn btn-dark">
+                                <i class="fa fa-plus-circle"></i>&nbsp;Add Exercise
+                            </a>
+                        </div>
+                        <div class="col">
+                            <a href="{% url 'yaksh:design_module' module.id course.id %}" class="btn btn-secondary">
+                                Design Module
+                            </a>
+                        </div>
+                    </div>
+                    <br>
+                    {% with module.get_learning_units as units %}
+                        {% if units %}
+                            <p><b><u>Lessons/Quizzes/Exercise</u></b><p>
+                            <table class="table table-responsive-sm">
+                                {% for unit in units %}
+                                    <tr>
+                                        <td>
+                                        {% if unit.type == "quiz" %}
+                                            {% if unit.quiz.is_exercise %}
+                                                <a href="{% url 'yaksh:edit_exercise' course.id module.id unit.quiz.id %}">
+                                                {{unit.quiz.description}}</a>
+                                            {% else %}
+                                                <a href="{% url 'yaksh:edit_quiz' course.id module.id unit.quiz.id %}">
+                                                {{unit.quiz.description}}</a>
+                                            {% endif %}
+                                        {% else %}
+                                            <a href="{% url 'yaksh:edit_lesson' course.id module.id unit.lesson.id %}">
+                                            {{unit.lesson.name}}</a>
+                                        {% endif %}
+                                        </td>
+                                        <td>
+                                        {% if unit.type == "quiz" %}
+                                        {% with unit.quiz as quiz %}
+                                            {% if quiz.questionpaper_set.get.id %}
+                                                <a href="{% url 'yaksh:designquestionpaper' course.id quiz.id quiz.questionpaper_set.get.id %}" class="btn btn-primary">
+                                                  <i class="fa fa-edit"></i>
+                                                  Edit Question Paper
+                                                </a>
+                                            {% else %}
+                                                <a href="{% url 'yaksh:designquestionpaper' course.id quiz.id %}" class="btn btn-success">
+                                                    <i class="fa fa-plus-circle"></i>
+                                                    Add Question Paper
+                                                </a>
+                                            {% endif %}
+                                        {% endwith %}
+                                        {% else %}
+                                            -------
+                                        {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if unit.type == "quiz" %}
+                                                {% if unit.quiz.is_exercise %}
+                                                    Exercise
+                                                {% else %}
+                                                    Quiz
+                                                {% endif %}
+                                            {% else %}
+                                                Lesson
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
                         {% else %}
-                            <a href="{% url 'yaksh:edit_quiz' unit.quiz.id course.id %}">
-                            {{unit.quiz.description}}</a>
+                            <center>
+                                <span class="badge badge-warning">
+                                    <big>No lesson/quiz added</big>
+                                </span>
+                            </center>
                         {% endif %}
-                    {% else %}
-                        <a href="{% url 'yaksh:edit_lesson' unit.lesson.id course.id %}">
-                        {{unit.lesson.name}}</a>
-                    {% endif %}
-                    </li>
-                    </ul>
-                {% endfor %}
-            </td>
-        </tr>
-        {% endfor %} <!-- end for modules -->
-        </table>
+                    {% endwith %}
+                </div>
+            </div>
+            <br>
+        {% endfor %}
     {% else %}
         <center>
             <span class="badge badge-warning"><big>No learning modules</big></span>

@@ -23,17 +23,9 @@
         </div>
         {% endfor %}
     {% endif %}
-    {% if course_id %}
-      <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
-        <i class="fa fa-arrow-left"></i>
-        Back
-      </a>
-    {% else %}
-      <a class="btn btn-primary" href="{% url 'yaksh:show_all_quizzes' %}">
-        <i class="fa fa-arrow-left"></i>
-        Back
-      </a>
-    {% endif %}
+    <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
+      <i class="fa fa-arrow-left"></i>&nbsp;Back
+    </a>
   <br><br>
     <form name=frm id=frm action="" method="post" >
         {% csrf_token %}
