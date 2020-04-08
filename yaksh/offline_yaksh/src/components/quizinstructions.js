@@ -12,7 +12,7 @@ const QuizInstructions = Vue.component('QuizInstructions', {
               You can attempt this Quiz at any time between <strong>{{quiz.start_date_time}}</strong> Asia/Kolkata and <strong>{{quiz.end_date_time}}</strong> Asia/Kolkata
               You are not allowed to attempt the Quiz before or after this duration
               </div>
-              <div v-html="quiz.instructions"></div>
+              <span v-html="quiz.instructions"></span>
               <router-link :to="{name: 'QuizModule', params: {course_id: courseId, quiz_id: quiz.id}}" class="btn btn-primary">Start Quiz</router-link>
             </div>
           </div>
@@ -30,7 +30,8 @@ const QuizInstructions = Vue.component('QuizInstructions', {
       'quiz',
     ])
   },
+
   created () {
-    this.courseId = parseInt(this.$route.params.course_id)
+    this.courseId = parseInt(this.$route.params.course_id);
   },
 })

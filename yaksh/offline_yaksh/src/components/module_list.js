@@ -33,7 +33,6 @@ var ModuleList = Vue.component('ModuleList', {
     const moduleId = parseInt(this.$route.params.module_id)
     this.$store.dispatch('updateModule', moduleId)
     this.$store.dispatch('activeModule', moduleId)
-    localStorage.removeItem("quiz")
   },
   computed: {
     ...Vuex.mapGetters([

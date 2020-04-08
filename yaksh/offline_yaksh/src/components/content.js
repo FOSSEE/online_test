@@ -1,47 +1,50 @@
 const Content = Vue.component('Content', {
   template: `
     <div id="content">
-      <ToggleButton />
+      <ToggleButton /> <!--ToggleButton component common for Quiz and Module-->
       <br />
-      <Login />
+      <Login /> <!--ToggleButton component common for Quiz and Module-->
+
+      <!--Quiz Content Component-->
       <div v-if="question">
         <div class="card">
           <div class="card-header">
             {{questionNumber}}. <h5><strong>{{question.summary}}</strong></h5>
-            <strong>{{question.type}}</strong>              
+            <strong>{{question.type}}</strong>
           </div>
           <div class="card-body">
-            <p v-html="question.description"></p>
+            <span v-html="question.description"></span>
           </div>
         </div>
         <div class="card">
           <div class="card-body">
-            <form @submit="submitForm">
-              <input ref="answer" v-if="question.type=='integer' || question.type=='float'">
-              <textarea v-if="question.type=='string'" ref="answer"></textarea>
-              <div class="form-group" v-if="question.type=='code'">
-                <textarea id="codemirror1" ref="answer" rows="10" cols="50" :key="question.id"></textarea>
-              </div>
+            <form @submit.prevent="submitAnswer">
               <div v-if="question.type=='mcq'">
-                <div v-for="testcases in question.test_cases" :key="testcases.id">
-                    <input type="radio" v-model="answer" name="testcases.options" :value="testcases.options"><div v-html="testcases.options"></div>
+                <div v-for="testcase in question.test_cases" :key="testcase.id">
+                  <input type="radio" name="testcase.id" @change="updateMcqAns(testcase.id)" /> <span v-html="testcase.options"></span>
                 </div>
               </div>
               <div v-if="question.type=='mcc'">
-                <div v-for="testcases in question.test_cases" :key="testcases.id">
-                    <input type="checkbox" :value="testcases.options" :id="testcases.id" @change="updateCheckedAnswers" > {{testcases.options}}
+                <div v-for="testcase in question.test_cases" :key="testcase.id">
+                  <input type="checkbox" :value="testcase.options" :id="testcase.id" @change="updateCheckedAnswers" /> <span v-html="testcase.options"></span>
                 </div>
               </div>
-              <input type="file" v-if="question.type=='upload'" ref="file" @change="handleFileUpload()" id="file" name="">
-              
+              <div v-if="question.type=='code'" class="form-group">
+                <!-- <textarea id="codemirror1" :value="codeAns" @input="updateCodeAns" rows="10" cols="50" :key="question.id"></textarea> -->
+                <codemirror ref="cm" :value="codeAns" :options="cmOption" @input="updateCodeAns" :key="question.id"/>
+              </div>
               <button class="btn btn-success">Submit</button>
-              <button class="btn btn-primary">Attempt Later</button>
             </form>
           </div>
-          <Error :result="result"/>
         </div>
       </div>
+      <!--End Quiz Content Component-->
+
+      <!--Error Component-->
       <Error :result="result"/>
+      <!--End Error Component-->
+
+      <!--Module Content Component-->
       <div class="card">
         <div v-if="!unit && module">
           <div class="card-header">
@@ -51,94 +54,79 @@ const Content = Vue.component('Content', {
               </div>
             </div>
           </div>
-          <div class="card-body" v-html="module.description"></div>
+          <div class="card-body">
+            <span v-html="module.description"></span>
+          </div>
         </div>
         <div v-if="unit">
           <div v-if="unit.lesson">
             <div v-if="unit.lesson.video_path">
-              <div class="card-header">
-                <h4>{{unit.lesson.name}}</h4>
-              </div>
-              <div class="card-body">
-                <video :src="unit.lesson.video_path" :key="unit.lesson.id" width="100%" controls></video>
-              </div>
+              <div class="card-header"><h4>{{unit.lesson.name}}</h4></div>
+              <div class="card-body"><video :src="unit.lesson.video_path" :key="unit.lesson.id" width="100%" controls></video></div>
             </div>
             <div v-else>
-              <div class="card-header">
-                <h4>{{unit.lesson.name}}</h4>
-              </div>
-              <div class="card-body">
-                <div v-html="unit.lesson.description"></div>
-              </div>
+              <div class="card-header"><h4>{{unit.lesson.name}}</h4></div>
+              <div class="card-body"><span v-html="unit.lesson.description"></span></div>
             </div>
           </div>
           <div v-else>
-            <div class="card-header">
-              <h4>{{unit.quiz.description}}</h4>
-            </div>
+            <div class="card-header"><h4>{{unit.quiz.description}}</h4></div>
             <div class="card-body">
-              <div v-html="unit.quiz.instructions"></div>
-             <center><router-link class="btn btn-primary" v-on:click.native="showQuiz(unit.quiz)" :to="{name: 'QuizInstructions', params: {course_id: courseId, unit_id: unit.id, quiz_id: unit.quiz.id}}" target="_blank"><strong>Start Quiz</strong></router-link></center>
+              <span v-html="unit.quiz.instructions"></span>
+              <center><router-link class="btn btn-primary" v-on:click.native="showQuiz(unit.quiz)" :to="{name: 'QuizInstructions', params: {course_id: courseId, unit_id: unit.id, quiz_id: unit.quiz.id}}" target="_blank"><strong>Start Quiz</strong></router-link></center>
             </div>
           </div>
         </div>
       </div>
-      <br/>
+      <br />
       <div v-if="module !== undefined || unit !== undefined">
         <center><button class="btn btn-primary" @click.prevent="next">Next</button></center>
       </div>
+      <!--End Module Content Component-->
     </div>
   `,
   data () {
     return {
-      courseId: undefined
+      courseId: undefined,
+      codeAns: 'def fun(): \n     return True',
     }
   },
+
   created () {
     this.courseId = parseInt(this.$route.params.course_id)
   },
+
   computed: {
     ...Vuex.mapGetters([
       'question',
+      'questionNumber',
       'answer',
-      'result',
       'module',
       'unit',
-      'moduleIndex',
-      'moduleId',
       'unitIndex',
-      'questionNumber'
+      'result',
+      'cmOption'
     ]),
-    answer: {
-      get () {
-        this.$store.state.answer
-      },
-      set (value) {
-        this.$store.commit("SET_ANSWER", value)
-      }
-    }
   },
+
   methods: {
     ...Vuex.mapActions([
-      'showQuiz',
+      'submitAnswer',
+      'showQuiz'
     ]),
-    updateCheckedAnswers (e) {
-      e.preventDefault()
-      this.$store.dispatch('updateCheckedAnswers', e.target)
+
+    updateMcqAns(id) {
+      id = '' + id;
+      this.$store.commit('SET_ANSWER', id);
     },
-    handleFileUpload (e) {
-      const file = this.$refs.file.files[0];
-      this.$store.commit('UPDATE_FILE', file)
+
+    updateCheckedAnswers(e) {
+      this.$store.dispatch('updateCheckedAnswers', e.target);
     },
-    submitForm(e) {
-      e.preventDefault()
-      if(this.question.type === 'mcc' || this.question.type === 'mcq') {
-        const answer = this.answer
-      } else {
-        const answer = this.$refs.answer.value
-        this.$store.commit('SET_ANSWER', answer)
-      }
-      this.$store.dispatch('submitAnswer')
+
+    updateCodeAns (value) {
+      console.log(value)
+      this.$store.commit('SET_ANSWER', value)
     },
 
     nextModule (currModIndex, moduleKeys, modules) {
@@ -174,18 +162,18 @@ const Content = Vue.component('Content', {
       this.$store.commit('UPDATE_UNIT_INDEX', currUnitIndex)
     },
 
-    next () {
+    next() {
       let currModule = this.module,
           currUnit = this.unit,
           modules = this.$store.getters.course_data.learning_module,
           moduleKeys = Object.keys(modules),
           currModIndex = modules.findIndex(module => module.id === currModule.id),
           units = currModule.learning_unit,
-          unitKeys = Object.keys(units)
-      if (units) {
-        let currUnitIndex = this.unitIndex
-        this.nextUnit(currUnitIndex, unitKeys, units, currModIndex, moduleKeys, modules)
+          unitKeys = Object.keys(units);
+      if(units) {
+        let currUnitIndex = this.unitIndex;
+        this.nextUnit(currUnitIndex, unitKeys, units, currModIndex, moduleKeys, modules);
       }
-    },
+    }
   }
-})
+});

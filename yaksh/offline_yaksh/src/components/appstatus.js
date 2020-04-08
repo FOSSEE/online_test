@@ -1,6 +1,6 @@
 const AppStatus = Vue.component('AppStatus', {
   template: `
-    <div>
+    <div class="p-2">
       <p class="indicator online" v-if="isOnline">Online</p>
       <p class="indicator offline" v-if="isOffline">Offline</p>
     </div>

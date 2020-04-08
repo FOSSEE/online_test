@@ -45,7 +45,7 @@ a, a:hover, a:focus {
   background: #7386D5;
   color: #fff;
   transition: all 0.3s;
-  max-height: calc(400vh - 9rem);
+  max-height: calc(150vh - 9rem);
   overflow-y: auto;
 }
 
@@ -171,17 +171,28 @@ a[data-toggle="collapse"] {
  background-color: rgba(0, 0, 0, 0.6);
 }
 
-.indicator.online {
-  background: #28B62C;
+.indicator.online, .indicator.offline {
   display: inline-block;
-  width: 1em;
-  height: 1em;
-  border-radius: 50%;
+  padding: 0.2rem;
+  border-radius: 5px;
+  margin: 0.1rem;
+}
+
+.indicator.online {
+  border: 3px solid green;
+  color: green;
+  background-color: white;
 }
 
 .indicator.offline {
-  background: #FF4136;
-  display: inline-block;
-  width: 1em;
-  height: 1em;
+  border: 3px solid red;
+  color: red;
+  background-color: white;
+}
+
+.CodeMirror {
+  border: 1px solid #eee;
+  height: auto;
+  width: 35rem;
+  font-size: 15px;
 }

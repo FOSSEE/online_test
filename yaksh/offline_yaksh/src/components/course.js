@@ -1,6 +1,7 @@
 var Course = Vue.component('Course', {
   template:`
     <div class="container" id="modules">
+    <center><h2>{{course_data.name}}</h2></center>
       <div v-for="(module, index) in course_data.learning_module" :key="module.id">
         <div class="card">
           <div class="card-header">
@@ -19,7 +20,8 @@ var Course = Vue.component('Course', {
             </div>
           </div>
           <div class="collapse" :id="'collapseExample-' + index">
-            <div class="card-body" v-html="module.description">
+            <div class="card-body">
+              <span v-html="module.description"></span>
             </div>
           </div>
         </div>
@@ -29,7 +31,7 @@ var Course = Vue.component('Course', {
   `,
   computed: {
       ...Vuex.mapGetters([
-        'course_data'
+        'course_data',
       ])
   }
 })

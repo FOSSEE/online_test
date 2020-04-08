@@ -7,10 +7,13 @@ An Offline implementation of Yaksh which works without the internet.
 
 ***Add all the provided lecture videos related to the course in this directory.***
 
+***Clone the source next to the videos directory***
 
-***Navigate to the offline yaksh course directory***
+`https://github.com/CruiseDevice/offline_yaksh.git`
 
-`cd <folder-name>`
+***Navigate to the offline_yaksh directory***
+
+`cd offline_yaksh`
 
 ***Click on index.html file to start the application. Now you should be able to view the course lectures without the internet.***
 

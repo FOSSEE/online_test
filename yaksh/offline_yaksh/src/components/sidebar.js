@@ -5,6 +5,11 @@ const Sidebar = Vue.component('Sidebar', {
         <div class="sidebar-header" id="sidebar_course_title">
           <center><h3>{{course_data.name}}</h3></center>
         </div>
+        <hr />
+        <div v-if="time_left">
+          <center><h4>{{quiz.description}}</h4></center>
+          <hr />
+        </div>
         <div v-if="getQuestions">
           <QuestionNumbers
             :questions="getQuestions"
@@ -22,7 +27,9 @@ const Sidebar = Vue.component('Sidebar', {
       'gettoken',
       'course_data',
       'active',
-      'loading'
+      'loading',
+      'quiz',
+      'time_left'
     ])
   },
   created () {
@@ -44,12 +51,14 @@ const Sidebar = Vue.component('Sidebar', {
         }
       })
       .then((response) => {
+        console.log(response)
         if(response.data.answerpaper){
           let firstQuestion = response.data.answerpaper.questions[0]
           this.$store.commit('UPDATE_SELECTED_QUESTION', response.data.answerpaper)
           this.$store.commit('UPDATE_QUESTION', firstQuestion)
           this.$store.commit('UPDATE_QUESTION_NUMBER', 1)
           this.$store.commit('SET_QUIZ_TIMER', response.data.time_left)
+          this.$store.commit('UPDATE_CM_MODE', firstQuestion)
         } else {
           let dict = {}
           dict["message"] = response.data.message

@@ -18,7 +18,7 @@ const routes = [
     path: '/:course_id/:unit_id/:quiz_id',
     component: QuizInstructions,
     name: 'QuizInstructions'
-  }
+  },
 ]
 
 const router = new VueRouter({routes})
@@ -45,8 +45,15 @@ const store = new Vuex.Store({
     question: undefined,
     questionNumber: undefined,
     time_left: undefined,
-    quiz: JSON.parse(localStorage.getItem('quiz')) || undefined,
+    quiz:  JSON.parse(sessionStorage.getItem('quiz')) || undefined,
     TOKEN: JSON.parse(localStorage.getItem('TOKEN')) || undefined,
+    cmOption: {
+      tabSize: 4,
+      styleActiveLine: true,
+      lineNumbers: true,
+      mode: '',
+      theme: "monokai"
+     }
   },
 
   mutations: {
@@ -144,6 +151,22 @@ const store = new Vuex.Store({
 
     UPDATE_ISOFFLINE(state, payload) {
       state.isOffline = payload
+    },
+
+    UPDATE_CM_MODE (state, payload) {
+      if(payload.language === 'python') {
+        state.cmOption.mode = 'text/x-python'
+      } else if (payload.language === 'c') {
+        state.cmOption.mode = 'text/x-csrc'
+      } else if (payload.language === 'cpp') {
+        state.cmOption.mode = 'text/x-c++src'
+      } else if (payload.language === 'java') {
+        state.cmOption.mode = 'text/x-java'
+      } else if (payload.language === 'bash') {
+        state.cmOption.mode = 'text/x-sh'
+      } else if (payload.language === 'scilab') {
+        state.cmOption.mode = 'text/x-csrc'
+      }
     }
   },
 
@@ -176,16 +199,14 @@ const store = new Vuex.Store({
     },
 
     showQuestion({commit}, payload) {
-      console.log(payload)
       this.state.result = []
       this.state.answer = []
       commit('UPDATE_QUESTION', payload.question)
       commit('UPDATE_QUESTION_NUMBER', payload.index + 1)
-      localStorage.setItem('question', JSON.stringify(payload.question))
+      commit('UPDATE_CM_MODE', payload.question)
     },
 
     showModule({commit}, module) {
-      this.state.quiz = undefined
       this.state.unitIndex = 0
       commit('UPDATE_MODULE', module)
       commit('UPDATE_UNIT_ID', undefined)
@@ -229,7 +250,7 @@ const store = new Vuex.Store({
     },
 
     showQuiz({commit}, quiz) {
-      localStorage.setItem('quiz', JSON.stringify(quiz))
+      sessionStorage.setItem('quiz', JSON.stringify(quiz))
       commit('UPDATE_QUIZ', quiz)
     },
 
@@ -249,40 +270,88 @@ const store = new Vuex.Store({
       commit('UPDATE_MODULE', module[0])
     },
 
-    async submitAnswer (state) {
-      const answerPaperId = state.state.questions.id,
-            questionId = state.state.question.id,
-            answer = state.state.answer
-      state.commit('UPDATE_LOADING', true)
-      axios({
+    async check_status({commit, dispatch}, payload) {
+      const question = this.getters.question,
+            TOKEN = this.getters.gettoken,
+            response = payload.response;
+      let count = payload.count,
+          MAX_COUNT = payload.MAX_COUNT;
+
+      if (question.type === 'code') {
+        const status = response.data.status,
+              uid = response.data.uid;
+
+        if ((status === 'running' || status == 'not started') && count < MAX_COUNT) {
+          const _response = await axios({
+            method: 'GET',
+              url: `http://localhost:8000/api/validate/${uid}/`,
+              headers: {
+                Authorization: 'Token ' + TOKEN
+              }
+          });
+
+          if (_response) {
+            const result = JSON.parse(_response.data.result)
+            if (result) {
+              commit('UPDATE_RESPONSE_RESULT', result)
+              commit('UPDATE_LOADING', false)
+            } else {
+              count++;
+              setTimeout(() => {
+                dispatch('check_status', {response, count, MAX_COUNT})
+              }, 2000)
+            }
+          }
+        }
+      } else {
+        commit('UPDATE_LOADING', false)
+      }
+    },
+
+    async submitAnswer ({commit, dispatch}) {
+      const answerPaperId = this.getters.getQuestions.id,
+            questionId = this.getters.question.id,
+            answer = this.getters.answer,
+            TOKEN = this.getters.gettoken;
+      commit('UPDATE_LOADING', true)
+      const response = await axios({
         method: 'POST',
         url:`http://localhost:8000/api/validate/${answerPaperId}/${questionId}/`,
         headers: {
-          Authorization: 'Token ' + state.state.TOKEN
+          Authorization: 'Token ' + TOKEN
         },
         data: {
           answer: answer
         },
-        timeout: 2500
-      })
-      .then((response) => {
-        if(this.state.question.type === 'code') {
-          if(response.data.status === 'running') {
-            axios({
-              method: 'GET',
-              url: `http://localhost:8000/api/validate/${response.data.uid}/`,
-              headers: {
-                Authorization: 'Token ' + state.state.TOKEN
-              }
-            })
-            .then((response) => {
-              const result = JSON.parse(response.data.result)
-              state.commit('UPDATE_RESPONSE_RESULT', result)
-            })
-          }
+      });
+      let count = 0,
+          MAX_COUNT = 14;
+      console.log(response);
+      dispatch('check_status', {response, count, MAX_COUNT});
+    },
+
+    quit({commit}) {
+      const answerPaperId = this.getters.getQuestions.id
+      const TOKEN = this.getters.gettoken
+      axios({
+        method: 'GET',
+        url: `http://localhost:8000/api/quit/${answerPaperId}/`,
+        headers: {
+          Authorization: 'Token ' + TOKEN
         }
-        state.commit('UPDATE_LOADING', false)
       })
+        .then((response) => {
+          console.log(response)
+          if (response.data.status === 'completed') {
+            sessionStorage.removeItem('quiz')
+            commit('UPDATE_QUIZ_TIMER', undefined)
+            commit('UPDATE_SELECTED_QUESTION', undefined)
+            commit('UPDATE_QUIZ', undefined)
+            commit('UPDATE_QUESTION', undefined)
+            commit('UPDATE_RESPONSE_RESULT', undefined)
+            router.push('/')
+          }
+        })
     }
   },
 
@@ -306,6 +375,7 @@ const store = new Vuex.Store({
     time_left: state => state.time_left,
     unitIndex: state => state.unitIndex,
     moduleIndex: state => state.moduleIndex,
+    cmOption: state => state.cmOption
   }
 })
 
@@ -323,8 +393,11 @@ new Vue({
             <img src="@/../static/images/yaksh_banner.png" alt="YAKSH"/>
           </a>
         </div>
-        <Timer />
-        <AppStatus />
+        <div class="d-flex flex-row-reverse">
+          <AppStatus />
+          <Quit />
+          <Timer />
+        </div>
       </div>
     </nav>
     <router-view/>
