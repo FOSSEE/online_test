@@ -1509,20 +1509,6 @@ def show_all_questions(request):
     if not is_moderator(user):
         raise Http404("You are not allowed to view this page !")
 
-    questions = Question.objects.get_queryset().filter(
-                user_id=user.id, active=True).order_by('-id')
-    form = QuestionFilterForm(user=user)
-    user_tags = questions.values_list('tags', flat=True).distinct()
-    all_tags = Tag.objects.filter(id__in=user_tags)
-    upload_form = UploadFileForm()
-    paginator = Paginator(questions, 30)
-    page = request.GET.get('page')
-    questions = paginator.get_page(page)
-    context['objects'] = questions
-    context['all_tags'] = all_tags
-    context['form'] = form
-    context['upload_form'] = upload_form
-
     if request.method == 'POST':
         if request.POST.get('delete') == 'delete':
             data = request.POST.getlist('question')
@@ -1576,6 +1562,20 @@ def show_all_questions(request):
                 ))
             else:
                 message = "Please select atleast one question to test"
+
+    questions = Question.objects.get_queryset().filter(
+                user_id=user.id, active=True).order_by('-id')
+    form = QuestionFilterForm(user=user)
+    user_tags = questions.values_list('tags', flat=True).distinct()
+    all_tags = Tag.objects.filter(id__in=user_tags)
+    upload_form = UploadFileForm()
+    paginator = Paginator(questions, 30)
+    page = request.GET.get('page')
+    questions = paginator.get_page(page)
+    context['objects'] = questions
+    context['all_tags'] = all_tags
+    context['form'] = form
+    context['upload_form'] = upload_form
 
     messages.info(request, message)
     return my_render_to_response(request, 'yaksh/showquestions.html', context)

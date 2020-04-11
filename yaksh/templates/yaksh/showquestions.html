@@ -146,78 +146,78 @@
           <!-- End Card body -->
         </div>
         <!-- End card filters and search -->
-      </div>
-      <form name=frm action="{% url 'yaksh:show_questions' %}" method="post">
-        {% csrf_token %}
-        <div id="filtered-questions">
+        <form name=frm action="{% url 'yaksh:show_questions' %}" method="post">
+          {% csrf_token %}
+          <div id="filtered-questions">
+            <br>
+            <a class="btn btn-lg btn-success" href="{% url 'yaksh:add_question' %}">
+              <i class="fa fa-plus-circle"></i>&nbsp;Add Question</a>
+            {% if objects %}
+              <div>
+                <br>
+                {% include "yaksh/paginator.html" %}
+                <br>
+                <h5><input id="checkall" type="checkbox"> Select All </h5>
+                 <div class="table-wrapper-2">
+                    <table id="questions-table" class="tablesorter table  table-striped table-responsive-sm">
+                      <thead>
+                        <tr>
+                          <th> Select </th>
+                          <th> Sr No. </th>
+                          <th> Summary&nbsp;<i class="fa fa-sort"></i> </th>
+                          <th> Language&nbsp;<i class="fa fa-sort"></i> </th>
+                          <th> Type&nbsp;<i class="fa fa-sort"></i> </th>
+                          <th> Marks&nbsp;<i class="fa fa-sort"></i> </th>
+                          <th>Test</th>
+                          <th>Download</th>
+                          <th>Delete</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for question in objects %}
+                        <tr>
+                          <td>
+                           <input type="checkbox" name="question" value="{{ question.id }}">
+                          </td>
+                          <td>{{forloop.counter}}</td>
+                          <td><a href="{% url 'yaksh:add_question' question.id %}">{{question.summary|capfirst}}</a></td>
+                          <td>{{question.language|capfirst}}</td>
+                          <td>{{question.type|capfirst}}</td>
+                          <td>{{question.points}}</td>
+                          <td>
+                            <a href="{% url 'yaksh:test_question' question.id %}" class="btn btn-info">
+                              Test
+                            </a>
+                          </td>
+                          <td><a href="{% url 'yaksh:download_question' question.id %}" class="btn btn-primary">
+                            <i class="fa fa-download"></i>&nbsp;Download</a></td>
+                          <td><a href="{% url 'yaksh:delete_question' question.id %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete {{question.summary|capfirst}}?')">
+                          <i class="fa fa-trash"></i>&nbsp;Delete</a></td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+              </div>
+            {% include "yaksh/paginator.html" %}
+            {% else %}
+              <br><br>
+              <div class="alert alert-info">
+                <center><h3>No Questions found</h3></center>
+              </div>
+            {% endif %}
+          </div>
           <br>
-          <a class="btn btn-lg btn-success" href="{% url 'yaksh:add_question' %}">
-            <i class="fa fa-plus-circle"></i>&nbsp;Add Question</a>
-          {% if objects %}
-            <div>
-              <br>
-              {% include "yaksh/paginator.html" %}
-              <br>
-              <h5><input id="checkall" type="checkbox"> Select All </h5>
-               <div class="table-wrapper-2">
-                  <table id="questions-table" class="tablesorter table  table-striped table-responsive-sm">
-                    <thead>
-                      <tr>
-                        <th> Select </th>
-                        <th> Sr No. </th>
-                        <th> Summary&nbsp;<i class="fa fa-sort"></i> </th>
-                        <th> Language&nbsp;<i class="fa fa-sort"></i> </th>
-                        <th> Type&nbsp;<i class="fa fa-sort"></i> </th>
-                        <th> Marks&nbsp;<i class="fa fa-sort"></i> </th>
-                        <th>Test</th>
-                        <th>Download</th>
-                        <th>Delete</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for question in objects %}
-                      <tr>
-                        <td>
-                         <input type="checkbox" name="question" value="{{ question.id }}">
-                        </td>
-                        <td>{{forloop.counter}}</td>
-                        <td><a href="{% url 'yaksh:add_question' question.id %}">{{question.summary|capfirst}}</a></td>
-                        <td>{{question.language|capfirst}}</td>
-                        <td>{{question.type|capfirst}}</td>
-                        <td>{{question.points}}</td>
-                        <td>
-                          <a href="{% url 'yaksh:test_question' question.id %}" class="btn btn-info">
-                            Test
-                          </a>
-                        </td>
-                        <td><a href="{% url 'yaksh:download_question' question.id %}" class="btn btn-primary">
-                          <i class="fa fa-download"></i>&nbsp;Download</a></td>
-                        <td><a href="{% url 'yaksh:delete_question' question.id %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete {{question.summary|capfirst}}?')">
-                        <i class="fa fa-trash"></i>&nbsp;Delete</a></td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-            </div>
-          {% include "yaksh/paginator.html" %}
-          {% else %}
-            <br><br>
-            <div class="alert alert-info">
-              <center><h3>No Questions found</h3></center>
-            </div>
-          {% endif %}
-        </div>
-        <br>
-        <center>
-          {% if objects %}
-            <button class="btn btn-lg btn-primary" type="submit" name='download' value='download'><i class="fa fa-download"></i>&nbsp;Download Selected</button>
-            <button class="btn btn-lg btn-primary" type="submit" name="test" value="test">Test Selected</button>
-            <button class="btn btn-lg btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>
-            <i class="fa fa-trash"></i>&nbsp;Delete Selected</button>
-          {% endif %}
-        </center>
-      </form>
+          <center>
+            {% if objects %}
+              <button class="btn btn-lg btn-primary" type="submit" name='download' value='download'><i class="fa fa-download"></i>&nbsp;Download Selected</button>
+              <button class="btn btn-lg btn-primary" type="submit" name="test" value="test">Test Selected</button>
+              <button class="btn btn-lg btn-danger" type="submit" onClick="return confirm_delete(frm);" name='delete' value='delete'>
+              <i class="fa fa-trash"></i>&nbsp;Delete Selected</button>
+            {% endif %}
+          </center>
+        </form>
+      </div>
     </div>
   </div>
 {% endblock %}
