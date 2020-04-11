@@ -1,0 +1,46 @@
+{% extends "user.html" %}
+
+{% block title %}
+    {{thread.title}}
+{% endblock title %}
+
+{% block content %}
+    <div class="container">
+        <a class="btn btn-primary" href="{% url "yaksh:course_forum" thread.course.id %}">Back to Threads</a>
+        <div class="card">
+            <div class="card-header">
+                {{thread.title}}
+                <br>
+                <small><strong>{{thread.creator.username}}</strong> {{thread.created_at}}</small>
+            </div>
+            <div class="card-body">
+                <p>{{thread.description}}</p>
+            </div>
+        </div>
+        <br>
+        <div class="card">
+            {% if comments %}
+                <div class="card-header">Comments:</div>
+                {% for comment in comments %}
+                    <div class="card-body">
+                        <p>{{comment.body}}</p>
+                        <small class="pull-right">by: <strong>{{comment.user.username}} </strong>. {{comment.created_at}}</small>
+                    </div>
+                    <hr>
+                {% endfor %}
+            {% else %}
+                    No comments on this thread.
+            {% endif %}
+        </div>
+        <br>
+        <div>
+            <form action="{% url "yaksh:thread_comments" thread.course.id thread.uid %}" method="POST">
+                <div class="form-group">
+                    {% csrf_token %}
+                    <textarea class="form-control" name="comment" id="" cols="55" rows="5" required></textarea>
+                </div>
+                <input type="submit" value="Submit" class="btn btn-primary">
+            </form>
+        </div>
+    </div>
+{% endblock content %}

@@ -7,6 +7,7 @@
     <div class="card">
         <div class="card-header">
             {{ course.name }}
+            <a href="{% url "yaksh:course_forum" course.id %}" class="btn btn-info pull-right">Discussion Forum</a>
         </div>
         <div class="card-body">
             {% if course.view_grade %}

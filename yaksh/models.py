@@ -1,5 +1,6 @@
 from __future__ import unicode_literals, division
 from datetime import datetime, timedelta
+import uuid
 import json
 import random
 import ruamel.yaml
@@ -2633,3 +2634,40 @@ class TestCaseOrder(models.Model):
     order = models.TextField()
 
 ##############################################################################
+class Thread(models.Model):
+    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    course = models.ForeignKey(Course,
+                               on_delete=models.CASCADE, related_name='thread')
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    # image = models.ImageField(upload_to='images/%y/%m/%d', blank=True)
+
+    def __str__(self):
+        return self.title
+
+    def get_last_comment(self):
+        return self.comment.last()
+
+    def get_comments_count(self):
+        return self.comment.count()
+
+##############################################################################
+class Comment(models.Model):
+    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    thread = models.ForeignKey(Thread,
+                               on_delete=models.CASCADE,
+                               related_name='comment')
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    active = models.BooleanField(default=True) #make it false if improper comment
+    # image = models.ImageField(upload_to='images/%y/%m/%d', blank=True)
+
+
+    def __str__(self):
+        return 'Comment by {0}: \n {1}'.format(self.user.username,
+                                               self.thread.title)

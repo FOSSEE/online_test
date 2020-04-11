@@ -1,6 +1,6 @@
 import os
 import csv
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template import Context, Template
@@ -37,7 +37,7 @@ from yaksh.models import (
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
-    LearningUnit, LearningModule, CourseStatus, question_types
+    LearningUnit, LearningModule, CourseStatus, question_types, Thread, Comment
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -3191,3 +3191,44 @@ def download_course_progress(request, course_id):
     for student in stud_details:
         writer.writerow(student)
     return response
+
+
+def course_forum(request, course_id):
+    user = request.user
+    course = get_object_or_404(Course, id=course_id)
+    threads = course.thread.all().order_by('modified_at')
+    if request.method == "POST":
+        title = request.POST['title']
+        description = request.POST['description']
+        if title and description:
+            new_thread = Thread.objects.create(title=title,
+                                               description=description,
+                                               creator=user, course=course)
+            new_thread.save()
+            return render(request, 'yaksh/thread_comments.html', {
+                'thread': new_thread,
+                'course': course,
+                'user': user,
+            })
+    return render(request, 'yaksh/course_forum.html', {
+        'user': user,
+        'course': course,
+        'threads': threads
+        })
+
+
+def thread_comments(request, course_id, uuid):
+    thread = get_object_or_404(Thread, uid=uuid)
+    comments = thread.comment.filter(active=True)
+    if request.method == "POST":
+        comment = request.POST.get('comment')
+        if comment is not None:
+            new_comment = Comment.objects.create(thread=thread,
+                                                 body=comment,
+                                                 user=request.user)
+            new_comment.save()
+            return HttpResponseRedirect(request.path_info)
+    return render(request, 'yaksh/thread_comments.html', {
+        'thread': thread,
+        'comments': comments
+        })
