@@ -1072,19 +1072,18 @@ def courses(request):
 
     form = SearchFilterForm()
 
-    if request.method == 'POST':
-        course_tags = request.POST.get('search_tags')
-        course_status = request.POST.get('search_status')
+    course_tags = request.GET.get('search_tags')
+    course_status = request.GET.get('search_status')
 
-        if course_status == 'select' :
-            courses = courses.filter(
-                name__contains=course_tags)
-        elif course_status == 'active' :
-            courses = courses.filter(
-                name__contains=course_tags, active=True)
-        elif course_status == 'closed':
-            courses = courses.filter(
-                name__contains=course_tags, active=False)
+    if course_status == 'select' and course_tags:
+        courses = courses.filter(
+            name__icontains=course_tags)
+    elif course_status == 'active' :
+        courses = courses.filter(
+            name__icontains=course_tags, active=True)
+    elif course_status == 'closed':
+        courses = courses.filter(
+            name__icontains=course_tags, active=False)
 
     paginator = Paginator(courses, 30)
     page = request.GET.get('page')

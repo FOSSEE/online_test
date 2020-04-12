@@ -2367,9 +2367,9 @@ class TestSearchFilters(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.post(
+        response = self.client.get(
             reverse('yaksh:courses'),
-            data={'course_tags': 'demo', 'course_status': 'active'}
+            data={'search_tags': 'demo', 'search_status': 'active'}
             )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/courses.html')
