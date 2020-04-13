@@ -23,7 +23,12 @@
                 <div class="card-header">Comments:</div>
                 {% for comment in comments %}
                     <div class="card-body">
-                        <p>{{comment.body}}</p>
+                        {% if comment.image %}
+                            <a href="{{comment.image.url}}" target="_blank">
+                                <img src="{{comment.image.url}}" class='comment_image'>
+                            </a>
+                        {% endif %}
+                        <p>{{comment.description}}</p>
                         <small class="pull-right">by: <strong>{{comment.user.username}} </strong>. {{comment.created_at}}</small>
                     </div>
                     <hr>
@@ -34,10 +39,10 @@
         </div>
         <br>
         <div>
-            <form action="{% url "yaksh:thread_comments" thread.course.id thread.uid %}" method="POST">
+            <form action="{% url "yaksh:thread_comments" thread.course.id thread.uid %}" method="POST" enctype='multipart/form-data'>
                 <div class="form-group">
                     {% csrf_token %}
-                    <textarea class="form-control" name="comment" id="" cols="55" rows="5" required></textarea>
+                    {{form}}
                 </div>
                 <input type="submit" value="Submit" class="btn btn-primary">
             </form>

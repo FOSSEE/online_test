@@ -1,7 +1,7 @@
 from django import forms
 from yaksh.models import (
     get_model_class, Profile, Quiz, Question, Course, QuestionPaper, Lesson,
-    LearningModule, TestCase, languages, question_types
+    LearningModule, TestCase, languages, question_types, Thread, Comment
 )
 from grades.models import GradingSystem
 from django.contrib.auth import authenticate
@@ -552,3 +552,44 @@ class TestcaseForm(forms.ModelForm):
     class Meta:
         model = TestCase
         fields = ["type"]
+
+
+class ThreadForm(forms.ModelForm):
+    class Meta:
+        model = Thread
+        fields = ["title", "description", "image"]
+        widgets = {
+            'title': forms.TextInput(
+                attrs = {
+                    'class': 'form-control'
+                }
+            ),
+            'description': forms.Textarea(
+                attrs = {
+                    'class': 'form-control'
+                }
+            ),
+            'image': forms.FileInput(
+                attrs = {
+                    'class': 'form-control-file'
+                }
+            )
+        }
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ["description", "image"]
+        widgets = {
+            'description': forms.Textarea(
+                attrs = {
+                    'class': 'form-control'
+                }
+            ),
+            'image': forms.FileInput(
+                attrs = {
+                    'class': 'form-control-file'
+                }
+            )
+        }

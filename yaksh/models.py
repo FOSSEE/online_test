@@ -11,6 +11,7 @@ from collections import Counter, defaultdict
 
 from django.db import models
 from django.contrib.auth.models import User, Group, Permission
+from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
 from django.utils import timezone
@@ -232,6 +233,18 @@ def render_template(template_path, data=None):
         render = template.render(context)
     return render
 
+
+def validate_image(image):
+    file_size = image.file.size
+    limit_mb = 30
+    if file_size > limit_mb * 1024 * 1024:
+        raise ValidationError("Max size of file is {0} MB".format(limit_mb))
+
+
+def get_image_dir(instance, filename):
+    return os.sep.join((
+        'thread_%s' % (instance), filename
+    ))
 
 ###############################################################################
 class CourseManager(models.Manager):
@@ -2634,16 +2647,21 @@ class TestCaseOrder(models.Model):
     order = models.TextField()
 
 ##############################################################################
-class Thread(models.Model):
+class ForumBase(models.Model):
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=200)
     description = models.TextField()
-    course = models.ForeignKey(Course,
-                               on_delete=models.CASCADE, related_name='thread')
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    # image = models.ImageField(upload_to='images/%y/%m/%d', blank=True)
+    image = models.ImageField(upload_to=get_image_dir, blank=True, 
+                              null=True, validators=[validate_image])
+    active = models.BooleanField(default=True)
+
+
+class Thread(ForumBase):
+    title = models.CharField(max_length=200)
+    course = models.ForeignKey(Course,
+                               on_delete=models.CASCADE, related_name='thread')
 
     def __str__(self):
         return self.title
@@ -2654,20 +2672,12 @@ class Thread(models.Model):
     def get_comments_count(self):
         return self.comment.count()
 
-##############################################################################
-class Comment(models.Model):
-    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    thread = models.ForeignKey(Thread,
+
+class Comment(ForumBase):
+    thread_field = models.ForeignKey(Thread,
                                on_delete=models.CASCADE,
                                related_name='comment')
-    body = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)
-    active = models.BooleanField(default=True) #make it false if improper comment
-    # image = models.ImageField(upload_to='images/%y/%m/%d', blank=True)
-
 
     def __str__(self):
-        return 'Comment by {0}: \n {1}'.format(self.user.username,
-                                               self.thread.title)
+        return 'Comment by {0}: {1}'.format(self.creator.username,
+                                              self.thread_field.title)

@@ -44,7 +44,7 @@ from yaksh.forms import (
     QuestionFilterForm, CourseForm, ProfileForm,
     UploadFileForm, FileForm, QuestionPaperForm, LessonForm,
     LessonFileForm, LearningModuleForm, ExerciseForm, TestcaseForm,
-    SearchFilterForm
+    SearchFilterForm, ThreadForm, CommentForm
 )
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .settings import URL_ROOT
@@ -3193,42 +3193,53 @@ def download_course_progress(request, course_id):
     return response
 
 
+@login_required
+@email_verified
 def course_forum(request, course_id):
     user = request.user
     course = get_object_or_404(Course, id=course_id)
-    threads = course.thread.all().order_by('modified_at')
+    threads = course.thread.all().order_by('-modified_at')
     if request.method == "POST":
-        title = request.POST['title']
-        description = request.POST['description']
-        if title and description:
-            new_thread = Thread.objects.create(title=title,
-                                               description=description,
-                                               creator=user, course=course)
+        form = ThreadForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_thread = form.save(commit=False)
+            new_thread.creator = user
+            new_thread.course = course
             new_thread.save()
-            return render(request, 'yaksh/thread_comments.html', {
-                'thread': new_thread,
-                'course': course,
-                'user': user,
-            })
+            return redirect('yaksh:thread_comments',
+                            course_id=course.id, uuid=new_thread.uid)
+    else:
+        form = ThreadForm()
     return render(request, 'yaksh/course_forum.html', {
         'user': user,
         'course': course,
-        'threads': threads
+        'threads': threads,
+        'form': form
         })
 
 
+@login_required
+@email_verified
 def thread_comments(request, course_id, uuid):
     thread = get_object_or_404(Thread, uid=uuid)
     comments = thread.comment.filter(active=True)
+    form = CommentForm()
     if request.method == "POST":
-        comment = request.POST.get('comment')
-        if comment is not None:
-            new_comment = Comment.objects.create(thread=thread,
-                                                 body=comment,
-                                                 user=request.user)
+        form = CommentForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_comment = form.save(commit=False)
+            new_comment.creator=request.user
+            new_comment.thread_field=thread
             new_comment.save()
-            return HttpResponseRedirect(request.path_info)
+            return redirect(request.path_info)
     return render(request, 'yaksh/thread_comments.html', {
         'thread': thread,
-        'comments': comments
+        'comments': comments,
+        'form': form
         })
+
+
+@login_required
+@email_verified
+def delete_thread(request, course_id, uuid):
+    thread = get_object_or_404(Thread, uid=uuid)

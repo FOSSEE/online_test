@@ -97,3 +97,12 @@ body, .dropdown-menu {
     min-height: 100vh;
     transition: all 0.3s;
 }
+
+/* ---------------------------------------------------
+    Forum STYLE
+----------------------------------------------------- */
+
+.comment_image {
+    width: 350px;
+    height: 350px;
+}

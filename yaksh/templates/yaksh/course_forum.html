@@ -23,13 +23,10 @@
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
               </div>
               <div class="modal-body">
-                <form action="." method="POST">
+                <form action="." method="POST" enctype='multipart/form-data'>
                     <div class="form-group">
                         {% csrf_token %}
-                        <label>Title: </label>
-                        <input name='title' type="text" class="form-control" required>
-                        <label>Description: </label>
-                        <textarea class="form-control" name="description" id="" cols="45" rows="3" required></textarea>
+                        {{form}}
                     </div>
                     <input type="submit" class="btn btn-primary" value="Create Thread">
                 </form>
@@ -50,12 +47,17 @@
                     <div class="card">
                         <div class="card-body">
                             <a href="{% url "yaksh:thread_comments" course.id thread.uid %}">{{thread.title}}</a>
+                            <br>
+                            {% if thread.image %}
+                                <img src="{{thread.image.url}}" class="thread_image">
+                            {% endif %}
                             <p class="pull-right"><small>{{thread.get_comments_count}}{% if thread.get_comments_count > 1 %} replies{% else %} reply{% endif %}</small></p>
                         </div>
                         <div class="card-footer">
                             {% with thread.get_last_comment as last_comment %}
-                                <small> {% if thread.creator.profile.is_moderator %} INSTRUCTOR CREATED {% endif %} Last Post by: <strong>{{last_comment.user}}</strong> . {{last_comment.modified_at|naturaltime}}</small>
+                                <small> {% if thread.creator.profile.is_moderator %} INSTRUCTOR CREATED {% endif %} Last Post by: <strong>{{last_comment.creator}}</strong> . {{last_comment.modified_at|naturaltime}}</small>
                             {% endwith %}
+                            <small><a href="{% url "yaksh:delete_thread" course.id thread.uid %}" class="pull-right">Delete</i></a></small>
                         </div>
                     </div>
                 <br>
