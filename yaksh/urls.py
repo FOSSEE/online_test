@@ -60,8 +60,10 @@ urlpatterns = [
     url(r'^course_modules/(?P<course_id>\d+)/$',
         views.course_modules, name='course_modules'),
     url(r'^forum/(?P<course_id>\d+)/$', views.course_forum, name='course_forum'),
-    url(r'^forum/(?P<course_id>\d+)/thread/(?P<uuid>[0-9a-f-]+)/', views.thread_comments, name='thread_comments'),
-    url(r'^forum/(?P<course_id>\d+)/thread/(?P<uuid>[0-9a-f-]+)/delete/', views.delete_thread, name='delete_thread'),
+    url(r'^forum/(?P<course_id>\d+)/thread/(?P<uuid>[0-9a-f-]+)/$', views.thread_comments, name='thread_comments'),
+    url(r'^forum/(?P<course_id>\d+)/thread/(?P<uuid>[0-9a-f-]+)/delete/', views.hide_thread, name='hide_thread'),
+    url(r'^forum/(?P<course_id>\d+)/comment/(?P<uuid>[0-9a-f-]+)/delete/', views.hide_comment, name='hide_comment'),
+
     url(r'^manage/$', views.prof_manage, name='manage'),
     url(r'^manage/addquestion/$', views.add_question, name="add_question"),
     url(r'^manage/addquestion/(?P<question_id>\d+)/$', views.add_question,

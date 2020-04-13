@@ -11,7 +11,12 @@
             <div class="card-header">
                 {{thread.title}}
                 <br>
-                <small><strong>{{thread.creator.username}}</strong> {{thread.created_at}}</small>
+                <small>
+                    <strong>{{thread.creator.username}}</strong>
+                    {{thread.created_at}}
+                    {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_thread" thread.course.id thread.uid %}" class="pull-right">Delete</a>{% endif %}
+                </small>
+
             </div>
             <div class="card-body">
                 <p>{{thread.description}}</p>
@@ -29,7 +34,10 @@
                             </a>
                         {% endif %}
                         <p>{{comment.description}}</p>
-                        <small class="pull-right">by: <strong>{{comment.user.username}} </strong>. {{comment.created_at}}</small>
+                        <small class="pull-right">
+                            by: <strong>{{comment.creator.username}} </strong>. {{comment.created_at}}
+                            {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_comment" thread.course.id comment.uid %}">Delete</a>{% endif %}
+                        </small>
                     </div>
                     <hr>
                 {% endfor %}

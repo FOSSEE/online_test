@@ -3198,7 +3198,7 @@ def download_course_progress(request, course_id):
 def course_forum(request, course_id):
     user = request.user
     course = get_object_or_404(Course, id=course_id)
-    threads = course.thread.all().order_by('-modified_at')
+    threads = course.thread.filter(active=True).order_by('-modified_at')
     if request.method == "POST":
         form = ThreadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -3214,13 +3214,15 @@ def course_forum(request, course_id):
         'user': user,
         'course': course,
         'threads': threads,
-        'form': form
+        'form': form,
+        'user': user
         })
 
 
 @login_required
 @email_verified
 def thread_comments(request, course_id, uuid):
+    user = request.user
     thread = get_object_or_404(Thread, uid=uuid)
     comments = thread.comment.filter(active=True)
     form = CommentForm()
@@ -3235,11 +3237,24 @@ def thread_comments(request, course_id, uuid):
     return render(request, 'yaksh/thread_comments.html', {
         'thread': thread,
         'comments': comments,
-        'form': form
+        'form': form,
+        'user': user
         })
 
 
 @login_required
 @email_verified
-def delete_thread(request, course_id, uuid):
+def hide_thread(request, course_id, uuid):
     thread = get_object_or_404(Thread, uid=uuid)
+    thread.comment.active = False
+    thread.active = False
+    thread.save()
+    return redirect('yaksh:course_forum', course_id)
+
+
+def hide_comment(request, course_id, uuid):
+    comment = get_object_or_404(Comment, uid=uuid)
+    thread_uid = comment.thread_field.uid
+    comment.active = False
+    comment.save()
+    return redirect('yaksh:thread_comments', course_id, thread_uid)

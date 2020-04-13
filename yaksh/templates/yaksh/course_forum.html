@@ -57,7 +57,9 @@
                             {% with thread.get_last_comment as last_comment %}
                                 <small> {% if thread.creator.profile.is_moderator %} INSTRUCTOR CREATED {% endif %} Last Post by: <strong>{{last_comment.creator}}</strong> . {{last_comment.modified_at|naturaltime}}</small>
                             {% endwith %}
-                            <small><a href="{% url "yaksh:delete_thread" course.id thread.uid %}" class="pull-right">Delete</i></a></small>
+                            {% if user.profile.is_moderator %}
+                                <small><a href="{% url "yaksh:hide_thread" course.id thread.uid %}" class="pull-right">Delete</i></a></small>
+                            {% endif %}
                         </div>
                     </div>
                 <br>

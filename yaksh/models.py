@@ -2670,7 +2670,7 @@ class Thread(ForumBase):
         return self.comment.last()
 
     def get_comments_count(self):
-        return self.comment.count()
+        return self.comment.filter(active=True).count()
 
 
 class Comment(ForumBase):
