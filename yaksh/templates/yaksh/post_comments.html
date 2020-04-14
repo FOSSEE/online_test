@@ -1,25 +1,28 @@
 {% extends "user.html" %}
 
 {% block title %}
-    {{thread.title}}
+    {{post.title}}
 {% endblock title %}
 
 {% block content %}
     <div class="container">
-        <a class="btn btn-primary" href="{% url "yaksh:course_forum" thread.course.id %}">Back to Threads</a>
+        <a class="btn btn-primary" href="{% url "yaksh:course_forum" post.course.id %}">Back to Posts</a>
         <div class="card">
             <div class="card-header">
-                {{thread.title}}
+                {{post.title}}
                 <br>
                 <small>
-                    <strong>{{thread.creator.username}}</strong>
-                    {{thread.created_at}}
-                    {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_thread" thread.course.id thread.uid %}" class="pull-right">Delete</a>{% endif %}
+                    <strong>{{post.creator.username}}</strong>
+                    {{post.created_at}}
+                    {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_post" post.course.id post.uid %}" class="pull-right">Delete</a>{% endif %}
                 </small>
 
             </div>
             <div class="card-body">
-                <p>{{thread.description}}</p>
+                <p>{{post.description}}</p>
+                <a href="{{post.image.url}}" target="_blank">
+                    <img src="{{post.image.url}}"  alt="">
+                </a>
             </div>
         </div>
         <br>
@@ -36,18 +39,18 @@
                         <p>{{comment.description}}</p>
                         <small class="pull-right">
                             by: <strong>{{comment.creator.username}} </strong>. {{comment.created_at}}
-                            {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_comment" thread.course.id comment.uid %}">Delete</a>{% endif %}
+                            {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_comment" post.course.id comment.uid %}">Delete</a>{% endif %}
                         </small>
                     </div>
                     <hr>
                 {% endfor %}
             {% else %}
-                    No comments on this thread.
+                    No comments on this post.
             {% endif %}
         </div>
         <br>
         <div>
-            <form action="{% url "yaksh:thread_comments" thread.course.id thread.uid %}" method="POST" enctype='multipart/form-data'>
+            <form action="{% url "yaksh:post_comments" post.course.id post.uid %}" method="POST" enctype='multipart/form-data'>
                 <div class="form-group">
                     {% csrf_token %}
                     {{form}}

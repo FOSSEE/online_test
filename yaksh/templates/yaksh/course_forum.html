@@ -10,16 +10,16 @@
             <center>Discussion Forum</center>
         </div>
         <div class="pull-right">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newThreadModal">New Thread</button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newPostModal">New Post</button>
         </div>
         <!-- Modal -->
-        <div id="newThreadModal" class="modal fade" role="dialog">
+        <div id="newPostModal" class="modal fade" role="dialog">
           <div class="modal-dialog">
 
             <!-- Modal content-->
             <div class="modal-content">
               <div class="modal-header">
-                <h4 class="modal-title">Create a new thread</h4>
+                <h4 class="modal-title">Create a new Post</h4>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
               </div>
               <div class="modal-body">
@@ -28,7 +28,7 @@
                         {% csrf_token %}
                         {{form}}
                     </div>
-                    <input type="submit" class="btn btn-primary" value="Create Thread">
+                    <input type="submit" class="btn btn-primary" value="Create Post">
                 </form>
               </div>
               <div class="modal-footer">
@@ -41,31 +41,33 @@
         <br>
         <br>
         <div>
-            <h3>Threads:</h3>
-            {% if threads %}
-                {% for thread in threads %}
+            <h3>Posts:</h3>
+            {% if posts %}
+                {% for post in posts %}
                     <div class="card">
                         <div class="card-body">
-                            <a href="{% url "yaksh:thread_comments" course.id thread.uid %}">{{thread.title}}</a>
+                            <a href="{% url "yaksh:post_comments" course.id post.uid %}">{{post.title}}</a>
                             <br>
-                            {% if thread.image %}
-                                <img src="{{thread.image.url}}" class="thread_image">
+                            {% if post.image %}
+                                <img src="{{post.image.url}}" class="post_image">
                             {% endif %}
-                            <p class="pull-right"><small>{{thread.get_comments_count}}{% if thread.get_comments_count > 1 %} replies{% else %} reply{% endif %}</small></p>
+                            <p class="pull-right"><small>{{post.get_comments_count}}{% if post.get_comments_count > 1 %} replies{% else %} reply{% endif %}</small></p>
                         </div>
                         <div class="card-footer">
-                            {% with thread.get_last_comment as last_comment %}
-                                <small> {% if thread.creator.profile.is_moderator %} INSTRUCTOR CREATED {% endif %} Last Post by: <strong>{{last_comment.creator}}</strong> . {{last_comment.modified_at|naturaltime}}</small>
+                            {% with post.get_last_comment as last_comment %}
+                                {% if last_comment %}
+                                    <small> {% if post.creator.profile.is_moderator %} INSTRUCTOR CREATED {% endif %} Last Post by: <strong>{{last_comment.creator}}</strong> . {{last_comment.modified_at|naturaltime}}</small>
+                                {% endif %}
                             {% endwith %}
                             {% if user.profile.is_moderator %}
-                                <small><a href="{% url "yaksh:hide_thread" course.id thread.uid %}" class="pull-right">Delete</i></a></small>
+                                <small><a href="{% url "yaksh:hide_post" course.id post.uid %}" class="pull-right">Delete</i></a></small>
                             {% endif %}
                         </div>
                     </div>
                 <br>
                 {% endfor %}
             {% else %}
-                No discussion threads are there yet. Create one to start discussing.
+                No discussion posts are there yet. Create one to start discussing.
             {% endif %}
         </div>
     </div>

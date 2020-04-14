@@ -37,14 +37,14 @@ from yaksh.models import (
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
-    LearningUnit, LearningModule, CourseStatus, question_types, Thread, Comment
+    LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
     QuestionFilterForm, CourseForm, ProfileForm,
     UploadFileForm, FileForm, QuestionPaperForm, LessonForm,
     LessonFileForm, LearningModuleForm, ExerciseForm, TestcaseForm,
-    SearchFilterForm, ThreadForm, CommentForm
+    SearchFilterForm, PostForm, CommentForm
 )
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .settings import URL_ROOT
@@ -3198,22 +3198,22 @@ def download_course_progress(request, course_id):
 def course_forum(request, course_id):
     user = request.user
     course = get_object_or_404(Course, id=course_id)
-    threads = course.thread.filter(active=True).order_by('-modified_at')
+    posts = course.post.filter(active=True).order_by('-modified_at')
     if request.method == "POST":
-        form = ThreadForm(request.POST, request.FILES)
+        form = PostForm(request.POST, request.FILES)
         if form.is_valid():
-            new_thread = form.save(commit=False)
-            new_thread.creator = user
-            new_thread.course = course
-            new_thread.save()
-            return redirect('yaksh:thread_comments',
-                            course_id=course.id, uuid=new_thread.uid)
+            new_post = form.save(commit=False)
+            new_post.creator = user
+            new_post.course = course
+            new_post.save()
+            return redirect('yaksh:post_comments',
+                            course_id=course.id, uuid=new_post.uid)
     else:
-        form = ThreadForm()
+        form = PostForm()
     return render(request, 'yaksh/course_forum.html', {
         'user': user,
         'course': course,
-        'threads': threads,
+        'posts': posts,
         'form': form,
         'user': user
         })
@@ -3221,21 +3221,21 @@ def course_forum(request, course_id):
 
 @login_required
 @email_verified
-def thread_comments(request, course_id, uuid):
+def post_comments(request, course_id, uuid):
     user = request.user
-    thread = get_object_or_404(Thread, uid=uuid)
-    comments = thread.comment.filter(active=True)
+    post = get_object_or_404(Post, uid=uuid)
+    comments = post.comment.filter(active=True)
     form = CommentForm()
     if request.method == "POST":
         form = CommentForm(request.POST, request.FILES)
         if form.is_valid():
             new_comment = form.save(commit=False)
-            new_comment.creator=request.user
-            new_comment.thread_field=thread
+            new_comment.creator = request.user
+            new_comment.post_field = post
             new_comment.save()
             return redirect(request.path_info)
-    return render(request, 'yaksh/thread_comments.html', {
-        'thread': thread,
+    return render(request, 'yaksh/post_comments.html', {
+        'post': post,
         'comments': comments,
         'form': form,
         'user': user
@@ -3244,17 +3244,17 @@ def thread_comments(request, course_id, uuid):
 
 @login_required
 @email_verified
-def hide_thread(request, course_id, uuid):
-    thread = get_object_or_404(Thread, uid=uuid)
-    thread.comment.active = False
-    thread.active = False
-    thread.save()
+def hide_post(request, course_id, uuid):
+    post = get_object_or_404(Post, uid=uuid)
+    post.comment.active = False
+    post.active = False
+    post.save()
     return redirect('yaksh:course_forum', course_id)
 
 
 def hide_comment(request, course_id, uuid):
     comment = get_object_or_404(Comment, uid=uuid)
-    thread_uid = comment.thread_field.uid
+    post_uid = comment.post_field.uid
     comment.active = False
     comment.save()
-    return redirect('yaksh:thread_comments', course_id, thread_uid)
+    return redirect('yaksh:post_comments', course_id, post_uid)

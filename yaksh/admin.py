@@ -1,7 +1,7 @@
 from yaksh.models import Question, Quiz, QuestionPaper, Profile
 from yaksh.models import (TestCase, StandardTestCase, StdIOBasedTestCase,
                           Course, AnswerPaper, CourseStatus, LearningModule,
-                          Lesson, Thread, Comment
+                          Lesson, Post, Comment
                           )
 from django.contrib import admin
 
@@ -48,7 +48,7 @@ class QuizAdmin(admin.ModelAdmin):
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Question)
 admin.site.register(TestCase)
-admin.site.register(Thread)
+admin.site.register(Post)
 admin.site.register(Comment)
 admin.site.register(StandardTestCase)
 admin.site.register(StdIOBasedTestCase)

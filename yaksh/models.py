@@ -243,8 +243,9 @@ def validate_image(image):
 
 def get_image_dir(instance, filename):
     return os.sep.join((
-        'thread_%s' % (instance), filename
+        'post_%s' % (instance), filename
     ))
+
 
 ###############################################################################
 class CourseManager(models.Manager):
@@ -1176,7 +1177,9 @@ class CourseStatus(models.Model):
         if self.is_course_complete():
             self.calculate_percentage()
             if self.course.grading_system is None:
-                grading_system = GradingSystem.objects.get(name__contains='default')
+                grading_system = GradingSystem.objects.get(
+                    name__contains='default'
+                )
             else:
                 grading_system = self.course.grading_system
             grade = grading_system.get_grade(self.percentage)
@@ -2646,6 +2649,7 @@ class TestCaseOrder(models.Model):
     # Order of the test case for a question.
     order = models.TextField()
 
+
 ##############################################################################
 class ForumBase(models.Model):
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
@@ -2653,15 +2657,15 @@ class ForumBase(models.Model):
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    image = models.ImageField(upload_to=get_image_dir, blank=True, 
+    image = models.ImageField(upload_to=get_image_dir, blank=True,
                               null=True, validators=[validate_image])
     active = models.BooleanField(default=True)
 
 
-class Thread(ForumBase):
+class Post(ForumBase):
     title = models.CharField(max_length=200)
     course = models.ForeignKey(Course,
-                               on_delete=models.CASCADE, related_name='thread')
+                               on_delete=models.CASCADE, related_name='post')
 
     def __str__(self):
         return self.title
@@ -2674,10 +2678,9 @@ class Thread(ForumBase):
 
 
 class Comment(ForumBase):
-    thread_field = models.ForeignKey(Thread,
-                               on_delete=models.CASCADE,
-                               related_name='comment')
+    post_field = models.ForeignKey(Post, on_delete=models.CASCADE,
+                                   related_name='comment')
 
     def __str__(self):
         return 'Comment by {0}: {1}'.format(self.creator.username,
-                                              self.thread_field.title)
+                                            self.post_field.title)
