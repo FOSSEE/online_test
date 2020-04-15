@@ -3198,6 +3198,9 @@ def download_course_progress(request, course_id):
 def course_forum(request, course_id):
     user = request.user
     course = get_object_or_404(Course, id=course_id)
+    if (not course.is_creator(user) and not course.is_teacher(user)
+        and not course.is_student(user)):
+        raise Http404('You are not enrolled in {0} course'.format(course.name))
     posts = course.post.filter(active=True).order_by('-modified_at')
     if request.method == "POST":
         form = PostForm(request.POST, request.FILES)
@@ -3225,6 +3228,10 @@ def post_comments(request, course_id, uuid):
     user = request.user
     post = get_object_or_404(Post, uid=uuid)
     comments = post.comment.filter(active=True)
+    course = get_object_or_404(Course, id=course_id)
+    if (not course.is_creator(user) and not course.is_teacher(user)
+        and not course.is_student(user)):
+        raise Http404('You are not enrolled in {0} course'.format(course.name))
     form = CommentForm()
     if request.method == "POST":
         form = CommentForm(request.POST, request.FILES)
@@ -3245,6 +3252,10 @@ def post_comments(request, course_id, uuid):
 @login_required
 @email_verified
 def hide_post(request, course_id, uuid):
+    course = get_object_or_404(Course, id=course_id)
+    if (not course.is_creator(user) and not course.is_teacher(user)
+        and not course.is_student(user)):
+        raise Http404('You are not enrolled in {0} course'.format(course.name))
     post = get_object_or_404(Post, uid=uuid)
     post.comment.active = False
     post.active = False
@@ -3253,6 +3264,10 @@ def hide_post(request, course_id, uuid):
 
 
 def hide_comment(request, course_id, uuid):
+    course = get_object_or_404(Course, id=course_id)
+    if (not course.is_creator(user) and not course.is_teacher(user)
+        and not course.is_student(user)):
+        raise Http404('You are not enrolled in {0} course'.format(course.name))
     comment = get_object_or_404(Comment, uid=uuid)
     post_uid = comment.post_field.uid
     comment.active = False

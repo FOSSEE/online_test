@@ -243,7 +243,7 @@ def validate_image(image):
 
 def get_image_dir(instance, filename):
     return os.sep.join((
-        'post_%s' % (instance), filename
+        'post_%s' % (instance.uid), filename
     ))
 
 

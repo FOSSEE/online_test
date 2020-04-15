@@ -20,9 +20,11 @@
             </div>
             <div class="card-body">
                 <p>{{post.description}}</p>
-                <a href="{{post.image.url}}" target="_blank">
-                    <img src="{{post.image.url}}"  alt="">
-                </a>
+                {% if post.image %}
+                    <a href="{{post.image.url}}" target="_blank">
+                        <img src="{{post.image.url}}" class="img-fluid" alt="">
+                    </a>
+                {% endif %}
             </div>
         </div>
         <br>
@@ -33,7 +35,7 @@
                     <div class="card-body">
                         {% if comment.image %}
                             <a href="{{comment.image.url}}" target="_blank">
-                                <img src="{{comment.image.url}}" class='comment_image'>
+                                <img src="{{comment.image.url}}" class='img-fluid'>
                             </a>
                         {% endif %}
                         <p>{{comment.description}}</p>
