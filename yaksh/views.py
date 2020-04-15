@@ -1070,20 +1070,20 @@ def courses(request):
         Q(creator=user) | Q(teachers=user),
         is_trial=False).order_by('-active').distinct()
 
-    form = SearchFilterForm()
+    tags = request.GET.get('search_tags')
+    status = request.GET.get('search_status')
 
-    course_tags = request.GET.get('search_tags')
-    course_status = request.GET.get('search_status')
+    form = SearchFilterForm(tags=tags, status=status)
 
-    if course_status == 'select' and course_tags:
+    if status == 'select' and tags:
         courses = courses.filter(
-            name__icontains=course_tags)
-    elif course_status == 'active' :
+            name__icontains=tags)
+    elif status == 'active':
         courses = courses.filter(
-            name__icontains=course_tags, active=True)
-    elif course_status == 'closed':
+            name__icontains=tags, active=True)
+    elif status == 'closed':
         courses = courses.filter(
-            name__icontains=course_tags, active=False)
+            name__icontains=tags, active=False)
 
     paginator = Paginator(courses, 30)
     page = request.GET.get('page')
@@ -1556,9 +1556,12 @@ def show_all_questions(request):
                     user, False, question_ids, None)
                 trial_paper.update_total_marks()
                 trial_paper.save()
-                return my_redirect(reverse("yaksh:start_quiz",
-                    args=[1, trial_module.id, trial_paper.id, trial_course.id]
-                ))
+                return my_redirect(
+                    reverse("yaksh:start_quiz",
+                            args=[1, trial_module.id, trial_paper.id,
+                                  trial_course.id]
+                        )
+                    )
             else:
                 message = "Please select atleast one question to test"
 
@@ -1591,15 +1594,16 @@ def questions_filter(request):
 
     questions = Question.objects.get_queryset().filter(
             user_id=user.id, active=True).order_by('-id')
-    form = QuestionFilterForm(user=user)
     user_tags = questions.values_list('tags', flat=True).distinct()
     all_tags = Tag.objects.filter(id__in=user_tags)
-    form = QuestionFilterForm(user=user)
     upload_form = UploadFileForm()
     filter_dict = {}
     question_type = request.GET.get('question_type')
     marks = request.GET.get('marks')
     language = request.GET.get('language')
+    form = QuestionFilterForm(
+        user=user, language=language, marks=marks, type=question_type
+    )
     if question_type:
         filter_dict['type'] = str(question_type)
     if marks:
@@ -1664,8 +1668,9 @@ def test_question(request, question_id):
     return my_redirect(
         reverse("yaksh:start_quiz",
                 args=[1, trial_module.id, trial_paper.id, trial_course.id]
+                )
             )
-        )
+
 
 @login_required
 @email_verified
