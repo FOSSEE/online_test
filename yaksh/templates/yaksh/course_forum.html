@@ -52,9 +52,7 @@
                         </div>
                         <div class="card-footer">
                             {% with post.get_last_comment as last_comment %}
-                                {% if last_comment %}
-                                    <small> {% if post.creator.profile.is_moderator %} INSTRUCTOR CREATED {% endif %} Last Post by: <strong>{{last_comment.creator}}</strong> . {{last_comment.modified_at|naturaltime}}</small>
-                                {% endif %}
+                                <small> {% if post.creator.profile.is_moderator %} <span class="brown-light">INSTRUCTOR</span> {% endif %} {% if last_comment %} Last Post by: <strong>{{last_comment.creator}}</strong> . {{last_comment.modified_at|naturaltime}} {% else %} Created By <strong>{{post.creator.username}}</strong> {% endif %}</small>
                             {% endwith %}
                             {% if user.profile.is_moderator %}
                                 <small><a href="{% url "yaksh:hide_post" course.id post.uid %}" class="pull-right">Delete</i></a></small>

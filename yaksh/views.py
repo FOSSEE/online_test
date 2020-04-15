@@ -3252,6 +3252,7 @@ def post_comments(request, course_id, uuid):
 @login_required
 @email_verified
 def hide_post(request, course_id, uuid):
+    user = request.user
     course = get_object_or_404(Course, id=course_id)
     if (not course.is_creator(user) and not course.is_teacher(user)
         and not course.is_student(user)):
@@ -3263,7 +3264,10 @@ def hide_post(request, course_id, uuid):
     return redirect('yaksh:course_forum', course_id)
 
 
+@login_required
+@email_verified
 def hide_comment(request, course_id, uuid):
+    user = request.user
     course = get_object_or_404(Course, id=course_id)
     if (not course.is_creator(user) and not course.is_teacher(user)
         and not course.is_student(user)):
