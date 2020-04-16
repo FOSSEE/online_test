@@ -6338,12 +6338,13 @@ class TestPost(TestCase):
         )
 
     def test_view_course_forum_denies_anonymous_user(self):
-        url = '/exam/login/?next=/exam/forum/' + str(self.course.id) + '/'
         response = self.client.get(reverse('yaksh:course_forum', kwargs={
             'course_id': self.course.id
         }), follow=True)
         self.assertEqual(response.status_code, 200)
-        redirection_url = url
+        redirection_url = '/exam/login/?next=/exam/forum/{0}/'.format(
+            str(self.course.id)
+            )
         self.assertRedirects(response, redirection_url)
 
     def test_view_course_forum(self):
@@ -6388,8 +6389,9 @@ class TestPost(TestCase):
             'uuid': post.uid
         }), follow=True)
         self.assertEqual(response.status_code, 200)
-        redirection_url = '/exam/login/?next=/exam/forum/' \
-            + str(self.course.id) + '/post/' + str(post.uid) + '/'
+        redirection_url = '/exam/login/?next=/exam/forum/{0}/post/{1}/'.format(
+                str(self.course.id), str(post.uid)
+            )
         self.assertRedirects(response, redirection_url)
 
     def test_hide_post(self):
