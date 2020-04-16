@@ -6351,6 +6351,7 @@ class TestPost(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
+        self.course.students.add(self.student)
         response = self.client.get(reverse('yaksh:course_forum', kwargs={
             'course_id': self.course.id
         }), follow=True)
@@ -6362,19 +6363,18 @@ class TestPost(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
+        self.course.students.add(self.student)
         response = self.client.post(reverse('yaksh:course_forum', kwargs={
             'course_id': self.course.id
-        }), {
-            'title': 'post 1',
-            'description': 'post 1 description',
-            'course': self.course,
-            'creator': self.student
+        }), data={
+            "title": 'Post 1',
+            "description": 'Post 1 description',
         })
         self.assertEquals(response.status_code, 302)
-        url = response.url.split('/')
-        uid = url[5]
-        test_against = Post.objects.get(uid=uid)
-        self.assertEqual(test_against.title, 'post 1')
+        result = Post.objects.filter(title='Post 1',
+                                     creator=self.student,
+                                     course=self.course)
+        self.assertTrue(result.exists())
 
     def test_open_created_post_denies_anonymous_user(self):
         post = Post.objects.create(
@@ -6397,6 +6397,7 @@ class TestPost(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
+        self.course.students.add(self.student)
         post = Post.objects.create(
             title='post 1',
             description='post 1 description',
@@ -6475,6 +6476,7 @@ class TestPostComment(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
+        self.course.students.add(self.student)
         response = self.client.post(reverse('yaksh:post_comments', kwargs={
             'course_id': self.course.id,
             'uuid': self.post.uid
@@ -6484,17 +6486,15 @@ class TestPostComment(TestCase):
             'creator': self.user,
         })
         self.assertEquals(response.status_code, 302)
-        url = response.url.split('/')
-        uid = url[5]
-        test_against = Comment.objects.filter(post_field__uid=uid)
-        comment = test_against[0]
-        self.assertEqual(comment.post_field, self.post)
+        result = Comment.objects.filter(post_field__uid=self.post.uid)
+        self.assertTrue(result.exists())
 
     def test_hide_post_comment(self):
         self.client.login(
             username=self.student.username,
             password=self.student_plaintext_pass
         )
+        self.course.students.add(self.student)
         comment = Comment.objects.create(
             post_field=self.post,
             description='post 1 comment',
