@@ -7,9 +7,11 @@
 {% block content %}
     <div class="container">
         <a class="btn btn-primary" href="{% url "yaksh:course_forum" post.course.id %}">Back to Posts</a>
+        <br>
+        <br>
         <div class="card">
             <div class="card-header">
-                {{post.title}}
+                <h3>{{post.title}}</h3>
                 <br>
                 <small>
                     <strong>{{post.creator.username}}</strong>
@@ -22,7 +24,7 @@
                 <p>{{post.description}}</p>
                 {% if post.image %}
                     <a href="{{post.image.url}}" target="_blank">
-                        <img src="{{post.image.url}}" class="img-fluid" alt="">
+                        <img src="{{post.image.url}}" class="post_image" alt="">
                     </a>
                 {% endif %}
             </div>
@@ -35,7 +37,7 @@
                     <div class="card-body">
                         {% if comment.image %}
                             <a href="{{comment.image.url}}" target="_blank">
-                                <img src="{{comment.image.url}}" class='img-fluid'>
+                                <img src="{{comment.image.url}}" class='comment_image'>
                             </a>
                         {% endif %}
                         <p>{{comment.description}}</p>
@@ -44,7 +46,6 @@
                             {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_comment" post.course.id comment.uid %}">Delete</a>{% endif %}
                         </small>
                     </div>
-                    <hr>
                 {% endfor %}
             {% else %}
                     No comments on this post.

@@ -42,12 +42,11 @@
         <br>
         <div>
             {% if posts %}
-            <h3>Posts:</h3>
                 {% for post in posts %}
                     <div class="card">
                         <div class="card-body">
                             <a href="{% url "yaksh:post_comments" course.id post.uid %}">{{post.title}}</a>
-                            <br>
+                            <p>{{post.description|truncatewords:30}}</p>
                             <p class="pull-right"><small>{{post.get_comments_count}}{% if post.get_comments_count > 1 %} replies{% else %} reply{% endif %}</small></p>
                         </div>
                         <div class="card-footer">
