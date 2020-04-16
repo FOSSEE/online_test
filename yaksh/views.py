@@ -3199,7 +3199,7 @@ def course_forum(request, course_id):
     user = request.user
     course = get_object_or_404(Course, id=course_id)
     if (not course.is_creator(user) and not course.is_teacher(user)
-        and not course.is_student(user)):
+            and not course.is_student(user)):
         raise Http404('You are not enrolled in {0} course'.format(course.name))
     posts = course.post.filter(active=True).order_by('-modified_at')
     if request.method == "POST":
@@ -3230,7 +3230,7 @@ def post_comments(request, course_id, uuid):
     comments = post.comment.filter(active=True)
     course = get_object_or_404(Course, id=course_id)
     if (not course.is_creator(user) and not course.is_teacher(user)
-        and not course.is_student(user)):
+            and not course.is_student(user)):
         raise Http404('You are not enrolled in {0} course'.format(course.name))
     form = CommentForm()
     if request.method == "POST":
@@ -3255,7 +3255,7 @@ def hide_post(request, course_id, uuid):
     user = request.user
     course = get_object_or_404(Course, id=course_id)
     if (not course.is_creator(user) and not course.is_teacher(user)
-        and not course.is_student(user)):
+            and not course.is_student(user)):
         raise Http404('You are not enrolled in {0} course'.format(course.name))
     post = get_object_or_404(Post, uid=uuid)
     post.comment.active = False
@@ -3270,7 +3270,7 @@ def hide_comment(request, course_id, uuid):
     user = request.user
     course = get_object_or_404(Course, id=course_id)
     if (not course.is_creator(user) and not course.is_teacher(user)
-        and not course.is_student(user)):
+            and not course.is_student(user)):
         raise Http404('You are not enrolled in {0} course'.format(course.name))
     comment = get_object_or_404(Comment, uid=uuid)
     post_uid = comment.post_field.uid
