@@ -45,6 +45,8 @@ INSTALLED_APPS = (
     'taggit',
     'social_django',
     'grades',
+    'django_celery_beat',
+    'notifications_plugin',
 )
 
 MIDDLEWARE = (
@@ -53,6 +55,7 @@ MIDDLEWARE = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'yaksh.middleware.one_session_per_user.OneSessionPerUserMiddleware',
+    'yaksh.middleware.get_notifications.NotificationMiddleware',
     'yaksh.middleware.user_time_zone.TimezoneMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -164,6 +167,7 @@ TEMPLATES = [
                 'social_django.context_processors.backends',
                 'social_django.context_processors.login_redirect',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.request',
             ],
             'debug': True,  # make this False in production
         }
@@ -208,3 +212,11 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 TAGGIT_CASE_INSENSITIVE = True
+
+# Celery parameters
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TIMEZONE = 'Asia/Kolkata'
+CELERY_BROKER_URL = 'redis://localhost'

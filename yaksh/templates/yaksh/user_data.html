@@ -33,11 +33,6 @@
         </div>
       </div>
     {% endwith %}
-    <br>
-      <a href="{% url 'yaksh:grade_user' data.papers.0.question_paper.quiz.id data.user.id course_id %}" class="btn btn-info">
-        Grade User
-      </a>
-    <br>
     {% for paper in data.papers %}
       <br>
       <h3><b><u>Attempt Number:</u></b>&nbsp;<span class="badge badge-pill badge-info">

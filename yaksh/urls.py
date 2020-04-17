@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.urls import path
 from yaksh import views
 
 urlpatterns = [
@@ -144,17 +145,14 @@ urlpatterns = [
         name="download_questions"),
     url(r'^manage/upload_questions/$', views.show_all_questions,
         name="upload_questions"),
-    url(r'^manage/grader/$', views.grader, name='grader'),
-    url(r'^manage/regrade/question/(?P<course_id>\d+)/(?P<question_id>\d+)/$',
-        views.regrade, name='regrade'),
-    url(r'^manage/regrade/questionpaper/(?P<course_id>\d+)/'
-        '(?P<question_id>\d+)/(?P<questionpaper_id>\d+)/$',
-        views.regrade, name='regrade'),
-    url(r'^manage/regrade/answerpaper/(?P<course_id>\d+)/'
-        '(?P<question_id>\d+)/(?P<answerpaper_id>\d+)/$',
-        views.regrade, name='regrade'),
-    url(r'^manage/regrade/paper/(?P<course_id>\d+)/(?P<answerpaper_id>\d+)/$',
-        views.regrade, name='regrade'),
+    url(r'^manage/regrade/paper/question/(?P<course_id>\d+)/'
+        '(?P<questionpaper_id>\d+)/(?P<question_id>\d+)/$',
+        views.regrade, name='regrade_by_quiz'),
+    url(r'^manage/regrade/user/(?P<course_id>\d+)/(?P<questionpaper_id>\d+)/'
+        '(?P<answerpaper_id>\d+)/$', views.regrade, name='regrade_by_user'),
+    url(r'^manage/regrade/user/question/(?P<course_id>\d+)/'
+        '(?P<questionpaper_id>\d+)/(?P<answerpaper_id>\d+)/'
+        '(?P<question_id>\d+)/', views.regrade, name='regrade_by_question'),
     url(r'^manage/(?P<mode>godmode|usermode)/(?P<quiz_id>\d+)/'
         '(?P<course_id>\d+)/$', views.test_quiz, name="test_quiz"),
     url(r'^manage/create_demo_course/$', views.create_demo_course,
@@ -205,4 +203,10 @@ urlpatterns = [
         views.course_teachers, name="course_teachers"),
     url(r'^manage/download/course/progress/(?P<course_id>\d+)',
         views.download_course_progress, name="download_course_progress"),
+    path('view/notifications', views.view_notifications,
+         name="view_notifications"),
+    path('mark/notifications/<uuid:message_uid>',
+        views.mark_notification, name="mark_notification"),
+    path('mark/notifications', views.mark_notification,
+         name="mark_notification"),
 ]

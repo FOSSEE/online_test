@@ -52,6 +52,8 @@ from .file_utils import extract_files, is_csv
 from .send_emails import (send_user_mail,
                           generate_activation_key, send_bulk_mail)
 from .decorators import email_verified, has_profile
+from .tasks import regrade_papers
+from notifications_plugin.models import Notification
 
 
 def my_redirect(url):
@@ -439,6 +441,7 @@ def prof_manage(request, msg=None):
     courses = Course.objects.get_queryset().filter(
         Q(creator=user) | Q(teachers=user),
         is_trial=False).distinct().order_by("-active")
+
     paginator = Paginator(courses, 20)
     page = request.GET.get('page')
     courses = paginator.get_page(page)
@@ -1268,18 +1271,6 @@ def monitor(request, quiz_id=None, course_id=None):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
-    if quiz_id is None:
-        courses = Course.objects.filter(
-            Q(creator=user) | Q(teachers=user),
-            is_trial=False
-        ).order_by("-active").distinct()
-        paginator = Paginator(courses, 30)
-        page = request.GET.get('page')
-        courses = paginator.get_page(page)
-        context = {
-            "papers": [], "objects": courses, "msg": "Monitor"
-        }
-        return my_render_to_response(request, 'yaksh/monitor.html', context)
     # quiz_id is not None.
     try:
         quiz = get_object_or_404(Quiz, id=quiz_id)
@@ -1716,7 +1707,7 @@ def download_quiz_csv(request, course_id, quiz_id):
 @login_required
 @email_verified
 def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
-               course_id=None):
+               course_id=None, extra_context=None):
     """Present an interface with which we can easily grade a user's papers
     and update all their marks and also give comments for each paper.
     """
@@ -1775,6 +1766,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             context = {
                 "data": data,
                 "quiz_id": quiz_id,
+                "quiz": quiz,
                 "users": user_details,
                 "attempts": attempts,
                 "user_id": user_id,
@@ -1801,7 +1793,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             course_id=course.id, user_id=user.id)
         if course_status.exists():
             course_status.first().set_grade()
-
+    if extra_context:
+        context.update(extra_context)
     return my_render_to_response(request, 'yaksh/grade_user.html', context)
 
 
@@ -2057,56 +2050,31 @@ def create_demo_course(request):
 
 @login_required
 @email_verified
-def grader(request, extra_context=None):
-    user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-    courses = Course.objects.filter(is_trial=False)
-    user_courses = list(courses.filter(creator=user)) + \
-        list(courses.filter(teachers=user))
-    context = {'courses': user_courses}
-    if extra_context:
-        context.update(extra_context)
-    return my_render_to_response(request, 'yaksh/regrade.html', context)
-
-
-@login_required
-@email_verified
-def regrade(request, course_id, question_id=None, answerpaper_id=None,
-            questionpaper_id=None):
+def regrade(request, course_id, questionpaper_id, question_id=None,
+            answerpaper_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     if not is_moderator(user) or (course.is_creator(user) and
                                   course.is_teacher(user)):
         raise Http404('You are not allowed to view this page!')
+    questionpaper = get_object_or_404(QuestionPaper, pk=questionpaper_id)
     details = []
-    if answerpaper_id is not None and question_id is None:
-        answerpaper = get_object_or_404(AnswerPaper, pk=answerpaper_id)
-        for question in answerpaper.questions.all():
-            details.append(answerpaper.regrade(question.id))
-            course_status = CourseStatus.objects.filter(
-                user=answerpaper.user, course=answerpaper.course)
-            if course_status.exists():
-                course_status.first().set_grade()
-    if questionpaper_id is not None and question_id is not None:
-        answerpapers = AnswerPaper.objects.filter(
-            questions=question_id,
-            question_paper_id=questionpaper_id, course_id=course_id)
-        for answerpaper in answerpapers:
-            details.append(answerpaper.regrade(question_id))
-            course_status = CourseStatus.objects.filter(
-                user=answerpaper.user, course=answerpaper.course)
-            if course_status.exists():
-                course_status.first().set_grade()
-    if answerpaper_id is not None and question_id is not None:
-        answerpaper = get_object_or_404(AnswerPaper, pk=answerpaper_id)
-        details.append(answerpaper.regrade(question_id))
-        course_status = CourseStatus.objects.filter(user=answerpaper.user,
-                                                    course=answerpaper.course)
-        if course_status.exists():
-            course_status.first().set_grade()
-
-    return grader(request, extra_context={'details': details})
+    quiz = questionpaper.quiz
+    data = {"user_id": user.id, "course_id": course_id,
+            "questionpaper_id": questionpaper_id, "question_id": question_id,
+            "answerpaper_id": answerpaper_id, "quiz_id": quiz.id,
+            "quiz_name": quiz.description, "course_name": course.name
+            }
+    regrade_papers.delay(data)
+    msg = dedent("""
+            {0} is submitted for re-evaluation. You will receive a
+            notification for the re-evaluation status
+            """.format(quiz.description)
+        )
+    messages.info(request, msg)
+    return redirect(
+        reverse("yaksh:grade_user", args=[quiz.id, course_id])
+    )
 
 
 @login_required
@@ -3191,3 +3159,38 @@ def download_course_progress(request, course_id):
     for student in stud_details:
         writer.writerow(student)
     return response
+
+
+@login_required
+@email_verified
+def view_notifications(request):
+    user = request.user
+    notifcations = Notification.objects.get_unread_receiver_notifications(
+        user.id
+    )
+    if is_moderator(user):
+        template = "manage.html"
+    else:
+        template = "user.html"
+    context = {"template": template, "notifications": notifcations,
+               "current_date_time": timezone.now()}
+    return my_render_to_response(
+        request, 'yaksh/view_notifications.html', context
+    )
+
+
+@login_required
+@email_verified
+def mark_notification(request, message_uid=None):
+    user = request.user
+    if message_uid:
+        Notification.objects.mark_single_notification(
+            user.id, message_uid, True
+        )
+    else:
+        if request.method == 'POST':
+            msg_uuids = request.POST.getlist("uid")
+            Notification.objects.mark_bulk_msg_notifications(
+                user.id, msg_uuids, True)
+    messages.success(request, "Marked notifcation(s) as read")
+    return redirect(reverse("yaksh:view_notifications"))
