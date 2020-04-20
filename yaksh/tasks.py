@@ -4,7 +4,6 @@ from textwrap import dedent
 
 # Django and celery imports
 from celery import shared_task
-from celery.utils.log import get_task_logger
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
 
@@ -24,31 +23,31 @@ def regrade_papers(data):
     quiz_name = data.get("quiz_name")
     course_name = data.get("course_name")
 
-    logger = get_task_logger(__name__)
+    url = reverse("yaksh:grade_user", args=[quiz_id, course_id])
 
     try:
         if answerpaper_id is not None and question_id is None:
             # Regrade specific user for all questions
             answerpaper = AnswerPaper.objects.get(id=answerpaper_id)
+            url = reverse("yaksh:grade_user",
+                          args=[quiz_id, answerpaper.user_id, course_id])
             for question in answerpaper.questions.all():
                 answerpaper.regrade(question.id)
                 course_status = CourseStatus.objects.filter(
                     user=answerpaper.user, course=answerpaper.course)
                 if course_status.exists():
                     course_status.first().set_grade()
-            url = reverse("yaksh:grade_user",
-                          args=[quiz_id, answerpaper.user_id, course_id])
 
         elif answerpaper_id is not None and question_id is not None:
             # Regrade specific user for a specific question
             answerpaper = AnswerPaper.objects.get(pk=answerpaper_id)
-            answerpaper.regrade(question_id)
-            course_status = CourseStatus.objects.filter(user=answerpaper.user,
-                                                        course=answerpaper.course)
-            if course_status.exists():
-                course_status.first().set_grade()
             url = reverse("yaksh:grade_user",
                           args=[quiz_id, answerpaper.user_id, course_id])
+            answerpaper.regrade(question_id)
+            course_status = CourseStatus.objects.filter(
+                user=answerpaper.user, course=answerpaper.course)
+            if course_status.exists():
+                course_status.first().set_grade()
 
         elif questionpaper_id is not None and question_id is not None:
             # Regrade all users for a specific question
@@ -61,23 +60,23 @@ def regrade_papers(data):
                     user=answerpaper.user, course=answerpaper.course)
                 if course_status.exists():
                     course_status.first().set_grade()
-            url = reverse("yaksh:grade_user", args=[quiz_id, course_id])
 
         message = dedent("""
-            Quiz re-evaluation is complete Click <a href="{0}">here</a> to view
+            Quiz re-evaluation is complete.
+            Click <a href="{0}">here</a> to view
             """.format(url)
             )
-        nm = NotificationMessage.objects.add_single_message(
-                user_id, "{0} re-evaluation status".format(quiz_name),
-                message, "success"
-            )
+        notification_type = "success"
     except Exception as e:
-        nm = NotificationMessage.objects.add_single_message(
-                user_id, "{0} re-evaluation status".format(quiz_name),
-                "Unable to regrade {0}. Try again later".format(quiz_name),
-                "warning"
+        message = dedent("""
+            Unable to regrade please try again.
+            Click <a href="{0}">here</a> to view""".format(url)
             )
-        logger.error(e)
+        notification_type = "warning"
+    nm = NotificationMessage.objects.add_single_message(
+        user_id, "{0} re-evaluation status".format(quiz_name),
+        message, notification_type
+    )
     notification = Notification.objects.add_single_notification(
         user_id, nm.id
     )

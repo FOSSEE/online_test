@@ -39,7 +39,9 @@
                             </a>
                         </div>
                         <div class="toast-body">
-                            <p><b>From: </b>{{message.creator.get_full_name}}</p>
+                            {% if user.id != message.creator.id %}
+                                <p><b>From: </b>{{message.creator.get_full_name}}</p>
+                            {% endif %}
                             <p><b>Description:</b></p>
                             {{message.description|safe}}
                         </div>
