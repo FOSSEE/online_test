@@ -5,6 +5,7 @@ python:
 
 services:
   - xvfb
+  - redis-server
 
 before_install:
   - sudo apt-get update -qq
