@@ -46,6 +46,7 @@ INSTALLED_APPS = (
     'social_django',
     'grades',
     'django_celery_beat',
+    'django_celery_results',
     'notifications_plugin',
 )
 
@@ -220,3 +221,4 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TIMEZONE = 'Asia/Kolkata'
 CELERY_BROKER_URL = 'redis://localhost'
+CELERY_RESULT_BACKEND = 'django-db'

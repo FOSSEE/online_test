@@ -2,6 +2,7 @@ from datetime import datetime
 import pytz
 import os
 import json
+import time
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -21,6 +22,8 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files import File
 from django.contrib.messages import get_messages
+from celery.contrib.testing.worker import start_worker
+from django.test import SimpleTestCase
 
 
 from yaksh.models import (
@@ -31,6 +34,7 @@ from yaksh.models import (
 )
 from yaksh.views import add_as_moderator
 from yaksh.decorators import user_has_profile
+from online_test.celery import app
 
 from notifications_plugin.models import Notification
 
@@ -3593,11 +3597,13 @@ class TestSelfEnroll(TestCase):
         self.assertRedirects(response, '/exam/manage/')
 
 
-class TestGrader(TestCase):
+class TestGrader(SimpleTestCase):
+    allow_database_queries = True
+
     def setUp(self):
         self.client = Client()
 
-        self.mod_group = Group.objects.create(name='moderator')
+        self.mod_group, created = Group.objects.get_or_create(name='moderator')
 
         # Create Moderator with profile
         self.user1_plaintext_pass = 'demo1'
@@ -3677,6 +3683,9 @@ class TestGrader(TestCase):
             end_time=timezone.now()+timezone.timedelta(minutes=20),
             )
 
+        self.celery_worker = start_worker(app)
+        self.celery_worker.__enter__()
+
     def tearDown(self):
         User.objects.all().delete()
         Course.objects.all().delete()
@@ -3685,6 +3694,7 @@ class TestGrader(TestCase):
         QuestionPaper.objects.all().delete()
         AnswerPaper.objects.all().delete()
         self.mod_group.delete()
+        self.celery_worker.__exit__(None, None, None)
 
     def test_regrade_denies_anonymous(self):
         # Given
@@ -3774,6 +3784,9 @@ class TestGrader(TestCase):
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(response.status_code, 200)
         self.assertIn("demo quiz is submitted for re-evaluation", messages[0])
+        self.assertEqual(Notification.objects.get_receiver_notifications(
+            self.user1.id
+            ).count(), 3)
 
     def test_regrade_denies_moderator_not_in_course(self):
         # Given
