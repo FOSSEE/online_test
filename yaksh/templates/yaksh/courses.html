@@ -41,8 +41,7 @@
             </div>
         {% else %}
             <hr>
-            <form name=frm action="" method="post">
-                {% csrf_token %}
+            <form name=frm action="" method="get">
                 <div class="card">
                     <div class="card-header">
                         <h3>Search/Filter Courses</h3>
@@ -57,9 +56,11 @@
                             </div>
                         </div>
                         <br>
-                        <button class="btn btn-success" type="submit">Search</button>
-                        <a class="btn btn-primary" href="{% url 'yaksh:courses' %}">
-                            Clear Search
+                        <button class="btn btn-outline-success" type="submit">
+                            <i class="fa fa-search"></i>&nbsp;Search
+                        </button>
+                        <a class="btn btn-outline-danger" href="{% url 'yaksh:courses' %}">
+                            <i class="fa fa-times"></i>&nbsp;Clear
                         </a>
                     </div>
                 </div>
