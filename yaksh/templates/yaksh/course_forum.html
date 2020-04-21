@@ -1,5 +1,6 @@
 {% extends "user.html" %}
 {% load humanize %}
+{% load static %}
 {% block title %}
     {{course.name}}: Discussion Forum
 {% endblock title %}
@@ -66,3 +67,6 @@
         </div>
     </div>
 {% endblock content %}
+{% block script %}
+      <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
+{% endblock script %}

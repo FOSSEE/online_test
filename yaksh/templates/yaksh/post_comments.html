@@ -1,4 +1,5 @@
 {% extends "user.html" %}
+{% load static %}
 {% load humanize %}
 {% block title %}
     {{post.title}}
@@ -21,7 +22,7 @@
 
             </div>
             <div class="card-body">
-                <p>{{post.description}}</p>
+                <div>{{post.description}}</div>
                 {% if post.image %}
                     <a href="{{post.image.url}}" target="_blank">
                         <img src="{{post.image.url}}" class="post_image" alt="">
@@ -40,7 +41,7 @@
                                 <img src="{{comment.image.url}}" class='comment_image'>
                             </a>
                         {% endif %}
-                        <p>{{comment.description}}</p>
+                        <div>{{comment.description}}</div>
                         <small class="pull-right">
                             by: <strong>{{comment.creator.username}} </strong>. {{comment.created_at|naturaltime}}
                             {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_comment" post.course.id comment.uid %}">Delete</a>{% endif %}
@@ -63,3 +64,6 @@
         </div>
     </div>
 {% endblock content %}
+{% block script %}
+      <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
+{% endblock script %}
