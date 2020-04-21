@@ -17,9 +17,9 @@ from string import punctuation, digits
 import pytz
 from .send_emails import generate_activation_key
 
-languages = (("select", "Select Language"),) + languages
+languages = (("", "Select Language"),) + languages
 
-question_types = (("select", "Select Question Type"),) + question_types
+question_types = (("", "Select Question Type"),) + question_types
 
 test_case_types = (
     ("standardtestcase", "Standard Testcase"),
@@ -344,25 +344,37 @@ class RandomQuestionForm(forms.Form):
 
 
 class QuestionFilterForm(forms.Form):
+
+    language = forms.ChoiceField(
+        choices=languages,
+        widget=forms.Select(attrs={'class': 'custom-select'}),
+        required=False
+        )
+    question_type = forms.ChoiceField(
+        choices=question_types,
+        widget=forms.Select(attrs={'class': 'custom-select'}),
+        required=False
+    )
+
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user")
+        lang = kwargs.pop("language") if "language" in kwargs else None
+        que_type = kwargs.pop("type") if "type" in kwargs else None
+        marks = kwargs.pop("marks") if "marks" in kwargs else None
         super(QuestionFilterForm, self).__init__(*args, **kwargs)
-        questions = Question.objects.filter(user_id=user.id)
-        points_list = questions.values_list('points', flat=True).distinct()
-        points_options = [(None, 'Select Marks')]
-        points_options.extend([(point, point) for point in points_list])
-        self.fields['marks'] = forms.FloatField(
-            widget=forms.Select(choices=points_options,
-                                attrs={'class': 'custom-select'})
+        points = Question.objects.filter(
+            user_id=user.id).values_list('points', flat=True).distinct()
+        points_options = [('', 'Select Marks')]
+        points_options.extend([(point, point) for point in points])
+        self.fields['marks'] = forms.ChoiceField(
+            choices=points_options,
+            widget=forms.Select(attrs={'class': 'custom-select'}),
+            required=False
         )
         self.fields['marks'].required = False
-    language = forms.CharField(
-        max_length=8, widget=forms.Select(choices=languages,
-                                          attrs={'class': 'custom-select'}))
-    question_type = forms.CharField(
-        max_length=8, widget=forms.Select(choices=question_types,
-                                          attrs={'class': 'custom-select'})
-    )
+        self.fields['language'].initial = lang
+        self.fields['question_type'].initial = que_type
+        self.fields['marks'].initial = marks
 
 
 class SearchFilterForm(forms.Form):
@@ -372,10 +384,17 @@ class SearchFilterForm(forms.Form):
                                       'class': form_input_class,}),
         required=False
         )
-    search_status = forms.CharField(max_length=16, widget=forms.Select(
+    search_status = forms.ChoiceField(
         choices=status_types,
-        attrs={'class': 'custom-select'}),
+        widget=forms.Select(attrs={'class': 'custom-select'})
         )
+
+    def __init__(self, *args, **kwargs):
+        status = kwargs.pop("status") if "status" in kwargs else None
+        tags = kwargs.pop("tags") if "tags" in kwargs else None
+        super(SearchFilterForm, self).__init__(*args, **kwargs)
+        self.fields["search_status"].initial = status
+        self.fields["search_tags"].initial = tags
 
 
 class CourseForm(forms.ModelForm):

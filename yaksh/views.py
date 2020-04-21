@@ -1073,21 +1073,20 @@ def courses(request):
         Q(creator=user) | Q(teachers=user),
         is_trial=False).order_by('-active').distinct()
 
-    form = SearchFilterForm()
+    tags = request.GET.get('search_tags')
+    status = request.GET.get('search_status')
 
-    if request.method == 'POST':
-        course_tags = request.POST.get('search_tags')
-        course_status = request.POST.get('search_status')
+    form = SearchFilterForm(tags=tags, status=status)
 
-        if course_status == 'select' :
-            courses = courses.filter(
-                name__contains=course_tags)
-        elif course_status == 'active' :
-            courses = courses.filter(
-                name__contains=course_tags, active=True)
-        elif course_status == 'closed':
-            courses = courses.filter(
-                name__contains=course_tags, active=False)
+    if status == 'select' and tags:
+        courses = courses.filter(
+            name__icontains=tags)
+    elif status == 'active':
+        courses = courses.filter(
+            name__icontains=tags, active=True)
+    elif status == 'closed':
+        courses = courses.filter(
+            name__icontains=tags, active=False)
 
     paginator = Paginator(courses, 30)
     page = request.GET.get('page')
@@ -1320,36 +1319,6 @@ def monitor(request, quiz_id=None, course_id=None):
     return my_render_to_response(request, 'yaksh/monitor.html', context)
 
 
-@csrf_exempt
-def ajax_questions_filter(request):
-    """Ajax call made when filtering displayed questions."""
-
-    user = request.user
-    filter_dict = {"user_id": user.id, "active": True}
-    question_type = request.POST.get('question_type')
-    marks = request.POST.get('marks')
-    language = request.POST.get('language')
-    if question_type:
-        filter_dict['type'] = str(question_type)
-
-    if marks:
-        filter_dict['points'] = marks
-
-    if language:
-        filter_dict['language'] = str(language)
-    questions = Question.objects.get_queryset().filter(
-                **filter_dict).order_by('id')
-    paginator = Paginator(questions, 30)
-    page = request.GET.get('page')
-    questions = paginator.get_page(page)
-    return my_render_to_response(
-        request, 'yaksh/ajax_question_filter.html', {
-            'questions': questions,
-            'objects': questions
-        }
-    )
-
-
 def _get_questions(user, question_type, marks):
     if question_type is None and marks is None:
         return None
@@ -1376,12 +1345,16 @@ def _remove_already_present(questionpaper_id, questions):
     return questions
 
 
-def _get_questions_from_tags(question_tags, user, active=True):
+def _get_questions_from_tags(question_tags, user, active=True, questions=None):
     search_tags = []
     for tags in question_tags:
         search_tags.extend(re.split('[; |, |\*|\n]', tags))
-    return Question.objects.filter(tags__name__in=search_tags,
-                                   user=user, active=active).distinct()
+    if questions:
+        search = questions.filter(tags__name__in=search_tags)
+    else:
+        search = Question.objects.get_queryset().filter(
+            tags__name__in=search_tags, user=user, active=active).distinct()
+    return search
 
 
 @login_required
@@ -1526,23 +1499,6 @@ def show_all_questions(request):
     if not is_moderator(user):
         raise Http404("You are not allowed to view this page !")
 
-    questions = Question.objects.get_queryset().filter(
-                user_id=user.id, active=True).order_by('id')
-    form = QuestionFilterForm(user=user)
-    user_tags = questions.values_list('tags', flat=True).distinct()
-    all_tags = Tag.objects.filter(id__in=user_tags)
-    upload_form = UploadFileForm()
-    paginator = Paginator(questions, 30)
-    page = request.GET.get('page')
-    questions = paginator.get_page(page)
-    context['questions'] = questions
-    context['objects'] = questions
-    context['all_tags'] = all_tags
-    context['papers'] = []
-    context['question'] = None
-    context['form'] = form
-    context['upload_form'] = upload_form
-
     if request.method == 'POST':
         if request.POST.get('delete') == 'delete':
             data = request.POST.getlist('question')
@@ -1567,7 +1523,7 @@ def show_all_questions(request):
                     questions = questions_file.read()
                     message = ques.load_questions(questions, user)
                 else:
-                    message = "Please Upload a ZIP file"
+                    message = "Please Upload a ZIP file or YAML file"
 
         if request.POST.get('download') == 'download':
             question_ids = request.POST.getlist('question')
@@ -1591,16 +1547,145 @@ def show_all_questions(request):
                     user, False, question_ids, None)
                 trial_paper.update_total_marks()
                 trial_paper.save()
-                return my_redirect("/exam/start/1/{0}/{1}/{2}".format(
-                    trial_module.id, trial_paper.id, trial_course.id))
+                return my_redirect(
+                    reverse("yaksh:start_quiz",
+                            args=[1, trial_module.id, trial_paper.id,
+                                  trial_course.id]
+                        )
+                    )
             else:
                 message = "Please select atleast one question to test"
 
-        if request.POST.get('question_tags'):
-            question_tags = request.POST.getlist("question_tags")
-            search_result = _get_questions_from_tags(question_tags, user)
-            context['questions'] = search_result
+    questions = Question.objects.get_queryset().filter(
+                user_id=user.id, active=True).order_by('-id')
+    form = QuestionFilterForm(user=user)
+    user_tags = questions.values_list('tags', flat=True).distinct()
+    all_tags = Tag.objects.filter(id__in=user_tags)
+    upload_form = UploadFileForm()
+    paginator = Paginator(questions, 30)
+    page = request.GET.get('page')
+    questions = paginator.get_page(page)
+    context['objects'] = questions
+    context['all_tags'] = all_tags
+    context['form'] = form
+    context['upload_form'] = upload_form
+
     messages.info(request, message)
+    return my_render_to_response(request, 'yaksh/showquestions.html', context)
+
+
+@login_required
+@email_verified
+def questions_filter(request):
+    """Filter questions by type, language or marks."""
+
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+
+    questions = Question.objects.get_queryset().filter(
+            user_id=user.id, active=True).order_by('-id')
+    user_tags = questions.values_list('tags', flat=True).distinct()
+    all_tags = Tag.objects.filter(id__in=user_tags)
+    upload_form = UploadFileForm()
+    filter_dict = {}
+    question_type = request.GET.get('question_type')
+    marks = request.GET.get('marks')
+    language = request.GET.get('language')
+    form = QuestionFilterForm(
+        user=user, language=language, marks=marks, type=question_type
+    )
+    if question_type:
+        filter_dict['type'] = str(question_type)
+    if marks:
+        filter_dict['points'] = marks
+    if language:
+        filter_dict['language'] = str(language)
+    questions = questions.filter(**filter_dict).order_by('-id')
+    paginator = Paginator(questions, 30)
+    page = request.GET.get('page')
+    questions = paginator.get_page(page)
+    context = {'form': form, 'upload_form': upload_form,
+               'all_tags': all_tags, 'objects': questions}
+    return my_render_to_response(
+        request, 'yaksh/showquestions.html', context
+    )
+
+
+@login_required
+@email_verified
+def delete_question(request, question_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404("You are not allowed to view this page !")
+
+    question = get_object_or_404(Question, pk=question_id)
+    question.active = False
+    question.save()
+    messages.success(request, "Deleted Question Successfully")
+
+    return my_redirect(reverse("yaksh:show_questions"))
+
+
+@login_required
+@email_verified
+def download_question(request, question_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404("You are not allowed to view this page !")
+
+    question = Question()
+    zip_file = question.dump_questions([question_id], user)
+    response = HttpResponse(content_type='application/zip')
+    response['Content-Disposition'] = dedent(
+        '''attachment; filename={0}_question.zip'''.format(user)
+    )
+    zip_file.seek(0)
+    response.write(zip_file.read())
+    return response
+
+
+@login_required
+@email_verified
+def test_question(request, question_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404("You are not allowed to view this page !")
+
+    trial_paper, trial_course, trial_module = test_mode(
+                    user, False, [question_id], None)
+    trial_paper.update_total_marks()
+    trial_paper.save()
+    return my_redirect(
+        reverse("yaksh:start_quiz",
+                args=[1, trial_module.id, trial_paper.id, trial_course.id]
+                )
+            )
+
+
+@login_required
+@email_verified
+def search_questions_by_tags(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404("You are not allowed to view this page !")
+
+    questions = Question.objects.get_queryset().filter(
+            user_id=user.id, active=True).order_by('-id')
+    form = QuestionFilterForm(user=user)
+    user_tags = questions.values_list('tags', flat=True).distinct()
+    all_tags = Tag.objects.filter(id__in=user_tags)
+    form = QuestionFilterForm(user=user)
+    upload_form = UploadFileForm()
+    question_tags = request.GET.getlist("question_tags")
+    questions = _get_questions_from_tags(
+        question_tags, user, questions=questions
+    )
+    paginator = Paginator(questions, 30)
+    page = request.GET.get('page')
+    questions = paginator.get_page(page)
+    context = {'form': form, 'upload_form': upload_form,
+               'all_tags': all_tags, 'objects': questions}
     return my_render_to_response(request, 'yaksh/showquestions.html', context)
 
 

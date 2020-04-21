@@ -47,7 +47,18 @@ function append_tag(tag){
         tag_name.value = tag.value;
     }
 }
-$(document).ready(function()
-    { 
-        $("#questions-table").tablesorter({sortList: [[0,0], [4,0]]});
+$(document).ready(function() {
+    $("#questions-table").tablesorter({});
+    $("#checkall").change(function(){
+        if($(this).prop("checked")) {
+                $("#filtered-questions input:checkbox").each(function(index, element) {
+                $(this).prop('checked', true);
+                });
+        }
+        else {
+                $("#filtered-questions input:checkbox").each(function(index, element) {
+                $(this).prop('checked', false);
+                });
+        }
     });
+});

@@ -2370,9 +2370,9 @@ class TestSearchFilters(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.post(
+        response = self.client.get(
             reverse('yaksh:courses'),
-            data={'course_tags': 'demo', 'course_status': 'active'}
+            data={'search_tags': 'demo', 'search_status': 'active'}
             )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/courses.html')
@@ -4412,6 +4412,7 @@ class TestShowQuestions(TestCase):
             points=2.0, language="python", type="code", user=self.user,
             active=True
             )
+        self.question.tags.add("question1")
         self.question1 = Question.objects.create(
             summary="Test_question2", description="Add two numbers",
             points=1.0, language="python", type="mcq", user=self.user,
@@ -4481,7 +4482,7 @@ class TestShowQuestions(TestCase):
             )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
-        self.assertEqual(response.context['questions'][0], self.question)
+        self.assertEqual(response.context['objects'][0], self.question1)
 
     def test_download_questions(self):
         """
@@ -4632,13 +4633,13 @@ class TestShowQuestions(TestCase):
                                             )
         trial_course = Course.objects.get(name="trial_course")
         trial_module = trial_course.learning_module.all()[0]
-        redirection_url = "/exam/start/1/{0}/{1}/{2}".format(
+        redirection_url = "/exam/start/1/{0}/{1}/{2}/".format(
             trial_module.id, trial_que_paper.id, trial_course.id
         )
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, redirection_url, target_status_code=301)
+        self.assertRedirects(response, redirection_url, target_status_code=200)
 
-    def test_ajax_questions_filter(self):
+    def test_questions_filter(self):
         """
             Check for filter questions based type, marks and
             language of a question
@@ -4647,15 +4648,15 @@ class TestShowQuestions(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.post(
+        response = self.client.get(
             reverse('yaksh:questions_filter'),
             data={'question_type': 'mcq',
                   'marks': '1.0', 'language': 'python'
                   }
             )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'yaksh/ajax_question_filter.html')
-        self.assertEqual(response.context['questions'][0], self.question1)
+        self.assertTemplateUsed(response, 'yaksh/showquestions.html')
+        self.assertEqual(response.context['objects'][0], self.question1)
 
     def test_download_question_yaml_template(self):
         """ Test to check download question yaml template """
@@ -4701,13 +4702,63 @@ class TestShowQuestions(TestCase):
             password=self.user_plaintext_pass
         )
         self.question.tags.add('code')
-        response = self.client.post(
-            reverse('yaksh:show_questions'),
-            data={'question_tags': ['code']}
+        response = self.client.get(
+                reverse('yaksh:search_questions_by_tags'),
+                data={'question_tags': ['question1']}
             )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/showquestions.html')
-        self.assertEqual(response.context['questions'][0], self.question)
+        self.assertEqual(response.context['objects'][0], self.question)
+
+    def test_single_question_attempt(self):
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:test_question', args=[self.question.id])
+            )
+        trial_que_paper = QuestionPaper.objects.get(
+                                            quiz__description="trial_questions"
+                                            )
+        trial_course = Course.objects.get(name="trial_course")
+        trial_module = trial_course.learning_module.all()[0]
+        redirection_url = "/exam/start/1/{0}/{1}/{2}/".format(
+            trial_module.id, trial_que_paper.id, trial_course.id
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, redirection_url, target_status_code=200)
+
+    def test_single_question_download(self):
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:download_question', args=[self.question.id])
+            )
+        file_name = "{0}_question.zip".format(self.user)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-Disposition'),
+                         "attachment; filename={0}".format(file_name))
+        zip_file = string_io(response.content)
+        zipped_file = zipfile.ZipFile(zip_file, 'r')
+        self.assertIsNone(zipped_file.testzip())
+        self.assertIn('questions_dump.yaml', zipped_file.namelist())
+        zip_file.close()
+        zipped_file.close()
+
+    def test_single_question_delete(self):
+        self.client.login(
+            username=self.user.username,
+            password=self.user_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:delete_question', args=[self.question.id])
+            )
+        self.assertEqual(response.status_code, 302)
+        updated_que = Question.objects.get(id=self.question.id)
+        self.assertFalse(updated_que.active)
 
 
 class TestShowStatistics(TestCase):
