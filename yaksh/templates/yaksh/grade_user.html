@@ -87,16 +87,17 @@ $(document).ready(function()
   <div class="row">
     {% if status == "grade" %}
       {% if users %}
-        <div id="student" class="col-md-3">
-          <ul class="nav nav-pills list-group">
-            {% for user in users %}
-              <li class="nav-item">
-                <a href="{% url 'yaksh:grade_user' quiz_id user.user__id course_id %}" class="list-group-item{% if user.user__id == data.user.id %} active {% endif %}">
-                  {{user.user__first_name}} {{user.user__last_name}}
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
+        <div id="student" class="col-lg-3">
+          <div class="students-list">
+            <select onchange="window.location.href=this.value" class="custom-select">
+              <option value="">Select student</option>
+              {% for user in users %}
+                 <option value="{% url 'yaksh:grade_user' quiz_id user.user__id course_id %}" {% if user.user__id == data.user.id %} selected {% endif %}>
+                   {{user.user__first_name|upper}} {{user.user__last_name|upper}}
+                 </option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
       {% else %}
         <div class="col-md-1"></div>
@@ -110,7 +111,8 @@ $(document).ready(function()
       {% endif %}
     {% endif %}
 
-    <div id="paper" class="col-md-9">
+    <div id="paper" class="col-lg-9">
+      <hr>
       {% if has_quiz_assignments %}
         <a href="{% url 'yaksh:download_quiz_assignment' quiz_id course_id %}" class="btn btn-outline-info">
           <i class="fa fa-download"></i>&nbsp;Download All Assignments
