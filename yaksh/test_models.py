@@ -2320,3 +2320,47 @@ class PostModelTestCases(unittest.TestCase):
         self.user3.delete()
         self.course.delete()
         self.post1.delete()
+
+
+class CommentModelTestCases(unittest.TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create(
+            username='bart',
+            password='bart',
+            email='bart@test.com'
+        )
+        Profile.objects.create(
+            user=self.user1,
+            roll_number=1,
+            institute='IIT',
+            department='Chemical',
+            position='Student'
+        )
+        self.course = Course.objects.create(
+            name='Python Course',
+            enrollment='Enroll Request',
+            creator=self.user1
+        )
+        self.post1 = Post.objects.create(
+            title='Post 1',
+            course=self.course,
+            creator=self.user1,
+            description='Post 1 description'
+        )
+        self.comment1 = Comment.objects.create(
+            post_field=self.post1,
+            creator=self.user1,
+            description='Post 1 comment 1'
+        )
+
+    def test__str__(self):
+        self.assertEquals(
+            str(self.comment1.post_field.title),
+            self.comment1.post_field.title
+    )
+
+    def tearDown(self):
+        self.user1.delete()
+        self.course.delete()
+        self.post1.delete()
+        self.comment1.delete()

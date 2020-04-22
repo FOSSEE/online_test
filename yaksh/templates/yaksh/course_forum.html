@@ -73,7 +73,7 @@
                             </td>
                             <td>
                                 {% if user.profile.is_moderator %}
-                                    <small><a href="{% url "yaksh:hide_post" course.id post.uid %}" class="pull-right">Delete</i></a></small>
+                                    <small><a href="{% url "yaksh:hide_post" course.id post.uid %}" class="pull-right btn btn-danger">Delete</i></a></small>
                                 {% endif %}
                             </td>
                         </tr>

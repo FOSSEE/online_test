@@ -17,7 +17,7 @@
                 <small>
                     <strong>{{post.creator.username}}</strong>
                     {{post.created_at|naturaltime}}
-                    {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_post" post.course.id post.uid %}" class="pull-right">Delete</a>{% endif %}
+                    {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_post" post.course.id post.uid %}" class="pull-right btn btn-danger">Delete</a>{% endif %}
                 </small>
 
             </div>
@@ -44,7 +44,7 @@
                         <div>{{comment.description}}</div>
                         <small class="pull-right">
                             by: <strong>{{comment.creator.username}} </strong>. {{comment.created_at|naturaltime}}
-                            {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_comment" post.course.id comment.uid %}">Delete</a>{% endif %}
+                            {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_comment" post.course.id comment.uid %}" class="btn btn-danger">Delete</a>{% endif %}
                         </small>
                     </div>
                 {% endfor %}
