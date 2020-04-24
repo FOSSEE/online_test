@@ -114,3 +114,7 @@ body, .dropdown-menu {
     width: 50%;
     height: 50%;
 }
+
+.description {
+    font-size: 16px;
+}
