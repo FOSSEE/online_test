@@ -14,7 +14,7 @@
             <div class="card-header text-white bg-dark py-2 px-3">
                 {{post.title}}
                 <br>
-                <small class="">
+                <small>
                     <strong>{{post.creator.username}}</strong>
                     {{post.created_at|naturaltime}}
                     {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_post" post.course.id post.uid %}" class="pull-right btn btn-danger">Delete</a>{% endif %}
@@ -22,7 +22,7 @@
 
             </div>
             <div class="card-body">
-                <p class="description">{{post.description}}</p>
+                <p class="card-text description">{{post.description}}</p>
                 {% if post.image %}
                     <a href="{{post.image.url}}" target="_blank">
                         <center><img src="{{post.image.url}}" class="post_image thumbnail" alt=""></center>
@@ -43,7 +43,7 @@
                                 <small class="text-muted">{{comment.created_at}} {% if user.profile.is_moderator %} <a href="{% url "yaksh:hide_comment" post.course.id comment.uid %}" class="btn btn-danger">Delete</a>{% endif %}</small>
                             </div>
                         </div>
-                        <p class="description">{{comment.description}}</p>
+                        <p class="card-text description">{{comment.description}}</p>
                         <div>
                             {% if comment.image %}
                                 <a href="{{comment.image.url}}" target="_blank">
