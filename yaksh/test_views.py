@@ -6740,10 +6740,10 @@ class TestPostComment(TestCase):
 
     def test_hide_post_comment(self):
         self.client.login(
-            username=self.student.username,
-            password=self.student_plaintext_pass
+            username=self.user.username,
+            password=self.user_plaintext_pass
         )
-        self.course.students.add(self.student)
+        self.course.students.add(self.user)
         comment = Comment.objects.create(
             post_field=self.post,
             description='post 1 comment',

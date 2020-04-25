@@ -1,13 +1,12 @@
-{% extends "user.html" %}
+{% extends base_template %}
 {% load static %}
-{% load humanize %}
 {% block title %}
     {{post.title}}
 {% endblock title %}
 
 {% block content %}
     <div class="container">
-        <a class="btn btn-primary" href="{% url "yaksh:course_forum" post.course.id %}">Back to Posts</a>
+        <a class="btn btn-primary" href="{% url 'yaksh:course_forum' post.course.id %}">Back to Posts</a>
         <br>
         <br>
         <div class="card mb-2 border-dark">
@@ -16,8 +15,8 @@
                 <br>
                 <small>
                     <strong>{{post.creator.username}}</strong>
-                    {{post.created_at|naturaltime}}
-                    {% if user.profile.is_moderator %}<a href="{% url "yaksh:hide_post" post.course.id post.uid %}" class="pull-right btn btn-danger">Delete</a>{% endif %}
+                    {{post.created_at}}
+                    {% if user.profile.is_moderator %}<a href="{% url 'yaksh:hide_post' post.course.id post.uid %}" class="pull-right btn btn-danger">Delete</a>{% endif %}
                 </small>
 
             </div>
@@ -40,7 +39,7 @@
                                 <strong class="text-muted">{{comment.creator.username}}</strong>
                             </div>
                             <div class="col-6 text-right">
-                                <small class="text-muted">{{comment.created_at}} {% if user.profile.is_moderator %} <a href="{% url "yaksh:hide_comment" post.course.id comment.uid %}" class="btn btn-danger">Delete</a>{% endif %}</small>
+                                <small class="text-muted">{{comment.created_at}} {% if user.profile.is_moderator %} <a href="{% url 'yaksh:hide_comment' post.course.id comment.uid %}" class="btn btn-danger">Delete</a>{% endif %}</small>
                             </div>
                         </div>
                         <p class="card-text description">{{comment.description}}</p>
@@ -57,7 +56,7 @@
         {% endif %}
         <br>
         <div>
-            <form action="{% url "yaksh:post_comments" post.course.id post.uid %}" method="POST" enctype='multipart/form-data'>
+            <form action="{% url 'yaksh:post_comments' post.course.id post.uid %}" method="POST" enctype='multipart/form-data'>
                 <div class="form-group">
                     {% csrf_token %}
                     {{form}}
