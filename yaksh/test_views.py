@@ -6516,15 +6516,15 @@ class TestPost(TestCase):
 
     def test_hide_post(self):
         self.client.login(
-            username=self.student.username,
-            password=self.student_plaintext_pass
+            username=self.user.username,
+            password=self.user_plaintext_pass
         )
-        self.course.students.add(self.student)
+        self.course.students.add(self.user)
         post = Post.objects.create(
             title='post 1',
             description='post 1 description',
             course=self.course,
-            creator=self.student
+            creator=self.user
         )
         url = reverse('yaksh:hide_post', kwargs={
             'course_id': self.course.id,
