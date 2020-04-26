@@ -60,7 +60,7 @@
         <br>
         <br>
         {% if posts %}
-            <table class="table">
+            <table id="posts_table" class="tablesorter table">
                 <thead class="thread-inverse">
                     <tr>
                         <th width="700">Questions</th>
@@ -106,4 +106,10 @@
 {% endblock content %}
 {% block script %}
       <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
+      <script type="text/javascript" src="{% static 'yaksh/js/jquery.tablesorter.min.js' %}"></script>
+      <script type="text/javascript">
+        $(document).ready(() => {
+            $("#posts_table").tablesorter();
+        });
+      </script>
 {% endblock script %}
