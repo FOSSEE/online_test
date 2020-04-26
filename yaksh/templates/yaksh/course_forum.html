@@ -9,13 +9,27 @@
             <h2><center>{{course.name}}</center></h2>
             <center>Discussion Forum</center>
         </div>
-        {% if moderator %}
-            <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">Back to Course</a>
-        {% else %}
-            <a href="{% url 'yaksh:course_modules' course.id %}" class="btn btn-primary">Back to Course</a>
-        {% endif %}
-            <div class="pull-right">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newPostModal">New Post</button>
+        <div class="d-flex p-2 bd-highlight">
+            <div class="col-md-4">
+                {% if moderator %}
+                    <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">Back to Course</a>
+                {% else %}
+                    <a href="{% url 'yaksh:course_modules' course.id %}" class="btn btn-primary">Back to Course</a>
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                <form class="my-2 my-lg-0" action="" method="GET">
+                    <div class="input-group">
+                        <input type="search" placeholder="Search" name="search" class="form-control">
+                        <span class="input-group-append">
+                            <button class="btn btn-outline-info" type="submit"><i class="fa fa-search"></i>&nbsp;Search</button>
+                        </span>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#newPostModal">New Post</button>
+            </div>
         </div>
         <!-- Modal -->
         <div id="newPostModal" class="modal fade" role="dialog">

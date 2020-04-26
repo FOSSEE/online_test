@@ -3206,8 +3206,11 @@ def course_forum(request, course_id):
     if (not course.is_creator(user) and not course.is_teacher(user)
             and not course.is_student(user)):
         raise Http404('You are not enrolled in {0} course'.format(course.name))
-    sort = request.GET.get('desc')
-    posts = course.post.filter(active=True).order_by('-modified_at')
+    if 'search' in request.GET:
+        search_term = request.GET['search']
+        posts = course.post.filter(active=True, title__icontains=search_term)
+    else:
+        posts = course.post.filter(active=True).order_by('-modified_at')
     paginator = Paginator(posts, 10)
     page = request.GET.get('page')
     posts = paginator.get_page(page)
