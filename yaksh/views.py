@@ -1,6 +1,6 @@
 import os
 import csv
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template import Context, Template
@@ -37,14 +37,14 @@ from yaksh.models import (
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
-    LearningUnit, LearningModule, CourseStatus, question_types
+    LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
     QuestionFilterForm, CourseForm, ProfileForm,
     UploadFileForm, FileForm, QuestionPaperForm, LessonForm,
     LessonFileForm, LearningModuleForm, ExerciseForm, TestcaseForm,
-    SearchFilterForm
+    SearchFilterForm, PostForm, CommentForm
 )
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .settings import URL_ROOT
@@ -3276,3 +3276,106 @@ def download_course_progress(request, course_id):
     for student in stud_details:
         writer.writerow(student)
     return response
+
+
+@login_required
+@email_verified
+def course_forum(request, course_id):
+    user = request.user
+    base_template = 'user.html'
+    moderator = False
+    if is_moderator(user):
+        base_template = 'manage.html'
+        moderator = True
+    course = get_object_or_404(Course, id=course_id)
+    if (not course.is_creator(user) and not course.is_teacher(user)
+            and not course.is_student(user)):
+        raise Http404('You are not enrolled in {0} course'.format(course.name))
+    if 'search' in request.GET:
+        search_term = request.GET['search']
+        posts = course.post.filter(active=True, title__icontains=search_term)
+    else:
+        posts = course.post.filter(active=True).order_by('-modified_at')
+    paginator = Paginator(posts, 10)
+    page = request.GET.get('page')
+    posts = paginator.get_page(page)
+    if request.method == "POST":
+        form = PostForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_post = form.save(commit=False)
+            new_post.creator = user
+            new_post.course = course
+            new_post.save()
+            return redirect('yaksh:post_comments',
+                            course_id=course.id, uuid=new_post.uid)
+    else:
+        form = PostForm()
+    return render(request, 'yaksh/course_forum.html', {
+        'user': user,
+        'course': course,
+        'base_template': base_template,
+        'posts': posts,
+        'moderator': moderator,
+        'objects': posts,
+        'form': form,
+        'user': user
+        })
+
+
+@login_required
+@email_verified
+def post_comments(request, course_id, uuid):
+    user = request.user
+    base_template = 'user.html'
+    if is_moderator(user):
+        base_template = 'manage.html'
+    post = get_object_or_404(Post, uid=uuid)
+    comments = post.comment.filter(active=True)
+    course = get_object_or_404(Course, id=course_id)
+    if (not course.is_creator(user) and not course.is_teacher(user)
+            and not course.is_student(user)):
+        raise Http404('You are not enrolled in {0} course'.format(course.name))
+    form = CommentForm()
+    if request.method == "POST":
+        form = CommentForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_comment = form.save(commit=False)
+            new_comment.creator = request.user
+            new_comment.post_field = post
+            new_comment.save()
+            return redirect(request.path_info)
+    return render(request, 'yaksh/post_comments.html', {
+        'post': post,
+        'comments': comments,
+        'base_template': base_template,
+        'form': form,
+        'user': user
+        })
+
+
+@login_required
+@email_verified
+def hide_post(request, course_id, uuid):
+    user = request.user
+    course = get_object_or_404(Course, id=course_id)
+    if (not course.is_creator(user) and not course.is_teacher(user)):
+        raise Http404('You are not enrolled in {0} course'.format(course.name))
+    post = get_object_or_404(Post, uid=uuid)
+    post.comment.active = False
+    post.active = False
+    post.save()
+    return redirect('yaksh:course_forum', course_id)
+
+
+@login_required
+@email_verified
+def hide_comment(request, course_id, uuid):
+    user = request.user
+    course = get_object_or_404(Course, id=course_id)
+    if (not course.is_creator(user) and not course.is_teacher(user)):
+        raise Http404('You are not enrolled in {0} course'.format(course.name))
+    comment = get_object_or_404(Comment, uid=uuid)
+    post_uid = comment.post_field.uid
+    comment.active = False
+    comment.save()
+    return redirect('yaksh:post_comments', course_id, post_uid)
