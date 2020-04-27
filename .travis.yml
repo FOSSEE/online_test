@@ -21,6 +21,7 @@ install:
 
 before_script:
   - python manage.py makemigrations notifications_plugin
+  - python manage.py makemigrations
   - python manage.py migrate auth
   - python manage.py migrate
 

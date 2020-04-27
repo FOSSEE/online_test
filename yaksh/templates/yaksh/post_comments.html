@@ -1,0 +1,71 @@
+{% extends base_template %}
+{% load static %}
+{% block title %}
+    {{post.title}}
+{% endblock title %}
+
+{% block content %}
+    <div class="container">
+        <a class="btn btn-primary" href="{% url 'yaksh:course_forum' post.course.id %}">Back to Posts</a>
+        <br>
+        <br>
+        <div class="card mb-2 border-dark">
+            <div class="card-header text-white bg-dark py-2 px-3">
+                {{post.title}}
+                <br>
+                <small>
+                    <strong>{{post.creator.username}}</strong>
+                    {{post.created_at}}
+                    {% if user.profile.is_moderator %}<a href="{% url 'yaksh:hide_post' post.course.id post.uid %}" class="pull-right btn btn-danger">Delete</a>{% endif %}
+                </small>
+
+            </div>
+            <div class="card-body">
+                <p class="card-text description">{{post.description}}</p>
+                {% if post.image %}
+                    <a href="{{post.image.url}}" target="_blank">
+                        <center><img src="{{post.image.url}}" class="post_image thumbnail" alt=""></center>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <br>
+        {% if comments %}
+            {% for comment in comments %}
+                <div class="card mb-2">
+                    <div class="card-body p-3">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong class="text-muted">{{comment.creator.username}}</strong>
+                            </div>
+                            <div class="col-6 text-right">
+                                <small class="text-muted">{{comment.created_at}} {% if user.profile.is_moderator %} <a href="{% url 'yaksh:hide_comment' post.course.id comment.uid %}" class="btn btn-danger">Delete</a>{% endif %}</small>
+                            </div>
+                        </div>
+                        <p class="card-text description">{{comment.description}}</p>
+                        <div>
+                            {% if comment.image %}
+                                <a href="{{comment.image.url}}" target="_blank">
+                                    <center><img src="{{comment.image.url}}" class="comment_image thumbnail" alt=""></center>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+        <br>
+        <div>
+            <form action="{% url 'yaksh:post_comments' post.course.id post.uid %}" method="POST" enctype='multipart/form-data'>
+                <div class="form-group">
+                    {% csrf_token %}
+                    {{form}}
+                </div>
+                <input type="submit" value="Submit" class="btn btn-primary">
+            </form>
+        </div>
+    </div>
+{% endblock content %}
+{% block script %}
+      <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
+{% endblock script %}

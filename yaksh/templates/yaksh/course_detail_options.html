@@ -30,6 +30,11 @@
         </a>
     </li>
     <li class="nav-item">
+        <a href="{% url 'yaksh:course_forum' course.id %}" class="nav-link list-group-item" title="Discussion forum of this course" data-placement="top" data-toggle="tooltip">
+            Discussion Forum
+        </a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link list-group-item {% if is_add_teacher %} active {% endif %}" href="{% url 'yaksh:search_teacher' course.id %}" data-toggle="tooltip" title="Add Teachers/TAs to this course" data-placement="top">
         Add Teachers/TAs
         </a>
