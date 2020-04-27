@@ -104,3 +104,25 @@ body, .dropdown-menu {
     position: fixed !important;
   }
 }
+
+/* ---------------------------------------------------
+    FORUM STYLE
+----------------------------------------------------- */
+
+.brown-light {
+    background: #f4a460;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+}
+
+.post_image, .comment_image {
+    width: 50%;
+    height: 50%;
+}
+
+.description {
+    font-size: 16px;
+}
+>>>>>>> 53a0c4ad3e733f3960000527f83565f2fd8fc412

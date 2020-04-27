@@ -1,0 +1,115 @@
+{% extends base_template %}
+{% load static %}
+{% block title %}
+    {{course.name}}: Discussion Forum
+{% endblock title %}
+{% block content %}
+    <div class="container">
+        <div>
+            <h2><center>{{course.name}}</center></h2>
+            <center>Discussion Forum</center>
+        </div>
+        <div class="d-flex p-2 bd-highlight">
+            <div class="col-md-4">
+                {% if moderator %}
+                    <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">Back to Course</a>
+                {% else %}
+                    <a href="{% url 'yaksh:course_modules' course.id %}" class="btn btn-primary">Back to Course</a>
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                <form class="my-2 my-lg-0" action="" method="GET">
+                    <div class="input-group">
+                        <input type="search" placeholder="Search" name="search" class="form-control">
+                        <span class="input-group-append">
+                            <button class="btn btn-outline-info" type="submit"><i class="fa fa-search"></i>&nbsp;Search</button>
+                        </span>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#newPostModal">New Post</button>
+            </div>
+        </div>
+        <!-- Modal -->
+        <div id="newPostModal" class="modal fade" role="dialog">
+          <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Create a new Post</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form action="." method="POST" enctype='multipart/form-data'>
+                    <div class="form-group">
+                        {% csrf_token %}
+                        {{form}}
+                    </div>
+                    <input type="submit" class="btn btn-primary" value="Create Post">
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+        <br>
+        <br>
+        {% if posts %}
+            <table id="posts_table" class="tablesorter table">
+                <thead class="thread-inverse">
+                    <tr>
+                        <th width="700">Questions</th>
+                        <th>Created by</th>
+                        <th>Replies</th>
+                        <th>Last reply</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in posts %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'yaksh:post_comments' course.id post.uid %}">{{post.title}}</a>
+                                <small class="text-muted d-block">{{ post.description|truncatewords:30 }}</small>
+                                <small class="text-muted"><strong>Last updated: {{post.modified_at}}</strong></small>
+                            </td>
+                            <td>{{post.creator.username}}</td>
+                            <td>{{post.get_comments_count}}</td>
+                            <td>
+                                {% with post.get_last_comment as last_comment %}
+                                    {% if last_comment %}
+                                        {{last_comment.creator}}
+                                    {% else %}
+                                        None
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td>
+                                {% if user.profile.is_moderator %}
+                                    <small><a href="{% url 'yaksh:hide_post' course.id post.uid %}" class="pull-right btn btn-danger">Delete</i></a></small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            No discussion posts are there yet. Create one to start discussing.
+        {% endif %}
+        {% include "yaksh/paginator.html" %}
+    </div>
+{% endblock content %}
+{% block script %}
+      <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
+      <script type="text/javascript" src="{% static 'yaksh/js/jquery.tablesorter.min.js' %}"></script>
+      <script type="text/javascript">
+        $(document).ready(() => {
+            $("#posts_table").tablesorter();
+        });
+      </script>
+{% endblock script %}

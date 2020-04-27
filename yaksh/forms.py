@@ -1,7 +1,7 @@
 from django import forms
 from yaksh.models import (
     get_model_class, Profile, Quiz, Question, Course, QuestionPaper, Lesson,
-    LearningModule, TestCase, languages, question_types
+    LearningModule, TestCase, languages, question_types, Post, Comment
 )
 from grades.models import GradingSystem
 from django.contrib.auth import authenticate
@@ -32,7 +32,7 @@ test_case_types = (
 )
 
 status_types = (
-    ('select','Select Status'),
+    ('select', 'Select Status'),
     ('active', 'Active'),
     ('closed', 'Inactive'),
     )
@@ -381,7 +381,7 @@ class SearchFilterForm(forms.Form):
     search_tags = forms.CharField(
         label='Search Tags',
         widget=forms.TextInput(attrs={'placeholder': 'Search',
-                                      'class': form_input_class,}),
+                                      'class': form_input_class, }),
         required=False
         )
     search_status = forms.ChoiceField(
@@ -571,3 +571,44 @@ class TestcaseForm(forms.ModelForm):
     class Meta:
         model = TestCase
         fields = ["type"]
+
+
+class PostForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = ["title", "description", "image"]
+        widgets = {
+            'title': forms.TextInput(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+            'description': forms.Textarea(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+            'image': forms.FileInput(
+                attrs={
+                    'class': 'form-control-file'
+                }
+            )
+        }
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ["description", "image"]
+        widgets = {
+            'description': forms.Textarea(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+            'image': forms.FileInput(
+                attrs={
+                    'class': 'form-control-file'
+                }
+            )
+        }
