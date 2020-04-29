@@ -12,6 +12,8 @@
   <script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
   <script type="text/javascript" src="{% static 'yaksh/js/add_question.js' %}"></script>
   <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
+  <script type="text/javascript" src="{% static 'yaksh/js/tccreator/generate_code.js' %}"></script>
+  <script type="text/javascript" src="{% static 'yaksh/js/tccreator/manage.js' %}"></script>
 {% endblock %}
 
 {% block onload %} onload='javascript:textareaformat();' {% endblock %}
@@ -153,6 +155,13 @@
                 <div id="collapse{{form.instance.id}}" class="collapse {% if formset.extra == 1 %} show {% else %} hide {% endif %}" data-parent="#accordion">
                   <div class="card-body">
                     {% autoescape off %}
+                    {% with l=question.language %}
+                    {% if l == 'c' or l == 'cpp' or l == 'java' or l == 'scilab' or l == 'r' %}
+                        {% if form.type.value == 'standardtestcase'%}
+                             <span id="myBtn" class="btn btn-primary" onclick="show_modal('myModal', '{{ form.test_case.id_for_label }}');">Click Here To Add Test Cases Easily</span>
+                        {% endif %}
+                    {% endif %}
+                    {% endwith %}
                       {{form.as_p}}
                     {% endautoescape %}
                   </div>
@@ -171,6 +180,7 @@
       </button>
     </center>
   </form>
+  {% include 'yaksh/add_testcases_easy.html' %}
 </div>
 
 {% endblock %}

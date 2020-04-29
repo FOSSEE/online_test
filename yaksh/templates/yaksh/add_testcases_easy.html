@@ -1,0 +1,56 @@
+<div id="myModal" class="modal"  tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Generate the testcase file content</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true" onclick="close_modal('myModal');">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+        <input id="ta-id-info" type="text" hidden>
+        <form id="tc_form">
+        <div class="form-row">
+            <div class="col">
+                <label for="languages" >Language:</label>
+                <select class="form-control" id="languages" name="languages" readonly>
+                    {% if question.language == 'c' %}
+                        <option value="C" selected>C</option>
+                    {% elif question.language == 'cpp' %}
+                        <option value="C++" selected>C++</option>
+                    {% elif question.language == 'java' %}
+                        <option value="Java" selected>Java</option>
+                    {% elif question.language == 'r' %}
+                        <option value="R" selected>R</option>
+                    {% elif question.language == 'scilab' %}
+                        <option value="Scilab" selected>Scilab</option>
+                    {% endif %}
+                </select>
+            </div>
+            <div class="col">
+                <label for="function_name" >Function name:</label>
+                <input class="form-control" type="text" id="function_name" name="function_name" required>
+                <b>Do not put parentheses</b>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="no_of_input">Number of inputs to the function:</label>
+            <input class="form-control" type="number" id="no_of_input" name="no_of_input" value=0 step=1 required onchange="addCon(this.value);">
+        </div>
+            <div id="types" class="form-row">
+            </div>
+            <div id="testcases">
+            </div>
+        </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+            <h3><p id="guide"  hidden> * To add String as input/ouptut use double quotes and single quotes for char </p></h3>
+            <button id="addtc" class="btn btn-primary" onclick="addtestcase();" hidden>Add TestCase</button>
+            <button id="reset" class="btn btn-warning" onclick="addCon(0);" hidden> Remove TestCases </button>
+            <button id="generate" class="btn btn-success" onclick="create_file_content();" hidden>Generate</button>
+      </div>
+    </div>
+  </div>
+</div>
