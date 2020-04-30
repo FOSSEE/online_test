@@ -26,22 +26,10 @@
                         Add/Edit Course
                     </a>
                 </li>
-                <li class="nav-item dropdown hide">
-                    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="true">More</a>
-                    <div class="dropdown-menu hide" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 37px, 0px); top: 0px; left: 0px; will-change: transform;">
-                    <a class="dropdown-item" href="{% url 'yaksh:show_all_quizzes' %}">
-                        View Quizzes
+                <li class="nav-item">
+                    <a href="{% url 'grades:grading_systems'%}" class="nav-link" >
+                        Add/View Grading Systems
                     </a>
-                    <a class="dropdown-item" href="{% url 'yaksh:show_all_lessons' %}">
-                        View Lessons
-                    </a>
-                    <a class="dropdown-item" href="{% url 'yaksh:show_all_modules' %}">
-                        View Modules
-                    </a>
-                    <a href="{% url 'grades:grading_systems'%}" class="dropdown-item" >
-                        View Grading Systems
-                    </a>
-                </div>
                 </li>
             </ul>
         </div>

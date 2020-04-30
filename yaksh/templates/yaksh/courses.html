@@ -8,14 +8,6 @@
 </script>
 {% endblock %}
 
-{% block css %}
-<style>
-    .test + .tooltip.top > .tooltip-inner {
-      padding: 15px;
-      font-size: 12px;
-    }
-</style>
-{% endblock %}
 {% block content %}
 <div class="container-fluid">
     <div class="container">
@@ -32,22 +24,10 @@
                             Add/Edit Course
                         </a>
                     </li>
-                    <li class="nav-item dropdown hide">
-                        <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="true">More</a>
-                        <div class="dropdown-menu hide" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 37px, 0px); top: 0px; left: 0px; will-change: transform;">
-                        <a class="dropdown-item" href="{% url 'yaksh:show_all_quizzes' %}">
-                            Add/View Quizzes
-                        </a>
-                        <a class="dropdown-item" href="{% url 'yaksh:show_all_lessons' %}">
-                            Add/View Lessons
-                        </a>
-                        <a class="dropdown-item" href="{% url 'yaksh:show_all_modules' %}">
-                            Add/View Modules
-                        </a>
-                        <a href="{% url 'grades:grading_systems'%}" class="dropdown-item" >
+                    <li class="nav-item">
+                        <a href="{% url 'grades:grading_systems'%}" class="nav-link" >
                             Add/View Grading Systems
                         </a>
-                    </div>
                     </li>
                 </ul>
             </div>
@@ -61,8 +41,7 @@
             </div>
         {% else %}
             <hr>
-            <form name=frm action="" method="post">
-                {% csrf_token %}
+            <form name=frm action="" method="get">
                 <div class="card">
                     <div class="card-header">
                         <h3>Search/Filter Courses</h3>
@@ -77,9 +56,11 @@
                             </div>
                         </div>
                         <br>
-                        <button class="btn btn-success" type="submit">Search</button>
-                        <a class="btn btn-primary" href="{% url 'yaksh:courses' %}">
-                            Clear Search
+                        <button class="btn btn-outline-success" type="submit">
+                            <i class="fa fa-search"></i>&nbsp;Search
+                        </button>
+                        <a class="btn btn-outline-danger" href="{% url 'yaksh:courses' %}">
+                            <i class="fa fa-times"></i>&nbsp;Clear
                         </a>
                     </div>
                 </div>

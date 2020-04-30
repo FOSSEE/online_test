@@ -1,5 +1,6 @@
 from __future__ import unicode_literals, division
 from datetime import datetime, timedelta
+import uuid
 import json
 import random
 import ruamel.yaml
@@ -10,6 +11,7 @@ from collections import Counter, defaultdict
 
 from django.db import models
 from django.contrib.auth.models import User, Group, Permission
+from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
 from django.utils import timezone
@@ -230,6 +232,19 @@ def render_template(template_path, data=None):
         context = Context(data)
         render = template.render(context)
     return render
+
+
+def validate_image(image):
+    file_size = image.file.size
+    limit_mb = 30
+    if file_size > limit_mb * 1024 * 1024:
+        raise ValidationError("Max size of file is {0} MB".format(limit_mb))
+
+
+def get_image_dir(instance, filename):
+    return os.sep.join((
+        'post_%s' % (instance.uid), filename
+    ))
 
 
 ###############################################################################
@@ -841,6 +856,15 @@ class LearningModule(models.Model):
         write_templates_to_zip(zip_file, module_file_path, module_data,
                                module_name, folder_name)
 
+    def get_unit_order(self, type, unit):
+        if type == "lesson":
+            order = self.get_learning_units().get(
+                type=type, lesson=unit).order
+        else:
+            order = self.get_learning_units().get(
+                type=type, quiz=unit).order
+        return order
+
     def __str__(self):
         return self.name
 
@@ -1153,7 +1177,9 @@ class CourseStatus(models.Model):
         if self.is_course_complete():
             self.calculate_percentage()
             if self.course.grading_system is None:
-                grading_system = GradingSystem.objects.get(name__contains='default')
+                grading_system = GradingSystem.objects.get(
+                    name__contains='default'
+                )
             else:
                 grading_system = self.course.grading_system
             grade = grading_system.get_grade(self.percentage)
@@ -1376,7 +1402,7 @@ class Question(models.Model):
                 testcases.append(case.get_field_value())
             q_dict['testcase'] = testcases
             q_dict['files'] = file_names
-            q_dict['tags'] = [tags.tag.name for tags in q_dict['tags']]
+            q_dict['tags'] = [tag.name for tag in q_dict['tags']]
             questions_dict.append(q_dict)
         question._add_yaml_to_zip(zip_file, questions_dict)
         return zip_file_name
@@ -2637,4 +2663,38 @@ class TestCaseOrder(models.Model):
     # Order of the test case for a question.
     order = models.TextField()
 
+
 ##############################################################################
+class ForumBase(models.Model):
+    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    image = models.ImageField(upload_to=get_image_dir, blank=True,
+                              null=True, validators=[validate_image])
+    active = models.BooleanField(default=True)
+
+
+class Post(ForumBase):
+    title = models.CharField(max_length=200)
+    course = models.ForeignKey(Course,
+                               on_delete=models.CASCADE, related_name='post')
+
+    def __str__(self):
+        return self.title
+
+    def get_last_comment(self):
+        return self.comment.last()
+
+    def get_comments_count(self):
+        return self.comment.filter(active=True).count()
+
+
+class Comment(ForumBase):
+    post_field = models.ForeignKey(Post, on_delete=models.CASCADE,
+                                   related_name='comment')
+
+    def __str__(self):
+        return 'Comment by {0}: {1}'.format(self.creator.username,
+                                            self.post_field.title)

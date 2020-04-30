@@ -74,18 +74,6 @@
           </div>
         </td>
       </tr>
-      {% if question %}
-        <tr><td>Add Test Case:</td>
-          <td>
-          <select id="case_type" class="form-control" name="case_type" onchange="frm.submit()">
-            <option value="" selected="selected">Select Testcase</option>
-            {% for key, value in testcase_options %}
-              <option value="{{key}}">{{value}}</option>
-            {% endfor %}
-          </select>
-          </td>
-        </tr>
-      {% endif %}
     </table>
     {% if uploaded_files %}
       <div class="card">
@@ -127,6 +115,22 @@
         <h3>Test Cases</h3>
       </div>
       <div class="card-body">
+        {% if question %}
+        <div class="row">
+          <div class="col pb-4">
+            <tr><td>Add Test Case:</td>
+              <td>
+              <select id="case_type" class="form-control" name="case_type" onchange="frm.submit()">
+                <option value="" selected="selected">Select Testcase</option>
+                {% for key, value in testcase_options %}
+                  <option value="{{key}}">{{value}}</option>
+                {% endfor %}
+              </select>
+              </td>
+            </tr>
+          </div>
+        </div>
+        {% endif %}
         {% for formset in formsets %}
           {{ formset.management_form }}
           <div id="accordion">
@@ -141,7 +145,7 @@
                     </div>
                     <div class="ml-auto">
                       <a class="card-link" data-toggle="collapse" href="#collapse{{form.instance.id}}">
-                        <i class="fa fa-toggle-down"></i>
+                        Details&nbsp;<i class="fa fa-angle-down"></i></i>
                       </a>
                     </div>
                   </div>

@@ -1,3 +1,14 @@
+=== 0.14.0 (07-04-2020) ===
+
+* Added search bar for searching course
+* Added codemirror for R language
+* Fixed a bug which did not allow to save the empty expected input field for 
+Standard input output based test case
+* Improved UX for creating course modules, lessons, quizzes and practice exercises
+* Fixed bug in the custom middleware to get proper user timezone and manage
+concurrent user logins
+* Prettify error message for R language
+
 === 0.13.0 (11-03-2020) ===
 
 * Revamped the UI and UX for the interface and standardised with Bootstrap 4 (Lumen theme from https://bootswatch.com/)

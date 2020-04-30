@@ -97,3 +97,24 @@ body, .dropdown-menu {
     min-height: 100vh;
     transition: all 0.3s;
 }
+
+/* ---------------------------------------------------
+    FORUM STYLE
+----------------------------------------------------- */
+
+.brown-light {
+    background: #f4a460;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+}
+
+.post_image, .comment_image {
+    width: 50%;
+    height: 50%;
+}
+
+.description {
+    font-size: 16px;
+}

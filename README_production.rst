@@ -5,6 +5,15 @@ This README provides documentation to help deploy Yaksh in a production
 environment. If you wish to take Yaksh on a trial run, here is a
 `Quickstart Guide <https://github.com/FOSSEE/online\_test/blob/master/README.rst>`__
 
+
+Requirements
+============
+
+Python 3.6, 3.7, 3.8
+
+Django 3.0.3
+
+
 ###################
 Deploying Locally
 ###################
@@ -50,16 +59,26 @@ To install this app follow the steps below:
 
    ::
 
-      $ git clone  https://github.com/FOSSEE/online_test.git
-      $ cd online_test
+      git clone  https://github.com/FOSSEE/online_test.git
+
+   ::
+
+      cd online_test
 
 2. Install Yaksh dependencies, Run
 
    ::
 
-      pip install -r requirements/requirements-py2.txt # For Python 2
+      pip3 install -r requirements/requirements-common.txt
 
-      pip3 install -r requirements/requirements-py3.txt # For Python 3
+   ::
+
+      pip3 install -r requirements/requirements-py3.txt
+
+   ::
+
+      sudo pip3 install -r requirements/requirements-codeserver.txt
+
 
 3. Rename the ``.sampleenv`` to ``.env``
 
@@ -84,9 +103,6 @@ To install this app follow the steps below:
    executed in a safe environment. Do this like so:
 
    ::
-
-        $ sudo python -m yaksh.code_server # For Python 2.x
-
 
         $ sudo python3 -m yaksh.code_server # For Python 3.x
 

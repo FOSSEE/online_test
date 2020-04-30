@@ -12,12 +12,17 @@ class TimezoneMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
-        return self.get_response(request)
-
-    def process_request(self, request):
+        # Code to be executed for each request before
+        # the view (and later middleware) are called.
         user = request.user
         user_tz = 'Asia/Kolkata'
         if hasattr(user, 'profile'):
             if user.profile.timezone:
                 user_tz = user.profile.timezone
         timezone.activate(pytz.timezone(user_tz))
+
+        response = self.get_response(request)
+
+        # Code to be executed for each request/response after
+        # the view is called.
+        return response

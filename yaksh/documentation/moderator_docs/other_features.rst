@@ -7,17 +7,26 @@ Grade User
 
 	Grade User is a feature of Yaksh to access students' answer papers for each quiz and grade them where necessary.
 
+	Clicking on the **Grade User** link from the nav bar will show all the courses.
+
+	Click on the **Details** button to show the quizzes associated to a particular course.
+
+	Click on the **Grade User** button next to the quiz name to view all the students who have attempted the quiz.
+
+	Click on the student name to view their submissions.
+
 Monitor
 -------
 
 	Monitor is a feature of Yaksh where the moderator can monitor a quiz and view statistics.
 
-Trial Papers
-------------
+	Clicking on the **Monitor** link from the nav bar will show all the courses.
 
-	When a moderator attempts a quiz in User or God mode or tests questions, a trial answer paper is created. Moderator can check the answer paper. 
+	Click on the **Details** button to show the quizzes associated to a particular course.
 
-	.. note:: It is advisable to delete these trial answer papers.
+	Click on the **Monitor** button next to the quiz name to view all the students who are attempting the quiz.
+
+	Click on the student name to view their submissions.
 
 Grader
 ------
