@@ -29,6 +29,7 @@ script:
   - coverage run -p manage.py test -v 2 yaksh
   - coverage run -p manage.py test -v 2 grades
   - coverage run -p manage.py test -v 2 yaksh.live_server_tests.load_test
+  - coverage run -p manage.py test -v 2 api
 
 after_success:
   - coverage combine
