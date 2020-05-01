@@ -1754,7 +1754,8 @@ class QuestionPaperManager(models.Manager):
 
     def create_trial_paper_to_test_quiz(self, trial_quiz, original_quiz_id):
         """Creates a trial question paper to test quiz."""
-        trial_quiz.questionpaper_set.all().delete()
+        if self.filter(quiz=trial_quiz).exists():
+            self.get(quiz=trial_quiz).delete()
         trial_questionpaper, trial_questions = \
             self._create_trial_from_questionpaper(original_quiz_id)
         trial_questionpaper.quiz = trial_quiz
