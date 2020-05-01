@@ -1,9 +1,11 @@
 from yaksh.models import (
-    Question, Quiz, QuestionPaper, QuestionSet, AnswerPaper, Course, Answer
+    Question, Quiz, QuestionPaper, QuestionSet, AnswerPaper, Course, Answer,
+    LearningModule
 )
 from api.serializers import (
     QuestionSerializer, QuizSerializer, QuestionPaperSerializer,
-    AnswerPaperSerializer, CourseSerializer
+    AnswerPaperSerializer, CourseSerializer, CourseUpdateSerializer,
+    LearningModuleSerializer, LearningModuleUpdateSerializer
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -40,7 +42,7 @@ class CourseList(APIView):
     """ List all courses """
 
     def get(self, request, format=None):
-        courses = Course.objects.filter(students=request.user)
+        courses = Course.objects.filter(creator=request.user)
         serializer = CourseSerializer(courses, many=True)
         return Response(serializer.data)
 
@@ -398,6 +400,44 @@ class GetCourse(APIView):
         course = Course.objects.get(id=pk)
         serializer = CourseSerializer(course)
         return Response(serializer.data)
+
+
+class CourseDetail(APIView):
+    """ Retrieve, update or delete a quiz """
+
+    def get_course(self, pk, user):
+        try:
+            return Course.objects.get(pk=pk, creator=user)
+        except Course.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        course = Course.objects.get(id=pk)
+        serializer = CourseSerializer(course)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = CourseUpdateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(creator=request.user)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LearningModuleDetail(APIView):
+    """ Retrieve, update or delete a quiz """
+
+    def get(self, request, pk, format=None):
+        module = LearningModule.objects.get(id=pk)
+        serializer = LearningModuleSerializer(module)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = LearningModuleUpdateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(creator=request.user)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])

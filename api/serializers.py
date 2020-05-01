@@ -77,3 +77,27 @@ class CourseSerializer(serializers.ModelSerializer):
             'grading_system',
             'view_grade',
         )
+
+class CourseUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        exclude = (
+            'teachers',
+            'rejected',
+            'requests',
+            'students',
+            'grading_system',
+            'view_grade',
+            'learning_module',
+            'creator',
+        )
+
+class LearningModuleUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LearningModule
+        exclude = (
+            'learning_unit',
+            'creator',
+            'html_data',
+            'is_trial'
+        )

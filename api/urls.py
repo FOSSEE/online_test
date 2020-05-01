@@ -27,7 +27,8 @@ urlpatterns = [
         views.GetCourse.as_view(), name='get_course'),
     url(r'quit/(?P<answerpaper_id>\d+)/$', views.QuitQuiz.as_view(),
         name="quit_quiz"),
-    url(r'login/$', views.login, name='login')
+    url(r'login/$', views.login, name='login'),
+    url(r'courses/$', views.CourseList.as_view(), name='courses'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
