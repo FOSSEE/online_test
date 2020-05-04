@@ -118,3 +118,10 @@ body, .dropdown-menu {
 .description {
     font-size: 16px;
 }
+
+/* ---------------------------------------------------
+    Quiz qusetion style
+----------------------------------------------------- */
+#question_card {
+    border: none;
+}
