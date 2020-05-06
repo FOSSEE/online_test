@@ -80,12 +80,10 @@ class CourseSerializer(serializers.ModelSerializer):
             for learning_unit in learning_units:
                 lesson=learning_unit.pop('lesson')
                 quiz=learning_unit.pop('quiz')
-                new_learning_unit=LearningUnit(**learning_unit)
-                new_learning_unit.save()
                 new_quiz= Quiz.objects.create(**quiz) if quiz else None
                 new_lesson=Lesson.objects.create(**lesson) if lesson else None
-                new_learning_unit.quiz=new_quiz
-                new_learning_unit.lesson=new_lesson
+                new_learning_unit=LearningUnit(**learning_unit,quiz=new_quiz,lesson=new_lesson)
+                new_learning_unit.save()
                 new_learning_module.learning_unit.add(new_learning_unit)
             new_course.learning_module.add(new_learning_module)
         return new_course
