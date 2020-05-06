@@ -1,9 +1,9 @@
 from yaksh.models import (
-    Question, Quiz, QuestionPaper, QuestionSet, AnswerPaper, Course, Answer
+    Question, Quiz, QuestionPaper, QuestionSet, AnswerPaper, Course, Answer, LearningModule, LearningUnit, Quiz, Lesson
 )
 from api.serializers import (
     QuestionSerializer, QuizSerializer, QuestionPaperSerializer,
-    AnswerPaperSerializer, CourseSerializer
+    AnswerPaperSerializer, CourseSerializer, LessonSerializer
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -17,6 +17,7 @@ from django.http import Http404
 from django.contrib.auth import authenticate
 from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
+from django.contrib.auth.models import User
 import json
 
 
@@ -430,3 +431,14 @@ class QuitQuiz(APIView):
         answerpaper.save()
         serializer = AnswerPaperSerializer(answerpaper)
         return Response(serializer.data)
+
+class CourseCreate(APIView):
+    def post(self,request):
+        serializer=CourseSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            print("Here")
+            return Response(serializer.errors)
+

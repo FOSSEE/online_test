@@ -27,6 +27,8 @@ urlpatterns = [
         views.GetCourse.as_view(), name='get_course'),
     url(r'quit/(?P<answerpaper_id>\d+)/$', views.QuitQuiz.as_view(),
         name="quit_quiz"),
+    url(r'course/create/$', views.CourseCreate.as_view(),
+        name="course_create"),
     url(r'login/$', views.login, name='login')
 ]
 
