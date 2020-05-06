@@ -1113,12 +1113,12 @@ def course_detail(request, course_id):
 
 @login_required
 @email_verified
-def enroll(request, course_id, user_id=None, was_rejected=False):
+def enroll_user(request, course_id, user_id=None, was_rejected=False):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
 
-    course = get_object_or_404(Course, pk=course_id)
+    course = get_object_or_404(Course, id=course_id)
     if not course.is_active_enrollment():
         msg = (
             'Enrollment for this course has been closed,'
@@ -1126,23 +1126,75 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
             'instructor/administrator.'
         )
         messages.warning(request, msg)
-        return my_redirect(reverse('yaksh:course_students', args=[course_id]))
+        return redirect('yaksh:course_students', course_id=course_id)
+
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
+    user = User.objects.get(id=user_id)
+    course.enroll(was_rejected, user)
+    messages.success(request, 'Enrolled student successfully')
+    return redirect('yaksh:course_students', course_id=course_id)
+
+
+@login_required
+@email_verified
+def reject_user(request, course_id, user_id=None, was_enrolled=False):
+    user = request.user
+    print(was_enrolled)
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+    course = get_object_or_404(Course, id=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    user = User.objects.get(id=user_id)
+    course.reject(was_enrolled, user)
+    messages.success(request, "Rejected students successfully")
+    return redirect('yaksh:course_students', course_id=course_id)
+
+
+@login_required
+@email_verified
+def enroll_reject_user(request,
+                       course_id, was_enrolled=False, was_rejected=False):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+    course = get_object_or_404(Course, id=course_id)
+
+    if not course.is_active_enrollment():
+        msg = (
+            'Enrollment for this course has been closed,'
+            ' please contact your '
+            'instructor/administrator.'
+        )
+        messages.warning(request, msg)
+        return redirect('yaksh:course_students', course_id=course_id)
 
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
 
     if request.method == 'POST':
-        enroll_ids = request.POST.getlist('check')
-    else:
-        enroll_ids = [user_id]
-    if not enroll_ids:
-        messages.warning(request, "Please select atleast one student")
-        return my_redirect(reverse('yaksh:course_students', args=[course_id]))
+        if 'enroll' in request.POST:
+            enroll_ids = request.POST.getlist('check')
+            if not enroll_ids:
+                messages.warning(request, "Please select atleast one student")
+                return redirect('yaksh:course_students', course_id=course_id)
+            users = User.objects.filter(id__in=enroll_ids)
+            course.enroll(was_rejected, *users)
+            messages.success(request, "Enrolled student(s) successfully")
+            return redirect('yaksh:course_students', course_id=course_id)
+        if 'reject' in request.POST:
+            reject_ids = request.POST.getlist('check')
+            if not reject_ids:
+                messages.warning(request, "Please select atleast one student")
+                return redirect('yaksh:course_students', course_id=course_id)
+            users = User.objects.filter(id__in=reject_ids)
+            course.reject(was_enrolled, *users)
+            messages.success(request, "Rejected students successfully")                
+            return redirect('yaksh:course_students', course_id=course_id)
 
-    users = User.objects.filter(id__in=enroll_ids)
-    course.enroll(was_rejected, *users)
-    messages.success(request, "Enrolled student(s) successfully")
-    return my_redirect(reverse('yaksh:course_students', args=[course_id]))
+    return redirect('yaksh:course_students', course_id=course_id)
 
 
 @login_required
@@ -1174,31 +1226,6 @@ def send_mail(request, course_id, user_id=None):
         'enrolled': course.get_enrolled(), 'is_mail': True
     }
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
-
-
-@login_required
-@email_verified
-def reject(request, course_id, user_id=None, was_enrolled=False):
-    user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page')
-
-    course = get_object_or_404(Course, pk=course_id)
-    if not course.is_creator(user) and not course.is_teacher(user):
-        raise Http404('This course does not belong to you')
-
-    if request.method == 'POST':
-        reject_ids = request.POST.getlist('check')
-    else:
-        reject_ids = [user_id]
-    if not reject_ids:
-        messages.warning(request, "Please select atleast one student")
-        return my_redirect(reverse('yaksh:course_students', args=[course_id]))
-
-    users = User.objects.filter(id__in=reject_ids)
-    course.reject(was_enrolled, *users)
-    messages.success(request, "Rejected students successfully")
-    return my_redirect(reverse('yaksh:course_students', args=[course_id]))
 
 
 @login_required
@@ -3215,11 +3242,11 @@ def course_students(request, course_id):
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404("You are not allowed to view {0}".format(
             course.name))
-    enrolled = course.get_enrolled()
-    requested = course.get_requests()
-    rejected = course.get_rejected()
-    context = {"enrolled": enrolled, "requested": requested, "course": course,
-               "rejected": rejected, "is_students": True}
+    enrolled_users = course.get_enrolled()
+    requested_users = course.get_requests()
+    rejected_users = course.get_rejected()
+    context = {"enrolled_users": enrolled_users, "requested_users": requested_users, "course": course,
+               "rejected_users": rejected_users, "is_students": True}
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
 
