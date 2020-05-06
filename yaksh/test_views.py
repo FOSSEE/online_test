@@ -2974,11 +2974,14 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.post(
-            reverse('yaksh:enroll_users',
-                    kwargs={'course_id': self.user1_course.id}),
-            data={'check': self.student1.id}
-            )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_course.id
+        })
+        data = {
+            'check': self.student1.id,
+            'enroll': 'enroll'
+        }
+        response = self.client.post(url, data)
         enrolled_student = self.user1_course.students.all()
         self.assertEqual(response.status_code, 302)
         self.assertSequenceEqual([self.student1], enrolled_student)
@@ -3008,11 +3011,14 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.post(
-            reverse('yaksh:reject_users',
-                    kwargs={'course_id': self.user1_course.id}),
-            data={'check': self.student1.id}
-            )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_course.id
+        })
+        data = {
+            'check': self.student1.id,
+            'reject': 'reject'
+        }
+        response = self.client.post(url, data)
         enrolled_student = self.user1_course.rejected.all()
         self.assertEqual(response.status_code, 302)
         self.assertSequenceEqual([self.student1], enrolled_student)
