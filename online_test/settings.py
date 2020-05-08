@@ -26,9 +26,9 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "yaksh_data", "output")
 SECRET_KEY = config('SECRET_KEY', default='dUmMy_s3cR3t_k3y')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default='TRUE')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_URLS', default='localhost')
 
 URL_ROOT = ''
 
@@ -73,12 +73,10 @@ WSGI_APPLICATION = 'online_test.wsgi.application'
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.{0}'.format(
-            config('DB_ENGINE', default='sqlite3')
-        ),
-        'NAME': config('DB_NAME',
-                       default=os.path.join(BASE_DIR, 'db.sqlite3')
-                       ),
+        'ENGINE': 'django.db.backends.{0}'.format(config('DB_ENGINE',
+                                                  default='sqlite3')),
+        'NAME': config('DB_NAME', default=os.path.join(BASE_DIR,
+                                                       'db.sqlite3')),
         # The following settings are not used with sqlite3:
         'USER': config('DB_USER', default=''),
         'PASSWORD': config('DB_PASSWORD', default=''),
