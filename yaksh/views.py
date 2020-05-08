@@ -1141,7 +1141,6 @@ def enroll_user(request, course_id, user_id=None, was_rejected=False):
 @email_verified
 def reject_user(request, course_id, user_id=None, was_enrolled=False):
     user = request.user
-    print(was_enrolled)
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
     course = get_object_or_404(Course, id=course_id)
