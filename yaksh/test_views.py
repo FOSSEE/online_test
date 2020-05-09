@@ -2632,16 +2632,19 @@ class TestCourseDetail(TestCase):
             name="Python Course",
             enrollment="Enroll Request", creator=self.user1
             )
+
         self.user1_othercourse = Course.objects.create(
             name="Python Course II",
             enrollment="Enroll Request", creator=self.user1
             )
+
         self.user1_deactive_course = Course.objects.create(
             name="Python Course II",
             enrollment="Enroll Request",
             creator=self.user1,
-            active=False
+            end_enroll_time=timezone.now()
         )
+
         self.learning_module = LearningModule.objects.create(
             name="test module", description="test description module",
             html_data="test html description module", creator=self.user1,
@@ -3099,7 +3102,7 @@ class TestCourseDetail(TestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, 404)
 
-    def test_enroll_user_in_deactivated_course(self):
+    def test_enroll_user_in_expired_course(self):
         self.client.login(
             username=self.user1.username,
             password=self.user1_plaintext_pass
@@ -3111,10 +3114,34 @@ class TestCourseDetail(TestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, 302)
 
+    def test_enroll_user_where_moderator_is_neither_creator_nor_teacher(self):
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_user', kwargs={
+            'course_id': self.user1_course.id,
+            'user_id': self.user1.id
+        })
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 404)
+
     def test_reject_user_not_moderator(self):
         self.client.login(
             username=self.student.username,
             password=self.student_plaintext_pass
+        )
+        url = reverse('yaksh:reject_user', kwargs={
+            'course_id': self.user1_course.id,
+            'user_id': self.user1.id
+        })
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_reject_user_where_moderator_is_neither_creator_nor_teacher(self):
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
         )
         url = reverse('yaksh:reject_user', kwargs={
             'course_id': self.user1_course.id,
@@ -3144,6 +3171,17 @@ class TestCourseDetail(TestCase):
         })
         response = self.client.post(url)
         self.assertEqual(response.status_code, 302)
+
+    def test_enroll_reject_user_where_moderator_is_neither_creator_nor_teacher(self):
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_course.id,
+        })
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 404)
 
     def test_toggle_course_status_get(self):
         self.client.login(
@@ -3363,6 +3401,25 @@ class TestCourseStudents(TestCase):
             is_moderator=True
         )
 
+        self.user2_plaintext_pass = 'demo2'
+        self.user2 = User.objects.create_user(
+            username='demo_user2',
+            password=self.user2_plaintext_pass,
+            first_name='user2_first_name',
+            last_name='user2_last_name',
+            email='demo2@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user2,
+            roll_number=10,
+            institute='IIT',
+            department='Aeronautical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
+        )
+
         self.student_plaintext_pass = 'demo_student'
         self.student = User.objects.create_user(
             username='demo_student',
@@ -3391,13 +3448,13 @@ class TestCourseStudents(TestCase):
 
         # Add to moderator group
         self.mod_group.user_set.add(self.user1)
+        self.mod_group.user_set.add(self.user2)
 
         self.user1_course = Course.objects.create(
             name="Python Course",
             enrollment="Enroll Request", creator=self.user1
             )
 
-        # self.course.students.add(self.student)
         self.user1_course.enroll(False, self.student)
         self.user1_course.reject(False, self.student1)
         self.user1_course.request(self.student2)
@@ -3451,9 +3508,25 @@ class TestCourseStudents(TestCase):
         self.assertTrue('requested_users' in response.context)
         self.assertTrue('rejected_users' in response.context)
 
+    def test_course_students_where_moderator_is_neither_creator_nor_teacher(
+            self):
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        url = reverse('yaksh:course_students', kwargs={
+            'course_id': self.user1_course.id,
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
 
     def tearDown(self):
-        pass
+        self.user1.delete()
+        self.user2.delete()
+        self.student.delete()
+        self.student1.delete()
+        self.student2.delete()
+        self.user1_course.delete()
 
 
 class TestEnrollRequest(TestCase):

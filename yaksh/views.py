@@ -1193,8 +1193,6 @@ def enroll_reject_user(request,
             messages.success(request, "Rejected students successfully")                
             return redirect('yaksh:course_students', course_id=course_id)
 
-    return redirect('yaksh:course_students', course_id=course_id)
-
 
 @login_required
 @email_verified
