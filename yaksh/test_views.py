@@ -3005,7 +3005,6 @@ class TestCourseDetail(TestCase):
         })
         data = {
             'check': self.student1.id,
-            'enroll': ''
         }
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 302)
@@ -3034,7 +3033,6 @@ class TestCourseDetail(TestCase):
         })
         data = {
             'check': self.student1.id,
-            'reject': ''
         }
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 302)
