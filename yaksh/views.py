@@ -1190,8 +1190,9 @@ def enroll_reject_user(request,
                 return redirect('yaksh:course_students', course_id=course_id)
             users = User.objects.filter(id__in=reject_ids)
             course.reject(was_enrolled, *users)
-            messages.success(request, "Rejected students successfully")                
+            messages.success(request, "Rejected students successfully")
             return redirect('yaksh:course_students', course_id=course_id)
+    return redirect('yaksh:course_students', course_id=course_id)
 
 
 @login_required
@@ -3242,8 +3243,13 @@ def course_students(request, course_id):
     enrolled_users = course.get_enrolled()
     requested_users = course.get_requests()
     rejected_users = course.get_rejected()
-    context = {"enrolled_users": enrolled_users, "requested_users": requested_users, "course": course,
-               "rejected_users": rejected_users, "is_students": True}
+    context = {
+        "enrolled_users": enrolled_users,
+        "requested_users": requested_users,
+        "course": course,
+        "rejected_users": rejected_users,
+        "is_students": True
+    }
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
 

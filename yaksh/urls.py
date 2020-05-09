@@ -122,9 +122,9 @@ urlpatterns = [
         name='edit_course'),
     url(r'manage/course_detail/(?P<course_id>\d+)/$', views.course_detail,
         name='course_detail'),
-    
+
     url(r'manage/enroll/(?P<course_id>\d+)/$', views.enroll_reject_user,
-        name="enroll_reject_user"),    
+        name="enroll_reject_user"),
     url(r'manage/enroll/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
         views.enroll_user, name="enroll_user"),
     url(r'manage/reject/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
@@ -146,14 +146,14 @@ urlpatterns = [
         name="upload_users"),
     url(r'manage/send_mail/(?P<course_id>\d+)/$', views.send_mail,
         name="send_mail"),
-    
+
     url(r'manage/toggle_status/(?P<course_id>\d+)/$',
         views.toggle_course_status, name="toggle_course_status"),
     url(r'^questions/filter$', views.questions_filter,
         name="questions_filter"),
     url(r'^editprofile/$', views.edit_profile, name='edit_profile'),
     url(r'^viewprofile/$', views.view_profile, name='view_profile'),
-    
+
     url(r'^manage/searchteacher/(?P<course_id>\d+)/$', views.search_teacher,
         name="search_teacher"),
     url(r'^manage/addteacher/(?P<course_id>\d+)/$', views.add_teacher,

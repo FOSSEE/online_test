@@ -3172,7 +3172,8 @@ class TestCourseDetail(TestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, 302)
 
-    def test_enroll_reject_user_where_moderator_is_neither_creator_nor_teacher(self):
+    def test_enroll_reject_user_where_moderator_is_neither_creator_nor_teacher(
+            self):
         self.client.login(
             username=self.user2.username,
             password=self.user2_plaintext_pass
@@ -3182,6 +3183,17 @@ class TestCourseDetail(TestCase):
         })
         response = self.client.post(url)
         self.assertEqual(response.status_code, 404)
+
+    def test_get_enroll_reject_user_view(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_course.id,
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
 
     def test_toggle_course_status_get(self):
         self.client.login(
