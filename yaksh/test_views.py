@@ -3530,6 +3530,17 @@ class TestCourseStudents(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
+    def test_course_students_where_user_is_not_moderator(self):
+        self.client.login(
+            username=self.student1,
+            password=self.student1_plaintext_pass
+        )
+        url = reverse('yaksh:course_students', kwargs={
+            'course_id': self.user1_course.id,
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
     def tearDown(self):
         self.user1.delete()
         self.user2.delete()
