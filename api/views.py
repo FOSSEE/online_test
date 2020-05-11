@@ -3,7 +3,7 @@ from yaksh.models import (
 )
 from api.serializers import (
     QuestionSerializer, QuizSerializer, QuestionPaperSerializer,
-    AnswerPaperSerializer, CourseSerializer, LessonSerializer
+    AnswerPaperSerializer, CourseSerializer, LessonSerializer, LearningModuleSerializer, LearningUnitSerializer, QuizSerializer
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -435,8 +435,30 @@ class QuitQuiz(APIView):
 class CourseCreate(APIView):
     def post(self,request):
         serializer=CourseSerializer(data=request.data)
+        modules=[]
+        for learning_module in request.data['learning_module']:
+            module_serializer=LearningModuleSerializer(data=learning_module)
+            units=[]
+            if module_serializer.is_valid():
+                module_instance=module_serializer.save()
+                modules.append(module_instance)
+                for learning_unit in learning_module['learning_unit']:
+                    quiz_data=learning_unit.pop('quiz')
+                    lesson_data=learning_unit.pop('lesson')
+                    unit_serializer=LearningUnitSerializer(data=learning_unit)
+                    if unit_serializer.is_valid():
+                        quiz_serializer=QuizSerializer(data=quiz_data)
+                        lesson_serializer=LessonSerializer(data=lesson_data)
+                        if quiz_serializer.is_valid():
+                            new_quiz=quiz_serializer.save()
+                        if lesson_serializer.is_valid():
+                            new_lesson=lesson_serializer.save()
+                        unit_instance=unit_serializer.save(quiz=new_quiz,lesson=new_lesson)
+                        units.append(unit_instance)
+                module_instance.learning_unit.set(*units)
         if serializer.is_valid():
-            serializer.save()
+            new_course=serializer.save()
+            new_course.learning_module.set(*modules)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             print("Here")
