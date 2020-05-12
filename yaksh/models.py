@@ -773,14 +773,20 @@ class LearningModule(models.Model):
 
     def get_passing_status(self, user, course):
         course_status = CourseStatus.objects.filter(user=user, course=course)
+        ordered_units = []
         if course_status.exists():
-            learning_units_with_quiz = self.learning_unit.filter(type='quiz')
+            learning_units_with_quiz = self.learning_unit.filter(
+                type='quiz'
+            ).order_by("order")
             ordered_units = learning_units_with_quiz.order_by("order")
 
-        statuses = [
-            unit.quiz.get_answerpaper_passing_status(user, course)
-            for unit in ordered_units
-        ]
+        if ordered_units:
+            statuses = [
+                unit.quiz.get_answerpaper_passing_status(user, course)
+                for unit in ordered_units
+            ]
+        else:
+            statuses = []
 
         if not statuses:
             status = False
