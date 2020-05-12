@@ -6912,8 +6912,8 @@ class TestStartExam(TestCase):
             user=self.student, question_paper=self.question_paper1,
             attempt_number=1,
             start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
-            end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
-            user_ip="127.0.0.1", status="completed", passed=True,
+            end_time=datetime(2020, 10, 9, 10, 15, 15, 0, tzone),
+            user_ip="127.0.0.1", status="inprogress", passed=True,
             percent=1, marks_obtained=1, course=self.user1_course1
         )
 
@@ -7236,6 +7236,151 @@ class TestStartExam(TestCase):
         self.user1_course1.students.add(self.user1)
         self.user1_course1.is_trial = True
         self.user1_course1.save()
+
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_not_allowed_to_start_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.question_paper1.fixed_questions.add(self.question1)
+
+        self.learning_module1.active = True
+        self.learning_module1.check_prerequisite = False
+        self.learning_module1.check_prerequisite_passes = False
+        self.learning_module1.save()
+
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        learning_unit = self.learning_module1.learning_unit.get(
+            quiz=self.question_paper1.quiz.id
+        )
+        learning_unit.check_prerequisite = False
+        learning_unit.save()
+
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper1.id,
+            'module_id': self.learning_module1.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_not_allowed_to_start_for_moderator(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        self.question_paper1.fixed_questions.add(self.question1)
+
+        self.learning_module1.active = True
+        self.learning_module1.check_prerequisite = False
+        self.learning_module1.check_prerequisite_passes = False
+        self.learning_module1.save()
+
+        self.user1_course1.students.add(self.user1)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        learning_unit = self.learning_module1.learning_unit.get(
+            quiz=self.question_paper1.quiz.id
+        )
+        learning_unit.check_prerequisite = False
+        learning_unit.save()
+
+    def test_start_allowed_to_start_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.question_paper2.fixed_questions.add(self.question1)
+
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.check_prerequisite_passes = False
+        self.learning_module2.save()
+
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        learning_unit = self.learning_module2.learning_unit.get(
+            quiz=self.question_paper2.quiz.id
+        )
+        learning_unit.check_prerequisite = False
+        learning_unit.save()
+
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_allowed_to_start_for_moderator(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        self.question_paper2.fixed_questions.add(self.question1)
+
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.check_prerequisite_passes = False
+        self.learning_module2.save()
+
+        self.user1_course1.students.add(self.user1)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        learning_unit = self.learning_module2.learning_unit.get(
+            quiz=self.question_paper2.quiz.id
+        )
+        learning_unit.check_prerequisite = False
+        learning_unit.save()
+
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_allowed_to_start_when_quiz_is_exercise_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.question_paper2.fixed_questions.add(self.question1)
+
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.check_prerequisite_passes = False
+        self.learning_module2.save()
+
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        learning_unit = self.learning_module2.learning_unit.get(
+            quiz=self.question_paper2.quiz.id
+        )
+        learning_unit.check_prerequisite = False
+        learning_unit.save()
+
+        self.question_paper2.quiz.is_exercise = True
+        self.question_paper2.quiz.save()
 
         url = reverse('yaksh:start_quiz', kwargs={
             'questionpaper_id': self.question_paper2.id,
