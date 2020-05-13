@@ -7014,7 +7014,7 @@ class TestStartExam(TestCase):
             password=self.student_plaintext_pass
         )
         self.question_paper1.fixed_questions.add(self.question1)
-        self.learning_module1.active=False
+        self.learning_module1.active = False
         self.learning_module1.save()
         url = reverse('yaksh:start_quiz', kwargs={
             'questionpaper_id': self.question_paper1.id,
@@ -7112,7 +7112,7 @@ class TestStartExam(TestCase):
 
         self.user1_course1.students.add(self.student)
         self.user1_course1.active = False
-        self.user1_course1.end_enroll_time=timezone.now()
+        self.user1_course1.end_enroll_time = timezone.now()
         self.user1_course1.save()
         url = reverse('yaksh:start_quiz', kwargs={
             'questionpaper_id': self.question_paper1.id,
