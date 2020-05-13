@@ -1455,6 +1455,19 @@ class Question(models.Model):
             tc_list.extend(test_case)
         return tc_list
 
+    def get_test_cases_as_dict(self, **kwargs):
+        tc_list = []
+        for tc in self.testcase_set.values_list("type", flat=True).distinct():
+            test_case_ctype = ContentType.objects.get(app_label="yaksh",
+                                                      model=tc)
+            test_case = test_case_ctype.get_all_objects_for_this_type(
+                question=self,
+                **kwargs
+            )
+            for tc in test_case:
+                tc_list.append(model_to_dict(tc))
+            return tc_list
+
     def get_test_case(self, **kwargs):
         for tc in self.testcase_set.all():
             test_case_type = tc.type
@@ -1746,6 +1759,7 @@ class QuestionPaper(models.Model):
         for question_set in self.random_questions.all():
             marks += question_set.marks * question_set.num_questions
         self.total_marks = marks
+        self.save()
 
     def _get_questions_for_answerpaper(self):
         """ Returns fixed and random questions for the answer paper"""

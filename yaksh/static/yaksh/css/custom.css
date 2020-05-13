@@ -98,6 +98,13 @@ body, .dropdown-menu {
     transition: all 0.3s;
 }
 
+@media (min-width: 1024px) {
+
+  .students-list {
+    position: fixed !important;
+  }
+}
+
 /* ---------------------------------------------------
     FORUM STYLE
 ----------------------------------------------------- */
@@ -118,9 +125,8 @@ body, .dropdown-menu {
 .description {
     font-size: 16px;
 }
-
 /* ---------------------------------------------------
-    Quiz qusetion style
+    Quiz question style
 ----------------------------------------------------- */
 #question_card {
     border: none;
