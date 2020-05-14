@@ -35,14 +35,14 @@ class QuizSerializer(serializers.ModelSerializer):
         model = Quiz
         exclude = ('view_answerpaper', )
     def create(self,validated_data):
-        return Quiz.objcects.create(**validated_data)
+        return Quiz.objects.create(**validated_data)
 
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
         fields = '__all__'
     def create(self,validated_data):
-        return Lesson.objcects.create(**validated_data)
+        return Lesson.objects.create(**validated_data)
 
 
 class LearningUnitSerializer(serializers.ModelSerializer):
@@ -51,8 +51,9 @@ class LearningUnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = LearningUnit
         fields = '__all__'
-    def create(self,validated_data,quiz,lesson):
-        new_unit=LearningUnit.objects.create(**validated_data,quiz=quiz,lesson=lesson)
+    def create(self,validated_data,quiz=None,lesson=None):
+        new_unit=LearningUnit(**validated_data)
+        new_unit.save()
         return new_unit
 
 class LearningModuleSerializer(serializers.ModelSerializer):
@@ -62,6 +63,7 @@ class LearningModuleSerializer(serializers.ModelSerializer):
         model = LearningModule
         fields = '__all__'
     def create(self,validated_data):
+        learning_unit=validated_data.pop("learning_unit")
         new_module=LearningModule(**validated_data)
         new_module.save()
         return new_module
@@ -80,27 +82,11 @@ class CourseSerializer(serializers.ModelSerializer):
             'view_grade',
         )
     def create(self,validated_data):
+          print(type(validated_data))
+          learning_module=validated_data.pop('learning_module')
           new_course=Course(**validated_data)
           new_course.save()
           return new_course
-    # def create(self,validated_data):
-    #     learning_modules=validated_data.pop('learning_module')
-    #     new_course=Course(**validated_data)
-    #     new_course.save()
-    #     for learning_module in learning_modules:
-    #         learning_units=learning_module.pop('learning_unit')
-    #         new_learning_module=LearningModule(**learning_module)
-    #         new_learning_module.save()
-    #         for learning_unit in learning_units:
-    #             lesson=learning_unit.pop('lesson')
-    #             quiz=learning_unit.pop('quiz')
-    #             new_quiz= Quiz.objects.create(**quiz) if quiz else None
-    #             new_lesson=Lesson.objects.create(**lesson) if lesson else None
-    #             new_learning_unit=LearningUnit(**learning_unit,quiz=new_quiz,lesson=new_lesson)
-    #             new_learning_unit.save()
-    #             new_learning_module.learning_unit.add(new_learning_unit)
-    #         new_course.learning_module.add(new_learning_module)
-    #     return new_course
 
             
 
