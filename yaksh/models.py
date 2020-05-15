@@ -1288,6 +1288,13 @@ class Question(models.Model):
     # Number of points for the question.
     points = models.FloatField(default=1.0)
 
+    # Negative marks for the question
+    negative_marks = models.FloatField(
+        default=0.0,
+        help_text='In Percentage eg: 25, '
+        'means 0.25 will be negative marks if question is for 1 mark'
+    )
+
     # The language for question.
     language = models.CharField(max_length=24,
                                 choices=languages)
@@ -1650,9 +1657,11 @@ class Answer(models.Model):
 
     def set_marks(self, marks):
         if marks > self.question.points:
-            self.marks = self.question.points
-        else:
-            self.marks = marks
+            marks = self.question.points
+        wrong_fraction = self.question.points - marks
+        negative_marks = wrong_fraction * (self.question.negative_marks/100)
+        self.marks = marks - negative_marks
+        self.save()
 
     def __str__(self):
         return "Answer for question {0}".format(self.question.summary)
@@ -2460,16 +2469,16 @@ class AnswerPaper(models.Model):
             if question.partial_grading and question.type == 'code':
                 max_weight = question.get_maximum_test_case_weight()
                 factor = result['weight']/max_weight
-                user_answer.marks = question.points * factor
+                user_answer.set_marks(question.points * factor)
             else:
-                user_answer.marks = question.points
+                user_answer.set_marks(question.points)
         else:
             if question.partial_grading and question.type == 'code':
                 max_weight = question.get_maximum_test_case_weight()
                 factor = result['weight']/max_weight
-                user_answer.marks = question.points * factor
+                user_answer.set_marks(question.points * factor)
             else:
-                user_answer.marks = 0
+                user_answer.set_marks(0)
         user_answer.save()
         self.update_marks('completed')
         return True, msg

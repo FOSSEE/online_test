@@ -903,22 +903,24 @@ def _update_paper(request, uid, result):
     paper = new_answer.answerpaper_set.first()
 
     if result.get('success'):
-        new_answer.marks = (current_question.points * result['weight'] /
-                            current_question.get_maximum_test_case_weight()) \
+        marks = (current_question.points * result['weight'] /
+                 current_question.get_maximum_test_case_weight()) \
             if current_question.partial_grading and \
             current_question.type == 'code' or \
             current_question.type == 'upload' else current_question.points
+        new_answer.set_marks(marks)
         new_answer.correct = result.get('success')
         error_message = None
         new_answer.error = json.dumps(result.get('error'))
         next_question = paper.add_completed_question(current_question.id)
     else:
-        new_answer.marks = (current_question.points * result['weight'] /
-                            current_question.get_maximum_test_case_weight()) \
+        marks = (current_question.points * result['weight'] /
+                 current_question.get_maximum_test_case_weight()) \
             if current_question.partial_grading and \
             current_question.type == 'code' or \
             current_question.type == 'upload' \
             else 0
+        new_answer.set_marks(marks)
         error_message = result.get('error') \
             if current_question.type == 'code' or \
             current_question.type == 'upload' \
