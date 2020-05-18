@@ -7,6 +7,7 @@ https://docs.djangoproject.com/en/1.6/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.6/ref/settings/
 """
+from celery.schedules import crontab
 from yaksh.pipeline.settings import AUTH_PIPELINE
 import os
 from decouple import config
@@ -51,7 +52,8 @@ INSTALLED_APPS = (
     'rest_framework',
     'api',
     'corsheaders',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'notification'
 )
 
 MIDDLEWARE = (
@@ -228,6 +230,16 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TIMEZONE = 'Asia/Kolkata'
 CELERY_BROKER_URL = 'redis://localhost'
 CELERY_RESULT_BACKEND = 'django-db'
+
+CELERY_BEAT_SCHEDULE = {
+ 'send-summary-every-hour': {
+       'task': 'course_deadline_task',
+       'schedule': crontab(
+           hour='00', minute=3, day_of_week='Monday', day_of_month='*',
+           month_of_year='*'
+        ),
+    },
+}
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
