@@ -508,6 +508,7 @@ class QuestionPaperForm(forms.ModelForm):
 
 
 class LessonForm(forms.ModelForm):
+    VIDEO_PATH = "../Videos"
     def __init__(self, *args, **kwargs):
         super(LessonForm, self).__init__(*args, **kwargs)
         des_msg = "Enter Lesson Description as Markdown text"
@@ -519,6 +520,10 @@ class LessonForm(forms.ModelForm):
         )
         self.fields['video_file'].widget.attrs.update(
             {'class': "custom-file-input"}
+        )
+        self.fields['video_path'].widget.attrs.update(
+            {'class': form_input_class, 'value': self.VIDEO_PATH,
+             'placeholder': "Relative video path for offline use only"}
         )
 
     class Meta:

@@ -3183,25 +3183,20 @@ def download_course(request, course_id):
         raise Http404("You are not allowed to download {0} course".format(
             course.name))
     if not course.has_lessons():
-        raise Http404("{0} course does not have any lessons".format(
-            course.name))
+        messages.warning(
+            request, "{0} course does not have any lessons".format(course.name)
+        )
+        return redirect(reverse("yaksh:courses"))
+
     current_dir = os.path.dirname(__file__)
     course_name = course.name.replace(" ", "_")
 
-    # Static files required for styling in html template
-    static_files = {"js": ["bootstrap.min.js",
-                           "jquery-3.3.1.min.js", "video.js"],
-                    "css": ["bootstrap.min.css",
-                            "video-js.css", "offline.css",
-                            "yakshcustom.css"],
-                    "images": ["yaksh_banner.png"]}
-    zip_file = course.create_zip(current_dir, static_files)
-    zip_file.seek(0)
-    response = HttpResponse(content_type='application/zip')
+    zip_file = course.create_zip(current_dir)
+    course_file = open(zip_file, 'rb')
+    response = HttpResponse(course_file, content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename={0}.zip'.format(
                                             course_name
                                             )
-    response.write(zip_file.read())
     return response
 
 

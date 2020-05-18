@@ -169,62 +169,6 @@ def create_group(group_name, app_label):
     return group
 
 
-def write_static_files_to_zip(zipfile, course_name, current_dir, static_files):
-    """ Write static files to zip
-
-        Parameters
-        ----------
-
-        zipfile : Zipfile object
-            zip file in which the static files need to be added
-
-        course_name : str
-            Create a folder with course name
-
-        current_dir: str
-            Path from which the static files will be taken
-
-        static_files: dict
-            Dictionary containing static folders as keys and static files as
-            values
-    """
-    for folder in static_files.keys():
-        folder_path = os.sep.join((current_dir, "static", "yaksh", folder))
-        for file in static_files[folder]:
-            file_path = os.sep.join((folder_path, file))
-            with open(file_path, "rb") as f:
-                zipfile.writestr(
-                    os.sep.join((course_name, "static", folder, file)),
-                    f.read()
-                    )
-
-
-def write_templates_to_zip(zipfile, template_path, data, filename, filepath):
-    """ Write template files to zip
-
-        Parameters
-        ----------
-
-        zipfile : Zipfile object
-            zip file in which the template files need to be added
-
-        template_path : str
-            Path from which the template file will be loaded
-
-        data: dict
-            Dictionary containing context data required for template
-
-        filename: str
-            Filename with which the template file should be named
-
-        filepath: str
-            File path in zip where the template will be added
-    """
-    rendered_template = render_template(template_path, data)
-    zipfile.writestr(os.sep.join((filepath, "{0}.html".format(filename))),
-                     str(rendered_template))
-
-
 def render_template(template_path, data=None):
     with open(template_path) as f:
         template_data = f.read()
@@ -285,6 +229,11 @@ class Lesson(models.Model):
         help_text="Please upload video files in mp4, ogv, webm format"
         )
 
+    video_path = models.CharField(
+        max_length=255, default=None, null=True, blank=True,
+        help_text="Relative video path for offline use only",
+        )
+
     def __str__(self):
         return "{0}".format(self.name)
 
@@ -313,33 +262,6 @@ class Lesson(models.Model):
             file_path = self.video_file.path
             if os.path.exists(file_path):
                 os.remove(file_path)
-
-    def _add_lesson_to_zip(self, next_unit, module, course, zip_file, path):
-        lesson_name = self.name.replace(" ", "_")
-        course_name = course.name.replace(" ", "_")
-        module_name = module.name.replace(" ", "_")
-        sub_folder_name = os.sep.join((
-            course_name, module_name, lesson_name
-            ))
-        lesson_files = self.get_files()
-        if self.video_file:
-            video_file = os.sep.join((sub_folder_name, os.path.basename(
-                        self.video_file.name)))
-            zip_file.writestr(video_file, self.video_file.read())
-        for lesson_file in lesson_files:
-            if os.path.exists(lesson_file.file.path):
-                filename = os.sep.join((sub_folder_name, os.path.basename(
-                    lesson_file.file.name)))
-                zip_file.writestr(filename, lesson_file.file.read())
-        unit_file_path = os.sep.join((
-            path, "templates", "yaksh", "download_course_templates",
-            "unit.html"
-            ))
-        lesson_data = {"course": course, "module": module,
-                       "lesson": self, "next_unit": next_unit,
-                       "lesson_files": lesson_files}
-        write_templates_to_zip(zip_file, unit_file_path, lesson_data,
-                               lesson_name, sub_folder_name)
 
 
 #############################################################################
@@ -586,23 +508,6 @@ class Quiz(models.Model):
         return '%s: on %s for %d minutes' % (desc, self.start_date_time,
                                              self.duration)
 
-    def _add_quiz_to_zip(self, next_unit, module, course, zip_file, path):
-        quiz_name = self.description.replace(" ", "_")
-        course_name = course.name.replace(" ", "_")
-        module_name = module.name.replace(" ", "_")
-        sub_folder_name = os.sep.join((
-            course_name, module_name, quiz_name
-            ))
-        unit_file_path = os.sep.join((
-            path, "templates", "yaksh", "download_course_templates",
-            "quiz.html"
-            ))
-        quiz_data = {"course": course, "module": module,
-                     "quiz": self, "next_unit": next_unit}
-
-        write_templates_to_zip(zip_file, unit_file_path, quiz_data,
-                               quiz_name, sub_folder_name)
-
 
 ##########################################################################
 class LearningUnit(models.Model):
@@ -831,36 +736,6 @@ class LearningModule(models.Model):
             new_unit = unit._create_unit_copy(user)
             new_module.learning_unit.add(new_unit)
         return new_module
-
-    def _add_module_to_zip(self, course, zip_file, path):
-        module_name = self.name.replace(" ", "_")
-        course_name = course.name.replace(" ", "_")
-        folder_name = os.sep.join((course_name, module_name))
-        lessons = self.get_lesson_units()
-
-        units = self.get_learning_units()
-        for idx, unit in enumerate(units):
-            next_unit = units[(idx + 1) % len(units)]
-            if unit.type == 'lesson':
-                unit.lesson._add_lesson_to_zip(next_unit,
-                                               self,
-                                               course,
-                                               zip_file,
-                                               path)
-            else:
-                unit.quiz._add_quiz_to_zip(next_unit,
-                                           self,
-                                           course,
-                                           zip_file,
-                                           path)
-
-        module_file_path = os.sep.join((
-            path, "templates", "yaksh", "download_course_templates",
-            "module.html"
-            ))
-        module_data = {"course": course, "module": self, "units": units}
-        write_templates_to_zip(zip_file, module_file_path, module_data,
-                               module_name, folder_name)
 
     def get_unit_order(self, type, unit):
         if type == "lesson":
@@ -1130,25 +1005,46 @@ class Course(models.Model):
     def is_student(self, user):
         return user in self.students.all()
 
-    def create_zip(self, path, static_files):
-        zip_file_name = string_io()
-        with zipfile.ZipFile(zip_file_name, "a") as zip_file:
-            course_name = self.name.replace(" ", "_")
-            modules = self.get_learning_modules()
-            file_path = os.sep.join(
-                (
-                    path, "templates", "yaksh",
-                    "download_course_templates", "index.html"
-                )
-            )
-            write_static_files_to_zip(zip_file, course_name, path,
-                                      static_files)
-            course_data = {"course": self, "modules": modules}
-            write_templates_to_zip(zip_file, file_path, course_data,
-                                   "index", course_name)
-            for module in modules:
-                module._add_module_to_zip(self, zip_file, path)
-        return zip_file_name
+    def create_zip(self, path):
+        dir_path = os.sep.join((path, "offline_yaksh"))
+        tmp_zip_path = os.sep.join((tempfile.mkdtemp(), "demo"))
+        name = shutil.make_archive(tmp_zip_path, "zip", dir_path)
+        with zipfile.ZipFile(name, "a") as zip_file:
+            offline_data = "const data = {0}".format(self.get_offline_data())
+            zip_file.writestr("course_data.js", offline_data)
+        return name
+
+    def get_offline_data(self):
+        learning_module = []
+        for module in self.get_learning_modules():
+            module_dict = model_to_dict(module)
+            unit_list = []
+            for unit in module.get_learning_units():
+                unit_dict = model_to_dict(unit)
+                if unit.type == "lesson":
+                    lesson_dict = model_to_dict(
+                        unit.lesson, exclude=["creator", "video_file"]
+                    )
+                    unit_dict["lesson"] = lesson_dict
+                else:
+                    quiz_dict = model_to_dict(unit.quiz, exclude=["creator"])
+                    quiz_dict["start_date_time"] = (
+                        quiz_dict["start_date_time"].strftime(
+                            "%Y-%m-%d %H:%M:%S")
+                        )
+                    quiz_dict["end_date_time"] = (
+                        quiz_dict["end_date_time"].strftime(
+                            "%Y-%m-%d %H:%M:%S")
+                        )
+                    unit_dict["quiz"] = quiz_dict
+                unit_list.append(unit_dict)
+            module_dict["learning_unit"] = unit_list
+            learning_module.append(module_dict)
+        course_data = model_to_dict(
+            self, fields=["id", "name", "active", "instructions"]
+        )
+        course_data["learning_module"] = learning_module
+        return json.dumps([course_data])
 
     def has_lessons(self):
         modules = self.get_learning_modules()
