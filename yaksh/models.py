@@ -49,6 +49,7 @@ languages = (
         ("java", "Java Language"),
         ("scilab", "Scilab"),
         ("r", "R"),
+        ("other", "Other")
     )
 
 question_types = (
@@ -1297,6 +1298,8 @@ class Question(models.Model):
     # The language for question.
     language = models.CharField(max_length=24,
                                 choices=languages)
+
+    topic = models.CharField(max_length=50, blank=True, null=True)
 
     # The type of question.
     type = models.CharField(max_length=24, choices=question_types)

@@ -192,3 +192,30 @@ function autosubmit()
         }
 
 }
+
+$(document).ready(() => {
+    let option = $('#id_language').val();
+    if(option === 'other') {
+        $('#id_topic').closest('tr').show();
+    } else {
+        $('#id_topic').closest('tr').hide();
+    }
+    $('#id_language').change(function() {
+        let value = $(this).val();
+        if (value === "other") {
+            $('#id_topic').closest('tr').show();
+            $('#id_type').children("option[value='code']").hide();
+        } else {
+            $('#id_topic').closest('tr').hide();
+            $('#id_type').children("option[value='code']").show();
+        }
+    });
+    $('#id_type').change(function() {
+        let value = $(this).val();
+        if (value === "code") {
+            $('#id_language').children("option[value='other']").hide();
+        } else {
+            $('#id_language').children("option[value='other']").show();
+        }
+    })
+});

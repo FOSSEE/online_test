@@ -125,4 +125,9 @@ body, .dropdown-menu {
 .description {
     font-size: 16px;
 }
->>>>>>> 53a0c4ad3e733f3960000527f83565f2fd8fc412
+/* ---------------------------------------------------
+    Quiz question style
+----------------------------------------------------- */
+#question_card {
+    border: none;
+}

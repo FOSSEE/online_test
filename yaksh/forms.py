@@ -298,6 +298,9 @@ class QuestionForm(forms.ModelForm):
         self.fields['language'].widget.attrs.update(
             {'class': 'custom-select'}
         )
+        self.fields['topic'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Topic name'}
+        )
         self.fields['type'].widget.attrs.update(
             {'class': 'custom-select'}
         )
