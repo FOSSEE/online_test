@@ -15,7 +15,24 @@ $(document).ready(function()
 {
   $("#marks_table").tablesorter({sortList: [[2,1]]});
 });
+function searchNames() {
+  var input, filter, ul, li, a, i, txtValue;
+  input = document.getElementById('myInput');
+  filter = input.value.toUpperCase();
+  $("#myUL").toggle();
+  ul = document.getElementById("myUL");
+  li = ul.getElementsByTagName('li');
 
+  for (i = 0; i < li.length; i++) {
+    a = li[i].getElementsByTagName("a")[0];
+    txtValue = a.textContent || a.innerText;
+    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+      li[i].style.display = "";
+    } else {
+      li[i].style.display = "none";
+    }
+  }
+}
 </script>
 {% endblock script %}
 
@@ -92,16 +109,17 @@ $(document).ready(function()
   <div class="row">
     {% if status == "grade" %}
       {% if users %}
-        <div id="student" class="col-md-3">
-          <ul class="nav nav-pills list-group">
-            {% for user in users %}
-              <li class="nav-item">
-                <a href="{% url 'yaksh:grade_user' quiz_id user.user__id course_id %}" class="list-group-item{% if user.user__id == data.user.id %} active {% endif %}">
-                  {{user.user__first_name}} {{user.user__last_name}}
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
+        <div id="student" class="col-lg-3">
+          <div class="students-list">
+            <select onchange="window.location.href=this.value" class="custom-select">
+              <option value="">Select student</option>
+              {% for user in users %}
+                 <option value="{% url 'yaksh:grade_user' quiz_id user.user__id course_id %}" {% if user.user__id == data.user.id %} selected {% endif %} title="{{user.user__first_name|upper}} {{user.user__last_name|upper}}">
+                   {{user.user__first_name|upper}} {{user.user__last_name|truncatechars:5|upper}}
+                 </option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
       {% else %}
         <div class="col-md-1"></div>
@@ -115,7 +133,7 @@ $(document).ready(function()
       {% endif %}
     {% endif %}
 
-    <div id="paper" class="col-md-9">
+    <div id="paper" class="col-lg-9">
       {% if has_quiz_assignments %}
         <a href="{% url 'yaksh:download_quiz_assignment' quiz_id course_id %}" class="btn btn-outline-info">
           <i class="fa fa-download"></i>&nbsp;Download All Assignments
@@ -173,8 +191,22 @@ $(document).ready(function()
         </div>
         {% endfor %}
       {% endif %}
+      {% if status == "grade" and users %}
+        <input type="text" id="myInput" onkeyup="searchNames()" placeholder="Type to search for names" class="form-control">
+        <ul class="nav nav-pills list-group" style="display: none;" id="myUL">
+          {% for user in users %}
+            <li class="nav-item">
+              <a href="{% url 'yaksh:grade_user' quiz_id user.user__id course_id %}" class="list-group-item">
+                {{user.user__first_name|upper}} {{user.user__last_name|upper}}
+              </a>
+            </li>
+          {% endfor %}
+          <br>
+        </ul>
+      {% endif %}
 
       {% if data %}
+        <hr>
         <div class="card">
           <div class="card-header">
             Student Details
