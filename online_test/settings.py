@@ -232,13 +232,20 @@ CELERY_BROKER_URL = 'redis://localhost'
 CELERY_RESULT_BACKEND = 'django-db'
 
 CELERY_BEAT_SCHEDULE = {
- 'send-summary-every-hour': {
+     'send-course-deadline-notifications-once-a-week': {
        'task': 'course_deadline_task',
        'schedule': crontab(
-           hour='00', minute=3, day_of_week='Monday', day_of_month='*',
+           hour='08', minute=43, day_of_week='Friday', day_of_month='*',
            month_of_year='*'
         ),
     },
+    'send-quiz-deadline-notifications-once-a-week': {
+        'task': 'quiz_deadline_task',
+        'schedule': crontab(
+            hour='09', minute=47, day_of_week='Friday', day_of_month='*',
+            month_of_year='*'
+        ),
+    }
 }
 
 REST_FRAMEWORK = {

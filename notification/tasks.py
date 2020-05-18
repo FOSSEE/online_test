@@ -37,8 +37,9 @@ def quiz_deadline_task():
     courses = Course.objects.filter(active=True, is_trial=False)
     for course in courses:
         students = course.students.all()
+        students_id = students.values_list('id', flat=True)
         creator = course.creator
-        modules = course.learning_modules.all()
+        modules = course.learning_module.all()
         for module in modules:
             units = module.learning_unit.all()
             for unit in units:
@@ -50,4 +51,12 @@ def quiz_deadline_task():
                             complete the quiz if not completed before the
                             deadline.
                             """.format(quiz, quiz.end_date_time)
+                        )
+                        notification_type = 'warning'
+                        nm = NotificationMessage.objects.add_single_message(
+                            creator_id=creator.id, summary='Quiz Notification',
+                            description=message, msg_type=notification_type
+                        )
+                        Notification.objects.add_bulk_user_notifications(
+                            receiver_ids=students_id, msg_id=nm.id
                         )
