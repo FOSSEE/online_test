@@ -45,6 +45,9 @@ INSTALLED_APPS = (
     'taggit',
     'social_django',
     'grades',
+    'django_celery_beat',
+    'django_celery_results',
+    'notifications_plugin',
     'rest_framework',
     'api',
     'corsheaders',
@@ -58,6 +61,7 @@ MIDDLEWARE = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'yaksh.middleware.one_session_per_user.OneSessionPerUserMiddleware',
+    'yaksh.middleware.get_notifications.NotificationMiddleware',
     'yaksh.middleware.user_time_zone.TimezoneMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -214,6 +218,16 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 TAGGIT_CASE_INSENSITIVE = True
+
+
+# Celery parameters
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TIMEZONE = 'Asia/Kolkata'
+CELERY_BROKER_URL = 'redis://localhost'
+CELERY_RESULT_BACKEND = 'django-db'
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,

@@ -2,6 +2,7 @@ from datetime import datetime
 import pytz
 import os
 import json
+import time
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -21,6 +22,8 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files import File
 from django.contrib.messages import get_messages
+from celery.contrib.testing.worker import start_worker
+from django.test import SimpleTestCase
 
 
 from yaksh.models import (
@@ -32,6 +35,9 @@ from yaksh.models import (
 from yaksh.views import add_as_moderator, course_forum, post_comments
 from yaksh.forms import PostForm, CommentForm
 from yaksh.decorators import user_has_profile
+from online_test.celery import app
+
+from notifications_plugin.models import Notification
 
 
 class TestUserRegistration(TestCase):
@@ -576,9 +582,9 @@ class TestMonitor(TestCase):
                                    )
         self.assertEqual(response.status_code, 404)
 
-    def test_monitor_display_quizzes(self):
+    def test_monitor_quiz_not_found(self):
         """
-            Check all the available quizzes in monitor
+            Check if quiz is not found
         """
         self.client.login(
             username=self.user.username,
@@ -587,10 +593,7 @@ class TestMonitor(TestCase):
         response = self.client.get(reverse('yaksh:monitor'),
                                    follow=True
                                    )
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "yaksh/monitor.html")
-        self.assertEqual(response.context['objects'][0], self.course)
-        self.assertEqual(response.context['msg'], "Monitor")
+        self.assertEqual(response.status_code, 404)
 
     def test_monitor_display_quiz_results(self):
         """
@@ -3595,11 +3598,13 @@ class TestSelfEnroll(TestCase):
         self.assertRedirects(response, '/exam/manage/')
 
 
-class TestGrader(TestCase):
+class TestGrader(SimpleTestCase):
+    allow_database_queries = True
+
     def setUp(self):
         self.client = Client()
 
-        self.mod_group = Group.objects.create(name='moderator')
+        self.mod_group, created = Group.objects.get_or_create(name='moderator')
 
         # Create Moderator with profile
         self.user1_plaintext_pass = 'demo1'
@@ -3679,6 +3684,9 @@ class TestGrader(TestCase):
             end_time=timezone.now()+timezone.timedelta(minutes=20),
             )
 
+        self.celery_worker = start_worker(app)
+        self.celery_worker.__enter__()
+
     def tearDown(self):
         User.objects.all().delete()
         Course.objects.all().delete()
@@ -3687,42 +3695,22 @@ class TestGrader(TestCase):
         QuestionPaper.objects.all().delete()
         AnswerPaper.objects.all().delete()
         self.mod_group.delete()
-
-    def test_grader_denies_anonymous(self):
-        # Given
-        redirect_destination = ('/exam/login/?next=/exam/manage/grader/')
-
-        # When
-        response = self.client.get(reverse('yaksh:grader'), follow=True)
-
-        # Then
-        self.assertRedirects(response, redirect_destination)
-
-    def test_grader_denies_students(self):
-        # Given
-        self.client.login(
-            username=self.student.username,
-            password=self.student_plaintext_pass
-        )
-
-        # When
-        response = self.client.get(reverse('yaksh:grader'), follow=True)
-
-        # Then
-        self.assertEqual(response.status_code, 404)
+        self.celery_worker.__exit__(None, None, None)
 
     def test_regrade_denies_anonymous(self):
         # Given
-        url = "/exam/login/?next=/exam/manage/regrade/answerpaper"
+        url = "/exam/login/?next=/exam/manage/regrade/user/question"
         redirect_destination = (
-            url + "/{}/{}/{}/".format(
-                self.course.id, self.question.id, self.answerpaper.id)
+            url + "/{}/{}/{}/{}/".format(
+                self.course.id, self.question_paper.id,
+                self.answerpaper.id, self.question.id)
             )
 
         # When
         response = self.client.get(
-            reverse('yaksh:regrade',
+            reverse('yaksh:regrade_by_question',
                     kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id,
                             'question_id': self.question.id,
                             'answerpaper_id': self.answerpaper.id}),
             follow=True
@@ -3740,8 +3728,9 @@ class TestGrader(TestCase):
 
         # When
         response = self.client.get(
-            reverse('yaksh:regrade',
+            reverse('yaksh:regrade_by_question',
                     kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id,
                             'question_id': self.question.id,
                             'answerpaper_id': self.answerpaper.id}),
             follow=True
@@ -3749,21 +3738,6 @@ class TestGrader(TestCase):
 
         # Then
         self.assertEqual(response.status_code, 404)
-
-    def test_grader_by_moderator(self):
-        # Given
-        self.client.login(
-            username=self.user1.username,
-            password=self.user1_plaintext_pass
-        )
-
-        # When
-        response = self.client.get(reverse('yaksh:grader'), follow=True)
-
-        # Then
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue('courses' in response.context)
-        self.assertTemplateUsed(response, 'yaksh/regrade.html')
 
     def test_regrade_by_moderator(self):
         # Given
@@ -3774,44 +3748,46 @@ class TestGrader(TestCase):
 
         # When
         response = self.client.get(
-            reverse('yaksh:regrade',
+            reverse('yaksh:regrade_by_question',
                     kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id,
                             'question_id': self.question.id,
                             'answerpaper_id': self.answerpaper.id}),
             follow=True)
 
         # Then
+        messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('courses' in response.context)
-        self.assertTrue('details' in response.context)
-        self.assertTemplateUsed(response, 'yaksh/regrade.html')
+        self.assertIn("demo quiz is submitted for re-evaluation", messages[0])
 
         # When
         response = self.client.get(
-            reverse('yaksh:regrade',
+            reverse('yaksh:regrade_by_user',
                     kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id,
                             'answerpaper_id': self.answerpaper.id}),
             follow=True)
 
         # Then
+        messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('courses' in response.context)
-        self.assertTrue('details' in response.context)
-        self.assertTemplateUsed(response, 'yaksh/regrade.html')
+        self.assertIn("demo quiz is submitted for re-evaluation", messages[0])
 
         # When
         response = self.client.get(
-            reverse('yaksh:regrade',
+            reverse('yaksh:regrade_by_quiz',
                     kwargs={'course_id': self.course.id,
                             'question_id': self.question.id,
                             'questionpaper_id': self.question_paper.id}),
             follow=True)
 
         # Then
+        messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('courses' in response.context)
-        self.assertTrue('details' in response.context)
-        self.assertTemplateUsed(response, 'yaksh/regrade.html')
+        self.assertIn("demo quiz is submitted for re-evaluation", messages[0])
+        self.assertEqual(Notification.objects.get_receiver_notifications(
+            self.user1.id
+            ).count(), 3)
 
     def test_regrade_denies_moderator_not_in_course(self):
         # Given
@@ -3823,8 +3799,9 @@ class TestGrader(TestCase):
         self.mod_group.user_set.remove(self.user2)
         # When
         response = self.client.get(
-            reverse('yaksh:regrade',
+            reverse('yaksh:regrade_by_question',
                     kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id,
                             'question_id': self.question.id,
                             'answerpaper_id': self.answerpaper.id}),
             follow=True)

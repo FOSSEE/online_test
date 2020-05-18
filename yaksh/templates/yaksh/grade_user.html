@@ -2,9 +2,9 @@
 {% load custom_filters %}
 {% load static %}
 
-{% block title %} Grade User {% endblock %}
+{% block title %} Grader {% endblock %}
 
-{% block pagetitle %} Grade User {% endblock pagetitle %}
+{% block pagetitle %} Grader {% endblock pagetitle %}
 
 {% block script %}
 <script type="text/javascript" src="{% static 'yaksh/js/jquery.tablesorter.min.js' %}">
@@ -51,7 +51,7 @@ function searchNames() {
                           </h5>
                       </div>
                       <div class="col-md">
-                          <a class="card-link btn btn-info" data-toggle="collapse" href="#collapse{{course.id}}">
+                          <a class="card-link btn btn-outline-success" data-toggle="collapse" href="#collapse{{course.id}}">
                               Details
                               <i class="fa fa-toggle-down" id="toggle_course_{{course.id}}"></i>
                           </a>
@@ -70,7 +70,12 @@ function searchNames() {
                                         {{quiz.description}}
                                       </div>
                                       <div class="col-md-2">
-                                        <a href="{% url 'yaksh:grade_user' quiz.id course.id%}" class="btn btn-primary">
+                                        <a href="{% url 'yaksh:monitor' quiz.id course.id%}" class="btn btn-primary">
+                                            Monitor
+                                          </a>
+                                      </div>
+                                      <div class="col-md-2">
+                                        <a href="{% url 'yaksh:grade_user' quiz.id course.id%}" class="btn btn-info">
                                           Grade
                                         </a>
                                       </div>
@@ -134,6 +139,46 @@ function searchNames() {
           <i class="fa fa-download"></i>&nbsp;Download All Assignments
         </a>
         <br><br>
+      {% endif %}
+      {% if status == 'grade' and users %}
+        <div id="accordian-questions" class="card">
+        <div class="card-header">
+            <a class="card-link" data-toggle="collapse" href="#questions">
+              Regrade papers by questions&nbsp;<i class="fa fa-angle-down"></i>
+            </a>
+        </div>
+        <div id="questions" class="collapse hide" data-parent="#accordion-questions">
+          {% with quiz.questionpaper_set.get as qp %}
+            <div class="card-body">
+              <table class="table table-responsive-sm">
+                <thead>
+                  <tr>
+                  <th>Questions</th>
+                  <th>Type</th>
+                  <th>Marks</th>
+                  <th>Regrade</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  {% for question in qp.get_question_bank %}
+                    <tr>
+                    <td>{{ question.summary }}</td>
+                    <td>{{ question.get_type_display }}</td>
+                    <td>{{ question.points }}</td>
+                    <td>
+                      <a href="{% url 'yaksh:regrade_by_quiz' course_id quiz.questionpaper_set.get.id question.id %}" class="btn btn-outline-success">
+                        <i class="fa fa-repeat"></i>&nbsp;Regrade
+                      </a>
+                    </td>
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+              </table>
+            </div>
+          {% endwith %}
+        </div>
+      </div>
+      <br>
       {% endif %}
 
       {% if messages %}
@@ -251,7 +296,16 @@ function searchNames() {
             {% if paper.answers.count %}
             <div class="card">
               <div class="card-header">
-                Submission Details
+                <div class="row">
+                  <div class="col-md-6">
+                    Submission Details                    
+                  </div>
+                  <div class="col-md-4">
+                    <a href="{% url 'yaksh:regrade_by_user' course_id quiz.questionpaper_set.get.id paper.id %}" class="btn btn-outline-success">
+                      <i class="fa fa-repeat"></i>&nbsp;Regrade Whole Paper
+                    </a>
+                  </div>
+                </div>
               </div>
               <div class="card-body">
                 <table class="tablesorter table table-striped table-bordered table-responsive-sm" id='marks_table'>
@@ -260,6 +314,7 @@ function searchNames() {
                     <th>Questions</th>
                     <th>Type</th>
                     <th>Marks Obtained</th>
+                    <th>Regrade by question</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -273,6 +328,11 @@ function searchNames() {
                           </td>
                           <td>{{ question.type }}</td>
                           <td>{{ answer.answer.marks }}</td>
+                          <td>
+                            <a href="{% url 'yaksh:regrade_by_question' course_id quiz.questionpaper_set.get.id paper.id question.id %}" class="btn btn-outline-success">
+                              <i class="fa fa-repeat"></i>&nbsp;Regrade
+                            </a>
+                          </td>
                           </tr>
                       {% endwith %}
                     {% endfor %}
@@ -287,7 +347,8 @@ function searchNames() {
                       <div class="card-header text-white bg-info">
                         <strong>
                           Details: {{forloop.counter}}. {{ question.summary }}
-                          <span class="marks pull-right"> Mark(s): {{ question.points }} </span>
+                          <span class="marks pull-right"> Mark(s): {{ question.points }}
+                          </span>
                         </strong>
                       </div>
                       <div class="card-body">
@@ -533,4 +594,40 @@ function searchNames() {
     </div>
   </div>
 </div>
+{% if details %}
+  <div class="modal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Regrade</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-responsive-sm">
+            <tbody>
+              {% for detail in details %}
+                {% if detail.0 %}
+                  <tr class="table-success">
+                    <td> Graded Successfully </td>
+                {% else%}
+                  <tr class="table-danger">
+                    <td> Did not Grade </td>
+                {% endif %}
+                    <td> {{ detail.1|linebreaks }} </td>
+                  </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
 {% endblock%}
