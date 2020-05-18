@@ -6,7 +6,9 @@
 
 {% block content %}
     <div class="container">
-        <a class="btn btn-primary" href="{% url 'yaksh:course_forum' post.course.id %}">Back to Posts</a>
+        <a class="btn btn-primary" href="{% url 'yaksh:course_forum' post.course.id %}">
+            <i class="fa fa-arrow-left"></i>&nbsp;Back to Posts
+        </a>
         <br>
         <br>
         <div class="card mb-2 border-dark">
@@ -56,12 +58,13 @@
         {% endif %}
         <br>
         <div>
+            <b><u>Add comment:</u></b>
             <form action="{% url 'yaksh:post_comments' post.course.id post.uid %}" method="POST" enctype='multipart/form-data'>
                 <div class="form-group">
                     {% csrf_token %}
                     {{form}}
                 </div>
-                <input type="submit" value="Submit" class="btn btn-primary">
+                <input type="submit" value="Submit" class="btn btn-success">
             </form>
         </div>
     </div>
