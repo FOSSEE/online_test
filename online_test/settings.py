@@ -7,7 +7,6 @@ https://docs.djangoproject.com/en/1.6/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.6/ref/settings/
 """
-from celery.schedules import crontab
 from yaksh.pipeline.settings import AUTH_PIPELINE
 import os
 from decouple import config
