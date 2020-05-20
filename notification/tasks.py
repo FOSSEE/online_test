@@ -8,12 +8,12 @@ from celery.task.schedules import crontab
 from notifications_plugin.models import NotificationMessage, Notification
 
 from yaksh.models import Course, Quiz, QuestionPaper, AnswerPaper
-
+from yaksh.send_emails import send_bulk_mail
 
 @periodic_task(
     run_every=(
         crontab(
-            hour='15', minute=6, day_of_week='Tuesday', day_of_month='*',
+            hour='08', minute=36, day_of_week='*/3', day_of_month='*',
             month_of_year='*'
         )
     ), name='course_deadline_task'
@@ -38,12 +38,15 @@ def course_deadline_task():
                 Notification.objects.add_bulk_user_notifications(
                     receiver_ids=students_id, msg_id=nm.id
                 )
+                subject = 'Course Notification'
+                send_bulk_mail(subject=subject, email_body=message,
+                               recipients=students_id, attachments=None)
 
 
 @periodic_task(
     run_every=(
         crontab(
-            hour='15', minute=8, day_of_week='Tuesday', day_of_month='*',
+            hour='09', minute=12, day_of_week='*/3', day_of_month='*',
             month_of_year='*'
         )
     ), name='quiz_deadline_task'
