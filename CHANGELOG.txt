@@ -1,3 +1,16 @@
+=== 0.2.0 (20-05-2020) ===
+
+* Added a discussion forum feature
+* Added a reject select button to reject mulitple students from a course
+* Added a celery task to regrade the papers
+* Merge monitor, grade user and regrade dashboard into a single consolidated dashboard
+* Fixed pagination and other issues while searching courses, questions
+* Added a search and a dropdown in grade user section
+* Added more tests for start quiz view function
+* Added a additional option "other" in language for a question which supports all types of question except the coding type
+* Fixed search in discussion forum
+* Added API for yaksh
+
 === 0.14.0 (07-04-2020) ===
 
 * Added search bar for searching course
