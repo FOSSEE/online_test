@@ -743,7 +743,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
 
     if request.method == 'POST':
         # Add the answer submitted, regardless of it being correct or not.
-        if paper.time_left() <= 0 or questionpaper.can_attempt_now(user, course_id)[0]:
+        if paper.time_left() <= 0 or not questionpaper.can_attempt_now(user, course_id)[0]:
             reason = 'Your time is up!'
             return complete(
                 request, reason, paper.attempt_number, paper.question_paper.id,
