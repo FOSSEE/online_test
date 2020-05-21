@@ -35,7 +35,7 @@ from yaksh.models import (
 from yaksh.views import add_as_moderator, course_forum, post_comments
 from yaksh.forms import PostForm, CommentForm
 from yaksh.decorators import user_has_profile
-from online_test.celery import app
+from online_test.celery_settings import app
 
 from notifications_plugin.models import Notification
 
