@@ -738,10 +738,17 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
         question_paper=questionpaper_id,
         course_id=course_id
     )
+    questionpaper = QuestionPaper.objects.get(id=questionpaper_id)
     current_question = get_object_or_404(Question, pk=q_id)
 
     if request.method == 'POST':
         # Add the answer submitted, regardless of it being correct or not.
+        if paper.time_left() <= 0 or questionpaper.can_attempt_now(user, course_id)[0]:
+            reason = 'Your time is up!'
+            return complete(
+                request, reason, paper.attempt_number, paper.question_paper.id,
+                course_id, module_id=module_id
+            )
         if current_question.type == 'mcq':
             user_answer = request.POST.get('answer')
         elif current_question.type == 'integer':
