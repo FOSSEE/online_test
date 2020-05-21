@@ -1,4 +1,8 @@
-=== 0.2.0 (20-05-2020) ===
+=== 0.20.1 (21-05-2020) ===
+
+* Rename celery.py to celery_settings.py to avoid conflicts with the celery app
+
+=== 0.20.0 (20-05-2020) ===
 
 * Added a discussion forum feature
 * Added a reject select button to reject mulitple students from a course
