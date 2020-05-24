@@ -76,9 +76,7 @@ function textareaformat()
     document.getElementById('id_tags').setAttribute('class','form-control');
     $("[id*="+'test_case_args'+"]").attr('placeholder',
                                          'Command Line arguments for bash only');
-    var desc_preview = "<p id='desc_preview' align='justify'></p>";
     var sol_preview = "<p id='sol_preview' align='justify'></p>";
-    $(desc_preview).insertBefore("#id_description");
     $(sol_preview).insertBefore("#id_solution");
 
     $('#id_snippet').bind('keydown', function( event ){
@@ -126,8 +124,6 @@ function textareaformat()
         language.style.border = '1px solid #ccc';
     });
 
-
-    document.getElementById('desc_preview').innerHTML = document.getElementById('id_description').value ; 
     document.getElementById('sol_preview').innerHTML = document.getElementById('id_solution').value ;
 
     var question_type = document.getElementById('id_type').value
@@ -170,8 +166,10 @@ function textareaformat()
                      tinymce.triggerSave();
                   });
             },
-            max_height: 200,
-            height: 200
+            max_height: 400,
+            height: 400,
+            plugins: "image code link",
+            convert_urls: false
         });
     });
 }

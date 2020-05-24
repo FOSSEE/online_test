@@ -52,8 +52,9 @@ $(document).ready(function(){
     $(function() {
         tinymce.init({ 
             selector: 'textarea#email_body',
-            max_height: 200,
-            height: 200
+            max_height: 400,
+            height: 400,
+            plugins: "code image link"
         });
     });
 

@@ -237,12 +237,9 @@ def add_question(request, question_id=None):
         qform = QuestionForm(request.POST, instance=question)
         fileform = FileForm(request.POST, request.FILES)
         remove_files_id = request.POST.getlist('clear')
-        files = request.FILES.getlist('file_field')
+        added_files = request.FILES.getlist('file_field')
         extract_files_id = request.POST.getlist('extract')
         hide_files_id = request.POST.getlist('hide')
-        if files:
-            for file in files:
-                FileUpload.objects.get_or_create(question=question, file=file)
         if remove_files_id:
             files = FileUpload.objects.filter(id__in=remove_files_id)
             for file in files:
@@ -267,12 +264,16 @@ def add_question(request, question_id=None):
                 request.POST, request.FILES, instance=question
                 )
             )
-        files = request.FILES.getlist('file_field')
         if qform.is_valid():
             question = qform.save(commit=False)
             question.user = user
             question.save()
             # many-to-many field save function used to save the tags
+            if added_files:
+                for file in added_files:
+                    FileUpload.objects.get_or_create(
+                        question=question, file=file
+                    )
             qform.save_m2m()
             for formset in formsets:
                 if formset.is_valid():
