@@ -167,6 +167,15 @@
                     {% endfor %}
                   {% endif %}
                   <br>
+                  <div class="card">
+                    <div class="card-body">
+                      <span class="badge badge-pill badge-success">
+                        Solution for the question
+                      </span><br><br>
+                      {{ question.solution|safe }}
+                    </div>
+                  </div>
+                  <br>
                   <h5>
                     <span class="badge badge-pill badge-primary">Student answer(s):
                     </span>
