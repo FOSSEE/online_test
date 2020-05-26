@@ -82,7 +82,7 @@ def quiz_deadline_task():
 @periodic_task(
     run_every=(
         crontab(
-            hour='14', minute=14, day_of_week='Tuesday', day_of_month='*',
+            hour='23', minute=30, day_of_week='Tuesday', day_of_month='*',
             month_of_year='*'
         )
     ), name='course_quiz_deadline_mail_task'
@@ -94,8 +94,8 @@ def course_quiz_deadline_mail_task():
             students = course.students.all()
             quizzes = course.get_quizzes()
             for student in students:
-                subscribtion = student.subscription_set.all()
-                if subscribtion.exists():
+                subscribed = student.subscription.exists()
+                if subscribed:
                     data = []
                     for quiz in quizzes:
                         quiz_data = {}
