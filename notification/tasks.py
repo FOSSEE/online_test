@@ -1,6 +1,9 @@
 from textwrap import dedent
+from collections import OrderedDict
 
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 
 from celery import task
 from celery.decorators import periodic_task
@@ -8,7 +11,8 @@ from celery.task.schedules import crontab
 from notifications_plugin.models import NotificationMessage, Notification
 
 from yaksh.models import Course, Quiz, QuestionPaper, AnswerPaper
-from yaksh.send_emails import send_bulk_mail
+from .models import Subscription
+
 
 @periodic_task(
     run_every=(
@@ -38,9 +42,6 @@ def course_deadline_task():
                 Notification.objects.add_bulk_user_notifications(
                     receiver_ids=students_id, msg_id=nm.id
                 )
-                subject = 'Course Notification'
-                send_bulk_mail(subject=subject, email_body=message,
-                               recipients=students_id, attachments=None)
 
 
 @periodic_task(
@@ -75,4 +76,48 @@ def quiz_deadline_task():
                     )
                     Notification.objects.add_bulk_user_notifications(
                         receiver_ids=students_id, msg_id=nm.id
+                    )
+
+
+@periodic_task(
+    run_every=(
+        crontab(
+            hour='14', minute=14, day_of_week='Tuesday', day_of_month='*',
+            month_of_year='*'
+        )
+    ), name='course_quiz_deadline_mail_task'
+)
+def course_quiz_deadline_mail_task():
+    courses = Course.objects.filter(active=True, is_trial=False)
+    for course in courses:
+        if course.is_active_enrollment():
+            students = course.students.all()
+            quizzes = course.get_quizzes()
+            for student in students:
+                subscribtion = student.subscription_set.all()
+                if subscribtion.exists():
+                    data = []
+                    for quiz in quizzes:
+                        quiz_data = {}
+                        answer_paper = AnswerPaper.objects.filter(
+                            course=course, user=student
+                        )
+                        if answer_paper.exists():
+                            quiz_data['quiz'] = quiz
+                            quiz_data['status'] = True
+                        else:
+                            quiz_data['quiz'] = quiz
+                            quiz_data['status'] = False
+                            quiz_data['deadline'] = quiz.end_date_time
+                        data.append(quiz_data)
+                    msg_html = render_to_string('notification/email.html', {
+                            'data': data
+                        }
+                    )
+                    msg_plain = render_to_string('notification/email.txt', {
+                            'data': data
+                        }
+                    )
+                    send_mail('email title', msg_plain, 'some@sender.com',
+                        [student.email], html_message=msg_html
                     )
