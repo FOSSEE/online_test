@@ -743,6 +743,12 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
 
     if request.method == 'POST':
         # Add the answer submitted, regardless of it being correct or not.
+        if (paper.time_left() <= -10 or paper.status == "completed"):
+            reason = 'Your time is up!'
+            return complete(
+                request, reason, paper.attempt_number, paper.question_paper.id,
+                course_id, module_id=module_id
+            )
         if current_question.type == 'mcq':
             user_answer = request.POST.get('answer')
         elif current_question.type == 'integer':

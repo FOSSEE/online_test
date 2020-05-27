@@ -5496,8 +5496,8 @@ class TestQuestionPaper(TestCase):
         self.answerpaper = AnswerPaper.objects.create(
             user=self.user, question_paper=self.question_paper,
             attempt_number=1,
-            start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
-            end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
+            start_time=timezone.now() - timezone.timedelta(minutes = 10),
+            end_time=timezone.now() - timezone.timedelta(minutes = 1),
             user_ip="127.0.0.1", status="inprogress", passed=False,
             percent=0, marks_obtained=0, course=self.course
         )
