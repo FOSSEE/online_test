@@ -226,7 +226,7 @@ question_type = "{{ question.type }}";
           <!-- MCQ type question -->
           {% if question.type == "mcq" %}
             {% for test_case in test_cases %}
-              {% if last_attempt and last_attempt|safe == test_case.id|safe %}
+              {% if last_attempt and last_attempt|to_int == test_case.id %}
               <input name="answer" type="radio" value="{{ test_case.id }}" checked />
                 {{ test_case.options|safe }} <br/>
               {% else %}

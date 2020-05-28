@@ -38,6 +38,9 @@ def inprogress(answerpaper):
 def zip_longest_out(a, b):
     return zip_longest(a, b)
 
+@register.filter(name='to_int')
+def to_int(value):
+    return int(value)
 
 @register.filter(name="file_title")
 def file_title(name):
