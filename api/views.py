@@ -490,4 +490,4 @@ class CourseCreate(APIView):
             new_course.learning_module.set(modules)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.errors)
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
