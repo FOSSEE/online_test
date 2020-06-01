@@ -440,22 +440,20 @@ class CourseCreate(APIView):
         user = get_object_or_404(User, username=username)
         user_id = user.id
         request.data['creator'] = user_id
-        for learning_module in request.data['learning_module']:
-            learning_module['creator'] = user_id
-            for learning_unit in learning_module["learning_unit"]:
-                if learning_unit['type'] == 'quiz':
-                    learning_unit['quiz']['creator'] = user.id
-                if learning_unit['type'] == 'lesson':
-                    learning_unit['lesson']['creator'] = user.id
         serializer = CourseSerializer(data=request.data)
         modules = []
         for learning_module in request.data['learning_module']:
+            learning_module['creator'] = user_id
             module_serializer = LearningModuleSerializer(data=learning_module)
             units = []
             if module_serializer.is_valid():
                 module_instance = module_serializer.save()
                 modules.append(module_instance)
                 for learning_unit in learning_module['learning_unit']:
+                    if learning_unit['type'] == 'quiz':
+                        learning_unit['quiz']['creator'] = user.id
+                    if learning_unit['type'] == 'lesson':
+                        learning_unit['lesson']['creator'] = user.id
                     unit_serializer = LearningUnitSerializer(
                         data=learning_unit)
                     if unit_serializer.is_valid():
@@ -490,4 +488,4 @@ class CourseCreate(APIView):
             new_course.learning_module.set(modules)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
