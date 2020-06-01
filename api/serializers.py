@@ -82,7 +82,6 @@ class CourseSerializer(serializers.ModelSerializer):
             'view_grade',
         )
     def create(self,validated_data):
-          print(type(validated_data))
           learning_module=validated_data.pop('learning_module')
           new_course=Course(**validated_data)
           new_course.save()
