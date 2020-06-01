@@ -21,6 +21,7 @@ from django.contrib.auth.models import User
 import json
 from django.shortcuts import get_object_or_404
 
+
 class QuestionList(APIView):
     """ List all questions or create a new question. """
 
@@ -432,57 +433,61 @@ class QuitQuiz(APIView):
         serializer = AnswerPaperSerializer(answerpaper)
         return Response(serializer.data)
 
+
 class CourseCreate(APIView):
-    def post(self,request):
-        username=request.data['creator']
-        user=get_object_or_404(User,username=username)
-        user_id=user.id 
-        request.data['creator']=user_id
+    def post(self, request):
+        username = request.data['creator']
+        user = get_object_or_404(User, username=username)
+        user_id = user.id
+        request.data['creator'] = user_id
         for learning_module in request.data['learning_module']:
-            learning_module['creator']=user_id
+            learning_module['creator'] = user_id
             for learning_unit in learning_module["learning_unit"]:
-                if learning_unit['type']=='quiz':
-                    learning_unit['quiz']['creator']=user.id
-                if learning_unit['type']=='lesson':
-                    learning_unit['lesson']['creator']=user.id
-        serializer=CourseSerializer(data=request.data)
-        modules=[]
+                if learning_unit['type'] == 'quiz':
+                    learning_unit['quiz']['creator'] = user.id
+                if learning_unit['type'] == 'lesson':
+                    learning_unit['lesson']['creator'] = user.id
+        serializer = CourseSerializer(data=request.data)
+        modules = []
         for learning_module in request.data['learning_module']:
-            module_serializer=LearningModuleSerializer(data=learning_module)
-            units=[]
+            module_serializer = LearningModuleSerializer(data=learning_module)
+            units = []
             if module_serializer.is_valid():
-                module_instance=module_serializer.save()
+                module_instance = module_serializer.save()
                 modules.append(module_instance)
                 for learning_unit in learning_module['learning_unit']:
-                    unit_serializer=LearningUnitSerializer(data=learning_unit)
+                    unit_serializer = LearningUnitSerializer(
+                        data=learning_unit)
                     if unit_serializer.is_valid():
                         if learning_unit['quiz'] is not None:
-                            quiz_serializer=QuizSerializer(data=learning_unit['quiz'])
+                            quiz_serializer = QuizSerializer(
+                                data=learning_unit['quiz'])
                             if quiz_serializer.is_valid():
-                                new_quiz=quiz_serializer.save()
+                                new_quiz = quiz_serializer.save()
                             else:
                                 return Response(quiz_serializer.errors)
                         else:
-                            new_quiz=None
+                            new_quiz = None
                         if learning_unit['lesson'] is not None:
-                            lesson_serializer=LessonSerializer(data=learning_unit['lesson'])
+                            lesson_serializer = LessonSerializer(
+                                data=learning_unit['lesson'])
                             if lesson_serializer.is_valid():
-                                new_lesson=lesson_serializer.save()
+                                new_lesson = lesson_serializer.save()
                             else:
                                 return Response(lesson_serializer.errors)
                         else:
-                            new_lesson=None
-                        unit_instance=unit_serializer.save(quiz=new_quiz,lesson=new_lesson)
+                            new_lesson = None
+                        unit_instance = unit_serializer.save(
+                            quiz=new_quiz, lesson=new_lesson)
                         units.append(unit_instance)
                     else:
-                         return Response(unit_serializer.errors)
+                        return Response(unit_serializer.errors)
                 module_instance.learning_unit.set(units)
             else:
                 return Response(module_serializer.errors)
         if serializer.is_valid():
-            new_course=serializer.save()
+            new_course = serializer.save()
             new_course.learning_module.set(modules)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors)
-

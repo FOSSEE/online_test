@@ -4,6 +4,8 @@ from yaksh.models import (
     LearningModule, LearningUnit, Lesson
 )
 from django.contrib.auth.models import User
+
+
 class QuestionSerializer(serializers.ModelSerializer):
     test_cases = serializers.SerializerMethodField()
 
@@ -30,47 +32,57 @@ class AnswerPaperSerializer(serializers.ModelSerializer):
         model = AnswerPaper
         fields = '__all__'
 
+
 class QuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
         exclude = ('view_answerpaper', )
-    def create(self,validated_data):
+
+    def create(self, validated_data):
         return Quiz.objects.create(**validated_data)
+
 
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
         fields = '__all__'
-    def create(self,validated_data):
+
+    def create(self, validated_data):
         return Lesson.objects.create(**validated_data)
 
 
 class LearningUnitSerializer(serializers.ModelSerializer):
-    quiz=QuizSerializer(allow_null=True)
-    lesson=LessonSerializer(allow_null=True)
+    quiz = QuizSerializer(allow_null=True)
+    lesson = LessonSerializer(allow_null=True)
+
     class Meta:
         model = LearningUnit
         fields = '__all__'
-    def create(self,validated_data,quiz=None,lesson=None):
-        new_unit=LearningUnit(**validated_data)
+
+    def create(self, validated_data, quiz=None, lesson=None):
+        new_unit = LearningUnit(**validated_data)
         new_unit.save()
         return new_unit
+
 
 class LearningModuleSerializer(serializers.ModelSerializer):
 
     learning_unit = LearningUnitSerializer(many=True)
+
     class Meta:
         model = LearningModule
         fields = '__all__'
-    def create(self,validated_data):
-        learning_unit=validated_data.pop("learning_unit")
-        new_module=LearningModule(**validated_data)
+
+    def create(self, validated_data):
+        learning_unit = validated_data.pop("learning_unit")
+        new_module = LearningModule(**validated_data)
         new_module.save()
         return new_module
-        
-    
+
+
 class CourseSerializer(serializers.ModelSerializer):
     learning_module = LearningModuleSerializer(many=True)
+
     class Meta:
         model = Course
         exclude = (
@@ -81,13 +93,9 @@ class CourseSerializer(serializers.ModelSerializer):
             'grading_system',
             'view_grade',
         )
-    def create(self,validated_data):
-          learning_module=validated_data.pop('learning_module')
-          new_course=Course(**validated_data)
-          new_course.save()
-          return new_course
 
-            
-
-                
-
+    def create(self, validated_data):
+        learning_module = validated_data.pop('learning_module')
+        new_course = Course(**validated_data)
+        new_course.save()
+        return new_course

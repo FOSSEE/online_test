@@ -18,30 +18,38 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ForumBase',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('uid', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
+                ('uid', models.UUIDField(
+                    default=uuid.uuid4, editable=False, unique=True)),
                 ('description', models.TextField()),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('modified_at', models.DateTimeField(auto_now=True)),
-                ('image', models.ImageField(blank=True, null=True, upload_to=yaksh.models.get_image_dir, validators=[yaksh.models.validate_image])),
+                ('image', models.ImageField(blank=True, null=True,
+                                            upload_to=yaksh.models.get_image_dir, validators=[yaksh.models.validate_image])),
                 ('active', models.BooleanField(default=True)),
-                ('creator', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('creator', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(
             name='Post',
             fields=[
-                ('forumbase_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='yaksh.ForumBase')),
+                ('forumbase_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE,
+                                                       parent_link=True, primary_key=True, serialize=False, to='yaksh.ForumBase')),
                 ('title', models.CharField(max_length=200)),
-                ('course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='post', to='yaksh.Course')),
+                ('course', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, related_name='post', to='yaksh.Course')),
             ],
             bases=('yaksh.forumbase',),
         ),
         migrations.CreateModel(
             name='Comment',
             fields=[
-                ('forumbase_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='yaksh.ForumBase')),
-                ('post_field', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comment', to='yaksh.Post')),
+                ('forumbase_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE,
+                                                       parent_link=True, primary_key=True, serialize=False, to='yaksh.ForumBase')),
+                ('post_field', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, related_name='comment', to='yaksh.Post')),
             ],
             bases=('yaksh.forumbase',),
         ),
