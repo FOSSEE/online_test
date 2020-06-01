@@ -434,6 +434,8 @@ class QuitQuiz(APIView):
         return Response(serializer.data)
 
 
+@authentication_classes(())
+@permission_classes(())
 class CourseCreate(APIView):
     def post(self, request):
         username = request.data['creator']
