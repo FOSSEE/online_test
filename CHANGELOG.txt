@@ -1,4 +1,14 @@
-=== 0.20.1 (21-05-2020) ===
+== 0.20.2 (02-06-2020) ===
+
+* Added a custom filter to convert str objects to int in templates
+* Fixed a bug that prevented users from seeing the last submitted MCQ answers
+* Updated the TinyMCE editor with multiple plugins
+* Fixed issue in question file upload for empty question instance
+* Changed variable name for uploaded file to avoid conflict with the queryset variable
+* Display question solution in view answer paper
+* Fixed bug to check if attempts are allowed and spare time is available before answer is checked 
+
+== 0.20.1 (21-05-2020) ===
 
 * Rename celery.py to celery_settings.py to avoid conflicts with the celery app
 
