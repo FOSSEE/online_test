@@ -465,7 +465,7 @@ class CourseCreate(APIView):
                             if quiz_serializer.is_valid():
                                 new_quiz = quiz_serializer.save()
                             else:
-                                return Response(quiz_serializer.errors)
+                                return Response(quiz_serializer.errors,status=status.HTTP_400_BAD_REQUEST)
                         else:
                             new_quiz = None
                         if learning_unit['lesson'] is not None:
@@ -474,17 +474,17 @@ class CourseCreate(APIView):
                             if lesson_serializer.is_valid():
                                 new_lesson = lesson_serializer.save()
                             else:
-                                return Response(lesson_serializer.errors)
+                                return Response(lesson_serializer.errors,status=status.HTTP_400_BAD_REQUEST)
                         else:
                             new_lesson = None
                         unit_instance = unit_serializer.save(
                             quiz=new_quiz, lesson=new_lesson)
                         units.append(unit_instance)
                     else:
-                        return Response(unit_serializer.errors)
+                        return Response(unit_serializer.errors,status=status.HTTP_400_BAD_REQUEST)
                 module_instance.learning_unit.set(units)
             else:
-                return Response(module_serializer.errors)
+                return Response(module_serializer.errors,status=status.HTTP_400_BAD_REQUEST)
         if serializer.is_valid():
             new_course = serializer.save()
             new_course.learning_module.set(modules)
