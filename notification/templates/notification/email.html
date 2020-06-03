@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+      <style type="text/css">
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        table {
+          border-collapse: collapse;
+          width: 100%;
+        }
+
+        th, td {
+          padding: 8px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+        }
+      </style>
+    </head>
+    <body>
+        {% with data.0 as data %}
+        <h2>Course:{{data.course.name}}</h2>
+        <p>The deadline for the course is <strong>{{data.course.end_enroll_time}}</strong></p>
+        <p>Below is the table of the quizzes for the course <strong>{{data.course.name}}</strong>. Please
+            make sure to <strong>complete</strong> these quizzes before the <strong>deadline</strong>.</p>
+         {% endwith %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Quiz</th>
+                    <th>Deadline</th>
+                    <th>Completed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quiz in data %}
+                    <tr>
+                        <td>{{quiz.quiz.description}}</td>
+                        <td>{{quiz.quiz.end_date_time|date:'Y-M-D h:i A'}}</td>
+                        <td>
+                            {% if quiz.ap.exists %}
+                                Complete
+                            {% else %}
+                                Incomplete
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </body>
+</html>

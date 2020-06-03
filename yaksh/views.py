@@ -10,6 +10,7 @@ from django.db import models
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
 from django.forms.models import inlineformset_factory
 from django.forms import fields
 from django.utils import timezone
@@ -46,6 +47,7 @@ from yaksh.forms import (
     LessonFileForm, LearningModuleForm, ExerciseForm, TestcaseForm,
     SearchFilterForm, PostForm, CommentForm
 )
+from notification.models import Subscription
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .settings import URL_ROOT
 from .file_utils import extract_files, is_csv
@@ -3057,6 +3059,11 @@ def course_modules(request, course_id, msg=None):
         if not course_status.grade:
             course_status.set_grade()
         context['grade'] = course_status.get_grade()
+    ct = ContentType.objects.get_for_model(course)
+    course_sub = Subscription.objects.get(
+        target_ct=ct, user=user, target_id=course.id
+    )
+    context['course_sub'] = course_sub
     return my_render_to_response(request, 'yaksh/course_modules.html', context)
 
 

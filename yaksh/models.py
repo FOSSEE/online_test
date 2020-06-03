@@ -11,6 +11,7 @@ from collections import Counter, defaultdict
 
 from django.db import models
 from django.contrib.auth.models import User, Group, Permission
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from taggit.managers import TaggableManager
@@ -40,6 +41,8 @@ from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from django.conf import settings
 from django.forms.models import model_to_dict
 from grades.models import GradingSystem
+
+from notification.models import Subscription
 
 languages = (
         ("python", "Python"),
@@ -896,6 +899,7 @@ class Course(models.Model):
     view_grade = models.BooleanField(default=False)
     learning_module = models.ManyToManyField(LearningModule,
                                              related_name='learning_module')
+    subscription = GenericRelation(Subscription, related_query_name='courses')
 
     # The start date of the course enrollment.
     start_enroll_time = models.DateTimeField(
@@ -1056,6 +1060,19 @@ class Course(models.Model):
         for module in learning_modules:
             quiz_list.extend(module.get_quiz_units())
         return quiz_list
+
+    def get_quizzes_digest(self, user):
+        quizzes = self.get_quizzes()
+        data = []
+        for quiz in quizzes:
+            quiz_data = {}
+            qp = quiz.questionpaper_set.get()
+            ap = qp.answerpaper_set.filter(course__id=self.id,  user=user)
+            quiz_data['quiz'] = quiz
+            quiz_data['course'] = self
+            quiz_data['user'] = user
+            data.append(quiz_data)
+        return data
 
     def get_quiz_details(self):
         return [(quiz, quiz.get_total_students(self),
