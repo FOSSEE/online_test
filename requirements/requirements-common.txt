@@ -1,6 +1,6 @@
 -r requirements-codeserver.txt
 invoke==0.21.0
-django==3.0.3
+django==3.0.7
 django-taggit==1.2.0
 pytz==2019.3
 requests-oauthlib>=0.6.1
