@@ -16,7 +16,7 @@ def get_version():
 
 
 install_requires = [
-    'django==3.0.3',
+    'django==3.0.7',
     'django-taggit==1.2.0',
     'pytz==2019.3',
     'requests-oauthlib>=0.6.1',
