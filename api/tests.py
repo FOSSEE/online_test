@@ -927,6 +927,5 @@ class CreateCourseTest(TestCase):
         self.assertTrue(Course.objects.filter(name='Python Test Api Course').exists())
 
     def tearDown(self):
-        self.client.logout()
         User.objects.all().delete()
         Course.objects.all.delete()
