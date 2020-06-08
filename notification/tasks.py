@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 
 from celery import task
 from notifications_plugin.models import NotificationMessage, Notification
@@ -74,6 +75,9 @@ def course_quiz_deadline_mail_task():
             if course.is_active_enrollment():
                 user = sub.user
                 data = course.get_quizzes_digest(user)
+                subject = 'Quiz deadline notification for course {0}'.format(
+                    course.name
+                )
                 msg_html = render_to_string('notification/email.html', {
                     'data': data
                 })
@@ -81,7 +85,7 @@ def course_quiz_deadline_mail_task():
                     'data': data
                 })
                 send_mail(
-                    'email title', msg_plain,
-                    'some@sender.com', [user.email],
+                    subject, msg_plain,
+                    settings.SENDER_EMAIL, [user.email],
                     html_message=msg_html
                 )
