@@ -36,7 +36,7 @@ class QuestionListTestCase(TestCase):
                                 type='mcq',
                                 user=self.user)
 
-    def test_get_all_questions_anonymous(self):
+    def test_get_all_questions_anonymous(self):content
         # When
         response = self.client.get(reverse('api:questions'))
         # Then
@@ -974,17 +974,17 @@ class CreateCourseTest(TestCase):
 
     def test_create_course(self):
         # Given
-        quiz = {'description': 'Quiz1', 'creator': self.user}
+        quiz = {'description': 'Quiz1', 'creator': 'demo'}
         LearningUnit = {'quiz': quiz, 'type': 'quiz', 'order': 1}
         leaningModule = {
             'name': 'LM1',
             'description': 'module one',
-            'creator': self.user.id,
+            'creator': 'demo',
             'learning_unit': LearningUnit
         }
         data = {
             'name': 'Python Test Api Course',
-            'creator': self.user.id,
+            'creator': 'demo',
             'enrollment': 'Enroll Request',
             'learning_module': leaningModule
         }
@@ -996,4 +996,4 @@ class CreateCourseTest(TestCase):
 
     def tearDown(self):
         User.objects.all().delete()
-        Course.objects.all.delete()
+        Course.objects.all().delete()
