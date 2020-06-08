@@ -109,7 +109,7 @@ class QuestionDetailTestCase(TestCase):
         question = Question.objects.get(summary='test question')
         # When
         response = self.client.get(reverse('api:question',
-                                   kwargs={'pk': question.id}))
+                                           kwargs={'pk': question.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -119,7 +119,7 @@ class QuestionDetailTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(reverse('api:question',
-                                   kwargs={'pk': invalid_pk}))
+                                           kwargs={'pk': invalid_pk}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -130,7 +130,7 @@ class QuestionDetailTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(reverse('api:question',
-                                   kwargs={'pk': question.id}))
+                                           kwargs={'pk': question.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
@@ -141,7 +141,7 @@ class QuestionDetailTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(reverse('api:question',
-                                   kwargs={'pk': question.id}))
+                                           kwargs={'pk': question.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -152,7 +152,7 @@ class QuestionDetailTestCase(TestCase):
                 'language': 'python', 'type': 'mcq', 'user': self.user.id}
         # When
         response = self.client.put(reverse('api:question',
-                                   kwargs={'pk': question.id}), data)
+                                           kwargs={'pk': question.id}), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -163,7 +163,7 @@ class QuestionDetailTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.put(reverse('api:question',
-                                   kwargs={'pk': question.id}), data)
+                                           kwargs={'pk': question.id}), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -175,7 +175,7 @@ class QuestionDetailTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.put(reverse('api:question',
-                                   kwargs={'pk': question.id}), data)
+                                           kwargs={'pk': question.id}), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         question = Question.objects.get(pk=question.pk)
@@ -186,7 +186,7 @@ class QuestionDetailTestCase(TestCase):
         question = Question.objects.get(summary='delete question')
         # When
         response = self.client.delete(reverse('api:question',
-                                      kwargs={'pk': question.id}))
+                                              kwargs={'pk': question.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -196,7 +196,7 @@ class QuestionDetailTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.delete(reverse('api:question',
-                                      kwargs={'pk': question.id}))
+                                              kwargs={'pk': question.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertTrue(Question.objects.filter(pk=question.id).exists())
@@ -207,7 +207,7 @@ class QuestionDetailTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.delete(reverse('api:question',
-                                      kwargs={'pk': question.id}))
+                                              kwargs={'pk': question.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Question.objects.filter(pk=question.id).exists())
@@ -361,7 +361,7 @@ class QuestionPaperListTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(reverse('api:questionpaper',
-                                   kwargs={'pk': questionpaper.id}))
+                                           kwargs={'pk': questionpaper.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
@@ -372,7 +372,7 @@ class QuestionPaperListTestCase(TestCase):
         # When
         self.client.login(username=self.otherusername, password=self.password)
         response = self.client.get(reverse('api:questionpaper',
-                                   kwargs={'pk': questionpaper.id}))
+                                           kwargs={'pk': questionpaper.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -385,7 +385,7 @@ class QuestionPaperListTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.put(reverse('api:questionpaper',
-                                   kwargs={'pk': questionpaper.id}), data)
+                                           kwargs={'pk': questionpaper.id}), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         questionpaper = QuestionPaper.objects.get(pk=questionpaper.id)
@@ -397,7 +397,7 @@ class QuestionPaperListTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.delete(reverse('api:questionpaper',
-                                      kwargs={'pk': questionpaper.id}))
+                                              kwargs={'pk': questionpaper.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         questionpapers = QuestionPaper.objects.filter(quiz=self.quiz2)
@@ -497,7 +497,7 @@ class QuizDetailTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(reverse('api:quiz',
-                                   kwargs={'pk': invalid_pk}))
+                                           kwargs={'pk': invalid_pk}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -508,7 +508,7 @@ class QuizDetailTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(reverse('api:quiz',
-                                   kwargs={'pk': quiz.id}))
+                                           kwargs={'pk': quiz.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
@@ -561,7 +561,7 @@ class QuizDetailTestCase(TestCase):
         quiz = Quiz.objects.get(description='delete quiz')
         # When
         response = self.client.delete(reverse('api:quiz',
-                                      kwargs={'pk': quiz.id}))
+                                              kwargs={'pk': quiz.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -571,7 +571,7 @@ class QuizDetailTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.delete(reverse('api:quiz',
-                                      kwargs={'pk': quiz.id}))
+                                              kwargs={'pk': quiz.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertTrue(Quiz.objects.filter(pk=quiz.id).exists())
@@ -582,7 +582,7 @@ class QuizDetailTestCase(TestCase):
         # When
         self.client.login(username=self.username, password=self.password)
         response = self.client.delete(reverse('api:quiz',
-                                      kwargs={'pk': quiz.id}))
+                                              kwargs={'pk': quiz.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Quiz.objects.filter(pk=quiz.id).exists())
@@ -826,7 +826,7 @@ class AnswerValidatorTestCase(TestCase):
         self.client.login(username=self.username, password=self.password)
         response = self.client.post(
             reverse('api:validators', kwargs={'answerpaper_id': answerpaper_id,
-                    'question_id': question_id}), data
+                                              'question_id': question_id}), data
         )
         # Then
         self.assertTrue(response.status_code, status.HTTP_200_OK)
@@ -846,7 +846,7 @@ class AnswerValidatorTestCase(TestCase):
         self.client.login(username=self.username, password=self.password)
         response = self.client.post(
             reverse('api:validators', kwargs={'answerpaper_id': answerpaper_id,
-                    'question_id': question_id}), data
+                                              'question_id': question_id}), data
         )
         # Then
         self.assertTrue(response.status_code, status.HTTP_200_OK)
@@ -861,7 +861,7 @@ class AnswerValidatorTestCase(TestCase):
         self.client.login(username=self.username, password=self.password)
         response = self.client.post(
             reverse('api:validators', kwargs={'answerpaper_id': answerpaper_id,
-                    'question_id': question_id}), data
+                                              'question_id': question_id}), data
         )
         # Then
         self.assertTrue(response.status_code, status.HTTP_200_OK)
@@ -885,7 +885,7 @@ class AnswerValidatorTestCase(TestCase):
         self.client.login(username=self.username, password=self.password)
         response = self.client.post(
             reverse('api:validators', kwargs={'answerpaper_id': answerpaper_id,
-                    'question_id': question_id}), data
+                                              'question_id': question_id}), data
         )
         # Then
         self.assertTrue(response.status_code, status.HTTP_200_OK)
@@ -904,3 +904,38 @@ class AnswerValidatorTestCase(TestCase):
             self.assertTrue(result.get('success'))
         else:
             self.assertEqual(response.data.get('status'), 'running')
+
+
+class CreateCourseTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.username = 'demo'
+        self.password = 'demo'
+        self.user = User.objects.create_user(username=self.username,
+                                             password=self.password)
+
+    def test_create_course(self):
+        # Given
+        quiz = {'description': 'Quiz1', 'creator': 'demo'}
+        LearningUnit = {'quiz': quiz, 'type': 'quiz', 'order': 1}
+        leaningModule = {
+            'name': 'LM1',
+            'description': 'module one',
+            'creator': 'demo',
+            'learning_unit': LearningUnit
+        }
+        data = {
+            'name': 'Python Test Api Course',
+            'creator': 'demo',
+            'enrollment': 'Enroll Request',
+            'learning_module': leaningModule
+        }
+        response = self.client.post(reverse('api:course_create'), data)
+        # Then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(
+            Course.objects.filter(name='Python Test Api Course').exists())
+
+    def tearDown(self):
+        User.objects.all().delete()
+        Course.objects.all().delete()
