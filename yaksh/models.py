@@ -296,7 +296,7 @@ class Lesson(models.Model):
         lesson_files = self.get_files()
         new_lesson = self
         new_lesson.id = None
-        new_lesson.name = "Copy of {0}".format(self.name)
+        new_lesson.name = self.name
         new_lesson.creator = user
         new_lesson.save()
         for _file in lesson_files:
@@ -575,7 +575,7 @@ class Quiz(models.Model):
         question_papers = self.questionpaper_set.all()
         new_quiz = self
         new_quiz.id = None
-        new_quiz.description = "Copy of {0}".format(self.description)
+        new_quiz.description = self.description
         new_quiz.creator = user
         new_quiz.save()
         for qp in question_papers:
@@ -932,7 +932,7 @@ class Course(models.Model):
         copy_course_name = "Copy Of {0}".format(self.name)
         new_course = self._create_duplicate_instance(user, copy_course_name)
         for module in learning_modules:
-            copy_module_name = "Copy of {0}".format(module.name)
+            copy_module_name = module.name
             new_module = module._create_module_copy(user, copy_module_name)
             new_course.learning_module.add(new_module)
         return new_course
