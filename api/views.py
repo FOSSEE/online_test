@@ -453,9 +453,9 @@ class CourseCreate(APIView):
                 modules.append(module_instance)
                 for learning_unit in learning_module['learning_unit']:
                     if learning_unit['type'] == 'quiz':
-                        learning_unit['quiz']['creator'] = user.id
+                        learning_unit['quiz']['creator'] = user_id
                     if learning_unit['type'] == 'lesson':
-                        learning_unit['lesson']['creator'] = user.id
+                        learning_unit['lesson']['creator'] = user_id
                     unit_serializer = LearningUnitSerializer(
                         data=learning_unit)
                     if unit_serializer.is_valid():
