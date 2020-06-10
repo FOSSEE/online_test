@@ -25,6 +25,7 @@ class HookEvaluator(BaseEvaluator):
         # Set test case data values
         self.hook_code = test_case_data.get('hook_code')
         self.weight = test_case_data.get('weight')
+        self.hidden = test_case_data.get('hidden')
 
     def teardown(self):
         # Delete the created file.

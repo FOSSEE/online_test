@@ -13,6 +13,9 @@
       <div class="card-header alert-danger">Error No. {{ forloop.counter }}</div>
       <div class="card-body ">
       <div class="">
+     {% if error.hidden %}
+      <strong> Hidden test case failed </strong>
+     {% else %}
       {% if not error.type %}
         <pre><code> {{error|safe}} </code></pre>
 
@@ -87,7 +90,8 @@
            </tr>
           </table>
         {% endif %}
-        </div>
+       {% endif %}
+       </div>
       </div>
       </div>
       <br>
