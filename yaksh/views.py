@@ -48,6 +48,7 @@ from yaksh.forms import (
     SearchFilterForm, PostForm, CommentForm
 )
 from notification.models import Subscription
+from notification.tasks import notify_teachers, notify_post_creator
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .settings import URL_ROOT
 from .file_utils import extract_files, is_csv
@@ -3338,7 +3339,7 @@ def course_forum(request, course_id):
     else:
         posts = course.post.get_queryset().filter(
             active=True).order_by('-modified_at')
-    paginator = Paginator(posts, 1)
+    paginator = Paginator(posts, 10)
     page = request.GET.get('page')
     posts = paginator.get_page(page)
     if request.method == "POST":
@@ -3348,6 +3349,18 @@ def course_forum(request, course_id):
             new_post.creator = user
             new_post.course = course
             new_post.save()
+            teacher_ids = list(course.get_teachers().values_list(
+                'id', flat=True
+                )
+            )
+            teacher_ids.append(course.creator.id) # append course creator id
+            data = {
+                "teacher_ids": teacher_ids,
+                "new_post_id": new_post.id,
+                "course_id": course.id,
+                "student_id": user.id 
+            }
+            notify_teachers.delay(data)
             return redirect('yaksh:post_comments',
                             course_id=course.id, uuid=new_post.uid)
     else:
@@ -3371,6 +3384,7 @@ def post_comments(request, course_id, uuid):
     if is_moderator(user):
         base_template = 'manage.html'
     post = get_object_or_404(Post, uid=uuid)
+    post_creator = post.creator
     comments = post.comment.filter(active=True)
     course = get_object_or_404(Course, id=course_id)
     if (not course.is_creator(user) and not course.is_teacher(user)
@@ -3381,9 +3395,14 @@ def post_comments(request, course_id, uuid):
         form = CommentForm(request.POST, request.FILES)
         if form.is_valid():
             new_comment = form.save(commit=False)
-            new_comment.creator = request.user
+            new_comment.creator = user
             new_comment.post_field = post
             new_comment.save()
+            data = {
+                "course_id": course.id,
+                "post_id": post.id
+            }
+            notify_post_creator.delay(data)
             return redirect(request.path_info)
     return render(request, 'yaksh/post_comments.html', {
         'post': post,
