@@ -916,25 +916,31 @@ class CreateCourseTest(TestCase):
 
     def test_create_course(self):
         # Given
-        quiz = {'description': 'Quiz1', 'creator': 'demo'}
-        LearningUnit = {'quiz': quiz, 'type': 'quiz', 'order': 1}
-        leaningModule = {
+        quiz = {'description': 'Quiz1'}
+        learningUnit = {'quiz': quiz, 'type': 'quiz', 'order': 1,'lesson':None}
+        learningModule = {
             'name': 'LM1',
             'description': 'module one',
-            'creator': 'demo',
-            'learning_unit': LearningUnit
+            'learning_unit': [learningUnit,]
         }
         data = {
             'name': 'Python Test Api Course',
             'creator': 'demo',
-            'enrollment': 'Enroll Request',
-            'learning_module': leaningModule
+            'enrollment': 'default',
+            'learning_module': [learningModule,]
         }
         response = self.client.post(reverse('api:course_create'), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(
             Course.objects.filter(name='Python Test Api Course').exists())
+        self.assertTrue(
+            LearningModule.objects.filter(name='LM1').exists())
+        self.assertTrue(
+            LearningUnit.objects.filter(type='quiz').exists())
+        self.assertTrue(
+            Quiz.objects.filter(description='Quiz1').exists())
+        
 
     def tearDown(self):
         User.objects.all().delete()
