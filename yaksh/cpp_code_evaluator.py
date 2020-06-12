@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import os
 from os.path import isfile
 import subprocess
+from textwrap import dedent
 
 # Local imports
 from .file_utils import copy_files, delete_files
@@ -49,15 +50,41 @@ class CppCodeEvaluator(BaseEvaluator):
 
         return user_output_path, ref_output_path
 
+    def append_test_case_to_answer(self):
+        content = dedent('''
+        {0}
+        #include <cassert>
+        int main(){{
+            {1};
+            return 0;
+        }}
+        '''.format(self.user_answer, self.test_case))
+        return content
+
     def get_commands(self, clean_ref_code_path, user_output_path,
                      ref_output_path):
-        compile_command = 'g++  {0} -c -o {1}'.format(
+        compile_command = 'g++ {0} -c -o {1}'.format(
             self.submit_code_path, user_output_path)
-        compile_main = 'g++ {0} {1} -o {2}'.format(
-            clean_ref_code_path, user_output_path,
-            ref_output_path
+        compile_main = 'g++ {0} -o {1}'.format(
+            clean_ref_code_path, ref_output_path
             )
         return compile_command, compile_main
+
+    def trim_error(self, error_type, error):
+        err = error_type
+        try:
+            error_lines = error.splitlines()
+            for e in error_lines:
+                if ':' in e:
+                    if error_type == 'Assertion Error:':
+                        err = '{0} \n {1}'.format(err, e.split(':')[-1])
+                    else:
+                        err = '{0} \n {1}'.format(err, e.split(':', 1)[1])
+                else:
+                    err = '{0} \n {1}'.format(err, e)
+        except Exception:
+            return '{0} \n {1}'.format(err, main_err)
+        return err
 
     def compile_code(self):
         if self.compiled_user_answer and self.compiled_test_code:
@@ -67,7 +94,8 @@ class CppCodeEvaluator(BaseEvaluator):
             self.test_code_path = self.create_submit_code_file('main.c')
             self.write_to_submit_code_file(self.submit_code_path,
                                            self.user_answer)
-            self.write_to_submit_code_file(self.test_code_path, self.test_case)
+            main_content = self.append_test_case_to_answer()
+            self.write_to_submit_code_file(self.test_code_path, main_content)
             clean_ref_code_path = self.test_code_path
             if self.file_paths:
                 self.files = copy_files(self.file_paths)
@@ -90,7 +118,6 @@ class CppCodeEvaluator(BaseEvaluator):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
-
             self.compiled_test_code = self._run_command(
                 self.compile_main,
                 shell=True,
@@ -141,31 +168,13 @@ class CppCodeEvaluator(BaseEvaluator):
                     success, err = True, None
                     mark_fraction = 1.0 if self.partial_grading else 0.0
                 else:
-                    err = "{0} \n {1}".format(stdout, stderr)
+                    err = self.trim_error('Assertion Error:', stderr)
                     raise AssertionError(err)
             else:
-                err = "Test case Error:"
-                try:
-                    error_lines = main_err.splitlines()
-                    for e in error_lines:
-                        if ':' in e:
-                            err = "{0} \n {1}".format(err, e.split(":", 1)[1])
-                        else:
-                            err = "{0} \n {1}".format(err, e)
-                except Exception:
-                        err = "{0} \n {1}".format(err, main_err)
+                err = self.trim_error('Test case Error:', main_err)
                 raise TestCaseError(err)
         else:
-            err = "Compilation Error:"
-            try:
-                error_lines = stdnt_stderr.splitlines()
-                for e in error_lines:
-                    if ':' in e:
-                        err = "{0} \n {1}".format(err, e.split(":", 1)[1])
-                    else:
-                        err = "{0} \n {1}".format(err, e)
-            except Exception:
-                err = "{0} \n {1}".format(err, stdnt_stderr)
+            err = self.trim_error('Compilation Error:', stdnt_stderr)
             raise CompilationError(err)
 
         return success, err, mark_fraction
