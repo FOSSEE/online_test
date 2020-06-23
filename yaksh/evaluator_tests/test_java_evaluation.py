@@ -20,43 +20,8 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
         self.tc_data = dedent("""
-            class main
-            {
-                public static <E> void check(E expect, E result)
-                {
-                    if(result.equals(expect))
-                    {
-                        System.out.println("Correct:Output expected "+expect+
-                                            "and got "+result);
-                    }
-                else
-                {
-                    System.out.println("Incorrect:Output expected "+expect+
-                                        "but got "+result);
-                    System.exit(1);
-                }
-                }
-                public static void main(String arg[])
-                {
-                   Test t = new Test();
-                   int result, input, output;
-                   input = 0; output = 0;
-                   result = t.square_num(input);
-                   System.out.println("Input submitted to the function: "+
-                                    input);
-                   check(output, result);
-                   input = 5; output = 25;
-                   result = t.square_num(input);
-                   System.out.println("Input submitted to the function: "+
-                                    input);
-                   check(output, result);
-                   input = 6; output = 36;
-                   result = t.square_num(input);
-                   System.out.println("Input submitted to the function: "+
-                                    input);
-                   check(output, result);
-                }
-            }
+            Test t = new Test();
+            assert t.square_num(5) == 25: "Square of 5 is not 25";
             """)
 
         self.test_case_data = [
@@ -172,33 +137,12 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
         # Given
         self.file_paths = [(self.f_path, False)]
         self.tc_data = dedent("""
-            class main
-            {
-                public static <E> void check(E expect, E result)
-                {
-                    if(result.equals(expect))
-                    {
-                        System.out.println("Correct:Output expected "+expect+
-                                            " and got "+result);
-                    }
-                else
-                {
-                    System.out.println("Incorrect:Output expected "+expect+
-                                        " but got "+result);
-                    System.exit(1);
-                }
-                }
-                public static void main(String arg[])
-                {
-                   String result = "";
-                   Test t = new Test();
-                   try{
-                   result = t.readFile();}
-                   catch(Exception e){
+            Test t = new Test();
+            try{
+                String a = t.readFile();
+                assert a.equals("2");
+            } catch(Exception e) {
                 System.out.print(e);
-                }
-                   check("2", result);
-                }
             }
             """)
         self.test_case_data = [
@@ -237,40 +181,14 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
         # When
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-
         # Then
         self.assertTrue(result.get("success"))
 
     def test_incorrect_testcase(self):
         # Given
         self.tc_data = dedent("""
-            class main
-            {
-                public static <E> void check(E expect, E result)
-                {
-                    if(result.equals(expect))
-                    {
-                        System.out.println("Correct:Output expected "+expect+
-                                            "and got "+result);
-                    }
-                else
-                {
-                    System.out.println("Incorrect:Output expected "+expect+
-                                        "but got "+result);
-                    System.exit(1);
-                }
-                }
-                public static void main(String arg[])
-                {
-                   Test t = new Test();
-                   int result, input, output;
-                   input = 0; output = 0;
-                   result = t.square_num(input);
-                   System.out.println("Input submitted to the function: "+
-                                    input);
-                   check(output, result)
-                }
-            }
+            Test t = new Test()
+            result = t.square_num(5) == 25;
             """)
         user_answer = ("class Test {\n\tint square_num(int a) "
                        "{\n\treturn a;\n\t}\n}")
@@ -701,43 +619,8 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
         user_answer = ("class Test {\n\tint square_num(int a)"
                        " {\n\treturn a*a;\n\t}\n}")
         assert_test_case = dedent("""
-            class main
-            {
-                public static <E> void check(E expect, E result)
-                {
-                    if(result.equals(expect))
-                    {
-                        System.out.println("Correct:Output expected "+expect+
-                                            " and got "+result);
-                    }
-                else
-                {
-                    System.out.println("Incorrect:Output expected "+expect+
-                                        " but got "+result);
-                    System.exit(1);
-                }
-                }
-                public static void main(String arg[])
-                {
-                   Test t = new Test();
-                   int result, input, output;
-                   input = 0; output = 0;
-                   result = t.square_num(input);
-                   System.out.println("Input submitted to the function: "+
-                                        input);
-                   check(output, result);
-                   input = 5; output = 25;
-                   result = t.square_num(input);
-                   System.out.println("Input submitted to the function: "+
-                                        input);
-                   check(output, result);
-                   input = 6; output = 36;
-                   result = t.square_num(input);
-                   System.out.println("Input submitted to the function: "+
-                                        input);
-                   check(output, result);
-                }
-            }
+            Test t = new Test();
+            assert t.square_num(6) == 36;
             """)
 
         hook_code = dedent("""\
