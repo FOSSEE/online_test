@@ -129,7 +129,8 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
-        self.assert_correct_output("Error", result.get("error"))
+        self.assert_correct_output("Error",
+                                   result.get("error")[0]["message"])
 
     def test_infinite_loop(self):
         # Given
@@ -416,7 +417,8 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assert_correct_output('Incorrect Answer', result.get('error'))
+        self.assert_correct_output('Incorrect Answer',
+                                   result.get('error')[0]['message'])
 
     def test_assert_with_hook(self):
         # Given

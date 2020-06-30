@@ -92,9 +92,8 @@ class ScilabEvaluationTestCases(EvaluatorBaseTest):
 
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-
         self.assertFalse(result.get("success"))
-        self.assert_correct_output('error', result.get("error"))
+        self.assert_correct_output('error', result.get("error")[0]['message'])
 
     def test_incorrect_answer(self):
         user_answer = ("funcprot(0)\nfunction[c]=add(a,b)"
@@ -110,10 +109,10 @@ class ScilabEvaluationTestCases(EvaluatorBaseTest):
 
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
-
-        lines_of_error = len(result.get('error')[0].splitlines())
+        lines_of_error = len(result.get('error')[0]['message'].splitlines())
         self.assertFalse(result.get('success'))
-        self.assert_correct_output("Message", result.get('error'))
+        self.assert_correct_output("Message",
+                                   result.get('error')[0]["message"])
         self.assertTrue(lines_of_error > 1)
 
     def test_infinite_loop(self):

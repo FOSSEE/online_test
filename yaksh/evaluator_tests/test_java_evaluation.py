@@ -694,7 +694,8 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assert_correct_output('Incorrect Answer', result.get('error'))
+        self.assert_correct_output('Incorrect Answer',
+                                   result.get('error')[0]['message'])
 
     def test_assert_with_hook(self):
         # Given
