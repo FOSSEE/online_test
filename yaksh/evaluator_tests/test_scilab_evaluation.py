@@ -48,7 +48,7 @@ class ScilabEvaluationTestCases(EvaluatorBaseTest):
             """)
         self.test_case_data = [{"test_case": self.tc_data,
                                 "test_case_type": "standardtestcase",
-                                "weight": 0.0
+                                "weight": 0.0, 'hidden': True
                                 }]
         self.in_dir = tmp_in_dir_path
         self.file_paths = None
@@ -93,6 +93,7 @@ class ScilabEvaluationTestCases(EvaluatorBaseTest):
         grader = Grader(self.in_dir)
         result = grader.evaluate(kwargs)
         self.assertFalse(result.get("success"))
+        self.assertTrue(result.get("error")[0]['hidden'])
         self.assert_correct_output('error', result.get("error")[0]['message'])
 
     def test_incorrect_answer(self):
@@ -111,6 +112,7 @@ class ScilabEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
         lines_of_error = len(result.get('error')[0]['message'].splitlines())
         self.assertFalse(result.get('success'))
+        self.assertTrue(result.get("error")[0]['hidden'])
         self.assert_correct_output("Message",
                                    result.get('error')[0]["message"])
         self.assertTrue(lines_of_error > 1)

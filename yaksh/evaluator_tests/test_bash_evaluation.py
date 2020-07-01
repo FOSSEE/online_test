@@ -25,7 +25,7 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
             {"test_case": self.tc_data,
              "test_case_args": self.tc_data_args,
              "test_case_type": "standardtestcase",
-             "weight": 0.0
+             "weight": 0.0, "hidden": False
              }
         ]
         self.in_dir = tempfile.mkdtemp()
@@ -66,7 +66,8 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
             {"test_case": tc_data,
              "test_case_args": "",
              "test_case_type": "standardtestcase",
-             "weight": 0.0
+             "weight": 0.0,
+             "hidden": True
              }
         ]
         kwargs = {'metadata': {
@@ -129,6 +130,7 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get("success"))
+        self.assertFalse(result.get("error")[0]["hidden"])
         self.assert_correct_output("Error",
                                    result.get("error")[0]["message"])
 
@@ -171,7 +173,8 @@ class BashAssertionEvaluationTestCases(EvaluatorBaseTest):
             "test_case": self.tc_data,
             "test_case_args": self.tc_data_args,
             "test_case_type": "standardtestcase",
-            "weight": 0.0
+            "weight": 0.0,
+            "hidden": True
         }]
         user_answer = ("#!/bin/bash\ncat $1")
         kwargs = {'metadata': {
@@ -241,7 +244,7 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
         test_case_data = [{'expected_output': '1 2 3\n4 5 6\n7 8 9\n',
                            'expected_input': '1,2,3\n4,5,6\n7,8,9',
                            'test_case_type': 'stdiobasedtestcase',
-                           'weight': 0.0
+                           'weight': 0.0,
                            }]
         kwargs = {
                   'metadata': {
@@ -271,7 +274,8 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
             'expected_output': '11',
             'expected_input': '5\n6',
             'test_case_type': 'stdiobasedtestcase',
-            'weight': 0.0
+            'weight': 0.0,
+            'hidden': True
             }]
         kwargs = {
                   'metadata': {
@@ -289,6 +293,7 @@ class BashStdIOEvaluationTestCases(EvaluatorBaseTest):
         # Then
         result_error = result.get('error')[0].get('error_msg')
         self.assert_correct_output("Incorrect", result_error)
+        self.assertTrue(result.get('error')[0]['hidden'])
         self.assertFalse(result.get('success'))
 
     def test_stdout_only(self):
@@ -400,7 +405,8 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                                 return success, err, mark_fraction
                             """)
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code, "weight": 1.0}]
+                           "hook_code": hook_code, "weight": 1.0,
+                           "hidden": True}]
 
         kwargs = {
                   'metadata': {
@@ -417,6 +423,7 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get('success'))
+        self.assertTrue(result.get('error')[0]['hidden'])
         self.assert_correct_output('Incorrect Answer',
                                    result.get('error')[0]['message'])
 
@@ -448,7 +455,8 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                            'weight': 1.0
                            },
                           {"test_case_type": "hooktestcase",
-                           "hook_code": hook_code, 'weight': 1.0},
+                           "hook_code": hook_code, 'weight': 1.0,
+                           'hidden': True},
                           ]
         kwargs = {
                   'metadata': {
@@ -546,7 +554,8 @@ class BashHookEvaluationTestCases(EvaluatorBaseTest):
                             """)
 
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code, "weight": 1.0}]
+                           "hook_code": hook_code, "weight": 1.0,
+                           "hidden": False}]
 
         kwargs = {
                   'metadata': {
