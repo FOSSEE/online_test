@@ -143,6 +143,9 @@ class Grader(object):
                 test_case_instance.compile_code()
                 eval_result = test_case_instance.check_code()
                 test_case_success, err, mark_fraction = eval_result
+                if not isinstance(err, dict):
+                    err = prettify_exceptions('Error', err)
+                err['hidden'] = test_case_instance.hidden
                 if test_case_success:
                     weight += mark_fraction * test_case_instance.weight
                 else:

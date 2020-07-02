@@ -2534,11 +2534,13 @@ class StandardTestCase(TestCase):
     test_case = models.TextField()
     weight = models.FloatField(default=1.0)
     test_case_args = models.TextField(blank=True)
+    hidden = models.BooleanField(default=False)
 
     def get_field_value(self):
         return {"test_case_type": "standardtestcase",
                 "test_case": self.test_case,
                 "weight": self.weight,
+                "hidden": self.hidden,
                 "test_case_args": self.test_case_args}
 
     def __str__(self):
@@ -2549,11 +2551,13 @@ class StdIOBasedTestCase(TestCase):
     expected_input = models.TextField(default=None, blank=True, null=True)
     expected_output = models.TextField(default=None)
     weight = models.IntegerField(default=1.0)
+    hidden = models.BooleanField(default=False)
 
     def get_field_value(self):
         return {"test_case_type": "stdiobasedtestcase",
                 "expected_output": self.expected_output,
                 "expected_input": self.expected_input,
+                "hidden": self.hidden,
                 "weight": self.weight}
 
     def __str__(self):
@@ -2599,10 +2603,11 @@ class HookTestCase(TestCase):
 
     )
     weight = models.FloatField(default=1.0)
+    hidden = models.BooleanField(default=False)
 
     def get_field_value(self):
         return {"test_case_type": "hooktestcase", "hook_code": self.hook_code,
-                "weight": self.weight}
+                "hidden": self.hidden, "weight": self.weight}
 
     def __str__(self):
         return u'Hook Testcase | Correct: {0}'.format(self.hook_code)

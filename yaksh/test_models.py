@@ -431,7 +431,8 @@ class QuestionTestCases(unittest.TestCase):
         self.test_case_upload_data = [{"test_case": "assert fact(3)==6",
                                        "test_case_type": "standardtestcase",
                                        "test_case_args": "",
-                                       "weight": 1.0
+                                       "weight": 1.0,
+                                       "hidden": False
                                        }]
         questions_data = [{"snippet": "def fact()", "active": True,
                            "points": 1.0,
@@ -2029,7 +2030,8 @@ class TestCaseTestCases(unittest.TestCase):
                        {'test_case': 'assert myfunc(12, 13) == 15',
                         'test_case_type': 'standardtestcase',
                         'test_case_args': "",
-                        'weight': 1.0
+                        'weight': 1.0,
+                        'hidden': False
                         }]
                        }
         self.answer_data_json = json.dumps(answer_data)

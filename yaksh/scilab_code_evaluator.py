@@ -23,6 +23,7 @@ class ScilabCodeEvaluator(BaseEvaluator):
         # Set test case data values
         self.test_case = test_case_data.get('test_case')
         self.weight = test_case_data.get('weight')
+        self.hidden = test_case_data.get('hidden')
 
     def teardown(self):
         # Delete the created file.

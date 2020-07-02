@@ -159,12 +159,15 @@
                       <span class="badge badge-pill badge-primary">Test cases:
                       </span>
                     </h5>
+                    <ul>
                     {% for testcase in question.get_test_cases %}
+                        {% if not testcase.hidden %}
                         <strong>
-                          {{ forloop.counter }}. {{ testcase }}
+                            <li> {{ testcase }} </li>
                         </strong>
-                        <br>
+                        {% endif %}
                     {% endfor %}
+                    </ul>
                   {% endif %}
                   <br>
                   <div class="card">
@@ -230,6 +233,7 @@
                           <div class="card-body">
                             {% with ans.error_list as err %}
                               {% for error in err %}
+                               {% if not error.hidden %}
                                 {% if error.type == 'stdio' %}
                                   {% if error.given_input %}
                                     <table class="table table-bordered table-responsive-sm">
@@ -293,6 +297,7 @@
                                 {% else %}
                                   <pre><code> {{error}} </code></pre>
                                 {% endif %}
+                               {% endif %}
                               {% endfor %}
                             {% endwith %}
                             {% if question.type == "code" %}

@@ -24,6 +24,7 @@ class CppStdIOEvaluator(StdIOEvaluator):
         self.expected_input = test_case_data.get('expected_input')
         self.expected_output = test_case_data.get('expected_output')
         self.weight = test_case_data.get('weight')
+        self.hidden = test_case_data.get('hidden')
 
     def teardown(self):
         if os.path.exists(self.submit_code_path):
