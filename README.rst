@@ -32,6 +32,18 @@ Features
 -  Scales to over 500+ simultaneous users.
 -  Distributed under the BSD license.
 
+To get a glimpse of all the available features check our demo website https://yaksh-demo.fossee.in. It has 50 teacher and student login.
+
+**Sample teacher login**
+
+Username:- teacher1
+Password:- teacher1
+
+**Sample student login**
+
+Username:- student1
+Password:- student1
+
 Requirements
 ============
 
@@ -61,7 +73,7 @@ miniconda. Download miniconda with Python 3.6 and above.
 
 * **Install redis server**
 
-  Redis is required for celery. Celery runs in background for regrading the papers.
+  Redis is required for celery. Celery runs a background task to re-evaluate the submissions.
 
   ::
 
@@ -80,6 +92,12 @@ miniconda. Download miniconda with Python 3.6 and above.
   ::
 
       systemctl status redis
+
+* **Run celery worker**
+  
+  ::
+
+      celery -A online_test worker -B
 
 * Ensure  `pip <https://pip.pypa.io/en/latest/installing.html>`_ is installed
 
