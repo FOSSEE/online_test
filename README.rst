@@ -59,7 +59,7 @@ miniconda. Download miniconda with Python 3.6 and above.
 
 **Pre-Requisite**
 
-* Install redis server
+* **Install redis server**
 
   Redis is required for celery. Celery runs in background for regrading the papers.
 
@@ -69,13 +69,13 @@ miniconda. Download miniconda with Python 3.6 and above.
 
       yum install redis (Centos)
 
-* Start redis server
+* **Start redis server**
 
   ::
      
       systemctl start redis
 
-* Check redis server status
+* **Check redis server status**
 
   ::
 
