@@ -1,3 +1,7 @@
+== 0.21.0 (02-07-2020) ===
+
+* Added support for hiding test cases for code questions
+
 == 0.20.2 (02-06-2020) ===
 
 * Added a custom filter to convert str objects to int in templates
