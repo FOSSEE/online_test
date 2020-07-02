@@ -9,23 +9,26 @@ To get an overview of the Yaksh interface please refer to the user documentation
 This is a Quickstart guide to help users setup a trial instance. If you wish to deploy Yaksh in a production environment here is a `Production Deployment Guide <https://github.com/FOSSEE/online\_test/blob/master/README\_production.rst>`_
 
 Introduction
-^^^^^^^^^^^^
+============
 
 This project provides an "exam" app that lets users take an online
 programming quiz.
 
 Features
-^^^^^^^^
+========
 
 -  Define fairly complicated programming problems and have users solve
    the problem.
 -  Immediate verification of code solution.
--  Supports pretty much arbitrary coding questions in Python, C, C++ and
-   simple Bash and uses "test cases" to test the implementations of the
-   students.
--  Supports simple multiple choice questions and File uploads.
--  Since it runs on your Python, you could technically test any Python
+-  Supports pretty much arbitrary coding questions in Python, C, C++, Java, R, Scilab and
+   Bash.
+-  Supports Multiple choice, Fill in the blanks, Arrange options and File upload based questions.
+-  Since it runs on Python, you could technically test any Python
    based library.
+-  Create course with lessons and quiz for online learning.
+-  Almost real-time monitoring for quiz.
+-  Supports automatic and manual grading, regrading of quiz.
+-  Add grading system to the course.
 -  Scales to over 500+ simultaneous users.
 -  Distributed under the BSD license.
 
@@ -36,6 +39,7 @@ Python 3.6, 3.7, 3.8
 
 Django 3.0.3
 
+Celery 4.4.2
 
 Installation
 ============
@@ -54,6 +58,28 @@ miniconda. Download miniconda with Python 3.6 and above.
 3. Restart the Terminal.
 
 **Pre-Requisite**
+
+* Install redis server
+
+  Redis is required for celery. Celery runs in background for regrading the papers.
+
+  ::
+
+      sudo apt install redis-server (Debian/Ubuntu)
+
+      yum install redis (Centos)
+
+* Start redis server
+
+  ::
+     
+      systemctl start redis
+
+* Check redis server status
+
+  ::
+
+      systemctl status redis
 
 * Ensure  `pip <https://pip.pypa.io/en/latest/installing.html>`_ is installed
 
