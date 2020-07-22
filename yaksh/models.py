@@ -1194,8 +1194,8 @@ class CourseStatus(models.Model):
             self.save()
 
     def calculate_percentage(self):
-        if self.is_course_complete():
-            quizzes = self.course.get_quizzes()
+        quizzes = self.course.get_quizzes()
+        if self.is_course_complete() and quizzes:
             total_weightage = 0
             sum = 0
             for quiz in quizzes:
