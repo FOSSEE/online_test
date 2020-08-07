@@ -1729,7 +1729,7 @@ class QuestionPaper(models.Model):
     total_marks = models.FloatField(default=0.0, blank=True)
 
     # Sequence or Order of fixed questions
-    fixed_question_order = models.CharField(max_length=255, blank=True)
+    fixed_question_order = models.TextField(blank=True)
 
     # Shuffle testcase order.
     shuffle_testcases = models.BooleanField("Shuffle testcase for each user",
