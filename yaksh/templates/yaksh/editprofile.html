@@ -34,7 +34,9 @@
                             {% endfor %}
                         {% endif %}
                         {% for field in form %}
-                            <td>{{ field }} <small>{{ field.help_text }}</small></td>
+                            <table>
+                            <td>{{ field.label }}</td><td>{{ field }}</td><td><small>{{ field.help_text }}</small></td>
+                            </table>
                             <br>
                         {% endfor %}
                         <br>
