@@ -6,13 +6,11 @@
     <br>
     <form action="{% url 'yaksh:edit_profile'%}" method="post" >
       {% csrf_token %}
-      <center>
         <div class="row justify-content-center form-group">
         <div class="col-md-4 col-md-offset-4">
             <form action="" method="post">
                 <fieldset>
                     {% csrf_token %}
-                    <center>
                         {% if form.errors %}
                             {% for field in form %}
                                 {% for error in field.errors %}
@@ -34,16 +32,17 @@
                             {% endfor %}
                         {% endif %}
                         {% for field in form %}
-                            <table>
-                            <td>{{ field.label }}</td><td>{{ field }}</td><td><small>{{ field.help_text }}</small></td>
-                            </table>
-                            <br>
+                            <div class="form-group">
+                                <label>
+                                    {{ field.label }}
+                                </label>
+                                {{ field }}
+                            </div>
                         {% endfor %}
                         <br>
                         <br>
-                    </center>
                     <button class="btn btn-success btn-lg" type="submit">Update</button>&nbsp;&nbsp;
-                    <a href="{% url 'yaksh:index' %}" class="btn btn-primary btn-lg">Cancel</a></center>
+                    <a href="{% url 'yaksh:index' %}" class="btn btn-primary btn-lg">Cancel</a>
                 </fieldset>
             </form>
         </div>
