@@ -237,4 +237,18 @@ urlpatterns = [
         views.mark_notification, name="mark_notification"),
     path('mark/notifications', views.mark_notification,
          name="mark_notification"),
+    path('manage/add/marker/<int:course_id>/<int:lesson_id>', views.add_marker,
+         name='add_marker'),
+    path('manage/add/topic/<int:course_id>/<int:lesson_id>', views.add_topic,
+         name='add_topic'),
+    path('manage/edit/topic/<int:course_id>/<int:lesson_id>/<int:topic_id>',
+         views.add_topic, name='edit_topic'),
+    path('manage/add/quiz/<int:course_id>/<int:lesson_id>',
+         views.add_marker_quiz, name='add_marker_quiz'),
+    path('manage/edit/quiz/<int:course_id>/<int:lesson_id>/<int:quiz_id>/<int:question_id>',
+         views.add_marker_quiz, name='edit_marker_quiz'),
+    path('manage/add/exercise/<int:course_id>/<int:lesson_id>',
+         views.add_marker_quiz, name='add_marker_exercise'),
+    path('manage/edit/exercise/<int:course_id>/<int:lesson_id>/<int:quiz_id>/<int:question_id>',
+         views.add_marker_quiz, name='edit_marker_exercise')
 ]

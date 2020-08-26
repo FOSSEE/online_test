@@ -122,3 +122,17 @@ def highlight_spaces(text):
     return text.replace(
         " ", '<span style="background-color:#ffb6db">&nbsp</span>'
         )
+
+
+@register.filter(name='video_name')
+def video_name(text):
+    video = literal_eval(text)
+    video = {k.lower(): v for k, v in video.items()}
+    if 'youtube' in video.keys():
+        name, vformat = video.get('youtube'), 'youtube'
+    elif 'vimeo' in video.keys():
+        name, vformat = video.get('vimeo'), 'vimeo'
+    else:
+        filename = os.path.basename(video.get("others"))
+        name, vformat = os.path.split(filename)
+    return name, vformat

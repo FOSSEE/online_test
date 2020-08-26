@@ -17,15 +17,14 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
-{% if error %}
-<div class="alert alert-danger">
-    {{error}}
-</div>
-{% endif %}
-<div class="container">
-    <div class="row justify-content-center form-group">
-        <div class="col-md-9 col-md-offset-4">
+<div class="container-fluid">
+    {% if error %}
+    <div class="alert alert-danger">
+        {{error}}
+    </div>
+    {% endif %}
+    <div class="row form-group">
+        <div class="col">
             <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
                 <i class="fa fa-arrow-left"></i>&nbsp;Back
             </a>
@@ -52,7 +51,7 @@
                                     <button type="button" class="close" data-dismiss="alert">
                                         <i class="fa fa-close"></i>
                                     </button>
-                                    <strong>{{ error|escape }}</strong>
+                                    <strong>{{ field.label }} : {{ error|escape }}</strong>
                                 </div>
                             {% endfor %}
                         {% endfor %}
@@ -61,7 +60,7 @@
                                 <button type="button" class="close" data-dismiss="alert">
                                     <i class="fa fa-close"></i>
                                 </button>
-                                <strong>{{ error|escape }}</strong>
+                                <strong>{{ field.label }} : {{ error|escape }}</strong>
                             </div>
                         {% endfor %}
                     {% endif %}
@@ -71,6 +70,12 @@
                     <br>
                     Active:&nbsp;{{lesson_form.active}}
                     <br><br>
+                    Video Path:
+                    <span class="badge badge-info">
+                        {{lesson_form.video_path.help_text}}    
+                    </span>
+                    {{lesson_form.video_path}}
+                    <br>
                     Video File:
                     <span class="badge badge-info">
                         {{lesson_form.video_file.help_text}}
@@ -126,28 +131,89 @@
                         <button class="btn btn-danger btn-lg" type="submit" id="submit" name="Delete"> <i class="fa fa-trash"></i>&nbsp;Delete Files
                         </button>
                         {% endif %}
-                        <button class="btn btn-outline-primary btn-lg" type="button" name="button" id="preview">
-                            <i class="fa fa-eye"></i>
-                            Preview Description
-                        </button>
-                        <button class="btn btn-outline-primary btn-lg" type="button" name="button" id="embed">
-                            <i class="fa fa-angle-left"></i>&nbsp;<i class="fa fa-angle-right"></i>
-                            Embed Video link
-                        </button>
                     </center>
-                    </form>
-                    <hr>
-                    <div class="card" id="preview_text_div" style="display: none;">
-                        <div class="card-heading">
-                            <center>
-                                <h3>Description Preview</h3>
-                            </center>
-                        </div>
-                        <div class="card-body" id="description_body">
-                        </div>
-                    </div>
                 </fieldset>
             </form>
+        </div>
+        <br><br>
+        <div class="col">
+            <br>
+            <div class="card">
+                <div class="card-header">
+                    <a class="card-link" data-toggle="collapse" href="#toc-collapse">
+                        Table Of Contents&nbsp;<i class="fa fa-angle-down"></i>
+                    </a>
+                </div>
+                <div class="collapse hide" id="toc-collapse">
+                    <div class="card-body" id="toc"></div>
+                </div>
+            </div>
+            <br>
+            <div class="card" id="preview_text_div">
+                <div class="card-header">
+                    Setup Lesson
+                </div>
+                <div class="card-body">
+                    {% if lesson_form.instance and lesson_form.instance.video_path %}
+                        {% with lesson_form.instance.video_path|video_name as video %}
+                        <div id="player" data-plyr-provider="{{video.1}}" data-plyr-embed-id="{{video.0}}"></div>
+                        <br>
+                        <div style="display: none" id="loader">
+                            <span class="spinner-border text-success"></span>
+                            Loading...
+                        </div>
+                        <form action="{% url 'yaksh:add_marker' course_id lesson_form.instance.id %}" method="POST" id="marker-form">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <input type="text" id="vtimer" class="form-control" name="video_time" value="00:00:00" required="">
+                                </div>
+                                <div class="col-md-4">
+                                    <select name="content" class="custom-select" required="" id="content-type">
+                                        <option value="">Select Marker</option>
+                                        <option value="1">Topic</option>
+                                        <option value="2">Graded Quiz</option>
+                                        <option value="3">Exercise</option>
+                                        <option value="4">Poll</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <select name="type" class="custom-select" id="id_type" style="display: none;">
+                                      <option value="" selected="">Select question type</option>
+
+                                      <option value="mcq">Single Correct Choice</option>
+
+                                      <option value="mcc">Multiple Correct Choices</option>
+
+                                      <option value="integer">Answer in Integer</option>
+
+                                      <option value="string">Answer in String</option>
+
+                                      <option value="float">Answer in Float</option>
+                                    </select>
+                                </div>
+                                <br><br>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-success" id="add-marker">
+                                        <i class="fa fa-plus-circle">&nbsp;</i>Add
+                                    </button>
+                                </div>
+                            </div>
+                        {% endwith %}
+                    {% else %}
+                        <div class="badge badge-info">
+                            <strong>
+                                Add a Video Path or Upload a video file to setup lesson contents
+                            </strong>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <br>
+            <div class="card">
+                <div class="card-header">Add/Edit Content</div>
+                <div class="card-body" id="lesson-content"></div>
+            </div>
         </div>
     </div>
 </div>

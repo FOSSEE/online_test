@@ -3,7 +3,7 @@ import csv
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
-from django.template import Context, Template
+from django.template import Context, Template, loader
 from django.http import Http404
 from django.db.models import Max, Q, F
 from django.db import models
@@ -44,7 +44,7 @@ from yaksh.forms import (
     QuestionFilterForm, CourseForm, ProfileForm,
     UploadFileForm, FileForm, QuestionPaperForm, LessonForm,
     LessonFileForm, LearningModuleForm, ExerciseForm, TestcaseForm,
-    SearchFilterForm, PostForm, CommentForm
+    SearchFilterForm, PostForm, CommentForm, TopicForm, VideoQuizForm
 )
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .settings import URL_ROOT
@@ -2576,6 +2576,8 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
             raise Http404('This Lesson does not belong to you')
 
     context = {}
+    lesson_form = LessonForm(instance=lesson)
+    lesson_files_form = LessonFileForm()
     if request.method == "POST":
         if "Save" in request.POST:
             lesson_form = LessonForm(request.POST, request.FILES,
@@ -2615,10 +2617,6 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
                     reverse("yaksh:edit_lesson",
                             args=[course_id, module_id, lesson.id])
                     )
-            else:
-                context['lesson_form'] = lesson_form
-                context['error'] = lesson_form["video_file"].errors
-                context['lesson_file_form'] = lesson_file_form
 
         if 'Delete' in request.POST:
             remove_files_id = request.POST.getlist('delete_files')
@@ -2635,8 +2633,6 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
                 )
 
     lesson_files = LessonFile.objects.filter(lesson=lesson)
-    lesson_files_form = LessonFileForm()
-    lesson_form = LessonForm(instance=lesson)
     context['lesson_form'] = lesson_form
     context['lesson_file_form'] = lesson_files_form
     context['lesson_files'] = lesson_files
@@ -3420,3 +3416,88 @@ def hide_comment(request, course_id, uuid):
     comment.active = False
     comment.save()
     return redirect('yaksh:post_comments', course_id, post_uid)
+
+
+@login_required
+@email_verified
+def add_marker(request, course_id, lesson_id):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    if (not is_moderator(user) or
+            not course.is_creator(user) or not course.is_creator(user)):
+        raise Http404("You are not allowed to view this page")
+    data = json.loads(request.body.decode("utf-8"))
+    content_type = data[-2].get("value")
+    print(content_type)
+    if content_type == '1':
+        form = TopicForm()
+        template_name = 'yaksh/add_topic.html'
+        status = 1
+        formset = None
+        tc_class = None
+    else:
+        try:
+            question_type = data[-1].get('value')
+        except IndexError:
+            question_type = "mcq"
+        form = VideoQuizForm(question_type=question_type)
+        formset, tc_class = get_tc_formset(question_type)
+        template_name = 'yaksh/add_video_quiz.html'
+        status = 2
+    context = {'form': form, 'course_id': course.id, 'lesson_id': lesson_id,
+               'formset': formset, 'tc_class': tc_class}
+    data = loader.render_to_string(
+        template_name, context=context, request=request
+    )
+    return JsonResponse(
+        {'success': True, 'data': data, 'content_type': content_type,
+         'status': status}
+    )
+
+def get_tc_formset(question_type):
+    tc, tc_class = McqTestCase, 'mcqtestcase'
+    if question_type == 'mcq' or question_type == 'mcc':
+        tc, tc_class = McqTestCase, 'mcqtestcase'
+    elif question_type == 'integer':
+        tc, tc_class = IntegerTestCase, 'integertestcase'
+    elif question_type == 'float':
+        tc, tc_class = FloatTestCase, 'floattestcase'
+    elif question_type == 'string':
+        tc, tc_class = StringTestCase, 'stringtestcase'
+    TestcaseFormset = inlineformset_factory(
+        Question, tc, form=TestcaseForm, extra=1, fields="__all__",
+    )
+    formset = TestcaseFormset(initial=[{'type': tc_class}])
+    return formset, tc_class
+
+
+@login_required
+@email_verified
+def add_topic(request, course_id, lesson_id, topic_id=None):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    if (not is_moderator(user) or
+            not course.is_creator(user) or not course.is_creator(user)):
+        raise Http404("You are not allowed to view this page")
+    print(request.method)
+    data = json.loads(request.body.decode("utf-8"))
+    print(data)
+    return JsonResponse(
+        {'success': True, 'data': data, 'message': 'Added successfully'}
+    )
+
+
+@login_required
+@email_verified
+def add_marker_quiz(request, course_id, lesson_id, question_id=None):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    if (not is_moderator(user) or
+            not course.is_creator(user) or not course.is_creator(user)):
+        raise Http404("You are not allowed to view this page")
+    print(request.method)
+    data = json.loads(request.body.decode("utf-8"))
+    print(data)
+    return JsonResponse(
+        {'success': True, 'data': data, 'message': 'Added successfully'}
+    )

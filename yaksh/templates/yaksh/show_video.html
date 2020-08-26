@@ -123,8 +123,14 @@
                 </a>
             {% endif %}
         {% else %}    <!--  Lesson body   -->
-            <div class="col-md-6" style="width: 100%">
-            {{lesson.html_data|safe}}
+            <div class="col" style="width: 100%">
+                {{lesson.html_data|safe}}
+            <br>
+            <div id="player" data-plyr-provider="youtube" data-plyr-embed-id="oHmm3mPxg6Y"></div>
+            <script>
+              const player = new Plyr('#player');
+              window.player = player;
+            </script>
             <br>
             <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
                 Next&nbsp;<i class="fa fa-step-forward"></i>
