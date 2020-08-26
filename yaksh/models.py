@@ -1,3 +1,4 @@
+# Python Imports
 from __future__ import unicode_literals, division
 from datetime import datetime, timedelta
 import uuid
@@ -32,14 +33,29 @@ import zipfile
 import tempfile
 from textwrap import dedent
 from ast import literal_eval
-from .file_utils import extract_files, delete_files
+
+# Django Imports
+from django.db import models
+from django.contrib.auth.models import User, Group, Permission
+from django.core.exceptions import ValidationError
+from django.contrib.contenttypes.models import ContentType
+from taggit.managers import TaggableManager
+from django.utils import timezone
+from django.core.files import File
+from django.contrib.contenttypes.fields import (
+    GenericForeignKey, GenericRelation
+)
+from django.contrib.contenttypes.models import ContentType
 from django.template import Context, Template
+from django.conf import settings
+from django.forms.models import model_to_dict
+
+# Local Imports
 from yaksh.code_server import (
     submit, get_result as get_result_from_code_server
 )
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
-from django.conf import settings
-from django.forms.models import model_to_dict
+from .file_utils import extract_files, delete_files
 from grades.models import GradingSystem
 
 languages = (
@@ -287,6 +303,11 @@ class Lesson(models.Model):
         help_text="Please upload video files in mp4, ogv, webm format"
         )
 
+    video_path = models.CharField(
+        max_length=255, default=None, null=True, blank=True,
+        help_text="Youtube id, vimeo id, others"
+        )
+
     def __str__(self):
         return "{0}".format(self.name)
 
@@ -498,6 +519,8 @@ class Quiz(models.Model):
     creator = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
 
     objects = QuizManager()
+
+    content = GenericRelation("TableOfContents")
 
     class Meta:
         verbose_name_plural = "Quizzes"
@@ -2738,3 +2761,25 @@ class Comment(ForumBase):
     def __str__(self):
         return 'Comment by {0}: {1}'.format(self.creator.username,
                                             self.post_field.title)
+
+
+class TableOfContents(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE,
+                               related_name='course')
+    Lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE,
+                               related_name='contents')
+    time = models.CharField(max_length=100, default=0)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey()
+
+    def __str__(self):
+        return f"Contents in {self.lesson.name}"
+
+
+class Topic(models.Model):
+    name = models.CharField(max_length=255)
+    content = GenericRelation(TableOfContents)
+
+    def __str__(self):
+        return f"{self.name}"

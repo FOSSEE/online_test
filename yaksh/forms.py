@@ -1,7 +1,8 @@
 from django import forms
 from yaksh.models import (
     get_model_class, Profile, Quiz, Question, Course, QuestionPaper, Lesson,
-    LearningModule, TestCase, languages, question_types, Post, Comment
+    LearningModule, TestCase, languages, question_types, Post, Comment,
+    Topic
 )
 from grades.models import GradingSystem
 from django.contrib.auth import authenticate
@@ -15,6 +16,8 @@ except ImportError:
     from string import ascii_letters as letters
 from string import punctuation, digits
 import pytz
+from ast import literal_eval
+
 from .send_emails import generate_activation_key
 
 languages = (("", "Select Language"),) + languages
@@ -520,6 +523,13 @@ class LessonForm(forms.ModelForm):
         self.fields['description'].widget.attrs.update(
             {'class': form_input_class, 'placeholder': des_msg}
         )
+        self.fields['video_path'].widget.attrs.update(
+            {'class': form_input_class,
+             'placeholder': dedent("""\
+                {'youtube': '', 'vimeo': '', 'others': ''}
+                """),
+             }
+        )
         self.fields['video_file'].widget.attrs.update(
             {'class': "custom-file-input"}
         )
@@ -539,6 +549,26 @@ class LessonForm(forms.ModelForm):
                         ", ".join(actual_extension))
                     )
         return file
+
+    def clean_video_path(self):
+        path = self.cleaned_data.get("video_path")
+        if path:
+            try:
+                value = literal_eval(path)
+                if not isinstance(value, dict):
+                    raise forms.ValidationError(
+                        "Value must be dictionary as shown in sample"
+                    )
+                else:
+                    if len(value) > 1:
+                        raise forms.ValidationError(
+                            "Only one of the video name should be entered"
+                        )
+            except ValueError:
+                raise forms.ValidationError(
+                    "Value must be dictionary as shown in sample"
+                )
+        return path
 
 
 class LessonFileForm(forms.Form):
@@ -615,3 +645,63 @@ class CommentForm(forms.ModelForm):
                 }
             )
         }
+
+
+class TopicForm(forms.ModelForm):
+
+    timer = forms.CharField()
+    def __init__(self, *args, **kwargs):
+        super(TopicForm, self).__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Topic Name'}
+        )
+        self.fields['timer'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Topic Time'}
+        )
+
+    class Meta:
+        model = Topic
+        fields = "__all__"
+
+
+class VideoQuizForm(forms.ModelForm):
+
+    _types = dict(question_types)
+
+    type = forms.CharField()
+
+    timer = forms.CharField()
+
+    def __init__(self, *args, **kwargs):
+        if 'question_type' in kwargs:
+            question_type = kwargs.pop('question_type')
+        else:
+            question_type = "mcq"
+        super(VideoQuizForm, self).__init__(*args, **kwargs)
+        self.fields['summary'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Summary'}
+        )
+        self.fields['language'].widget.attrs.update(
+            {'class': 'custom-select'}
+        )
+        self.fields['topic'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Question topic name'}
+        )
+        self.fields['points'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Points'}
+        )
+        self.fields['type'].widget.attrs.update(
+            {'class': form_input_class, 'readonly': True}
+        )
+        self.fields['type'].initial = self._types.get(question_type)
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Description'}
+        )
+        self.fields['timer'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Quiz Time'}
+        )
+
+    class Meta:
+        model = Question
+        fields = ['summary', 'description', 'points',
+                  'language', 'type', 'topic']
