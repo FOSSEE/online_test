@@ -21,10 +21,115 @@
                 <table class="table table-bordered table-responsive-sm">
                     <tr class="bg-light yakshred"><th>Question</th><th>Type</th><th>Total</th><th>Answered Correctly</th></tr>
                     {% for question, value in question_stats.items  %}
-                    <tr><td>{{ question.summary }}</td><td>{{ question.type }}</td><td>{{value.1}}</td><td>{{ value.0 }} ({% widthratio value.0 value.1 100 %}%)</td></tr>
+                    <tr>
+                        <td>{{ question.summary }}
+                            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapse_question_{{question.id}}" aria-expanded="false" aria-controls="collapseExample">
+                            More
+                            </button>
+                            <div class="collapse" id="collapse_question_{{question.id}}">
+                                <div class="card card-body" style="width: 18rem;">
+                                    <strong>
+                                        Summary:
+                                    </strong>
+                                    <p>
+                                        {{ question.summary }}
+                                    </p>
+                                    <strong>
+                                        Description:
+                                    </strong>
+                                    <p>
+                                        {{ question.description }}
+                                    </p>
+                                    <strong>
+                                        Points:
+                                    </strong>
+                                    <p>
+                                        {{ question.points }}
+                                    </p>
+                                    <strong>
+                                        Type:
+                                    </strong>
+                                    <p>
+                                        {{ question.type }}
+                                    </p>
+                                    {% if question.type in 'mcq mcc' %}
+                                    <strong>
+                                        Test Cases:
+                                    </strong>
+                                    <p>
+                                        <ol>
+                                        {% for tc in question.testcase_set.all %}
+                                                <li>              
+                                                    {{ tc.mcqtestcase.options }}
+                                                    {% if tc.mcqtestcase.correct %}
+                                                        <span class="badge badge-primary">Correct</span>
+                                                    {% endif %}
+                                                </li>
+                                        {% endfor %}
+                                        </ol>
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ question.type }}</td>
+                        <td>{{value.1}}</td><td>{{ value.0 }} ({% widthratio value.0 value.1 100 %}%)</td>
+
+
+                    </tr>
                     {% endfor %}
                 </table>
             {% endif %}
+
+            <!-- The Modal -->
+            <div class="modal" id="question_detail_modal">
+            <div class="modal-dialog">
+              <div class="modal-content">
+              
+                <!-- Modal Header -->
+                <div class="modal-header">
+                  <h4 class="modal-title">Question Details</h4>
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <table>
+                        <tr>
+                            <td>Summary</td>
+                            <td>{{ question.summary }}</td>
+                        </tr>
+                        <tr>
+                            <td>Description</td>
+                            <td>{{ question.description }}</td>
+                        </tr>                        <tr>
+                            <td>Type</td>
+                            <td>{{ question.type }}</td>
+                        </tr>                        <tr>
+                            <td>Points</td>
+                            <td>{{ question.points }}</td>
+                        </tr>
+                        <tr>
+                            {% for tc in question.testcase_set.all %}
+                                tc
+                            {% endfor %}
+                            <br><br>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                </div>
+                
+              </div>
+            </div>
+            </div>
+
+              </div>
+            </div>
+            <!-- end Modal outer -->
         </div>
     </div>
 </div>
