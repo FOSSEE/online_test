@@ -19,7 +19,7 @@
             {% if question_stats %}
                 <p><b>Total number of participants: {{ total }}</b></p>
                 <table class="table table-bordered table-responsive-sm">
-                    <tr class="bg-light yakshred"><th>Question</th><th>Type</th><th>Total</th><th>Answered</th></tr>
+                    <tr class="bg-light yakshred"><th>Question</th><th>Type</th><th>Total</th><th>Answered Correctly</th></tr>
                     {% for question, value in question_stats.items  %}
                     <tr><td>{{ question.summary }}</td><td>{{ question.type }}</td><td>{{value.1}}</td><td>{{ value.0 }} ({% widthratio value.0 value.1 100 %}%)</td></tr>
                     {% endfor %}
