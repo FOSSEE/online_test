@@ -131,3 +131,9 @@ body, .dropdown-menu {
 #question_card {
     border: none;
 }
+
+
+iframe {
+    display:block;
+    width:100%;
+}
