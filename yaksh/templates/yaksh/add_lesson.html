@@ -9,6 +9,8 @@
 </script>
 <script type="text/javascript" src="{% static 'yaksh/js/jquery-ui.js' %}">
 </script>
+<script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML">
+</script>
 {% endblock %}
 
 {% block css %}
@@ -23,8 +25,8 @@
         {{error}}
     </div>
     {% endif %}
-    <div class="row form-group">
-        <div class="col">
+    <div class="row justify-content-center form-group">
+        <div class="col-md-5 col-md-offset-4">
             <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
                 <i class="fa fa-arrow-left"></i>&nbsp;Back
             </a>

@@ -23,7 +23,7 @@ from django.urls import reverse
 import json
 from textwrap import dedent
 import zipfile
-from markdown import Markdown
+import markdown
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -101,7 +101,9 @@ CSV_FIELDS = ['name', 'username', 'roll_number', 'institute', 'department',
 
 def get_html_text(md_text):
     """Takes markdown text and converts it to html"""
-    return Markdown().convert(md_text)
+    return markdown.markdown(
+        md_text, extensions=['tables', 'fenced_code']
+    )
 
 
 def formfield_callback(field):
