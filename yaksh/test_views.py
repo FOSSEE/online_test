@@ -2755,6 +2755,33 @@ class TestCourseDetail(TestCase):
                 id=uploaded_users.first().id).exists()
         )
 
+    def test_upload_existing_user_email(self):
+        # Given
+        self.client.login(
+            username=self.user1.username, password=self.user1_plaintext_pass)
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     'user_existing_email.csv')
+        csv_file = open(csv_file_path, 'rb')
+        upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
+        csv_file.close()
+
+        # When
+        response = self.client.post(
+            reverse('yaksh:upload_users',
+                    kwargs={'course_id': self.user1_course.id}),
+            data={'csv_file': upload_file})
+
+        # Then
+        uploaded_users = User.objects.filter(email='demo_student@test.com')
+        self.assertEqual(response.status_code, 302)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertIn('demo_student', messages[0])
+        self.assertTrue(
+            self.user1_course.students.filter(
+                id=uploaded_users.first().id).exists()
+        )
+        self.assertEqual(uploaded_users.count(), 1)
+
     def test_upload_users_add_update_reject(self):
         # Given
         self.client.login(

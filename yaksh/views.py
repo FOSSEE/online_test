@@ -2411,8 +2411,10 @@ def _read_user_csv(request, reader, course):
             messages.info(request, "{0} -- Missing Values".format(counter))
             continue
         users = User.objects.filter(username=username)
+        if not users.exists():
+            users = User.objects.filter(email=email)
         if users.exists():
-            user = users[0]
+            user = users.last()
             if remove.strip().lower() == 'true':
                 _remove_from_course(user, course)
                 messages.info(request, "{0} -- {1} -- User rejected".format(
