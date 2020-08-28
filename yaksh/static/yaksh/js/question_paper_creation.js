@@ -59,7 +59,7 @@ $(document).ready(function(){
         return true;
     });
 
-    $('#add_checkall').change(function () {
+    $('#add_checkall').on("change", function () {
         if($(this).prop("checked")) {
             $("#fixed-available input:checkbox").each(function(index, element) {
                 if(isNaN($(this).val())) {return};
@@ -74,7 +74,7 @@ $(document).ready(function(){
         }
     });
 
-    $('#remove_checkall').change(function () {
+    $('#remove_checkall').on("change", function () {
         if($(this).prop("checked")) {
             $("#fixed-added input:checkbox").each(function (index, element) {
                 if(isNaN($(this).val())) { return };
@@ -83,7 +83,6 @@ $(document).ready(function(){
             });
         } else {
             $("#fixed-added input:checkbox").each(function (index, element) {
-                console.log('unchecked');
                 $(this).prop('checked', false);
                 checked_vals.pop(parseInt($(this).val()));
             });
