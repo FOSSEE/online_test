@@ -1757,7 +1757,6 @@ def user_data(request, user_id, questionpaper_id=None, course_id=None):
         raise Http404('You are not allowed to view this page!')
     user = User.objects.get(id=user_id)
     data = AnswerPaper.objects.get_user_data(user, questionpaper_id, course_id)
-
     context = {'data': data, 'course_id': course_id}
     return my_render_to_response(request, 'yaksh/user_data.html', context)
 
