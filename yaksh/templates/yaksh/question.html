@@ -239,21 +239,21 @@ question_type = "{{ question.type }}";
           <!-- Integer type question -->
           {% if question.type == "integer" %}
             Enter Integer:<br/>
-            <input autofocus class="form-control" name="answer" type="number" id="integer" value="{{ last_attempt|safe }}" />
+            <input autofocus class="form-control" name="answer" type="number" id="integer" value="{{ last_attempt|to_integer }}" />
             <br><br>
           {% endif %}
 
           <!-- String type question -->
           {% if question.type == "string" %}
             Enter Text:<br/>
-            <textarea autofocus name="answer" id="string" class="form-control" style="width: 100%">{{ last_attempt|safe }}</textarea>
+            <textarea autofocus name="answer" id="string" class="form-control" style="width: 100%">{{ last_attempt|to_str }}</textarea>
             <br/><br/>
           {% endif %}
 
           <!-- Float type question -->
           {% if question.type == "float" %}
             Enter Decimal Value :<br/>
-            <input autofocus class="form-control" name="answer" type="number" step="any" id="float" value="{{ last_attempt|safe }}" />
+            <input autofocus class="form-control" name="answer" type="number" step="any" id="float" value="{{ last_attempt|to_float }}" />
             <br/><br/>
           {% endif %}
 

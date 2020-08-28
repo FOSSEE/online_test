@@ -122,3 +122,26 @@ def highlight_spaces(text):
     return text.replace(
         " ", '<span style="background-color:#ffb6db">&nbsp</span>'
         )
+
+
+@register.filter(name="to_integer")
+def to_integer(text):
+    try:
+        value = int(text)
+    except ValueError:
+        value = ''
+    return value
+
+
+@register.filter(name="to_float")
+def to_float(text):
+    try:
+        value = float(text)
+    except ValueError:
+        value = ''
+    return value
+
+
+@register.filter(name="to_str")
+def to_str(text):
+    return text.decode("utf-8")
