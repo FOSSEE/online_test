@@ -1446,6 +1446,13 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
                 question_paper.save()
                 question_paper.fixed_questions.add(*questions)
                 messages.success(request, "Questions added successfully")
+                return redirect(
+                    'yaksh:designquestionpaper',
+                    course_id=course_id,
+                    quiz_id=quiz_id,
+                    questionpaper_id=questionpaper_id
+                )
+
             else:
                 messages.warning(request, "Please select atleast one question")
 
@@ -1464,6 +1471,12 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
                     question_paper.save()
                 question_paper.fixed_questions.remove(*question_ids)
                 messages.success(request, "Questions removed successfully")
+                return redirect(
+                    'yaksh:designquestionpaper',
+                    course_id=course_id,
+                    quiz_id=quiz_id,
+                    questionpaper_id=questionpaper_id
+                )
             else:
                 messages.warning(request, "Please select atleast one question")
 
