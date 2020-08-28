@@ -1,9 +1,10 @@
 {% extends "manage.html" %}
 
+{% block title %} Question Statistics {% endblock %}
 {% block pagetitle %} Statistics for {{ quiz.description }}{% endblock pagetitle %}
 
 {% block content %}
-<div class="container">
+<div class="container-fluid">
     <div class="row">
         <div class="col-md-2">
             <ul class="list-group">
@@ -18,16 +19,14 @@
         <div class="col-md-9">
             {% if question_stats %}
                 <p><b>Total number of participants: {{ total }}</b></p>
-                <table class="table table-bordered table-responsive-sm">
-                    <tr class="bg-light yakshred"><th>Question</th><th>Type</th><th>Total</th><th>Answered Correctly</th></tr>
+                <table class="table table-responsive-sm">
+                    <tr class="bg-light yakshred"><th>Question</th><th></th><th>Type</th><th>Total</th><th>Answered Correctly</th></tr>
                     {% for question, value in question_stats.items  %}
                     <tr>
-                        <td>{{ question.summary }}
-                            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapse_question_{{question.id}}" aria-expanded="false" aria-controls="collapseExample">
-                            More
-                            </button>
+                        <td width="45%">{{ question.summary }}
                             <div class="collapse" id="collapse_question_{{question.id}}">
-                                <div class="card card-body" style="width: 18rem;">
+                                <br>
+                                <div class="card card-body">
                                     <strong>
                                         Summary:
                                     </strong>
@@ -38,7 +37,7 @@
                                         Description:
                                     </strong>
                                     <p>
-                                        {{ question.description }}
+                                        {{ question.description|safe }}
                                     </p>
                                     <strong>
                                         Points:
@@ -50,7 +49,7 @@
                                         Type:
                                     </strong>
                                     <p>
-                                        {{ question.type }}
+                                        {{ question.get_type_display }}
                                     </p>
                                     {% if question.type in 'mcq mcc' %}
                                     <strong>
@@ -71,6 +70,11 @@
                                     {% endif %}
                                 </div>
                             </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-outline-primary" type="button" data-toggle="collapse" data-target="#collapse_question_{{question.id}}" aria-expanded="false" aria-controls="collapseExample">
+                            <i class="fa fa-angle-down"></i>&nbsp;More
+                            </button>
                         </td>
                         <td>{{ question.type }}</td>
                         <td>{{value.1}}</td><td>{{ value.0 }} ({% widthratio value.0 value.1 100 %}%)</td>
