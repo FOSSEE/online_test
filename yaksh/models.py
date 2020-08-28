@@ -1695,17 +1695,15 @@ class QuestionPaperManager(models.Manager):
 
     def create_trial_paper_to_test_quiz(self, trial_quiz, original_quiz_id):
         """Creates a trial question paper to test quiz."""
-        if self.filter(quiz=trial_quiz).exists():
-            trial_questionpaper = self.get(quiz=trial_quiz)
-        else:
-            trial_questionpaper, trial_questions = \
-                self._create_trial_from_questionpaper(original_quiz_id)
-            trial_questionpaper.quiz = trial_quiz
-            trial_questionpaper.fixed_questions\
-                .add(*trial_questions["fixed_questions"])
-            trial_questionpaper.random_questions\
-                .add(*trial_questions["random_questions"])
-            trial_questionpaper.save()
+        trial_quiz.questionpaper_set.all().delete()
+        trial_questionpaper, trial_questions = \
+            self._create_trial_from_questionpaper(original_quiz_id)
+        trial_questionpaper.quiz = trial_quiz
+        trial_questionpaper.fixed_questions\
+            .add(*trial_questions["fixed_questions"])
+        trial_questionpaper.random_questions\
+            .add(*trial_questions["random_questions"])
+        trial_questionpaper.save()
         return trial_questionpaper
 
 

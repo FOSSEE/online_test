@@ -27,7 +27,7 @@ from yaksh import settings
 
 
 def setUpModule():
-    Group.objects.create(name='moderator')
+    Group.objects.get_or_create(name='moderator')
 
     # create user profile
     user = User.objects.create_user(username='creator',
@@ -842,7 +842,11 @@ class QuestionPaperTestCases(unittest.TestCase):
                 total_marks=0.0,
                 shuffle_questions=True
             )
-
+        self.question_paper_with_time_between_attempts.fixed_question_order = \
+            "{0}, {1}".format(self.questions[3].id, self.questions[5].id)
+        self.question_paper_with_time_between_attempts.fixed_questions.add(
+            self.questions[3], self.questions[5]
+            )
         self.question_paper.fixed_question_order = "{0}, {1}".format(
                 self.questions[3].id, self.questions[5].id
                 )
@@ -1030,7 +1034,7 @@ class QuestionPaperTestCases(unittest.TestCase):
         qu_list = [str(self.questions_list[0]), str(self.questions_list[1])]
         trial_paper = \
             QuestionPaper.objects.create_trial_paper_to_test_quiz(
-                self.trial_quiz, self.quiz.id
+                self.trial_quiz, self.quiz_with_time_between_attempts.id
                 )
         trial_paper.random_questions.add(self.question_set_1)
         trial_paper.random_questions.add(self.question_set_2)

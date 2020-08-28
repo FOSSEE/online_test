@@ -821,7 +821,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                                      previous_question=current_question)
         else:
             user_answer = request.POST.get('answer')
-        if not user_answer:
+        if not str(user_answer):
             msg = "Please submit a valid answer."
             return show_question(
                 request, current_question, paper, notification=msg,
@@ -1491,6 +1491,12 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
                 random_set.questions.add(*random_ques)
                 question_paper.random_questions.add(random_set)
                 messages.success(request, "Questions removed successfully")
+                return redirect(
+                    'yaksh:designquestionpaper',
+                    course_id=course_id,
+                    quiz_id=quiz_id,
+                    questionpaper_id=questionpaper_id
+                )
             else:
                 messages.warning(request, "Please select atleast one question")
 
@@ -1499,6 +1505,12 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
             if random_set_ids:
                 question_paper.random_questions.remove(*random_set_ids)
                 messages.success(request, "Questions removed successfully")
+                return redirect(
+                    'yaksh:designquestionpaper',
+                    course_id=course_id,
+                    quiz_id=quiz_id,
+                    questionpaper_id=questionpaper_id
+                )
             else:
                 messages.warning(request, "Please select question set")
 
