@@ -1527,8 +1527,8 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
         if questions:
             questions = _remove_already_present(questionpaper_id, questions)
 
-        question_paper.update_total_marks()
-        question_paper.save()
+    question_paper.update_total_marks()
+    question_paper.save()
     random_sets = question_paper.random_questions.all()
     fixed_questions = question_paper.get_ordered_questions()
     context = {
