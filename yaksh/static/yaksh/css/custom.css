@@ -3,8 +3,7 @@ body, .dropdown-menu {
 }
 
 .base-content {
-    padding-top: 5em;
-    padding-bottom: 5em;
+    padding-top: 3em;
 }
 
 #login-btn, #signup-btn, #forgot-btn{
@@ -87,6 +86,10 @@ body, .dropdown-menu {
     display: block;
 }
 
+.side_component {
+    background-color: whitesmoke;
+}
+
 /* ---------------------------------------------------
     CONTENT STYLE
 ----------------------------------------------------- */
@@ -129,7 +132,7 @@ body, .dropdown-menu {
     Quiz question style
 ----------------------------------------------------- */
 #question_card {
-    border: none;
+
 }
 
 
