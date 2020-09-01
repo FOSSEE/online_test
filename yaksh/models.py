@@ -2311,8 +2311,8 @@ class AnswerPaper(models.Model):
             q_a[question].append({
                 'marks': max([
                     answer['answer'].marks
-                        for answer in answers
-                            if question == answer['answer'].question
+                    for answer in answers
+                    if question == answer['answer'].question
                 ])
             })
 
