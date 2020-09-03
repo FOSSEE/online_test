@@ -146,8 +146,8 @@
                         Table Of Contents&nbsp;<i class="fa fa-angle-down"></i>
                     </a>
                 </div>
-                <div class="collapse hide" id="toc-collapse">
-                    <div class="card-body" id="toc"></div>
+                <div class="collapse show" id="toc-collapse">
+                    <div class="card-body" id="toc">{{toc}}</div>
                 </div>
             </div>
             <br>
@@ -160,11 +160,7 @@
                         {% with lesson_form.instance.video_path|video_name as video %}
                         <div id="player" data-plyr-provider="{{video.1}}" data-plyr-embed-id="{{video.0}}"></div>
                         <br>
-                        <div style="display: none" id="loader">
-                            <span class="spinner-border text-success"></span>
-                            Loading...
-                        </div>
-                        <form action="{% url 'yaksh:add_marker' course_id lesson_form.instance.id %}" method="POST" id="marker-form">
+                        <form action="{% url 'yaksh:add_marker' course_id lesson_form.instance.id %}" method="POST" id="marker-form" name="marker-form">
                             {% csrf_token %}
                             <div class="row">
                                 <div class="col-md-3">

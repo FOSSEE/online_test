@@ -1,0 +1,29 @@
+<table class="table table-responsive-sm">
+{% for toc in contents %}
+    <tr>
+        <td>
+            {{ toc.get_toc_text }}
+        </td>
+        <td>
+            {{toc.get_content_display}}   
+        </td>
+        <td>
+            {{toc.time}}
+        </td>
+        <td>
+            {% if toc.content == 1 %}
+                <a href="#" class="btn btn-outline-primary" data-url="{% url 'yaksh:edit_topic' toc.content toc.course_id toc.lesson_id toc.object_id %}">
+            {% else %}
+                <a href="#" class="btn btn-outline-primary" data-url="{% url 'yaksh:edit_marker_quiz' toc.content toc.course_id toc.lesson_id toc.object_id %}">
+            {% endif %}
+                    <i class="fa fa-edit">&nbsp;Edit</i>
+                </a>
+        </td>
+        <td>
+            <a href="#" class="btn btn-outline-danger">
+                <i class="fa fa-trash">&nbsp;Delete</i>
+            </a>
+        </td>
+    </tr>
+{% endfor %}
+</table>
