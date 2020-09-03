@@ -1,7 +1,11 @@
+{% load static %}
+<script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML">
+</script>
 {% if question_id %}
-<form class="form-group" method="POST" action="{% url 'yaksh:edit_marker_quiz' course_id lesson_id question_id %}" id="question-form">
+<form class="form-group" method="POST" action="{% url 'yaksh:edit_marker_quiz' content_type course_id lesson_id question_id %}" id="question-form">
 {% else %}
-<form class="form-group" method="POST" action="{% url 'yaksh:add_marker_quiz' course_id lesson_id %}" id="question-form">
+<form class="form-group" method="POST" action="{% url 'yaksh:add_marker_quiz' content_type course_id lesson_id %}" id="question-form">
 {% endif %}
     {% csrf_token %}
     <table class="table table-responsive-sm">
@@ -39,7 +43,7 @@
     </button>
 </form>
 <script type="text/javascript">
-    $(document).ready(function(){
+    $(document).ready(function() {
         var tc_type = "#id_"+"{{tc_class}}"+"_set-TOTAL_FORMS";
         $('#add_more').click(function() {
             var form_idx = $(tc_type).val();
@@ -53,22 +57,38 @@
             $(this).find('input[type=number]').addClass("form-control");
         });
         let option = $('#id_language').val();
-        console.log(option);
         if(option === 'other') {
             $('#id_topic').closest('tr').show();
+            $('#id_topic').prop("required", true);
         } else {
             $('#id_topic').closest('tr').hide();
+            $('#id_topic').prop("required", false);
         }
         $('#id_language').on('change', function() {
             let lang_value = $(this).val();
-            console.log(lang_value);
             if (lang_value === "other") {
                 $('#id_topic').closest('tr').show();
+                $('#id_topic').prop("required", true);
                 $('#id_type').children("option[value='code']").hide();
             } else {
                 $('#id_topic').closest('tr').hide();
+                $('#id_topic').prop("required", false);
                 $('#id_type').children("option[value='code']").show();
             }
         });
+        function init_editor() {
+            tinymce.init({
+                selector : "textarea",
+                setup : function(ed) {
+                      ed.on('change', function(e) {
+                         tinymce.triggerSave();
+                      });
+                },
+                max_height: 400,
+                height: 400,
+                plugins: "image code link",
+                convert_urls: false
+            });
+        }
     });
 </script>

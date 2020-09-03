@@ -45,40 +45,54 @@ $(document).ready(function() {
     // Marker Form
     $("#marker-form").submit(function(e) {
         e.preventDefault();
-        $("#loader").show();
-        ajax_call($(this).attr("action"), 'POST', $(this).serializeArray());
+        lock_screen();
+        var csrf = document.getElementById("marker-form").elements[0].value;
+        ajax_call($(this).attr("action"), $(this).attr("method"), $(this).serialize(), csrf);
     });
 
-    function ajax_call(url, method, data) {
+    function ajax_call(url, method, data, csrf) {
         $.ajax({
             url: url,
             timeout: 15000,
-            type: method,
-            data: JSON.stringify(data),
-            dataType: 'json',
-            contentType: 'application/json; charset=utf-8',
+            method: method,
+            data: data,
             beforeSend: function(xhr, settings) {
               if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                var csrftoken = data[0].value
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                xhr.setRequestHeader("X-CSRFToken", csrf);
               }
             },
             success: function(msg) {
-                $("#loader").hide();
+                unlock_screen();
                 if (msg.success) {
                     if (msg.status) $("#lesson-content").html(msg.data);
                     if (msg.content_type === '1') {
                         add_topic();
                     }
-                    else if(msg.content_type === '2') {
+                    else {
                         add_question();   
                     }
                 }
+                if (msg.toc) show_toc(msg.toc);
                 if (msg.message) alert(msg.message)
             },
-            error: function(jqXHR, textStatus) {
-                $("#loader").hide();
-                alert("Cannot add the marker. Please try again");
+            error: function(xhr, data) {
+                switch(xhr.status) {
+                    case 400: {
+                        unlock_screen();
+                        console.log(data.responseJSON);
+                        break;
+                    }
+                    case 500: {
+                        unlock_screen();
+                        alert('500 status code! server error');
+                        break;
+                    }
+                    case 404: {
+                        unlock_screen();
+                        alert('404 status code! server error');
+                        break;
+                    }
+                }
             }
         });
     }
@@ -89,8 +103,9 @@ $(document).ready(function() {
         }
         $("#topic-form").submit(function(e) {
             e.preventDefault();
-            $("#loader").show();
-            ajax_call($(this).attr("action"), 'POST', $(this).serializeArray());
+            lock_screen();
+            var csrf = document.getElementById("topic-form").elements[0].value;
+            ajax_call($(this).attr("action"), $(this).attr("method"), $(this).serialize(), csrf);
         });
     }
 
@@ -100,9 +115,27 @@ $(document).ready(function() {
         }
         $("#question-form").submit(function(e) {
             e.preventDefault();
-            $("#loader").show();
-            ajax_call($(this).attr("action"), 'POST', $(this).serializeArray());
+            lock_screen();
+            var csrf = document.getElementById("question-form").elements[0].value;
+            ajax_call($(this).attr("action"), $(this).attr("method"), $(this).serialize(), csrf);
         });
+    }
+
+    function lock_screen() {
+        document.getElementById("ontop").style.display = "block";
+    }
+
+    function unlock_screen() {
+        document.getElementById("ontop").style.display = "none";
+    }
+
+    function show_error() {
+
+    }
+
+    function show_toc(toc) {
+        $("#lesson-content").empty();
+        $("#toc").html(toc);
     }
 
     $('#id_video_file').on('change',function(){
