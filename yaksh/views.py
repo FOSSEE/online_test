@@ -38,7 +38,8 @@ from yaksh.models import (
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
-    LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment
+    LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
+    Topic, TableOfContents
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -2662,6 +2663,14 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
                     request, "Please select atleast one file to delete"
                 )
 
+    contents = TableOfContents.objects.filter(
+                    course_id=course_id, lesson_id=lesson_id
+                )
+    data = loader.render_to_string(
+        "yaksh/show_toc.html", context={'contents': contents},
+        request=request
+    )
+    context['toc'] = data
     lesson_files = LessonFile.objects.filter(lesson=lesson)
     context['lesson_form'] = lesson_form
     context['lesson_file_form'] = lesson_files_form
@@ -3519,9 +3528,8 @@ def add_marker(request, course_id, lesson_id):
     if (not is_moderator(user) or
             not course.is_creator(user) or not course.is_creator(user)):
         raise Http404("You are not allowed to view this page")
-    data = json.loads(request.body.decode("utf-8"))
-    content_type = data[-2].get("value")
-    print(content_type)
+    content_type = request.POST.get("content")
+    question_type = request.POST.get("type")
     if content_type == '1':
         form = TopicForm()
         template_name = 'yaksh/add_topic.html'
@@ -3529,16 +3537,15 @@ def add_marker(request, course_id, lesson_id):
         formset = None
         tc_class = None
     else:
-        try:
-            question_type = data[-1].get('value')
-        except IndexError:
+        if not question_type:
             question_type = "mcq"
         form = VideoQuizForm(question_type=question_type)
         formset, tc_class = get_tc_formset(question_type)
         template_name = 'yaksh/add_video_quiz.html'
         status = 2
     context = {'form': form, 'course_id': course.id, 'lesson_id': lesson_id,
-               'formset': formset, 'tc_class': tc_class}
+               'formset': formset, 'tc_class': tc_class,
+               'content_type': content_type}
     data = loader.render_to_string(
         template_name, context=context, request=request
     )
@@ -3547,7 +3554,8 @@ def add_marker(request, course_id, lesson_id):
          'status': status}
     )
 
-def get_tc_formset(question_type):
+
+def get_tc_formset(question_type, post=None, question=None):
     tc, tc_class = McqTestCase, 'mcqtestcase'
     if question_type == 'mcq' or question_type == 'mcc':
         tc, tc_class = McqTestCase, 'mcqtestcase'
@@ -3560,37 +3568,102 @@ def get_tc_formset(question_type):
     TestcaseFormset = inlineformset_factory(
         Question, tc, form=TestcaseForm, extra=1, fields="__all__",
     )
-    formset = TestcaseFormset(initial=[{'type': tc_class}])
+    formset = TestcaseFormset(
+         post, initial=[{'type': tc_class}], instance=question
+    )
     return formset, tc_class
 
 
 @login_required
 @email_verified
-def add_topic(request, course_id, lesson_id, topic_id=None):
+def add_topic(request, content_type, course_id, lesson_id, topic_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     if (not is_moderator(user) or
             not course.is_creator(user) or not course.is_creator(user)):
         raise Http404("You are not allowed to view this page")
-    print(request.method)
-    data = json.loads(request.body.decode("utf-8"))
-    print(data)
-    return JsonResponse(
-        {'success': True, 'data': data, 'message': 'Added successfully'}
-    )
+    if topic_id:
+        topic = get_object_or_404(Topic, pk=topic_id)
+    else:
+        topic = None
+    context = {}
+    if request.method == "POST":
+        form = TopicForm(request.POST, instance=topic)
+        if form.is_valid():
+            form.save()
+            if not topic:
+                TableOfContents.objects.create(
+                    content_object=form.instance, course_id=course_id,
+                    lesson_id=lesson_id, content=content_type,
+                    time=request.POST.get("timer")
+                )
+                contents = TableOfContents.objects.filter(
+                        course_id=course_id, lesson_id=lesson_id
+                )
+                data = loader.render_to_string(
+                    "yaksh/show_toc.html", context={'contents': contents},
+                    request=request
+                )
+                context['toc'] = data
+            status_code = 200
+            context['success'] = True
+            context['message'] = 'Added topic successfully'
+        else:
+            status_code = 400
+            context['success'] = False
+            context['message'] = form.errors.as_json()
+    return JsonResponse(context, status=status_code)
 
 
 @login_required
 @email_verified
-def add_marker_quiz(request, course_id, lesson_id, question_id=None):
+def add_marker_quiz(request, content_type, course_id, lesson_id,
+                    question_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     if (not is_moderator(user) or
             not course.is_creator(user) or not course.is_creator(user)):
         raise Http404("You are not allowed to view this page")
-    print(request.method)
-    data = json.loads(request.body.decode("utf-8"))
-    print(data)
-    return JsonResponse(
-        {'success': True, 'data': data, 'message': 'Added successfully'}
-    )
+    if question_id:
+        question = get_object_or_404(Question, pk=question_id)
+    else:
+        question = None
+    context = {}
+    if request.method == "POST":
+        qform = VideoQuizForm(request.POST, instance=question)
+        if qform.is_valid():
+            qform.save(commit=False)
+            qform.instance.user = user
+            qform.save()
+            formset, tc_class = get_tc_formset(
+                qform.instance.type, request.POST, qform.instance
+            )
+            if formset.is_valid():
+                formset.save()
+                if not question:
+                    TableOfContents.objects.create(
+                        content_object=qform.instance, course_id=course_id,
+                        lesson_id=lesson_id, content=content_type,
+                        time=request.POST.get("timer")
+                    )
+                    contents = TableOfContents.objects.filter(
+                        course_id=course_id, lesson_id=lesson_id
+                    )
+                    data = loader.render_to_string(
+                        "yaksh/show_toc.html", context={'contents': contents},
+                        request=request
+                    )
+                    context['toc'] = data
+                status_code = 200
+                context['success'] = True
+                context['message'] = 'Added question successfully'
+                context['content_type'] = content_type
+            else:
+                status_code = 400
+                context['success'] = False
+                context['message'] = formset.errors.as_json()
+        else:
+            status_code = 400
+            context['success'] = False
+            context['message'] = qform.errors.as_json()
+    return JsonResponse(context, status=status_code)
