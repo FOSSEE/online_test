@@ -650,6 +650,7 @@ class CommentForm(forms.ModelForm):
 class TopicForm(forms.ModelForm):
 
     timer = forms.CharField()
+
     def __init__(self, *args, **kwargs):
         super(TopicForm, self).__init__(*args, **kwargs)
         self.fields['name'].widget.attrs.update(
@@ -665,8 +666,6 @@ class TopicForm(forms.ModelForm):
 
 
 class VideoQuizForm(forms.ModelForm):
-
-    _types = dict(question_types)
 
     type = forms.CharField()
 
@@ -693,7 +692,7 @@ class VideoQuizForm(forms.ModelForm):
         self.fields['type'].widget.attrs.update(
             {'class': form_input_class, 'readonly': True}
         )
-        self.fields['type'].initial = self._types.get(question_type)
+        self.fields['type'].initial = question_type
         self.fields['description'].widget.attrs.update(
             {'class': form_input_class, 'placeholder': 'Description'}
         )

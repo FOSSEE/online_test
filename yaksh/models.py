@@ -511,8 +511,6 @@ class Quiz(models.Model):
 
     objects = QuizManager()
 
-    content = GenericRelation("TableOfContents")
-
     class Meta:
         verbose_name_plural = "Quizzes"
 
@@ -1343,6 +1341,8 @@ class Question(models.Model):
 
     # Solution for the question.
     solution = models.TextField(blank=True)
+
+    content = GenericRelation("TableOfContents")
 
     tc_code_types = {
         "python": [
@@ -2730,17 +2730,29 @@ class Comment(ForumBase):
 
 
 class TableOfContents(models.Model):
+    toc_types = ((1, "Topic"), (2, "Graded Quiz"), (3, "Exercise"), (4, "Poll"))
     course = models.ForeignKey(Course, on_delete=models.CASCADE,
                                related_name='course')
-    Lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE,
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE,
                                related_name='contents')
     time = models.CharField(max_length=100, default=0)
+    content = models.IntegerField(choices=toc_types)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey()
 
+    class Meta:
+        verbose_name_plural = "Table Of Contents"
+
+    def get_toc_text(self):
+        if self.content == 1:
+            content_name =  Topic.objects.get(id=self.object_id).name
+        else:
+            content_name = Question.objects.get(id=self.object_id).summary
+        return content_name
+
     def __str__(self):
-        return f"Contents in {self.lesson.name}"
+        return f"TOC for {self.lesson.name} with {self.get_content_display()}"
 
 
 class Topic(models.Model):
