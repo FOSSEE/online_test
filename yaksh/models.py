@@ -42,6 +42,7 @@ from django.template import Context, Template
 from django.conf import settings
 from django.forms.models import model_to_dict
 from django.db.models import Count
+
 # Local Imports
 from yaksh.code_server import (
     submit, get_result as get_result_from_code_server
@@ -308,6 +309,9 @@ class Lesson(models.Model):
         max_length=255, default=None, null=True, blank=True,
         help_text="Youtube id, vimeo id, others"
         )
+
+    post = GenericRelation('Post', related_query_name='lessons')
+
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -919,6 +923,7 @@ class Course(models.Model):
     view_grade = models.BooleanField(default=False)
     learning_module = models.ManyToManyField(LearningModule,
                                              related_name='learning_module')
+    post = GenericRelation('Post', related_query_name='courses')
 
     # The start date of the course enrollment.
     start_enroll_time = models.DateTimeField(
@@ -2753,8 +2758,15 @@ class ForumBase(models.Model):
 
 class Post(ForumBase):
     title = models.CharField(max_length=200)
-    course = models.ForeignKey(Course,
-                               on_delete=models.CASCADE, related_name='post')
+    target_ct = models.ForeignKey(ContentType,
+                                  blank=True,
+                                  null=True,
+                                  related_name='target_obj',
+                                  on_delete=models.CASCADE)
+    target_id = models.PositiveIntegerField(null=True,
+                                            blank=True,
+                                            db_index=True)
+    target = GenericForeignKey('target_ct', 'target_id')
 
     def __str__(self):
         return self.title
