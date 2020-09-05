@@ -10,6 +10,7 @@ from django.db import models
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
 from django.forms.models import inlineformset_factory
 from django.forms import fields
 from django.utils import timezone
@@ -3357,6 +3358,7 @@ def course_forum(request, course_id):
         base_template = 'manage.html'
         moderator = True
     course = get_object_or_404(Course, id=course_id)
+    course_ct = ContentType.objects.get_for_model(course)
     if (not course.is_creator(user) and not course.is_teacher(user)
             and not course.is_student(user)):
         raise Http404('You are not enrolled in {0} course'.format(course.name))
@@ -3365,9 +3367,10 @@ def course_forum(request, course_id):
         posts = course.post.get_queryset().filter(
             active=True, title__icontains=search_term)
     else:
-        posts = course.post.get_queryset().filter(
-            active=True).order_by('-modified_at')
-    paginator = Paginator(posts, 1)
+        posts = Post.objects.filter(
+            target_ct=course_ct, target_id=course.id, active=True
+        ).order_by('-modified_at')
+    paginator = Paginator(posts, 10)
     page = request.GET.get('page')
     posts = paginator.get_page(page)
     if request.method == "POST":
@@ -3375,7 +3378,7 @@ def course_forum(request, course_id):
         if form.is_valid():
             new_post = form.save(commit=False)
             new_post.creator = user
-            new_post.course = course
+            new_post.target = course
             new_post.save()
             return redirect('yaksh:post_comments',
                             course_id=course.id, uuid=new_post.uid)
@@ -3419,7 +3422,7 @@ def post_comments(request, course_id, uuid):
         'comments': comments,
         'base_template': base_template,
         'form': form,
-        'user': user
+        'user': user,
         })
 
 
@@ -3428,7 +3431,7 @@ def post_comments(request, course_id, uuid):
 def hide_post(request, course_id, uuid):
     user = request.user
     course = get_object_or_404(Course, id=course_id)
-    if (not course.is_creator(user) and not course.is_teacher(user)):
+    if (not course.is_creator(user) or not course.is_teacher(user)):
         raise Http404('You are not enrolled in {0} course'.format(course.name))
     post = get_object_or_404(Post, uid=uuid)
     post.comment.active = False
@@ -3442,7 +3445,7 @@ def hide_post(request, course_id, uuid):
 def hide_comment(request, course_id, uuid):
     user = request.user
     course = get_object_or_404(Course, id=course_id)
-    if (not course.is_creator(user) and not course.is_teacher(user)):
+    if (not course.is_creator(user) or not course.is_teacher(user)):
         raise Http404('You are not enrolled in {0} course'.format(course.name))
     comment = get_object_or_404(Comment, uid=uuid)
     post_uid = comment.post_field.uid

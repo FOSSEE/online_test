@@ -1,6 +1,7 @@
 from django import template
 from django.template.defaultfilters import stringfilter
 from django.forms.fields import CheckboxInput
+from django.contrib.contenttypes.models import ContentType
 from ast import literal_eval
 import os
 try:

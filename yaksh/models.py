@@ -13,6 +13,7 @@ from django.db import models
 from django.contrib.auth.models import User, Group, Permission
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from taggit.managers import TaggableManager
 from django.utils import timezone
 from django.core.files import File
@@ -285,6 +286,8 @@ class Lesson(models.Model):
         null=True, blank=True,
         help_text="Please upload video files in mp4, ogv, webm format"
         )
+
+    post = GenericRelation('Post', related_query_name='lessons')
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -896,6 +899,7 @@ class Course(models.Model):
     view_grade = models.BooleanField(default=False)
     learning_module = models.ManyToManyField(LearningModule,
                                              related_name='learning_module')
+    post = GenericRelation('Post', related_query_name='courses')
 
     # The start date of the course enrollment.
     start_enroll_time = models.DateTimeField(
@@ -2690,8 +2694,15 @@ class ForumBase(models.Model):
 
 class Post(ForumBase):
     title = models.CharField(max_length=200)
-    course = models.ForeignKey(Course,
-                               on_delete=models.CASCADE, related_name='post')
+    target_ct = models.ForeignKey(ContentType,
+                                  blank=True,
+                                  null=True,
+                                  related_name='target_obj',
+                                  on_delete=models.CASCADE)
+    target_id = models.PositiveIntegerField(null=True,
+                                            blank=True,
+                                            db_index=True)
+    target = GenericForeignKey('target_ct', 'target_id')
 
     def __str__(self):
         return self.title
