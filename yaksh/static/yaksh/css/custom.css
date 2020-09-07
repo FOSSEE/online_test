@@ -145,3 +145,19 @@ body, .dropdown-menu {
 .CodeMirror-fullscreen .CodeMirror-scroll {
     max-height: none !important;
 }
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar {
+    // Width of vertical scroll bar
+    width: 8px;
+    // Height of horizontal scroll bar
+    height: 10px;
+
+}
+::-webkit-scrollbar-thumb {
+border-radius: 8px;
+background: #c2c9d2;
+}

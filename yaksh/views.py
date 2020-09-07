@@ -2689,7 +2689,6 @@ def show_lesson(request, lesson_id, module_id, course_id):
     toc = TableOfContents.objects.filter(
         course_id=course_id, lesson_id=lesson_id
     )
-
     all_modules = course.get_learning_modules()
     if learn_unit.has_prerequisite():
         if not learn_unit.is_prerequisite_complete(user, learn_module, course):
