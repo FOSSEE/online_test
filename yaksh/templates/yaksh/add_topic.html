@@ -1,5 +1,5 @@
 {% if topic_id %}
-<form class="form-group" method="POST" action="{% url 'yaksh:edit_topic' content_type course_id lesson_id topic_id %}" id="topic-form">
+<form class="form-group" method="POST" action="{% url 'yaksh:edit_topic' content_type course_id lesson_id toc_id topic_id %}" id="topic-form">
 {% else %}
 <form class="form-group" method="POST" action="{% url 'yaksh:add_topic' content_type course_id lesson_id %}" id="topic-form">
 {% endif %}

@@ -158,7 +158,13 @@
                 <div class="card-body">
                     {% if lesson_form.instance and lesson_form.instance.video_path %}
                         {% with lesson_form.instance.video_path|video_name as video %}
+                        {% if video.1 == "others" %}
+                        <video id="player" playsinline controls>
+                            <source src="{{video.0}}" />
+                        </video>
+                        {% else %}
                         <div id="player" data-plyr-provider="{{video.1}}" data-plyr-embed-id="{{video.0}}"></div>
+                        {% endif %}
                         <br>
                         <form action="{% url 'yaksh:add_marker' course_id lesson_form.instance.id %}" method="POST" id="marker-form" name="marker-form">
                             {% csrf_token %}

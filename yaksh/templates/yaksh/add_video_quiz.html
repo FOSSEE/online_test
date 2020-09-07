@@ -3,7 +3,7 @@
 <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML">
 </script>
 {% if question_id %}
-<form class="form-group" method="POST" action="{% url 'yaksh:edit_marker_quiz' content_type course_id lesson_id question_id %}" id="question-form">
+<form class="form-group" method="POST" action="{% url 'yaksh:edit_marker_quiz' content_type course_id lesson_id toc_id question_id %}" id="question-form">
 {% else %}
 <form class="form-group" method="POST" action="{% url 'yaksh:add_marker_quiz' content_type course_id lesson_id %}" id="question-form">
 {% endif %}

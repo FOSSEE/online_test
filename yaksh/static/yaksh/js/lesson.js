@@ -16,10 +16,6 @@ $(document).ready(function() {
       seconds = seconds < 10 ? "0" + seconds : seconds;
       timer.val(hours + ":" + minutes + ":" + seconds);
     });
-    function csrfSafeMethod(method) {
-        // these HTTP methods do not require CSRF protection
-        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-    }
 
     $("#vtimer").on("change keyup paste", function() {
         player.pause();
@@ -50,95 +46,7 @@ $(document).ready(function() {
         ajax_call($(this).attr("action"), $(this).attr("method"), $(this).serialize(), csrf);
     });
 
-    function ajax_call(url, method, data, csrf) {
-        $.ajax({
-            url: url,
-            timeout: 15000,
-            method: method,
-            data: data,
-            beforeSend: function(xhr, settings) {
-              if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                xhr.setRequestHeader("X-CSRFToken", csrf);
-              }
-            },
-            success: function(msg) {
-                unlock_screen();
-                if (msg.success) {
-                    if (msg.status) $("#lesson-content").html(msg.data);
-                    if (msg.content_type === '1') {
-                        add_topic();
-                    }
-                    else {
-                        add_question();   
-                    }
-                }
-                if (msg.toc) show_toc(msg.toc);
-                if (msg.message) alert(msg.message)
-            },
-            error: function(xhr, data) {
-                switch(xhr.status) {
-                    case 400: {
-                        unlock_screen();
-                        console.log(data.responseJSON);
-                        break;
-                    }
-                    case 500: {
-                        unlock_screen();
-                        alert('500 status code! server error');
-                        break;
-                    }
-                    case 404: {
-                        unlock_screen();
-                        alert('404 status code! server error');
-                        break;
-                    }
-                }
-            }
-        });
-    }
-
-    function add_topic() {
-        if (!$("#id_timer").val()) {
-            $("#id_timer").val($("#vtimer").val());
-        }
-        $("#topic-form").submit(function(e) {
-            e.preventDefault();
-            lock_screen();
-            var csrf = document.getElementById("topic-form").elements[0].value;
-            ajax_call($(this).attr("action"), $(this).attr("method"), $(this).serialize(), csrf);
-        });
-    }
-
-    function add_question() {
-        if (!$("#id_timer").val()) {
-            $("#id_timer").val($("#vtimer").val());
-        }
-        $("#question-form").submit(function(e) {
-            e.preventDefault();
-            lock_screen();
-            var csrf = document.getElementById("question-form").elements[0].value;
-            ajax_call($(this).attr("action"), $(this).attr("method"), $(this).serialize(), csrf);
-        });
-    }
-
-    function lock_screen() {
-        document.getElementById("ontop").style.display = "block";
-    }
-
-    function unlock_screen() {
-        document.getElementById("ontop").style.display = "none";
-    }
-
-    function show_error() {
-
-    }
-
-    function show_toc(toc) {
-        $("#lesson-content").empty();
-        $("#toc").html(toc);
-    }
-
-    $('#id_video_file').on('change',function(){
+    $('#id_video_file').on('change',function() {
         //get the file name
         var files = [];
         for (var i = 0; i < $(this)[0].files.length; i++) {
@@ -147,7 +55,7 @@ $(document).ready(function() {
         $(this).next('.custom-file-label').html(files.join(', '));
     });
 
-    $('#id_Lesson_files').on('change',function(){
+    $('#id_Lesson_files').on('change',function() {
         //get the file name
         var files = [];
         for (var i = 0; i < $(this)[0].files.length; i++) {
@@ -156,3 +64,105 @@ $(document).ready(function() {
         $(this).next('.custom-file-label').html(files.join(', '));
     });
 });
+
+
+function add_topic() {
+    if (!$("#id_timer").val()) {
+        $("#id_timer").val($("#vtimer").val());
+    }
+    $("#topic-form").submit(function(e) {
+        e.preventDefault();
+        lock_screen();
+        var csrf = document.getElementById("topic-form").elements[0].value;
+        ajax_call($(this).attr("action"), $(this).attr("method"), $(this).serialize(), csrf);
+    });
+}
+
+function add_question() {
+    if (!$("#id_timer").val()) {
+        $("#id_timer").val($("#vtimer").val());
+    }
+    $("#question-form").submit(function(e) {
+        e.preventDefault();
+        lock_screen();
+        var csrf = document.getElementById("question-form").elements[0].value;
+        ajax_call($(this).attr("action"), $(this).attr("method"), $(this).serialize(), csrf);
+    });
+}
+
+function lock_screen() {
+    document.getElementById("ontop").style.display = "block";
+}
+
+function unlock_screen() {
+    document.getElementById("ontop").style.display = "none";
+}
+
+function show_error(error) {
+    var err_msg = "\n";
+    Object.keys(err).forEach(function(key) {
+        var value = err[key];
+        err_msg = err_msg + key + " : " + value[0].message + "\n";
+    });
+    alert(err_msg);
+}
+
+function show_toc(toc) {
+    $("#lesson-content").empty();
+    $("#toc").html(toc);
+}
+
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+function ajax_call(url, method, data, csrf) {
+    $.ajax({
+        url: url,
+        timeout: 15000,
+        method: method,
+        data: data,
+        beforeSend: function(xhr, settings) {
+          if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrf);
+          }
+        },
+        success: function(msg) {
+            unlock_screen();
+            if (msg.success) {
+                if (msg.status) $("#lesson-content").html(msg.data);
+                if (parseInt(msg.content_type) === 1) {
+                    add_topic();
+                }
+                else {
+                    add_question();
+                }
+            }
+            if (msg.toc) show_toc(msg.toc);
+            if (msg.message) alert(msg.message)
+        },
+        error: function(xhr, data) {
+            unlock_screen();
+            switch(xhr.status) {
+                case 400: {
+                    err = JSON.parse(xhr.responseJSON.message);
+                    show_error(err);
+                    break;
+                }
+                case 500: {
+                    alert('500 status code! server error');
+                    break;
+                }
+                case 404: {
+                    alert('404 status code! server error');
+                    break;
+                }
+                default: {
+                    alert('Unable to perform action. Please try again');
+                    break;
+                }
+            }
+        }
+    });
+}

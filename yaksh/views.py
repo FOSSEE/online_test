@@ -2714,6 +2714,9 @@ def show_lesson(request, lesson_id, module_id, course_id):
 
     # update course status with current unit
     _update_unit_status(course_id, user, learn_unit)
+    toc = TableOfContents.objects.filter(
+        course_id=course_id, lesson_id=lesson_id
+    )
 
     all_modules = course.get_learning_modules()
     if learn_unit.has_prerequisite():
@@ -2751,8 +2754,8 @@ def show_lesson(request, lesson_id, module_id, course_id):
     context = {'lesson': learn_unit.lesson, 'user': user,
                'course': course, 'state': "lesson", "all_modules": all_modules,
                'learning_units': learning_units, "current_unit": learn_unit,
-               'learning_module': learn_module, 'comments': comments,
-               'form': form, 'post': post}
+               'learning_module': learn_module, 'toc': toc,
+               'comments': comments, 'form': form, 'post': post}
     return my_render_to_response(request, 'yaksh/show_video.html', context)
 
 
@@ -3569,14 +3572,26 @@ def get_tc_formset(question_type, post=None, question=None):
         Question, tc, form=TestcaseForm, extra=1, fields="__all__",
     )
     formset = TestcaseFormset(
-         post, initial=[{'type': tc_class}], instance=question
+        post, initial=[{'type': tc_class}], instance=question
     )
     return formset, tc_class
 
 
+def get_toc_contents(request, course_id, lesson_id):
+    contents = TableOfContents.objects.filter(
+        course_id=course_id, lesson_id=lesson_id
+    )
+    data = loader.render_to_string(
+        "yaksh/show_toc.html", context={'contents': contents},
+        request=request
+    )
+    return data
+
+
 @login_required
 @email_verified
-def add_topic(request, content_type, course_id, lesson_id, topic_id=None):
+def add_topic(request, content_type, course_id, lesson_id, toc_id=None,
+              topic_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     if (not is_moderator(user) or
@@ -3586,25 +3601,26 @@ def add_topic(request, content_type, course_id, lesson_id, topic_id=None):
         topic = get_object_or_404(Topic, pk=topic_id)
     else:
         topic = None
+    if toc_id:
+        toc = get_object_or_404(TableOfContents, pk=toc_id)
+    else:
+        toc = None
     context = {}
     if request.method == "POST":
         form = TopicForm(request.POST, instance=topic)
         if form.is_valid():
             form.save()
+            time = request.POST.get("timer")
             if not topic:
                 TableOfContents.objects.create(
                     content_object=form.instance, course_id=course_id,
                     lesson_id=lesson_id, content=content_type,
-                    time=request.POST.get("timer")
+                    time=time
                 )
-                contents = TableOfContents.objects.filter(
-                        course_id=course_id, lesson_id=lesson_id
-                )
-                data = loader.render_to_string(
-                    "yaksh/show_toc.html", context={'contents': contents},
-                    request=request
-                )
-                context['toc'] = data
+            context['toc'] = get_toc_contents(request, course_id, lesson_id)
+            if toc:
+                toc.time = time
+                toc.save()
             status_code = 200
             context['success'] = True
             context['message'] = 'Added topic successfully'
@@ -3612,13 +3628,26 @@ def add_topic(request, content_type, course_id, lesson_id, topic_id=None):
             status_code = 400
             context['success'] = False
             context['message'] = form.errors.as_json()
+    else:
+        form = TopicForm(instance=topic, time=toc.time)
+        template_context = {'form': form, 'course_id': course.id,
+                   'lesson_id': lesson_id, 'content_type': content_type,
+                   'topic_id': topic_id, 'toc_id': toc_id}
+        data = loader.render_to_string(
+            "yaksh/add_topic.html", context=template_context, request=request
+        )
+        context['success'] = True
+        context['data'] = data
+        context['content_type'] = content_type
+        context['status'] = 1
+        status_code = 200
     return JsonResponse(context, status=status_code)
 
 
 @login_required
 @email_verified
 def add_marker_quiz(request, content_type, course_id, lesson_id,
-                    question_id=None):
+                    toc_id=None, question_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     if (not is_moderator(user) or
@@ -3628,32 +3657,34 @@ def add_marker_quiz(request, content_type, course_id, lesson_id,
         question = get_object_or_404(Question, pk=question_id)
     else:
         question = None
+    if toc_id:
+        toc = get_object_or_404(TableOfContents, pk=toc_id)
+    else:
+        toc = None
     context = {}
     if request.method == "POST":
         qform = VideoQuizForm(request.POST, instance=question)
         if qform.is_valid():
-            qform.save(commit=False)
-            qform.instance.user = user
+            if not question_id:
+                qform.save(commit=False)
+                qform.instance.user = user
             qform.save()
             formset, tc_class = get_tc_formset(
                 qform.instance.type, request.POST, qform.instance
             )
             if formset.is_valid():
                 formset.save()
+                time = request.POST.get("timer")
                 if not question:
                     TableOfContents.objects.create(
                         content_object=qform.instance, course_id=course_id,
                         lesson_id=lesson_id, content=content_type,
-                        time=request.POST.get("timer")
+                        time=time
                     )
-                    contents = TableOfContents.objects.filter(
-                        course_id=course_id, lesson_id=lesson_id
-                    )
-                    data = loader.render_to_string(
-                        "yaksh/show_toc.html", context={'contents': contents},
-                        request=request
-                    )
-                    context['toc'] = data
+                context['toc'] = get_toc_contents(request, course_id, lesson_id)
+                if toc:
+                    toc.time = time
+                    toc.save()
                 status_code = 200
                 context['success'] = True
                 context['message'] = 'Added question successfully'
@@ -3661,9 +3692,43 @@ def add_marker_quiz(request, content_type, course_id, lesson_id,
             else:
                 status_code = 400
                 context['success'] = False
-                context['message'] = formset.errors.as_json()
+                context['message'] = "Error in saving form"
         else:
             status_code = 400
             context['success'] = False
             context['message'] = qform.errors.as_json()
+    else:
+        form = VideoQuizForm(instance=question, time=toc.time)
+        formset, tc_class = get_tc_formset(question.type, question=question)
+        template_context = {
+            'form': form, 'course_id': course.id, 'lesson_id': lesson_id,
+            'formset': formset, 'tc_class': tc_class, 'toc_id': toc_id,
+            'content_type': content_type, 'question_id': question_id
+        }
+        data = loader.render_to_string(
+            "yaksh/add_video_quiz.html", context=template_context,
+            request=request
+        )
+        context['success'] = True
+        context['data'] = data
+        context['content_type'] = content_type
+        context['status'] = 2
+        status_code = 200
     return JsonResponse(context, status=status_code)
+
+
+@login_required
+@email_verified
+def delete_toc(request, course_id, toc_id):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    if (not is_moderator(user) or
+            not course.is_creator(user) or not course.is_creator(user)):
+        raise Http404("You are not allowed to view this page")
+    toc = get_object_or_404(TableOfContents, pk=toc_id)
+    redirect_url = request.POST.get("redirect_url")
+    if toc.content == 1:
+        get_object_or_404(Topic, pk=toc.object_id).delete()
+    else:
+        get_object_or_404(Question, id=toc.object_id).delete()
+    return redirect(redirect_url)

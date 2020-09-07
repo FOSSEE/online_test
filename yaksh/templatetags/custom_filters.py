@@ -156,6 +156,5 @@ def video_name(text):
     elif 'vimeo' in video.keys():
         name, vformat = video.get('vimeo'), 'vimeo'
     else:
-        filename = os.path.basename(video.get("others"))
-        name, vformat = os.path.split(filename)
+        name, vformat = video.get('others'), 'others'
     return name, vformat
