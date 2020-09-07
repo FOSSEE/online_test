@@ -652,6 +652,7 @@ class TopicForm(forms.ModelForm):
     timer = forms.CharField()
 
     def __init__(self, *args, **kwargs):
+        time = kwargs.pop("time") if "time" in kwargs else None
         super(TopicForm, self).__init__(*args, **kwargs)
         self.fields['name'].widget.attrs.update(
             {'class': form_input_class, 'placeholder': 'Topic Name'}
@@ -659,10 +660,22 @@ class TopicForm(forms.ModelForm):
         self.fields['timer'].widget.attrs.update(
             {'class': form_input_class, 'placeholder': 'Topic Time'}
         )
+        self.fields['timer'].initial = time
 
     class Meta:
         model = Topic
         fields = "__all__"
+
+    def clean_timer(self):
+        timer = self.cleaned_data.get("timer")
+        if timer:
+            try:
+                hh, mm, ss = timer.split(":")
+            except ValueError:
+                raise forms.ValidationError(
+                    "Marker time should be in the format hh:mm:ss"
+                )
+        return timer
 
 
 class VideoQuizForm(forms.ModelForm):
@@ -676,6 +689,7 @@ class VideoQuizForm(forms.ModelForm):
             question_type = kwargs.pop('question_type')
         else:
             question_type = "mcq"
+        time = kwargs.pop("time") if "time" in kwargs else None
         super(VideoQuizForm, self).__init__(*args, **kwargs)
         self.fields['summary'].widget.attrs.update(
             {'class': form_input_class, 'placeholder': 'Summary'}
@@ -690,7 +704,7 @@ class VideoQuizForm(forms.ModelForm):
             {'class': form_input_class, 'placeholder': 'Points'}
         )
         self.fields['type'].widget.attrs.update(
-            {'class': form_input_class, 'readonly': True}
+            {'class': form_input_class}
         )
         self.fields['type'].initial = question_type
         self.fields['description'].widget.attrs.update(
@@ -699,8 +713,20 @@ class VideoQuizForm(forms.ModelForm):
         self.fields['timer'].widget.attrs.update(
             {'class': form_input_class, 'placeholder': 'Quiz Time'}
         )
+        self.fields['timer'].initial = time
 
     class Meta:
         model = Question
         fields = ['summary', 'description', 'points',
                   'language', 'type', 'topic']
+
+    def clean_timer(self):
+        timer = self.cleaned_data.get("timer")
+        if timer:
+            try:
+                hh, mm, ss = timer.split(":")
+            except ValueError:
+                raise forms.ValidationError(
+                    "Marker time should be in the format hh:mm:ss"
+                )
+        return timer

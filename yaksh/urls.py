@@ -241,18 +241,13 @@ urlpatterns = [
          name='add_marker'),
     path('manage/add/lesson/topic/<int:content_type>/<int:course_id>/<int:lesson_id>',
          views.add_topic, name='add_topic'),
-    path('manage/edit/lesson/topic/<int:content_type>/<int:course_id>/<int:lesson_id>/<int:topic_id>',
-         views.add_topic, name='edit_topic'),
+    path('manage/edit/lesson/topic/<int:content_type>/<int:course_id>/<int:lesson_id>/'
+         '<int:toc_id>/<int:topic_id>', views.add_topic, name='edit_topic'),
     path('manage/add/lesson/quiz/<int:content_type>/<int:course_id>/<int:lesson_id>',
          views.add_marker_quiz, name='add_marker_quiz'),
-    path('manage/edit/lesson/quiz/<int:content_type>/<int:course_id>/<int:lesson_id>/<int:question_id>',
-         views.add_marker_quiz, name='edit_marker_quiz'),
-    path('manage/add/lesson/exercise/<int:content_type>/<int:course_id>/<int:lesson_id>',
-         views.add_marker_quiz, name='add_marker_quiz'),
-    path('manage/edit/lesson/exercise/<int:content_type>/<int:course_id>/<int:lesson_id>/<int:question_id>',
-         views.add_marker_quiz, name='edit_marker_quiz'),
-    path('manage/add/lesson/poll/<int:content_type>/<int:course_id>/<int:lesson_id>',
-         views.add_marker_quiz, name='add_marker_quiz'),
-    path('manage/edit/lesson/poll/<int:content_type>/<int:course_id>/<int:lesson_id>/<int:question_id>',
-         views.add_marker_quiz, name='edit_marker_quiz')
+    path('manage/edit/lesson/quiz/<int:content_type>/<int:course_id>/<int:lesson_id>/'
+         '<int:toc_id>/<int:question_id>', views.add_marker_quiz,
+         name='edit_marker_quiz'),
+    path('manage/remove/lesson/toc/<int:course_id>/<int:toc_id>',
+         views.delete_toc, name='delete_toc'),
 ]
