@@ -1,6 +1,7 @@
 $(document).ready(function() {
     var simplemde = new SimpleMDE({
         element: document.getElementById("id_description"),
+        forceSync: true,
     });
     const player = new Plyr('#player');
     var timer = $("#vtimer");
