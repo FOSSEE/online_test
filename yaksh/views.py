@@ -37,7 +37,8 @@ from yaksh.models import (
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
-    LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment
+    LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
+    MicroManager
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -483,6 +484,46 @@ def user_login(request):
 
 @login_required
 @email_verified
+def special_start(request, micromanager_id=None):
+    user = request.user
+    micromanager = get_object_or_404(MicroManager, pk=micromanager_id,
+                                     student=user)
+    course = micromanager.course
+    quiz = micromanager.quiz
+    module = course.get_learning_module(quiz)
+    quest_paper = get_object_or_404(QuestionPaper, quiz=quiz)
+
+    if not course.is_enrolled(user):
+        msg = 'You are not enrolled in {0} course'.format(course.name)
+        return quizlist_user(request, msg=msg)
+
+    if not micromanager.can_student_attempt():
+        msg = 'Your special attempts are exhausted for {0}'.format(
+            quiz.description)
+        return quizlist_user(request, msg=msg)
+
+    last_attempt = AnswerPaper.objects.get_user_last_attempt(
+        quest_paper, user, course.id)
+
+    if last_attempt:
+        if last_attempt.is_attempt_inprogress():
+            return show_question(
+                request, last_attempt.current_question(), last_attempt,
+                course_id=course.id, module_id=module.id,
+                previous_question=last_attempt.current_question()
+            )
+
+    attempt_num = micromanager.get_attempt_number()
+    ip = request.META['REMOTE_ADDR']
+    new_paper = quest_paper.make_answerpaper(user, ip, attempt_num, course.id,
+                                             special=True)
+    micromanager.increment_attempts_utilised()
+    return show_question(request, new_paper.current_question(), new_paper,
+                         course_id=course.id, module_id=module.id)
+
+
+@login_required
+@email_verified
 def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
           module_id=None):
     """Check the user cedentials and if any quiz is available,
@@ -643,7 +684,7 @@ def show_question(request, question, paper, error_message=None,
             request, msg, paper.attempt_number, paper.question_paper.id,
             course_id=course_id, module_id=module_id
         )
-    if not quiz.active:
+    if not quiz.active and not paper.is_special:
         reason = 'The quiz has been deactivated!'
         return complete(
             request, reason, paper.attempt_number, paper.question_paper.id,
@@ -3449,3 +3490,93 @@ def hide_comment(request, course_id, uuid):
     comment.active = False
     comment.save()
     return redirect('yaksh:post_comments', course_id, post_uid)
+
+
+@login_required
+@email_verified
+def allow_special_attempt(request, user_id, course_id, quiz_id):
+    user = request.user
+
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
+    quiz = get_object_or_404(Quiz, pk=quiz_id)
+    student = get_object_or_404(User, pk=user_id)
+
+    if not course.is_enrolled(student):
+        raise Http404('The student is not enrolled for this course')
+
+    micromanager, created = MicroManager.objects.get_or_create(
+        course=course, student=student, quiz=quiz
+    )
+    micromanager.manager = user
+    micromanager.save()
+
+    if (not micromanager.is_special_attempt_required() or
+            micromanager.is_last_attempt_inprogress()):
+        name = student.get_full_name()
+        msg = '{} can attempt normally. No special attempt required!'.format(
+            name)
+    elif micromanager.can_student_attempt():
+        msg = '{} already has a special attempt!'.format(
+            student.get_full_name())
+    else:
+        micromanager.allow_special_attempt()
+        msg = 'A special attempt is provided to {}!'.format(
+            student.get_full_name())
+
+    messages.info(request, msg)
+    return my_redirect('/exam/manage/monitor/{0}/{1}/'.format(quiz_id,
+                                                              course_id))
+
+
+@login_required
+@email_verified
+def revoke_special_attempt(request, micromanager_id):
+    user = request.user
+
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+
+    micromanager = get_object_or_404(MicroManager, pk=micromanager_id)
+    course = micromanager.course
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    micromanager.revoke_special_attempt()
+    msg = 'Revoked special attempt for {}'.format(
+        micromanager.student.get_full_name())
+    messages.info(request, msg)
+    return my_redirect('/exam/manage/monitor/{0}/{1}/'.format(
+        micromanager.quiz.id, course.id))
+
+
+@login_required
+@email_verified
+def extend_time(request, paper_id):
+    user = request.user
+
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+
+    anspaper = get_object_or_404(AnswerPaper, pk=paper_id)
+    course = anspaper.course
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
+    if request.method == "POST":
+        extra_time = request.POST.get('extra_time', None)
+        if extra_time is None:
+            msg = 'Please provide time'
+        else:
+            anspaper.set_extra_time(extra_time)
+            msg = 'Extra {0} minutes given to {1}'.format(
+                extra_time, anspaper.user.get_full_name())
+    else:
+        msg = 'Bad Request'
+    messages.info(request, msg)
+    return my_redirect('/exam/manage/monitor/{0}/{1}/'.format(
+        anspaper.question_paper.quiz.id, course.id))
