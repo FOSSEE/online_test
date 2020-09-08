@@ -2715,10 +2715,39 @@ def show_lesson(request, lesson_id, module_id, course_id):
         if not learn_unit.is_prerequisite_complete(user, learn_module, course):
             msg = "You have not completed previous Lesson/Quiz/Exercise"
             return view_module(request, learn_module.id, course_id, msg=msg)
+
+    lesson_ct = ContentType.objects.get_for_model(learn_unit.lesson)
+    title = learn_unit.lesson.name
+    try:
+        post = Post.objects.get(
+            target_ct=lesson_ct, target_id=learn_unit.lesson.id,
+            active=True, title=title, creator=user,
+            description=f'Discussion on {title} lesson',
+        )
+    except Post.DoesNotExist:
+        post = Post.objects.create(
+            target_ct=lesson_ct, target_id=learn_unit.lesson.id,
+            active=True, title=title, creator=user,
+            description=f'Discussion on {title} lesson',
+        )
+    if request.method == "POST":
+        form = CommentForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_comment = form.save(commit=False)
+            new_comment.creator = request.user
+            new_comment.post_field = post
+            new_comment.save()
+            return redirect(request.path_info)
+        else:
+            raise Http404(f'Post does not exist for lesson {title}')
+    else:
+        form = CommentForm()
+        comments = post.comment.filter(active=True)
     context = {'lesson': learn_unit.lesson, 'user': user,
                'course': course, 'state': "lesson", "all_modules": all_modules,
                'learning_units': learning_units, "current_unit": learn_unit,
-               'learning_module': learn_module}
+               'learning_module': learn_module, 'comments': comments,
+               'form': form, 'post': post}
     return my_render_to_response(request, 'yaksh/show_video.html', context)
 
 
@@ -3364,6 +3393,7 @@ def course_forum(request, course_id):
         raise Http404('You are not enrolled in {0} course'.format(course.name))
     search_term = request.GET.get('search_post')
     if search_term:
+        # Fix this...
         posts = course.post.get_queryset().filter(
             active=True, title__icontains=search_term)
     else:
@@ -3432,7 +3462,7 @@ def hide_post(request, course_id, uuid):
     user = request.user
     course = get_object_or_404(Course, id=course_id)
     if (not course.is_creator(user) or not course.is_teacher(user)):
-        raise Http404('You are not enrolled in {0} course'.format(course.name))
+        raise Http404(f'Only a course creator or a teacher can delete the post.')
     post = get_object_or_404(Post, uid=uuid)
     post.comment.active = False
     post.active = False
@@ -3444,9 +3474,12 @@ def hide_post(request, course_id, uuid):
 @email_verified
 def hide_comment(request, course_id, uuid):
     user = request.user
-    course = get_object_or_404(Course, id=course_id)
-    if (not course.is_creator(user) or not course.is_teacher(user)):
-        raise Http404('You are not enrolled in {0} course'.format(course.name))
+    if course_id:
+        course = get_object_or_404(Course, id=course_id)
+        if (not course.is_creator(user) or not course.is_teacher(user)):
+            raise Http404(
+                f'Only a course creator or a teacher can delete the comments'
+            )
     comment = get_object_or_404(Comment, uid=uuid)
     post_uid = comment.post_field.uid
     comment.active = False
