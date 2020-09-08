@@ -310,9 +310,6 @@ class Lesson(models.Model):
         help_text="Youtube id, vimeo id, others"
         )
 
-    post = GenericRelation('Post', related_query_name='lessons')
-
-
     def __str__(self):
         return "{0}".format(self.name)
 
@@ -923,7 +920,6 @@ class Course(models.Model):
     view_grade = models.BooleanField(default=False)
     learning_module = models.ManyToManyField(LearningModule,
                                              related_name='learning_module')
-    post = GenericRelation('Post', related_query_name='courses')
 
     # The start date of the course enrollment.
     start_enroll_time = models.DateTimeField(
