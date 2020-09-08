@@ -13,7 +13,7 @@ from django.db import models
 from django.contrib.auth.models import User, Group, Permission
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.fields import GenericForeignKey
 from taggit.managers import TaggableManager
 from django.utils import timezone
 from django.core.files import File
@@ -286,8 +286,6 @@ class Lesson(models.Model):
         null=True, blank=True,
         help_text="Please upload video files in mp4, ogv, webm format"
         )
-
-    post = GenericRelation('Post', related_query_name='lessons')
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -899,7 +897,6 @@ class Course(models.Model):
     view_grade = models.BooleanField(default=False)
     learning_module = models.ManyToManyField(LearningModule,
                                              related_name='learning_module')
-    post = GenericRelation('Post', related_query_name='courses')
 
     # The start date of the course enrollment.
     start_enroll_time = models.DateTimeField(
