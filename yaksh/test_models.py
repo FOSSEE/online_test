@@ -5,7 +5,7 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
-    create_group, legend_display_types, Post, Comment
+    create_group, legend_display_types, Post, Comment, MicroManager
 from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
@@ -103,7 +103,8 @@ def setUpModule():
     course.save()
     LessonFile.objects.create(lesson=lesson)
     CourseStatus.objects.create(course=course, user=course_user)
-
+    MicroManager.objects.create(manager=user, course=course, quiz=quiz,
+                                student=course_user)
 
 def tearDownModule():
     User.objects.all().delete()
@@ -116,6 +117,7 @@ def tearDownModule():
     LearningUnit.objects.all().delete()
     LearningModule.objects.all().delete()
     AnswerPaper.objects.all().delete()
+    MicroManager.objects.all().delete()
     Group.objects.all().delete()
 
 
@@ -129,6 +131,141 @@ class GlobalMethodsTestCases(unittest.TestCase):
 
 
 ###############################################################################
+class MicroManagerTestCase(unittest.TestCase):
+    def setUp(self):
+        self.micromanager = MicroManager.objects.first()
+        self.course = self.micromanager.course
+        quiz = self.micromanager.quiz
+        self.questionpaper = QuestionPaper.objects.create(quiz=quiz)
+        question = Question.objects.get(summary='Q1')
+        self.questionpaper.fixed_questions.add(question)
+        self.questionpaper.update_total_marks()
+        self.student = User.objects.get(username='course_user')
+
+    def tearDown(self):
+        self.questionpaper.delete()
+
+    def test_micromanager(self):
+        # Given
+        user = User.objects.get(username='creator')
+        course = Course.objects.get(name='Python Course', creator=user)
+        quiz = Quiz.objects.get(description='demo quiz 1')
+        student = User.objects.get(username='course_user')
+
+        # When
+        micromanager = MicroManager.objects.first()
+
+        # Then
+        self.assertIsNotNone(micromanager)
+        self.assertEqual(micromanager.manager, user)
+        self.assertEqual(micromanager.student, student)
+        self.assertEqual(micromanager.course, course)
+        self.assertEqual(micromanager.quiz, quiz)
+        self.assertFalse(micromanager.special_attempt)
+        self.assertEqual(micromanager.attempts_permitted, 0)
+        self.assertEqual(micromanager.attempts_utilised, 0)
+        self.assertEqual(micromanager.wait_time, 0)
+        self.assertEqual(micromanager.attempt_valid_for, 90)
+        self.assertEqual(user.micromanaging.first(), micromanager)
+        self.assertEqual(student.micromanaged.first(), micromanager)
+
+    def test_set_wait_time(self):
+        # Given
+        micromanager = self.micromanager
+
+        # When
+        micromanager.set_wait_time(days=2)
+
+        # Then
+        self.assertEqual(micromanager.wait_time, 2)
+
+    def self_increment_attempts_permitted(self):
+        # Given
+        micromanager = self.micromanager
+
+        # When
+        micromanager.increment_attempts_permitted()
+
+        # Then
+        self.assertEqual(micromanager.attempts_permitted, 1)
+
+    def test_update_permitted_time(self):
+        # Given
+        micromanager = self.micromanager
+        permit_time = timezone.now()
+
+        # When
+        micromanager.update_permitted_time(permit_time)
+
+        # Then
+        self.assertEqual(micromanager.permitted_time, permit_time)
+
+    def test_has_student_attempts_exhausted(self):
+        # Given
+        micromanager = self.micromanager
+
+        # Then
+        self.assertFalse(micromanager.has_student_attempts_exhausted())
+
+    def test_has_quiz_time_exhausted(self):
+        # Given
+        micromanager = self.micromanager
+
+        # Then
+        self.assertFalse(micromanager.has_quiz_time_exhausted())
+
+    def test_is_special_attempt_required(self):
+        # Given
+        micromanager = self.micromanager
+        attempt = 1
+        ip = '127.0.0.1'
+
+        # Then
+        self.assertFalse(micromanager.is_special_attempt_required())
+
+        # When
+        answerpaper = self.questionpaper.make_answerpaper(self.student, ip,
+                                                          attempt,
+                                                          self.course.id)
+        answerpaper.update_marks(state='completed')
+
+        # Then
+        self.assertTrue(micromanager.is_special_attempt_required())
+
+        answerpaper.delete()
+
+    def test_allow_special_attempt(self):
+        # Given
+        micromanager = self.micromanager
+
+        # When
+        micromanager.allow_special_attempt()
+
+        # Then
+        self.assertFalse(micromanager.special_attempt)
+
+    def test_has_special_attempt(self):
+        # Given
+        micromanager = self.micromanager
+
+        # Then
+        self.assertFalse(micromanager.has_special_attempt())
+
+    def test_is_attempt_time_valid(self):
+        # Given
+        micromanager = self.micromanager
+
+        # Then
+        self.assertTrue(micromanager.is_attempt_time_valid())
+
+    def test_can_student_attempt(self):
+        # Given
+        micromanager = self.micromanager
+
+        # Then
+        self.assertFalse(micromanager.can_student_attempt())
+
+
 class LessonTestCases(unittest.TestCase):
     def setUp(self):
         self.lesson = Lesson.objects.get(name='L1')

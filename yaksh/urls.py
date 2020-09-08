@@ -237,4 +237,13 @@ urlpatterns = [
         views.mark_notification, name="mark_notification"),
     path('mark/notifications', views.mark_notification,
          name="mark_notification"),
+    url(r'^manage/micromanager/allow_special_attempt/(?P<user_id>\d+)/'
+        '(?P<course_id>\d+)/(?P<quiz_id>\d+)/$',
+        views.allow_special_attempt, name='allow_special_attempt'),
+    url(r'^micromanager/special_start/(?P<micromanager_id>\d+)/$',
+        views.special_start, name='special_start'),
+    url(r'^manage/micromanager/special_revoke/(?P<micromanager_id>\d+)/$',
+        views.revoke_special_attempt, name='revoke_special_attempt'),
+    url(r'^manage/extend_time/(?P<paper_id>\d+)/$',
+        views.extend_time, name='extend_time'),
 ]
