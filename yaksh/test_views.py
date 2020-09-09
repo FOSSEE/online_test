@@ -2755,6 +2755,33 @@ class TestCourseDetail(TestCase):
                 id=uploaded_users.first().id).exists()
         )
 
+    def test_upload_existing_user_email(self):
+        # Given
+        self.client.login(
+            username=self.user1.username, password=self.user1_plaintext_pass)
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     'user_existing_email.csv')
+        csv_file = open(csv_file_path, 'rb')
+        upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
+        csv_file.close()
+
+        # When
+        response = self.client.post(
+            reverse('yaksh:upload_users',
+                    kwargs={'course_id': self.user1_course.id}),
+            data={'csv_file': upload_file})
+
+        # Then
+        uploaded_users = User.objects.filter(email='demo_student@test.com')
+        self.assertEqual(response.status_code, 302)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertIn('demo_student', messages[0])
+        self.assertTrue(
+            self.user1_course.students.filter(
+                id=uploaded_users.first().id).exists()
+        )
+        self.assertEqual(uploaded_users.count(), 1)
+
     def test_upload_users_add_update_reject(self):
         # Given
         self.client.login(
@@ -5937,12 +5964,11 @@ class TestQuestionPaper(TestCase):
                   'add-random': ['']}
             )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'yaksh/design_questionpaper.html')
-        random_set = response.context['random_sets'][0]
-        added_random_ques = random_set.questions.all()
-        self.assertIn(self.random_que1, added_random_ques)
-        self.assertIn(self.random_que2, added_random_ques)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            self.question_paper.random_questions.filter(
+                id__in=[self.random_que1.id, self.random_que2.id]).exists()
+        )
 
         # Check if questions already exists
         self.client.login(
@@ -5969,10 +5995,11 @@ class TestQuestionPaper(TestCase):
             data={'checked_ques': [self.fixed_que.id],
                   'add-fixed': ''}
             )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
-        self.assertEqual(response.context['fixed_questions'][0],
-                         self.fixed_que)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            self.fixed_question_paper.fixed_questions.filter(
+                id=self.fixed_que.id).exists()
+        )
 
         # Add one more fixed question in question paper
         response = self.client.post(
@@ -5983,10 +6010,11 @@ class TestQuestionPaper(TestCase):
             data={'checked_ques': [self.question_float.id],
                   'add-fixed': ''}
             )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
-        self.assertEqual(response.context['fixed_questions'],
-                         [self.fixed_que, self.question_float])
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            self.fixed_question_paper.fixed_questions.filter(
+                id=self.question_float.id).exists()
+        )
 
         # Remove fixed question from question paper
         response = self.client.post(
@@ -5997,10 +6025,11 @@ class TestQuestionPaper(TestCase):
             data={'added-questions': [self.fixed_que.id],
                   'remove-fixed': ''}
             )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
-        self.assertEqual(response.context['fixed_questions'],
-                         [self.question_float])
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(
+            self.fixed_question_paper.fixed_questions.filter(
+                id=self.fixed_que.id).exists()
+        )
 
         # Remove one more fixed question from question paper
         response = self.client.post(
@@ -6011,9 +6040,11 @@ class TestQuestionPaper(TestCase):
             data={'added-questions': [self.question_float.id],
                   'remove-fixed': ''}
             )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
-        self.assertEqual(response.context['fixed_questions'], [])
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(
+            self.fixed_question_paper.fixed_questions.filter(
+                id=self.question_float.id).exists()
+        )
 
         # Remove random questions from question paper
         random_que_set = self.question_paper.random_questions.all().first()
@@ -6025,9 +6056,11 @@ class TestQuestionPaper(TestCase):
             data={'random_sets': random_que_set.id,
                   'remove-random': ''}
             )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['qpaper'], self.question_paper)
-        self.assertEqual(len(response.context['random_sets']), 0)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(
+            self.question_paper.random_questions.filter(
+                id=random_que_set.id).exists()
+        )
 
 
 class TestLearningModule(TestCase):

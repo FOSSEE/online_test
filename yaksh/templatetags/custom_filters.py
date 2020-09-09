@@ -10,6 +10,7 @@ except ImportError:
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
+from yaksh.models import User, Course, Quiz
 
 register = template.Library()
 
@@ -135,3 +136,45 @@ def video_name(text):
     else:
         name, vformat = video.get('others'), 'others'
     return name, vformat
+
+
+@register.filter(name="to_integer")
+def to_integer(text):
+    try:
+        value = int(text)
+    except ValueError:
+        value = ''
+    return value
+
+
+@register.filter(name="to_float")
+def to_float(text):
+    try:
+        value = float(text)
+    except ValueError:
+        value = ''
+    return value
+
+
+@register.filter(name="to_str")
+def to_str(text):
+    return text.decode("utf-8")
+
+
+@register.inclusion_tag('yaksh/micromanaged.html')
+def show_special_attempt(user_id, course_id):
+    user = User.objects.get(pk=user_id)
+    micromanagers = user.micromanaged.filter(course_id=course_id)
+    context = {'micromanagers': micromanagers}
+    return context
+
+
+@register.inclusion_tag('yaksh/micromonitor.html')
+def specail_attempt_monitor(user_id, course_id, quiz_id):
+    user = User.objects.get(pk=user_id)
+    micromanagers = user.micromanaged.filter(course_id=course_id,
+                                             quiz_id=quiz_id)
+    context = {'user_id': user_id, 'course_id': course_id, 'quiz_id': quiz_id}
+    if micromanagers.exists():
+        context['micromanager'] = micromanagers.first()
+    return context

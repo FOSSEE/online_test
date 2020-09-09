@@ -57,7 +57,37 @@ $(document).ready(function(){
     $('#design_q').submit(function(eventObj) {
         $(this).append('<input type="hidden" name="checked_ques" value='+checked_vals+'>');
         return true;
-});
+    });
+
+    $('#add_checkall').on("change", function () {
+        if($(this).prop("checked")) {
+            $("#fixed-available input:checkbox").each(function(index, element) {
+                if(isNaN($(this).val())) {return};
+                $(this).prop("checked", true);
+                checked_vals.push(parseInt($(this).val()))
+            });
+        } else {
+            $("#fixed-available input:checkbox").each(function(index, element){
+                $(this).prop('checked', false);
+                checked_vals.pop(parseInt($(this).val()));
+            });
+        }
+    });
+
+    $('#remove_checkall').on("change", function () {
+        if($(this).prop("checked")) {
+            $("#fixed-added input:checkbox").each(function (index, element) {
+                if(isNaN($(this).val())) { return };
+                $(this).prop('checked', true);
+                checked_vals.push(parseInt($(this).val()));
+            });
+        } else {
+            $("#fixed-added input:checkbox").each(function (index, element) {
+                $(this).prop('checked', false);
+                checked_vals.pop(parseInt($(this).val()));
+            });
+        }
+    });
 
 });//document
 function append_tag(tag){
@@ -69,3 +99,4 @@ function append_tag(tag){
         tag_name.value = tag.value;
     }
 }
+

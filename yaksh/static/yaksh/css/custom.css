@@ -132,6 +132,7 @@ body, .dropdown-menu {
     border: none;
 }
 
+<<<<<<< HEAD
 /* Simple MDE editor style */
 .editor-toolbar.fullscreen, .editor-preview-side { 
     z-index: 2000 !important;
@@ -158,6 +159,11 @@ body, .dropdown-menu {
 
 }
 ::-webkit-scrollbar-thumb {
-border-radius: 8px;
-background: #c2c9d2;
+    border-radius: 8px;
+    background: #c2c9d2;
+}
+
+iframe {
+    display:block;
+    width:100%;
 }

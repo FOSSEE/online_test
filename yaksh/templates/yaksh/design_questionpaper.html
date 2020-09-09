@@ -114,24 +114,27 @@
                     <div id="fixed-available-wrapper">
                         <p><u>Select questions to add:</u></p>
                         <div id="fixed-available">
-                            {% if state == "fixed"  or state == "None" %}
-                                <ul class="inputs-list">
-                                   {% for question in questions %}
-                                        <li>
-                                            <label>
-                                                <input type="checkbox" name="questions" data-qid="{{question.id}}" value={{question.id}}>
-                                                <span>
-                                                    {% if user == question.user %}
-                                                        <a href="{% url 'yaksh:add_question' question.id %}" target="_blank">{{ question.summary }}</a>
-                                                    {% else %}
-                                                        {{question.summary}}
-                                                    {% endif %}
-                                                </span>
-                                                <span> {{ question.points }}</span>
-                                            </label>
-                                         </li>
-                                    {% endfor %}
-                                </ul>
+                            {% if questions %}
+                                {% if state == "fixed"  or state == "None" %}
+                                    <ul class="inputs-list">
+                                        <h5><input id="add_checkall" name="add_checkall" type="checkbox"> Select All </h5>
+                                        {% for question in questions %}
+                                            <li>
+                                                <label>
+                                                    <input type="checkbox" name="questions" data-qid="{{question.id}}" value={{question.id}}>
+                                                    <span>
+                                                        {% if user == question.user %}
+                                                            <a href="{% url 'yaksh:add_question' question.id %}" target="_blank">{{ question.summary }}</a>
+                                                        {% else %}
+                                                            {{question.summary}}
+                                                        {% endif %}
+                                                    </span>
+                                                    <span> {{ question.points }}</span>
+                                                </label>
+                                             </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
                             {% endif %}
                         </div>
                     </div>
@@ -144,24 +147,27 @@
                     <div id="fixed-added-wrapper">
                         <p><u>Fixed questions currently in paper:</u></p>
                         <div id="fixed-added">
-                            <ul class="inputs-list">
-                               {% for question in fixed_questions %}
-                                    <li>
-                                        <label>
-                                            <input type="checkbox" name="added-questions"
-                                            data-qid="{{question.id}}" value={{question.id}}>
-                                            <span>
-                                                {% if user == question.user %}
-                                                    <a href="{% url 'yaksh:add_question' question.id %}" target="_blank">{{ question.summary }}</a>
-                                                {% else %}
-                                                    {{question.summary}}
-                                                {% endif %}
-                                            </span>
-                                            <span> {{ question.points }} </span>
-                                        </label>
-                                     </li>
-                                {% endfor %}
-                            </ul>
+                            {% if fixed_questions %}
+                                <ul class="inputs-list">
+                                   <h5><input id="remove_checkall" type="checkbox"> Select All </h5>
+                                   {% for question in fixed_questions %}
+                                        <li>
+                                            <label>
+                                                <input type="checkbox" name="added-questions"
+                                                data-qid="{{question.id}}" value={{question.id}}>
+                                                <span>
+                                                    {% if user == question.user %}
+                                                        <a href="{% url 'yaksh:add_question' question.id %}" target="_blank">{{ question.summary }}</a>
+                                                    {% else %}
+                                                        {{question.summary}}
+                                                    {% endif %}
+                                                </span>
+                                                <span> {{ question.points }} </span>
+                                            </label>
+                                         </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
                         </div>
                     </div>
                     <br />
