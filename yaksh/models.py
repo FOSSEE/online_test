@@ -2762,9 +2762,9 @@ class TableOfContents(models.Model):
 
     def get_toc_text(self):
         if self.content == 1:
-            content_name =  Topic.objects.get(id=self.object_id).name
+            content_name =  self.content_object.name
         else:
-            content_name = Question.objects.get(id=self.object_id).summary
+            content_name = self.content_object.summary
         return content_name
 
     def __str__(self):
@@ -2777,6 +2777,15 @@ class Topic(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+
+class VideoQuizAnswer(models.Model):
+    toc = models.ForeignKey(TableOfContents, on_delete=models.CASCADE)
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Lesson answer of {self.toc} by {self.user.get_full_name()}"
 
 
 class MicroManager(models.Model):

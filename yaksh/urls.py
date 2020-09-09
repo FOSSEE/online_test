@@ -259,4 +259,8 @@ urlpatterns = [
          name='edit_marker_quiz'),
     path('manage/remove/lesson/toc/<int:course_id>/<int:toc_id>',
          views.delete_toc, name='delete_toc'),
+    path('get/marker/quiz/<int:course_id>/<int:toc_id>', views.get_marker_quiz,
+         name='get_marker_quiz'),
+    path('submit/marker/quiz/<int:course_id>/<int:toc_id>',
+         views.submit_marker_quiz, name='submit_marker_quiz'),
 ]
