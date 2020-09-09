@@ -261,4 +261,8 @@ urlpatterns = [
         views.revoke_special_attempt, name='revoke_special_attempt'),
     url(r'^manage/extend_time/(?P<paper_id>\d+)/$',
         views.extend_time, name='extend_time'),
+    path('get/marker/quiz/<int:course_id>/<int:toc_id>', views.get_marker_quiz,
+         name='get_marker_quiz'),
+    path('submit/marker/quiz/<int:course_id>/<int:toc_id>',
+         views.submit_marker_quiz, name='submit_marker_quiz'),
 ]

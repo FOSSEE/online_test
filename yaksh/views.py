@@ -2756,6 +2756,9 @@ def show_lesson(request, lesson_id, module_id, course_id):
     _update_unit_status(course_id, user, learn_unit)
     toc = TableOfContents.objects.filter(
         course_id=course_id, lesson_id=lesson_id
+    ).order_by("time")
+    contents_by_time = json.dumps(
+        list(toc.values("id", "content", "time"))
     )
     all_modules = course.get_learning_modules()
     if learn_unit.has_prerequisite():
@@ -2794,7 +2797,8 @@ def show_lesson(request, lesson_id, module_id, course_id):
                'course': course, 'state': "lesson", "all_modules": all_modules,
                'learning_units': learning_units, "current_unit": learn_unit,
                'learning_module': learn_module, 'toc': toc,
-               'comments': comments, 'form': form, 'post': post}
+               'comments': comments, 'form': form, 'post': post,
+               'contents_by_time': contents_by_time}
     return my_render_to_response(request, 'yaksh/show_video.html', context)
 
 
@@ -3704,7 +3708,7 @@ def add_topic(request, content_type, course_id, lesson_id, toc_id=None,
                 toc.save()
             status_code = 200
             context['success'] = True
-            context['message'] = 'Added topic successfully'
+            context['message'] = 'Saved topic successfully'
         else:
             status_code = 400
             context['success'] = False
@@ -3768,7 +3772,7 @@ def add_marker_quiz(request, content_type, course_id, lesson_id,
                     toc.save()
                 status_code = 200
                 context['success'] = True
-                context['message'] = 'Added question successfully'
+                context['message'] = 'Saved question successfully'
                 context['content_type'] = content_type
             else:
                 status_code = 400
@@ -3861,3 +3865,37 @@ def extend_time(request, paper_id):
     messages.info(request, msg)
     return my_redirect('/exam/manage/monitor/{0}/{1}/'.format(
         anspaper.question_paper.quiz.id, course.id))
+
+
+@login_required
+@email_verified
+def get_marker_quiz(request, course_id, toc_id):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_student(user):
+        raise Http404("You are not allowed to view this page")
+    toc = get_object_or_404(TableOfContents, pk=toc_id)
+    question = toc.content_object
+    template_context = {
+        "question": question, "course_id": course_id, "toc": toc,
+        "test_cases": question.get_test_cases()
+    }
+    data = loader.render_to_string(
+        "yaksh/show_lesson_quiz.html", context=template_context,
+        request=request
+    )
+    context = {"data": data, "success": True}
+    return JsonResponse(context)
+
+
+@login_required
+@email_verified
+def submit_marker_quiz(request, course_id, toc_id):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_student(user):
+        raise Http404("You are not allowed to view this page")
+    toc = get_object_or_404(TableOfContents, pk=toc_id)
+    print(request.POST)
+    context = {"success": True}
+    return JsonResponse(context)

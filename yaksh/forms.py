@@ -704,7 +704,7 @@ class VideoQuizForm(forms.ModelForm):
             {'class': form_input_class, 'placeholder': 'Points'}
         )
         self.fields['type'].widget.attrs.update(
-            {'class': form_input_class}
+            {'class': form_input_class, 'readonly': True}
         )
         self.fields['type'].initial = question_type
         self.fields['description'].widget.attrs.update(

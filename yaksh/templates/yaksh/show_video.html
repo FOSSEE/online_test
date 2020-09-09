@@ -5,10 +5,22 @@
 {% block title %} {{ learning_module.name }} {% endblock %}
 {% block script %}
 <script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'yaksh/js/lesson.js' %}">
+<script type="text/javascript" src="{% static 'yaksh/js/lesson.js' %}"></script>
+<script type="text/javascript">
+    var player;
+    var contents_by_time = JSON.parse('{{ contents_by_time|safe }}');
+    var loc = 0;
+    var video_time = [];
 </script>
+<script type="text/javascript" src="{% static 'yaksh/js/jquery-ui.js' %}"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/show_toc.js' %}">
+</script>
+<script src="{% static 'yaksh/js/jquery-sortable.js' %}"></script>
 <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML">
 </script>
+{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'yaksh/css/jquery-ui/jquery-ui.css' %}">
 {% endblock %}
 {% block main %}
 <div class="wrapper">
@@ -144,10 +156,6 @@
                             <div id="player" data-plyr-provider="{{video.1}}" data-plyr-embed-id="{{video.0}}"></div>
                             {% endif %}
                         {% endwith %}
-                        <br>
-                        <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
-                        Next&nbsp;<i class="fa fa-step-forward"></i>
-                        </a>
                     {% endif %}
                     </div>
                 </div>
@@ -165,13 +173,16 @@
                                     {% with content.get_toc_text as toc_name %}
                                     <tr>
                                         <td>
-                                            {{ toc_name }}
+                                            <a href="#" onclick="select_toc(this);" data-toc="{{content.id}}" data-content-type="{{content.content}}">{{ toc_name }}</a>
                                         </td>
                                         <td>
                                             {{content.get_content_display}}
                                         </td>
-                                        <td>
+                                        <td id="toc_time_{{content.id}}">
                                             {{content.time}}
+                                        </td>
+                                        <td>
+                                            <input type="hidden" id="toc_{{content.id}}" value="{% url 'yaksh:get_marker_quiz' course.id content.id %}" data-content="{{content.content}}"/>
                                         </td>
                                     </tr>
                                     {% endwith %}
@@ -186,36 +197,34 @@
                 </div>
                 </div>
                 <div class="col-md-8">
-                    <hr>
-                    <h3><strong>Lesson Description</strong></h3>
-                    <hr>
-                    <div class="col" style="width: 100%">
-                        {{lesson.html_data|safe}}
-                    </div>
-                    <br>
-                    {% if not lesson.video_path %}
-                    <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
-                        Next&nbsp;<i class="fa fa-step-forward"></i>
-                    </a>
-                    <br>
-                    {% endif %}
-                    <div class="col-md-7">
-                    {% with lesson.get_files as lesson_files %}
-                        {% if lesson_files %}
-                            <div class="card">
-                                <div class="card-header">
-                                    Files for this lesson
+                    <div class="card-body">
+                        <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
+                            Next&nbsp;<i class="fa fa-step-forward"></i>
+                        </a>
+                        <hr>
+                        <h3><strong>Lesson Description</strong></h3>
+                        <hr>
+                        <div class="col" style="width: 100%">
+                            {{lesson.html_data|safe}}
+                        </div>
+                        <div class="col-md-7">
+                        {% with lesson.get_files as lesson_files %}
+                            {% if lesson_files %}
+                                <div class="card">
+                                    <div class="card-header">
+                                        Files for this lesson
+                                    </div>
+                                    <div class="card-body">
+                                        {% for f in lesson_files %}
+                                            <a href="{{f.file.url}}" class="list-group-item">
+                                                {{forloop.counter}}.{{ f.file.name|file_title }}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    {% for f in lesson_files %}
-                                        <a href="{{f.file.url}}" class="list-group-item">
-                                            {{forloop.counter}}.{{ f.file.name|file_title }}
-                                        </a>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endwith %}
+                            {% endif %}
+                        {% endwith %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -265,28 +274,6 @@
         {% endif %}
     </div>
 </div>
-<script type="text/javascript">
-    $(document).ready(function () {
-        $('#sidebarCollapse').on('click', function () {
-            $('#sidebar').toggleClass('active');
-        });
-       $(document).ready(() => {
-             $(function() {
-                tinymce.init({
-                    selector: 'textarea#id_description',
-                    setup : function(ed) {
-                          ed.on('change', function(e) {
-                             tinymce.triggerSave();
-                          });
-                    },
-                    max_height: 400,
-                    height: 400,
-                    plugins: "image code link",
-                    convert_urls: false
-                });
-            });
-        });
-    });
-</script>
+<div id="dialog"></div>
 {% endblock %}
 
