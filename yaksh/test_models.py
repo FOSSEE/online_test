@@ -1,5 +1,6 @@
 import unittest
 from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
@@ -2292,9 +2293,10 @@ class PostModelTestCases(unittest.TestCase):
             enrollment='Enroll Request',
             creator=self.user3
         )
+        course_ct = ContentType.objects.get_for_model(self.course)
         self.post1 = Post.objects.create(
             title='Post 1',
-            course=self.course,
+            target_ct=course_ct, target_id=self.course.id,
             creator=self.user1,
             description='Post 1 description'
         )
@@ -2317,56 +2319,9 @@ class PostModelTestCases(unittest.TestCase):
         count = self.post1.get_comments_count()
         self.assertEquals(count, 2)
 
-    def test__str__(self):
-        self.assertEquals(str(self.post1.title), self.post1.title)
-
     def tearDown(self):
         self.user1.delete()
         self.user2.delete()
         self.user3.delete()
         self.course.delete()
         self.post1.delete()
-
-
-class CommentModelTestCases(unittest.TestCase):
-    def setUp(self):
-        self.user1 = User.objects.create(
-            username='bart',
-            password='bart',
-            email='bart@test.com'
-        )
-        Profile.objects.create(
-            user=self.user1,
-            roll_number=1,
-            institute='IIT',
-            department='Chemical',
-            position='Student'
-        )
-        self.course = Course.objects.create(
-            name='Python Course',
-            enrollment='Enroll Request',
-            creator=self.user1
-        )
-        self.post1 = Post.objects.create(
-            title='Post 1',
-            course=self.course,
-            creator=self.user1,
-            description='Post 1 description'
-        )
-        self.comment1 = Comment.objects.create(
-            post_field=self.post1,
-            creator=self.user1,
-            description='Post 1 comment 1'
-        )
-
-    def test__str__(self):
-        self.assertEquals(
-            str(self.comment1.post_field.title),
-            self.comment1.post_field.title
-    )
-
-    def tearDown(self):
-        self.user1.delete()
-        self.course.delete()
-        self.post1.delete()
-        self.comment1.delete()

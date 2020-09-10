@@ -6928,6 +6928,8 @@ class TestPost(TestCase):
 
     def tearDown(self):
         self.client.logout()
+        self.user.delete()
+        self.course.delete()
         self.mod_group.delete()
 
 
@@ -7150,6 +7152,8 @@ class TestPostComment(TestCase):
 
     def tearDown(self):
         self.client.logout()
+        self.user.delete()
+        self.course.delete()
         self.mod_group.delete()
 
 
