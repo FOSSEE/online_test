@@ -2820,8 +2820,74 @@ class VideoQuizAnswer(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE)
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
 
+    def check_answer(self, user_answer):
+        result = {'success': False, 'error': ['Incorrect answer'],
+                  'weight': 0.0}
+        question = self.toc.content_object
+        if question.type == 'mcq':
+            expected_answer = question.get_test_case(correct=True).id
+            if user_answer.strip() == str(expected_answer).strip():
+                result['success'] = True
+                result['error'] = ['Correct answer']
+
+        elif question.type == 'mcc':
+            expected_answers = []
+            for opt in question.get_test_cases(correct=True):
+                expected_answers.append(str(opt.id))
+            if set(user_answer) == set(expected_answers):
+                result['success'] = True
+                result['error'] = ['Correct answer']
+
+        elif question.type == 'integer':
+            expected_answers = []
+            for tc in question.get_test_cases():
+                expected_answers.append(int(tc.correct))
+            if int(user_answer) in expected_answers:
+                result['success'] = True
+                result['error'] = ['Correct answer']
+
+        elif question.type == 'string':
+            tc_status = []
+            for tc in question.get_test_cases():
+                if tc.string_check == "lower":
+                    if tc.correct.lower().splitlines()\
+                       == user_answer.lower().splitlines():
+                        tc_status.append(True)
+                else:
+                    if tc.correct.splitlines()\
+                       == user_answer.splitlines():
+                        tc_status.append(True)
+            if any(tc_status):
+                result['success'] = True
+                result['error'] = ['Correct answer']
+
+        elif question.type == 'float':
+            user_answer = float(user_answer)
+            tc_status = []
+            user_answer = float(user_answer)
+            for tc in question.get_test_cases():
+                if abs(tc.correct - user_answer) <= tc.error_margin:
+                    tc_status.append(True)
+            if any(tc_status):
+                result['success'] = True
+                result['error'] = ['Correct answer']
+
+        elif question.type == 'arrange':
+            testcase_ids = sorted(
+                              [tc.id for tc in question.get_test_cases()]
+                              )
+            if user_answer == testcase_ids:
+                result['success'] = True
+                result['error'] = ['Correct answer']
+        self.answer.error = result
+        ans_status = result.get("success")
+        self.answer.correct = ans_status
+        if ans_status:
+            self.answer.marks = self.answer.question.points
+        self.answer.save()
+
     def __str__(self):
-        return f"Lesson answer of {self.toc} by {self.user.get_full_name()}"
+        return f"Lesson answer of {self.toc} by {self.student.get_full_name()}"
 
 
 class MicroManager(models.Model):
