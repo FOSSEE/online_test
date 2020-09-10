@@ -3483,9 +3483,11 @@ def course_forum(request, course_id):
         raise Http404('You are not enrolled in {0} course'.format(course.name))
     search_term = request.GET.get('search_post')
     if search_term:
-        # Fix this...
-        posts = course.post.get_queryset().filter(
-            active=True, title__icontains=search_term)
+        posts = Post.objects.filter(
+                Q(title__icontains=search_term) |
+                Q(description__icontains=search_term),
+                target_ct=course_ct, target_id=course.id, active=True
+            )
     else:
         posts = Post.objects.filter(
             target_ct=course_ct, target_id=course.id, active=True
