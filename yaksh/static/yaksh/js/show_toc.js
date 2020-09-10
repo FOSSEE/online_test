@@ -92,8 +92,6 @@ function ajax_call(url, method, data, csrf) {
             unlock_screen();
             if (msg.data) {
                 show_question(msg.data);
-            } else {
-                $("#dialog").dialog("close");
             }
             if(msg.message) alert(msg.message);
         },

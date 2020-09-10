@@ -38,7 +38,7 @@ from yaksh.models import (
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
     LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
-    Topic, TableOfContents, MicroManager
+    Topic, TableOfContents, VideoQuizAnswer, MicroManager
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -3832,6 +3832,51 @@ def submit_marker_quiz(request, course_id, toc_id):
     if not course.is_student(user):
         raise Http404("You are not allowed to view this page")
     toc = get_object_or_404(TableOfContents, pk=toc_id)
-    print(request.POST)
-    context = {"success": True}
+    current_question = toc.content_object
+    if current_question.type == 'mcq':
+        user_answer = request.POST.get('answer')
+    elif current_question.type == 'integer':
+        try:
+            user_answer = int(request.POST.get('answer'))
+        except ValueError:
+            msg = "Please enter an Integer Value"
+    elif current_question.type == 'float':
+        try:
+            user_answer = float(request.POST.get('answer'))
+        except ValueError:
+            msg = "Please enter a Float Value"
+    elif current_question.type == 'string':
+        user_answer = str(request.POST.get('answer'))
+    elif current_question.type == 'mcc':
+        user_answer = request.POST.getlist('answer')
+    elif current_question.type == 'arrange':
+        user_answer_ids = request.POST.get('answer').split(',')
+        user_answer = [int(ids) for ids in user_answer_ids]
+
+    def is_valid_answer(user_answer):
+        success = True
+        if current_question.type == "mcc" and not user_answer:
+            success = False
+        elif not str(user_answer):
+            success = False
+        return success
+
+    if is_valid_answer(user_answer):
+        if not VideoQuizAnswer.objects.filter(
+            toc_id=toc_id, student_id=user.id).exists():
+            answer = Answer.objects.create(
+                question_id=current_question.id, answer=user_answer,
+                correct=False, error=json.dumps([])
+            )
+            lesson_ans = VideoQuizAnswer.objects.create(
+                toc_id=toc_id, student=user, answer=answer
+            )
+            if toc.content == 2:
+                lesson_ans.check_answer(user_answer)
+            msg = "Answer saved successfully"
+        else:
+            msg = "You have already submitted the answer"
+    else:
+        msg = "Please submit a valid answer"
+    context = {"success": True, "message": msg}
     return JsonResponse(context)
