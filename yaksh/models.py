@@ -2585,7 +2585,7 @@ class AssignmentUploadManager(models.Manager):
 class AssignmentUpload(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     assignmentQuestion = models.ForeignKey(Question, on_delete=models.CASCADE)
-    assignmentFile = models.FileField(upload_to=get_assignment_dir)
+    assignmentFile = models.FileField(upload_to=get_assignment_dir, max_length=255)
     question_paper = models.ForeignKey(QuestionPaper, blank=True, null=True,
                                        on_delete=models.CASCADE)
     course = models.ForeignKey(Course, null=True, blank=True,

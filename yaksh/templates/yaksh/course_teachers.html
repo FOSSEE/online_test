@@ -9,11 +9,13 @@
             <tr>
                 <th>Select</th>
                 <th>Name</th>
+                <th>Email</th>
             </tr>
             {% for teacher in teachers %}
                 <tr>
                     <td><input type="checkbox" name="remove" value="{{ teacher.id }}"></td>
                     <td>{{ teacher.get_full_name }}</td>
+                    <td>{{ teacher.email }}</td>
                 </tr>
             {% endfor %}
         <table>
