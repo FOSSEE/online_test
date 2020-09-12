@@ -49,7 +49,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.template import Context, Template
 from django.conf import settings
 from django.forms.models import model_to_dict
-
+from django.db.models import Count
 # Local Imports
 from yaksh.code_server import (
     submit, get_result as get_result_from_code_server
@@ -2781,6 +2781,18 @@ class Comment(ForumBase):
                                             self.post_field.title)
 
 
+class TOCManager(models.Manager):
+
+    def get_data(self, course_id, lesson_id):
+        toc = TableOfContents.objects.filter(
+            course_id=course_id, lesson_id=lesson_id, content__in=[2, 3, 4]
+        )
+        answers = LessonQuizAnswer.objects.select_related("toc").filter(
+            toc__course_id=course_id, toc__lesson_id=lesson_id
+        )
+        return answers
+
+
 class TableOfContents(models.Model):
     toc_types = ((1, "Topic"), (2, "Graded Quiz"), (3, "Exercise"), (4, "Poll"))
     course = models.ForeignKey(Course, on_delete=models.CASCADE,
@@ -2792,6 +2804,8 @@ class TableOfContents(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey()
+
+    objects = TOCManager()
 
     class Meta:
         verbose_name_plural = "Table Of Contents"
@@ -2809,13 +2823,14 @@ class TableOfContents(models.Model):
 
 class Topic(models.Model):
     name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
     content = GenericRelation(TableOfContents)
 
     def __str__(self):
         return f"{self.name}"
 
 
-class VideoQuizAnswer(models.Model):
+class LessonQuizAnswer(models.Model):
     toc = models.ForeignKey(TableOfContents, on_delete=models.CASCADE)
     student = models.ForeignKey(User, on_delete=models.CASCADE)
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
@@ -2885,6 +2900,7 @@ class VideoQuizAnswer(models.Model):
         if ans_status:
             self.answer.marks = self.answer.question.points
         self.answer.save()
+        return result
 
     def __str__(self):
         return f"Lesson answer of {self.toc} by {self.student.get_full_name()}"

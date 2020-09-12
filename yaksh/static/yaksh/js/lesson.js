@@ -71,6 +71,7 @@ function add_topic() {
     if (!$("#id_timer").val()) {
         $("#id_timer").val($("#vtimer").val());
     }
+    document.getElementById("id_timer").focus();
     $("#topic-form").submit(function(e) {
         e.preventDefault();
         lock_screen();
@@ -83,6 +84,7 @@ function add_question() {
     if (!$("#id_timer").val()) {
         $("#id_timer").val($("#vtimer").val());
     }
+    document.getElementById("id_timer").focus();
     $("#question-form").submit(function(e) {
         e.preventDefault();
         lock_screen();
@@ -92,11 +94,11 @@ function add_question() {
 }
 
 function lock_screen() {
-    document.getElementById("ontop").style.display = "block";
+    document.getElementById("loader").style.display = "block";
 }
 
 function unlock_screen() {
-    document.getElementById("ontop").style.display = "none";
+    document.getElementById("loader").style.display = "none";
 }
 
 function show_error(error) {
@@ -105,8 +107,39 @@ function show_error(error) {
         var value = err[key];
         err_msg = err_msg + key + " : " + value[0].message + "\n";
     });
-    alert(err_msg);
+    show_message(err_msg, "error");
 }
+
+function show_message(message, msg_type) {
+    toastr.options = {
+      "positionClass": "toast-top-center",
+      "timeOut": "1500",
+      "showDuration": "300",
+    }
+    switch(msg_type) {
+        case "info": {
+            toastr.info(message);
+            break;
+        }
+        case "error": {
+            toastr.error(message);
+            break;
+        }
+        case "warning": {
+            toastr.warning(message);
+            break;
+        }
+        case "success": {
+            toastr.success(message);
+            break;
+        }
+        default: {
+            toastr.info(message);
+            break;
+        }
+    }
+}
+
 
 function show_toc(toc) {
     $("#lesson-content").empty();
@@ -131,17 +164,22 @@ function ajax_call(url, method, data, csrf) {
         },
         success: function(msg) {
             unlock_screen();
-            if (msg.success) {
-                if (msg.status) $("#lesson-content").html(msg.data);
-                if (parseInt(msg.content_type) === 1) {
-                    add_topic();
-                }
-                else {
-                    add_question();
-                }
+            if (msg.status) $("#lesson-content").html(msg.data);
+            if (parseInt(msg.content_type) === 1) {
+                add_topic();
+            }
+            else {
+                add_question();
             }
             if (msg.toc) show_toc(msg.toc);
-            if (msg.message) alert(msg.message)
+            if (msg.message) {
+                if (msg.success) {
+                    show_message(msg.message, "success");
+                }
+                else {
+                    show_message(msg.message, "warning");
+                }
+            }
         },
         error: function(xhr, data) {
             unlock_screen();
@@ -152,15 +190,15 @@ function ajax_call(url, method, data, csrf) {
                     break;
                 }
                 case 500: {
-                    alert('500 status code! server error');
+                    show_message('500 status code! server error', "error");
                     break;
                 }
                 case 404: {
-                    alert('404 status code! server error');
+                    show_message('404 status code! server error', "error");
                     break;
                 }
                 default: {
-                    alert('Unable to perform action. Please try again');
+                    show_message('Unable to perform action. Please try again', "error");
                     break;
                 }
             }

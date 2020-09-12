@@ -28,6 +28,7 @@ $(document).ready(function() {
             loc += 1;
             if(content.content != 1) {
                 player.pause();
+                player.fullscreen.exit();
                 url = $("#toc_"+content.id).val();
                 ajax_call(url, "GET");
             }
@@ -49,26 +50,23 @@ function get_time_in_seconds(time) {
 }
 
 function lock_screen() {
-    document.getElementById("ontop").style.display = "block";
+    document.getElementById("loader").style.display = "block";
+    if ($("#check").is(":visible")) {
+        $("#check").attr("disabled", true);
+    }
 }
 
 function unlock_screen() {
-    document.getElementById("ontop").style.display = "none";
-}
-
-function show_error(error) {
-    var err_msg = "";
-    Object.keys(err).forEach(function(key) {
-        var value = err[key];
-        err_msg = err_msg + key + " : " + value[0].message + "\n";
-    });
-    alert(err_msg);
+    document.getElementById("loader").style.display = "none";
+    if ($("#check").is(":visible")) {
+        $("#check").attr("disabled", false);
+    }
 }
 
 function show_question(data) {
     $("#dialog").html(data);
     $("#dialog").dialog({
-        width: 600,
+        width: 800,
         height: 500,
     });
     $("#submit-quiz-form").submit(function(e) {
@@ -81,15 +79,48 @@ function show_question(data) {
 
 function select_toc(element) {
     var toc_id = element.getAttribute("data-toc"); 
+    var content_type = element.getAttribute("data-toc-type");
     var toc_time = $("#toc_time_"+toc_id).val();
     player.currentTime = get_time_in_seconds(toc_time);
-    url = $("#toc_"+toc_id).val();
-    ajax_call(url, "GET");
+    if (content_type != 1) {
+        url = $("#toc_"+toc_id).val();
+        ajax_call(url, "GET");
+    }
 }
 
 function csrfSafeMethod(method) {
     // these HTTP methods do not require CSRF protection
     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+function show_message(message, msg_type) {
+    toastr.options = {
+      "positionClass": "toast-top-center",
+      "timeOut": "1500",
+      "showDuration": "300",
+    }
+    switch(msg_type) {
+        case "info": {
+            toastr.info(message);
+            break;
+        }
+        case "error": {
+            toastr.error(message);
+            break;
+        }
+        case "warning": {
+            toastr.warning(message);
+            break;
+        }
+        case "success": {
+            toastr.success(message);
+            break;
+        }
+        default: {
+            toastr.info(message);
+            break;
+        }
+    }
 }
 
 function ajax_call(url, method, data, csrf) {
@@ -109,26 +140,33 @@ function ajax_call(url, method, data, csrf) {
             if (msg.data) {
                 show_question(msg.data);
             }
-            if(msg.message) alert(msg.message);
+            if (msg.message) {
+                if (msg.success) {
+                    $("#dialog").dialog("close");
+                    show_message(msg.message, "success");
+                }
+                else {
+                    show_message(msg.message, "warning");
+                }
+            }
         },
         error: function(xhr, data) {
             unlock_screen();
             switch(xhr.status) {
                 case 400: {
-                    err = JSON.parse(xhr.responseJSON.message);
-                    show_error(err);
+                    show_message("400 status code! server error", "error");
                     break;
                 }
                 case 500: {
-                    alert('500 status code! server error');
+                    show_message("500 status code! server error", "error");
                     break;
                 }
                 case 404: {
-                    alert('404 status code! server error');
+                    show_message("404 status code! server error", "error");
                     break;
                 }
                 default: {
-                    alert('Unable to perform action. Please try again');
+                    show_message('Unable to perform action. Please try again', "error");
                     break;
                 }
             }

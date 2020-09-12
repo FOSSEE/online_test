@@ -92,11 +92,9 @@
 
     <!-- Page Content  -->
     <div id="content">
-
         <button type="button" id="sidebarCollapse" class="btn btn-outline-info">
             <i class="fa fa-navicon fa-lg"></i>
         </button>
-
         <br><br>
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
@@ -110,7 +108,6 @@
             {% endif %}
         </ol>
         <br>
-
         {% if msg %}
             <center>
                 <div class="alert alert-dismissible alert-warning">
@@ -173,7 +170,9 @@
                                     {% with content.get_toc_text as toc_name %}
                                     <tr>
                                         <td>
-                                            <a href="#" onclick="select_toc(this);" data-toc="{{content.id}}" data-content-type="{{content.content}}">{{ toc_name }}</a>
+                                            <a href="#" onclick="select_toc(this);" data-toc="{{content.id}}" data-toc-type="{{content.content}}">
+                                                {{ toc_name }}
+                                            </a>
                                         </td>
                                         <td>
                                             {{content.get_content_display}}
@@ -181,9 +180,7 @@
                                         <td id="toc_time_{{content.id}}">
                                             {{content.time}}
                                         </td>
-                                        <td>
-                                            <input type="hidden" id="toc_{{content.id}}" value="{% url 'yaksh:get_marker_quiz' course.id content.id %}" data-content="{{content.content}}"/>
-                                        </td>
+                                        <input type="hidden" id="toc_{{content.id}}" value="{% url 'yaksh:get_marker_quiz' course.id content.id %}" data-content="{{content.content}}"/>
                                     </tr>
                                     {% endwith %}
                                 {% empty %}

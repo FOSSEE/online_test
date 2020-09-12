@@ -39,7 +39,7 @@ from yaksh.models import (
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
     LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
-    Topic, TableOfContents, VideoQuizAnswer, MicroManager
+    Topic, TableOfContents, LessonQuizAnswer, MicroManager
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -3836,6 +3836,7 @@ def delete_toc(request, course_id, toc_id):
         get_object_or_404(Topic, pk=toc.object_id).delete()
     else:
         get_object_or_404(Question, id=toc.object_id).delete()
+    messages.success(request, "Content deleted successfully")
     return redirect(redirect_url)
 
 
@@ -3903,12 +3904,12 @@ def submit_marker_quiz(request, course_id, toc_id):
         try:
             user_answer = int(request.POST.get('answer'))
         except ValueError:
-            msg = "Please enter an Integer Value"
+            user_answer = None
     elif current_question.type == 'float':
         try:
             user_answer = float(request.POST.get('answer'))
         except ValueError:
-            msg = "Please enter a Float Value"
+            user_answer = None
     elif current_question.type == 'string':
         user_answer = str(request.POST.get('answer'))
     elif current_question.type == 'mcc':
@@ -3917,30 +3918,59 @@ def submit_marker_quiz(request, course_id, toc_id):
         user_answer_ids = request.POST.get('answer').split(',')
         user_answer = [int(ids) for ids in user_answer_ids]
 
-    def is_valid_answer(user_answer):
-        success = True
-        if current_question.type == "mcc" and not user_answer:
-            success = False
-        elif not str(user_answer):
-            success = False
-        return success
+    def is_valid_answer(answer):
+        status = True
+        if ((current_question.type == "mcc" or
+                current_question.type == "arrange") and not answer):
+            status = False
+        elif answer is None or not str(answer):
+            status = False
+        return status
 
     if is_valid_answer(user_answer):
-        if not VideoQuizAnswer.objects.filter(
-            toc_id=toc_id, student_id=user.id).exists():
+        success = True
+        # check if graded quiz and already attempted
+        has_attempts =  LessonQuizAnswer.objects.filter(
+            toc_id=toc_id, student_id=user.id).exists()
+        if ((toc.content == 2 and not has_attempts) or
+                toc.content == 3 or toc.content == 4):
             answer = Answer.objects.create(
                 question_id=current_question.id, answer=user_answer,
                 correct=False, error=json.dumps([])
             )
-            lesson_ans = VideoQuizAnswer.objects.create(
+            lesson_ans = LessonQuizAnswer.objects.create(
                 toc_id=toc_id, student=user, answer=answer
             )
-            if toc.content == 2:
-                lesson_ans.check_answer(user_answer)
             msg = "Answer saved successfully"
+            # call check answer only for graded quiz and exercise
+            if toc.content == 3 or toc.content == 2:
+                result = lesson_ans.check_answer(user_answer)
+            # if exercise then show custom message
+            if toc.content == 3:
+                if result.get("success"):
+                    msg = "You answered the question correctly"
+                else:
+                    success = False
+                    msg = "You have answered the question incorrectly. "\
+                          "Please refer the lesson again"
         else:
             msg = "You have already submitted the answer"
     else:
+        success = False
         msg = "Please submit a valid answer"
-    context = {"success": True, "message": msg}
+    context = {"success": success, "message": msg}
     return JsonResponse(context)
+
+
+@login_required
+@email_verified
+def lessson_statistics(request, course_id, lesson_id):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    if (not is_moderator(user) or
+            not course.is_creator(user) or not course.is_creator(user)):
+        raise Http404("You are not allowed to view this page")
+    toc = TableOfContents.objects.get_data(course_id, lesson_id)
+    return render(request, 'yaksh/show_lesson_statistics.html', {
+        'data': toc,
+        })
