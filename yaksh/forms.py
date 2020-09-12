@@ -655,10 +655,13 @@ class TopicForm(forms.ModelForm):
         time = kwargs.pop("time") if "time" in kwargs else None
         super(TopicForm, self).__init__(*args, **kwargs)
         self.fields['name'].widget.attrs.update(
-            {'class': form_input_class, 'placeholder': 'Topic Name'}
+            {'class': form_input_class, 'placeholder': 'Name'}
         )
         self.fields['timer'].widget.attrs.update(
-            {'class': form_input_class, 'placeholder': 'Topic Time'}
+            {'class': form_input_class, 'placeholder': 'Time'}
+        )
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Description'}
         )
         self.fields['timer'].initial = time
 

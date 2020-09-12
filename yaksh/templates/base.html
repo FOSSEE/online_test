@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="{% static 'yaksh/css/ontop.css' %}" type="text/css" />
   <link rel="stylesheet" href="{% static 'yaksh/css/plyr.css' %}" />
   <link rel="stylesheet" type="text/css" href="{% static 'yaksh/css/simplemde.min.css' %}">
+  <link rel="stylesheet" href="{% static 'yaksh/css/toastr.min.css' %}" />">
 
 
   {% block meta %}
@@ -42,6 +43,8 @@
   <script src="{% static 'yaksh/js/plyr.js' %}"></script>
   <script type="text/javascript" src="{% static 'yaksh/js/simplemde.min.js' %}">
   </script>
+  <script type="text/javascript" src="{% static 'yaksh/js/toastr.min.js' %}">
+  </script>
  
   <script>
       new WOW().init();
@@ -55,6 +58,22 @@
   <div id="ontop">
     <div id="state">
       Checking...<img src="{% static 'yaksh/images/check_answer.gif' %}"/>
+    </div>
+  </div>
+  <div id="loader">
+    <div id="state1">
+      <div class="spinner-grow text-success" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="spinner-grow text-danger" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="spinner-grow text-warning" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="spinner-grow text-primary" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
     </div>
   </div>
   
