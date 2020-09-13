@@ -84,11 +84,11 @@ DATABASES = {
                        default=os.path.join(BASE_DIR, 'db.sqlite3')
                        ),
         # The following settings are not used with sqlite3:
-        'USER': config('DB_USER', default=''),
-        'PASSWORD': config('DB_PASSWORD', default=''),
+        'USER': config('DB_USER', default='yaksh_user'),
+        'PASSWORD': config('DB_PASSWORD', default='mysecretpassword'),
         # Empty for localhost through domain sockets or '1$
         'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default=''),
+        'PORT': config('DB_PORT', default='3306'),
     },
 }
 
@@ -122,20 +122,25 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "yaksh_data", "data")
 
 STATIC_ROOT = 'yaksh/static/'
 
+
+
+
 # Set this varable to <True> if smtp-server is not allowing to send email.
-EMAIL_USE_TLS = False
+EMAIL_USE_TLS = True
 
-EMAIL_HOST = 'your_email_host'
+EMAIL_HOST = 'smtp.gmail.com'
 
-EMAIL_PORT = 'your_email_port'
+EMAIL_PORT = '587'
 
-EMAIL_HOST_USER = 'email_host_user'
+EMAIL_HOST_USER = 'yakshcertificate@gmail.com'
 
-EMAIL_HOST_PASSWORD = 'email_host_password'
+EMAIL_HOST_PASSWORD = 'elite2019'
+
+EMAIL_USE_SSL = False
 
 # Set EMAIL_BACKEND to 'django.core.mail.backends.smtp.EmailBackend'
 # in production
-EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # SENDER_EMAIL, REPLY_EMAIL, PRODUCTION_URL, IS_DEVELOPMENT are used in email
 # verification. Set the variables accordingly to avoid errors in production
