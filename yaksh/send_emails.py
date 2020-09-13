@@ -11,7 +11,7 @@ import os
 # Django imports
 from django.utils.crypto import get_random_string
 from django.conf import settings
-from django.core.mail import EmailMultiAlternatives, send_mail
+from django.core.mail import EmailMultiAlternatives, send_mail,EmailMessage
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 
@@ -88,3 +88,12 @@ def send_bulk_mail(subject, email_body, recipients, attachments):
                 Please contact {1}.""".format(exc_msg, settings.REPLY_EMAIL)
 
     return message
+def mail_certificate(send_to):
+    email = EmailMessage('Certificate' , 
+        'Congrats!! You successfully completed the course',
+        settings.EMAIL_HOST_USER ,
+        [send_to,],
+    )
+    
+    email.attach_file('certificate.pdf')
+    email.send()
