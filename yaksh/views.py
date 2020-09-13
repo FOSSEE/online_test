@@ -1,9 +1,14 @@
 import os
 import csv
+import smtplib
+import imghdr
+from django.core.mail import send_mail,EmailMultiAlternatives
+from email.message import EmailMessage
+from django.core.mail import EmailMessage
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
-from django.template import Context, Template, loader
+from django.template import Context, Template
 from django.http import Http404
 from django.db.models import Max, Q, F
 from django.db import models
@@ -23,13 +28,14 @@ from django.urls import reverse
 import json
 from textwrap import dedent
 import zipfile
-import markdown
+from . import settings
+from markdown import Markdown
 try:
     from StringIO import StringIO as string_io
 except ImportError:
     from io import BytesIO as string_io
 import re
-# Local imports.
+
 from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, FloatTestCase,
@@ -37,8 +43,7 @@ from yaksh.models import (
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
-    LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
-    MicroManager
+    LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -51,11 +56,32 @@ from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .settings import URL_ROOT
 from .file_utils import extract_files, is_csv
 from .send_emails import (send_user_mail,
-                          generate_activation_key, send_bulk_mail)
+                          generate_activation_key, send_bulk_mail,mail_certificate)
 from .decorators import email_verified, has_profile
 from .tasks import regrade_papers
 from notifications_plugin.models import Notification
-
+from django.shortcuts import render
+from online_test.settings import EMAIL_HOST_USER,EMAIL_HOST_PASSWORD
+from django.template.loader import get_template
+from django.shortcuts import redirect
+from django.http import HttpResponse
+from yaksh.models import CourseStatus
+from pdflatex import PDFLaTeX
+import jinja2
+latex_jinja_env = jinja2.Environment(
+    block_start_string = '\BLOCK{' ,
+    block_end_string = '}',
+    variable_start_string = '\VAR{' ,
+    variable_end_string = '}',
+    comment_start_string = '\#{' ,
+    comment_end_string = '}',
+    line_statement_prefix = '%-',
+    line_comment_prefix = '%#',
+    trim_blocks = True,
+    autoescape = False,
+    loader = jinja2.FileSystemLoader(os.path.abspath('.'))
+   )
+from django.contrib import messages
 
 def my_redirect(url):
     """An overridden redirect to deal with URL_ROOT-ing. See settings.py
@@ -102,9 +128,7 @@ CSV_FIELDS = ['name', 'username', 'roll_number', 'institute', 'department',
 
 def get_html_text(md_text):
     """Takes markdown text and converts it to html"""
-    return markdown.markdown(
-        md_text, extensions=['tables', 'fenced_code']
-    )
+    return Markdown().convert(md_text)
 
 
 def formfield_callback(field):
@@ -484,46 +508,6 @@ def user_login(request):
 
 @login_required
 @email_verified
-def special_start(request, micromanager_id=None):
-    user = request.user
-    micromanager = get_object_or_404(MicroManager, pk=micromanager_id,
-                                     student=user)
-    course = micromanager.course
-    quiz = micromanager.quiz
-    module = course.get_learning_module(quiz)
-    quest_paper = get_object_or_404(QuestionPaper, quiz=quiz)
-
-    if not course.is_enrolled(user):
-        msg = 'You are not enrolled in {0} course'.format(course.name)
-        return quizlist_user(request, msg=msg)
-
-    if not micromanager.can_student_attempt():
-        msg = 'Your special attempts are exhausted for {0}'.format(
-            quiz.description)
-        return quizlist_user(request, msg=msg)
-
-    last_attempt = AnswerPaper.objects.get_user_last_attempt(
-        quest_paper, user, course.id)
-
-    if last_attempt:
-        if last_attempt.is_attempt_inprogress():
-            return show_question(
-                request, last_attempt.current_question(), last_attempt,
-                course_id=course.id, module_id=module.id,
-                previous_question=last_attempt.current_question()
-            )
-
-    attempt_num = micromanager.get_attempt_number()
-    ip = request.META['REMOTE_ADDR']
-    new_paper = quest_paper.make_answerpaper(user, ip, attempt_num, course.id,
-                                             special=True)
-    micromanager.increment_attempts_utilised()
-    return show_question(request, new_paper.current_question(), new_paper,
-                         course_id=course.id, module_id=module.id)
-
-
-@login_required
-@email_verified
 def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
           module_id=None):
     """Check the user cedentials and if any quiz is available,
@@ -684,7 +668,7 @@ def show_question(request, question, paper, error_message=None,
             request, msg, paper.attempt_number, paper.question_paper.id,
             course_id=course_id, module_id=module_id
         )
-    if not quiz.active and not paper.is_special:
+    if not quiz.active:
         reason = 'The quiz has been deactivated!'
         return complete(
             request, reason, paper.attempt_number, paper.question_paper.id,
@@ -862,7 +846,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                                      previous_question=current_question)
         else:
             user_answer = request.POST.get('answer')
-        if not str(user_answer):
+        if not user_answer:
             msg = "Please submit a valid answer."
             return show_question(
                 request, current_question, paper, notification=msg,
@@ -1487,13 +1471,6 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
                 question_paper.save()
                 question_paper.fixed_questions.add(*questions)
                 messages.success(request, "Questions added successfully")
-                return redirect(
-                    'yaksh:designquestionpaper',
-                    course_id=course_id,
-                    quiz_id=quiz_id,
-                    questionpaper_id=questionpaper_id
-                )
-
             else:
                 messages.warning(request, "Please select atleast one question")
 
@@ -1512,12 +1489,6 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
                     question_paper.save()
                 question_paper.fixed_questions.remove(*question_ids)
                 messages.success(request, "Questions removed successfully")
-                return redirect(
-                    'yaksh:designquestionpaper',
-                    course_id=course_id,
-                    quiz_id=quiz_id,
-                    questionpaper_id=questionpaper_id
-                )
             else:
                 messages.warning(request, "Please select atleast one question")
 
@@ -1532,12 +1503,6 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
                 random_set.questions.add(*random_ques)
                 question_paper.random_questions.add(random_set)
                 messages.success(request, "Questions removed successfully")
-                return redirect(
-                    'yaksh:designquestionpaper',
-                    course_id=course_id,
-                    quiz_id=quiz_id,
-                    questionpaper_id=questionpaper_id
-                )
             else:
                 messages.warning(request, "Please select atleast one question")
 
@@ -1546,12 +1511,6 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
             if random_set_ids:
                 question_paper.random_questions.remove(*random_set_ids)
                 messages.success(request, "Questions removed successfully")
-                return redirect(
-                    'yaksh:designquestionpaper',
-                    course_id=course_id,
-                    quiz_id=quiz_id,
-                    questionpaper_id=questionpaper_id
-                )
             else:
                 messages.warning(request, "Please select question set")
 
@@ -1568,8 +1527,8 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
         if questions:
             questions = _remove_already_present(questionpaper_id, questions)
 
-    question_paper.update_total_marks()
-    question_paper.save()
+        question_paper.update_total_marks()
+        question_paper.save()
     random_sets = question_paper.random_questions.all()
     fixed_questions = question_paper.get_ordered_questions()
     context = {
@@ -1973,7 +1932,6 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                 'comments_%d' % paper.question_paper.id, 'No comments')
             paper.save()
         messages.success(request, "Student data saved successfully")
-
         course_status = CourseStatus.objects.filter(
             course_id=course.id, user_id=user.id)
         if course_status.exists():
@@ -2477,10 +2435,8 @@ def _read_user_csv(request, reader, course):
             messages.info(request, "{0} -- Missing Values".format(counter))
             continue
         users = User.objects.filter(username=username)
-        if not users.exists():
-            users = User.objects.filter(email=email)
         if users.exists():
-            user = users.last()
+            user = users[0]
             if remove.strip().lower() == 'true':
                 _remove_from_course(user, course)
                 messages.info(request, "{0} -- {1} -- User rejected".format(
@@ -3096,7 +3052,7 @@ def view_module(request, module_id, course_id, msg=None):
                 " previous to {0}".format(learning_module.name)
             )
             return course_modules(request, course_id, msg)
-
+    
     learning_units = learning_module.get_learning_units()
     context['learning_units'] = learning_units
     context['learning_module'] = learning_module
@@ -3106,6 +3062,24 @@ def view_module(request, module_id, course_id, msg=None):
     context['course'] = course
     context['state'] = "module"
     context['msg'] = msg
+    course_status = CourseStatus.objects.filter(
+            course_id=course.id, user_id=user.id)
+    print(user.get_full_name(), course , user.email)
+    #print(course_status.first().get_certificateStatus())
+    if course.percent_completed(user, all_modules) == 100 and course_status.first().get_certificateStatus() == '':
+        template = latex_jinja_env.get_template('yaksh.tex')
+        document = template.render(name = user.get_full_name(), course = course)
+        with open('certificate.tex','w') as output:
+            output.write(document)
+
+        os.system("pdflatex certificate.tex")
+        mail_certificate(user.email)
+        course_status.first().set_certificateStatus()
+        messages.success(request, 'Your course certificate sent to your registeres mail Id')
+        return redirect('/')
+    if course.percent_completed(user,all_modules) == 100 and course_status.first().get_certificateStatus() == 'True':
+        messages.warning(request, 'You have already recieved your certificate, kindly check your mail')
+        return redirect('/')
     return my_render_to_response(request, 'yaksh/show_video.html', context)
 
 
@@ -3492,91 +3466,3 @@ def hide_comment(request, course_id, uuid):
     return redirect('yaksh:post_comments', course_id, post_uid)
 
 
-@login_required
-@email_verified
-def allow_special_attempt(request, user_id, course_id, quiz_id):
-    user = request.user
-
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page')
-
-    course = get_object_or_404(Course, pk=course_id)
-    if not course.is_creator(user) and not course.is_teacher(user):
-        raise Http404('This course does not belong to you')
-
-    quiz = get_object_or_404(Quiz, pk=quiz_id)
-    student = get_object_or_404(User, pk=user_id)
-
-    if not course.is_enrolled(student):
-        raise Http404('The student is not enrolled for this course')
-
-    micromanager, created = MicroManager.objects.get_or_create(
-        course=course, student=student, quiz=quiz
-    )
-    micromanager.manager = user
-    micromanager.save()
-
-    if (not micromanager.is_special_attempt_required() or
-            micromanager.is_last_attempt_inprogress()):
-        name = student.get_full_name()
-        msg = '{} can attempt normally. No special attempt required!'.format(
-            name)
-    elif micromanager.can_student_attempt():
-        msg = '{} already has a special attempt!'.format(
-            student.get_full_name())
-    else:
-        micromanager.allow_special_attempt()
-        msg = 'A special attempt is provided to {}!'.format(
-            student.get_full_name())
-
-    messages.info(request, msg)
-    return my_redirect('/exam/manage/monitor/{0}/{1}/'.format(quiz_id,
-                                                              course_id))
-
-
-@login_required
-@email_verified
-def revoke_special_attempt(request, micromanager_id):
-    user = request.user
-
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page')
-
-    micromanager = get_object_or_404(MicroManager, pk=micromanager_id)
-    course = micromanager.course
-    if not course.is_creator(user) and not course.is_teacher(user):
-        raise Http404('This course does not belong to you')
-    micromanager.revoke_special_attempt()
-    msg = 'Revoked special attempt for {}'.format(
-        micromanager.student.get_full_name())
-    messages.info(request, msg)
-    return my_redirect('/exam/manage/monitor/{0}/{1}/'.format(
-        micromanager.quiz.id, course.id))
-
-
-@login_required
-@email_verified
-def extend_time(request, paper_id):
-    user = request.user
-
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page')
-
-    anspaper = get_object_or_404(AnswerPaper, pk=paper_id)
-    course = anspaper.course
-    if not course.is_creator(user) and not course.is_teacher(user):
-        raise Http404('This course does not belong to you')
-
-    if request.method == "POST":
-        extra_time = request.POST.get('extra_time', None)
-        if extra_time is None:
-            msg = 'Please provide time'
-        else:
-            anspaper.set_extra_time(extra_time)
-            msg = 'Extra {0} minutes given to {1}'.format(
-                extra_time, anspaper.user.get_full_name())
-    else:
-        msg = 'Bad Request'
-    messages.info(request, msg)
-    return my_redirect('/exam/manage/monitor/{0}/{1}/'.format(
-        anspaper.question_paper.quiz.id, course.id))
