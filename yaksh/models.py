@@ -1184,6 +1184,7 @@ class CourseStatus(models.Model):
     grade = models.CharField(max_length=255, null=True, blank=True)
     percentage = models.FloatField(default=0.0)
     percent_completed = models.IntegerField(default=0)
+    certificate = models.CharField(max_length=255)
 
     def get_grade(self):
         return self.grade
@@ -1200,6 +1201,13 @@ class CourseStatus(models.Model):
             grade = grading_system.get_grade(self.percentage)
             self.grade = grade
             self.save()
+    def get_certificateStatus(self):
+        return self.certificate
+
+    def set_certificateStatus(self):
+        self.certificate = True
+        self.save()
+
 
     def calculate_percentage(self):
         quizzes = self.course.get_quizzes()
