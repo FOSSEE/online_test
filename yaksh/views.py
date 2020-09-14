@@ -3617,24 +3617,3 @@ def extend_time(request, paper_id):
     messages.info(request, msg)
     return my_redirect('/exam/manage/monitor/{0}/{1}/'.format(
         anspaper.question_paper.quiz.id, course.id))
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-   
-  
