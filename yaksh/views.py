@@ -67,11 +67,11 @@ from pdflatex import PDFLaTeX
 import jinja2
 from django.contrib import messages
 latex_jinja_env = jinja2.Environment(
-    block_start_string='\BLOCK{',
+    block_start_string='\\BLOCK{',
     block_end_string='}',
-    variable_start_string='\VAR{',
+    variable_start_string='\\VAR{',
     variable_end_string='}',
-    comment_start_string='\#{',
+    comment_start_string='\\#{',
     comment_end_string='}',
     line_statement_prefix='%-',
     line_comment_prefix='%#',
@@ -3134,7 +3134,7 @@ def view_module(request, module_id, course_id, msg=None):
     if course.percent_completed(user, all_modules) == 100:
         if course_status.first().get_certificateStatus() is False:
             template = latex_jinja_env.get_template('yaksh.tex')
-            document=template.render(name=user.get_full_name(), course=course)
+            document = template.render(name=user.get_full_name(), course=course)
             with open('certificate.tex', 'w') as output:
                 output.write(document)
 
@@ -3145,7 +3145,7 @@ def view_module(request, module_id, course_id, msg=None):
             messages.success(request, msg)
             return redirect('/')
         else:
-            msg = 'You have already recieved your certificate, kindly check your mail'
+            msg = 'You already recieved certificate, kindly check your mail'
             messages.warning(request, msg)
             return redirect('/')
     return my_render_to_response(request, 'yaksh/show_video.html', context)
