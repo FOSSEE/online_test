@@ -1204,11 +1204,10 @@ class CourseStatus(models.Model):
 
     def get_certificateStatus(self):
         return bool(self.certificate)
-    
+
     def set_certificateStatus(self):
         self.certificate = True
         self.save()
-
 
     def calculate_percentage(self):
         quizzes = self.course.get_quizzes()
