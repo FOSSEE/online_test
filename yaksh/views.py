@@ -3129,8 +3129,6 @@ def view_module(request, module_id, course_id, msg=None):
     context['msg'] = msg
     course_status = CourseStatus.objects.filter(
             course_id=course.id, user_id=user.id)
-    print(user.get_full_name(), course , user.email)
-    #print(course_status.first().get_certificateStatus())
     if course.percent_completed(user, all_modules) == 100 and course_status.first().get_certificateStatus() == '':
         template = latex_jinja_env.get_template('yaksh.tex')
         document = template.render(name = user.get_full_name(), course = course)
@@ -3146,9 +3144,6 @@ def view_module(request, module_id, course_id, msg=None):
         messages.warning(request, 'You have already recieved your certificate, kindly check your mail')
         return redirect('/')
     return my_render_to_response(request, 'yaksh/show_video.html', context)
-
-
-
 
 
 @login_required
