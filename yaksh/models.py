@@ -2323,6 +2323,17 @@ class AnswerPaper(models.Model):
                     'answer': answer,
                     'error_list': [e for e in json.loads(answer.error)]
                 }]
+
+        for question, answers in q_a.items():
+            answers = q_a[question]
+            q_a[question].append({
+                'marks': max([
+                    answer['answer'].marks
+                    for answer in answers
+                    if question == answer['answer'].question
+                ])
+            })
+
         return q_a
 
     def get_latest_answer(self, question_id):
