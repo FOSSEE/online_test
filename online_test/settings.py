@@ -132,15 +132,15 @@ EMAIL_HOST = 'smtp.gmail.com'
 
 EMAIL_PORT = '587'
 
-EMAIL_HOST_USER = 'yakshcertificate@gmail.com'
+EMAIL_HOST_USER = 'email_host_user'
 
-EMAIL_HOST_PASSWORD = 'elite2019'
+EMAIL_HOST_PASSWORD = 'email_host_password'
 
 EMAIL_USE_SSL = False
 
 # Set EMAIL_BACKEND to 'django.core.mail.backends.smtp.EmailBackend'
 # in production
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
 
 # SENDER_EMAIL, REPLY_EMAIL, PRODUCTION_URL, IS_DEVELOPMENT are used in email
 # verification. Set the variables accordingly to avoid errors in production
