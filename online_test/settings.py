@@ -122,9 +122,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "yaksh_data", "data")
 
 STATIC_ROOT = 'yaksh/static/'
 
-
-
-
 # Set this varable to <True> if smtp-server is not allowing to send email.
 EMAIL_USE_TLS = True
 
