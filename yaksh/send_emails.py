@@ -91,6 +91,9 @@ def send_bulk_mail(subject, email_body, recipients, attachments):
 
 
 def mail_certificate(send_to):
-    email = EmailMessage('Certificate', 'Congrats!! You successfully completed the course', settings.EMAIL_HOST_USER, [send_to,], )
+    email = EmailMessage('Certificate',
+                         'Congrats!! You successfully completed the course',
+                         settings.EMAIL_HOST_USER,
+                         [send_to, ], )
     email.attach_file('certificate.pdf')
     email.send()
