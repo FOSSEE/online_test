@@ -266,5 +266,7 @@ urlpatterns = [
     path('submit/marker/quiz/<int:course_id>/<int:toc_id>',
          views.submit_marker_quiz, name='submit_marker_quiz'),
     path('manage/lesson/stats/<int:course_id>/<int:lesson_id>',
-         views.lessson_statistics, name='lessson_statistics'),
+         views.lesson_statistics, name='lesson_statistics'),
+    path('manage/lesson/stats/<int:course_id>/<int:lesson_id>/<int:toc_id>',
+         views.lesson_statistics, name='lesson_statistics'),
 ]

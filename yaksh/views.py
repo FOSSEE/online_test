@@ -3964,13 +3964,19 @@ def submit_marker_quiz(request, course_id, toc_id):
 
 @login_required
 @email_verified
-def lessson_statistics(request, course_id, lesson_id):
+def lesson_statistics(request, course_id, lesson_id, toc_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     if (not is_moderator(user) or
             not course.is_creator(user) or not course.is_creator(user)):
         raise Http404("You are not allowed to view this page")
-    toc = TableOfContents.objects.get_data(course_id, lesson_id)
-    return render(request, 'yaksh/show_lesson_statistics.html', {
-        'data': toc,
-        })
+    context = {}
+    data = TableOfContents.objects.get_data(course_id, lesson_id)
+    context['data'] = data
+    context['lesson'] = next(iter(data)).lesson
+    context['course_id'] = course_id
+    if toc_id:
+        per_que_data = TableOfContents.objects.get_question_stats(toc_id)
+        context['per_que_data'] = per_que_data
+        context['is_que_data'] = True
+    return render(request, 'yaksh/show_lesson_statistics.html', context)
