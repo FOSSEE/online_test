@@ -1,3 +1,9 @@
+=== 0.24.0 (09-09-2020) ===
+
+* Fix rendering of the quiz list
+* Fix bug to show maximum marks for all attempts in answerpaper
+* Fix bug to show only distinct answered questions
+
 === 0.23.0 (09-09-2020) ===
 
 * Allow a single user or multiple users to reattempt a quiz
