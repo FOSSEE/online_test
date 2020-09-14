@@ -2332,7 +2332,7 @@ class AnswerPaper(models.Model):
         return self.questions.filter(active=True)
 
     def get_questions_answered(self):
-        return self.questions_answered.all()
+        return self.questions_answered.all().distinct()
 
     def get_questions_unanswered(self):
         return self.questions_unanswered.all()
