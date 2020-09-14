@@ -1988,7 +1988,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
         for paper in papers:
             for question, answers in paper.get_question_answers().items():
                 marks = float(request.POST.get('q%d_marks' % question.id, 0))
-                answer = answers[-1]['answer']
+                answer = answers[0]['answer']
                 answer.set_marks(marks)
                 answer.save()
             paper.update_marks()
