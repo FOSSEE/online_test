@@ -65,6 +65,7 @@ from django.http import HttpResponse
 from yaksh.models import CourseStatus
 from pdflatex import PDFLaTeX
 import jinja2
+from django.contrib import messages
 latex_jinja_env = jinja2.Environment(
     block_start_string = '\BLOCK{',
     block_end_string = '}',
@@ -77,7 +78,7 @@ latex_jinja_env = jinja2.Environment(
     trim_blocks = True,
     autoescape = False,
     loader = jinja2.FileSystemLoader(os.path.abspath('.')))
-from django.contrib import messages
+
 
 def my_redirect(url):
     """An overridden redirect to deal with URL_ROOT-ing. See settings.py
@@ -3133,7 +3134,7 @@ def view_module(request, module_id, course_id, msg=None):
     if course.percent_completed(user, all_modules) == 100 and course_status.first().get_certificateStatus() is False:
         template = latex_jinja_env.get_template('yaksh.tex')
         document = template.render(name = user.get_full_name(), course = course)
-        with open('certificate.tex','w') as output:
+        with open('certificate.tex', 'w') as output:
             output.write(document)
 
         os.system("pdflatex certificate.tex")
@@ -3141,7 +3142,7 @@ def view_module(request, module_id, course_id, msg=None):
         course_status.first().set_certificateStatus()
         messages.success(request, 'Your course certificate sent to your registeres mail Id')
         return redirect('/')
-    if course.percent_completed(user,all_modules) == 100 and course_status.first().get_certificateStatus() is True:
+    if course.percent_completed(user, all_modules) == 100 and course_status.first().get_certificateStatus() is True:
         messages.warning(request, 'You have already recieved your certificate, kindly check your mail')
         return redirect('/')
     return my_render_to_response(request, 'yaksh/show_video.html', context)
