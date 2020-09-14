@@ -1,4 +1,5 @@
 {% extends "user.html" %}
+{% load custom_filters %}
 {% block title %} Student Dashboard {% endblock %}
 
 {% block script %}
@@ -74,14 +75,13 @@
                                         Request Rejected
                                     </span>
                                 {% elif user in course.data.students.all %}
-                                
                                     {% if course.completion_percentage == 100 %}
                                         <a class="btn btn-primary" href="{% url 'yaksh:course_modules' course.data.id %}">
                                             completed
                                         </a>
                                     {% elif course.completion_percentage > 0 %}
-                                        <a class="btn btn-primary" href="{% url 'yaksh:course_modules' course.data.id %}">
-                                            continue
+                                        <a class="btn btn-primary" href="{% url 'yaksh:course_modules' course.data.id %}" >
+                                            Continue
                                         </a>
                                     {% else %}
                                         <a class="btn btn-success" href="{% url 'yaksh:course_modules' course.data.id %}">
@@ -109,6 +109,7 @@
                                 {% endif %}
                             </div>
                         </div>
+                        {% show_special_attempt user.id course.data.id %}
                     </div>
                     <div id="collapse{{course.data.id}}" class="collapse hide" data-parent="#accordion">
                         <div class="card-body">
@@ -171,4 +172,3 @@
 </div>
 
 {% endblock %}
-
