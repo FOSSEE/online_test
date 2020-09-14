@@ -10,7 +10,7 @@ except ImportError:
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
-from yaksh.models import User, Course, Quiz
+from yaksh.models import User, Course, Quiz, TableOfContents
 
 register = template.Library()
 
@@ -178,3 +178,8 @@ def specail_attempt_monitor(user_id, course_id, quiz_id):
     if micromanagers.exists():
         context['micromanager'] = micromanagers.first()
     return context
+
+
+@register.simple_tag
+def get_answers(toc_id, user_id):
+    return TableOfContents.objects.get_answer(toc_id, user_id)

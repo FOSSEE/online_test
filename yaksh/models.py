@@ -2748,13 +2748,47 @@ class Comment(ForumBase):
 class TOCManager(models.Manager):
 
     def get_data(self, course_id, lesson_id):
-        toc = TableOfContents.objects.filter(
+        contents = TableOfContents.objects.filter(
             course_id=course_id, lesson_id=lesson_id, content__in=[2, 3, 4]
         )
-        answers = LessonQuizAnswer.objects.select_related("toc").filter(
-            toc__course_id=course_id, toc__lesson_id=lesson_id
-        )
-        return answers
+        data = {}
+        for toc in contents:
+            data[toc] = LessonQuizAnswer.objects.filter(
+                toc_id=toc.id).values_list("toc_id").distinct().count()
+        return data
+
+    def get_question_stats(self, toc_id):
+        answers = LessonQuizAnswer.objects.filter(
+            toc_id=toc_id)
+        question = answers.first().toc.content_object
+        answers = answers.values(
+            "student__first_name", "student__last_name", "student__email",
+            "student_id", "toc_id"
+            ).distinct()
+        return question, answers
+
+    def get_answer(self, toc_id, user_id):
+        submission = LessonQuizAnswer.objects.filter(
+            toc_id=toc_id, student_id=user_id).last()
+        question = submission.toc.content_object
+        attempted_answer = submission.answer
+        if question.type == "mcq":
+            submitted_answer = literal_eval(attempted_answer.answer)
+            answers = [
+                tc.options
+                for tc in question.get_test_cases(id=submitted_answer)
+            ]
+            answer = ",".join(answers)
+        elif question.type == "mcc":
+            submitted_answer = literal_eval(attempted_answer.answer)
+            answers = [
+                tc.options
+                for tc in question.get_test_cases(id__in=submitted_answer)
+            ]
+            answer = ",".join(answers)
+        else:
+            answer = attempted_answer.answer
+        return answer, attempted_answer.correct
 
 
 class TableOfContents(models.Model):

@@ -1,5 +1,155 @@
 {% extends "manage.html" %}
+{% load custom_filters %}
 {% block title %} Lesson Statistics {% endblock %}
+{% block pagetitle %} Statistics for {{lesson}} {% endblock %}
 {% block content %}
-{{data}}
+<div class="container-fluid">
+    <br>
+    <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
+        <i class="fa fa-arrow-left"></i>&nbsp;Back
+    </a>
+    <br><br>
+    {% if data %}
+    <div class="row">
+        <div class="col-md-3">
+            <ul class="list-group">
+                {% for toc, count in data.items %}
+                <li class="list-group-item">
+                    <div class="row">
+                        <div class="col-md-4">
+                            {{ toc.content_object.summary }}
+                        </div>
+                        <div class="col-md-4">
+                            {{toc.get_content_display}}
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'yaksh:lesson_statistics' toc.course_id toc.lesson_id toc.id %}">Details</a>
+                        </div>
+                    </table>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-7">
+            {% if not is_que_data %}
+                <table class="table table-responsive">
+                    <tr>
+                        <th>TOC</th>
+                        <th>Type</th>
+                        <th>Submissions</th>
+                    </tr>
+                    {% for toc, count in data.items %}
+                        <tr>
+                            <td>{{ toc.content_object.summary }}</td>
+                            <td>{{ toc.get_content_display }}</td>
+                            <td>{{ count }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <div class="card">
+                    {% with per_que_data.0 as question %}
+                    <div class="card-header">
+                        {{question.summary}}
+                        <div>
+                        {% if question.language == "other" %}
+                          <small class="text text-muted"><strong>Topic:</strong> <span class="badge badge-primary">{{question.topic}}</small></span>
+                        {% else %}
+                          <small class="textx text-muted"><strong>Language:</strong> <span class="badge badge-primary">{{question.language}}</span></small>
+                        {% endif %}
+                        {% if question.type == "mcq" %}
+                          <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">SINGLE CORRECT CHOICE</span></small>
+                        {% elif question.type == "mcc" %}
+                          <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">MULTIPLE CORRECT CHOICES</span></small>
+                        {% elif question.type == "code" %}
+                          <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">PROGRAMMING</span></small>
+                        {% elif question.type == "upload" %}
+                          <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">ASSIGNMENT UPLOAD</span></small>
+                        {% elif question.type == "integer" %}
+                          <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">FILL IN THE BLANKS WITH INTEGER ANSWER</span></small>
+                        {% elif question.type == "string" %}
+                          <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">FILL IN THE BLANKS WITH STRING ANSWER</span></small>
+                          {% if testcase.string_check == "lower" %}
+                              <br>(CASE INSENSITIVE)
+                          {% else %}
+                              <br>(CASE SENSITIVE)
+                          {% endif %}
+                        {% elif question.type == "float" %}
+                          <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">FILL IN THE BLANKS WITH FLOAT ANSWER</span></small>
+                        {% elif question.type == "arrange" %}
+                          <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">ARRANGE THE OPTIONS IN CORRECT ORDER</span></small>
+                        {% endif %}
+                        <span class="badge badge-info pull-right">
+                          <small><strong>Marks: {{ question.points }}</strong></small>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                        {{question.description|safe}}
+                        <br>
+                        {% for tc in question.get_test_cases %}
+                            {% if question.type == "mcc" or question.type == "mcq" %}
+                            {% if tc.correct %}
+                            <span class="badge badge-pill badge-success">
+                                {{forloop.counter}}.
+                            </span>
+                            {% else %}
+                            <span class="badge badge-pill badge-dark">
+                                {{ forloop.counter }}.
+                            </span>
+                            {% endif %}
+                            {{tc.options}}
+                            {% elif question.type == "integer" %}
+                            <span class="badge badge-pill badge-success">Answer:</span>
+                            {{tc.correct}}
+                            {% elif question.type == "string" %}
+                            <span class="badge badge-pill badge-success">Answer:</span>
+                            {{tc.correct}} ({{tc.get_string_check_display}})
+                            {% elif question.type == "float" %}
+                            {{tc.correct}} with Error Margin {{ tc.error_margin }}
+                            {% endif %}
+                            <br>
+                        {% endfor %}
+                    </div>
+                    {% endwith %}
+                </div>
+                <br>
+                <table class="table table-responsive">
+                    <tr>
+                        <th>Sr No.</th>
+                        <th>Student Name</th>
+                        <th>Email</th>
+                        <th>Latest Answer</th>
+                        <th>Status</th>
+                    </tr>
+                    {% for data in per_que_data.1 %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>{{data.student__first_name}} {{data.student__last_name}}</td>
+                            <td>{{data.student__email}}</td>
+                            {% get_answers data.toc_id data.student_id as user_answer %}
+                            <td>{{ user_answer.0 }}</td>
+                            <td>
+                                {% if user_answer.1 %}
+                                    <span class="badge badge-success">
+                                        Correct
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-secondary">
+                                        Not correct
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+        <div class="alert alert-info">
+            No lesson quizzes found
+        </div>
+    {% endif %}
+</div>
 {% endblock %}
