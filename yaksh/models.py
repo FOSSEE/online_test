@@ -1201,6 +1201,7 @@ class CourseStatus(models.Model):
             grade = grading_system.get_grade(self.percentage)
             self.grade = grade
             self.save()
+    
     def get_certificateStatus(self):
         return self.certificate
 
