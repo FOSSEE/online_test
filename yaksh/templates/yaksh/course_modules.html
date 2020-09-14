@@ -10,11 +10,11 @@
             <a href="{% url 'yaksh:course_forum' course.id %}" class="btn btn-info pull-right">Discussion Forum</a>
         </div>
         <div class="card-body">
-            
+            {% if course.view_grade %}
                 <center>
-                    <b>Grade:</b> {% if grade %} {{grade}} {% else %} Will be available once the course is complete {% endif %}
+                    <b>Grade:</b> {% if grade %} {{ grade }} {% else %} Will be available once the course is complete {% endif %}
                 </center>
-            
+            {% endif %}
             {% if msg %}
                 <div class="alert alert-dismissible alert-warning">
                     <button type="button" class="close" data-dismiss="alert">
