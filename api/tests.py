@@ -865,7 +865,7 @@ class AnswerValidatorTestCase(TestCase):
         )
         # Then
         self.assertTrue(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data.get(True))
+        self.assertTrue(response.data.get("success") == None)
         answerpaper = AnswerPaper.objects.get(
             user=self.user, course=self.course, attempt_number=1,
             question_paper=self.questionpaper
