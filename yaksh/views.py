@@ -51,7 +51,9 @@ from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .settings import URL_ROOT
 from .file_utils import extract_files, is_csv
 from .send_emails import (send_user_mail,
-                          generate_activation_key, send_bulk_mail,mail_certificate)
+                          generate_activation_key,
+                          send_bulk_mail,
+                          mail_certificate)
 from .decorators import email_verified, has_profile
 from .tasks import regrade_papers
 from notifications_plugin.models import Notification
@@ -64,18 +66,17 @@ from yaksh.models import CourseStatus
 from pdflatex import PDFLaTeX
 import jinja2
 latex_jinja_env = jinja2.Environment(
-    block_start_string = '\BLOCK{' ,
+    block_start_string = '\BLOCK{',
     block_end_string = '}',
-    variable_start_string = '\VAR{' ,
+    variable_start_string = '\VAR{',
     variable_end_string = '}',
-    comment_start_string = '\#{' ,
+    comment_start_string = '\#{',
     comment_end_string = '}',
     line_statement_prefix = '%-',
     line_comment_prefix = '%#',
     trim_blocks = True,
     autoescape = False,
-    loader = jinja2.FileSystemLoader(os.path.abspath('.'))
-   )
+    loader = jinja2.FileSystemLoader(os.path.abspath('.')))
 from django.contrib import messages
 
 def my_redirect(url):
@@ -3117,7 +3118,7 @@ def view_module(request, module_id, course_id, msg=None):
                 " previous to {0}".format(learning_module.name)
             )
             return course_modules(request, course_id, msg)
-    
+
     learning_units = learning_module.get_learning_units()
     context['learning_units'] = learning_units
     context['learning_module'] = learning_module
@@ -3129,7 +3130,7 @@ def view_module(request, module_id, course_id, msg=None):
     context['msg'] = msg
     course_status = CourseStatus.objects.filter(
             course_id=course.id, user_id=user.id)
-    if course.percent_completed(user, all_modules) == 100 and course_status.first().get_certificateStatus() == False:
+    if course.percent_completed(user, all_modules) == 100 and course_status.first().get_certificateStatus() is False:
         template = latex_jinja_env.get_template('yaksh.tex')
         document = template.render(name = user.get_full_name(), course = course)
         with open('certificate.tex','w') as output:
@@ -3140,7 +3141,7 @@ def view_module(request, module_id, course_id, msg=None):
         course_status.first().set_certificateStatus()
         messages.success(request, 'Your course certificate sent to your registeres mail Id')
         return redirect('/')
-    if course.percent_completed(user,all_modules) == 100 and course_status.first().get_certificateStatus() == True:
+    if course.percent_completed(user,all_modules) == 100 and course_status.first().get_certificateStatus() is True:
         messages.warning(request, 'You have already recieved your certificate, kindly check your mail')
         return redirect('/')
     return my_render_to_response(request, 'yaksh/show_video.html', context)
