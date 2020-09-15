@@ -87,7 +87,7 @@ DATABASES = {
         'USER': config('DB_USER', default=''),
         'PASSWORD': config('DB_PASSWORD', default=''),
         # Empty for localhost through domain sockets or '1$
-        'HOST': config('DB_HOST', default=''),
+        'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default=''),
     },
 }
