@@ -26,15 +26,27 @@ $(document).ready(function() {
         if (time_arr_length > 0 && player.currentTime >= video_time[loc]) {
             var content = contents_by_time[loc]; 
             loc += 1;
-            if(content.content != 1) {
+            if(content.content == 1) {
+                show_topic($("#toc_desc_"+content.id).val(), false);
+            }
+            else {
                 player.pause();
-                player.fullscreen.exit();
+                if(player.fullscreen.active) player.fullscreen.exit();
                 url = $("#toc_"+content.id).val();
                 ajax_call(url, "GET");
             }
         }
     });
 });
+
+function show_topic(description, override) {
+    var topic_div = $("#topic-description");
+    if(override) {
+        topic_div.html(description);
+    } else {
+        topic_div.append("<br>" + description);
+    }
+}
 
 function store_video_time(contents) {
     for (var j = 0; j < contents.length; j++)
@@ -82,7 +94,10 @@ function select_toc(element) {
     var content_type = element.getAttribute("data-toc-type");
     var toc_time = $("#toc_time_"+toc_id).val();
     player.currentTime = get_time_in_seconds(toc_time);
-    if (content_type != 1) {
+    if (content_type == 1) {
+        show_topic($("#toc_desc_"+toc_id).val(), true);
+    }
+    else {
         url = $("#toc_"+toc_id).val();
         ajax_call(url, "GET");
     }
