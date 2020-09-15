@@ -179,6 +179,7 @@
                                             {{content.time}}
                                         </td>
                                         <input type="hidden" id="toc_{{content.id}}" value="{% url 'yaksh:get_marker_quiz' course.id content.id %}" data-content="{{content.content}}"/>
+                                        <input type="hidden" id="toc_desc_{{content.id}}" value="{{content.content_object.description|safe}}" data-content="{{content.content}}"/>
                                     </tr>
                                     {% endwith %}
                                 {% empty %}
@@ -192,33 +193,35 @@
                 </div>
                 </div>
                 <div class="col-md-8">
-                    <div class="card-body">
-                        <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
-                            Next&nbsp;<i class="fa fa-step-forward"></i>
-                        </a>
-                        <hr>
-                        <h3><strong>Lesson Description</strong></h3>
-                        <hr>
-                        <div class="col" style="width: 100%">
-                            {{lesson.html_data|safe}}
-                        </div>
-                        <div class="col-md-7">
-                        {% with lesson.get_files as lesson_files %}
-                            {% if lesson_files %}
-                                <div class="card">
-                                    <div class="card-header">
-                                        Files for this lesson
+                    <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
+                        Next&nbsp;<i class="fa fa-step-forward"></i>
+                    </a>
+                    <br><br>
+                    <div class="card">
+                        <div class="card-header"><h3><strong>Lesson Description</strong></h3></div>
+                        <div class="card-body">
+                            <div class="col" style="width: 100%">
+                                {{lesson.html_data|safe}}
+                            </div>
+                            <div class="card-body" id="topic-description"></div>
+                            <div class="col-md-7">
+                            {% with lesson.get_files as lesson_files %}
+                                {% if lesson_files %}
+                                    <div class="card">
+                                        <div class="card-header">
+                                            Files for this lesson
+                                        </div>
+                                        <div class="card-body">
+                                            {% for f in lesson_files %}
+                                                <a href="{{f.file.url}}" class="list-group-item">
+                                                    {{forloop.counter}}.{{ f.file.name|file_title }}
+                                                </a>
+                                            {% endfor %}
+                                        </div>
                                     </div>
-                                    <div class="card-body">
-                                        {% for f in lesson_files %}
-                                            <a href="{{f.file.url}}" class="list-group-item">
-                                                {{forloop.counter}}.{{ f.file.name|file_title }}
-                                            </a>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endwith %}
+                                {% endif %}
+                            {% endwith %}
+                            </div>
                         </div>
                     </div>
                 </div>

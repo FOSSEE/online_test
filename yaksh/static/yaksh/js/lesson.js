@@ -1,7 +1,13 @@
 $(document).ready(function() {
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
     var simplemde = new SimpleMDE({
         element: document.getElementById("id_description"),
         forceSync: true,
+        hideIcons: ["preview", "side-by-side", "fullscreen"]
+    });
+    simplemde.codemirror.on("change", function() {
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        $("#description_body").html(simplemde.markdown(simplemde.value()));
     });
     const player = new Plyr('#player');
     var timer = $("#vtimer");
@@ -34,6 +40,12 @@ $(document).ready(function() {
             $("#id_type").hide();
             $("#id_type").attr("required", false);
         } else {
+            if(valueSelected == "4") {
+                $('#id_type option[value="mcq"]').prop("selected", true);
+                $('#id_type').attr("disabled", true);
+            } else {
+                $('#id_type').attr("disabled", false);
+            }
             $("#id_type").show();
             $("#id_type").attr("required", true);
         }

@@ -132,19 +132,6 @@ body, .dropdown-menu {
     border: none;
 }
 
-/* Simple MDE editor style */
-.editor-toolbar.fullscreen, .editor-preview-side { 
-    z-index: 2000 !important;
-}
-.CodeMirror, .CodeMirror-scroll {
-    max-height: 400px !important;
-}
-.CodeMirror-fullscreen.CodeMirror {
-    max-height: none !important;
-}
-.CodeMirror-fullscreen .CodeMirror-scroll {
-    max-height: none !important;
-}
 
 ::-webkit-scrollbar {
   width: 10px;

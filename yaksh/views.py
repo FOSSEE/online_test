@@ -2704,7 +2704,7 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
 
     contents = TableOfContents.objects.filter(
                     course_id=course_id, lesson_id=lesson_id
-                )
+                ).order_by("time")
     data = loader.render_to_string(
         "yaksh/show_toc.html", context={'contents': contents},
         request=request
@@ -3559,7 +3559,7 @@ def get_tc_formset(question_type, post=None, question=None):
 def get_toc_contents(request, course_id, lesson_id):
     contents = TableOfContents.objects.filter(
         course_id=course_id, lesson_id=lesson_id
-    )
+    ).order_by("time")
     data = loader.render_to_string(
         "yaksh/show_toc.html", context={'contents': contents},
         request=request

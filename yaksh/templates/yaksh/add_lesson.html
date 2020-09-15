@@ -68,6 +68,16 @@
                     {% endif %}
                     {{lesson_form.name}}
                     <br>
+                    <div class="card" id="preview_text_div">
+                        <div class="card-header">
+                            <center>
+                                <h3>Description Preview</h3>
+                            </center>
+                        </div>
+                        <div class="card-body" id="description_body" style="max-height: 400px; overflow-y: auto;">
+                        </div>
+                    </div>
+                    <br>
                     {{lesson_form.description}}
                     <br>
                     Active:&nbsp;{{lesson_form.active}}
@@ -138,7 +148,7 @@
             </form>
         </div>
         <br><br>
-        <div class="col">
+        <div class="col-md-5">
             <br>
             <div class="card">
                 <div class="card-header">
