@@ -75,11 +75,7 @@
                                         Request Rejected
                                     </span>
                                 {% elif user in course.data.students.all %}
-                                    {% if course.completion_percentage == 100 %}
-                                        <a class="btn btn-primary" href="{% url 'yaksh:course_modules' course.data.id %}">
-                                            completed
-                                        </a>
-                                    {% elif course.completion_percentage > 0 %}
+                                    {% if course.completion_percentage > 0 %}
                                         <a class="btn btn-primary" href="{% url 'yaksh:course_modules' course.data.id %}" >
                                             Continue
                                         </a>
