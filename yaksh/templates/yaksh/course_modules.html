@@ -7,7 +7,7 @@
     <div class="card">
         <div class="card-header">
             {{ course.name }}
-            <a href="{% url 'yaksh:course_forum' course.id %}" class="btn btn-info pull-right">Discussion Forum</a>
+            <a href="{% url "yaksh:course_forum" course.id %}" class="btn btn-info pull-right">Discussion Forum</a>
         </div>
         <div class="card-body">
             {% if course.view_grade %}
@@ -33,7 +33,6 @@
                     {% elif course_percentage <= 75 %}
                         <div class="progress-bar bg-warning" role="progressbar" aria-valuenow="{{course_percentage}}"
                         aria-valuemin="0" aria-valuemax="100" style="width:{{course_percentage}}%">
-                    
                     {% else %}
                         <div class="progress-bar bg-success" role="progressbar" aria-valuenow="{{course_percentage}}"
                         aria-valuemin="0" aria-valuemax="100" style="width:{{course_percentage}}%">
@@ -69,7 +68,6 @@
                                 {% if module_status == "completed" %}
                                 <div class="btn btn-info ">
                                     Get Certificate
-                                    
                                 </div>
                                 {% elif module_status == "inprogress" %}
                                 <div class="btn btn-primary">
@@ -102,7 +100,6 @@
                             </div>
                         </div>
                     </div>
-                   
                     <div id="collapse-{{module.id}}" class="collapse hide" data-parent="#accordion-{{module.id}}">
                         <div class="card-body">
                             <table class="table yakshwell">
@@ -175,9 +172,7 @@
             </div>
             <br>
             {% endfor %}
-        </div>           
+        </div>
     </div>
 </div>
-                    
 {% endblock %}
-
