@@ -84,11 +84,11 @@ DATABASES = {
                        default=os.path.join(BASE_DIR, 'db.sqlite3')
                        ),
         # The following settings are not used with sqlite3:
-        'USER': config('DB_USER', default='yaksh_user'),
-        'PASSWORD': config('DB_PASSWORD', default='mysecretpassword'),
+        'USER': config('DB_USER', default=''),
+        'PASSWORD': config('DB_PASSWORD', default=''),
         # Empty for localhost through domain sockets or '1$
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='3306'),
+        'HOST': config('DB_HOST', default=''),
+        'PORT': config('DB_PORT', default=''),
     },
 }
 
@@ -123,17 +123,15 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "yaksh_data", "data")
 STATIC_ROOT = 'yaksh/static/'
 
 # Set this varable to <True> if smtp-server is not allowing to send email.
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = False
 
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST = 'your_email_host'
 
-EMAIL_PORT = '587'
+EMAIL_PORT = 'your_email_port'
 
 EMAIL_HOST_USER = 'email_host_user'
 
 EMAIL_HOST_PASSWORD = 'email_host_password'
-
-EMAIL_USE_SSL = False
 
 # Set EMAIL_BACKEND to 'django.core.mail.backends.smtp.EmailBackend'
 # in production
