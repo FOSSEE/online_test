@@ -1071,6 +1071,25 @@ class Course(models.Model):
             learning_units.extend(module.get_learning_units())
         return learning_units
 
+    def get_lesson_posts(self, user):
+        learning_units = self.get_learning_units()
+        comments = []
+        for unit in learning_units:
+            if unit.lesson is not None:
+                lesson_ct = ContentType.objects.get_for_model(unit.lesson)
+                title = unit.lesson.name
+                try:
+                    post = Post.objects.get(
+                        target_ct=lesson_ct,
+                        target_id=unit.lesson.id,
+                        active=True, title=title, creator=user
+                    )
+                except Post.DoesNotExist:
+                    post = None
+                if post is not None:
+                    comments.append(post)
+        return comments
+
     def remove_trial_modules(self):
         learning_modules = self.learning_module.all()
         for module in learning_modules:
