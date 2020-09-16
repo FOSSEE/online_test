@@ -2811,7 +2811,6 @@ def show_lesson(request, lesson_id, module_id, course_id):
         post = Post.objects.get(
             target_ct=lesson_ct, target_id=learn_unit.lesson.id,
             active=True, title=title, creator=user,
-            description=f'Discussion on {title} lesson',
         )
     except Post.DoesNotExist:
         post = Post.objects.create(
@@ -3519,6 +3518,27 @@ def course_forum(request, course_id):
 
 @login_required
 @email_verified
+def lessons_forum(request, course_id):
+    user = request.user
+    base_template = 'user.html'
+    moderator = False
+    if is_moderator(user):
+        base_template = 'manage.html'
+        moderator = True
+    course = get_object_or_404(Course, id=course_id)
+    course_ct = ContentType.objects.get_for_model(course)
+    lesson_posts = course.get_lesson_posts(user)
+    return render(request, 'yaksh/lessons_forum.html', {
+        'user': user,
+        'base_template': base_template,
+        'moderator': moderator,
+        'course': course,
+        'posts': lesson_posts,
+    })
+
+
+@login_required
+@email_verified
 def post_comments(request, course_id, uuid):
     user = request.user
     base_template = 'user.html'
@@ -3545,6 +3565,7 @@ def post_comments(request, course_id, uuid):
         'base_template': base_template,
         'form': form,
         'user': user,
+        'course': course
         })
 
 
@@ -3554,7 +3575,9 @@ def hide_post(request, course_id, uuid):
     user = request.user
     course = get_object_or_404(Course, id=course_id)
     if (not course.is_creator(user) or not course.is_teacher(user)):
-        raise Http404(f'Only a course creator or a teacher can delete the post.')
+        raise Http404(
+            'Only a course creator or a teacher can delete the post.'
+        )
     post = get_object_or_404(Post, uid=uuid)
     post.comment.active = False
     post.active = False
@@ -3570,7 +3593,7 @@ def hide_comment(request, course_id, uuid):
         course = get_object_or_404(Course, id=course_id)
         if (not course.is_creator(user) or not course.is_teacher(user)):
             raise Http404(
-                f'Only a course creator or a teacher can delete the comments'
+                'Only a course creator or a teacher can delete the comments'
             )
     comment = get_object_or_404(Comment, uid=uuid)
     post_uid = comment.post_field.uid
