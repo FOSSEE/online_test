@@ -506,14 +506,14 @@ def user_login(request):
 
 
 @login_required
-@email_verified	
+@email_verified
 def special_start(request, micromanager_id=None):
     user = request.user
     micromanager = get_object_or_404(MicroManager, pk=micromanager_id,
-                                     student=user)	
-    course = micromanager.course	
-    quiz = micromanager.quiz	
-    module = course.get_learning_module(quiz)	
+                                     student=user)
+    course = micromanager.course
+    quiz = micromanager.quiz
+    module = course.get_learning_module(quiz)
     quest_paper = get_object_or_404(QuestionPaper, quiz=quiz)
     if not course.is_enrolled(user):
         msg = 'You are not enrolled in {0} course'.format(course.name)
