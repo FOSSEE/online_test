@@ -4,10 +4,38 @@
 
 {% block main %}
 <div class="container">
+    <div>
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-dismissible alert-{{ message.tags }}">
+                <button type="button" class="close" data-dismiss="alert">
+                    <i class="fa fa-close"></i>
+                </button>
+                <strong>{{ message }}</strong>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
     <div class="card">
         <div class="card-header">
-            {{ course.name }}
-            <a href="{% url "yaksh:course_forum" course.id %}" class="btn btn-info pull-right">Discussion Forum</a>
+            <div class="p-2">
+                {{ course.name }}
+            </div>
+            <div class='d-flex'>
+                <div class="p-2 flex-grow-1">
+                    <a href="{% url 'notification:toggle_subscription_status' course.id %}">
+                        {% if course_sub.subscribe %}
+                            <i class="fa fa-toggle-on fa-2x"></i>
+                        {% else %}
+                            <i class="fa fa-toggle-off fa-2x"></i>
+                        {% endif %}
+                    </a>
+                    <small class="p-2 text text-muted">Subscribe to course mail letter</small>
+                </div>
+                <div class="p-2">
+                    <a href="{% url "yaksh:course_forum" course.id %}" class="p-2 btn btn-info">Discussion Forum</a>
+                </div>
+            </div>
         </div>
         <div class="card-body">
             {% if course.view_grade %}

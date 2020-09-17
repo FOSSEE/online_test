@@ -10,6 +10,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 from yaksh.pipeline.settings import AUTH_PIPELINE
 import os
 from decouple import config
+from celery.schedules import crontab
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -51,7 +52,8 @@ INSTALLED_APPS = (
     'rest_framework',
     'api',
     'corsheaders',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'notification'
 )
 
 MIDDLEWARE = (
@@ -228,6 +230,30 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TIMEZONE = 'Asia/Kolkata'
 CELERY_BROKER_URL = 'redis://localhost'
 CELERY_RESULT_BACKEND = 'django-db'
+
+CELERY_BEAT_SCHEDULE = {
+    'send-course-deadline-notifications-twice-a-week': {
+       'task': 'course_deadline_task',
+       'schedule': crontab(
+           hour='08', minute=30, day_of_week='*/3', day_of_month='*',
+           month_of_year='*'
+        ),
+    },
+    'send-quiz-deadline-notifications-twice-a-week': {
+        'task': 'quiz_deadline_task',
+        'schedule': crontab(
+            hour='09', minute=00, day_of_week='*/3', day_of_month='*',
+            month_of_year='*'
+        ),
+    },
+    'send_course_quiz_deadline_mail': {
+        'task': 'course_quiz_deadline_mail_task',
+        'schedule': crontab(
+            hour='09', minute=31, day_of_week='*/3', day_of_month='*',
+            month_of_year='*'
+        )
+    }
+}
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
