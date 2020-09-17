@@ -7,10 +7,6 @@
     <div id="wrapper" class="d-flex">
         {% include "yaksh/sidebar.html" %}
         <div class="container" id="page-content-wrapper">
-            <div>
-                <h2><center>{{course.name}}</center></h2>
-                <center>Discussion Forum</center>
-            </div>
             <div class="d-flex p-2 bd-highlight">
                 <div class="col-md-4">
                     {% if moderator %}
@@ -25,6 +21,10 @@
                 </div>
             </div>
             {% if posts %}
+                <div>
+                    <h2><center>{{course.name}}</center></h2>
+                    <center>Discussion Forum</center>
+                </div>
                 <table class="table">
                     <thead class="thread-inverse">
                         <tr>
@@ -63,6 +63,10 @@
                             {% endfor %}
                     </tbody>
                 </table>
+            {% else %}
+                <div>
+                    <center>No Lesson posts here. They will appear when someone comments on video lessons.</center>
+                </div>
             {% endif %}
         </div>
     </div>

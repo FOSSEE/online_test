@@ -2810,7 +2810,7 @@ def show_lesson(request, lesson_id, module_id, course_id):
     try:
         post = Post.objects.get(
             target_ct=lesson_ct, target_id=learn_unit.lesson.id,
-            active=True, title=title, creator=user,
+            active=True, title=title
         )
     except Post.DoesNotExist:
         post = Post.objects.create(
@@ -3527,7 +3527,7 @@ def lessons_forum(request, course_id):
         moderator = True
     course = get_object_or_404(Course, id=course_id)
     course_ct = ContentType.objects.get_for_model(course)
-    lesson_posts = course.get_lesson_posts(user)
+    lesson_posts = course.get_lesson_posts()
     return render(request, 'yaksh/lessons_forum.html', {
         'user': user,
         'base_template': base_template,
