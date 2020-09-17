@@ -6758,7 +6758,7 @@ class TestPost(TestCase):
         })
         response = self.client.get(url, follow=True)
         self.assertEqual(response.status_code, 200)
-        redirection_url = '/exam/login/?next=/exam/forum/{0}/'.format(
+        redirection_url = '/exam/login/?next=/exam/forum/course_forum/{0}/'.format(
             str(self.course.id)
             )
         self.assertRedirects(response, redirection_url)
@@ -6789,7 +6789,7 @@ class TestPost(TestCase):
         self.assertEquals(response.status_code, 404)
 
     def test_course_forum_url_resolves_course_forum_view(self):
-        view = resolve('/exam/forum/1/')
+        view = resolve('/exam/forum/course_forum/1/')
         self.assertEqual(view.func, course_forum)
 
     def test_course_forum_contains_link_to_post_comments_page(self):

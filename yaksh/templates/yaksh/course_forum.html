@@ -55,28 +55,28 @@
               </div>
             </div>
             <br>
-            <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <form class="my-2 my-lg-0" action="" method="GET">
-                        <div class="input-group">
-                            <input type="search" placeholder="Search Post" name="search_post" class="form-control">
-                            <span class="input-group-append">
-                                <button class="btn btn-outline-info">
-                                    <i class="fa fa-search"></i>&nbsp;Search
-                                </button>
-                            </span>
-                        </div>
-                    </form>
-                </div>
-                <div class="col-md-4">
-                    <a class="btn btn-outline-danger" href="{% url 'yaksh:course_forum' course.id %}">
-                        <i class="fa fa-times"></i>&nbsp;Clear Search
-                    </a>
-                </div>
-            </div>
-            <br>
             {% with objects as posts %}
                 {% if posts %}
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <form class="my-2 my-lg-0" action="" method="GET">
+                                <div class="input-group">
+                                    <input type="search" placeholder="Search Post" name="search_post" class="form-control">
+                                    <span class="input-group-append">
+                                        <button class="btn btn-outline-info">
+                                            <i class="fa fa-search"></i>&nbsp;Search
+                                        </button>
+                                    </span>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <a class="btn btn-outline-danger" href="{% url 'yaksh:course_forum' course.id %}">
+                                <i class="fa fa-times"></i>&nbsp;Clear Search
+                            </a>
+                        </div>
+                    </div>
+                    <br>
                     {% include "yaksh/paginator.html" %}
                     <br>
                     <table id="posts_table" class="tablesorter table">
@@ -120,7 +120,7 @@
                     <br>
                     {% include "yaksh/paginator.html" %}
                 {% else %}
-                    No discussion posts are there yet. Create one to start discussing.
+                    <center>No discussion posts are there yet. Create one to start discussing.</center>
                 {% endif %}
             {% endwith %}
         </div>
