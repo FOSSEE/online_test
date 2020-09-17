@@ -3,7 +3,7 @@ import csv
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
-from django.template import Context, Template
+from django.template import Context, Template, loader
 from django.http import Http404
 from django.db.models import Max, Q, F
 from django.db import models
