@@ -116,6 +116,7 @@ $(document).ready(function()
             <th> Attempts&nbsp;<i class="fa fa-sort"></i> </th>
             <th> Time Left&nbsp;<i class="fa fa-sort"></i> </th>
             <th> Status&nbsp;<i class="fa fa-sort"></i> </th>
+            <th> Extend time&nbsp;<i class="fa fa-sort"></i> </th>
             <th> Special Attempt&nbsp;<i class="fa fa-sort"></i> </th>
           </tr>
           </thead>
@@ -132,17 +133,20 @@ $(document).ready(function()
               <td> {{ paper.answers.count }} </td>
               <td id="time_left{{forloop.counter0}}"> {{ paper.time_left }} </td>
               <td> {% if paper.is_attempt_inprogress %}
-                       <form method="post" action="{% url 'yaksh:extend_time' paper.id %}">
-                           {% csrf_token %}
-                           <div class="form-group">
-                                <label for="extra_time"> Time in mins </label>
-                                <input type="number" class="form-control" id="extra_time" name="extra_time" required>
-                           </div>
-                           <button type="submit" class="btn btn-primary">Extend Time</button>
-                       </form>
+                        <span class="badge badge-secondary"> Inprogress </span>
                     {% else %}
                         <span class="badge badge-secondary"> Completed </span>
                    {% endif %}
+              </td>
+              <td>
+                   <form method="post" action="{% url 'yaksh:extend_time' paper.id %}">
+                       {% csrf_token %}
+                       <div class="form-group">
+                            <label for="extra_time"> Time in mins </label>
+                            <input type="number" step="any" class="form-control" id="extra_time" name="extra_time" required>
+                       </div>
+                       <button type="submit" class="btn btn-primary">Extend Time</button>
+                   </form>
               </td>
               <td>{% specail_attempt_monitor paper.user.id course.id quiz.id %}</td>
           </tr>
