@@ -1798,7 +1798,6 @@ def user_data(request, user_id, questionpaper_id=None, course_id=None):
         raise Http404('You are not allowed to view this page!')
     user = User.objects.get(id=user_id)
     data = AnswerPaper.objects.get_user_data(user, questionpaper_id, course_id)
-
     context = {'data': data, 'course_id': course_id}
     return my_render_to_response(request, 'yaksh/user_data.html', context)
 
@@ -1965,7 +1964,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
         for paper in papers:
             for question, answers in paper.get_question_answers().items():
                 marks = float(request.POST.get('q%d_marks' % question.id, 0))
-                answer = answers[-1]['answer']
+                answer = answers[0]['answer']
                 answer.set_marks(marks)
                 answer.save()
             paper.update_marks()

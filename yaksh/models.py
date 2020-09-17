@@ -2338,6 +2338,17 @@ class AnswerPaper(models.Model):
                     'answer': answer,
                     'error_list': [e for e in json.loads(answer.error)]
                 }]
+
+        for question, answers in q_a.items():
+            answers = q_a[question]
+            q_a[question].append({
+                'marks': max([
+                    answer['answer'].marks
+                    for answer in answers
+                    if question == answer['answer'].question
+                ])
+            })
+
         return q_a
 
     def get_latest_answer(self, question_id):
@@ -2347,7 +2358,7 @@ class AnswerPaper(models.Model):
         return self.questions.filter(active=True)
 
     def get_questions_answered(self):
-        return self.questions_answered.all()
+        return self.questions_answered.all().distinct()
 
     def get_questions_unanswered(self):
         return self.questions_unanswered.all()
@@ -2546,7 +2557,7 @@ class AssignmentUploadManager(models.Manager):
 class AssignmentUpload(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     assignmentQuestion = models.ForeignKey(Question, on_delete=models.CASCADE)
-    assignmentFile = models.FileField(upload_to=get_assignment_dir)
+    assignmentFile = models.FileField(upload_to=get_assignment_dir, max_length=255)
     question_paper = models.ForeignKey(QuestionPaper, blank=True, null=True,
                                        on_delete=models.CASCADE)
     course = models.ForeignKey(Course, null=True, blank=True,

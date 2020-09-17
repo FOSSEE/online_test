@@ -1791,12 +1791,14 @@ class AnswerPaperTestCases(unittest.TestCase):
             answers_saved = Answer.objects.filter(question=question)
             error_list = [json.loads(ans.error) for ans in answers_saved]
             if answers_saved:
-                self.assertEqual(len(answered[question]), len(answers_saved))
+                self.assertGreater(len(answered[question]), len(answers_saved))
                 ans = []
                 err = []
                 for val in answered[question]:
-                    ans.append(val.get('answer'))
-                    err.append(val.get('error_list'))
+                    if val.get('answer') is not None:
+                        ans.append(val.get('answer'))
+                    if val.get('error_list') is not None:
+                        err.append(val.get('error_list'))
                 self.assertEqual(set(ans), set(answers_saved))
                 self.assertEqual(error_list, err)
 

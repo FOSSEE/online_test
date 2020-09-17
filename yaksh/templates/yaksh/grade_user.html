@@ -327,7 +327,7 @@ function searchNames() {
                             </a>
                           </td>
                           <td>{{ question.type }}</td>
-                          <td>{{ answer.answer.marks }}</td>
+                          <td>{{ answer.marks }}</td>
                           <td>
                             <a href="{% url 'yaksh:regrade_by_question' course_id quiz.questionpaper_set.get.id paper.id question.id %}" class="btn btn-outline-success">
                               <i class="fa fa-repeat"></i>&nbsp;Regrade
@@ -567,7 +567,7 @@ function searchNames() {
                       <div class="col-md-2">
                         <label class="col-form-label" for="q{{ question.id }}">Marks:</label>
                         {% with answers|last as answer %}
-                        <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answer.answer.marks }}"><br><br>
+                        <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answer.marks }}"><br><br>
                         {% endwith %}
                       </div>
                     </div>
