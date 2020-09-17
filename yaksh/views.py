@@ -507,46 +507,6 @@ def user_login(request):
 
 @login_required
 @email_verified
-def special_start(request, micromanager_id=None):
-    user = request.user
-    micromanager = get_object_or_404(MicroManager, pk=micromanager_id,
-                                     student=user)
-    course = micromanager.course
-    quiz = micromanager.quiz
-    module = course.get_learning_module(quiz)
-    quest_paper = get_object_or_404(QuestionPaper, quiz=quiz)
-
-    if not course.is_enrolled(user):
-        msg = 'You are not enrolled in {0} course'.format(course.name)
-        return quizlist_user(request, msg=msg)
-
-    if not micromanager.can_student_attempt():
-        msg = 'Your special attempts are exhausted for {0}'.format(
-            quiz.description)
-        return quizlist_user(request, msg=msg)
-
-    last_attempt = AnswerPaper.objects.get_user_last_attempt(
-        quest_paper, user, course.id)
-
-    if last_attempt:
-        if last_attempt.is_attempt_inprogress():
-            return show_question(
-                request, last_attempt.current_question(), last_attempt,
-                course_id=course.id, module_id=module.id,
-                previous_question=last_attempt.current_question()
-            )
-
-    attempt_num = micromanager.get_attempt_number()
-    ip = request.META['REMOTE_ADDR']
-    new_paper = quest_paper.make_answerpaper(user, ip, attempt_num, course.id,
-                                             special=True)
-    micromanager.increment_attempts_utilised()
-    return show_question(request, new_paper.current_question(), new_paper,
-                         course_id=course.id, module_id=module.id)
-
-
-@login_required
-@email_verified
 def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
           module_id=None):
     """Check the user cedentials and if any quiz is available,
