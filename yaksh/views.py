@@ -3129,8 +3129,8 @@ def view_module(request, module_id, course_id, msg=None):
     if course.percent_completed(user, all_modules) == 100:
         if course_status.first().get_certificateStatus() is False:
             template = latex_jinja_env.get_template('yaksh.tex')
-            name = user.get_full_name()
-            document = template.render(name=user.name, course=course)
+            full_name = user.get_full_name()
+            document = template.render(name=full_name, course=course)
             with open('certificate.tex', 'w') as output:
                 output.write(document)
 
