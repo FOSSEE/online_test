@@ -1203,7 +1203,7 @@ class CourseStatus(models.Model):
             self.save()
 
     def get_certificateStatus(self):
-        return bool(self.certificate)
+        return self.certificate
 
     def set_certificateStatus(self):
         self.certificate = True
