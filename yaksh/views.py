@@ -3906,12 +3906,17 @@ def lesson_statistics(request, course_id, lesson_id, toc_id=None):
             not course.is_creator(user) or not course.is_creator(user)):
         raise Http404("You are not allowed to view this page")
     context = {}
+    lesson = get_object_or_404(Lesson, id=lesson_id)
     data = TableOfContents.objects.get_data(course_id, lesson_id)
     context['data'] = data
-    context['lesson'] = next(iter(data)).lesson
+    context['lesson'] = lesson
     context['course_id'] = course_id
     if toc_id:
         per_que_data = TableOfContents.objects.get_question_stats(toc_id)
-        context['per_que_data'] = per_que_data
+        paginator = Paginator(per_que_data[1], 50)
+        context['question'] = per_que_data[0]
+        page = request.GET.get('page')
+        per_que_data = paginator.get_page(page)
         context['is_que_data'] = True
+        context['objects'] = per_que_data
     return render(request, 'yaksh/show_lesson_statistics.html', context)
