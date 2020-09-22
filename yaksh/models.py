@@ -2769,8 +2769,8 @@ class TOCManager(models.Manager):
         return data
 
     def get_question_stats(self, toc_id):
-        answers = LessonQuizAnswer.objects.filter(
-            toc_id=toc_id)
+        answers = LessonQuizAnswer.objects.get_queryset().filter(
+            toc_id=toc_id).order_by('id')
         question = answers.first().toc.content_object
         answers = answers.values(
             "student__first_name", "student__last_name", "student__email",
@@ -2855,17 +2855,17 @@ class LessonQuizAnswer(models.Model):
                 result['error'] = ['Correct answer']
 
         elif question.type == 'mcc':
-            expected_answers = []
-            for opt in question.get_test_cases(correct=True):
-                expected_answers.append(str(opt.id))
+            expected_answers = [
+                str(opt.id) for opt in question.get_test_cases(correct=True)
+            ]
             if set(user_answer) == set(expected_answers):
                 result['success'] = True
                 result['error'] = ['Correct answer']
 
         elif question.type == 'integer':
-            expected_answers = []
-            for tc in question.get_test_cases():
-                expected_answers.append(int(tc.correct))
+            expected_answers = [
+                int(tc.correct) for tc in question.get_test_cases()
+            ]
             if int(user_answer) in expected_answers:
                 result['success'] = True
                 result['error'] = ['Correct answer']

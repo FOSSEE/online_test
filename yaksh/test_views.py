@@ -30,7 +30,8 @@ from yaksh.models import (
     User, Profile, Question, Quiz, QuestionPaper, AnswerPaper, Answer, Course,
     AssignmentUpload, McqTestCase, IntegerTestCase, StringTestCase,
     FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,
-    LessonFile, CourseStatus, dict_to_yaml, Post, Comment
+    LessonFile, CourseStatus, dict_to_yaml, Post, Comment, Topic,
+    TableOfContents, LessonQuizAnswer
 )
 from yaksh.views import add_as_moderator, course_forum, post_comments
 from yaksh.forms import PostForm, CommentForm
@@ -7746,3 +7747,459 @@ class TestStartExam(TestCase):
         self.student.delete()
         self.quiz1.delete()
         self.user1_course1.delete()
+
+
+class TestLessonContents(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
+
+        # Create Moderator with profile
+        self.user1_plaintext_pass = 'demo'
+        self.user1 = User.objects.create_user(
+            username='demo_user',
+            password=self.user1_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com',
+        )
+        Profile.objects.create(
+            user=self.user1,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user1)
+
+        # Create Student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Create courses for user1
+        self.user1_course1 = Course.objects.create(
+            name="My Course", enrollment="Enroll Request", creator=self.user1
+        )
+
+        # Create learning modules for user1
+        self.learning_module1 = LearningModule.objects.create(
+            order=1, name="My Module", description="My Module",
+            check_prerequisite=False, creator=self.user1
+        )
+        self.lesson1 = Lesson.objects.create(
+            name="My Lesson", description="My Lesson",
+            creator=self.user1
+        )
+
+        # Create units for lesson
+        self.lesson_unit1 = LearningUnit.objects.create(
+            order=1, type="lesson", lesson=self.lesson1
+        )
+        self.learning_module1.learning_unit.add(self.lesson_unit1)
+        self.user1_course1.learning_module.add(self.learning_module1)
+
+    def tearDown(self):
+        self.client.logout()
+        self.user1.delete()
+        self.lesson_unit1.delete()
+        self.user1_course1.delete()
+        self.learning_module1.delete()
+
+    def test_create_marker(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        # disallow user other than moderator or course creator or course teacher
+        response = self.client.post(
+            reverse('yaksh:add_marker',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'content': '1', 'question_type': ''}
+            )
+        self.assertEqual(response.status_code, 404)
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+
+        # Get json response for topic
+        response = self.client.post(
+            reverse('yaksh:add_marker',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'content': '1', 'question_type': ''}
+            )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+        self.assertEqual(json_response.get("content_type"), '1')
+
+        # Get json response for question form
+        response = self.client.post(
+            reverse('yaksh:add_marker',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'content': '2', 'question_type': ''}
+            )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+        self.assertEqual(json_response.get("content_type"), '2')
+
+    def test_add_lesson_topic(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        # disallow user other than moderator or course creator or course teacher
+        response = self.client.post(
+            reverse('yaksh:add_topic',
+                    kwargs={"content_type": '1',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'timer': '00:00:00', 'name': 'My Lesson Topic',
+                  'description': 'My lesson topic description'}
+            )
+        self.assertEqual(response.status_code, 404)
+
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+
+        # Post json response for topic
+        response = self.client.post(
+            reverse('yaksh:add_topic',
+                    kwargs={"content_type": '1',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'timer': '00:00:00', 'name': 'My_Lesson_Topic',
+                  'description': 'My lesson topic description'}
+            )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+        self.assertEqual(
+            json_response.get("message"), "Saved topic successfully"
+        )
+        topics = Topic.objects.filter(name="My_Lesson_Topic")
+        self.assertTrue(topics.exists())
+
+        # Get json response for topic form
+        single_topic = topics.first()
+        toc = TableOfContents.objects.get(
+            course_id=self.user1_course1.id, lesson_id=self.lesson1.id,
+            object_id=single_topic.id
+        )
+        response = self.client.get(
+            reverse('yaksh:edit_topic',
+                    kwargs={"content_type": '1',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id,
+                            "topic_id": single_topic.id,
+                            "toc_id": toc.id})
+                    )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+
+        # delete topic Toc
+        response = self.client.post(
+            reverse('yaksh:delete_toc',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "toc_id": toc.id}),
+            data={'redirect_url': reverse("yaksh:login")}
+            )
+        self.assertEqual(response.status_code, 302)
+
+    def test_add_lesson_quiz(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        # disallow user other than moderator or course creator or course teacher
+        response = self.client.post(
+            reverse('yaksh:add_marker_quiz',
+                    kwargs={"content_type": '1',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'timer': '00:00:00', 'summary': 'My_Lesson_question',
+                  'description': 'My lesson topic description',
+                  'language': 'mcq', 'type': 'other', 'topic': 'test'}
+            )
+        self.assertEqual(response.status_code, 404)
+
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+
+        # Post json response for lesson quiz (with 400 error)
+        response = self.client.post(
+            reverse('yaksh:add_marker_quiz',
+                    kwargs={"content_type": '1',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'timer': '00:00:00', 'summary': 'My_Lesson_question',
+                  'description': 'My lesson question description',
+                  'language': 'other', 'type': 'integer', 'topic': 'test'}
+            )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(json_response.get("success"))
+
+        # Post json response for lesson quiz (with 200 success)
+        response = self.client.post(
+            reverse('yaksh:add_marker_quiz',
+                    kwargs={"content_type": '2',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'timer': '00:00:00', 'summary': 'My_Lesson_question',
+                  'description': 'My lesson question description',
+                  'language': 'other', 'type': 'integer', 'topic': 'test',
+                  'points': '1', 'form-TOTAL_FORMS': 1,
+                  'form-MAX_NUM_FORMS': '',
+                  'form-INITIAL_FORMS': 0, 'integertestcase_set-TOTAL_FORMS': 0,
+                  'integertestcase_set-INITIAL_FORMS': 0,
+                  'integertestcase_set-MIN_NUM_FORMS': 0,
+                  'integertestcase_set-MAX_NUM_FORMS': 0,
+                  'integertestcase_set-0-correct': "1"}
+            )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+
+        self.assertEqual(
+            json_response.get("message"), "Saved question successfully"
+        )
+        que = Question.objects.filter(summary="My_Lesson_question")
+        self.assertTrue(que.exists())
+
+        # Get edit question form
+        single_que = que.first()
+        toc = TableOfContents.objects.get(
+            course_id=self.user1_course1.id, lesson_id=self.lesson1.id,
+            object_id=single_que.id
+        )
+        response = self.client.get(
+            reverse('yaksh:edit_marker_quiz',
+                    kwargs={"content_type": '2',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id,
+                            "question_id": single_que.id,
+                            "toc_id": toc.id})
+                    )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+        self.assertEqual(json_response.get("content_type"), 2)
+
+        # delete question Toc
+        response = self.client.post(
+            reverse('yaksh:delete_toc',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "toc_id": toc.id}),
+            data={'redirect_url': reverse("yaksh:login")}
+            )
+        self.assertEqual(response.status_code, 302)
+
+    def test_get_and_submit_marker_quiz(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+
+        # Create a question for lesson exercise
+        response = self.client.post(
+            reverse('yaksh:add_marker_quiz',
+                    kwargs={"content_type": '3',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'timer': '00:00:00', 'summary': 'My_Lesson_question',
+                  'description': 'My lesson question description',
+                  'language': 'other', 'type': 'integer', 'topic': 'test',
+                  'points': '1', 'form-TOTAL_FORMS': 1,
+                  'form-MAX_NUM_FORMS': '',
+                  'form-INITIAL_FORMS': 0,
+                  'integertestcase_set-TOTAL_FORMS': 1,
+                  'integertestcase_set-INITIAL_FORMS': 0,
+                  'integertestcase_set-MIN_NUM_FORMS': 0,
+                  'integertestcase_set-MAX_NUM_FORMS': 0,
+                  'integertestcase_set-0-type': 'integertestcase',
+                  'integertestcase_set-0-correct': "1"}
+            )
+
+        self.client.logout()
+        que = Question.objects.filter(summary="My_Lesson_question")
+
+        single_que = que.first()
+        toc = TableOfContents.objects.get(
+            course_id=self.user1_course1.id, lesson_id=self.lesson1.id,
+            object_id=single_que.id
+        )
+
+        # Get lesson exercise as student
+        # Given
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        # When
+        response = self.client.get(
+            reverse('yaksh:get_marker_quiz',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "toc_id": toc.id})
+            )
+
+        # Then
+        self.assertEqual(response.status_code, 404)
+
+        # Given
+        self.user1_course1.students.add(self.student)
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        # When
+        response = self.client.get(
+            reverse('yaksh:get_marker_quiz',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "toc_id": toc.id})
+            )
+        json_response = json.loads(response.content)
+
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+
+        # Submit empty answer for lesson quiz
+        response = self.client.post(
+            reverse('yaksh:submit_marker_quiz',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "toc_id": toc.id}),
+            data={'answer': ''}
+            )
+        json_response = json.loads(response.content)
+
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(json_response.get("success"))
+
+        # Submit valid answer for lesson quiz
+        # When
+        response = self.client.post(
+            reverse('yaksh:submit_marker_quiz',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "toc_id": toc.id}),
+            data={'answer': '1'}
+            )
+        json_response = json.loads(response.content)
+
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+        self.assertEqual(
+            json_response.get("message"), "You answered the question correctly"
+        )
+
+
+    def test_lesson_statistics(self):
+        # Given
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+
+        # Create a question for lesson exercise
+        # When
+        response = self.client.post(
+            reverse('yaksh:add_marker_quiz',
+                    kwargs={"content_type": '3',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'timer': '00:00:00', 'summary': 'My_Lesson_question',
+                  'description': 'My lesson question description',
+                  'language': 'other', 'type': 'integer', 'topic': 'test',
+                  'points': '1', 'form-TOTAL_FORMS': 1,
+                  'form-MAX_NUM_FORMS': '',
+                  'form-INITIAL_FORMS': 0,
+                  'integertestcase_set-TOTAL_FORMS': 1,
+                  'integertestcase_set-INITIAL_FORMS': 0,
+                  'integertestcase_set-MIN_NUM_FORMS': 0,
+                  'integertestcase_set-MAX_NUM_FORMS': 0,
+                  'integertestcase_set-0-type': 'integertestcase',
+                  'integertestcase_set-0-correct': "1"}
+            )
+        que = Question.objects.filter(summary="My_Lesson_question")
+
+        single_que = que.first()
+        toc = TableOfContents.objects.get(
+            course_id=self.user1_course1.id, lesson_id=self.lesson1.id,
+            object_id=single_que.id
+        )
+        self.client.logout()
+        self.user1_course1.students.add(self.student)
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.post(
+            reverse('yaksh:submit_marker_quiz',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "toc_id": toc.id}),
+            data={'answer': '1'}
+            )
+        self.client.logout()
+
+        # Then
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:lesson_statistics',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id})
+            )
+        response_data = response.context
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            next(iter(response_data.get("data").keys())).id, toc.id
+        )
+
+        # Then
+        response = self.client.get(
+            reverse('yaksh:lesson_statistics',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id,
+                            "toc_id": toc.id})
+            )
+        response_data = response.context
+        student_info = response_data.get("objects").object_list[0]
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            next(iter(response_data.get("data").keys())).id, toc.id
+        )
+        self.assertEqual(student_info.get("student_id"), self.student.id)
