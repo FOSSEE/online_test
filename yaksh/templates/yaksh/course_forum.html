@@ -29,6 +29,20 @@
                     </button>
                 </div>
             </div>
+           {% if messages %}
+                <div>
+                  <center>
+                      {% for message in messages %}
+                          <div class="alert alert-dismissible alert-{{ message.tags }}">
+                              <button type="button" class="close" data-dismiss="alert">
+                                  <i class="fa fa-close"></i>
+                              </button>
+                              <strong>{{ message }}</strong>
+                          </div>
+                      {% endfor %}
+                  </center>
+               </div>
+           {% endif %}
             <!-- Modal -->
             <div id="newPostModal" class="modal fade" role="dialog">
               <div class="modal-dialog">
@@ -109,7 +123,7 @@
                                         {% endwith %}
                                     </td>
                                     <td>
-                                        {% if user.profile.is_moderator %}
+                                        {% if user == course.creator %}
                                             <small><a href="{% url 'yaksh:hide_post' course.id post.uid %}" class="pull-right fa fa-trash"></i></a></small>
                                         {% endif %}
                                     </td>

@@ -11,6 +11,20 @@
         </a>
         <br>
         <br>
+       {% if messages %}
+            <div>
+              <center>
+                  {% for message in messages %}
+                      <div class="alert alert-dismissible alert-{{ message.tags }}">
+                          <button type="button" class="close" data-dismiss="alert">
+                              <i class="fa fa-close"></i>
+                          </button>
+                          <strong>{{ message }}</strong>
+                      </div>
+                  {% endfor %}
+              </center>
+           </div>
+       {% endif %}
         <div class="card mb-2 border-dark">
             <div class="card-header text-white bg-dark py-2 px-3">
                 {{post.title}}
@@ -18,7 +32,7 @@
                 <small>
                     <strong>{{post.creator.username}}</strong>
                     {{post.created_at}}
-                    {% if user.profile.is_moderator %}<a href="{% url 'yaksh:hide_post' post.target.id post.uid %}" class="pull-right fa fa-trash"></a>{% endif %}
+                    {% if user == course.creator %}<a href="{% url 'yaksh:hide_post' post.target.id post.uid %}" class="pull-right fa fa-trash"></a>{% endif %}
                 </small>
 
             </div>
@@ -41,7 +55,7 @@
                                 <strong class="text-muted">{{comment.creator.username}}</strong>
                             </div>
                             <div class="col-6 text-right">
-                                <small class="text-muted">{{comment.created_at}} {% if user.profile.is_moderator %} <a href="{% url 'yaksh:hide_comment' post.target.id comment.uid %}" class="fa fa-trash"></a>{% endif %}</small>
+                                <small class="text-muted">{{comment.created_at}} {% if user == course.creator %} <a href="{% url 'yaksh:hide_comment' post.target.id comment.uid %}" class="fa fa-trash"></a>{% endif %}</small>
                             </div>
                         </div>
                         <p class="card-text description">{{comment.description}}</p>

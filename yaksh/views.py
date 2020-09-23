@@ -3574,7 +3574,7 @@ def post_comments(request, course_id, uuid):
 def hide_post(request, course_id, uuid):
     user = request.user
     course = get_object_or_404(Course, id=course_id)
-    if (not course.is_creator(user) or not course.is_teacher(user)):
+    if (not course.is_creator(user) and not course.is_teacher(user)):
         raise Http404(
             'Only a course creator or a teacher can delete the post.'
         )
@@ -3591,7 +3591,7 @@ def hide_comment(request, course_id, uuid):
     user = request.user
     if course_id:
         course = get_object_or_404(Course, id=course_id)
-        if (not course.is_creator(user) or not course.is_teacher(user)):
+        if (not course.is_creator(user) and not course.is_teacher(user)):
             raise Http404(
                 'Only a course creator or a teacher can delete the comments'
             )
