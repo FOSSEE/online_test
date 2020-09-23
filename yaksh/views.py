@@ -3529,8 +3529,7 @@ def allow_special_attempt(request, user_id, course_id, quiz_id):
             student.get_full_name())
 
     messages.info(request, msg)
-    return my_redirect('/exam/manage/monitor/{0}/{1}/'.format(quiz_id,
-                                                              course_id))
+    return redirect('yaksh:monitor', quiz_id, course_id)
 
 
 @login_required
@@ -3549,8 +3548,8 @@ def revoke_special_attempt(request, micromanager_id):
     msg = 'Revoked special attempt for {}'.format(
         micromanager.student.get_full_name())
     messages.info(request, msg)
-    return my_redirect('/exam/manage/monitor/{0}/{1}/'.format(
-        micromanager.quiz.id, course.id))
+    return redirect(
+        'yaksh:monitor', micromanager.quiz.id, course.id)
 
 
 @login_required
@@ -3567,7 +3566,7 @@ def extend_time(request, paper_id):
         raise Http404('This course does not belong to you')
 
     if request.method == "POST":
-        extra_time = request.POST.get('extra_time', None)
+        extra_time = float(request.POST.get('extra_time', 0))
         if extra_time is None:
             msg = 'Please provide time'
         else:
@@ -3577,5 +3576,5 @@ def extend_time(request, paper_id):
     else:
         msg = 'Bad Request'
     messages.info(request, msg)
-    return my_redirect('/exam/manage/monitor/{0}/{1}/'.format(
-        anspaper.question_paper.quiz.id, course.id))
+    return redirect(
+        'yaksh:monitor', anspaper.question_paper.quiz.id, course.id)

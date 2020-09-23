@@ -2235,7 +2235,14 @@ class AnswerPaper(models.Model):
         return questions
 
     def set_extra_time(self, time=0):
-        self.extra_time = time
+        now = timezone.now()
+        self.extra_time += time
+        if self.status == 'completed' and self.end_time < now:
+            self.extra_time = time
+            quiz_time = self.question_paper.quiz.duration
+            self.start_time = now - timezone.timedelta(minutes=quiz_time)
+            self.end_time = now + timezone.timedelta(minutes=time)
+            self.status = 'inprogress'
         self.save()
 
     def time_left(self):
