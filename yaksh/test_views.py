@@ -6924,7 +6924,7 @@ class TestPost(TestCase):
             'uuid': post.uid
         })
         response = self.client.get(url, follow=True)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
 
     def tearDown(self):
         self.client.logout()
@@ -7148,7 +7148,7 @@ class TestPostComment(TestCase):
             'uuid': comment.uid
         })
         response = self.client.get(url)
-        self.assertEquals(response.status_code, 404)
+        self.assertEquals(response.status_code, 302)
 
     def tearDown(self):
         self.client.logout()
