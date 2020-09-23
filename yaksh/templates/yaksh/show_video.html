@@ -154,6 +154,19 @@
             {% endwith %}
             </div>
         {% endif %}
+        {% if state == 'lesson' %}
+            <div>
+                <b><u>Add comment:</u></b>
+                <form action="" method="POST" enctype='multipart/form-data'>
+                    <div class="form-group">
+                        {% csrf_token %}
+                        {{form}}
+                    </div>
+                    <input type="submit" value="Submit" class="btn btn-success">
+                </form>
+            </div>
+        {% endif %}
+        <br>
         {% if comments %}
             {% for comment in comments %}
                 <div class="card mb-2">
@@ -162,9 +175,11 @@
                             <div class="col-6">
                                 <strong class="text-muted">{{comment.creator.username}}</strong>
                             </div>
-                            <div class="col-6 text-right">
-                                <small class="text-muted">{{comment.created_at}} {% if user.profile.is_moderator %} <a href="{% url 'yaksh:hide_comment' course.id comment.uid %}" class="fa fa-trash"></a>{% endif %}</small>
-                            </div>
+                            {% if user == course.creator %}
+                                <div class="col-6 text-right">
+                                    <small class="text-muted">{{comment.created_at}} {% if user.profile.is_moderator %} <a href="{% url 'yaksh:hide_comment' course.id comment.uid %}" class="fa fa-trash"></a>{% endif %}</small>
+                                </div>
+                            {% endif %}
                         </div>
                         <p class="card-text description">{{comment.description}}</p>
                         <div>
@@ -177,18 +192,6 @@
                     </div>
                 </div>
             {% endfor %}
-        {% endif %}
-        {% if state == 'lesson' %}
-            <div>
-                <b><u>Add comment:</u></b>
-                <form action="" method="POST" enctype='multipart/form-data'>
-                    <div class="form-group">
-                        {% csrf_token %}
-                        {{form}}
-                    </div>
-                    <input type="submit" value="Submit" class="btn btn-success">
-                </form>
-            </div>
         {% endif %}
     </div>
 </div>
