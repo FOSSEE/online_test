@@ -1993,6 +1993,32 @@ class AnswerPaperManager(models.Manager):
             questions.append(question.id)
         return Counter(questions)
 
+    def get_per_answer_stats(self, questionpaper_id, attempt_number,
+                                   course_id, status='completed'):
+        papers = self.filter(question_paper_id=questionpaper_id,
+                             course_id=course_id,
+                             attempt_number=attempt_number, status=status)
+        questions = Question.objects.filter(
+            questions__id__in=papers,
+        ).distinct()
+
+        stats = {}
+        for question in questions:
+            answers = Answer.objects.filter(
+                answerpaper__id__in=papers, question=question.id
+            ).values('answer', 'question__id', 'answerpaper__id')
+            question_ans_count = {}
+            answerpaper_count = []
+            for ans in answers:
+                if ans.get('answerpaper__id'):
+                    if ans.get('answer') not in question_ans_count:
+                        question_ans_count[ans.get('answer')] = 1
+                    else:
+                        question_ans_count[ans.get('answer')] += 1
+                    answerpaper_count.append(ans.get('answerpaper__id'))
+            stats[question] = question_ans_count
+        return stats
+
     def get_all_questions_answered(self, questionpaper_id, attempt_number,
                                    course_id, status='completed'):
         ''' Return a dict of answered question id as key and count as value'''
@@ -2046,16 +2072,27 @@ class AnswerPaperManager(models.Manager):
                                                              course_id)
         questions = self.get_all_questions(questionpaper_id, attempt_number,
                                            course_id)
+        per_answer_stats = self.get_per_answer_stats(
+            questionpaper_id, attempt_number, course_id
+        )
         all_questions = Question.objects.filter(
                 id__in=set(questions),
                 active=True
             ).order_by('type')
         for question in all_questions:
             if question.id in questions_answered:
-                question_stats[question] = [questions_answered[question.id],
-                                            questions[question.id]]
+                question_stats[question] = {
+                        'answered': [questions_answered[question.id],
+                                            questions[question.id]],
+                        'per_answer': per_answer_stats[question],
+                    }
+
             else:
-                question_stats[question] = [0, questions[question.id]]
+                question_stats[question] = {
+                        'answered': [0, questions[question.id]],
+                        'per_answer': per_answer_stats[question],
+                    }
+
         return question_stats
 
     def _get_answerpapers_for_quiz(self, questionpaper_id, course_id,

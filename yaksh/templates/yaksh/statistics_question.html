@@ -1,4 +1,5 @@
 {% extends "manage.html" %}
+{% load custom_filters %}
 
 {% block title %} Question Statistics {% endblock %}
 {% block pagetitle %} Statistics for {{ quiz.description }}{% endblock pagetitle %}
@@ -20,8 +21,8 @@
             {% if question_stats %}
                 <p><b>Total number of participants: {{ total }}</b></p>
                 <table class="table table-responsive-sm">
-                    <tr class="bg-light yakshred"><th>Question</th><th>Type</th><th>Total</th><th>Answered Correctly</th></tr>
-                    {% for question, value in question_stats.items  %}
+                    <tr class="bg-light yakshred"><th>Question</th><th></th><th>Type</th><th>Total</th><th>Answered Correctly</th></tr>
+                    {% for question, data in question_stats.items  %}
                     <tr>
                         <td style="width: 45%">
                             <a href="#collapse_question_{{question.id}}" data-toggle="collapse">
@@ -61,12 +62,14 @@
                                     <p>
                                         <ol>
                                         {% for tc in question.testcase_set.all %}
-                                            <li>
-                                                {{ tc.mcqtestcase.options|safe }}
-                                                {% if tc.mcqtestcase.correct %}
-                                                    <span class="badge badge-success">Correct</span>
-                                                {% endif %}
-                                            </li>
+                                                <li>         
+                                                    {{ tc.mcqtestcase.options }}
+                                                    {% if tc.mcqtestcase.correct %}
+                                                        <span class="badge badge-primary">Correct</span>
+                                                    {% endif %}
+                                                    {% get_dict_value data.per_answer tc.id|stringformat:"i" as num %}
+                                                        <span class="badge badge-info">Answered: {{ num }}</span>
+                                                </li>
                                         {% endfor %}
                                         </ol>
                                     </p>
@@ -76,7 +79,9 @@
                             </div>
                         </td>
                         <td>{{ question.type }}</td>
-                        <td>{{value.1}}</td><td>{{ value.0 }} ({% widthratio value.0 value.1 100 %}%)</td>
+                        <td>{{data.answered.1}}</td><td>{{ data.answered.0 }} ({% widthratio data.answered.0 data.answered.1 100 %}%)</td>
+
+
                     </tr>
                     {% endfor %}
                 </table>
