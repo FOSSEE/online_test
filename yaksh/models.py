@@ -2924,7 +2924,6 @@ class LessonQuizAnswer(models.Model):
         elif question.type == 'float':
             user_answer = float(user_answer)
             tc_status = []
-            user_answer = float(user_answer)
             for tc in question.get_test_cases():
                 if abs(tc.correct - user_answer) <= tc.error_margin:
                     tc_status.append(True)

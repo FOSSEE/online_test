@@ -6603,6 +6603,54 @@ class TestLessons(TestCase):
             lesson=self.lesson).first()
         self.assertIn("test", lesson_files.file.name)
         lesson_file_path = lesson_files.file.path
+
+        # Teacher adds multiple videos in video path
+        response = self.client.post(
+            reverse('yaksh:edit_lesson',
+                    kwargs={"lesson_id": self.lesson.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
+            data={"name": "updated lesson",
+                  "description": "updated description",
+                  "video_path": "{'youtube': 'test', 'others': 'test'}",
+                  "Save": "Save"}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            "Video path : Only one of the video name should be entered",
+            str(response.content)
+        )
+
+        # Teacher adds wrong pattern in video path
+        response = self.client.post(
+            reverse('yaksh:edit_lesson',
+                    kwargs={"lesson_id": self.lesson.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
+            data={"name": "updated lesson",
+                  "description": "updated description",
+                  "video_path": "test",
+                  "Save": "Save"}
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            "Video path : Value must be dictionary as shown in sample",
+            str(response.content)
+        )
+
+        # Teacher adds correct path in video path
+        response = self.client.post(
+            reverse('yaksh:edit_lesson',
+                    kwargs={"lesson_id": self.lesson.id,
+                            "course_id": self.course.id,
+                            "module_id": self.learning_module.id}),
+            data={"name": "updated lesson",
+                  "description": "updated description",
+                  "video_path": "{'others': 'test'}",
+                  "Save": "Save"}
+            )
+        self.assertEqual(response.status_code, 302)
+
         # Teacher removes the lesson file
         response = self.client.post(
             reverse('yaksh:edit_lesson',
@@ -8197,3 +8245,208 @@ class TestLessonContents(TestCase):
             next(iter(response_data.get("data").keys())).id, toc.id
         )
         self.assertEqual(student_info.get("student_id"), self.student.id)
+
+    def test_multiple_lesson_question_types(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+
+        # Create float based question
+        response = self.client.post(
+            reverse('yaksh:add_marker_quiz',
+                    kwargs={"content_type": '3',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'timer': '00:00:00', 'summary': 'Float_Lesson',
+                  'description': 'My lesson question description',
+                  'language': 'other', 'type': 'float', 'topic': 'test',
+                  'points': '1', 'form-TOTAL_FORMS': 1,
+                  'form-MAX_NUM_FORMS': '',
+                  'form-INITIAL_FORMS': 0,
+                  'floattestcase_set-TOTAL_FORMS': 1,
+                  'floattestcase_set-INITIAL_FORMS': 0,
+                  'floattestcase_set-MIN_NUM_FORMS': 0,
+                  'floattestcase_set-MAX_NUM_FORMS': 0,
+                  'floattestcase_set-0-type': 'floattestcase',
+                  'floattestcase_set-0-correct': "1",
+                  'floattestcase_set-0-error_margin': "0.1"
+                }
+            )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+        self.assertEqual(
+            json_response.get("message"), "Saved question successfully"
+        )
+
+
+        # Create a mcq question
+        response = self.client.post(
+            reverse('yaksh:add_marker_quiz',
+                    kwargs={"content_type": '3',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'timer': '00:00:00', 'summary': 'Mcq_Lesson',
+                  'description': 'My lesson question description',
+                  'language': 'other', 'type': 'mcq', 'topic': 'test',
+                  'points': '1', 'form-TOTAL_FORMS': 2,
+                  'form-MAX_NUM_FORMS': '',
+                  'form-INITIAL_FORMS': 0,
+                  'mcqtestcase_set-TOTAL_FORMS': 2,
+                  'mcqtestcase_set-INITIAL_FORMS': 0,
+                  'mcqtestcase_set-MIN_NUM_FORMS': 0,
+                  'mcqtestcase_set-MAX_NUM_FORMS': 0,
+                  'mcqtestcase_set-0-type': 'mcqtestcase',
+                  'mcqtestcase_set-0-options': "1",
+                  'mcqtestcase_set-0-correct': True,
+                  'mcqtestcase_set-1-type': 'mcqtestcase',
+                  'mcqtestcase_set-1-options': "2",
+                  'mcqtestcase_set-1-correct': False
+                }
+            )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+        self.assertEqual(
+            json_response.get("message"), "Saved question successfully"
+        )
+
+        # Create a mcc question
+        response = self.client.post(
+            reverse('yaksh:add_marker_quiz',
+                    kwargs={"content_type": '3',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'timer': '00:00:00', 'summary': 'Mcc_Lesson',
+                  'description': 'My lesson question description',
+                  'language': 'other', 'type': 'mcc', 'topic': 'test',
+                  'points': '1', 'form-TOTAL_FORMS': 2,
+                  'form-MAX_NUM_FORMS': '',
+                  'form-INITIAL_FORMS': 0,
+                  'mcqtestcase_set-TOTAL_FORMS': 2,
+                  'mcqtestcase_set-INITIAL_FORMS': 0,
+                  'mcqtestcase_set-MIN_NUM_FORMS': 0,
+                  'mcqtestcase_set-MAX_NUM_FORMS': 0,
+                  'mcqtestcase_set-0-type': 'mcqtestcase',
+                  'mcqtestcase_set-0-options': "1",
+                  'mcqtestcase_set-0-correct': True,
+                  'mcqtestcase_set-1-type': 'mcqtestcase',
+                  'mcqtestcase_set-1-options': "2",
+                  'mcqtestcase_set-1-correct': False
+                }
+            )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+        self.assertEqual(
+            json_response.get("message"), "Saved question successfully"
+        )
+
+
+        # Create a string based question
+        response = self.client.post(
+            reverse('yaksh:add_marker_quiz',
+                    kwargs={"content_type": '3',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'timer': '00:00:00', 'summary': 'String_Lesson',
+                  'description': 'My lesson question description',
+                  'language': 'other', 'type': 'string', 'topic': 'test',
+                  'points': '1', 'form-TOTAL_FORMS': 1,
+                  'form-MAX_NUM_FORMS': '',
+                  'form-INITIAL_FORMS': 0,
+                  'stringtestcase_set-TOTAL_FORMS': 1,
+                  'stringtestcase_set-INITIAL_FORMS': 0,
+                  'stringtestcase_set-MIN_NUM_FORMS': 0,
+                  'stringtestcase_set-MAX_NUM_FORMS': 0,
+                  'stringtestcase_set-0-type': 'stringtestcase',
+                  'stringtestcase_set-0-correct': "test",
+                  'stringtestcase_set-0-string_check': "lower"
+                }
+            )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+        self.assertEqual(
+            json_response.get("message"), "Saved question successfully"
+        )
+
+        ques = Question.objects.filter(
+            summary__in=["Mcq_Lesson", "Mcc_Lesson",
+                         "Float_Lesson", "String_Lesson"]
+            ).values_list("id", flat=True)
+        self.assertTrue(ques.exists())
+        tocs = TableOfContents.objects.filter(
+            course_id=self.user1_course1.id, lesson_id=self.lesson1.id,
+            object_id__in=ques
+        ).values_list("id", flat=True)
+        self.assertTrue(tocs.exists())
+
+        # Student submits answers to all the questions
+        self.user1_course1.students.add(self.student)
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+
+        # submit mcq question
+        response = self.client.post(
+            reverse('yaksh:submit_marker_quiz',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "toc_id": tocs[0]}),
+            data={'answer': '1'}
+            )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+        self.assertEqual(
+            json_response.get("message"), "You answered the question correctly"
+        )
+
+        # submit mcc question
+        response = self.client.post(
+            reverse('yaksh:submit_marker_quiz',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "toc_id": tocs[1]}),
+            data={'answer': ['1']}
+            )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(json_response.get("success"))
+        self.assertIn(
+            "You have answered the question incorrectly",
+            json_response.get("message"),
+        )
+
+        # submit float question
+        response = self.client.post(
+            reverse('yaksh:submit_marker_quiz',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "toc_id": tocs[2]}),
+            data={'answer': '1.0'}
+            )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(json_response.get("success"))
+        self.assertIn(
+            "You have answered the question incorrectly",
+            json_response.get("message"),
+        )
+
+
+        # submit string question
+        response = self.client.post(
+            reverse('yaksh:submit_marker_quiz',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "toc_id": tocs[3]}),
+            data={'answer': 'test'}
+            )
+        json_response = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json_response.get("success"))
+        self.assertEqual(
+            json_response.get("message"), "You answered the question correctly"
+        )
+
+

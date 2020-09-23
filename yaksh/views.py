@@ -3774,9 +3774,10 @@ def add_marker_quiz(request, content_type, course_id, lesson_id,
                 context['message'] = 'Saved question successfully'
                 context['content_type'] = content_type
             else:
-                status_code = 400
+                status_code = 200
                 context['success'] = False
-                context['message'] = "Error in saving form"
+                context['message'] = "Error in saving."\
+                                     " Please check the question test cases"
         else:
             status_code = 400
             context['success'] = False
@@ -3944,14 +3945,14 @@ def submit_marker_quiz(request, course_id, toc_id):
             # call check answer only for graded quiz and exercise
             if toc.content == 3 or toc.content == 2:
                 result = lesson_ans.check_answer(user_answer)
-            # if exercise then show custom message
-            if toc.content == 3:
-                if result.get("success"):
-                    msg = "You answered the question correctly"
-                else:
-                    success = False
-                    msg = "You have answered the question incorrectly. "\
-                          "Please refer the lesson again"
+                # if exercise then show custom message
+                if toc.content == 3:
+                    if result.get("success"):
+                        msg = "You answered the question correctly"
+                    else:
+                        success = False
+                        msg = "You have answered the question incorrectly. "\
+                              "Please refer the lesson again"
         else:
             msg = "You have already submitted the answer"
     else:
