@@ -1,7 +1,12 @@
 {% extends "manage.html" %}
+{% load static %}
 {% load custom_filters %}
 {% block title %} Add/Edit Grading {% endblock %}
 {% block pagetitle %} Add/Edit Grading {% endblock %}
+{% block script %}
+    <script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'yaksh/js/add_grades.js' %}"></script>
+{% endblock %}
 {% block main %}
 <html>
 <div class="row">

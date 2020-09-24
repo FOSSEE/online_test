@@ -1,6 +1,5 @@
 function test()
 {
-
 	document.getElementById('id_duration').setAttribute('class','mini-text form-control');
 	document.getElementById('id_pass_criteria').setAttribute('class','mini-text form-control');
     if (document.getElementById("id_description").value != "")
@@ -13,6 +12,18 @@ function test()
     document.getElementById('rendered_text').innerHTML = document.getElementById('id_instructions').value ;
   });
     document.getElementById('rendered_text').innerHTML = document.getElementById('id_instructions').value ;
+    tinymce.init({
+        selector: 'textarea#id_instructions',
+        setup : function(ed) {
+              ed.on('change', function(e) {
+                 tinymce.triggerSave();
+              });
+        },
+        max_height: 400,
+        height: 400,
+        plugins: "image code link",
+        convert_urls: false
+    });
 }
 
 String.prototype.beginsWith = function (string) {
