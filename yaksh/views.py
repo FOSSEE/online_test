@@ -3569,10 +3569,11 @@ def hide_comment(request, course_id, uuid):
 @email_verified
 def add_marker(request, course_id, lesson_id):
     user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
     course = get_object_or_404(Course, pk=course_id)
-    if (not is_moderator(user) or
-            not course.is_creator(user) or not course.is_creator(user)):
-        raise Http404("You are not allowed to view this page")
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
     content_type = request.POST.get("content")
     question_type = request.POST.get("type")
     if content_type == '1':
@@ -3676,10 +3677,11 @@ def allow_special_attempt(request, user_id, course_id, quiz_id):
 def add_topic(request, content_type, course_id, lesson_id, toc_id=None,
               topic_id=None):
     user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
     course = get_object_or_404(Course, pk=course_id)
-    if (not is_moderator(user) or
-            not course.is_creator(user) or not course.is_creator(user)):
-        raise Http404("You are not allowed to view this page")
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
     if topic_id:
         topic = get_object_or_404(Topic, pk=topic_id)
     else:
@@ -3732,10 +3734,11 @@ def add_topic(request, content_type, course_id, lesson_id, toc_id=None,
 def add_marker_quiz(request, content_type, course_id, lesson_id,
                     toc_id=None, question_id=None):
     user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
     course = get_object_or_404(Course, pk=course_id)
-    if (not is_moderator(user) or
-            not course.is_creator(user) or not course.is_creator(user)):
-        raise Http404("You are not allowed to view this page")
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
     if question_id:
         question = get_object_or_404(Question, pk=question_id)
     else:
@@ -3825,10 +3828,11 @@ def revoke_special_attempt(request, micromanager_id):
 @email_verified
 def delete_toc(request, course_id, toc_id):
     user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
     course = get_object_or_404(Course, pk=course_id)
-    if (not is_moderator(user) or
-            not course.is_creator(user) or not course.is_creator(user)):
-        raise Http404("You are not allowed to view this page")
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
     toc = get_object_or_404(TableOfContents, pk=toc_id)
     redirect_url = request.POST.get("redirect_url")
     if toc.content == 1:
@@ -3966,10 +3970,11 @@ def submit_marker_quiz(request, course_id, toc_id):
 @email_verified
 def lesson_statistics(request, course_id, lesson_id, toc_id=None):
     user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
     course = get_object_or_404(Course, pk=course_id)
-    if (not is_moderator(user) or
-            not course.is_creator(user) or not course.is_creator(user)):
-        raise Http404("You are not allowed to view this page")
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
     context = {}
     lesson = get_object_or_404(Lesson, id=lesson_id)
     data = TableOfContents.objects.get_data(course_id, lesson_id)
