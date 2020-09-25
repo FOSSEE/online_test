@@ -6616,7 +6616,7 @@ class TestLessons(TestCase):
             )
         self.assertEqual(response.status_code, 200)
         self.assertIn(
-            "Video path : Only one of the video name should be entered",
+            "Video path : Only one type of video path is allowed",
             str(response.content)
         )
 
@@ -6633,7 +6633,7 @@ class TestLessons(TestCase):
             )
         self.assertEqual(response.status_code, 200)
         self.assertIn(
-            "Video path : Value must be dictionary as shown in sample",
+            "Video path : Value must be dictionary",
             str(response.content)
         )
 
@@ -8454,5 +8454,33 @@ class TestLessonContents(TestCase):
         self.assertEqual(
             json_response.get("message"), "You answered the question correctly"
         )
+        self.client.logout()
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
 
+        # Get statistics for mcc question
+        response = self.client.get(
+            reverse('yaksh:lesson_statistics',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id,
+                            "toc_id": tocs[1]})
+            )
+        response_data = response.context
+        student_info = response_data.get("objects").object_list[0]
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(student_info.get("student_id"), self.student.id)
+
+        # Get statistics for mcq question
+        response = self.client.get(
+            reverse('yaksh:lesson_statistics',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id,
+                            "toc_id": tocs[0]})
+            )
+        response_data = response.context
+        student_info = response_data.get("objects").object_list[0]
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(student_info.get("student_id"), self.student.id)
 
