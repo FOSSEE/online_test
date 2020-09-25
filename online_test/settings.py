@@ -160,6 +160,10 @@ PRODUCTION_URL = 'your_project_url'
 # If this variable is kept <True> in production, email will not be verified.
 IS_DEVELOPMENT = True
 
+# Video File upload size
+MAX_UPLOAD_SIZE = 52428800
+
+
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 TEMPLATES = [
