@@ -35,7 +35,6 @@ $(document).ready(function(){
     function preview_text(data) {
         $("#description_body").empty();
         $("#description_body").html(data);
-        MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
     }
 
     $("#embed").click(function() {
