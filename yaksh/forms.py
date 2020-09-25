@@ -9,6 +9,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import timezone
+from django.template.defaultfilters import filesizeformat
 from textwrap import dedent
 try:
     from string import letters
@@ -530,9 +531,6 @@ class LessonForm(forms.ModelForm):
                 """),
              }
         )
-        self.fields['video_file'].widget.attrs.update(
-            {'class': "custom-file-input"}
-        )
 
     class Meta:
         model = Lesson
@@ -548,6 +546,12 @@ class LessonForm(forms.ModelForm):
                     "Please upload video files in {0} format".format(
                         ", ".join(actual_extension))
                     )
+            if file.size > settings.MAX_UPLOAD_SIZE:
+                raise forms.ValidationError(
+                    f"Video file size must be less than "\
+                    f"{filesizeformat(settings.MAX_UPLOAD_SIZE)}. "
+                    f"Current size is {filesizeformat(file.size)}"
+                )
         return file
 
     def clean_video_path(self):
@@ -557,16 +561,16 @@ class LessonForm(forms.ModelForm):
                 value = literal_eval(path)
                 if not isinstance(value, dict):
                     raise forms.ValidationError(
-                        "Value must be dictionary as shown in sample"
+                        "Value must be dictionary e.g {'youtube': 'video-id'}"
                     )
                 else:
                     if len(value) > 1:
                         raise forms.ValidationError(
-                            "Only one of the video name should be entered"
+                            "Only one type of video path is allowed"
                         )
             except ValueError:
                 raise forms.ValidationError(
-                    "Value must be dictionary as shown in sample"
+                    "Value must be dictionary e.g {'youtube': 'video-id'}"
                 )
         return path
 

@@ -298,7 +298,7 @@ class Lesson(models.Model):
 
     # A video file
     video_file = models.FileField(
-        upload_to=get_file_dir, default=None,
+        upload_to=get_file_dir, max_length=255, default=None,
         null=True, blank=True,
         help_text="Please upload video files in mp4, ogv, webm format"
         )
