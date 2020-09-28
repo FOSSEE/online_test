@@ -1812,6 +1812,8 @@ class QuestionPaper(models.Model):
         for question in questions:
             marks += question.points
         for question_set in self.random_questions.all():
+            question_set.marks = question_set.questions.first().points
+            question_set.save()
             marks += question_set.marks * question_set.num_questions
         self.total_marks = marks
         self.save()
