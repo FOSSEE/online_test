@@ -1929,8 +1929,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                 course.is_teacher(current_user):
             raise Http404('This course does not belong to you')
         has_quiz_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id__in=questionpaper_id
-                                ).exists()
+            course_id=course_id, question_paper_id__in=questionpaper_id
+            ).exists()
         context = {
             "users": user_details,
             "quiz_id": quiz_id,
@@ -1949,9 +1949,9 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             except IndexError:
                 raise Http404('No attempts for paper')
             has_user_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id__in=questionpaper_id,
-                                user_id=user_id
-                                ).exists()
+                course_id=course_id, question_paper_id__in=questionpaper_id,
+                user_id=user_id
+                ).exists()
             user = User.objects.get(id=user_id)
             data = AnswerPaper.objects.get_user_data(
                 user, questionpaper_id, course_id, attempt_number
@@ -2212,12 +2212,12 @@ def view_answerpaper(request, questionpaper_id, course_id):
     if quiz.view_answerpaper and user in course.students.all():
         data = AnswerPaper.objects.get_user_data(user, questionpaper_id,
                                                  course_id)
-        has_user_assignment = AssignmentUpload.objects.filter(
+        has_user_assignments = AssignmentUpload.objects.filter(
             user=user, course_id=course.id,
             question_paper_id=questionpaper_id
         ).exists()
         context = {'data': data, 'quiz': quiz, 'course_id': course.id,
-                   "has_user_assignment": has_user_assignment}
+                   "has_user_assignments": has_user_assignments}
         return my_render_to_response(
             request, 'yaksh/view_answerpaper.html', context
         )
