@@ -994,7 +994,7 @@ class QuestionPaperTestCases(unittest.TestCase):
         # create two QuestionSet for random questions
         # QuestionSet 1
         self.question_set_1 = QuestionSet.objects.create(
-            marks=2, num_questions=2
+            marks=1, num_questions=2
         )
 
         # add pool of questions for random sampling
@@ -1007,7 +1007,7 @@ class QuestionPaperTestCases(unittest.TestCase):
 
         # QuestionSet 2
         self.question_set_2 = QuestionSet.objects.create(
-            marks=3, num_questions=3
+            marks=1, num_questions=3
         )
 
         # add pool of questions
@@ -1074,7 +1074,7 @@ class QuestionPaperTestCases(unittest.TestCase):
         """ Test update_total_marks() method of Question Paper"""
         self.assertEqual(self.question_paper.total_marks, 0)
         self.question_paper.update_total_marks()
-        self.assertEqual(self.question_paper.total_marks, 15)
+        self.assertEqual(self.question_paper.total_marks, 7.0)
 
     def test_get_random_questions(self):
         """ Test get_random_questions() method of Question Paper"""
