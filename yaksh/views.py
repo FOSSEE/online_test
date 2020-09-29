@@ -668,6 +668,7 @@ def show_question(request, question, paper, error_message=None,
     quiz = paper.question_paper.quiz
     quiz_type = 'Exam'
     can_skip = False
+    assignment_files = []
     if previous_question:
         delay_time = paper.time_left_on_question(previous_question)
     else:
@@ -709,6 +710,13 @@ def show_question(request, question, paper, error_message=None,
         test_cases = question.get_ordered_test_cases(paper)
     else:
         test_cases = question.get_test_cases()
+    if question.type == 'upload':
+        assignment_files = AssignmentUpload.objects.filter(
+                            assignmentQuestion_id=question.id,
+                            course_id=course_id,
+                            user=request.user,
+                            question_paper_id=paper.question_paper_id
+                        )
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
     course = Course.objects.get(id=course_id)
     module = course.learning_module.get(id=module_id)
@@ -728,6 +736,7 @@ def show_question(request, question, paper, error_message=None,
         'delay_time': delay_time,
         'quiz_type': quiz_type,
         'all_modules': all_modules,
+        'assignment_files': assignment_files,
     }
     answers = paper.get_previous_answers(question)
     if answers:
