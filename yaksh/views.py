@@ -668,6 +668,7 @@ def show_question(request, question, paper, error_message=None,
     quiz = paper.question_paper.quiz
     quiz_type = 'Exam'
     can_skip = False
+    assignment_files = []
     if previous_question:
         delay_time = paper.time_left_on_question(previous_question)
     else:
@@ -709,6 +710,13 @@ def show_question(request, question, paper, error_message=None,
         test_cases = question.get_ordered_test_cases(paper)
     else:
         test_cases = question.get_test_cases()
+    if question.type == 'upload':
+        assignment_files = AssignmentUpload.objects.filter(
+                            assignmentQuestion_id=question.id,
+                            course_id=course_id,
+                            user=request.user,
+                            question_paper_id=paper.question_paper_id
+                        )
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
     course = Course.objects.get(id=course_id)
     module = course.learning_module.get(id=module_id)
@@ -728,6 +736,7 @@ def show_question(request, question, paper, error_message=None,
         'delay_time': delay_time,
         'quiz_type': quiz_type,
         'all_modules': all_modules,
+        'assignment_files': assignment_files,
     }
     answers = paper.get_previous_answers(question)
     if answers:
@@ -1920,8 +1929,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                 course.is_teacher(current_user):
             raise Http404('This course does not belong to you')
         has_quiz_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id__in=questionpaper_id
-                                ).exists()
+            course_id=course_id, question_paper_id__in=questionpaper_id
+            ).exists()
         context = {
             "users": user_details,
             "quiz_id": quiz_id,
@@ -1940,9 +1949,9 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             except IndexError:
                 raise Http404('No attempts for paper')
             has_user_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id__in=questionpaper_id,
-                                user_id=user_id
-                                ).exists()
+                course_id=course_id, question_paper_id__in=questionpaper_id,
+                user_id=user_id
+                ).exists()
             user = User.objects.get(id=user_id)
             data = AnswerPaper.objects.get_user_data(
                 user, questionpaper_id, course_id, attempt_number
@@ -2203,12 +2212,12 @@ def view_answerpaper(request, questionpaper_id, course_id):
     if quiz.view_answerpaper and user in course.students.all():
         data = AnswerPaper.objects.get_user_data(user, questionpaper_id,
                                                  course_id)
-        has_user_assignment = AssignmentUpload.objects.filter(
+        has_user_assignments = AssignmentUpload.objects.filter(
             user=user, course_id=course.id,
             question_paper_id=questionpaper_id
         ).exists()
         context = {'data': data, 'quiz': quiz, 'course_id': course.id,
-                   "has_user_assignment": has_user_assignment}
+                   "has_user_assignments": has_user_assignments}
         return my_render_to_response(
             request, 'yaksh/view_answerpaper.html', context
         )

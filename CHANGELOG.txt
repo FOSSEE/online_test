@@ -1,3 +1,10 @@
+=== 0.25.0 (14-09-2020) ===
+
+* Fix bug to show missing marks in grade user
+* Recalculate and save total marks of paper after saving or changing
+* Remove MathJax references and replace Katex CDN
+* Add feature to allow to extend time even if the paper is completed
+
 === 0.24.0 (09-09-2020) ===
 
 * Fix rendering of the quiz list
