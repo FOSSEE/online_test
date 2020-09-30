@@ -10,7 +10,8 @@ from ruamel.yaml.comments import CommentedMap
 from random import sample
 from collections import Counter, defaultdict
 import glob
-
+import sys
+import traceback
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -254,6 +255,15 @@ def get_image_dir(instance, filename):
     return os.sep.join((
         'post_%s' % (instance.uid), filename
     ))
+
+
+def is_valid_time_format(time):
+    try:
+        hh, mm, ss = time.split(":")
+        status = True
+    except ValueError:
+        status = False
+    return status
 
 
 ###############################################################################
@@ -2809,6 +2819,66 @@ class TOCManager(models.Manager):
         else:
             answer = attempted_answer.answer
         return answer, attempted_answer.correct
+
+    def add_contents(self, course_id, lesson_id, user, contents):
+        toc = []
+        messages = []
+        for content in contents:
+            name = content.get('name') or content.get('summary')
+            if "content_type" not in content or "time" not in content:
+                messages.append(
+                    (False,
+                     f"content_type or time key is missing in {name}")
+                )
+            else:
+                content_type = content.pop('content_type')
+                time = content.pop('time')
+                if not is_valid_time_format(time):
+                    messages.append(
+                        (False,
+                        f"Invalid time format in {name}. "
+                         "Format should be 00:00:00")
+                    )
+                else:
+                    if content_type == 1:
+                        topic = Topic.objects.create(**content)
+                        toc.append(TableOfContents(
+                            course_id=course_id, lesson_id=lesson_id, time=time,
+                            content_object=topic, content=content_type 
+                        ))
+                        messages.append((True, f"{topic.name} added successfully"))
+                    else:
+                        content['user'] = user
+                        test_cases = content.pop("testcase")
+                        que_type = content.get('type')
+                        if "files" in content:
+                            content.pop("files")
+                        if "tags" in content:
+                            content.pop("tags")
+                        if (que_type in ['code', 'upload']):
+                            messages.append(
+                                (False, f"{que_type} question is not allowed. "
+                                 f"{content.get('summary')} is not added")
+                            )
+                        else:
+                            que = Question.objects.create(**content)
+                            for test_case in test_cases:
+                                test_case_type = test_case.pop('test_case_type')
+                                model_class = get_model_class(test_case_type)
+                                model_class.objects.get_or_create(
+                                    question=que, **test_case, type=test_case_type
+                                )
+                            toc.append(TableOfContents(
+                                course_id=course_id, lesson_id=lesson_id,
+                                time=time, content_object=que,
+                                content=content_type
+                            ))
+                        messages.append(
+                            (True, f"{que.summary} added successfully")
+                        )
+        if toc:
+            TableOfContents.objects.bulk_create(toc)
+        return messages
 
 
 class TableOfContents(models.Model):

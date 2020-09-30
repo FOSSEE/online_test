@@ -8484,3 +8484,86 @@ class TestLessonContents(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(student_info.get("student_id"), self.student.id)
 
+    def test_upload_lesson_contents(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        dummy_file = SimpleUploadedFile("test.txt", b"test")
+        # Invalid file type
+        response = self.client.post(
+            reverse('yaksh:edit_lesson',
+                    kwargs={"lesson_id": self.lesson1.id,
+                            "course_id": self.user1_course1.id,
+                            "module_id": self.learning_module1.id}),
+            data={"toc": dummy_file,
+                  "upload_toc": "upload_toc"}
+            )
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Please upload yaml or yml type file', messages)
+
+        # Valid yaml file for TOC
+        yaml_path = os.sep.join((FIXTURES_DIR_PATH, 'sample_lesson_toc.yaml'))
+        with open(yaml_path, 'rb') as fp:
+            yaml_file = SimpleUploadedFile("test.yml", fp.read())
+            response = self.client.post(
+                reverse('yaksh:edit_lesson',
+                        kwargs={"lesson_id": self.lesson1.id,
+                                "course_id": self.user1_course1.id,
+                                "module_id": self.learning_module1.id}),
+                data={"toc": yaml_file,
+                      "upload_toc": "upload_toc"}
+                )
+            contents = [
+                'Sample lesson quiz 1', 'Sample lesson quiz 2',
+                'Sample lesson topic 1', 'Sample lesson topic 2'
+            ]
+            self.assertEqual(response.status_code, 200)
+            has_que = Question.objects.filter(
+                summary__in=contents[:2]
+                ).exists()
+            has_topics = Topic.objects.filter(
+                name__in=contents[2:]
+                ).exists()
+            self.assertTrue(has_que)
+            self.assertTrue(has_topics)
+
+        # Invalid YAML file data
+        yaml_content = b"""
+        ---
+        name: 'Sample lesson topic 2'
+        description: 'Topic 2 description'
+        """
+        yaml_file = SimpleUploadedFile("test.yml", yaml_content)
+        response = self.client.post(
+                reverse('yaksh:edit_lesson',
+                        kwargs={"lesson_id": self.lesson1.id,
+                                "course_id": self.user1_course1.id,
+                                "module_id": self.learning_module1.id}),
+                data={"toc": yaml_file,
+                      "upload_toc": "upload_toc"}
+                )
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Error parsing yaml", messages[0])
+
+        # Invalid YAML with no content_type and invalid time format
+        yaml_path = os.sep.join((FIXTURES_DIR_PATH, 'invalid_yaml.yaml'))
+        with open(yaml_path, 'rb') as fp:
+            yaml_file = SimpleUploadedFile("test.yml", fp.read())
+            response = self.client.post(
+                reverse('yaksh:edit_lesson',
+                        kwargs={"lesson_id": self.lesson1.id,
+                                "course_id": self.user1_course1.id,
+                                "module_id": self.learning_module1.id}),
+                data={"toc": yaml_file,
+                      "upload_toc": "upload_toc"}
+                )
+            messages = [m.message for m in get_messages(response.wsgi_request)]
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(
+                "content_type or time key is missing", messages[0]
+            )
+            self.assertIn("Invalid time format", messages[1])
+

@@ -1,8 +1,18 @@
+<div>
+    <form action="" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="toc" required="">
+        <button class="btn btn-outline-success" id="upload_toc" name="upload_toc">
+            <i class="fa fa-upload"></i>&nbsp;Upload TOC
+        </button>
+    </form>
+</div>
+<hr>
 <table class="table table-responsive-sm">
 {% for toc in contents %}
     {% with toc.get_toc_text as toc_name %}
     <tr>
-        <td>
+        <td width="30%">
             {{ toc_name }}
         </td>
         <td>
@@ -36,6 +46,7 @@
         <span class="badge badge-warning">No Table of contents added</span>
     </center>
 {% endfor %}
+</table>
 <script type="text/javascript">
     $(document).ready(function() {
         var divs = document.getElementsByClassName("hidden");
@@ -51,4 +62,3 @@
         ajax_call(url, "GET");
     }
 </script>
-</table>

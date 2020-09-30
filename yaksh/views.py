@@ -24,6 +24,7 @@ import json
 from textwrap import dedent
 import zipfile
 import markdown
+import ruamel
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -2709,6 +2710,26 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
                 messages.warning(
                     request, "Please select atleast one file to delete"
                 )
+
+        if 'upload_toc' in request.POST:
+            toc_file = request.FILES.get('toc')
+            file_extension = os.path.splitext(toc_file.name)[1][1:]
+            if file_extension not in ['yaml', 'yml']:
+                messages.warning(
+                    request, "Please upload yaml or yml type file"
+                )
+            else:
+                try:
+                    toc_data = ruamel.yaml.safe_load_all(toc_file.read())
+                    results = TableOfContents.objects.add_contents(
+                        course_id, lesson_id, user, toc_data)
+                    for status, msg in results:
+                        if status == True:
+                            messages.success(request, msg)
+                        else:
+                            messages.warning(request, msg)
+                except Exception as e:
+                    messages.warning(request, f"Error parsing yaml: {e}")
 
     contents = TableOfContents.objects.filter(
                     course_id=course_id, lesson_id=lesson_id
