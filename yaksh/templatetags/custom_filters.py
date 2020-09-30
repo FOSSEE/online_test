@@ -10,7 +10,7 @@ except ImportError:
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
-from yaksh.models import User, Course, Quiz, TableOfContents
+from yaksh.models import User, Course, Quiz, TableOfContents, Lesson
 
 register = template.Library()
 
@@ -183,3 +183,13 @@ def specail_attempt_monitor(user_id, course_id, quiz_id):
 @register.simple_tag
 def get_answers(toc_id, user_id):
     return TableOfContents.objects.get_answer(toc_id, user_id)
+
+
+@register.simple_tag
+def has_lesson_video(lesson_id):
+    lesson = Lesson.objects.filter(id=lesson_id)
+    if lesson.exists():
+        status = True if lesson.first().video_path else False
+    else:
+        status = False
+    return status

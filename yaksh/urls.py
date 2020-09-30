@@ -269,4 +269,6 @@ urlpatterns = [
          views.lesson_statistics, name='lesson_statistics'),
     path('manage/lesson/stats/<int:course_id>/<int:lesson_id>/<int:toc_id>',
          views.lesson_statistics, name='lesson_statistics'),
+    path('manage/download/sample/toc',
+         views.download_sample_toc, name='download_sample_toc'),
 ]
