@@ -1,0 +1,66 @@
+# content_type 1: Topic, 2: Grading quiz, 3: Exercise, 4: Poll
+---
+summary: |-
+  Sample lesson quiz 1
+type: |-
+  mcq
+language: |-
+  other
+description: |-
+  Choose the letter from the following
+points: 1.0
+testcase:
+- test_case_type: |-
+    mcqtestcase
+  options: |-
+    A 
+  correct: false
+- test_case_type: |-
+    mcqtestcase
+  options: |-
+    B
+  correct: true
+- test_case_type: |-
+    mcqtestcase
+  options: |-
+    C
+  correct: false
+- test_case_type: |-
+    mcqtestcase
+  options: |-
+    D
+  correct: false
+active: true
+topic: 'Dummy1'
+content_type: 2
+time: '00:02:00'
+---
+summary: |-
+  Sample lesson quiz 2
+type: |-
+  mcq
+language: |-
+  python
+description: |-
+  What will be the output of the statement
+  <br>
+  print(1+2)
+points: 1.0
+testcase:
+- test_case_type: |-
+    integertestcase
+  correct: '3'
+active: true
+topic: 'Dummy2'
+content_type: 2
+time: '00:05:00'
+---
+name: 'Sample lesson topic 1'
+description: 'Topic 1 description'
+content_type: 1
+time: '00:00:00'
+---
+name: 'Sample lesson topic 2'
+description: 'Topic 2 description'
+content_type: 1
+time: '00:01:00'
