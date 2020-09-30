@@ -3320,7 +3320,7 @@ class TestCourseDetail(TestCase):
         response = self.client.get(reverse('yaksh:download_sample_csv'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
-                         'attachment; filename="sample_user_upload"')
+                         'attachment; filename="sample_user_upload.csv"')
 
     def test_view_course_status(self):
         """ Test to view course status """
@@ -8484,7 +8484,7 @@ class TestLessonContents(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(student_info.get("student_id"), self.student.id)
 
-    def test_upload_lesson_contents(self):
+    def test_upload_download_lesson_contents(self):
         self.client.login(
             username=self.user1.username,
             password=self.user1_plaintext_pass
@@ -8567,3 +8567,8 @@ class TestLessonContents(TestCase):
             )
             self.assertIn("Invalid time format", messages[1])
 
+        # Download yaml sample
+        response = self.client.get(reverse('yaksh:download_sample_toc'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-Disposition'),
+                         'attachment; filename="sample_lesson_toc.yaml"')

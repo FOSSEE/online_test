@@ -2583,7 +2583,23 @@ def download_sample_csv(request):
     with open(csv_file_path, 'rb') as csv_file:
         response = HttpResponse(csv_file.read(), content_type='text/csv')
         response['Content-Disposition'] = (
-            'attachment; filename="sample_user_upload"'
+            'attachment; filename="sample_user_upload.csv"'
+        )
+        return response
+
+
+@login_required
+@email_verified
+def download_sample_toc(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                 "sample_lesson_toc.yaml")
+    with open(csv_file_path, 'rb') as csv_file:
+        response = HttpResponse(csv_file.read(), content_type='text/yaml')
+        response['Content-Disposition'] = (
+            'attachment; filename="sample_lesson_toc.yaml"'
         )
         return response
 
@@ -2731,13 +2747,7 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
                 except Exception as e:
                     messages.warning(request, f"Error parsing yaml: {e}")
 
-    contents = TableOfContents.objects.filter(
-                    course_id=course_id, lesson_id=lesson_id
-                ).order_by("time")
-    data = loader.render_to_string(
-        "yaksh/show_toc.html", context={'contents': contents},
-        request=request
-    )
+    data = get_toc_contents(request, course_id, lesson_id)
     context['toc'] = data
     lesson_files = LessonFile.objects.filter(lesson=lesson)
     context['lesson_form'] = lesson_form
@@ -3591,7 +3601,9 @@ def get_toc_contents(request, course_id, lesson_id):
         course_id=course_id, lesson_id=lesson_id
     ).order_by("time")
     data = loader.render_to_string(
-        "yaksh/show_toc.html", context={'contents': contents},
+        "yaksh/show_toc.html", context={
+            'contents': contents, 'lesson_id': lesson_id
+        },
         request=request
     )
     return data
