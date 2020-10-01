@@ -2824,6 +2824,7 @@ def show_lesson(request, lesson_id, module_id, course_id):
             new_comment = form.save(commit=False)
             new_comment.creator = request.user
             new_comment.post_field = post
+            new_comment.anonymous = request.POST.get('anonymous', '') == 'on'
             new_comment.save()
             return redirect(request.path_info)
         else:
@@ -3500,6 +3501,7 @@ def course_forum(request, course_id):
             new_post = form.save(commit=False)
             new_post.creator = user
             new_post.target = course
+            new_post.anonymous = request.POST.get('anonymous', '') == 'on'
             new_post.save()
             return redirect('yaksh:post_comments',
                             course_id=course.id, uuid=new_post.uid)
@@ -3557,6 +3559,7 @@ def post_comments(request, course_id, uuid):
             new_comment = form.save(commit=False)
             new_comment.creator = request.user
             new_comment.post_field = post
+            new_comment.anonymous = request.POST.get('anonymous', '') == 'on'
             new_comment.save()
             return redirect(request.path_info)
     return render(request, 'yaksh/post_comments.html', {
