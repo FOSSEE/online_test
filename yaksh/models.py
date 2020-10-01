@@ -2706,6 +2706,7 @@ class ForumBase(models.Model):
     image = models.ImageField(upload_to=get_image_dir, blank=True,
                               null=True, validators=[validate_image])
     active = models.BooleanField(default=True)
+    anonymous = models.BooleanField(default=False)
 
 
 class Post(ForumBase):

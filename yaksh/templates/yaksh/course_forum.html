@@ -111,7 +111,13 @@
                                         <small class="text-muted d-block">{{ post.description|truncatewords:30 }}</small>
                                         <small class="text-muted"><strong>Last updated: {{post.modified_at}}</strong></small>
                                     </td>
-                                    <td>{{post.creator.username}}</td>
+                                    <td>
+                                        {% if post.anonymous %}
+                                            Anonymous
+                                        {% else %}
+                                            {{post.creator.username}}
+                                        {% endif %}
+                                    </td>
                                     <td>{{post.get_comments_count}}</td>
                                     <td>
                                         {% with post.get_last_comment as last_comment %}
