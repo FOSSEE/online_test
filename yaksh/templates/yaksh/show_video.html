@@ -16,6 +16,7 @@
 <script src="{% static 'yaksh/js/jquery-sortable.js' %}"></script>
 <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML">
 </script>
+<script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
 {% endblock %}
 {% block css %}
 <link rel="stylesheet" href="{% static 'yaksh/css/jquery-ui/jquery-ui.css' %}">
@@ -258,7 +259,7 @@
                                 <small class="text-muted">{{comment.created_at}} {% if user.profile.is_moderator %} <a href="{% url 'yaksh:hide_comment' course.id comment.uid %}" class="fa fa-trash"></a>{% endif %}</small>
                             </div>
                         </div>
-                        <p class="card-text description">{{comment.description}}</p>
+                        <p class="card-text description">{{comment.description|safe}}</p>
                         <div>
                             {% if comment.image %}
                                 <a href="{{comment.image.url}}" target="_blank">

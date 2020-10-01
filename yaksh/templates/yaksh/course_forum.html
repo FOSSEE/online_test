@@ -149,9 +149,24 @@
 {% block script %}
       <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
       <script type="text/javascript" src="{% static 'yaksh/js/jquery.tablesorter.min.js' %}"></script>
+      <script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
       <script type="text/javascript">
         $(document).ready(() => {
             $("#posts_table").tablesorter();
+             $(function() {
+                tinymce.init({
+                    selector: 'textarea#id_description',
+                    setup : function(ed) {
+                          ed.on('change', function(e) {
+                             tinymce.triggerSave();
+                          });
+                    },
+                    max_height: 400,
+                    height: 400,
+                    plugins: "image code link",
+                    convert_urls: false
+                });
+            });
         });
       </script>
 {% endblock script %}
