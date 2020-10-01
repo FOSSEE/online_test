@@ -4,8 +4,8 @@
 
 {% block title %} {{ learning_module.name }} {% endblock %}
 {% block script %}
-<script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML">
-</script>
+<script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
 {% endblock %}
 {% block main %}
 <div class="wrapper">
@@ -185,7 +185,7 @@
                                 <small class="text-muted">{{comment.created_at}} {% if user.profile.is_moderator %} <a href="{% url 'yaksh:hide_comment' course.id comment.uid %}" class="fa fa-trash"></a>{% endif %}</small>
                             </div>
                         </div>
-                        <p class="card-text description">{{comment.description}}</p>
+                        <p class="card-text description">{{comment.description|safe}}</p>
                         <div>
                             {% if comment.image %}
                                 <a href="{{comment.image.url}}" target="_blank">
@@ -203,6 +203,22 @@
     $(document).ready(function () {
         $('#sidebarCollapse').on('click', function () {
             $('#sidebar').toggleClass('active');
+        });
+       $(document).ready(() => {
+             $(function() {
+                tinymce.init({
+                    selector: 'textarea#id_description',
+                    setup : function(ed) {
+                          ed.on('change', function(e) {
+                             tinymce.triggerSave();
+                          });
+                    },
+                    max_height: 400,
+                    height: 400,
+                    plugins: "image code link",
+                    convert_urls: false
+                });
+            });
         });
     });
 </script>

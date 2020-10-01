@@ -43,7 +43,7 @@
 
             </div>
             <div class="card-body">
-                <p class="card-text description">{{post.description}}</p>
+                <p class="card-text description">{{post.description|safe}}</p>
                 {% if post.image %}
                     <a href="{{post.image.url}}" target="_blank">
                         <center><img src="{{post.image.url}}" class="post_image thumbnail" alt=""></center>
@@ -80,7 +80,7 @@
                                 <small class="text-muted">{{comment.created_at}} {% if user == course.creator %} <a href="{% url 'yaksh:hide_comment' post.target.id comment.uid %}" class="fa fa-trash"></a>{% endif %}</small>
                             </div>
                         </div>
-                        <p class="card-text description">{{comment.description}}</p>
+                        <p class="card-text description">{{comment.description|safe}}</p>
                         <div>
                             {% if comment.image %}
                                 <a href="{{comment.image.url}}" target="_blank">
@@ -97,4 +97,23 @@
 {% endblock content %}
 {% block script %}
       <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
+      <script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
+      <script type="text/javascript">
+       $(document).ready(() => {
+             $(function() {
+                tinymce.init({
+                    selector: 'textarea#id_description',
+                    setup : function(ed) {
+                          ed.on('change', function(e) {
+                             tinymce.triggerSave();
+                          });
+                    },
+                    max_height: 400,
+                    height: 400,
+                    plugins: "image code link",
+                    convert_urls: false
+                });
+            });
+        });
+      </script>
 {% endblock script %}
