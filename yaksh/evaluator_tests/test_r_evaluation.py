@@ -44,7 +44,7 @@ class RAssertionEvaluationTestCase(EvaluatorBaseTest):
         )
         self.test_case_data = [{"test_case": self.test_case,
                                 "test_case_type": "standardtestcase",
-                                "weight": 0.0
+                                "weight": 0.0, "hidden": True
                                 }]
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in"
@@ -108,6 +108,7 @@ class RAssertionEvaluationTestCase(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
         errors = result.get('error')
         # Then
+        self.assertTrue(result.get("error")[0]['hidden'])
         self.assertFalse(result.get('success'))
         self.assertEqual(errors[0]['message'], err)
 
@@ -134,6 +135,7 @@ class RAssertionEvaluationTestCase(EvaluatorBaseTest):
         errors = result.get('error')
 
         # Then
+        self.assertTrue(result.get("error")[0]['hidden'])
         self.assertFalse(result.get("success"))
         self.assertIn("object 'a' not found", errors[0]['message'])
 
@@ -159,6 +161,7 @@ class RAssertionEvaluationTestCase(EvaluatorBaseTest):
         errors = result.get('error')
 
         # Then
+        self.assertTrue(result.get("error")[0]['hidden'])
         self.assertFalse(result.get("success"))
         err = errors[0]['message']
         self.assertIn("is.null(obj) == FALSE is not TRUE", err)

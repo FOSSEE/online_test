@@ -54,7 +54,7 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
             """)
         self.test_case_data = [{"test_case": self.tc_data,
                                 "test_case_type": "standardtestcase",
-                                "weight": 0.0
+                                "weight": 0.0, "hidden": False
                                 }]
         self.in_dir = tmp_in_dir_path
         self.timeout_msg = ("Code took more than {0} seconds to run. "
@@ -184,9 +184,9 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                 check(50, result);
             }
             """)
-        self.test_case_data = [{"test_case": self.tc_data,
+        test_case_data = [{"test_case": self.tc_data,
                                 "test_case_type": "standardtestcase",
-                                "weight": 0.0
+                                "weight": 0.0,
                                 }]
         user_answer = dedent("""
             #include<stdio.h>
@@ -206,7 +206,7 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    }, 'test_case_data': self.test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -257,9 +257,9 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                         {
                         return a+b;
                         }""")
-        self.test_case_data = [{"test_case": self.tc_data,
+        test_case_data = [{"test_case": self.tc_data,
                                 "test_case_type": "standardtestcase",
-                                "weight": 0.0
+                                "weight": 0.0,
                                 }]
         kwargs = {
                   'metadata': {
@@ -267,7 +267,7 @@ class CAssertionEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    }, 'test_case_data': self.test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -287,6 +287,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                                 'expected_input': '5\n6',
                                 'weight': 0.0,
                                 'test_case_type': 'stdiobasedtestcase',
+                                'hidden': True
                                 }]
         self.in_dir = tempfile.mkdtemp()
         self.timeout_msg = ("Code took more than {0} seconds to run. "
@@ -324,7 +325,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
 
     def test_array_input(self):
         # Given
-        self.test_case_data = [{'expected_output': '561',
+        test_case_data = [{'expected_output': '561',
                                 'expected_input': '5\n6\n1',
                                 'weight': 0.0,
                                 'test_case_type': 'stdiobasedtestcase',
@@ -344,7 +345,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    }, 'test_case_data': self.test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -356,7 +357,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
 
     def test_string_input(self):
         # Given
-        self.test_case_data = [{'expected_output': 'abc',
+        test_case_data = [{'expected_output': 'abc',
                                 'expected_input': 'abc',
                                 'weight': 0.0,
                                 'test_case_type': 'stdiobasedtestcase',
@@ -374,7 +375,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    }, 'test_case_data': self.test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -408,6 +409,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
         # Then
         lines_of_error = len(result.get('error')[0].get('error_line_numbers'))
         result_error = result.get('error')[0].get('error_msg')
+        self.assertTrue(result.get('error')[0].get('hidden'))
         self.assertFalse(result.get('success'))
         self.assert_correct_output("Incorrect", result_error)
         self.assertTrue(lines_of_error > 0)
@@ -472,7 +474,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
 
     def test_only_stdout(self):
         # Given
-        self.test_case_data = [{'expected_output': '11',
+        test_case_data = [{'expected_output': '11',
                                 'weight': 0.0,
                                 'test_case_type': 'stdiobasedtestcase',
                                 }]
@@ -488,7 +490,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    }, 'test_case_data': self.test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -522,11 +524,12 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         # Then
+        self.assertFalse(result.get('hidden'))
         self.assertTrue(result.get('success'))
 
     def test_cpp_array_input(self):
         # Given
-        self.test_case_data = [{'expected_output': '561',
+        test_case_data = [{'expected_output': '561',
                                 'expected_input': '5\n6\n1',
                                 'weight': 0.0,
                                 'test_case_type': 'stdiobasedtestcase',
@@ -547,7 +550,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    }, 'test_case_data': self.test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -559,7 +562,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
 
     def test_cpp_string_input(self):
         # Given
-        self.test_case_data = [{'expected_output': 'abc',
+        test_case_data = [{'expected_output': 'abc',
                                 'expected_input': 'abc',
                                 'weight': 0.0,
                                 'test_case_type': 'stdiobasedtestcase',
@@ -578,7 +581,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    }, 'test_case_data': self.test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -613,6 +616,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
         # Then
         lines_of_error = len(result.get('error')[0].get('error_line_numbers'))
         result_error = result.get('error')[0].get('error_msg')
+        self.assertTrue(result.get('error')[0].get('hidden'))
         self.assertFalse(result.get('success'))
         self.assert_correct_output("Incorrect", result_error)
         self.assertTrue(lines_of_error > 0)
@@ -675,7 +679,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
 
     def test_cpp_only_stdout(self):
         # Given
-        self.test_case_data = [{'expected_output': '11',
+        test_case_data = [{'expected_output': '11',
                                'expected_input': '',
                                 'weight': 0.0,
                                 'test_case_type': 'stdiobasedtestcase',
@@ -693,7 +697,7 @@ class CppStdIOEvaluationTestCases(EvaluatorBaseTest):
                     'file_paths': self.file_paths,
                     'partial_grading': False,
                     'language': 'cpp'
-                    }, 'test_case_data': self.test_case_data,
+                    }, 'test_case_data': test_case_data,
                   }
 
         # When
@@ -806,7 +810,8 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                             """)
 
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code, "weight": 1.0}]
+                           "hook_code": hook_code, "weight": 1.0,
+                           "hidden": True}]
         kwargs = {
                   'metadata': {
                     'user_answer': user_answer,
@@ -821,8 +826,10 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         # Then
+        self.assertTrue(result.get('error')[0]['hidden'])
         self.assertFalse(result.get('success'))
-        self.assert_correct_output('Incorrect Answer', result.get('error'))
+        self.assert_correct_output('Incorrect Answer',
+                                   result.get('error')[0]['message'])
 
     def test_assert_with_hook(self):
         # Given
@@ -999,7 +1006,8 @@ class CppHookEvaluationTestCases(EvaluatorBaseTest):
                             """)
 
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code, "weight": 1.0}]
+                           "hook_code": hook_code, "weight": 1.0,
+                           "hidden": False}]
 
         kwargs = {
                   'metadata': {

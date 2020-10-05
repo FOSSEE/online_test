@@ -27,6 +27,7 @@ class BashCodeEvaluator(BaseEvaluator):
         self.test_case_args = test_case_data.get('test_case_args')
 
         self.weight = test_case_data.get('weight')
+        self.hidden = test_case_data.get('hidden')
 
     def teardown(self):
         # Delete the created file.

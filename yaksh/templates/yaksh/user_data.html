@@ -33,11 +33,6 @@
         </div>
       </div>
     {% endwith %}
-    <br>
-      <a href="{% url 'yaksh:grade_user' data.papers.0.question_paper.quiz.id data.user.id course_id %}" class="btn btn-info">
-        Grade User
-      </a>
-    <br>
     {% for paper in data.papers %}
       <br>
       <h3><b><u>Attempt Number:</u></b>&nbsp;<span class="badge badge-pill badge-info">
@@ -79,19 +74,17 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for question, answers in paper.get_question_answers.items %}
-                  {% with answers|last as answer %}
-                      <tr>
+                  {% for question, answers in paper.get_question_answers.items %}
+                    <tr>
+                      <td>{{question.summary}}</td>
+                      <td>{{question.type}}</td>
                       <td>
-                        <a href="#question_{{question.id}}">
-                          {{ question.summary }}
-                        </a>
+                        {% for answer in answers %}
+                          {{answer.marks}}
+                        {% endfor %}
                       </td>
-                      <td>{{ question.type }}</td>
-                      <td>{{ answer.answer.marks }}</td>
-                      </tr>
-                  {% endwith %}
-                {% endfor %}
+                    </tr>
+                  {% endfor %}
                 </tbody>
             </table>
             {% for question, answers in paper.get_question_answers.items %}
@@ -318,12 +311,12 @@
                 <div class="col-md-2">
                   <label class="col-form-label" for="q{{ question.id }}">Marks:</label>
                   {% with answers|last as answer %}
-                  <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answer.answer.marks }}" readonly=""><br><br>
+                    <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answer.marks }}" readonly=""><br><br>
                   {% endwith %}
                 </div>
               </div>
               <hr/>
-              {% endfor %} {# for question, answers ... #}
+            {% endfor %} {# for question, answers ... #}
               <div class="form-group">
                 <h3>Teacher comments: </h3>
                 <textarea id="comments_{{paper.question_paper.id}}" class="form-control"

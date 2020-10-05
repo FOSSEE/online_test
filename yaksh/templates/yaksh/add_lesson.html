@@ -9,6 +9,8 @@
 </script>
 <script type="text/javascript" src="{% static 'yaksh/js/jquery-ui.js' %}">
 </script>
+<script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML">
+</script>
 {% endblock %}
 
 {% block css %}
@@ -17,15 +19,15 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container-fluid">
 {% if error %}
 <div class="alert alert-danger">
     {{error}}
 </div>
 {% endif %}
-<div class="container">
+<div class="container-fluid">
     <div class="row justify-content-center form-group">
-        <div class="col-md-9 col-md-offset-4">
+        <div class="col-md-5 col-md-offset-4">
             <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
                 <i class="fa fa-arrow-left"></i>&nbsp;Back
             </a>
@@ -137,17 +139,19 @@
                     </center>
                     </form>
                     <hr>
-                    <div class="card" id="preview_text_div" style="display: none;">
-                        <div class="card-heading">
-                            <center>
-                                <h3>Description Preview</h3>
-                            </center>
-                        </div>
-                        <div class="card-body" id="description_body">
-                        </div>
-                    </div>
                 </fieldset>
             </form>
+        </div>
+        <div class="col-md-6">
+            <div class="card" id="preview_text_div">
+                <div class="card-header">
+                    <center>
+                        <h3>Description Preview</h3>
+                    </center>
+                </div>
+                <div class="card-body" id="description_body">
+                </div>
+            </div>
         </div>
     </div>
 </div>

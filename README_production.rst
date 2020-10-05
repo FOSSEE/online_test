@@ -73,7 +73,7 @@ To install this app follow the steps below:
 
    ::
 
-      pip3 install -r requirements/requirements-py3.txt
+      pip3 install -r requirements/requirements-production.txt
 
    ::
 

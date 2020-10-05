@@ -2,6 +2,7 @@ from datetime import datetime
 import pytz
 import os
 import json
+import time
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -21,6 +22,8 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files import File
 from django.contrib.messages import get_messages
+from celery.contrib.testing.worker import start_worker
+from django.test import SimpleTestCase
 
 
 from yaksh.models import (
@@ -32,6 +35,9 @@ from yaksh.models import (
 from yaksh.views import add_as_moderator, course_forum, post_comments
 from yaksh.forms import PostForm, CommentForm
 from yaksh.decorators import user_has_profile
+from online_test.celery_settings import app
+
+from notifications_plugin.models import Notification
 
 
 class TestUserRegistration(TestCase):
@@ -576,9 +582,9 @@ class TestMonitor(TestCase):
                                    )
         self.assertEqual(response.status_code, 404)
 
-    def test_monitor_display_quizzes(self):
+    def test_monitor_quiz_not_found(self):
         """
-            Check all the available quizzes in monitor
+            Check if quiz is not found
         """
         self.client.login(
             username=self.user.username,
@@ -587,10 +593,7 @@ class TestMonitor(TestCase):
         response = self.client.get(reverse('yaksh:monitor'),
                                    follow=True
                                    )
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "yaksh/monitor.html")
-        self.assertEqual(response.context['objects'][0], self.course)
-        self.assertEqual(response.context['msg'], "Monitor")
+        self.assertEqual(response.status_code, 404)
 
     def test_monitor_display_quiz_results(self):
         """
@@ -2632,10 +2635,19 @@ class TestCourseDetail(TestCase):
             name="Python Course",
             enrollment="Enroll Request", creator=self.user1
             )
+
         self.user1_othercourse = Course.objects.create(
             name="Python Course II",
             enrollment="Enroll Request", creator=self.user1
             )
+
+        self.user1_deactive_course = Course.objects.create(
+            name="Python Course II",
+            enrollment="Enroll Request",
+            creator=self.user1,
+            end_enroll_time=timezone.now()
+        )
+
         self.learning_module = LearningModule.objects.create(
             name="test module", description="test description module",
             html_data="test html description module", creator=self.user1,
@@ -2742,6 +2754,33 @@ class TestCourseDetail(TestCase):
             self.user1_othercourse.students.filter(
                 id=uploaded_users.first().id).exists()
         )
+
+    def test_upload_existing_user_email(self):
+        # Given
+        self.client.login(
+            username=self.user1.username, password=self.user1_plaintext_pass)
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     'user_existing_email.csv')
+        csv_file = open(csv_file_path, 'rb')
+        upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
+        csv_file.close()
+
+        # When
+        response = self.client.post(
+            reverse('yaksh:upload_users',
+                    kwargs={'course_id': self.user1_course.id}),
+            data={'csv_file': upload_file})
+
+        # Then
+        uploaded_users = User.objects.filter(email='demo_student@test.com')
+        self.assertEqual(response.status_code, 302)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertIn('demo_student', messages[0])
+        self.assertTrue(
+            self.user1_course.students.filter(
+                id=uploaded_users.first().id).exists()
+        )
+        self.assertEqual(uploaded_users.count(), 1)
 
     def test_upload_users_add_update_reject(self):
         # Given
@@ -2974,14 +3013,73 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.post(
-            reverse('yaksh:enroll_users',
-                    kwargs={'course_id': self.user1_course.id}),
-            data={'check': self.student1.id}
-            )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_course.id
+        })
+        data = {
+            'check': self.student1.id,
+            'enroll': 'enroll'
+        }
+        response = self.client.post(url, data)
         enrolled_student = self.user1_course.students.all()
         self.assertEqual(response.status_code, 302)
         self.assertSequenceEqual([self.student1], enrolled_student)
+
+    def test_student_course_enroll_post_without_enroll_in_request(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_course.id
+        })
+        data = {
+            'check': self.student1.id,
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+
+    def test_student_course_enroll_post_without_enroll_ids(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_course.id
+        })
+        data = {
+            'enroll': 'enroll'
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+
+    def test_student_course_reject_post_without_reject_in_request(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_course.id
+        })
+        data = {
+            'check': self.student1.id,
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+
+    def test_student_course_reject_post_without_reject_ids(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_course.id
+        })
+        data = {
+            'reject': 'reject'
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
 
     def test_student_course_reject_get(self):
         """
@@ -3008,14 +3106,122 @@ class TestCourseDetail(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        response = self.client.post(
-            reverse('yaksh:reject_users',
-                    kwargs={'course_id': self.user1_course.id}),
-            data={'check': self.student1.id}
-            )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_course.id
+        })
+        data = {
+            'check': self.student1.id,
+            'reject': 'reject'
+        }
+        response = self.client.post(url, data)
         enrolled_student = self.user1_course.rejected.all()
         self.assertEqual(response.status_code, 302)
         self.assertSequenceEqual([self.student1], enrolled_student)
+
+    def test_enroll_user_not_moderator(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_user', kwargs={
+            'course_id': self.user1_course.id,
+            'user_id': self.user1.id
+        })
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_enroll_user_in_expired_course(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_user', kwargs={
+            'course_id': self.user1_deactive_course.id,
+            'user_id': self.student.id
+        })
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_enroll_user_where_moderator_is_neither_creator_nor_teacher(self):
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_user', kwargs={
+            'course_id': self.user1_course.id,
+            'user_id': self.user1.id
+        })
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_reject_user_not_moderator(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        url = reverse('yaksh:reject_user', kwargs={
+            'course_id': self.user1_course.id,
+            'user_id': self.user1.id
+        })
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_reject_user_where_moderator_is_neither_creator_nor_teacher(self):
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        url = reverse('yaksh:reject_user', kwargs={
+            'course_id': self.user1_course.id,
+            'user_id': self.user1.id
+        })
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_enroll_reject_user_not_moderator(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_course.id,
+        })
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_enroll_reject_user_in_deactivated_course(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_deactive_course.id,
+        })
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_enroll_reject_user_where_moderator_is_neither_creator_nor_teacher(
+            self):
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_course.id,
+        })
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_enroll_reject_user_view(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:enroll_reject_user', kwargs={
+            'course_id': self.user1_course.id,
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
 
     def test_toggle_course_status_get(self):
         self.client.login(
@@ -3208,6 +3414,170 @@ class TestCourseDetail(TestCase):
         self.assertIn("Student_First_Name Student_Last_Name", data)
         self.assertIn("Overall Course Progress", data)
         self.assertIn("Per Module Progress", data)
+
+
+class TestCourseStudents(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
+
+        # Create Moderator with profile
+        self.user1_plaintext_pass = 'demo1'
+        self.user1 = User.objects.create_user(
+            username='demo_user1',
+            password=self.user1_plaintext_pass,
+            first_name='user1_first_name',
+            last_name='user1_last_name',
+            email='demo@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user1,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
+        )
+
+        self.user2_plaintext_pass = 'demo2'
+        self.user2 = User.objects.create_user(
+            username='demo_user2',
+            password=self.user2_plaintext_pass,
+            first_name='user2_first_name',
+            last_name='user2_last_name',
+            email='demo2@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.user2,
+            roll_number=10,
+            institute='IIT',
+            department='Aeronautical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
+        )
+
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+        self.student1_plaintext_pass = 'demo_student'
+        self.student1 = User.objects.create_user(
+            username='demo_student1',
+            password=self.student1_plaintext_pass,
+            first_name='student1_first_name',
+            last_name='student1_last_name',
+            email='demo_student1@test.com'
+        )
+
+        self.student2_plaintext_pass = 'demo_student'
+        self.student2 = User.objects.create_user(
+            username='demo_student2',
+            password=self.student2_plaintext_pass,
+            first_name='student2_first_name',
+            last_name='student2_last_name',
+            email='demo_student2@test.com'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user1)
+        self.mod_group.user_set.add(self.user2)
+
+        self.user1_course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.user1
+            )
+
+        self.user1_course.enroll(False, self.student)
+        self.user1_course.reject(False, self.student1)
+        self.user1_course.request(self.student2)
+
+    def test_enrolled_users(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:course_students', kwargs={
+            'course_id': self.user1_course.id
+        })
+        response = self.client.get(url)
+        enrolled_users = self.user1_course.get_enrolled()
+        self.assertTrue(enrolled_users.exists())
+
+    def test_requested_users(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:course_students', kwargs={
+            'course_id': self.user1_course.id
+        })
+        response = self.client.get(url)
+        requested_users = self.user1_course.get_requests()
+        self.assertTrue(requested_users.exists())
+
+    def test_rejected_users(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:course_students', kwargs={
+            'course_id': self.user1_course.id
+        })
+        response = self.client.get(url)
+        rejected_users = self.user1_course.get_rejected()
+        self.assertTrue(rejected_users.exists())
+
+    def test_course_students_context(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:course_students', kwargs={
+            'course_id': self.user1_course.id
+        })
+        response = self.client.get(url)
+        self.assertTrue('enrolled_users' in response.context)
+        self.assertTrue('requested_users' in response.context)
+        self.assertTrue('rejected_users' in response.context)
+
+    def test_course_students_where_moderator_is_neither_creator_nor_teacher(
+            self):
+        self.client.login(
+            username=self.user2.username,
+            password=self.user2_plaintext_pass
+        )
+        url = reverse('yaksh:course_students', kwargs={
+            'course_id': self.user1_course.id,
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_course_students_where_user_is_not_moderator(self):
+        self.client.login(
+            username=self.student1,
+            password=self.student1_plaintext_pass
+        )
+        url = reverse('yaksh:course_students', kwargs={
+            'course_id': self.user1_course.id,
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def tearDown(self):
+        self.user1.delete()
+        self.user2.delete()
+        self.student.delete()
+        self.student1.delete()
+        self.student2.delete()
+        self.user1_course.delete()
 
 
 class TestEnrollRequest(TestCase):
@@ -3595,11 +3965,13 @@ class TestSelfEnroll(TestCase):
         self.assertRedirects(response, '/exam/manage/')
 
 
-class TestGrader(TestCase):
+class TestGrader(SimpleTestCase):
+    allow_database_queries = True
+
     def setUp(self):
         self.client = Client()
 
-        self.mod_group = Group.objects.create(name='moderator')
+        self.mod_group, created = Group.objects.get_or_create(name='moderator')
 
         # Create Moderator with profile
         self.user1_plaintext_pass = 'demo1'
@@ -3679,6 +4051,9 @@ class TestGrader(TestCase):
             end_time=timezone.now()+timezone.timedelta(minutes=20),
             )
 
+        self.celery_worker = start_worker(app)
+        self.celery_worker.__enter__()
+
     def tearDown(self):
         User.objects.all().delete()
         Course.objects.all().delete()
@@ -3687,42 +4062,22 @@ class TestGrader(TestCase):
         QuestionPaper.objects.all().delete()
         AnswerPaper.objects.all().delete()
         self.mod_group.delete()
-
-    def test_grader_denies_anonymous(self):
-        # Given
-        redirect_destination = ('/exam/login/?next=/exam/manage/grader/')
-
-        # When
-        response = self.client.get(reverse('yaksh:grader'), follow=True)
-
-        # Then
-        self.assertRedirects(response, redirect_destination)
-
-    def test_grader_denies_students(self):
-        # Given
-        self.client.login(
-            username=self.student.username,
-            password=self.student_plaintext_pass
-        )
-
-        # When
-        response = self.client.get(reverse('yaksh:grader'), follow=True)
-
-        # Then
-        self.assertEqual(response.status_code, 404)
+        self.celery_worker.__exit__(None, None, None)
 
     def test_regrade_denies_anonymous(self):
         # Given
-        url = "/exam/login/?next=/exam/manage/regrade/answerpaper"
+        url = "/exam/login/?next=/exam/manage/regrade/user/question"
         redirect_destination = (
-            url + "/{}/{}/{}/".format(
-                self.course.id, self.question.id, self.answerpaper.id)
+            url + "/{}/{}/{}/{}/".format(
+                self.course.id, self.question_paper.id,
+                self.answerpaper.id, self.question.id)
             )
 
         # When
         response = self.client.get(
-            reverse('yaksh:regrade',
+            reverse('yaksh:regrade_by_question',
                     kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id,
                             'question_id': self.question.id,
                             'answerpaper_id': self.answerpaper.id}),
             follow=True
@@ -3740,8 +4095,9 @@ class TestGrader(TestCase):
 
         # When
         response = self.client.get(
-            reverse('yaksh:regrade',
+            reverse('yaksh:regrade_by_question',
                     kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id,
                             'question_id': self.question.id,
                             'answerpaper_id': self.answerpaper.id}),
             follow=True
@@ -3749,21 +4105,6 @@ class TestGrader(TestCase):
 
         # Then
         self.assertEqual(response.status_code, 404)
-
-    def test_grader_by_moderator(self):
-        # Given
-        self.client.login(
-            username=self.user1.username,
-            password=self.user1_plaintext_pass
-        )
-
-        # When
-        response = self.client.get(reverse('yaksh:grader'), follow=True)
-
-        # Then
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue('courses' in response.context)
-        self.assertTemplateUsed(response, 'yaksh/regrade.html')
 
     def test_regrade_by_moderator(self):
         # Given
@@ -3774,44 +4115,46 @@ class TestGrader(TestCase):
 
         # When
         response = self.client.get(
-            reverse('yaksh:regrade',
+            reverse('yaksh:regrade_by_question',
                     kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id,
                             'question_id': self.question.id,
                             'answerpaper_id': self.answerpaper.id}),
             follow=True)
 
         # Then
+        messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('courses' in response.context)
-        self.assertTrue('details' in response.context)
-        self.assertTemplateUsed(response, 'yaksh/regrade.html')
+        self.assertIn("demo quiz is submitted for re-evaluation", messages[0])
 
         # When
         response = self.client.get(
-            reverse('yaksh:regrade',
+            reverse('yaksh:regrade_by_user',
                     kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id,
                             'answerpaper_id': self.answerpaper.id}),
             follow=True)
 
         # Then
+        messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('courses' in response.context)
-        self.assertTrue('details' in response.context)
-        self.assertTemplateUsed(response, 'yaksh/regrade.html')
+        self.assertIn("demo quiz is submitted for re-evaluation", messages[0])
 
         # When
         response = self.client.get(
-            reverse('yaksh:regrade',
+            reverse('yaksh:regrade_by_quiz',
                     kwargs={'course_id': self.course.id,
                             'question_id': self.question.id,
                             'questionpaper_id': self.question_paper.id}),
             follow=True)
 
         # Then
+        messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('courses' in response.context)
-        self.assertTrue('details' in response.context)
-        self.assertTemplateUsed(response, 'yaksh/regrade.html')
+        self.assertIn("demo quiz is submitted for re-evaluation", messages[0])
+        self.assertEqual(Notification.objects.get_receiver_notifications(
+            self.user1.id
+            ).count(), 3)
 
     def test_regrade_denies_moderator_not_in_course(self):
         # Given
@@ -3823,8 +4166,9 @@ class TestGrader(TestCase):
         self.mod_group.user_set.remove(self.user2)
         # When
         response = self.client.get(
-            reverse('yaksh:regrade',
+            reverse('yaksh:regrade_by_question',
                     kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id,
                             'question_id': self.question.id,
                             'answerpaper_id': self.answerpaper.id}),
             follow=True)
@@ -5179,8 +5523,8 @@ class TestQuestionPaper(TestCase):
         self.answerpaper = AnswerPaper.objects.create(
             user=self.user, question_paper=self.question_paper,
             attempt_number=1,
-            start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
-            end_time=datetime(2014, 10, 9, 10, 15, 15, 0, tzone),
+            start_time=timezone.now() - timezone.timedelta(minutes = 10),
+            end_time=timezone.now() - timezone.timedelta(minutes = 1),
             user_ip="127.0.0.1", status="inprogress", passed=False,
             percent=0, marks_obtained=0, course=self.course
         )
@@ -5620,12 +5964,11 @@ class TestQuestionPaper(TestCase):
                   'add-random': ['']}
             )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'yaksh/design_questionpaper.html')
-        random_set = response.context['random_sets'][0]
-        added_random_ques = random_set.questions.all()
-        self.assertIn(self.random_que1, added_random_ques)
-        self.assertIn(self.random_que2, added_random_ques)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            self.question_paper.random_questions.filter(
+                id__in=[self.random_que1.id, self.random_que2.id]).exists()
+        )
 
         # Check if questions already exists
         self.client.login(
@@ -5652,10 +5995,11 @@ class TestQuestionPaper(TestCase):
             data={'checked_ques': [self.fixed_que.id],
                   'add-fixed': ''}
             )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
-        self.assertEqual(response.context['fixed_questions'][0],
-                         self.fixed_que)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            self.fixed_question_paper.fixed_questions.filter(
+                id=self.fixed_que.id).exists()
+        )
 
         # Add one more fixed question in question paper
         response = self.client.post(
@@ -5666,10 +6010,11 @@ class TestQuestionPaper(TestCase):
             data={'checked_ques': [self.question_float.id],
                   'add-fixed': ''}
             )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
-        self.assertEqual(response.context['fixed_questions'],
-                         [self.fixed_que, self.question_float])
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            self.fixed_question_paper.fixed_questions.filter(
+                id=self.question_float.id).exists()
+        )
 
         # Remove fixed question from question paper
         response = self.client.post(
@@ -5680,10 +6025,11 @@ class TestQuestionPaper(TestCase):
             data={'added-questions': [self.fixed_que.id],
                   'remove-fixed': ''}
             )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
-        self.assertEqual(response.context['fixed_questions'],
-                         [self.question_float])
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(
+            self.fixed_question_paper.fixed_questions.filter(
+                id=self.fixed_que.id).exists()
+        )
 
         # Remove one more fixed question from question paper
         response = self.client.post(
@@ -5694,9 +6040,11 @@ class TestQuestionPaper(TestCase):
             data={'added-questions': [self.question_float.id],
                   'remove-fixed': ''}
             )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['qpaper'], self.fixed_question_paper)
-        self.assertEqual(response.context['fixed_questions'], [])
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(
+            self.fixed_question_paper.fixed_questions.filter(
+                id=self.question_float.id).exists()
+        )
 
         # Remove random questions from question paper
         random_que_set = self.question_paper.random_questions.all().first()
@@ -5708,9 +6056,11 @@ class TestQuestionPaper(TestCase):
             data={'random_sets': random_que_set.id,
                   'remove-random': ''}
             )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['qpaper'], self.question_paper)
-        self.assertEqual(len(response.context['random_sets']), 0)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(
+            self.question_paper.random_questions.filter(
+                id=random_que_set.id).exists()
+        )
 
 
 class TestLearningModule(TestCase):
@@ -6402,7 +6752,7 @@ class TestPost(TestCase):
         self.assertContains(response, 'csrfmiddlewaretoken')
 
     def test_view_course_forum_denies_anonymous_user(self):
-        url = reverse('yaksh:course_forum', kwargs= {
+        url = reverse('yaksh:course_forum', kwargs={
             'course_id': self.course.id
         })
         response = self.client.get(url, follow=True)
@@ -6463,7 +6813,6 @@ class TestPost(TestCase):
             'uuid': post.uid
         })
         self.assertContains(response, 'href="{0}'.format(post_comments_url))
-
 
     def test_new_post_valid_post_data(self):
         self.client.login(
@@ -6812,3 +7161,588 @@ class TestPostComment(TestCase):
         self.user.delete()
         self.course.delete()
         self.mod_group.delete()
+
+
+class TestStartExam(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
+
+        # Create Moderator with profile
+        self.user1_plaintext_pass = 'demo'
+        self.user1 = User.objects.create_user(
+            username='demo_user',
+            password=self.user1_plaintext_pass,
+            first_name='first_name',
+            last_name='last_name',
+            email='demo@test.com',
+        )
+        Profile.objects.create(
+            user=self.user1,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.user1)
+
+        # Create Student
+        self.student_plaintext_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='demo_student',
+            password=self.student_plaintext_pass,
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student@test.com'
+        )
+        Profile.objects.create(
+            user=self.student,
+            roll_number=10,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC'
+        )
+
+        # Create courses for user1
+        self.user1_course1 = Course.objects.create(
+            name="Demo Course",
+            enrollment="Enroll Request", creator=self.user1
+        )
+        # course1 status
+        self.course1_status = CourseStatus.objects.create(
+            course=self.user1_course1, user=self.user1
+        )
+
+        # Create learning modules for user1
+        self.learning_module1 = LearningModule.objects.create(
+            order=1, name="Demo Module", description="Demo Module",
+            check_prerequisite=False, creator=self.user1
+        )
+        self.learning_module2 = LearningModule.objects.create(
+            order=2, name="Demo Module 2", description="Demo Module 2",
+            check_prerequisite=False, creator=self.user1
+        )
+
+        self.quiz1 = Quiz.objects.create(
+            time_between_attempts=0, description='Demo Quiz',
+            creator=self.user1
+        )
+
+        self.quiz2 = Quiz.objects.create(
+            time_between_attempts=0, description='Demo Quiz 2',
+            creator=self.user1
+        )
+
+        self.question_paper1 = QuestionPaper.objects.create(
+            quiz=self.quiz1, total_marks=1.0
+        )
+
+        self.question_paper2 = QuestionPaper.objects.create(
+            quiz=self.quiz2, total_marks=1.0
+        )
+
+        self.question1 = Question.objects.create(
+            summary="Test_question 1", description="Add two numbers",
+            points=1.0, language="python", type="code", user=self.user1
+        )
+
+        user_answer = "def add(a, b)\n\treturn a+b"
+        self.new_answer = Answer.objects.create(
+            question=self.question1, answer=user_answer,
+            correct=True, error=json.dumps([])
+        )
+
+        self.answerpaper = AnswerPaper.objects.create(
+            user=self.student, question_paper=self.question_paper1,
+            attempt_number=1,
+            start_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_time=datetime(2020, 10, 9, 10, 15, 15, 0, tzone),
+            user_ip="127.0.0.1", status="inprogress", passed=True,
+            percent=1, marks_obtained=1, course=self.user1_course1
+        )
+
+        self.answerpaper.answers.add(self.new_answer)
+        self.answerpaper.questions_answered.add(self.question1)
+
+        # Create lessons for user1
+        self.lesson1 = Lesson.objects.create(
+            name="Demo Lesson", description="Demo Lession",
+            creator=self.user1
+        )
+
+        self.lesson2 = Lesson.objects.create(
+            name="Test Lesson", description="Test Lession",
+            creator=self.user1
+        )
+
+        # Create units for lesson and quiz
+        self.lesson_unit1 = LearningUnit.objects.create(
+            order=1, type="lesson", lesson=self.lesson1
+        )
+        self.quiz_unit1 = LearningUnit.objects.create(
+            order=2, type="quiz", quiz=self.quiz1
+        )
+        self.lesson_unit2 = LearningUnit.objects.create(
+            order=1, type="lesson", lesson=self.lesson2
+        )
+        self.quiz_unit2 = LearningUnit.objects.create(
+            order=2, type="quiz", quiz=self.quiz2
+        )
+
+        # Add units to module
+        self.learning_module1.learning_unit.add(self.lesson_unit1)
+        self.learning_module1.learning_unit.add(self.quiz_unit1)
+
+        self.learning_module2.learning_unit.add(self.lesson_unit2)
+        self.learning_module2.learning_unit.add(self.quiz_unit2)
+
+        # Add module to course
+        self.user1_course1.learning_module.add(self.learning_module1)
+        self.user1_course1.learning_module.add(self.learning_module2)
+
+    def test_start_question_paper_does_not_exists_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': 99,
+            'module_id': self.learning_module1.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_start_question_paper_does_not_exists_for_moderator(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': 99,
+            'module_id': self.learning_module1.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_question_paper_has_no_question_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper1.id,
+            'module_id': self.learning_module1.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_start_question_paper_has_no_question_for_moderator(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper1.id,
+            'module_id': self.learning_module1.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_has_no_active_learning_module_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.question_paper1.fixed_questions.add(self.question1)
+        self.learning_module1.active = False
+        self.learning_module1.save()
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper1.id,
+            'module_id': self.learning_module1.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_start_learning_module_has_prerequisite_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.question_paper2.fixed_questions.add(self.question1)
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = True
+        self.learning_module2.save()
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_learning_module_prerequisite_passes_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.question_paper2.fixed_questions.add(self.question1)
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.check_prerequisite_passes = True
+        self.learning_module2.save()
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_user_enrolled_in_the_course_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.question_paper1.fixed_questions.add(self.question1)
+        self.learning_module1.active = True
+        self.learning_module1.check_prerequisite = False
+        self.learning_module1.check_prerequisite_passes = False
+        self.learning_module1.save()
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper1.id,
+            'module_id': self.learning_module1.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_user_enrolled_in_the_course_for_moderator(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        self.question_paper1.fixed_questions.add(self.question1)
+        self.learning_module1.active = True
+        self.learning_module1.check_prerequisite = False
+        self.learning_module1.check_prerequisite_passes = False
+        self.learning_module1.save()
+
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper1.id,
+            'module_id': self.learning_module1.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_course_is_active_and_not_expired_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.question_paper1.fixed_questions.add(self.question1)
+        self.learning_module1.active = True
+        self.learning_module1.check_prerequisite = False
+        self.learning_module1.check_prerequisite_passes = False
+        self.learning_module1.save()
+
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.active = False
+        self.user1_course1.end_enroll_time = timezone.now()
+        self.user1_course1.save()
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper1.id,
+            'module_id': self.learning_module1.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_course_is_active_and_not_expired_for_moderator(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        self.question_paper1.fixed_questions.add(self.question1)
+        self.learning_module1.active = True
+        self.learning_module1.check_prerequisite = False
+        self.learning_module1.check_prerequisite_passes = False
+        self.learning_module1.save()
+
+        self.user1_course1.students.add(self.user1)
+        self.user1_course1.active = False
+        self.user1_course1.end_enroll_time = timezone.now()
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper1.id,
+            'module_id': self.learning_module1.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_quiz_is_active_and_is_not_expired_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.question_paper1.fixed_questions.add(self.question1)
+        self.learning_module1.active = True
+        self.learning_module1.check_prerequisite = False
+        self.learning_module1.check_prerequisite_passes = False
+        self.learning_module1.save()
+
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.save()
+
+        self.question_paper1.quiz.end_date_time = timezone.now()
+        self.question_paper1.quiz.active = False
+        self.question_paper1.quiz.save()
+
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper1.id,
+            'module_id': self.learning_module1.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_quiz_is_active_and_is_not_expired_for_moderator(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        self.question_paper1.fixed_questions.add(self.question1)
+        self.learning_module1.active = True
+        self.learning_module1.check_prerequisite = False
+        self.learning_module1.check_prerequisite_passes = False
+        self.learning_module1.save()
+
+        self.user1_course1.students.add(self.user1)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        self.question_paper1.quiz.end_date_time = timezone.now()
+        self.question_paper1.quiz.active = False
+        self.question_paper1.quiz.save()
+
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper1.id,
+            'module_id': self.learning_module1.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_prereq_check_and_pass_criteria_for_quiz_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.question_paper2.fixed_questions.add(self.question1)
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.check_prerequisite_passes = False
+        self.learning_module2.save()
+
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_prereq_check_and_pass_criteria_for_quiz_for_moderator(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        self.question_paper2.fixed_questions.add(self.question1)
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.check_prerequisite_passes = False
+        self.learning_module2.save()
+
+        self.user1_course1.students.add(self.user1)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_not_allowed_to_start_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.question_paper1.fixed_questions.add(self.question1)
+
+        self.learning_module1.active = True
+        self.learning_module1.check_prerequisite = False
+        self.learning_module1.check_prerequisite_passes = False
+        self.learning_module1.save()
+
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        learning_unit = self.learning_module1.learning_unit.get(
+            quiz=self.question_paper1.quiz.id
+        )
+        learning_unit.check_prerequisite = False
+        learning_unit.save()
+
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper1.id,
+            'module_id': self.learning_module1.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_not_allowed_to_start_for_moderator(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        self.question_paper1.fixed_questions.add(self.question1)
+
+        self.learning_module1.active = True
+        self.learning_module1.check_prerequisite = False
+        self.learning_module1.check_prerequisite_passes = False
+        self.learning_module1.save()
+
+        self.user1_course1.students.add(self.user1)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        learning_unit = self.learning_module1.learning_unit.get(
+            quiz=self.question_paper1.quiz.id
+        )
+        learning_unit.check_prerequisite = False
+        learning_unit.save()
+
+    def test_start_allowed_to_start_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.question_paper2.fixed_questions.add(self.question1)
+
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.check_prerequisite_passes = False
+        self.learning_module2.save()
+
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        learning_unit = self.learning_module2.learning_unit.get(
+            quiz=self.question_paper2.quiz.id
+        )
+        learning_unit.check_prerequisite = False
+        learning_unit.save()
+
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_allowed_to_start_for_moderator(self):
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        self.question_paper2.fixed_questions.add(self.question1)
+
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.check_prerequisite_passes = False
+        self.learning_module2.save()
+
+        self.user1_course1.students.add(self.user1)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        learning_unit = self.learning_module2.learning_unit.get(
+            quiz=self.question_paper2.quiz.id
+        )
+        learning_unit.check_prerequisite = False
+        learning_unit.save()
+
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_start_allowed_to_start_when_quiz_is_exercise_for_user(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        self.question_paper2.fixed_questions.add(self.question1)
+
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.check_prerequisite_passes = False
+        self.learning_module2.save()
+
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        learning_unit = self.learning_module2.learning_unit.get(
+            quiz=self.question_paper2.quiz.id
+        )
+        learning_unit.check_prerequisite = False
+        learning_unit.save()
+
+        self.question_paper2.quiz.is_exercise = True
+        self.question_paper2.quiz.save()
+
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def tearDown(self):
+        self.client.logout()
+        self.user1.delete()
+        self.student.delete()
+        self.quiz1.delete()
+        self.user1_course1.delete()

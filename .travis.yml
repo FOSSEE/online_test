@@ -5,6 +5,7 @@ python:
 
 services:
   - xvfb
+  - redis-server
 
 before_install:
   - sudo apt-get update -qq
@@ -19,6 +20,7 @@ install:
   - python setup.py develop
 
 before_script:
+  - python manage.py makemigrations notifications_plugin
   - python manage.py makemigrations
   - python manage.py migrate auth
   - python manage.py migrate

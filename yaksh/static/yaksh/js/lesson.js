@@ -32,13 +32,9 @@ $(document).ready(function(){
         });
     });
 
-    function preview_text(data){
-        var preview_div = $("#preview_text_div");
-        if (!preview_div.is(":visible")){
-            $("#preview_text_div").toggle();
-        }
+    function preview_text(data) {
         $("#description_body").empty();
-        $("#description_body").append(data);
+        $("#description_body").html(data);
     }
 
     $("#embed").click(function() {

@@ -56,7 +56,11 @@
 	{% csrf_token %}
 	<center>
         <button class="btn btn-outline-success btn-lg" type="submit" name="yes">Yes</button>
+        {% if paper.is_special %}
+        <a class="btn btn-outline-danger btn-lg" name="no" href="{% url 'yaksh:skip_question' paper.questions.first.id paper.attempt_number module_id paper.question_paper.id course_id %}">No</a>
+        {% else %}
         <a class="btn btn-outline-danger btn-lg" name="no" href="{% url 'yaksh:start_quiz' paper.attempt_number module_id paper.question_paper.id course_id %}">No</a>
+        {% endif %}
     </center>
 	</form>
 {% endblock content %}

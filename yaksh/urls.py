@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.urls import path
 from yaksh import views
 
 urlpatterns = [
@@ -122,30 +123,38 @@ urlpatterns = [
         name='edit_course'),
     url(r'manage/course_detail/(?P<course_id>\d+)/$', views.course_detail,
         name='course_detail'),
-    url(r'manage/enroll/(?P<course_id>\d+)/(?P<user_id>\d+)/$', views.enroll,
-        name="enroll_user"),
+
+    url(r'manage/enroll/(?P<course_id>\d+)/$', views.enroll_reject_user,
+        name="enroll_reject_user"),
+    url(r'manage/enroll/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
+        views.enroll_user, name="enroll_user"),
+    url(r'manage/reject/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
+        views.reject_user, name="reject_user"),
+    url(r'manage/enrolled/reject/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
+        views.reject_user, {'was_enrolled': True},
+        name="reject_enrolled_user"),
+    url(r'manage/enrolled/reject/(?P<course_id>\d+)/$',
+        views.enroll_reject_user, {'was_enrolled': True},
+        name="reject_enrolled_users"),
     url(r'manage/enroll/rejected/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
-        views.enroll, {'was_rejected': True}, name="enroll_rejected"),
+        views.enroll_user, {'was_rejected': True},
+        name="enroll_rejected_user"),
+    url(r'manage/enroll/rejected/(?P<course_id>\d+)/$',
+        views.enroll_reject_user, {'was_rejected': True},
+        name="enroll_rejected_users"),
+
     url(r'manage/upload_users/(?P<course_id>\d+)/$', views.upload_users,
         name="upload_users"),
     url(r'manage/send_mail/(?P<course_id>\d+)/$', views.send_mail,
         name="send_mail"),
-    url(r'manage/reject/(?P<course_id>\d+)/(?P<user_id>\d+)/$', views.reject,
-        name="reject_user"),
-    url(r'manage/enrolled/reject/(?P<course_id>\d+)/(?P<user_id>\d+)/$',
-        views.reject, {'was_enrolled': True}, name="reject_user"),
+
     url(r'manage/toggle_status/(?P<course_id>\d+)/$',
         views.toggle_course_status, name="toggle_course_status"),
     url(r'^questions/filter$', views.questions_filter,
         name="questions_filter"),
     url(r'^editprofile/$', views.edit_profile, name='edit_profile'),
     url(r'^viewprofile/$', views.view_profile, name='view_profile'),
-    url(r'^manage/enroll/(?P<course_id>\d+)/$', views.enroll,
-        name="enroll_users"),
-    url(r'manage/enroll/rejected/(?P<course_id>\d+)/$',
-        views.enroll, {'was_rejected': True}, name="enroll_rejected"),
-    url(r'manage/enrolled/reject/(?P<course_id>\d+)/$',
-        views.reject, {'was_enrolled': True}, name="reject_users"),
+
     url(r'^manage/searchteacher/(?P<course_id>\d+)/$', views.search_teacher,
         name="search_teacher"),
     url(r'^manage/addteacher/(?P<course_id>\d+)/$', views.add_teacher,
@@ -156,17 +165,14 @@ urlpatterns = [
         name="download_questions"),
     url(r'^manage/upload_questions/$', views.show_all_questions,
         name="upload_questions"),
-    url(r'^manage/grader/$', views.grader, name='grader'),
-    url(r'^manage/regrade/question/(?P<course_id>\d+)/(?P<question_id>\d+)/$',
-        views.regrade, name='regrade'),
-    url(r'^manage/regrade/questionpaper/(?P<course_id>\d+)/'
-        '(?P<question_id>\d+)/(?P<questionpaper_id>\d+)/$',
-        views.regrade, name='regrade'),
-    url(r'^manage/regrade/answerpaper/(?P<course_id>\d+)/'
-        '(?P<question_id>\d+)/(?P<answerpaper_id>\d+)/$',
-        views.regrade, name='regrade'),
-    url(r'^manage/regrade/paper/(?P<course_id>\d+)/(?P<answerpaper_id>\d+)/$',
-        views.regrade, name='regrade'),
+    url(r'^manage/regrade/paper/question/(?P<course_id>\d+)/'
+        '(?P<questionpaper_id>\d+)/(?P<question_id>\d+)/$',
+        views.regrade, name='regrade_by_quiz'),
+    url(r'^manage/regrade/user/(?P<course_id>\d+)/(?P<questionpaper_id>\d+)/'
+        '(?P<answerpaper_id>\d+)/$', views.regrade, name='regrade_by_user'),
+    url(r'^manage/regrade/user/question/(?P<course_id>\d+)/'
+        '(?P<questionpaper_id>\d+)/(?P<answerpaper_id>\d+)/'
+        '(?P<question_id>\d+)/', views.regrade, name='regrade_by_question'),
     url(r'^manage/(?P<mode>godmode|usermode)/(?P<quiz_id>\d+)/'
         '(?P<course_id>\d+)/$', views.test_quiz, name="test_quiz"),
     url(r'^manage/create_demo_course/$', views.create_demo_course,
@@ -225,4 +231,19 @@ urlpatterns = [
         views.delete_question, name="delete_question"),
     url(r'^manage/search/questions', views.search_questions_by_tags,
         name="search_questions_by_tags"),
+    path('view/notifications', views.view_notifications,
+         name="view_notifications"),
+    path('mark/notifications/<uuid:message_uid>',
+        views.mark_notification, name="mark_notification"),
+    path('mark/notifications', views.mark_notification,
+         name="mark_notification"),
+    url(r'^manage/micromanager/allow_special_attempt/(?P<user_id>\d+)/'
+        '(?P<course_id>\d+)/(?P<quiz_id>\d+)/$',
+        views.allow_special_attempt, name='allow_special_attempt'),
+    url(r'^micromanager/special_start/(?P<micromanager_id>\d+)/$',
+        views.special_start, name='special_start'),
+    url(r'^manage/micromanager/special_revoke/(?P<micromanager_id>\d+)/$',
+        views.revoke_special_attempt, name='revoke_special_attempt'),
+    url(r'^manage/extend_time/(?P<paper_id>\d+)/$',
+        views.extend_time, name='extend_time'),
 ]

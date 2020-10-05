@@ -3,7 +3,7 @@ import csv
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
-from django.template import Context, Template
+from django.template import Context, Template, loader
 from django.http import Http404
 from django.db.models import Max, Q, F
 from django.db import models
@@ -23,7 +23,7 @@ from django.urls import reverse
 import json
 from textwrap import dedent
 import zipfile
-from markdown import Markdown
+import markdown
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -37,7 +37,8 @@ from yaksh.models import (
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
-    LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment
+    LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
+    MicroManager
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -52,6 +53,8 @@ from .file_utils import extract_files, is_csv
 from .send_emails import (send_user_mail,
                           generate_activation_key, send_bulk_mail)
 from .decorators import email_verified, has_profile
+from .tasks import regrade_papers
+from notifications_plugin.models import Notification
 
 
 def my_redirect(url):
@@ -99,7 +102,9 @@ CSV_FIELDS = ['name', 'username', 'roll_number', 'institute', 'department',
 
 def get_html_text(md_text):
     """Takes markdown text and converts it to html"""
-    return Markdown().convert(md_text)
+    return markdown.markdown(
+        md_text, extensions=['tables', 'fenced_code']
+    )
 
 
 def formfield_callback(field):
@@ -235,12 +240,9 @@ def add_question(request, question_id=None):
         qform = QuestionForm(request.POST, instance=question)
         fileform = FileForm(request.POST, request.FILES)
         remove_files_id = request.POST.getlist('clear')
-        files = request.FILES.getlist('file_field')
+        added_files = request.FILES.getlist('file_field')
         extract_files_id = request.POST.getlist('extract')
         hide_files_id = request.POST.getlist('hide')
-        if files:
-            for file in files:
-                FileUpload.objects.get_or_create(question=question, file=file)
         if remove_files_id:
             files = FileUpload.objects.filter(id__in=remove_files_id)
             for file in files:
@@ -265,12 +267,16 @@ def add_question(request, question_id=None):
                 request.POST, request.FILES, instance=question
                 )
             )
-        files = request.FILES.getlist('file_field')
         if qform.is_valid():
             question = qform.save(commit=False)
             question.user = user
             question.save()
             # many-to-many field save function used to save the tags
+            if added_files:
+                for file in added_files:
+                    FileUpload.objects.get_or_create(
+                        question=question, file=file
+                    )
             qform.save_m2m()
             for formset in formsets:
                 if formset.is_valid():
@@ -439,6 +445,7 @@ def prof_manage(request, msg=None):
     courses = Course.objects.get_queryset().filter(
         Q(creator=user) | Q(teachers=user),
         is_trial=False).distinct().order_by("-active")
+
     paginator = Paginator(courses, 20)
     page = request.GET.get('page')
     courses = paginator.get_page(page)
@@ -473,6 +480,46 @@ def user_login(request):
         context = {"form": form}
 
     return my_render_to_response(request, 'yaksh/login.html', context)
+
+
+@login_required
+@email_verified
+def special_start(request, micromanager_id=None):
+    user = request.user
+    micromanager = get_object_or_404(MicroManager, pk=micromanager_id,
+                                     student=user)
+    course = micromanager.course
+    quiz = micromanager.quiz
+    module = course.get_learning_module(quiz)
+    quest_paper = get_object_or_404(QuestionPaper, quiz=quiz)
+
+    if not course.is_enrolled(user):
+        msg = 'You are not enrolled in {0} course'.format(course.name)
+        return quizlist_user(request, msg=msg)
+
+    if not micromanager.can_student_attempt():
+        msg = 'Your special attempts are exhausted for {0}'.format(
+            quiz.description)
+        return quizlist_user(request, msg=msg)
+
+    last_attempt = AnswerPaper.objects.get_user_last_attempt(
+        quest_paper, user, course.id)
+
+    if last_attempt:
+        if last_attempt.is_attempt_inprogress():
+            return show_question(
+                request, last_attempt.current_question(), last_attempt,
+                course_id=course.id, module_id=module.id,
+                previous_question=last_attempt.current_question()
+            )
+
+    attempt_num = micromanager.get_attempt_number()
+    ip = request.META['REMOTE_ADDR']
+    new_paper = quest_paper.make_answerpaper(user, ip, attempt_num, course.id,
+                                             special=True)
+    micromanager.increment_attempts_utilised()
+    return show_question(request, new_paper.current_question(), new_paper,
+                         course_id=course.id, module_id=module.id)
 
 
 @login_required
@@ -621,6 +668,7 @@ def show_question(request, question, paper, error_message=None,
     quiz = paper.question_paper.quiz
     quiz_type = 'Exam'
     can_skip = False
+    assignment_files = []
     if previous_question:
         delay_time = paper.time_left_on_question(previous_question)
     else:
@@ -637,7 +685,7 @@ def show_question(request, question, paper, error_message=None,
             request, msg, paper.attempt_number, paper.question_paper.id,
             course_id=course_id, module_id=module_id
         )
-    if not quiz.active:
+    if not quiz.active and not paper.is_special:
         reason = 'The quiz has been deactivated!'
         return complete(
             request, reason, paper.attempt_number, paper.question_paper.id,
@@ -662,6 +710,13 @@ def show_question(request, question, paper, error_message=None,
         test_cases = question.get_ordered_test_cases(paper)
     else:
         test_cases = question.get_test_cases()
+    if question.type == 'upload':
+        assignment_files = AssignmentUpload.objects.filter(
+                            assignmentQuestion_id=question.id,
+                            course_id=course_id,
+                            user=request.user,
+                            question_paper_id=paper.question_paper_id
+                        )
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
     course = Course.objects.get(id=course_id)
     module = course.learning_module.get(id=module_id)
@@ -681,6 +736,7 @@ def show_question(request, question, paper, error_message=None,
         'delay_time': delay_time,
         'quiz_type': quiz_type,
         'all_modules': all_modules,
+        'assignment_files': assignment_files,
     }
     answers = paper.get_previous_answers(question)
     if answers:
@@ -739,6 +795,12 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
 
     if request.method == 'POST':
         # Add the answer submitted, regardless of it being correct or not.
+        if (paper.time_left() <= -10 or paper.status == "completed"):
+            reason = 'Your time is up!'
+            return complete(
+                request, reason, paper.attempt_number, paper.question_paper.id,
+                course_id, module_id=module_id
+            )
         if current_question.type == 'mcq':
             user_answer = request.POST.get('answer')
         elif current_question.type == 'integer':
@@ -809,7 +871,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                                      previous_question=current_question)
         else:
             user_answer = request.POST.get('answer')
-        if not user_answer:
+        if not str(user_answer):
             msg = "Please submit a valid answer."
             return show_question(
                 request, current_question, paper, notification=msg,
@@ -1113,12 +1175,12 @@ def course_detail(request, course_id):
 
 @login_required
 @email_verified
-def enroll(request, course_id, user_id=None, was_rejected=False):
+def enroll_user(request, course_id, user_id=None, was_rejected=False):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page')
 
-    course = get_object_or_404(Course, pk=course_id)
+    course = get_object_or_404(Course, id=course_id)
     if not course.is_active_enrollment():
         msg = (
             'Enrollment for this course has been closed,'
@@ -1126,23 +1188,73 @@ def enroll(request, course_id, user_id=None, was_rejected=False):
             'instructor/administrator.'
         )
         messages.warning(request, msg)
-        return my_redirect(reverse('yaksh:course_students', args=[course_id]))
+        return redirect('yaksh:course_students', course_id=course_id)
+
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
+    user = User.objects.get(id=user_id)
+    course.enroll(was_rejected, user)
+    messages.success(request, 'Enrolled student successfully')
+    return redirect('yaksh:course_students', course_id=course_id)
+
+
+@login_required
+@email_verified
+def reject_user(request, course_id, user_id=None, was_enrolled=False):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+    course = get_object_or_404(Course, id=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    user = User.objects.get(id=user_id)
+    course.reject(was_enrolled, user)
+    messages.success(request, "Rejected students successfully")
+    return redirect('yaksh:course_students', course_id=course_id)
+
+
+@login_required
+@email_verified
+def enroll_reject_user(request,
+                       course_id, was_enrolled=False, was_rejected=False):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+    course = get_object_or_404(Course, id=course_id)
+
+    if not course.is_active_enrollment():
+        msg = (
+            'Enrollment for this course has been closed,'
+            ' please contact your '
+            'instructor/administrator.'
+        )
+        messages.warning(request, msg)
+        return redirect('yaksh:course_students', course_id=course_id)
 
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
 
     if request.method == 'POST':
-        enroll_ids = request.POST.getlist('check')
-    else:
-        enroll_ids = [user_id]
-    if not enroll_ids:
-        messages.warning(request, "Please select atleast one student")
-        return my_redirect(reverse('yaksh:course_students', args=[course_id]))
-
-    users = User.objects.filter(id__in=enroll_ids)
-    course.enroll(was_rejected, *users)
-    messages.success(request, "Enrolled student(s) successfully")
-    return my_redirect(reverse('yaksh:course_students', args=[course_id]))
+        if 'enroll' in request.POST:
+            enroll_ids = request.POST.getlist('check')
+            if not enroll_ids:
+                messages.warning(request, "Please select atleast one student")
+                return redirect('yaksh:course_students', course_id=course_id)
+            users = User.objects.filter(id__in=enroll_ids)
+            course.enroll(was_rejected, *users)
+            messages.success(request, "Enrolled student(s) successfully")
+            return redirect('yaksh:course_students', course_id=course_id)
+        if 'reject' in request.POST:
+            reject_ids = request.POST.getlist('check')
+            if not reject_ids:
+                messages.warning(request, "Please select atleast one student")
+                return redirect('yaksh:course_students', course_id=course_id)
+            users = User.objects.filter(id__in=reject_ids)
+            course.reject(was_enrolled, *users)
+            messages.success(request, "Rejected students successfully")
+            return redirect('yaksh:course_students', course_id=course_id)
+    return redirect('yaksh:course_students', course_id=course_id)
 
 
 @login_required
@@ -1174,31 +1286,6 @@ def send_mail(request, course_id, user_id=None):
         'enrolled': course.get_enrolled(), 'is_mail': True
     }
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
-
-
-@login_required
-@email_verified
-def reject(request, course_id, user_id=None, was_enrolled=False):
-    user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page')
-
-    course = get_object_or_404(Course, pk=course_id)
-    if not course.is_creator(user) and not course.is_teacher(user):
-        raise Http404('This course does not belong to you')
-
-    if request.method == 'POST':
-        reject_ids = request.POST.getlist('check')
-    else:
-        reject_ids = [user_id]
-    if not reject_ids:
-        messages.warning(request, "Please select atleast one student")
-        return my_redirect(reverse('yaksh:course_students', args=[course_id]))
-
-    users = User.objects.filter(id__in=reject_ids)
-    course.reject(was_enrolled, *users)
-    messages.success(request, "Rejected students successfully")
-    return my_redirect(reverse('yaksh:course_students', args=[course_id]))
 
 
 @login_required
@@ -1267,18 +1354,6 @@ def monitor(request, quiz_id=None, course_id=None):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
-    if quiz_id is None:
-        courses = Course.objects.filter(
-            Q(creator=user) | Q(teachers=user),
-            is_trial=False
-        ).order_by("-active").distinct()
-        paginator = Paginator(courses, 30)
-        page = request.GET.get('page')
-        courses = paginator.get_page(page)
-        context = {
-            "papers": [], "objects": courses, "msg": "Monitor"
-        }
-        return my_render_to_response(request, 'yaksh/monitor.html', context)
     # quiz_id is not None.
     try:
         quiz = get_object_or_404(Quiz, id=quiz_id)
@@ -1421,6 +1496,13 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
                 question_paper.save()
                 question_paper.fixed_questions.add(*questions)
                 messages.success(request, "Questions added successfully")
+                return redirect(
+                    'yaksh:designquestionpaper',
+                    course_id=course_id,
+                    quiz_id=quiz_id,
+                    questionpaper_id=questionpaper_id
+                )
+
             else:
                 messages.warning(request, "Please select atleast one question")
 
@@ -1439,6 +1521,12 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
                     question_paper.save()
                 question_paper.fixed_questions.remove(*question_ids)
                 messages.success(request, "Questions removed successfully")
+                return redirect(
+                    'yaksh:designquestionpaper',
+                    course_id=course_id,
+                    quiz_id=quiz_id,
+                    questionpaper_id=questionpaper_id
+                )
             else:
                 messages.warning(request, "Please select atleast one question")
 
@@ -1453,6 +1541,12 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
                 random_set.questions.add(*random_ques)
                 question_paper.random_questions.add(random_set)
                 messages.success(request, "Questions removed successfully")
+                return redirect(
+                    'yaksh:designquestionpaper',
+                    course_id=course_id,
+                    quiz_id=quiz_id,
+                    questionpaper_id=questionpaper_id
+                )
             else:
                 messages.warning(request, "Please select atleast one question")
 
@@ -1461,6 +1555,12 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
             if random_set_ids:
                 question_paper.random_questions.remove(*random_set_ids)
                 messages.success(request, "Questions removed successfully")
+                return redirect(
+                    'yaksh:designquestionpaper',
+                    course_id=course_id,
+                    quiz_id=quiz_id,
+                    questionpaper_id=questionpaper_id
+                )
             else:
                 messages.warning(request, "Please select question set")
 
@@ -1477,8 +1577,8 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
         if questions:
             questions = _remove_already_present(questionpaper_id, questions)
 
-        question_paper.update_total_marks()
-        question_paper.save()
+    question_paper.update_total_marks()
+    question_paper.save()
     random_sets = question_paper.random_questions.all()
     fixed_questions = question_paper.get_ordered_questions()
     context = {
@@ -1707,7 +1807,6 @@ def user_data(request, user_id, questionpaper_id=None, course_id=None):
         raise Http404('You are not allowed to view this page!')
     user = User.objects.get(id=user_id)
     data = AnswerPaper.objects.get_user_data(user, questionpaper_id, course_id)
-
     context = {'data': data, 'course_id': course_id}
     return my_render_to_response(request, 'yaksh/user_data.html', context)
 
@@ -1801,7 +1900,7 @@ def download_quiz_csv(request, course_id, quiz_id):
 @login_required
 @email_verified
 def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
-               course_id=None):
+               course_id=None, extra_context=None):
     """Present an interface with which we can easily grade a user's papers
     and update all their marks and also give comments for each paper.
     """
@@ -1830,8 +1929,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                 course.is_teacher(current_user):
             raise Http404('This course does not belong to you')
         has_quiz_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id__in=questionpaper_id
-                                ).exists()
+            course_id=course_id, question_paper_id__in=questionpaper_id
+            ).exists()
         context = {
             "users": user_details,
             "quiz_id": quiz_id,
@@ -1850,9 +1949,9 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             except IndexError:
                 raise Http404('No attempts for paper')
             has_user_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id__in=questionpaper_id,
-                                user_id=user_id
-                                ).exists()
+                course_id=course_id, question_paper_id__in=questionpaper_id,
+                user_id=user_id
+                ).exists()
             user = User.objects.get(id=user_id)
             data = AnswerPaper.objects.get_user_data(
                 user, questionpaper_id, course_id, attempt_number
@@ -1860,6 +1959,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             context = {
                 "data": data,
                 "quiz_id": quiz_id,
+                "quiz": quiz,
                 "users": user_details,
                 "attempts": attempts,
                 "user_id": user_id,
@@ -1873,7 +1973,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
         for paper in papers:
             for question, answers in paper.get_question_answers().items():
                 marks = float(request.POST.get('q%d_marks' % question.id, 0))
-                answer = answers[-1]['answer']
+                answer = answers[0]['answer']
                 answer.set_marks(marks)
                 answer.save()
             paper.update_marks()
@@ -1886,7 +1986,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             course_id=course.id, user_id=user.id)
         if course_status.exists():
             course_status.first().set_grade()
-
+    if extra_context:
+        context.update(extra_context)
     return my_render_to_response(request, 'yaksh/grade_user.html', context)
 
 
@@ -2111,12 +2212,12 @@ def view_answerpaper(request, questionpaper_id, course_id):
     if quiz.view_answerpaper and user in course.students.all():
         data = AnswerPaper.objects.get_user_data(user, questionpaper_id,
                                                  course_id)
-        has_user_assignment = AssignmentUpload.objects.filter(
+        has_user_assignments = AssignmentUpload.objects.filter(
             user=user, course_id=course.id,
             question_paper_id=questionpaper_id
         ).exists()
         context = {'data': data, 'quiz': quiz, 'course_id': course.id,
-                   "has_user_assignment": has_user_assignment}
+                   "has_user_assignments": has_user_assignments}
         return my_render_to_response(
             request, 'yaksh/view_answerpaper.html', context
         )
@@ -2142,56 +2243,31 @@ def create_demo_course(request):
 
 @login_required
 @email_verified
-def grader(request, extra_context=None):
-    user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-    courses = Course.objects.filter(is_trial=False)
-    user_courses = list(courses.filter(creator=user)) + \
-        list(courses.filter(teachers=user))
-    context = {'courses': user_courses}
-    if extra_context:
-        context.update(extra_context)
-    return my_render_to_response(request, 'yaksh/regrade.html', context)
-
-
-@login_required
-@email_verified
-def regrade(request, course_id, question_id=None, answerpaper_id=None,
-            questionpaper_id=None):
+def regrade(request, course_id, questionpaper_id, question_id=None,
+            answerpaper_id=None):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     if not is_moderator(user) or (course.is_creator(user) and
                                   course.is_teacher(user)):
         raise Http404('You are not allowed to view this page!')
+    questionpaper = get_object_or_404(QuestionPaper, pk=questionpaper_id)
     details = []
-    if answerpaper_id is not None and question_id is None:
-        answerpaper = get_object_or_404(AnswerPaper, pk=answerpaper_id)
-        for question in answerpaper.questions.all():
-            details.append(answerpaper.regrade(question.id))
-            course_status = CourseStatus.objects.filter(
-                user=answerpaper.user, course=answerpaper.course)
-            if course_status.exists():
-                course_status.first().set_grade()
-    if questionpaper_id is not None and question_id is not None:
-        answerpapers = AnswerPaper.objects.filter(
-            questions=question_id,
-            question_paper_id=questionpaper_id, course_id=course_id)
-        for answerpaper in answerpapers:
-            details.append(answerpaper.regrade(question_id))
-            course_status = CourseStatus.objects.filter(
-                user=answerpaper.user, course=answerpaper.course)
-            if course_status.exists():
-                course_status.first().set_grade()
-    if answerpaper_id is not None and question_id is not None:
-        answerpaper = get_object_or_404(AnswerPaper, pk=answerpaper_id)
-        details.append(answerpaper.regrade(question_id))
-        course_status = CourseStatus.objects.filter(user=answerpaper.user,
-                                                    course=answerpaper.course)
-        if course_status.exists():
-            course_status.first().set_grade()
-
-    return grader(request, extra_context={'details': details})
+    quiz = questionpaper.quiz
+    data = {"user_id": user.id, "course_id": course_id,
+            "questionpaper_id": questionpaper_id, "question_id": question_id,
+            "answerpaper_id": answerpaper_id, "quiz_id": quiz.id,
+            "quiz_name": quiz.description, "course_name": course.name
+            }
+    regrade_papers.delay(data)
+    msg = dedent("""
+            {0} is submitted for re-evaluation. You will receive a
+            notification for the re-evaluation status
+            """.format(quiz.description)
+        )
+    messages.info(request, msg)
+    return redirect(
+        reverse("yaksh:grade_user", args=[quiz.id, course_id])
+    )
 
 
 @login_required
@@ -2409,8 +2485,10 @@ def _read_user_csv(request, reader, course):
             messages.info(request, "{0} -- Missing Values".format(counter))
             continue
         users = User.objects.filter(username=username)
+        if not users.exists():
+            users = User.objects.filter(email=email)
         if users.exists():
-            user = users[0]
+            user = users.last()
             if remove.strip().lower() == 'true':
                 _remove_from_course(user, course)
                 messages.info(request, "{0} -- {1} -- User rejected".format(
@@ -3215,11 +3293,16 @@ def course_students(request, course_id):
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404("You are not allowed to view {0}".format(
             course.name))
-    enrolled = course.get_enrolled()
-    requested = course.get_requests()
-    rejected = course.get_rejected()
-    context = {"enrolled": enrolled, "requested": requested, "course": course,
-               "rejected": rejected, "is_students": True}
+    enrolled_users = course.get_enrolled()
+    requested_users = course.get_requests()
+    rejected_users = course.get_rejected()
+    context = {
+        "enrolled_users": enrolled_users,
+        "requested_users": requested_users,
+        "course": course,
+        "rejected_users": rejected_users,
+        "is_students": True
+    }
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
 
@@ -3280,6 +3363,41 @@ def download_course_progress(request, course_id):
 
 @login_required
 @email_verified
+def view_notifications(request):
+    user = request.user
+    notifcations = Notification.objects.get_unread_receiver_notifications(
+        user.id
+    )
+    if is_moderator(user):
+        template = "manage.html"
+    else:
+        template = "user.html"
+    context = {"template": template, "notifications": notifcations,
+               "current_date_time": timezone.now()}
+    return my_render_to_response(
+        request, 'yaksh/view_notifications.html', context
+    )
+
+
+@login_required
+@email_verified
+def mark_notification(request, message_uid=None):
+    user = request.user
+    if message_uid:
+        Notification.objects.mark_single_notification(
+            user.id, message_uid, True
+        )
+    else:
+        if request.method == 'POST':
+            msg_uuids = request.POST.getlist("uid")
+            Notification.objects.mark_bulk_msg_notifications(
+                user.id, msg_uuids, True)
+    messages.success(request, "Marked notifcation(s) as read")
+    return redirect(reverse("yaksh:view_notifications"))
+
+
+@login_required
+@email_verified
 def course_forum(request, course_id):
     user = request.user
     base_template = 'user.html'
@@ -3291,12 +3409,14 @@ def course_forum(request, course_id):
     if (not course.is_creator(user) and not course.is_teacher(user)
             and not course.is_student(user)):
         raise Http404('You are not enrolled in {0} course'.format(course.name))
-    if 'search' in request.GET:
-        search_term = request.GET['search']
-        posts = course.post.filter(active=True, title__icontains=search_term)
+    search_term = request.GET.get('search_post')
+    if search_term:
+        posts = course.post.get_queryset().filter(
+            active=True, title__icontains=search_term)
     else:
-        posts = course.post.filter(active=True).order_by('-modified_at')
-    paginator = Paginator(posts, 10)
+        posts = course.post.get_queryset().filter(
+            active=True).order_by('-modified_at')
+    paginator = Paginator(posts, 1)
     page = request.GET.get('page')
     posts = paginator.get_page(page)
     if request.method == "POST":
@@ -3314,7 +3434,6 @@ def course_forum(request, course_id):
         'user': user,
         'course': course,
         'base_template': base_template,
-        'posts': posts,
         'moderator': moderator,
         'objects': posts,
         'form': form,
@@ -3379,3 +3498,92 @@ def hide_comment(request, course_id, uuid):
     comment.active = False
     comment.save()
     return redirect('yaksh:post_comments', course_id, post_uid)
+
+
+@login_required
+@email_verified
+def allow_special_attempt(request, user_id, course_id, quiz_id):
+    user = request.user
+
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
+    quiz = get_object_or_404(Quiz, pk=quiz_id)
+    student = get_object_or_404(User, pk=user_id)
+
+    if not course.is_enrolled(student):
+        raise Http404('The student is not enrolled for this course')
+
+    micromanager, created = MicroManager.objects.get_or_create(
+        course=course, student=student, quiz=quiz
+    )
+    micromanager.manager = user
+    micromanager.save()
+
+    if (not micromanager.is_special_attempt_required() or
+            micromanager.is_last_attempt_inprogress()):
+        name = student.get_full_name()
+        msg = '{} can attempt normally. No special attempt required!'.format(
+            name)
+    elif micromanager.can_student_attempt():
+        msg = '{} already has a special attempt!'.format(
+            student.get_full_name())
+    else:
+        micromanager.allow_special_attempt()
+        msg = 'A special attempt is provided to {}!'.format(
+            student.get_full_name())
+
+    messages.info(request, msg)
+    return redirect('yaksh:monitor', quiz_id, course_id)
+
+
+@login_required
+@email_verified
+def revoke_special_attempt(request, micromanager_id):
+    user = request.user
+
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+
+    micromanager = get_object_or_404(MicroManager, pk=micromanager_id)
+    course = micromanager.course
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    micromanager.revoke_special_attempt()
+    msg = 'Revoked special attempt for {}'.format(
+        micromanager.student.get_full_name())
+    messages.info(request, msg)
+    return redirect(
+        'yaksh:monitor', micromanager.quiz.id, course.id)
+
+
+@login_required
+@email_verified
+def extend_time(request, paper_id):
+    user = request.user
+
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page')
+
+    anspaper = get_object_or_404(AnswerPaper, pk=paper_id)
+    course = anspaper.course
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
+    if request.method == "POST":
+        extra_time = float(request.POST.get('extra_time', 0))
+        if extra_time is None:
+            msg = 'Please provide time'
+        else:
+            anspaper.set_extra_time(extra_time)
+            msg = 'Extra {0} minutes given to {1}'.format(
+                extra_time, anspaper.user.get_full_name())
+    else:
+        msg = 'Bad Request'
+    messages.info(request, msg)
+    return redirect(
+        'yaksh:monitor', anspaper.question_paper.quiz.id, course.id)

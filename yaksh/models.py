@@ -49,6 +49,7 @@ languages = (
         ("java", "Java Language"),
         ("scilab", "Scilab"),
         ("r", "R"),
+        ("other", "Other")
     )
 
 question_types = (
@@ -773,14 +774,20 @@ class LearningModule(models.Model):
 
     def get_passing_status(self, user, course):
         course_status = CourseStatus.objects.filter(user=user, course=course)
+        ordered_units = []
         if course_status.exists():
-            learning_units_with_quiz = self.learning_unit.filter(type='quiz')
+            learning_units_with_quiz = self.learning_unit.filter(
+                type='quiz'
+            ).order_by("order")
             ordered_units = learning_units_with_quiz.order_by("order")
 
-        statuses = [
-            unit.quiz.get_answerpaper_passing_status(user, course)
-            for unit in ordered_units
-        ]
+        if ordered_units:
+            statuses = [
+                unit.quiz.get_answerpaper_passing_status(user, course)
+                for unit in ordered_units
+            ]
+        else:
+            statuses = []
 
         if not statuses:
             status = False
@@ -1038,6 +1045,14 @@ class Course(models.Model):
     def get_learning_modules(self):
         return self.learning_module.order_by("order")
 
+    def get_learning_module(self, quiz):
+        modules = self.get_learning_modules()
+        for module in modules:
+            for unit in module.get_learning_units():
+                if unit.quiz == quiz:
+                    break
+        return module
+
     def get_unit_completion_status(self, module, user, unit):
         course_module = self.learning_module.get(id=module.id)
         learning_unit = course_module.learning_unit.get(id=unit.id)
@@ -1187,8 +1202,8 @@ class CourseStatus(models.Model):
             self.save()
 
     def calculate_percentage(self):
-        if self.is_course_complete():
-            quizzes = self.course.get_quizzes()
+        quizzes = self.course.get_quizzes()
+        if self.is_course_complete() and quizzes:
             total_weightage = 0
             sum = 0
             for quiz in quizzes:
@@ -1291,6 +1306,8 @@ class Question(models.Model):
     # The language for question.
     language = models.CharField(max_length=24,
                                 choices=languages)
+
+    topic = models.CharField(max_length=50, blank=True, null=True)
 
     # The type of question.
     type = models.CharField(max_length=24, choices=question_types)
@@ -1686,17 +1703,15 @@ class QuestionPaperManager(models.Manager):
 
     def create_trial_paper_to_test_quiz(self, trial_quiz, original_quiz_id):
         """Creates a trial question paper to test quiz."""
-        if self.filter(quiz=trial_quiz).exists():
-            trial_questionpaper = self.get(quiz=trial_quiz)
-        else:
-            trial_questionpaper, trial_questions = \
-                self._create_trial_from_questionpaper(original_quiz_id)
-            trial_questionpaper.quiz = trial_quiz
-            trial_questionpaper.fixed_questions\
-                .add(*trial_questions["fixed_questions"])
-            trial_questionpaper.random_questions\
-                .add(*trial_questions["random_questions"])
-            trial_questionpaper.save()
+        trial_quiz.questionpaper_set.all().delete()
+        trial_questionpaper, trial_questions = \
+            self._create_trial_from_questionpaper(original_quiz_id)
+        trial_questionpaper.quiz = trial_quiz
+        trial_questionpaper.fixed_questions\
+            .add(*trial_questions["fixed_questions"])
+        trial_questionpaper.random_questions\
+            .add(*trial_questions["random_questions"])
+        trial_questionpaper.save()
         return trial_questionpaper
 
 
@@ -1720,7 +1735,7 @@ class QuestionPaper(models.Model):
     total_marks = models.FloatField(default=0.0, blank=True)
 
     # Sequence or Order of fixed questions
-    fixed_question_order = models.CharField(max_length=255, blank=True)
+    fixed_question_order = models.TextField(blank=True)
 
     # Shuffle testcase order.
     shuffle_testcases = models.BooleanField("Shuffle testcase for each user",
@@ -1754,6 +1769,8 @@ class QuestionPaper(models.Model):
         for question in questions:
             marks += question.points
         for question_set in self.random_questions.all():
+            question_set.marks = question_set.questions.first().points
+            question_set.save()
             marks += question_set.marks * question_set.num_questions
         self.total_marks = marks
         self.save()
@@ -1769,7 +1786,7 @@ class QuestionPaper(models.Model):
             all_questions = questions
         return all_questions
 
-    def make_answerpaper(self, user, ip, attempt_num, course_id):
+    def make_answerpaper(self, user, ip, attempt_num, course_id, special=False):
         """Creates an answer paper for the user to attempt the quiz"""
         try:
             ans_paper = AnswerPaper.objects.get(user=user,
@@ -1788,6 +1805,7 @@ class QuestionPaper(models.Model):
             ans_paper.end_time = ans_paper.start_time + \
                 timedelta(minutes=self.quiz.duration)
             ans_paper.question_paper = self
+            ans_paper.is_special = special
             ans_paper.save()
             questions = self._get_questions_for_answerpaper()
             ans_paper.questions.add(*questions)
@@ -2132,6 +2150,10 @@ class AnswerPaper(models.Model):
     # set question order
     questions_order = models.TextField(blank=True, default='')
 
+    extra_time = models.FloatField('Additional time in mins', default=0.0)
+
+    is_special = models.BooleanField(default=False)
+
     objects = AnswerPaperManager()
 
     class Meta:
@@ -2214,11 +2236,23 @@ class AnswerPaper(models.Model):
             questions = list(self.questions.all())
         return questions
 
+    def set_extra_time(self, time=0):
+        now = timezone.now()
+        self.extra_time += time
+        if self.status == 'completed' and self.end_time < now:
+            self.extra_time = time
+            quiz_time = self.question_paper.quiz.duration
+            self.start_time = now - timezone.timedelta(minutes=quiz_time)
+            self.end_time = now + timezone.timedelta(minutes=time)
+            self.status = 'inprogress'
+        self.save()
+
     def time_left(self):
         """Return the time remaining for the user in seconds."""
         secs = self._get_total_seconds()
+        extra_time = self.extra_time * 60
         total = self.question_paper.quiz.duration*60.0
-        remain = max(total - secs, 0)
+        remain = max(total - (secs - extra_time), 0)
         return int(remain)
 
     def time_left_on_question(self, question):
@@ -2298,6 +2332,17 @@ class AnswerPaper(models.Model):
                     'answer': answer,
                     'error_list': [e for e in json.loads(answer.error)]
                 }]
+
+        for question, answers in q_a.items():
+            answers = q_a[question]
+            q_a[question].append({
+                'marks': max([
+                    answer['answer'].marks
+                    for answer in answers
+                    if question == answer['answer'].question
+                ])
+            })
+
         return q_a
 
     def get_latest_answer(self, question_id):
@@ -2307,7 +2352,7 @@ class AnswerPaper(models.Model):
         return self.questions.filter(active=True)
 
     def get_questions_answered(self):
-        return self.questions_answered.all()
+        return self.questions_answered.all().distinct()
 
     def get_questions_unanswered(self):
         return self.questions_unanswered.all()
@@ -2506,7 +2551,7 @@ class AssignmentUploadManager(models.Manager):
 class AssignmentUpload(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     assignmentQuestion = models.ForeignKey(Question, on_delete=models.CASCADE)
-    assignmentFile = models.FileField(upload_to=get_assignment_dir)
+    assignmentFile = models.FileField(upload_to=get_assignment_dir, max_length=255)
     question_paper = models.ForeignKey(QuestionPaper, blank=True, null=True,
                                        on_delete=models.CASCADE)
     course = models.ForeignKey(Course, null=True, blank=True,
@@ -2525,11 +2570,13 @@ class StandardTestCase(TestCase):
     test_case = models.TextField()
     weight = models.FloatField(default=1.0)
     test_case_args = models.TextField(blank=True)
+    hidden = models.BooleanField(default=False)
 
     def get_field_value(self):
         return {"test_case_type": "standardtestcase",
                 "test_case": self.test_case,
                 "weight": self.weight,
+                "hidden": self.hidden,
                 "test_case_args": self.test_case_args}
 
     def __str__(self):
@@ -2540,11 +2587,13 @@ class StdIOBasedTestCase(TestCase):
     expected_input = models.TextField(default=None, blank=True, null=True)
     expected_output = models.TextField(default=None)
     weight = models.IntegerField(default=1.0)
+    hidden = models.BooleanField(default=False)
 
     def get_field_value(self):
         return {"test_case_type": "stdiobasedtestcase",
                 "expected_output": self.expected_output,
                 "expected_input": self.expected_input,
+                "hidden": self.hidden,
                 "weight": self.weight}
 
     def __str__(self):
@@ -2590,10 +2639,11 @@ class HookTestCase(TestCase):
 
     )
     weight = models.FloatField(default=1.0)
+    hidden = models.BooleanField(default=False)
 
     def get_field_value(self):
         return {"test_case_type": "hooktestcase", "hook_code": self.hook_code,
-                "weight": self.weight}
+                "hidden": self.hidden, "weight": self.weight}
 
     def __str__(self):
         return u'Hook Testcase | Correct: {0}'.format(self.hook_code)
@@ -2698,3 +2748,108 @@ class Comment(ForumBase):
     def __str__(self):
         return 'Comment by {0}: {1}'.format(self.creator.username,
                                             self.post_field.title)
+
+
+class MicroManager(models.Model):
+    manager = models.ForeignKey(User, on_delete=models.CASCADE,
+                                related_name='micromanaging', null=True)
+    student = models.ForeignKey(User, on_delete=models.CASCADE,
+                                related_name='micromanaged')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, null=True)
+    special_attempt = models.BooleanField(default=False)
+    attempts_permitted = models.IntegerField(default=0)
+    permitted_time = models.DateTimeField(default=timezone.now)
+    attempts_utilised = models.IntegerField(default=0)
+    wait_time = models.IntegerField('Days to wait before special attempt',
+                                    default=0)
+    attempt_valid_for = models.IntegerField('Validity days', default=90)
+
+    class Meta:
+        unique_together = ('student', 'course', 'quiz')
+
+    def set_wait_time(self, days=0):
+        self.wait_time = days
+        self.save()
+
+    def increment_attempts_permitted(self):
+        self.attempts_permitted += 1
+        self.save()
+
+    def update_permitted_time(self, permit_time=None):
+        time_now = timezone.now()
+        self.permitted_time = time_now if not permit_time else permit_time
+        self.save()
+
+    def has_student_attempts_exhausted(self):
+        if self.quiz.attempts_allowed == -1:
+            return False
+        question_paper = self.quiz.questionpaper_set.first()
+        attempts = AnswerPaper.objects.get_total_attempt(
+            question_paper, self.student, course_id=self.course.id
+        )
+        last_attempt = AnswerPaper.objects.get_user_last_attempt(
+            question_paper, self.student, self.course.id
+        )
+        if last_attempt:
+            if last_attempt.is_attempt_inprogress():
+                return False
+        return attempts >= self.quiz.attempts_allowed
+
+    def is_last_attempt_inprogress(self):
+        question_paper = self.quiz.questionpaper_set.first()
+        last_attempt = AnswerPaper.objects.get_user_last_attempt(
+            question_paper, self.student, self.course.id
+        )
+        if last_attempt:
+            return last_attempt.is_attempt_inprogress()
+        return False
+
+    def has_quiz_time_exhausted(self):
+        return not self.quiz.active or self.quiz.is_expired()
+
+    def is_course_exhausted(self):
+        return not self.course.active or not self.course.is_active_enrollment()
+
+    def is_special_attempt_required(self):
+        return (self.has_student_attempts_exhausted() or
+                self.has_quiz_time_exhausted() or self.is_course_exhausted())
+
+    def allow_special_attempt(self, wait_time=0):
+        if (self.is_special_attempt_required() and
+                not self.is_last_attempt_inprogress()):
+            self.special_attempt = True
+            if self.attempts_utilised >= self.attempts_permitted:
+                self.increment_attempts_permitted()
+            self.update_permitted_time()
+            self.set_wait_time(days=wait_time)
+            self.save()
+
+    def has_special_attempt(self):
+        return (self.special_attempt and
+                (self.attempts_utilised < self.attempts_permitted))
+
+    def is_attempt_time_valid(self):
+        permit_time = self.permitted_time
+        wait_time = permit_time + timezone.timedelta(days=self.wait_time)
+        valid_time = permit_time + timezone.timedelta(
+            days=self.attempt_valid_for)
+        return wait_time <= timezone.now() <= valid_time
+
+    def can_student_attempt(self):
+        return self.has_special_attempt() and self.is_attempt_time_valid()
+
+    def get_attempt_number(self):
+        return self.quiz.attempts_allowed + self.attempts_utilised + 1
+
+    def increment_attempts_utilised(self):
+        self.attempts_utilised += 1
+        self.save()
+
+    def revoke_special_attempt(self):
+        self.special_attempt = False
+        self.save()
+
+    def __str__(self):
+        return 'MicroManager for {0} - {1}'.format(self.student.username,
+                                                   self.course.name)

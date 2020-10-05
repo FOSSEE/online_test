@@ -1,3 +1,65 @@
+=== 0.25.0 (14-09-2020) ===
+
+* Fix bug to show missing marks in grade user
+* Recalculate and save total marks of paper after saving or changing
+* Remove MathJax references and replace Katex CDN
+* Add feature to allow to extend time even if the paper is completed
+
+=== 0.24.0 (09-09-2020) ===
+
+* Fix rendering of the quiz list
+* Fix bug to show maximum marks for all attempts in answerpaper
+* Fix bug to show only distinct answered questions
+
+=== 0.23.0 (09-09-2020) ===
+
+* Allow a single user or multiple users to reattempt a quiz
+
+=== 0.22.1 (28-08-2020) ===
+
+* Avoid duplicate user entry with same email address during upload.
+* Fix a bug where user cannot submit zero as answer
+* Fix UI in question statistics.
+* Fix a bug where the trial question paper was not updated.
+* Fix a bug where answers for fill in the blanks type is not shown.
+
+=== 0.22.0 (27-08-2020) ===
+
+* Fix zero division error if the course does not have any quizzes.
+* Improve question statistics
+* Add Mathjax support to lesson and module.
+
+=== 0.21.0 (02-07-2020) ===
+
+* Added support for hiding test cases for code questions
+
+=== 0.20.2 (02-06-2020) ===
+
+* Added a custom filter to convert str objects to int in templates
+* Fixed a bug that prevented users from seeing the last submitted MCQ answers
+* Updated the TinyMCE editor with multiple plugins
+* Fixed issue in question file upload for empty question instance
+* Changed variable name for uploaded file to avoid conflict with the queryset variable
+* Display question solution in view answer paper
+* Fixed bug to check if attempts are allowed and spare time is available before answer is checked 
+
+=== 0.20.1 (21-05-2020) ===
+
+* Rename celery.py to celery_settings.py to avoid conflicts with the celery app
+
+=== 0.20.0 (20-05-2020) ===
+
+* Added a discussion forum feature
+* Added a reject select button to reject mulitple students from a course
+* Added a celery task to regrade the papers
+* Merge monitor, grade user and regrade dashboard into a single consolidated dashboard
+* Fixed pagination and other issues while searching courses, questions
+* Added a search and a dropdown in grade user section
+* Added more tests for start quiz view function
+* Added a additional option "other" in language for a question which supports all types of question except the coding type
+* Fixed search in discussion forum
+* Added API for yaksh
+
 === 0.14.0 (07-04-2020) ===
 
 * Added search bar for searching course

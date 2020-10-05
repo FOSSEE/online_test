@@ -12,23 +12,19 @@
         <div class="d-flex p-2 bd-highlight">
             <div class="col-md-4">
                 {% if moderator %}
-                    <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">Back to Course</a>
+                    <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
+                        <i class="fa fa-arrow-left"></i>&nbsp;Back
+                    </a>
                 {% else %}
-                    <a href="{% url 'yaksh:course_modules' course.id %}" class="btn btn-primary">Back to Course</a>
+                    <a href="{% url 'yaksh:course_modules' course.id %}" class="btn btn-primary">
+                        <i class="fa fa-arrow-left"></i>&nbsp;Back
+                    </a>
                 {% endif %}
             </div>
-            <div class="col-md-4">
-                <form class="my-2 my-lg-0" action="" method="GET">
-                    <div class="input-group">
-                        <input type="search" placeholder="Search" name="search" class="form-control">
-                        <span class="input-group-append">
-                            <button class="btn btn-outline-info" type="submit"><i class="fa fa-search"></i>&nbsp;Search</button>
-                        </span>
-                    </div>
-                </form>
-            </div>
-            <div class="col-md-4">
-                <button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#newPostModal">New Post</button>
+            <div class="col-md">
+                <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#newPostModal">
+                    <i class="fa fa-plus-circle"></i>&nbsp;New Post
+                </button>
             </div>
         </div>
         <!-- Modal -->
@@ -58,12 +54,34 @@
           </div>
         </div>
         <br>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form class="my-2 my-lg-0" action="" method="GET">
+                    <div class="input-group">
+                        <input type="search" placeholder="Search Post" name="search_post" class="form-control">
+                        <span class="input-group-append">
+                            <button class="btn btn-outline-info">
+                                <i class="fa fa-search"></i>&nbsp;Search
+                            </button>
+                        </span>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <a class="btn btn-outline-danger" href="{% url 'yaksh:course_forum' course.id %}">
+                    <i class="fa fa-times"></i>&nbsp;Clear Search
+                </a>
+            </div>
+        </div>
         <br>
+        {% with objects as posts %}
         {% if posts %}
+            {% include "yaksh/paginator.html" %}
+            <br>
             <table id="posts_table" class="tablesorter table">
                 <thead class="thread-inverse">
                     <tr>
-                        <th width="700">Questions</th>
+                        <th width="700">Posts</th>
                         <th>Created by</th>
                         <th>Replies</th>
                         <th>Last reply</th>
@@ -98,10 +116,12 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <br>
+            {% include "yaksh/paginator.html" %}
         {% else %}
             No discussion posts are there yet. Create one to start discussing.
         {% endif %}
-        {% include "yaksh/paginator.html" %}
+        {% endwith %}
     </div>
 {% endblock content %}
 {% block script %}

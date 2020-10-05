@@ -1,8 +1,12 @@
 {% extends "user.html" %}
+{% load static %}
 {% load custom_filters %}
 
 {% block title %} {{ learning_module.name }} {% endblock %}
-
+{% block script %}
+<script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML">
+</script>
+{% endblock %}
 {% block main %}
 <div class="wrapper">
     <!-- Sidebar  -->

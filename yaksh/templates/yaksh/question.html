@@ -107,10 +107,10 @@ function call_skip(url)
     form.submit();
 }
 init_val = '{{ last_attempt|escape_quotes|safe }}';
-lang = "{{ question.language }}"
-course_id = "{{course.id}}"
-module_id = "{{module.id}}"
-question_type = "{{ question.type }}"
+lang = "{{ question.language }}";
+course_id = "{{course.id}}";
+module_id = "{{module.id}}";
+question_type = "{{ question.type }}";
 
 </script>
 {% endblock script %}
@@ -127,14 +127,14 @@ question_type = "{{ question.type }}"
           <button type="button" class="close" data-dismiss="alert">
             <i class="fa fa-close"></i>
           </button>
-          <strong>Note:</strong> {{ notification }}
+          {{ notification }}
         </div>
         {% else %}
         <div id="notification" class="alert alert-info col-md-8" role="alert">
           <button type="button" class="close" data-dismiss="alert">
             <i class="fa fa-close"></i>
           </button>
-          <strong>Note:</strong> {{ notification }}
+          {{ notification }}
         </div>
         {% endif %}
       {% else %}
@@ -146,39 +146,42 @@ question_type = "{{ question.type }}"
   <form id="code" action="{% url 'yaksh:check' question.id paper.attempt_number module.id paper.question_paper.id course.id %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <input type=hidden name="question_id" id="question_id" value="{{ question.id }}"></input>
-    <div class="card">
+    <div class="card" id="question_card">
       <div class="card-header">
-        <div class="row">
-          <div class="col-md-6">
-            {{ question.summary }}
+        <div>
+          <div>
+            <h2>{{ question.summary }}</h2>
           </div>
-          <div class="col-md-4">
+          <div>
+            {% if question.language == "other" %}
+              <small class="text text-muted"><strong>Topic:</strong> <span class="badge badge-primary">{{question.topic}}</small></span>
+            {% else %}
+              <small class="textx text-muted"><strong>Language:</strong> <span class="badge badge-primary">{{question.language}}</span></small>
+            {% endif %}
             {% if question.type == "mcq" %}
-              SINGLE CORRECT CHOICE
+              <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">SINGLE CORRECT CHOICE</span></small>
             {% elif question.type == "mcc" %}
-              MULTIPLE CORRECT CHOICES
+              <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">MULTIPLE CORRECT CHOICES</span></small>
             {% elif question.type == "code" %}
-              PROGRAMMING
+              <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">PROGRAMMING</span></small>
             {% elif question.type == "upload" %}
-              ASSIGNMENT UPLOAD
+              <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">ASSIGNMENT UPLOAD</span></small>
             {% elif question.type == "integer" %}
-              FILL IN THE BLANKS WITH INTEGER ANSWER
+              <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">FILL IN THE BLANKS WITH INTEGER ANSWER</span></small>
             {% elif question.type == "string" %}
-              FILL IN THE BLANKS WITH STRING ANSWER
+              <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">FILL IN THE BLANKS WITH STRING ANSWER</span></small>
               {% if testcase.string_check == "lower" %}
                   <br>(CASE INSENSITIVE)
               {% else %}
                   <br>(CASE SENSITIVE)
               {% endif %}
             {% elif question.type == "float" %}
-              FILL IN THE BLANKS WITH FLOAT ANSWER
+              <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">FILL IN THE BLANKS WITH FLOAT ANSWER</span></small>
             {% elif question.type == "arrange" %}
-              ARRANGE THE OPTIONS IN CORRECT ORDER
+              <small class="text text-muted"><strong>Type:</strong> <span class="badge badge-primary">ARRANGE THE OPTIONS IN CORRECT ORDER</span></small>
             {% endif %}
-          </div>
-          <div class="col-md-2">
-            <span class="badge badge-info">
-              {{ question.points }} Marks
+            <span class="badge badge-info pull-right">
+              <small><strong>Marks: {{ question.points }}</strong></small>
             </span>
           </div>
         </div>
@@ -223,7 +226,7 @@ question_type = "{{ question.type }}"
           <!-- MCQ type question -->
           {% if question.type == "mcq" %}
             {% for test_case in test_cases %}
-              {% if last_attempt and last_attempt|safe == test_case.id|safe %}
+              {% if last_attempt and last_attempt|to_int == test_case.id %}
               <input name="answer" type="radio" value="{{ test_case.id }}" checked />
                 {{ test_case.options|safe }} <br/>
               {% else %}
@@ -236,21 +239,21 @@ question_type = "{{ question.type }}"
           <!-- Integer type question -->
           {% if question.type == "integer" %}
             Enter Integer:<br/>
-            <input autofocus class="form-control" name="answer" type="number" id="integer" value="{{ last_attempt|safe }}" />
+            <input autofocus class="form-control" name="answer" type="number" id="integer" value="{{ last_attempt|to_integer }}" />
             <br><br>
           {% endif %}
 
           <!-- String type question -->
           {% if question.type == "string" %}
             Enter Text:<br/>
-            <textarea autofocus name="answer" id="string" class="form-control" style="width: 100%">{{ last_attempt|safe }}</textarea>
+            <textarea autofocus name="answer" id="string" class="form-control" style="width: 100%">{{ last_attempt|to_str }}</textarea>
             <br/><br/>
           {% endif %}
 
           <!-- Float type question -->
           {% if question.type == "float" %}
             Enter Decimal Value :<br/>
-            <input autofocus class="form-control" name="answer" type="number" step="any" id="float" value="{{ last_attempt|safe }}" />
+            <input autofocus class="form-control" name="answer" type="number" step="any" id="float" value="{{ last_attempt|to_float }}" />
             <br/><br/>
           {% endif %}
 
@@ -273,6 +276,15 @@ question_type = "{{ question.type }}"
           {% if question.type == "upload" %}
             <p>Upload assignment file for the said question<p>
             <input type=file id="assignment" name="assignment" multiple="">
+            {% if assignment_files %}
+                <ul class="list-group">
+                {% for as_file in assignment_files %}
+                    <li class="list-group-item">
+                      <a href="{{as_file.assignmentFile.url}}" target="_blank">{{ as_file.assignmentFile.name|file_title }}</a>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% endif %}
           {% endif %}
 
           <!-- Arrange type question -->
