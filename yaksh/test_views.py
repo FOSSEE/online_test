@@ -3967,6 +3967,7 @@ class TestSelfEnroll(TestCase):
         self.assertRedirects(response, '/exam/manage/')
 
 
+
 class TestGrader(SimpleTestCase):
     allow_database_queries = True
 
@@ -6218,7 +6219,7 @@ class TestLearningModule(TestCase):
         learning_module = LearningModule.objects.get(name="test module1")
         self.assertEqual(learning_module.description, "my test1")
         self.assertEqual(learning_module.creator, self.user)
-        self.assertTrue(learning_module.check_prerequisite)
+        self.assertFalse(learning_module.check_prerequisite)
         self.assertEqual(learning_module.html_data,
                          Markdown().convert("my test1"))
 
@@ -6311,7 +6312,7 @@ class TestLearningModule(TestCase):
         updated_learning_unit = LearningUnit.objects.get(id=learning_unit.id)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/add_module.html')
-        self.assertFalse(updated_learning_unit.check_prerequisite)
+        self.assertTrue(updated_learning_unit.check_prerequisite)
 
         # Test to remove learning unit from learning module
         response = self.client.post(
