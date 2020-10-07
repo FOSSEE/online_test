@@ -336,7 +336,7 @@ class LearningModuleTestCases(unittest.TestCase):
     def test_learning_module(self):
         self.assertEqual(self.learning_module.description, 'module one')
         self.assertEqual(self.learning_module.creator, self.creator)
-        self.assertTrue(self.learning_module.check_prerequisite)
+        self.assertFalse(self.learning_module.check_prerequisite)
         self.assertEqual(self.learning_module.order, 0)
 
     def test_prerequisite_passes(self):
@@ -371,16 +371,16 @@ class LearningModuleTestCases(unittest.TestCase):
         self.assertEqual(module_quiz_lesson, quiz_lessons)
 
     def test_toggle_check_prerequisite(self):
-        self.assertTrue(self.learning_module.check_prerequisite)
+        self.assertFalse(self.learning_module.check_prerequisite)
         # When
         self.learning_module.toggle_check_prerequisite()
         # Then
-        self.assertFalse(self.learning_module.check_prerequisite)
+        self.assertTrue(self.learning_module.check_prerequisite)
 
         # When
         self.learning_module.toggle_check_prerequisite()
         # Then
-        self.assertTrue(self.learning_module.check_prerequisite)
+        self.assertFalse(self.learning_module.check_prerequisite)
 
     def test_get_next_unit(self):
         # Given
@@ -466,8 +466,8 @@ class LearningUnitTestCases(unittest.TestCase):
         )
         self.assertIsNone(self.learning_unit_one.quiz)
         self.assertIsNone(self.learning_unit_two.lesson)
-        self.assertTrue(self.learning_unit_one.check_prerequisite)
-        self.assertTrue(self.learning_unit_two.check_prerequisite)
+        self.assertFalse(self.learning_unit_one.check_prerequisite)
+        self.assertFalse(self.learning_unit_two.check_prerequisite)
 
 
 class ProfileTestCases(unittest.TestCase):

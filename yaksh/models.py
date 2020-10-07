@@ -637,7 +637,7 @@ class LearningUnit(models.Model):
                                on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, null=True, blank=True,
                              on_delete=models.CASCADE)
-    check_prerequisite = models.BooleanField(default=True)
+    check_prerequisite = models.BooleanField(default=False)
 
     def get_lesson_or_quiz(self):
         unit = None
@@ -716,7 +716,7 @@ class LearningModule(models.Model):
     order = models.IntegerField(default=0)
     creator = models.ForeignKey(User, related_name="module_creator",
                                 on_delete=models.CASCADE)
-    check_prerequisite = models.BooleanField(default=True)
+    check_prerequisite = models.BooleanField(default=False)
     check_prerequisite_passes = models.BooleanField(default=False)
     html_data = models.TextField(null=True, blank=True)
     active = models.BooleanField(default=True)
