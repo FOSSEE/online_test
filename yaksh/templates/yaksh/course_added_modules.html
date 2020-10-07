@@ -93,6 +93,22 @@
                                                 Lesson
                                             {% endif %}
                                         </td>
+                                        <td>
+                                            {% if unit.type == "quiz" %}
+                                                {% if unit.quiz.questionpaper_set.get.id %}
+                                                    <a href="{% url 'yaksh:show_statistics' unit.quiz.questionpaper_set.get.id course.id %}" class="btn btn-outline-primary">
+                                                        <i class="fa fa-line-chart"></i>
+                                                        Statistics
+                                                    </a>
+                                                {% else %}
+                                                    ----
+                                                {% endif %}
+                                            {% else %}
+                                                <a href="{% url 'yaksh:lesson_statistics' course.id unit.lesson.id %}" class="btn btn-outline-primary">
+                                                    <i class="fa fa-line-chart"></i>&nbsp;Statistics
+                                                </a>
+                                            {% endif %}
+                                        </td>
                                     </tr>
                                 {% endfor %}
                             </table>

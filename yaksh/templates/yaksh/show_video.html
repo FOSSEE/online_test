@@ -4,8 +4,21 @@
 
 {% block title %} {{ learning_module.name }} {% endblock %}
 {% block script %}
+<script type="text/javascript">
+    var player;
+    var contents_by_time = JSON.parse('{{ contents_by_time|safe }}');
+    var loc = 0;
+    var video_time = [];
+</script>
+<script type="text/javascript" src="{% static 'yaksh/js/jquery-ui.js' %}"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/show_toc.js' %}">
+</script>
+<script src="{% static 'yaksh/js/jquery-sortable.js' %}"></script>
 <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML">
 </script>
+{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'yaksh/css/jquery-ui/jquery-ui.css' %}">
 {% endblock %}
 {% block main %}
 <div class="wrapper">
@@ -77,11 +90,9 @@
 
     <!-- Page Content  -->
     <div id="content">
-
         <button type="button" id="sidebarCollapse" class="btn btn-outline-info">
             <i class="fa fa-navicon fa-lg"></i>
         </button>
-
         <br><br>
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
@@ -95,7 +106,6 @@
             {% endif %}
         </ol>
         <br>
-
         {% if msg %}
             <center>
                 <div class="alert alert-dismissible alert-warning">
@@ -127,41 +137,98 @@
                 </a>
             {% endif %}
         {% else %}    <!--  Lesson body   -->
-            <div class="col-md-6" style="width: 100%">
-            {{lesson.html_data|safe}}
-            <br>
-            <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
-                Next&nbsp;<i class="fa fa-step-forward"></i>
-            </a>
-            </div>
-            <br>
-            <div class="col-md-7">
-            {% with lesson.get_files as lesson_files %}
-                {% if lesson_files %}
-                    <div class="card">
-                        <div class="card-header">
-                            Files for this lesson
-                        </div>
-                        <div class="card-body">
-                            {% for f in lesson_files %}
-                                <a href="{{f.file.url}}" class="list-group-item">
-                                    {{forloop.counter}}.{{ f.file.name|file_title }}
-                                </a>
-                            {% endfor %}
+            <!-- Lesson Table of contents -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card-body">
+                    {% if lesson.video_path %}
+                        {% with lesson.video_path|video_name as video %}
+                            {% if video.1 == "others" %}
+                            <video id="player" playsinline controls>
+                                <source src="{{video.0}}" />
+                            </video>
+                            {% else %}
+                            <div id="player" data-plyr-provider="{{video.1}}" data-plyr-embed-id="{{video.0}}"></div>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <a class="card-link" data-toggle="collapse" href="#toc-collapse">
+                            Table Of Contents&nbsp;<i class="fa fa-angle-down"></i>
+                        </a>
+                    </div>
+                    <div class="collapse show" id="toc-collapse">
+                        <div class="card-body" id="toc">
+                            <table class="table table-responsive">
+                                {% for content in toc %}
+                                    {% with content.get_toc_text as toc_name %}
+                                    <tr>
+                                        <td>
+                                            <a href="#" onclick="select_toc(this);" data-toc="{{content.id}}" data-toc-type="{{content.content}}">
+                                                {{ toc_name }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            {{content.get_content_display}}
+                                        </td>
+                                        <td id="toc_time_{{content.id}}">
+                                            {{content.time}}
+                                        </td>
+                                        <input type="hidden" id="toc_{{content.id}}" value="{% url 'yaksh:get_marker_quiz' course.id content.id %}" data-content="{{content.content}}"/>
+                                        <input type="hidden" id="toc_desc_{{content.id}}" value="{{content.content_object.description|safe}}" data-content="{{content.content}}"/>
+                                    </tr>
+                                    {% endwith %}
+                                {% empty %}
+                                    <center>
+                                        <span class="badge badge-warning">No Table of contents added</span>
+                                    </center>
+                                {% endfor %}
+                            </table>
                         </div>
                     </div>
-                {% endif %}
-            {% endwith %}
+                </div>
+                </div>
+                <div class="col-md-8">
+                    <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
+                        Next&nbsp;<i class="fa fa-step-forward"></i>
+                    </a>
+                    <br><br>
+                    <div class="card">
+                        <div class="card-header"><h3><strong>Lesson Description</strong></h3></div>
+                        <div class="card-body">
+                            <div class="col" style="width: 100%">
+                                {{lesson.html_data|safe}}
+                            </div>
+                            <div class="card-body" id="topic-description"></div>
+                            <div class="col-md-7">
+                            {% with lesson.get_files as lesson_files %}
+                                {% if lesson_files %}
+                                    <div class="card">
+                                        <div class="card-header">
+                                            Files for this lesson
+                                        </div>
+                                        <div class="card-body">
+                                            {% for f in lesson_files %}
+                                                <a href="{{f.file.url}}" class="list-group-item">
+                                                    {{forloop.counter}}.{{ f.file.name|file_title }}
+                                                </a>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         {% endif %}
     </div>
 </div>
-<script type="text/javascript">
-    $(document).ready(function () {
-        $('#sidebarCollapse').on('click', function () {
-            $('#sidebar').toggleClass('active');
-        });
-    });
-</script>
+<div id="dialog"></div>
 {% endblock %}
 

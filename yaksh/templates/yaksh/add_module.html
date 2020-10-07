@@ -60,7 +60,7 @@
                                     <button type="button" class="close" data-dismiss="alert">
                                         <i class="fa fa-close"></i>
                                     </button>
-                                    <strong>{{ error|escape }}</strong>
+                                    <strong>{{field.label}} : {{ error|escape }}</strong>
                                 </div>
                             {% endfor %}
                         {% endfor %}
@@ -69,28 +69,21 @@
                                 <button type="button" class="close" data-dismiss="alert">
                                     <i class="fa fa-close"></i>
                                 </button>
-                                <strong>{{ error|escape }}</strong>
+                                <strong>{{field.label}} : {{ error|escape }}</strong>
                             </div>
                         {% endfor %}
                     {% endif %}
                     {{module_form.name}}
                     <br>
-                    {{module_form.description}}
-                    <br>
                     Active:&nbsp;{{module_form.active}}
+                    <br>
+                    <br>
+                    {{module_form.description}}
                     <br>
                     <center>
                         <button class="btn btn-success btn-lg" type="submit" id="submit" name="Save">
                             <i class="fa fa-save"></i>
                             Save
-                        </button>
-                        <button class="btn btn-outline-primary btn-lg" type="button" name="button" id="preview">
-                            <i class="fa fa-eye"></i>
-                            Preview Description
-                        </button>
-                        <button class="btn btn-outline-primary btn-lg" type="button" name="button" id="embed">
-                            <i class="fa fa-angle-left"></i>&nbsp;<i class="fa fa-angle-right"></i>
-                            Embed Video link
                         </button>
                     </center>
                     </form>

@@ -10,7 +10,7 @@ except ImportError:
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
-from yaksh.models import User, Course, Quiz
+from yaksh.models import User, Course, Quiz, TableOfContents, Lesson
 
 register = template.Library()
 
@@ -125,6 +125,19 @@ def highlight_spaces(text):
         )
 
 
+@register.filter(name='video_name')
+def video_name(text):
+    video = literal_eval(text)
+    video = {k.lower(): v for k, v in video.items()}
+    if 'youtube' in video.keys():
+        name, vformat = video.get('youtube'), 'youtube'
+    elif 'vimeo' in video.keys():
+        name, vformat = video.get('vimeo'), 'vimeo'
+    else:
+        name, vformat = video.get('others'), 'others'
+    return name, vformat
+
+
 @register.filter(name="to_integer")
 def to_integer(text):
     try:
@@ -165,3 +178,18 @@ def specail_attempt_monitor(user_id, course_id, quiz_id):
     if micromanagers.exists():
         context['micromanager'] = micromanagers.first()
     return context
+
+
+@register.simple_tag
+def get_answers(toc_id, user_id):
+    return TableOfContents.objects.get_answer(toc_id, user_id)
+
+
+@register.simple_tag
+def has_lesson_video(lesson_id):
+    lesson = Lesson.objects.filter(id=lesson_id)
+    if lesson.exists():
+        status = True if lesson.first().video_path else False
+    else:
+        status = False
+    return status
