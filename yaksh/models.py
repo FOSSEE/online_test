@@ -42,6 +42,7 @@ from django.template import Context, Template
 from django.conf import settings
 from django.forms.models import model_to_dict
 from django.db.models import Count
+
 # Local Imports
 from yaksh.code_server import (
     submit, get_result as get_result_from_code_server
@@ -1100,6 +1101,25 @@ class Course(models.Model):
         for module in learning_modules:
             learning_units.extend(module.get_learning_units())
         return learning_units
+
+    def get_lesson_posts(self):
+        learning_units = self.get_learning_units()
+        comments = []
+        for unit in learning_units:
+            if unit.lesson is not None:
+                lesson_ct = ContentType.objects.get_for_model(unit.lesson)
+                title = unit.lesson.name
+                try:
+                    post = Post.objects.get(
+                        target_ct=lesson_ct,
+                        target_id=unit.lesson.id,
+                        active=True, title=title
+                    )
+                except Post.DoesNotExist:
+                    post = None
+                if post is not None:
+                    comments.append(post)
+        return comments
 
     def remove_trial_modules(self):
         learning_modules = self.learning_module.all()
@@ -2749,12 +2769,20 @@ class ForumBase(models.Model):
     image = models.ImageField(upload_to=get_image_dir, blank=True,
                               null=True, validators=[validate_image])
     active = models.BooleanField(default=True)
+    anonymous = models.BooleanField(default=False)
 
 
 class Post(ForumBase):
     title = models.CharField(max_length=200)
-    course = models.ForeignKey(Course,
-                               on_delete=models.CASCADE, related_name='post')
+    target_ct = models.ForeignKey(ContentType,
+                                  blank=True,
+                                  null=True,
+                                  related_name='target_obj',
+                                  on_delete=models.CASCADE)
+    target_id = models.PositiveIntegerField(null=True,
+                                            blank=True,
+                                            db_index=True)
+    target = GenericForeignKey('target_ct', 'target_id')
 
     def __str__(self):
         return self.title

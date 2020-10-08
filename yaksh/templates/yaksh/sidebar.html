@@ -1,0 +1,8 @@
+<!-- Sidebar -->
+<div class="bg-light border-right" id="sidebar-wrapper">
+  <div class="list-group list-group-flush">
+    <a href="{% url 'yaksh:course_forum' course.id %}" class="list-group-item list-group-item-action {% if '/course_forum/' in request.path %}active{% endif %}">Course Forum</a>
+    <a href="{% url 'yaksh:lessons_forum' course.id %}" class="list-group-item list-group-item-action {% if '/lessons_forum/' in request.path %}active{% endif %}">Lessons Forum</a>
+  </div>
+</div>
+<!-- /#sidebar-wrapper -->

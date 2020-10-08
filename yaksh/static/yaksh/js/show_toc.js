@@ -2,6 +2,24 @@ $(document).ready(function() {
     $('#sidebarCollapse').on('click', function () {
         $('#sidebar').toggleClass('active');
     });
+
+    $(document).ready(() => {
+         $(function() {
+            tinymce.init({
+                selector: 'textarea#id_description',
+                setup : function(ed) {
+                      ed.on('change', function(e) {
+                         tinymce.triggerSave();
+                      });
+                },
+                max_height: 400,
+                height: 400,
+                plugins: "image code link",
+                convert_urls: false
+            });
+        });
+    });
+
     player = new Plyr('#player');
     var totalSeconds;
     store_video_time(contents_by_time);

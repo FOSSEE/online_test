@@ -22,6 +22,7 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files import File
 from django.contrib.messages import get_messages
+from django.contrib.contenttypes.models import ContentType
 from celery.contrib.testing.worker import start_worker
 from django.test import SimpleTestCase
 
@@ -6807,7 +6808,7 @@ class TestPost(TestCase):
         })
         response = self.client.get(url, follow=True)
         self.assertEqual(response.status_code, 200)
-        redirection_url = '/exam/login/?next=/exam/forum/{0}/'.format(
+        redirection_url = '/exam/login/?next=/exam/forum/course_forum/{0}/'.format(
             str(self.course.id)
             )
         self.assertRedirects(response, redirection_url)
@@ -6838,7 +6839,7 @@ class TestPost(TestCase):
         self.assertEquals(response.status_code, 404)
 
     def test_course_forum_url_resolves_course_forum_view(self):
-        view = resolve('/exam/forum/1/')
+        view = resolve('/exam/forum/course_forum/1/')
         self.assertEqual(view.func, course_forum)
 
     def test_course_forum_contains_link_to_post_comments_page(self):
@@ -6851,10 +6852,11 @@ class TestPost(TestCase):
         url = reverse('yaksh:course_forum', kwargs={
             'course_id': self.course.id
         })
+        course_ct = ContentType.objects.get_for_model(self.course)
         post = Post.objects.create(
             title='post 1',
             description='post 1 description',
-            course=self.course,
+            target_ct=course_ct, target_id=self.course.id,
             creator=self.student
         )
         response = self.client.get(url)
@@ -6879,9 +6881,11 @@ class TestPost(TestCase):
         }
         response = self.client.post(url, data)
         # This shouldn't be 302. Check where does it redirects.
+        course_ct = ContentType.objects.get_for_model(self.course)
         result = Post.objects.filter(title='Post 1',
                                      creator=self.student,
-                                     course=self.course)
+                                     target_ct=course_ct,
+                                     target_id=self.course.id)
         self.assertTrue(result.exists())
 
     def test_new_post_invalid_post_data(self):
@@ -6914,24 +6918,12 @@ class TestPost(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertFalse(Post.objects.exists())
 
-    def test_contains_form(self):
-        self.client.login(
-            username=self.student.username,
-            password=self.student_plaintext_pass
-        )
-        self.course.students.add(self.student)
-        url = reverse('yaksh:course_forum', kwargs={
-            'course_id': self.course.id
-        })
-        response = self.client.get(url)
-        form = response.context.get('form')
-        self.assertIsInstance(form, PostForm)
-
     def test_open_created_post_denies_anonymous_user(self):
+        course_ct = ContentType.objects.get_for_model(self.course)
         post = Post.objects.create(
             title='post 1',
             description='post 1 description',
-            course=self.course,
+            target_ct=course_ct, target_id=self.course.id,
             creator=self.student
         )
         url = reverse('yaksh:post_comments', kwargs={
@@ -6970,11 +6962,12 @@ class TestPost(TestCase):
             password=self.user_plaintext_pass
         )
         self.course.students.add(self.user)
+        course_ct = ContentType.objects.get_for_model(self.course)
         post = Post.objects.create(
             title='post 1',
             description='post 1 description',
-            course=self.course,
-            creator=self.user
+            target_ct=course_ct, target_id=self.course.id,
+            creator=self.student
         )
         url = reverse('yaksh:hide_post', kwargs={
             'course_id': self.course.id,
@@ -7037,10 +7030,11 @@ class TestPostComment(TestCase):
             enrollment="Enroll Request", creator=self.user
         )
 
+        course_ct = ContentType.objects.get_for_model(self.course)
         self.post = Post.objects.create(
             title='post 1',
             description='post 1 description',
-            course=self.course,
+            target_ct=course_ct, target_id=self.course.id,
             creator=self.student
         )
 
