@@ -1,3 +1,14 @@
+=== 0.27.0 (08-10-2020) ===
+
+* Fix template footer CSS
+* Add lesson comments feature
+
+=== 0.26.0 (07-10-2020) ===
+
+* Fix bug that sets module and lesson prerequisites to false
+* Add video lesson feature
+* Show assignment upload file in view answerpaper 
+
 === 0.25.0 (14-09-2020) ===
 
 * Fix bug to show missing marks in grade user
