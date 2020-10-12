@@ -53,10 +53,33 @@ from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .settings import URL_ROOT
 from .file_utils import extract_files, is_csv
 from .send_emails import (send_user_mail,
-                          generate_activation_key, send_bulk_mail)
+                          generate_activation_key,
+                          send_bulk_mail,
+                          mail_certificate)
 from .decorators import email_verified, has_profile
 from .tasks import regrade_papers
 from notifications_plugin.models import Notification
+from django.shortcuts import render
+from online_test.settings import EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
+from django.template.loader import get_template
+from django.shortcuts import redirect
+from django.http import HttpResponse
+from yaksh.models import CourseStatus
+from pdflatex import PDFLaTeX
+import jinja2
+from django.contrib import messages
+latex_jinja_env = jinja2.Environment(
+    block_start_string='\\BLOCK{',
+    block_end_string='}',
+    variable_start_string='\\VAR{',
+    variable_end_string='}',
+    comment_start_string='\\#{',
+    comment_end_string='}',
+    line_statement_prefix='%-',
+    line_comment_prefix='%#',
+    trim_blocks=True,
+    autoescape=False,
+    loader=jinja2.FileSystemLoader(os.path.abspath('.')))
 
 
 def my_redirect(url):
@@ -494,19 +517,15 @@ def special_start(request, micromanager_id=None):
     quiz = micromanager.quiz
     module = course.get_learning_module(quiz)
     quest_paper = get_object_or_404(QuestionPaper, quiz=quiz)
-
     if not course.is_enrolled(user):
         msg = 'You are not enrolled in {0} course'.format(course.name)
         return quizlist_user(request, msg=msg)
-
     if not micromanager.can_student_attempt():
         msg = 'Your special attempts are exhausted for {0}'.format(
             quiz.description)
         return quizlist_user(request, msg=msg)
-
     last_attempt = AnswerPaper.objects.get_user_last_attempt(
         quest_paper, user, course.id)
-
     if last_attempt:
         if last_attempt.is_attempt_inprogress():
             return show_question(
@@ -514,7 +533,6 @@ def special_start(request, micromanager_id=None):
                 course_id=course.id, module_id=module.id,
                 previous_question=last_attempt.current_question()
             )
-
     attempt_num = micromanager.get_attempt_number()
     ip = request.META['REMOTE_ADDR']
     new_paper = quest_paper.make_answerpaper(user, ip, attempt_num, course.id,
@@ -3185,6 +3203,26 @@ def view_module(request, module_id, course_id, msg=None):
     context['course'] = course
     context['state'] = "module"
     context['msg'] = msg
+    course_status = CourseStatus.objects.filter(
+            course_id=course.id, user_id=user.id)
+    if course.percent_completed(user, all_modules) == 100:
+        if course_status.first().get_certificateStatus() is False:
+            template = latex_jinja_env.get_template('yaksh.tex')
+            full_name = user.get_full_name()
+            document = template.render(name=full_name, course=course)
+            with open('certificate.tex', 'w') as output:
+                output.write(document)
+
+            os.system("pdflatex certificate.tex")
+            mail_certificate(user.email)
+            course_status.first().set_certificateStatus()
+            msg = 'Your course certificate sent to your registeres mail Id'
+            messages.success(request, msg)
+            return redirect('/')
+        else:
+            msg = 'You already recieved certificate, kindly check your mail'
+            messages.warning(request, msg)
+            return redirect('/')
     return my_render_to_response(request, 'yaksh/show_video.html', context)
 
 
