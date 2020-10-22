@@ -1710,11 +1710,16 @@ class Answer(models.Model):
     # Whether skipped or not.
     skipped = models.BooleanField(default=False)
 
+    comment = models.TextField(null=True, blank=True)
+
     def set_marks(self, marks):
         if marks > self.question.points:
             self.marks = self.question.points
         else:
             self.marks = marks
+
+    def set_comment(self, comments):
+        self.comment = comments
 
     def __str__(self):
         return "Answer for question {0}".format(self.question.summary)
@@ -2358,6 +2363,11 @@ class AnswerPaper(models.Model):
         """ Sets end time """
         self.end_time = datetime
         self.save()
+
+    def get_answer_comment(self, question_id):
+        answer = self.answers.filter(question_id=question_id).last()
+        if answer:
+            return answer.comment
 
     def get_question_answers(self):
         """

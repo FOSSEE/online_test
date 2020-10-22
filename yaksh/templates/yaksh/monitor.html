@@ -4,7 +4,7 @@
 {% block title %} Monitor {% endblock %}
 {% block pagetitle %} Monitor {% endblock pagetitle %}
 
-{% block meta %} <meta http-equiv="refresh" content="30"/> {% endblock meta %}
+{% block meta %} <meta http-equiv="refresh" content="300"/> {% endblock meta %}
 
 {% block script %}
 {% if papers %}
@@ -88,19 +88,55 @@ $(document).ready(function()
           <br>
       <div class="row">
         <div class="col-md-4">
-          <a href="{% url 'yaksh:show_statistics' papers.0.question_paper.id course.id %}" class="btn btn-primary">
-            <i class="fa fa-line-chart"></i>&nbsp;Question Statistics
-          </a>
-        </div>
-        <div class="col-md-4">
           <button type="button" class="btn btn-info" data-toggle="modal" data-target="#csvModal">
             <i class="fa fa-download"></i>&nbsp;Download CSV
           </button>
         </div>
         <div class="col-md-4">
+          <a href="{% url 'yaksh:show_statistics' papers.0.question_paper.id course.id %}" class="btn btn-primary">
+            <i class="fa fa-line-chart"></i>&nbsp;Question Statistics
+          </a>
+        </div>
+        <div class="col-md-4">
           <div class="badge badge-info">
-            Auto-Refreshes every 30 seconds
+            Auto-Refreshes every 5 minutes
           </div>
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+        <p>
+        <b>
+        - Download the CSV file from the button above<br />
+        - Edit and upload the same <br />
+        </b>
+        </p>
+        </div>
+        <div class="col-md-6">
+        <form id="upload_users" action="{% url 'yaksh:upload_marks' course.id papers.0.question_paper.id %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="input-group mb-3">
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" name="csv_file" id="upload"/>
+                    <label class="custom-file-label" for="upload">Select</label>
+                </div>
+                <div class="input-group-append">
+                    <button class="btn btn-outline-primary" type="submit">
+                        <i class="fa fa-upload"></i>
+                        Upload
+                    </button>
+                </div>
+            </div>
+              <script>
+                  $('#upload').on('change',function(){
+                      //get the file name
+                      var fileName = $(this).val();
+                      //replace the "Choose a file" label
+                      $(this).next('.custom-file-label').html(fileName);
+                  })
+              </script>
+        </form>
         </div>
       </div>
       <br>
@@ -172,7 +208,11 @@ $(document).ready(function()
               {% for field in csv_fields %}
               <div class="form-check form-check-inline">
                 <label class="form-check-label">
+                    {% if field == 'username' or field == 'questions' %}
+                    <input class="form-check-input" name="csv_fields" type="checkbox" value="{{ field }}" checked onclick="return false"> {{ field }}
+                    {% else %}
                     <input class="form-check-input" name="csv_fields" type="checkbox" value="{{ field }}" checked> {{ field }}
+                    {% endif %}
                 </label>
               </div>
               <br>

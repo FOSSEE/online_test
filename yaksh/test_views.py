@@ -2566,6 +2566,190 @@ class TestAddCourse(TestCase):
                              target_status_code=301)
 
 
+class TestUploadMarks(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.mod_group = Group.objects.create(name='moderator')
+
+        # Create Moderator with profile
+        self.teacher = User.objects.create_user(
+            username='teacher',
+            password='teacher',
+            first_name='teacher',
+            last_name='teaacher',
+            email='teacher@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.teacher,
+            roll_number=101,
+            institute='IIT',
+            department='Chemical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
+        )
+
+        self.TA = User.objects.create_user(
+            username='TA',
+            password='TA',
+            first_name='TA',
+            last_name='TA',
+            email='TA@test.com'
+        )
+
+        Profile.objects.create(
+            user=self.TA,
+            roll_number=102,
+            institute='IIT',
+            department='Aeronautical',
+            position='Moderator',
+            timezone='UTC',
+            is_moderator=True
+        )
+
+        # Create Student
+        self.student1 = User.objects.create_user(
+            username='student1',
+            password='student1',
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student1@test.com'
+        )
+        self.student2 = User.objects.create_user(
+            username='student2',
+            password='student2',
+            first_name='student_first_name',
+            last_name='student_last_name',
+            email='demo_student2@test.com'
+        )
+
+        # Add to moderator group
+        self.mod_group.user_set.add(self.teacher)
+        self.mod_group.user_set.add(self.TA)
+
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request", creator=self.teacher
+        )
+
+        self.question1 = Question.objects.create(
+            id=1212, summary='Dummy1', points=1,
+            type='code', user=self.teacher
+        )
+        self.question2 = Question.objects.create(
+            id=1213, summary='Dummy2', points=1,
+            type='code', user=self.teacher
+        )
+
+        self.quiz = Quiz.objects.create(time_between_attempts=0,
+                                        description='demo quiz')
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz, total_marks=2.0
+        )
+        self.question_paper.fixed_questions.add(self.question1)
+        self.question_paper.fixed_questions.add(self.question2)
+        self.question_paper.save()
+
+        self.ans_paper1 = AnswerPaper.objects.create(
+            user=self.student1, attempt_number=1,
+            question_paper=self.question_paper, start_time=timezone.now(),
+            user_ip='101.0.0.1', course=self.course,
+            end_time=timezone.now()+timezone.timedelta(minutes=20)
+        )
+        self.ans_paper2 = AnswerPaper.objects.create(
+            user=self.student2, attempt_number=1,
+            question_paper=self.question_paper, start_time=timezone.now(),
+            user_ip='101.0.0.1', course=self.course,
+            end_time=timezone.now()+timezone.timedelta(minutes=20)
+        )
+        self.answer1 = Answer(
+            question=self.question1, answer="answer1",
+            correct=False, error=json.dumps([]), marks=0
+        )
+        self.answer2 = Answer(
+            question=self.question2, answer="answer2",
+            correct=False, error=json.dumps([]), marks=0
+        )
+        self.answer1.save()
+        self.answer2.save()
+        self.ans_paper1.answers.add(self.answer1)
+        self.ans_paper1.answers.add(self.answer2)
+        self.ans_paper1.questions_answered.add(self.question1)
+        self.ans_paper1.questions_answered.add(self.question2)
+        self.ans_paper1.questions.add(self.question1)
+        self.ans_paper1.questions.add(self.question2)
+
+    def tearDown(self):
+        self.client.logout()
+        self.student1.delete()
+        self.student2.delete()
+        self.TA.delete()
+        self.teacher.delete()
+        self.course.delete()
+        self.ans_paper1.delete()
+        self.ans_paper2.delete()
+        self.question_paper.delete()
+        self.quiz.delete()
+        self.question1.delete()
+        self.question2.delete()
+        self.mod_group.delete()
+
+    def test_upload_users_with_correct_csv(self):
+        # Given
+        self.client.login(
+            username=self.teacher.username,
+            password='teacher'
+        )
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "marks_correct.csv")
+        csv_file = open(csv_file_path, 'rb')
+        upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
+        previous_total = self.ans_paper1.marks_obtained
+
+        # When
+        response = self.client.post(
+            reverse('yaksh:upload_marks',
+                    kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id}),
+            data={'csv_file': upload_file})
+        csv_file.close()
+
+        # Then
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(previous_total, 0)
+        ans_paper = AnswerPaper.objects.get(user=self.student1,
+                                            question_paper=self.question_paper,
+                                            course=self.course)
+        self.assertEqual(ans_paper.marks_obtained, 2)
+        answer = Answer.objects.get(answer='answer1')
+        self.assertEqual(answer.comment.strip(), 'good work')
+
+    def test_upload_users_with_wrong_csv(self):
+        # Given
+        self.client.login(
+            username='teacher',
+            password='teacher'
+        )
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "demo_questions.zip")
+        csv_file = open(csv_file_path, 'rb')
+        upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
+        message = "The file uploaded is not a CSV file."
+
+        # When
+        response = self.client.post(
+            reverse('yaksh:upload_marks',
+                    kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id}),
+            data={'csv_file': upload_file})
+        csv_file.close()
+
+        # Then
+        self.assertEqual(response.status_code, 302)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual('The file uploaded is not a CSV file.', messages[0])
+
+
 class TestCourseDetail(TestCase):
     def setUp(self):
         self.client = Client()

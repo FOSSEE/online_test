@@ -1818,7 +1818,10 @@ def _expand_questions(questions, field_list):
     field_list.remove('questions')
     for question in questions:
         field_list.insert(
-            i, '{0}-{1}'.format(question.summary, question.points))
+            i, 'Q-{0}-{1}-{2}-marks'.format(question.id, question.summary,
+                                            question.points))
+        field_list.insert(
+            i+1, 'Q-{0}-{1}-comments'.format(question.id, question.summary))
     return field_list
 
 
@@ -1878,8 +1881,18 @@ def download_quiz_csv(request, course_id, quiz_id):
             'status': 'answerpaper.status'}
     questions_scores = {}
     for question in questions:
-        questions_scores['{0}-{1}'.format(question.summary, question.points)] \
-                = 'answerpaper.get_per_question_score({0})'.format(question.id)
+        questions_scores['Q-{0}-{1}-{2}-marks'.format(
+            question.id, question.summary, question.points)] \
+            = 'answerpaper.get_per_question_score({0})'.format(question.id)
+        answer = question.answer_set.last()
+        comment = None
+        if answer:
+            comment = answer.comment
+        else:
+            comment = ''
+        questions_scores['Q-{0}-{1}-comments'.format(
+            question.id, question.summary)] \
+            = 'answerpaper.get_answer_comment({0})'.format(question.id)
     csv_fields_values.update(questions_scores)
 
     users = users.exclude(id=course.creator.id).exclude(
@@ -4032,3 +4045,88 @@ def lesson_statistics(request, course_id, lesson_id, toc_id=None):
         context['is_que_data'] = True
         context['objects'] = per_que_data
     return render(request, 'yaksh/show_lesson_statistics.html', context)
+
+
+@login_required
+@email_verified
+def upload_marks(request, course_id, questionpaper_id):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    question_paper = get_object_or_404(QuestionPaper, pk=questionpaper_id)
+    quiz = question_paper.quiz
+
+    if not (course.is_teacher(user) or course.is_creator(user)):
+        raise Http404('You are not allowed to view this page!')
+    if request.method == 'POST':
+        if 'csv_file' not in request.FILES:
+            messages.warning(request, "Please upload a CSV file.")
+            return redirect('yaksh:monitor', quiz.id, course_id)
+        csv_file = request.FILES['csv_file']
+        is_csv_file, dialect = is_csv(csv_file)
+        if not is_csv_file:
+            messages.warning(request, "The file uploaded is not a CSV file.")
+            return redirect('yaksh:monitor', quiz.id, course_id)
+        try:
+            reader = csv.DictReader(
+                csv_file.read().decode('utf-8').splitlines(),
+                dialect=dialect)
+        except TypeError:
+            messages.warning(request, "Bad CSV file")
+            return redirect('yaksh:monitor', quiz.id, course_id)
+        user_ids, question_ids = _get_header_info(reader)
+        csv_file.seek(0)
+        reader = csv.DictReader(csv_file.read().decode('utf-8').splitlines(),
+                                dialect=dialect)
+        _read_marks_csv(reader, course, question_paper, user_ids, question_ids)
+        messages.warning(request, "Marks uploaded!")
+    return redirect('yaksh:monitor', quiz.id, course_id)
+
+
+def _get_header_info(reader):
+    user_ids, question_ids = [], []
+    fields = reader.fieldnames
+    for field in fields:
+        if field.startswith('Q') and field.count('-') > 0:
+            qid = int(field.split('-')[1])
+            if qid not in question_ids:
+                question_ids.append(qid)
+    for row in reader:
+        username = row['username']
+        user = User.objects.filter(username=username).first()
+        if not user:
+            pass
+        user_ids.append(user.id)
+    return user_ids, question_ids
+
+
+def _read_marks_csv(reader, course, question_paper, user_ids, question_ids):
+    answerpapers = question_paper.answerpaper_set.filter(course=course,
+                                                         user_id__in=user_ids)
+    for row in reader:
+        username = row['username']
+        user = User.objects.filter(username=username).first()
+        if not user:
+            pass
+        answerpaper = answerpapers.get(user=user)
+        answers = answerpaper.answers.all()
+        answered = answerpaper.questions_answered.all().values_list('id',
+                                                                    flat=True)
+        for qid in question_ids:
+            question = Question.objects.filter(id=qid).first()
+            if not question:
+                pass
+            if qid in answered:
+                answer = answers.filter(question_id=qid).last()
+                if not answer:
+                    pass
+                answer.set_marks(
+                    float(row['Q-{0}-{1}-{2}-marks'.format(
+                        qid, question.summary, question.points)])
+                )
+                answer.set_comment(
+                    row['Q-{0}-{1}-comments'.format(
+                        qid, question.summary, question.points)]
+                )
+                answer.save()
+        answerpaper.update_marks(state='completed')
+        answerpaper.save()
