@@ -102,6 +102,19 @@
                             </span>
                             {% endif %}
                             {{tc.options}}
+                            {% if per_tc_ans %}
+                                {% get_tc_percent tc.id per_tc_ans as percent %}
+                                <div class="progress" style="width: 30%">
+                                {% if percent %}
+                                    <div class="progress-bar bg-success" role="progressbar" aria-valuenow="{{percent}}"
+                                      aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                        <b style="color: white;">{{percent}}%</b>
+                                    </div>
+                                {% else %}
+                                    <b style="color: black;">0%</b>
+                                {% endif %}
+                                </div>
+                            {% endif %}
                             {% elif question.type == "integer" %}
                             <span class="badge badge-pill badge-success">Answer:</span>
                             {{tc.correct}}
@@ -116,33 +129,43 @@
                     </div>
                 </div>
                 <br>
+                <strong>Total Submissions: {{total_count}}</strong>
+                <br><br>
+                {% if question.type != 'mcq' and question.type != 'mcc' %}
+                    <div id="plot_div"></div>
+                    <script type="text/javascript">
+                        var x_data = [];
+                        var y_data = [];
+                        {% for i, j in per_tc_ans.items %}
+                            x_data.push("{{i}}");
+                            y_data.push("{{j}}");
+                        {% endfor %}
+                        var data = [{x: x_data, y: y_data, type: 'bar'}];
+                        var layout = {
+                            title: "Submission records",
+                            xaxis: {title: 'Submitted Value'},
+                            yaxis: {title: 'Number of Submissions'}
+                        };
+                        var config = {responsive: true}
+                        Plotly.newPlot('plot_div', data, layout, config);
+                    </script>
+                    <br><br>
+                {% endif %}
                 {% include "yaksh/paginator.html" %}
                 <table class="table table-responsive">
                     <tr>
                         <th>Sr No.</th>
                         <th>Student Name</th>
                         <th>Email</th>
-                        <th>Latest Answer</th>
-                        <th>Status</th>
+                        <th>Latest Submission</th>
                     </tr>
                     {% for data in objects.object_list %}
                         <tr>
-                            <td>{{forloop.counter}}</td>
+                            <td>{{ forloop.counter0|add:objects.start_index }}</td>
                             <td>{{data.student__first_name}} {{data.student__last_name}}</td>
                             <td>{{data.student__email}}</td>
                             {% get_answers data.toc_id data.student_id as user_answer %}
                             <td>{{ user_answer.0 }}</td>
-                            <td>
-                                {% if user_answer.1 %}
-                                    <span class="badge badge-success">
-                                        Correct
-                                    </span>
-                                {% else %}
-                                    <span class="badge badge-secondary">
-                                        Incorrect
-                                    </span>
-                                {% endif %}
-                            </td>
                         </tr>
                     {% endfor %}
                 </table>
