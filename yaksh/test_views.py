@@ -8195,6 +8195,29 @@ class TestLessonContents(TestCase):
                   'integertestcase_set-0-type': 'integertestcase',
                   'integertestcase_set-0-correct': "1"}
             )
+        self.client.post(
+            reverse('yaksh:add_marker_quiz',
+                    kwargs={"content_type": '3',
+                            "course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id}),
+            data={'timer': '00:00:00', 'summary': 'Mcc_Lesson_stats',
+                  'description': 'My lesson question description',
+                  'language': 'other', 'type': 'mcc', 'topic': 'test',
+                  'points': '1', 'form-TOTAL_FORMS': 2,
+                  'form-MAX_NUM_FORMS': '',
+                  'form-INITIAL_FORMS': 0,
+                  'mcqtestcase_set-TOTAL_FORMS': 2,
+                  'mcqtestcase_set-INITIAL_FORMS': 0,
+                  'mcqtestcase_set-MIN_NUM_FORMS': 0,
+                  'mcqtestcase_set-MAX_NUM_FORMS': 0,
+                  'mcqtestcase_set-0-type': 'mcqtestcase',
+                  'mcqtestcase_set-0-options': "1",
+                  'mcqtestcase_set-0-correct': True,
+                  'mcqtestcase_set-1-type': 'mcqtestcase',
+                  'mcqtestcase_set-1-options': "2",
+                  'mcqtestcase_set-1-correct': False
+                }
+            )
         que = Question.objects.filter(summary="My_Lesson_question")
 
         single_que = que.first()
@@ -8245,6 +8268,43 @@ class TestLessonContents(TestCase):
         self.assertEqual(
             next(iter(response_data.get("data").keys())).id, toc.id
         )
+        self.assertEqual(student_info.get("student_id"), self.student.id)
+
+        # Test for mcc lesson question statistics
+        # Given
+        que = Question.objects.filter(summary="Mcc_Lesson_stats")
+
+        single_que = que.first()
+        toc = TableOfContents.objects.get(
+            course_id=self.user1_course1.id, lesson_id=self.lesson1.id,
+            object_id=single_que.id
+        )
+        self.client.logout()
+
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+        )
+        response = self.client.post(
+            reverse('yaksh:submit_marker_quiz',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "toc_id": toc.id}),
+            data={'answer': [str(i.id) for i in single_que.get_test_cases()]}
+            )
+        self.client.logout()
+
+        # Then
+        self.client.login(
+            username=self.user1.username,
+            password=self.user1_plaintext_pass
+        )
+        response = self.client.get(
+            reverse('yaksh:lesson_statistics',
+                    kwargs={"course_id": self.user1_course1.id,
+                            "lesson_id": self.lesson1.id,
+                            "toc_id": toc.id})
+            )
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(student_info.get("student_id"), self.student.id)
 
     def test_multiple_lesson_question_types(self):
