@@ -2378,15 +2378,24 @@ class AnswerPaper(models.Model):
                     'error_list': [e for e in json.loads(answer.error)]
                 }]
 
+        q_a.update(
+            { q: [] for q in self.questions_unanswered.all() }
+        )
+
         for question, answers in q_a.items():
             answers = q_a[question]
-            q_a[question].append({
-                'marks': max([
-                    answer['answer'].marks
-                    for answer in answers
-                    if question == answer['answer'].question
-                ])
-            })
+            if answers:
+                q_a[question].append({
+                    'marks': max([
+                        answer['answer'].marks
+                        for answer in answers
+                        if question == answer['answer'].question
+                    ]),
+                })
+            else:
+                q_a[question].append({
+                    'marks': 0.0,
+                })
 
         return q_a
 
