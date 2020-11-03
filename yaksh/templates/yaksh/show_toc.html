@@ -1,20 +1,22 @@
 {% load custom_filters %}
 {% has_lesson_video lesson_id as has_video %}
 {% if has_video %}
-    <div>
-        <a href="{% url 'yaksh:download_sample_toc' %}">
-            <i class="fa fa-download"></i>&nbsp;Download Sample
-        </a>
-        <br><br>
-        <form action="" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <input type="file" name="toc" required="">
-            <button class="btn btn-outline-success" id="upload_toc" name="upload_toc">
-                <i class="fa fa-upload"></i>&nbsp;Upload TOC
-            </button>
-        </form>
+    <div class="card">
+        <div class="card-body">
+            <a href="{% url 'yaksh:download_sample_toc' %}">
+                <i class="fa fa-download"></i>&nbsp;Download Sample
+            </a>
+            <hr>
+            <form action="" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="file" name="toc" required="">
+                <button class="btn btn-outline-success" id="upload_toc" name="upload_toc">
+                    <i class="fa fa-upload"></i>&nbsp;Upload TOC
+                </button>
+            </form>
+        </div>
     </div>
-    <hr>
+    <br>
 {% endif %}
 <table class="table table-responsive-sm">
 {% for toc in contents %}

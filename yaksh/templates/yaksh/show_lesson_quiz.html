@@ -1,5 +1,16 @@
 {% load custom_filters %}
 <script type="text/javascript">
+    $(document).ready(function() {
+      renderMathInElement(
+        document.body,
+        {
+          delimiters: [
+            {left: "$$", right: "$$", display: false},
+            {left: "$", right: "$", display: true},
+          ]
+        }
+      );
+    });
     function user_arranged_options() {
         var temp_array = []
         var add_array = document.getElementById("arrange_order");
@@ -120,11 +131,11 @@
                   var order_array = $(arrange).sortable(['serialize']);
                 </script>
             {% endif %}
-            {% if question.type == "mcq" or  question.type == "mcc" or question.type == "integer" or question.type == "float" or question.type ==  "string" %}
+            {% if question.type == "arrange" %}
+              <br><button class="btn btn-success" type="submit" name="check" id="check" onClick="return user_arranged_options();">Submit</button>
+            {% else %}
               <br><button class="btn btn-success" type="submit" name="check" id="check">Submit
               </button>
-            {% elif question.type == "arrange" %}
-              <br><button class="btn btn-success" type="submit" name="check" id="check" onClick="return user_arranged_options();">Submit</button>
             {% endif %}
         </div>
     </div>

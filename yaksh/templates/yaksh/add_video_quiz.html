@@ -76,9 +76,9 @@
                 $('#id_type').children("option[value='code']").show();
             }
         });
-        function init_editor() {
+        $(function() {
             tinymce.init({
-                selector : "textarea",
+                selector: 'textarea#que_description',
                 setup : function(ed) {
                       ed.on('change', function(e) {
                          tinymce.triggerSave();
@@ -89,6 +89,6 @@
                 plugins: "image code link",
                 convert_urls: false
             });
-        }
+        });
     });
 </script>
