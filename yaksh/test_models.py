@@ -1788,20 +1788,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         """ Test get_question_answer() method of Answer Paper"""
         questions = self.answerpaper.questions.all()
         answered = self.answerpaper.get_question_answers()
-        for question in questions:
-            answers_saved = Answer.objects.filter(question=question)
-            error_list = [json.loads(ans.error) for ans in answers_saved]
-            if answers_saved:
-                self.assertGreater(len(answered[question]), len(answers_saved))
-                ans = []
-                err = []
-                for val in answered[question]:
-                    if val.get('answer') is not None:
-                        ans.append(val.get('answer'))
-                    if val.get('error_list') is not None:
-                        err.append(val.get('error_list'))
-                self.assertEqual(set(ans), set(answers_saved))
-                self.assertEqual(error_list, err)
+        self.assertEqual(list(questions), list(answered.keys()))
 
     def test_is_answer_correct(self):
         self.assertTrue(self.answerpaper.is_answer_correct(self.questions[0]))

@@ -141,59 +141,59 @@
             <!-- Lesson Table of contents -->
             <div class="row">
                 {% if lesson.video_path %}
-                <div class="col-md-8">
-                    <div class="card-body">
-                        {% with lesson.video_path|video_name as video %}
-                            {% if video.1 == "others" %}
-                            <video id="player" playsinline controls>
-                                <source src="{{video.0}}" />
-                            </video>
-                            {% else %}
-                            <div id="player" data-plyr-provider="{{video.1}}" data-plyr-embed-id="{{video.0}}"></div>
-                            {% endif %}
-                        {% endwith %}
-                    </div>
-                </div>
-                {% if toc %}
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <a class="card-link" data-toggle="collapse" href="#toc-collapse">
-                                Table Of Contents&nbsp;<i class="fa fa-angle-down"></i>
-                            </a>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            {% with lesson.video_path|video_name as video %}
+                                {% if video.1 == "others" %}
+                                <video id="player" playsinline controls>
+                                    <source src="{{video.0}}" />
+                                </video>
+                                {% else %}
+                                <div id="player" data-plyr-provider="{{video.1}}" data-plyr-embed-id="{{video.0}}"></div>
+                                {% endif %}
+                            {% endwith %}
                         </div>
-                        <div class="collapse show" id="toc-collapse">
-                            <div class="card-body" id="toc">
-                                <table class="table table-responsive">
-                                    {% for content in toc %}
-                                        {% with content.get_toc_text as toc_name %}
-                                        <tr>
-                                            <td>
-                                                <a href="#" onclick="select_toc(this);" data-toc="{{content.id}}" data-toc-type="{{content.content}}">
-                                                    {{ toc_name }}
-                                                </a>
-                                            </td>
-                                            <td>
-                                                {{content.get_content_display}}
-                                            </td>
-                                            <td id="toc_time_{{content.id}}">
-                                                {{content.time}}
-                                            </td>
-                                            <input type="hidden" id="toc_{{content.id}}" value="{% url 'yaksh:get_marker_quiz' course.id content.id %}" data-content="{{content.content}}"/>
-                                            <input type="hidden" id="toc_desc_{{content.id}}" value="{{content.content_object.description|safe}}" data-content="{{content.content}}"/>
-                                        </tr>
-                                        {% endwith %}
-                                    {% empty %}
-                                        <center class=table-responsive>
-                                            <span class="badge badge-warning">No Table of contents added</span>
-                                        </center>
-                                    {% endfor %}
-                                </table>
+                    </div>
+                    {% if toc %}
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <a class="card-link" data-toggle="collapse" href="#toc-collapse">
+                                    Table Of Contents&nbsp;<i class="fa fa-angle-down"></i>
+                                </a>
+                            </div>
+                            <div class="collapse show" id="toc-collapse">
+                                <div class="card-body" id="toc" style="max-height: 400px; overflow-y: auto;">
+                                    <table class="table table-responsive">
+                                        {% for content in toc %}
+                                            {% with content.get_toc_text as toc_name %}
+                                            <tr>
+                                                <td>
+                                                    <a href="#" onclick="select_toc(this);" data-toc="{{content.id}}" data-toc-type="{{content.content}}">
+                                                        {{ toc_name }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    {{content.get_content_display}}
+                                                </td>
+                                                <td id="toc_time_{{content.id}}">
+                                                    {{content.time}}
+                                                </td>
+                                                <input type="hidden" id="toc_{{content.id}}" value="{% url 'yaksh:get_marker_quiz' course.id content.id %}" data-content="{{content.content}}"/>
+                                                <input type="hidden" id="toc_desc_{{content.id}}" value="{{content.content_object.description|safe}}" data-content="{{content.content}}"/>
+                                            </tr>
+                                            {% endwith %}
+                                        {% empty %}
+                                            <center class=table-responsive>
+                                                <span class="badge badge-warning">No Table of contents added</span>
+                                            </center>
+                                        {% endfor %}
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                {% endif %}
+                    {% endif %}
                 {% endif %}
                 <div class="col-md-8">
                     <div class="card">

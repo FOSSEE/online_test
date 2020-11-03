@@ -199,8 +199,6 @@ urlpatterns = [
         views.design_module, name="design_module"),
     url(r'^manage/courses/designmodule/(?P<module_id>\d+)/'
         '(?P<course_id>\d+)/$', views.design_module, name="design_module"),
-    url(r'^manage/courses/lesson/preview/$',
-        views.preview_html_text, name="preview_html_text"),
     url(r'^manage/courses/add_module/(?P<course_id>\d+)/$',
         views.add_module, name="add_module"),
     url(r'^manage/courses/add_module/(?P<course_id>\d+)/(?P<module_id>\d+)/$',

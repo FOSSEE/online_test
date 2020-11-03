@@ -6728,20 +6728,6 @@ class TestLessons(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["msg"], err_msg)
 
-    def test_preview_lesson_description(self):
-        """ Test preview lesson description converted from md to html"""
-        self.client.login(
-            username=self.teacher.username,
-            password=self.teacher_plaintext_pass
-        )
-        lesson = json.dumps({'description': self.lesson.description})
-        response = self.client.post(
-            reverse('yaksh:preview_html_text'),
-            data=lesson, content_type="application/json"
-            )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()['data'], '<p>test description</p>')
-
 
 class TestPost(TestCase):
     def setUp(self):
