@@ -715,7 +715,8 @@ class VideoQuizForm(forms.ModelForm):
         )
         self.fields['type'].initial = question_type
         self.fields['description'].widget.attrs.update(
-            {'class': form_input_class, 'placeholder': 'Description'}
+            {'class': form_input_class, 'placeholder': 'Description',
+             'id': 'que_description'}
         )
         self.fields['timer'].widget.attrs.update(
             {'class': form_input_class, 'placeholder': 'Quiz Time'}

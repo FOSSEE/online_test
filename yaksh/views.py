@@ -2987,19 +2987,6 @@ def add_module(request, course_id=None, module_id=None):
 
 @login_required
 @email_verified
-def preview_html_text(request):
-    user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-    response_kwargs = {}
-    response_kwargs['content_type'] = 'application/json'
-    request_data = json.loads(request.body.decode("utf-8"))
-    html_text = get_html_text(request_data['description'])
-    return HttpResponse(json.dumps({"data": html_text}), **response_kwargs)
-
-
-@login_required
-@email_verified
 def get_next_unit(request, course_id, module_id, current_unit_id=None,
                   first_unit=None):
     user = request.user
