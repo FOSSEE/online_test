@@ -25,8 +25,8 @@
         {{error}}
     </div>
     {% endif %}
-    <div class="row justify-content-center form-group">
-        <div class="col-md-5 col-md-offset-4">
+    <div class="row">
+        <div class="col-md-6">
             <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
                 <i class="fa fa-arrow-left"></i>&nbsp;Back
             </a>
@@ -143,7 +143,7 @@
             </form>
         </div>
         <br><br>
-        <div class="col-md-5">
+        <div class="col-md-6">
             <br>
             <div class="card">
                 <div class="card-header">
@@ -152,13 +152,13 @@
                     </a>
                 </div>
                 <div class="collapse show" id="toc-collapse">
-                    <div class="card-body" id="toc">{{toc}}</div>
+                    <div class="card-body" id="toc" style="max-height: 400px; overflow-y: auto;">{{toc}}</div>
                 </div>
             </div>
             <br>
             <div class="card" id="preview_text_div">
                 <div class="card-header">
-                    Setup Lesson
+                    Create lesson table of contents
                 </div>
                 <div class="card-body">
                     {% if lesson_form.instance and lesson_form.instance.video_path %}
