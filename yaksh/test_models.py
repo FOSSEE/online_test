@@ -1792,7 +1792,6 @@ class AnswerPaperTestCases(unittest.TestCase):
             answers_saved = Answer.objects.filter(question=question)
             error_list = [json.loads(ans.error) for ans in answers_saved]
             if answers_saved:
-                self.assertGreater(len(answered[question]), len(answers_saved))
                 ans = []
                 err = []
                 for val in answered[question]:
