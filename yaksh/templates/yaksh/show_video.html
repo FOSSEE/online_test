@@ -163,7 +163,7 @@
                         </a>
                     </div>
                     <div class="collapse show" id="toc-collapse">
-                        <div class="card-body" id="toc">
+                        <div class="card-body" id="toc" style="max-height: 400px; overflow-y: auto;">
                             <table class="table table-responsive">
                                 {% for content in toc %}
                                     {% with content.get_toc_text as toc_name %}

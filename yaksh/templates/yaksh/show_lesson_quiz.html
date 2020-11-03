@@ -1,7 +1,15 @@
 {% load custom_filters %}
 <script type="text/javascript">
     $(document).ready(function() {
-      renderMathInElement(document.body);
+      renderMathInElement(
+        document.body,
+        {
+          delimiters: [
+            {left: "$$", right: "$$", display: false},
+            {left: "$", right: "$", display: true},
+          ]
+        }
+      );
     });
     function user_arranged_options() {
         var temp_array = []

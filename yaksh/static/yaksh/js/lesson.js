@@ -1,13 +1,20 @@
 $(document).ready(function() {
-    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
     var simplemde = new SimpleMDE({
         element: document.getElementById("id_description"),
         forceSync: true,
         hideIcons: ["preview", "side-by-side", "fullscreen"]
     });
     simplemde.codemirror.on("change", function() {
-        MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
         $("#description_body").html(simplemde.markdown(simplemde.value()));
+        renderMathInElement(
+          document.body,
+          {
+            delimiters: [
+              {left: "$$", right: "$$", display: false},
+              {left: "$", right: "$", display: true},
+            ]
+          }
+        );
     });
     const player = new Plyr('#player');
     var timer = $("#vtimer");
