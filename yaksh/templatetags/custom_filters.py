@@ -3,6 +3,7 @@ from django.template.defaultfilters import stringfilter
 from django.forms.fields import CheckboxInput
 from ast import literal_eval
 import os
+import pandas as pd
 try:
     from itertools import zip_longest
 except ImportError:
@@ -193,3 +194,9 @@ def has_lesson_video(lesson_id):
     else:
         status = False
     return status
+
+
+@register.simple_tag
+def get_tc_percent(tc_id, data):
+    return data.get(str(tc_id), 0)
+

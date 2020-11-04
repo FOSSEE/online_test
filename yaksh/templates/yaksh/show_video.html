@@ -140,64 +140,62 @@
         {% else %}    <!--  Lesson body   -->
             <!-- Lesson Table of contents -->
             <div class="row">
-                <div class="col-md-8">
-                    <div class="card-body">
-                    {% if lesson.video_path %}
-                        {% with lesson.video_path|video_name as video %}
-                            {% if video.1 == "others" %}
-                            <video id="player" playsinline controls>
-                                <source src="{{video.0}}" />
-                            </video>
-                            {% else %}
-                            <div id="player" data-plyr-provider="{{video.1}}" data-plyr-embed-id="{{video.0}}"></div>
-                            {% endif %}
-                        {% endwith %}
-                    {% endif %}
-                    </div>
-                </div>
-                <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <a class="card-link" data-toggle="collapse" href="#toc-collapse">
-                            Table Of Contents&nbsp;<i class="fa fa-angle-down"></i>
-                        </a>
-                    </div>
-                    <div class="collapse show" id="toc-collapse">
-                        <div class="card-body" id="toc" style="max-height: 400px; overflow-y: auto;">
-                            <table class="table table-responsive">
-                                {% for content in toc %}
-                                    {% with content.get_toc_text as toc_name %}
-                                    <tr>
-                                        <td>
-                                            <a href="#" onclick="select_toc(this);" data-toc="{{content.id}}" data-toc-type="{{content.content}}">
-                                                {{ toc_name }}
-                                            </a>
-                                        </td>
-                                        <td>
-                                            {{content.get_content_display}}
-                                        </td>
-                                        <td id="toc_time_{{content.id}}">
-                                            {{content.time}}
-                                        </td>
-                                        <input type="hidden" id="toc_{{content.id}}" value="{% url 'yaksh:get_marker_quiz' course.id content.id %}" data-content="{{content.content}}"/>
-                                        <input type="hidden" id="toc_desc_{{content.id}}" value="{{content.content_object.description|safe}}" data-content="{{content.content}}"/>
-                                    </tr>
-                                    {% endwith %}
-                                {% empty %}
-                                    <center>
-                                        <span class="badge badge-warning">No Table of contents added</span>
-                                    </center>
-                                {% endfor %}
-                            </table>
+                {% if lesson.video_path %}
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            {% with lesson.video_path|video_name as video %}
+                                {% if video.1 == "others" %}
+                                <video id="player" playsinline controls>
+                                    <source src="{{video.0}}" />
+                                </video>
+                                {% else %}
+                                <div id="player" data-plyr-provider="{{video.1}}" data-plyr-embed-id="{{video.0}}"></div>
+                                {% endif %}
+                            {% endwith %}
                         </div>
                     </div>
-                </div>
-                </div>
+                    {% if toc %}
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <a class="card-link" data-toggle="collapse" href="#toc-collapse">
+                                    Table Of Contents&nbsp;<i class="fa fa-angle-down"></i>
+                                </a>
+                            </div>
+                            <div class="collapse show" id="toc-collapse">
+                                <div class="card-body" id="toc" style="max-height: 400px; overflow-y: auto;">
+                                    <table class="table table-responsive">
+                                        {% for content in toc %}
+                                            {% with content.get_toc_text as toc_name %}
+                                            <tr>
+                                                <td>
+                                                    <a href="#" onclick="select_toc(this);" data-toc="{{content.id}}" data-toc-type="{{content.content}}">
+                                                        {{ toc_name }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    {{content.get_content_display}}
+                                                </td>
+                                                <td id="toc_time_{{content.id}}">
+                                                    {{content.time}}
+                                                </td>
+                                                <input type="hidden" id="toc_{{content.id}}" value="{% url 'yaksh:get_marker_quiz' course.id content.id %}" data-content="{{content.content}}"/>
+                                                <input type="hidden" id="toc_desc_{{content.id}}" value="{{content.content_object.description|safe}}" data-content="{{content.content}}"/>
+                                            </tr>
+                                            {% endwith %}
+                                        {% empty %}
+                                            <center class=table-responsive>
+                                                <span class="badge badge-warning">No Table of contents added</span>
+                                            </center>
+                                        {% endfor %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endif %}
                 <div class="col-md-8">
-                    <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
-                        Next&nbsp;<i class="fa fa-step-forward"></i>
-                    </a>
-                    <br><br>
                     <div class="card">
                         <div class="card-header"><h3><strong>Lesson Description</strong></h3></div>
                         <div class="card-body">
@@ -227,23 +225,28 @@
                     </div>
                 </div>
             </div>
+            <br>
+            <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
+                    Next&nbsp;<i class="fa fa-step-forward"></i>
+            </a>
         {% endif %}
         {% if state == 'lesson' %}
-            <div>
-                <b><u>Add comment:</u></b>
+            <div class="col-md-8">
+                <hr>
+                <b><u>Comments:</u></b>
                 <form action="" method="POST" enctype='multipart/form-data'>
                     <div class="form-group">
                         {% csrf_token %}
-                        {{form}}
+                        {{form.as_p}}
                     </div>
-                    <input type="submit" value="Submit" class="btn btn-success">
+                    <input type="submit" value="Submit" class="btn btn-success btn-lg">
                 </form>
             </div>
         {% endif %}
         <br>
         {% if comments %}
             {% for comment in comments %}
-                <div class="card mb-2">
+                <div class="card mb-2 col-md-8">
                     <div class="card-body p-3">
                         <div class="row mb-3">
                             <div class="col-6">

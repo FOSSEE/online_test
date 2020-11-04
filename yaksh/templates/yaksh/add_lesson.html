@@ -89,9 +89,11 @@
                     {{lesson_form.video_path}}
                     <br>
                     Video File:
-                    <span class="badge badge-info">
-                        {{lesson_form.video_file.help_text}}
-                    </span>
+                    <div class="table-responsive">
+                        <span class="badge badge-info">
+                            {{lesson_form.video_file.help_text}}
+                        </span>
+                    </div>
                     <div class="col-md-4">
                         {{lesson_form.video_file}}
                     </div>
@@ -210,10 +212,12 @@
                             </div>
                         {% endwith %}
                     {% else %}
-                        <div class="badge badge-info">
-                            <strong>
-                                Add a Video Path or Upload a video file to setup lesson contents
-                            </strong>
+                        <div class="table-responsive">
+                            <div class="badge badge-info">
+                                <strong>
+                                    Add a Video Path or Upload a video file to setup lesson contents
+                                </strong>
+                            </div>
                         </div>
                     {% endif %}
                 </div>

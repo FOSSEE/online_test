@@ -65,6 +65,13 @@
     </ul>
     </div>
 </nav>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $(".alert").delay(2000).slideUp(200, function() {
+            $(this).alert('close');
+        });
+    });
+</script>
 
 {% endblock %}
 {% block content %}

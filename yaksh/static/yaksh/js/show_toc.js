@@ -13,7 +13,7 @@ $(document).ready(function() {
                       });
                 },
                 max_height: 400,
-                height: 400,
+                height: 200,
                 plugins: "image code link",
                 convert_urls: false
             });

@@ -4012,8 +4012,19 @@ def lesson_statistics(request, course_id, lesson_id, toc_id=None):
     context['course_id'] = course_id
     if toc_id:
         per_que_data = TableOfContents.objects.get_question_stats(toc_id)
-        paginator = Paginator(per_que_data[1], 50)
-        context['question'] = per_que_data[0]
+        question = per_que_data[0]
+        answers = per_que_data[1]
+        is_percent_reqd = (
+            True if question.type == "mcq" or question.type == "mcc"
+                else False
+            )
+        per_tc_ans, total_count = TableOfContents.objects.get_per_tc_ans(
+            toc_id, question.type, is_percent_reqd
+        )
+        context['per_tc_ans'] = per_tc_ans
+        context['total_count'] = total_count
+        paginator = Paginator(answers, 50)
+        context['question'] = question
         page = request.GET.get('page')
         per_que_data = paginator.get_page(page)
         context['is_que_data'] = True

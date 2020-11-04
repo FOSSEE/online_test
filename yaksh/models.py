@@ -25,6 +25,7 @@ import zipfile
 import tempfile
 from textwrap import dedent
 from ast import literal_eval
+import pandas as pd
 
 # Django Imports
 from django.db import models
@@ -2821,18 +2822,49 @@ class TOCManager(models.Manager):
         data = {}
         for toc in contents:
             data[toc] = LessonQuizAnswer.objects.filter(
-                toc_id=toc.id).values_list("toc_id").distinct().count()
+                toc_id=toc.id).values_list(
+                "student_id", flat=True).distinct().count()
         return data
 
     def get_question_stats(self, toc_id):
         answers = LessonQuizAnswer.objects.get_queryset().filter(
             toc_id=toc_id).order_by('id')
-        question = answers.first().toc.content_object
-        answers = answers.values(
-            "student__first_name", "student__last_name", "student__email",
-            "student_id", "toc_id"
-            ).distinct()
+        question = TableOfContents.objects.get(id=toc_id).content_object
+        if answers.exists():
+            answers = answers.values(
+                "student__first_name", "student__last_name", "student__email",
+                "student_id", "toc_id"
+                )
+            df = pd.DataFrame(answers)
+            answers = df.drop_duplicates().to_dict(orient='records')
         return question, answers
+
+    def get_per_tc_ans(self, toc_id, question_type, is_percent=True):
+        answers = LessonQuizAnswer.objects.filter(toc_id=toc_id).values(
+            "student_id", "answer__answer"
+        ).order_by("id")
+        data = None
+        if answers.exists():
+            df = pd.DataFrame(answers)
+            grp = df.groupby(["student_id"]).tail(1)
+            total_count = grp.count().answer__answer
+            data = grp.groupby(["answer__answer"]).count().to_dict().get(
+                "student_id")
+            if question_type == "mcc":
+                tc_ids = []
+                mydata = {}
+                for i in data.keys():
+                    tc_ids.extend(literal_eval(i))
+                for j in tc_ids:
+                    if j not in mydata:
+                        mydata[j] = 1
+                    else:
+                        mydata[j] +=1
+                data = mydata.copy()
+            if is_percent:
+                for key, value in data.items():
+                    data[key] = (value/total_count)*100
+        return data, total_count
 
     def get_answer(self, toc_id, user_id):
         submission = LessonQuizAnswer.objects.filter(

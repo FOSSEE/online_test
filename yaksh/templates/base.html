@@ -52,6 +52,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js" integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4" crossorigin="anonymous"></script>
 
   <!-- To automatically render math in text elements, include the auto-render extension: -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js" integrity="sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa" crossorigin="anonymous">
   </script>
  
@@ -67,9 +68,6 @@
             ]
           }
         );
-        $(".alert").delay(2000).slideUp(200, function() {
-            $(this).alert('close');
-        });
       });
   </script>
   {% block script %}
