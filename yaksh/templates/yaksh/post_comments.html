@@ -77,7 +77,7 @@
                                 </strong>
                             </div>
                             <div class="col-6 text-right">
-                                <small class="text-muted">{{comment.created_at}} {% if user == course.creator or user in course.get_teachers %} <a href="{% url 'yaksh:hide_comment' post.target.id comment.uid %}" class="fa fa-trash"></a>{% endif %}</small>
+                                <small class="text-muted">{{comment.created_at}} {% if user == course.creator or user in course.get_teachers %} <a href="{% url 'yaksh:hide_comment' course.id comment.uid %}" class="fa fa-trash"></a>{% endif %}</small>
                             </div>
                         </div>
                         <p class="card-text description">{{comment.description|safe}}</p>
