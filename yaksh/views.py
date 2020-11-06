@@ -4075,12 +4075,8 @@ def upload_marks(request, course_id, questionpaper_id):
         except TypeError:
             messages.warning(request, "Bad CSV file")
             return redirect('yaksh:monitor', quiz.id, course_id)
-        user_ids, question_ids = _get_header_info(reader)
-        csv_file.seek(0)
-        reader = csv.DictReader(csv_file.read().decode('utf-8').splitlines(),
-                                dialect=dialect)
-        _read_marks_csv(reader, course, question_paper, user_ids, question_ids)
-        messages.warning(request, "Marks uploaded!")
+        question_ids = _get_header_info(reader)
+        _read_marks_csv(request, reader, course, question_paper, question_ids)
     return redirect('yaksh:monitor', quiz.id, course_id)
 
 
@@ -4092,43 +4088,55 @@ def _get_header_info(reader):
             qid = int(field.split('-')[1])
             if qid not in question_ids:
                 question_ids.append(qid)
+    return question_ids
+
+
+def _read_marks_csv(request, reader, course, question_paper, question_ids):
+    messages.info(request, 'Marks Uploaded!')
     for row in reader:
         username = row['username']
         user = User.objects.filter(username=username).first()
-        if not user:
-            pass
-        user_ids.append(user.id)
-    return user_ids, question_ids
-
-
-def _read_marks_csv(reader, course, question_paper, user_ids, question_ids):
-    answerpapers = question_paper.answerpaper_set.filter(course=course,
-                                                         user_id__in=user_ids)
-    for row in reader:
-        username = row['username']
-        user = User.objects.filter(username=username).first()
-        if not user:
-            pass
-        answerpaper = answerpapers.get(user=user)
+        if user:
+            answerpapers = question_paper.answerpaper_set.filter(course=course,
+                                                         user_id=user.id)
+        else:
+            messages.info(request, '{0} user not found!'.format(username))
+            continue
+        answerpaper = answerpapers.last()
+        if not answerpaper:
+            messages.info(request, '{0} has no answerpaper!'.format(username))
+            continue
         answers = answerpaper.answers.all()
-        answered = answerpaper.questions_answered.all().values_list('id',
-                                                                    flat=True)
+        questions = answerpaper.questions.all().values_list('id', flat=True)
         for qid in question_ids:
             question = Question.objects.filter(id=qid).first()
             if not question:
-                pass
-            if qid in answered:
+                messages.info(request,
+                             '{0} is an invalid question id!'.format(qid))
+                continue
+            if qid in questions:
                 answer = answers.filter(question_id=qid).last()
                 if not answer:
-                    pass
-                answer.set_marks(
-                    float(row['Q-{0}-{1}-{2}-marks'.format(
-                        qid, question.summary, question.points)])
-                )
-                answer.set_comment(
-                    row['Q-{0}-{1}-comments'.format(
-                        qid, question.summary, question.points)]
-                )
+                    answer = Answer(question_id=qid, marks=0, correct=False,
+                                    answer='Created During Marks Update!',
+                                    error=json.dumps([]))
+                    answer.save()
+                    answerpaper.answers.add(answer)
+                key1 = 'Q-{0}-{1}-{2}-marks'.format(qid, question.summary,
+                                                    question.points)
+                key2 = 'Q-{0}-{1}-comments'.format(qid, question.summary,
+                                                   question.points)
+                if key1 in reader.fieldnames:
+                    try:
+                        answer.set_marks(float(row[key1]))
+                    except ValueError:
+                        messages.info(request,
+                                     '{0} invalid marks!'.format(row[key1]))
+                if key2 in reader.fieldnames:
+                    answer.set_comment(row[key2])
                 answer.save()
         answerpaper.update_marks(state='completed')
         answerpaper.save()
+        messages.info(request,
+            'Updated successfully for user: {0}, question: {1}'.format(
+            username, question.summary))

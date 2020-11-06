@@ -2672,14 +2672,23 @@ class TestUploadMarks(TestCase):
             question=self.question2, answer="answer2",
             correct=False, error=json.dumps([]), marks=0
         )
+        self.answer12 = Answer(
+            question=self.question1, answer="answer12",
+            correct=False, error=json.dumps([]), marks=0
+        )
         self.answer1.save()
+        self.answer12.save()
         self.answer2.save()
         self.ans_paper1.answers.add(self.answer1)
         self.ans_paper1.answers.add(self.answer2)
+        self.ans_paper2.answers.add(self.answer12)
         self.ans_paper1.questions_answered.add(self.question1)
         self.ans_paper1.questions_answered.add(self.question2)
+        self.ans_paper2.questions_answered.add(self.question1)
         self.ans_paper1.questions.add(self.question1)
         self.ans_paper1.questions.add(self.question2)
+        self.ans_paper2.questions.add(self.question1)
+        self.ans_paper2.questions.add(self.question2)
 
     def tearDown(self):
         self.client.logout()
@@ -2696,16 +2705,16 @@ class TestUploadMarks(TestCase):
         self.question2.delete()
         self.mod_group.delete()
 
-    def test_upload_users_with_correct_csv(self):
+    def test_upload_users_marks_not_attempted_question(self):
         # Given
         self.client.login(
             username=self.teacher.username,
             password='teacher'
         )
-        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "marks_correct.csv")
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     "marks_not_attempted_question.csv")
         csv_file = open(csv_file_path, 'rb')
         upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
-        previous_total = self.ans_paper1.marks_obtained
 
         # When
         response = self.client.post(
@@ -2717,7 +2726,180 @@ class TestUploadMarks(TestCase):
 
         # Then
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(previous_total, 0)
+        ans_paper = AnswerPaper.objects.get(user=self.student2,
+                                            question_paper=self.question_paper,
+                                            course=self.course)
+        self.assertEqual(ans_paper.marks_obtained, 1.3)
+        answer = Answer.objects.get(answer='answer12')
+        self.assertEqual(answer.comment.strip(), 'very good')
+
+    def test_upload_users_marks_invalid_question_id(self):
+        # Given
+        self.client.login(
+            username=self.teacher.username,
+            password='teacher'
+        )
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     "marks_invalid_question_id.csv")
+        csv_file = open(csv_file_path, 'rb')
+        upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
+
+        # When
+        response = self.client.post(
+            reverse('yaksh:upload_marks',
+                    kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id}),
+            data={'csv_file': upload_file})
+        csv_file.close()
+
+        # Then
+        self.assertEqual(response.status_code, 302)
+
+    def test_upload_users_marks_invalid_user(self):
+        # Given
+        self.client.login(
+            username=self.teacher.username,
+            password='teacher'
+        )
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     "marks_invalid_user.csv")
+        csv_file = open(csv_file_path, 'rb')
+        upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
+
+        # When
+        response = self.client.post(
+            reverse('yaksh:upload_marks',
+                    kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id}),
+            data={'csv_file': upload_file})
+        csv_file.close()
+
+        # Then
+        self.assertEqual(response.status_code, 302)
+
+    def test_upload_users_marks_invalid_data(self):
+        # Given
+        self.client.login(
+            username=self.teacher.username,
+            password='teacher'
+        )
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     "marks_invalid_data.csv")
+        csv_file = open(csv_file_path, 'rb')
+        upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
+
+        # When
+        response = self.client.post(
+            reverse('yaksh:upload_marks',
+                    kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id}),
+            data={'csv_file': upload_file})
+        csv_file.close()
+
+        # Then
+        self.assertEqual(response.status_code, 302)
+
+    def test_upload_users_marks_headers_missing(self):
+        # Given
+        self.client.login(
+            username=self.teacher.username,
+            password='teacher'
+        )
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     "marks_header_missing.csv")
+        csv_file = open(csv_file_path, 'rb')
+        upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
+
+        # When
+        response = self.client.post(
+            reverse('yaksh:upload_marks',
+                    kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id}),
+            data={'csv_file': upload_file})
+        csv_file.close()
+
+        # Then
+        self.assertEqual(response.status_code, 302)
+        ans_paper = AnswerPaper.objects.get(user=self.student1,
+                                            question_paper=self.question_paper,
+                                            course=self.course)
+        self.assertEqual(ans_paper.marks_obtained, 0.9)
+
+    def test_upload_users_marks_headers_modified(self):
+        # Given
+        self.client.login(
+            username=self.teacher.username,
+            password='teacher'
+        )
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     "marks_header_modified.csv")
+        csv_file = open(csv_file_path, 'rb')
+        upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
+
+        # When
+        response = self.client.post(
+            reverse('yaksh:upload_marks',
+                    kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id}),
+            data={'csv_file': upload_file})
+        csv_file.close()
+
+        # Then
+        self.assertEqual(response.status_code, 302)
+        answer = Answer.objects.get(answer='answer1')
+        self.assertEqual(answer.comment.strip(), 'fine work')
+        self.assertNotEqual(answer.marks, 0.75)
+        answer = Answer.objects.get(answer='answer2')
+        self.assertEqual(answer.comment.strip(), 'not nice')
+
+    def test_upload_users_marks_csv_single_question(self):
+        # Given
+        self.client.login(
+            username=self.teacher.username,
+            password='teacher'
+        )
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                     "marks_single_question.csv")
+        csv_file = open(csv_file_path, 'rb')
+        upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
+
+        # When
+        response = self.client.post(
+            reverse('yaksh:upload_marks',
+                    kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id}),
+            data={'csv_file': upload_file})
+        csv_file.close()
+
+        # Then
+        self.assertEqual(response.status_code, 302)
+        ans_paper = AnswerPaper.objects.get(user=self.student1,
+                                            question_paper=self.question_paper,
+                                            course=self.course)
+        self.assertEqual(ans_paper.marks_obtained, 0.5)
+        answer = Answer.objects.get(answer='answer1')
+        self.assertEqual(answer.comment.strip(), 'okay work')
+
+    def test_upload_users_with_correct_csv(self):
+        # Given
+        self.client.login(
+            username=self.teacher.username,
+            password='teacher'
+        )
+        csv_file_path = os.path.join(FIXTURES_DIR_PATH, "marks_correct.csv")
+        csv_file = open(csv_file_path, 'rb')
+        upload_file = SimpleUploadedFile(csv_file_path, csv_file.read())
+
+        # When
+        response = self.client.post(
+            reverse('yaksh:upload_marks',
+                    kwargs={'course_id': self.course.id,
+                            'questionpaper_id': self.question_paper.id}),
+            data={'csv_file': upload_file})
+        csv_file.close()
+
+        # Then
+        self.assertEqual(response.status_code, 302)
         ans_paper = AnswerPaper.objects.get(user=self.student1,
                                             question_paper=self.question_paper,
                                             course=self.course)
