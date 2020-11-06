@@ -10,8 +10,8 @@ $(document).ready(function() {
           document.body,
           {
             delimiters: [
-              {left: "$$", right: "$$", display: false},
-              {left: "$", right: "$", display: true},
+              {left: "$$", right: "$$", display: true},
+              {left: "$", right: "$", display: false},
             ]
           }
         );
