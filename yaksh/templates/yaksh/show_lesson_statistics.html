@@ -5,10 +5,19 @@
 {% block content %}
 <div class="container-fluid">
     <br>
-    <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
-        <i class="fa fa-arrow-left"></i>&nbsp;Back
-    </a>
-    <br><br>
+    <div class="row">
+        <div class="col-md-2">
+            <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
+                <i class="fa fa-arrow-left"></i>&nbsp;Back
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a class="btn btn-outline-dark" href="{% url 'stats:view_lesson_watch_stats' course_id lesson.id %}">
+                <i class="fa fa-line-chart"></i>&nbsp;Video Statistics
+            </a>
+        </div>
+    </div>
+    <br>
     {% if data %}
     <div class="row">
         <div class="col-md-4">

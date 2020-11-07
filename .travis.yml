@@ -21,6 +21,7 @@ install:
 
 before_script:
   - python manage.py makemigrations notifications_plugin
+  - python manage.py makemigrations stats
   - python manage.py makemigrations
   - python manage.py migrate auth
   - python manage.py migrate
@@ -29,6 +30,7 @@ before_script:
 script:
   - coverage erase
   - coverage run -p manage.py test -v 2 yaksh
+  - coverage run -p manage.py test -v 2 stats
   - coverage run -p manage.py test -v 2 grades
   - coverage run -p manage.py test -v 2 yaksh.live_server_tests.load_test
   - coverage run -p manage.py test -v 2 api

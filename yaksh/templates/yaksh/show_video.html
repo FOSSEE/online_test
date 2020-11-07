@@ -196,6 +196,11 @@
                     {% endif %}
                 {% endif %}
                 <div class="col-md-8">
+                    <form action="{% url 'stats:add_tracker' track_id %}" method="POST" id="track-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="video_duration" id="video_duration">
+                        <input type="hidden" name="current_video_time" id="current_video_time">
+                    </form>
                     <div class="card">
                         <div class="card-header"><h3><strong>Lesson Description</strong></h3></div>
                         <div class="card-body">
@@ -226,7 +231,7 @@
                 </div>
             </div>
             <br>
-            <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
+            <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" id="next_unit">
                     Next&nbsp;<i class="fa fa-step-forward"></i>
             </a>
         {% endif %}

@@ -45,6 +45,7 @@ INSTALLED_APPS = (
     'taggit',
     'social_django',
     'grades',
+    'stats',
     'django_celery_beat',
     'django_celery_results',
     'notifications_plugin',

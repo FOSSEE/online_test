@@ -42,6 +42,7 @@ from yaksh.models import (
     LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
     Topic, TableOfContents, LessonQuizAnswer, MicroManager
 )
+from stats.models import TrackLesson
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
     QuestionFilterForm, CourseForm, ProfileForm,
@@ -2817,6 +2818,9 @@ def show_lesson(request, lesson_id, module_id, course_id):
         if not learn_unit.is_prerequisite_complete(user, learn_module, course):
             msg = "You have not completed previous Lesson/Quiz/Exercise"
             return view_module(request, learn_module.id, course_id, msg=msg)
+    track, created = TrackLesson.objects.get_or_create(
+        user_id=user.id, course_id=course_id, lesson_id=lesson_id
+        )
 
     lesson_ct = ContentType.objects.get_for_model(learn_unit.lesson)
     title = learn_unit.lesson.name
@@ -2849,7 +2853,7 @@ def show_lesson(request, lesson_id, module_id, course_id):
                'course': course, 'state': "lesson", "all_modules": all_modules,
                'learning_units': learning_units, "current_unit": learn_unit,
                'learning_module': learn_module, 'toc': toc,
-               'contents_by_time': contents_by_time,
+               'contents_by_time': contents_by_time, 'track_id': track.id,
                'comments': comments, 'form': form, 'post': post}
     return my_render_to_response(request, 'yaksh/show_video.html', context)
 
