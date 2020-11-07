@@ -1,3 +1,8 @@
+=== 0.29.0 (07-11-2020) ===
+
+* Add feature to track lesson video views
+* Fix post and comments deletion
+
 === 0.28.0 (04-11-2020) ===
 
 * Add ability for added teachers to delete posts and comments
