@@ -1,7 +1,9 @@
 {% extends "manage.html" %}
-
+{% load static %}
 {% block title %} Lesson Views {% endblock %}
 {% block script %}
+<script type="text/javascript" src="{% static 'yaksh/js/jquery.tablesorter.min.js' %}">
+</script>
 <script type="text/javascript">
     function get_time_in_seconds(time) {
         var time = time.split(":");
@@ -12,14 +14,14 @@
     }
 
     $(document).ready(function() {
+        $("#stats-table").tablesorter({});
         $('#stats-table tr').each(function() {
             var td = $(this).find("td");
             var elapsed = td.eq(4).html();
             var duration = td.eq(5).html();
-            var input = td.eq(6).find("input");
-            if (elapsed != undefined && duration != undefined) {
+            if (elapsed != undefined || duration != undefined) {
                 percent = (get_time_in_seconds(elapsed) / get_time_in_seconds(duration)) * 100;
-                input.val(Math.round(percent));
+                td.eq(6).html(Math.round(percent));
             }
         });
     });
@@ -39,15 +41,17 @@
     <br>
     <h4><strong>{{total}} student(s) viewed this lesson</strong></h4>
     <table class="table table-responsive" id="stats-table">
-        <tr>
-            <th>Sr No.</th>
-            <th>Student Name</th>
-            <th>Last access on</th>
-            <th>Started on</th>
-            <th>Current Time</th>
-            <th>Video Duration</th>
-            <th>Percentage watched</th>
-        </tr>
+        <thead>
+            <tr>
+                <th>Sr No.</th>
+                <th>Student Name&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Last access on&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Started on&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Current Time&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Video Duration&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Percentage watched&nbsp;<i class="fa fa-sort"></i></th>
+            </tr>
+        </thead>
         {% for track in trackings %}
             <tr>
                 <td>{{ forloop.counter0|add:objects.start_index }}</td>
@@ -56,9 +60,7 @@
                 <td>{{track.creation_time}}</td>
                 <td>{{track.current_time}}</td>
                 <td>{{track.video_duration}}</td>
-                <td>
-                    <input type="text" class="form-control" readonly="">
-                </td>
+                <td></td>
             </tr>
         {% endfor %}
     </table>
