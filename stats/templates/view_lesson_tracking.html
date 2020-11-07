@@ -47,20 +47,24 @@
                 <th>Student Name&nbsp;<i class="fa fa-sort"></i></th>
                 <th>Last access on&nbsp;<i class="fa fa-sort"></i></th>
                 <th>Started on&nbsp;<i class="fa fa-sort"></i></th>
-                <th>Current Time&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Current Duration&nbsp;<i class="fa fa-sort"></i></th>
                 <th>Video Duration&nbsp;<i class="fa fa-sort"></i></th>
                 <th>Percentage watched&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Total visits&nbsp;<i class="fa fa-sort"></i></th>
             </tr>
         </thead>
         {% for track in trackings %}
             <tr>
                 <td>{{ forloop.counter0|add:objects.start_index }}</td>
                 <td>{{track.user.get_full_name}}</td>
-                <td>{{track.last_access_time}}</td>
+                {% with track.get_last_access_time_and_vists as time_and_visits %}
+                <td>{{time_and_visits.0}}</td>
                 <td>{{track.creation_time}}</td>
                 <td>{{track.current_time}}</td>
                 <td>{{track.video_duration}}</td>
                 <td></td>
+                <td>{{time_and_visits.1}}</td>
+                {% endwith %}
             </tr>
         {% endfor %}
     </table>
