@@ -15,15 +15,6 @@
 
     $(document).ready(function() {
         $("#stats-table").tablesorter({});
-        $('#stats-table tr').each(function() {
-            var td = $(this).find("td");
-            var elapsed = td.eq(4).html();
-            var duration = td.eq(5).html();
-            if (elapsed != undefined || duration != undefined) {
-                percent = (get_time_in_seconds(elapsed) / get_time_in_seconds(duration)) * 100;
-                td.eq(6).html(Math.round(percent));
-            }
-        });
     });
 </script>
 {% endblock %}
@@ -49,22 +40,22 @@
                 <th>Started on&nbsp;<i class="fa fa-sort"></i></th>
                 <th>Current Duration&nbsp;<i class="fa fa-sort"></i></th>
                 <th>Video Duration&nbsp;<i class="fa fa-sort"></i></th>
-                <th>Percentage watched&nbsp;<i class="fa fa-sort"></i></th>
-                <th>Total visits&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Percentage Watched&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Watched Once Completely&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Total Time Spent&nbsp;<i class="fa fa-sort"></i></th>
             </tr>
         </thead>
         {% for track in trackings %}
             <tr>
                 <td>{{ forloop.counter0|add:objects.start_index }}</td>
                 <td>{{track.user.get_full_name}}</td>
-                {% with track.get_last_access_time_and_vists as time_and_visits %}
-                <td>{{time_and_visits.0}}</td>
+                <td>{{track.get_last_access_time}}</td>
                 <td>{{track.creation_time}}</td>
-                <td>{{track.current_time}}</td>
-                <td>{{track.video_duration}}</td>
-                <td></td>
-                <td>{{time_and_visits.1}}</td>
-                {% endwith %}
+                <td>{{track.get_current_time}}</td>
+                <td>{{track.get_video_duration}}</td>
+                <td>{{track.get_percentage_complete}}</td>
+                <td>{{track.get_watched}}</td>
+                <td>{{track.time_spent}}</td>
             </tr>
         {% endfor %}
     </table>
