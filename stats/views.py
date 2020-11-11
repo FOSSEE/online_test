@@ -7,7 +7,7 @@ from django.core.paginator import Paginator
 from django.http import Http404
 
 # Local Imports
-from stats.models import TrackLesson, LessonLog
+from stats.models import TrackLesson, LessonLog, str_to_time, time_to_seconds
 from yaksh.models import Course
 from yaksh.decorators import email_verified
 
@@ -25,12 +25,16 @@ def add_tracker(request, tracker_id):
     video_duration = request.POST.get('video_duration')
     current_time = request.POST.get('current_video_time')
     if current_time:
-        track.current_time = current_time
+        track.set_current_time(current_time)
         track.video_duration = video_duration
         LessonLog.objects.create(
-            track_id=track.id, last_access_time=timezone.now()
+            track_id=track.id, current_time=current_time,
+            last_access_time=timezone.now()
         )
         track.save()
+        if not track.watched:
+            track.set_watched()
+            track.save()
         success = True
     else:
         success = False
