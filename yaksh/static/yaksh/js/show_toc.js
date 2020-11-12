@@ -25,14 +25,16 @@ $(document).ready(function() {
     store_video_time(contents_by_time);
     var time_arr_length = video_time.length;
     var total_duration;
-    player.on('ready', event => {
+    player.on('ready loadedmetadata', event => {
         total_duration = parseInt(player.duration);
-        start_tracker((total_duration * 1000) / 4, player);
+        $("#video_duration").val(get_time_in_hrs(total_duration));
+        if (total_duration > 0) {
+            start_tracker((total_duration * 1000) / 4, player);
+        }
     });
 
     player.on('timeupdate', event => {
         var current_time = player.currentTime;
-        $("#video_duration").val(get_time_in_hrs(total_duration));
         $("#current_video_time").val(get_time_in_hrs(current_time));
         if (time_arr_length > 0 && current_time >= video_time[loc]) {
             var content = contents_by_time[loc]; 
