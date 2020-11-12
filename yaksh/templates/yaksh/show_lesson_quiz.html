@@ -71,7 +71,7 @@
                   <input name="answer" type="radio" value="{{ test_case.id }}" checked />
                     {{ test_case.options|safe }} <br/>
                   {% else %}
-                  <input name="answer" type="radio" value="{{ test_case.id }}" />
+                  <input name="answer" type="radio" value="{{ test_case.id }}" required="" />
                     {{ test_case.options|safe }} <br/>
                   {% endif %}
                 {% endfor %}
@@ -80,21 +80,21 @@
             {% if question.type == "integer" %}
             <!-- Integer type Question -->
                 Enter Integer:<br/>
-                <input autofocus class="form-control" name="answer" type="number" id="integer" value="{{ last_attempt|to_integer }}" />
+                <input autofocus class="form-control" name="answer" type="number" id="integer" value="{{ last_attempt|to_integer }}" required=""/>
                 <br><br>
             {% endif %}
 
             {% if question.type == "string" %}
             <!-- String type question -->
                 Enter Text:<br/>
-                <textarea autofocus name="answer" id="string" class="form-control" style="width: 100%">{{ last_attempt|to_str }}</textarea>
+                <textarea autofocus name="answer" id="string" class="form-control" style="width: 100%" required="">{{ last_attempt|to_str }}</textarea>
                 <br/><br/>
             {% endif %}
 
             {% if question.type == "float" %}
             <!-- Float type question -->
                 Enter Decimal Value :<br/>
-                <input autofocus class="form-control" name="answer" type="number" step="any" id="float" value="{{ last_attempt|to_float }}" />
+                <input autofocus class="form-control" name="answer" type="number" step="any" id="float" value="{{ last_attempt|to_float }}" required=""/>
                 <br/><br/>
             {% endif %}
 

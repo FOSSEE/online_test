@@ -14,8 +14,6 @@
 <script type="text/javascript" src="{% static 'yaksh/js/show_toc.js' %}">
 </script>
 <script src="{% static 'yaksh/js/jquery-sortable.js' %}"></script>
-<script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML">
-</script>
 <script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
 {% endblock %}
 {% block css %}
@@ -282,5 +280,12 @@
     </div>
 </div>
 <div id="dialog"></div>
+<div class="modal" tabindex="-1" role="dialog" id="myModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-body" id="lesson_quiz_question"></div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
