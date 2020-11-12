@@ -10,14 +10,10 @@
     var loc = 0;
     var video_time = [];
 </script>
-<script type="text/javascript" src="{% static 'yaksh/js/jquery-ui.js' %}"></script>
 <script type="text/javascript" src="{% static 'yaksh/js/show_toc.js' %}">
 </script>
 <script src="{% static 'yaksh/js/jquery-sortable.js' %}"></script>
 <script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
-{% endblock %}
-{% block css %}
-<link rel="stylesheet" href="{% static 'yaksh/css/jquery-ui/jquery-ui.css' %}">
 {% endblock %}
 {% block main %}
 <div class="wrapper">
@@ -279,7 +275,6 @@
         {% endif %}
     </div>
 </div>
-<div id="dialog"></div>
 <div class="modal" tabindex="-1" role="dialog" id="myModal">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
