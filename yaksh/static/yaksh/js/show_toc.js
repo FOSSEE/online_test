@@ -118,11 +118,8 @@ function unlock_screen() {
 }
 
 function show_question(data) {
-    $("#dialog").html(data);
-    $("#dialog").dialog({
-        width: 800,
-        height: 500,
-    });
+    $("#myModal").modal({backdrop: 'static', keyboard: false});
+    $("#lesson_quiz_question").html(data)
     $("#submit-quiz-form").submit(function(e) {
         e.preventDefault();
         lock_screen();
@@ -135,7 +132,7 @@ function show_question(data) {
 function select_toc(element) {
     var toc_id = element.getAttribute("data-toc"); 
     var content_type = element.getAttribute("data-toc-type");
-    var toc_time = $("#toc_time_"+toc_id).val();
+    var toc_time = $("#toc_time_"+toc_id).html().trim();
     player.currentTime = get_time_in_seconds(toc_time);
     if (content_type == 1) {
         show_topic($("#toc_desc_"+toc_id).val(), true);
@@ -199,8 +196,8 @@ function ajax_call(url, method, data, csrf, screen_lock=true) {
                 show_question(msg.data);
             }
             if (msg.message) {
+                $("#myModal").modal('hide');
                 if (msg.success) {
-                    $("#dialog").dialog("close");
                     show_message(msg.message, "success");
                 }
                 else {
