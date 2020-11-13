@@ -156,6 +156,10 @@ urlpatterns = [
         name="questions_filter"),
     url(r'^editprofile/$', views.edit_profile, name='edit_profile'),
     url(r'^viewprofile/$', views.view_profile, name='view_profile'),
+    url(r'^generate_qrcode/(?P<answerpaper_id>\d+)/(?P<question_id>\d+)/(?P<module_id>\d+)/$',
+         views.generate_qrcode, name='generate_qrcode'),
+    url(r'^upload_file/(?P<key>.+)/$',
+         views.upload_file, name='upload_file'),
 
     url(r'^manage/searchteacher/(?P<course_id>\d+)/$', views.search_teacher,
         name="search_teacher"),

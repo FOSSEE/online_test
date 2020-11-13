@@ -285,6 +285,14 @@ question_type = "{{ question.type }}";
                 {% endfor %}
                 </ul>
             {% endif %}
+            {% if qrcode %}
+                <img src="{{ qrcode.image.url }}">
+            {% else %}
+              <a class="active btn btn-outline-primary " href="#"data-toggle="tooltip"
+                  title="Upload from any device using the QR Code"
+                  onclick="call_skip('{% url 'yaksh:generate_qrcode' paper.id question.id module.id %}')">Generate QR Code</a>
+            {% endif %}
+            <p></p>
           {% endif %}
 
           <!-- Arrange type question -->
@@ -365,7 +373,6 @@ question_type = "{{ question.type }}";
   {% if question.type == 'code' or question.type == 'upload' %}
   <div id="error_panel"></div>
   {% endif %}
-         
   <!-- Modal -->
   <div class="modal" id="upload_alert" >
     <div class="modal-dialog">

@@ -1,0 +1,32 @@
+<html>
+<title> Upload File </title>
+
+<script>
+function validate(){
+    uploaded_file = document.getElementById("assignment").value;
+    if(uploaded_file == ""){
+        $("#upload_alert").modal("show");
+        return false;
+    }
+    return true;
+}
+</script>
+<style>
+div, input, button {
+    font-size: x-large;
+        text-align: center;
+}
+</style>
+<div>
+{% if success %}
+    <p> {{ msg }}</p>
+{% else %}
+  <form id="code" action="{% url 'yaksh:upload_file' key %}" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+        <h3>Upload assignment file for {{ question.summary }}</h3>
+        <input type=file id="assignment" name="assignment" multiple="">
+        <button class="btn btn-success" type="submit" name="check" id="check" onClick="return validate();">Upload</button>
+  </form>
+{% endif %}
+</div>
+</html>

@@ -40,7 +40,8 @@ from yaksh.models import (
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
     LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
-    Topic, TableOfContents, LessonQuizAnswer, MicroManager
+    Topic, TableOfContents, LessonQuizAnswer, MicroManager, QRcode,
+    QRcodeHandler
 )
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
@@ -57,6 +58,7 @@ from .send_emails import (send_user_mail,
 from .decorators import email_verified, has_profile
 from .tasks import regrade_papers
 from notifications_plugin.models import Notification
+import hashlib
 
 
 def my_redirect(url):
@@ -671,6 +673,7 @@ def show_question(request, question, paper, error_message=None,
     quiz_type = 'Exam'
     can_skip = False
     assignment_files = []
+    qrcode = []
     if previous_question:
         delay_time = paper.time_left_on_question(previous_question)
     else:
@@ -719,6 +722,13 @@ def show_question(request, question, paper, error_message=None,
                             user=request.user,
                             question_paper_id=paper.question_paper_id
                         )
+        handlers = QRcodeHandler.objects.filter(user=request.user,
+                                               question=question,
+                                               answerpaper=paper)
+        qrcode = None
+        if handlers.exists():
+            handler = handlers.last()
+            qrcode = handler.qrcode_set.filter(active=True, used=False).last()
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
     course = Course.objects.get(id=course_id)
     module = course.learning_module.get(id=module_id)
@@ -739,6 +749,7 @@ def show_question(request, question, paper, error_message=None,
         'quiz_type': quiz_type,
         'all_modules': all_modules,
         'assignment_files': assignment_files,
+        'qrcode': qrcode,
     }
     answers = paper.get_previous_answers(question)
     if answers:
@@ -4136,3 +4147,65 @@ def _read_marks_csv(request, reader, course, question_paper, question_ids):
         messages.info(request,
             'Updated successfully for user: {0}, question: {1}'.format(
             username, question.summary))
+
+
+@login_required
+@email_verified
+def generate_qrcode(request, answerpaper_id, question_id, module_id):
+    user = request.user
+    answerpaper = get_object_or_404(AnswerPaper, pk=answerpaper_id)
+    question = get_object_or_404(Question, pk=question_id)
+
+    if not answerpaper.is_attempt_inprogress():
+        pass
+    handler = QRcodeHandler.objects.get_or_create(user=user, question=question,
+                                                  answerpaper=answerpaper)[0]
+    qrcode = handler.get_qrcode()
+    content = '{0}/exam/upload_file/{1}'.format(URL_ROOT, qrcode.short_key)
+    qrcode.generate_image(content)
+    qrcode.save()
+    return show_question(request, question, answerpaper,
+                         course_id=answerpaper.course.id, module_id=module_id,
+                         previous_question=question)
+
+
+def upload_file(request, key):
+    qrcode = get_object_or_404(QRcode, short_key=key, active=True, used=False)
+    handler = qrcode.handler
+    context = {'question' :  handler.question, 'key' : qrcode.short_key}
+    if not handler.can_use():
+        context['success'] = True
+        context['msg'] = 'Sorry, test time up!'
+        return render(request, 'yaksh/upload_file.html', context)
+    if request.method == 'POST':
+        assignment_filename = request.FILES.getlist('assignment')
+        if not assignment_filename:
+            msg = 'Please upload assignment file'
+            context['msg'] = msg
+            return render(request, 'yaksh/upload_file.html', context)
+        for fname in assignment_filename:
+            fname._name = fname._name.replace(" ", "_")
+            assignment_files = AssignmentUpload.objects.filter(
+                assignmentQuestion=handler.question,
+                course_id=handler.answerpaper.course.id,
+                assignmentFile__icontains=fname, user=handler.user,
+                question_paper=handler.answerpaper.question_paper)
+            if assignment_files.exists():
+                assign_file = assignment_files.first()
+                if os.path.exists(assign_file.assignmentFile.path):
+                    os.remove(assign_file.assignmentFile.path)
+                assign_file.delete()
+            AssignmentUpload.objects.create(user=handler.user,
+                assignmentQuestion=handler.question,
+                course_id=handler.answerpaper.course.id, assignmentFile=fname,
+                question_paper=handler.answerpaper.question_paper)
+            qrcode.set_used()
+            qrcode.deactivate()
+            qrcode.save()
+            context['success'] = True
+            msg = "File Uploaded Successfully! Reload the (test)question "\
+                  "page to see the uploaded file"
+            context['msg'] = msg
+            return render(request, 'yaksh/upload_file.html', context)
+    return render(request, 'yaksh/upload_file.html', context)
+
