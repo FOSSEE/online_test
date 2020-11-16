@@ -106,6 +106,17 @@
                                 <div class="card border-primary">
                                     <div class="card-header" style="height: 150px">
                                         {{course.name}}
+                                        <div>
+                                            {% if user.id != course.creator.id %}
+                                            <span class="badge badge-pill badge-warning">
+                                                Allotted Course
+                                            </span>
+                                            {% else %}
+                                            <span class="badge badge-pill badge-primary">
+                                                Created Course
+                                            </span>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
@@ -119,15 +130,6 @@
                                         </div>
                                         <hr>
                                         <div class="row">
-                                            <div class="col-md-5">
-                                                <span class="badge badge-pill badge-info">
-                                                    {% if user.id != course.creator.id %}
-                                                        Allotted Course
-                                                    {% else %}
-                                                        Created Course
-                                                    {% endif %}
-                                                </span>
-                                            </div>
                                             <div class="col-md-3">
                                                 {% if course.active %}
                                                     <span class="badge badge-pill badge-success">

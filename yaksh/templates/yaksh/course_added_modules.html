@@ -1,3 +1,4 @@
+{% load custom_filters %}
 {% if is_modules %}
     {% block pagetitle %} <center> <h3>Course Modules</h3> </center> {% endblock %}
         <a href="{% url 'yaksh:add_module' course.id %}" class="btn btn-primary btn-lg">
@@ -49,7 +50,8 @@
                             <table class="table table-responsive-sm">
                                 {% for unit in units %}
                                     <tr>
-                                        <td>
+                                        <td>{{forloop.counter}}</td>
+                                        <td width="25%">
                                         {% if unit.type == "quiz" %}
                                             {% if unit.quiz.is_exercise %}
                                                 <a href="{% url 'yaksh:edit_exercise' course.id module.id unit.quiz.id %}">
@@ -69,12 +71,12 @@
                                             {% if quiz.questionpaper_set.get.id %}
                                                 <a href="{% url 'yaksh:designquestionpaper' course.id quiz.id quiz.questionpaper_set.get.id %}" class="btn btn-primary">
                                                   <i class="fa fa-edit"></i>
-                                                  Edit Question Paper
+                                                  Question Paper
                                                 </a>
                                             {% else %}
                                                 <a href="{% url 'yaksh:designquestionpaper' course.id quiz.id %}" class="btn btn-success">
                                                     <i class="fa fa-plus-circle"></i>
-                                                    Add Question Paper
+                                                    Question Paper
                                                 </a>
                                             {% endif %}
                                         {% endwith %}
@@ -95,6 +97,14 @@
                                         </td>
                                         <td>
                                             {% if unit.type == "quiz" %}
+                                                ----
+                                            {% else %}
+                                                {% get_lesson_views course.id unit.lesson.id as views %}
+                                                {{views.0}} views out of {{views.1}}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if unit.type == "quiz" %}
                                                 {% if unit.quiz.questionpaper_set.get.id %}
                                                     <a href="{% url 'yaksh:show_statistics' unit.quiz.questionpaper_set.get.id course.id %}" class="btn btn-outline-primary">
                                                         <i class="fa fa-line-chart"></i>
@@ -104,9 +114,23 @@
                                                     ----
                                                 {% endif %}
                                             {% else %}
-                                                <a href="{% url 'yaksh:lesson_statistics' course.id unit.lesson.id %}" class="btn btn-outline-primary">
-                                                    <i class="fa fa-line-chart"></i>&nbsp;Statistics
+                                            <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+                                                <button type="button" class="btn btn-outline-primary">
+                                                    <i class="fa fa-line-chart"></i>
+                                                    Statistics
+                                                </button>
+                                                <div class="btn-group" role="group">
+                                                <button id="btnGroupDrop1" type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                                <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
+                                                <a class="dropdown-item" href="{% url 'stats:view_lesson_watch_stats' course.id unit.lesson.id %}">
+                                                    Video Views
                                                 </a>
+                                                <a class="dropdown-item" href="{% url 'yaksh:lesson_statistics' course.id unit.lesson.id %}">
+                                                    Quiz Submissions
+                                                </a>
+                                                </div>
+                                                </div>
+                                                </div>
                                             {% endif %}
                                         </td>
                                     </tr>

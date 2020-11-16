@@ -11,7 +11,11 @@ except ImportError:
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
+
+# Local Imports
 from yaksh.models import User, Course, Quiz, TableOfContents, Lesson
+from stats.models import TrackLesson
+
 
 register = template.Library()
 
@@ -200,3 +204,10 @@ def has_lesson_video(lesson_id):
 def get_tc_percent(tc_id, data):
     return data.get(str(tc_id), 0)
 
+
+@register.simple_tag
+def get_lesson_views(course_id, lesson_id):
+    course = Course.objects.get(id=course_id)
+    return TrackLesson.objects.filter(
+        course_id=course_id, lesson_id=lesson_id
+    ).count(), course.students.count()
