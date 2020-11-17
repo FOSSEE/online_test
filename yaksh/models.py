@@ -1331,7 +1331,7 @@ class Profile(models.Model):
         super(Profile, self).save(*args, **kwargs)
 
     def __str__(self):
-        return '%s' % (self.user.get_full_name())
+        return '%s' % (self.user.get_full_name() or self.user.username)
 
 
 ###############################################################################
