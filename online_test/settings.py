@@ -45,6 +45,7 @@ INSTALLED_APPS = (
     'taggit',
     'social_django',
     'grades',
+    'stats',
     'django_celery_beat',
     'django_celery_results',
     'notifications_plugin',
@@ -159,6 +160,10 @@ PRODUCTION_URL = 'your_project_url'
 # Set this variable to <False> once the project is in production.
 # If this variable is kept <True> in production, email will not be verified.
 IS_DEVELOPMENT = True
+
+# Video File upload size
+MAX_UPLOAD_SIZE = 52428800
+
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 

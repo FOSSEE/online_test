@@ -17,6 +17,7 @@ urlpatterns = [
     url(r'^', include('social_django.urls', namespace='social')),
     url(r'^grades/', include(('grades.urls', 'grades'))),
     url(r'^api/', include('api.urls', namespace='api')),
+    url(r'^stats/', include('stats.urls', namespace='stats')),
 
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -65,36 +65,13 @@
     </ul>
     </div>
 </nav>
-
-<!-- iframe div for video embed -->
-<div id="iframe_div" style="display: none;">
-  <iframe class="embed-responsive-item" id="video_frame" width="640" height="480" allowfullscreen>
-  </iframe>
-</div>
-<!-- end iframe div -->
-
-<!-- Dialog to video embed -->
-<div id="dialog_iframe" title="Embed Video URL" style="display: none;">
-  <div class="input-group mb-3">
-    <input id="url" name="url" type="text" required="true" class="form-control" placeholder="Enter video link">
-    <div class="input-group-append">
-        <input type="button" id="submit_info" name="submit_info" class="btn btn-primary" value="Submit" />
-    </div>
-  </div>
-  <div id="error_div" style="display: none;">
-      <b> Please enter URL</b>
-  </div>
-  <div id="copy_div">
-      <br>
-      <label>Paste HTML to embed in website:</label>
-      <textarea id="html_text" class="form-control" rows="5" cols="100"></textarea>
-      <br>
-      <a class="btn btn-secondary" id="copy" data-toggle="tooltip" title="Copy to Clipboard">
-          <i class="fa fa-clipboard" aria-hidden="true"></i>
-      </a>
-  </div>
-</div>
-<!-- end dialog -->
+<script type="text/javascript">
+    $(document).ready(function() {
+        $(".alert").delay(2000).slideUp(200, function() {
+            $(this).alert('close');
+        });
+    });
+</script>
 
 {% endblock %}
 {% block content %}

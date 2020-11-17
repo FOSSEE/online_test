@@ -1,0 +1,94 @@
+{% load static %}
+<script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML">
+</script>
+{% if question_id %}
+<form class="form-group" method="POST" action="{% url 'yaksh:edit_marker_quiz' content_type course_id lesson_id toc_id question_id %}" id="question-form">
+{% else %}
+<form class="form-group" method="POST" action="{% url 'yaksh:add_marker_quiz' content_type course_id lesson_id %}" id="question-form">
+{% endif %}
+    {% csrf_token %}
+    <table class="table table-responsive-sm">
+        {% for field in form %}
+            <tr>
+                <td>{{ field.label }}</td>
+                <td>{{ field }} <small>{{ field.help_text }}</small></td>
+            </tr>
+        {% endfor %}
+    </table>
+    {{ formset.management_form }}
+    <br>
+    <button type="button" id="add_more" class="btn btn-primary">
+        <i class="fa fa-plus-circle"></i>&nbsp;Add More
+    </button>
+    <br><br>
+    <div id="form_set">
+        {% for form in formset.forms %}
+            {{form.non_field_errors}}
+            {{form.errors}}
+            <table class='no_error'>
+                {{ form }}
+            </table>
+            <hr>
+        {% endfor %}
+    </div>
+    <div id="empty_form" style="display:none">
+        <table class='no_error'>
+            {{ formset.empty_form }}
+        </table>
+        <hr>
+    </div>
+    <button type="submit" class="btn btn-success">
+        <i class="fa fa-save"></i>&nbsp;Save
+    </button>
+</form>
+<script type="text/javascript">
+    $(document).ready(function() {
+        var tc_type = "#id_"+"{{tc_class}}"+"_set-TOTAL_FORMS";
+        $('#add_more').click(function() {
+            var form_idx = $(tc_type).val();
+            $('#form_set').append($('#empty_form').html().replace(/__prefix__/g, form_idx));
+            $(tc_type).val(parseInt(form_idx) + 1);
+            var form_type = "#id_"+'{{tc_class}}'+"_set-"+form_idx+"-type";
+            $(form_type).val($("#id_"+'{{tc_class}}'+"_set-0-type").val());
+        });
+        $("#question-form").each(function() {
+            $(this).find('textarea').addClass("form-control");
+            $(this).find('input[type=number]').addClass("form-control");
+        });
+        let option = $('#id_language').val();
+        if(option === 'other') {
+            $('#id_topic').closest('tr').show();
+            $('#id_topic').prop("required", true);
+        } else {
+            $('#id_topic').closest('tr').hide();
+            $('#id_topic').prop("required", false);
+        }
+        $('#id_language').on('change', function() {
+            let lang_value = $(this).val();
+            if (lang_value === "other") {
+                $('#id_topic').closest('tr').show();
+                $('#id_topic').prop("required", true);
+                $('#id_type').children("option[value='code']").hide();
+            } else {
+                $('#id_topic').closest('tr').hide();
+                $('#id_topic').prop("required", false);
+                $('#id_type').children("option[value='code']").show();
+            }
+        });
+        $(function() {
+            tinymce.init({
+                selector: 'textarea#que_description',
+                setup : function(ed) {
+                      ed.on('change', function(e) {
+                         tinymce.triggerSave();
+                      });
+                },
+                max_height: 400,
+                height: 400,
+                plugins: "image code link",
+                convert_urls: false
+            });
+        });
+    });
+</script>

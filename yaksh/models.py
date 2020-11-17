@@ -1,3 +1,4 @@
+# Python Imports
 from __future__ import unicode_literals, division
 from datetime import datetime, timedelta
 import uuid
@@ -8,16 +9,9 @@ from ruamel.yaml.scalarstring import PreservedScalarString
 from ruamel.yaml.comments import CommentedMap
 from random import sample
 from collections import Counter, defaultdict
-
-from django.db import models
-from django.contrib.auth.models import User, Group, Permission
-from django.core.exceptions import ValidationError
-from django.contrib.contenttypes.models import ContentType
-from taggit.managers import TaggableManager
-from django.utils import timezone
-from django.core.files import File
 import glob
-
+import sys
+import traceback
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -31,14 +25,31 @@ import zipfile
 import tempfile
 from textwrap import dedent
 from ast import literal_eval
-from .file_utils import extract_files, delete_files
+import pandas as pd
+
+# Django Imports
+from django.db import models
+from django.contrib.auth.models import User, Group, Permission
+from django.core.exceptions import ValidationError
+from django.contrib.contenttypes.models import ContentType
+from taggit.managers import TaggableManager
+from django.utils import timezone
+from django.core.files import File
+from django.contrib.contenttypes.fields import (
+    GenericForeignKey, GenericRelation
+)
+from django.contrib.contenttypes.models import ContentType
 from django.template import Context, Template
+from django.conf import settings
+from django.forms.models import model_to_dict
+from django.db.models import Count
+
+# Local Imports
 from yaksh.code_server import (
     submit, get_result as get_result_from_code_server
 )
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
-from django.conf import settings
-from django.forms.models import model_to_dict
+from .file_utils import extract_files, delete_files
 from grades.models import GradingSystem
 
 languages = (
@@ -248,6 +259,15 @@ def get_image_dir(instance, filename):
     ))
 
 
+def is_valid_time_format(time):
+    try:
+        hh, mm, ss = time.split(":")
+        status = True
+    except ValueError:
+        status = False
+    return status
+
+
 ###############################################################################
 class CourseManager(models.Manager):
 
@@ -281,9 +301,14 @@ class Lesson(models.Model):
 
     # A video file
     video_file = models.FileField(
-        upload_to=get_file_dir, default=None,
+        upload_to=get_file_dir, max_length=255, default=None,
         null=True, blank=True,
         help_text="Please upload video files in mp4, ogv, webm format"
+        )
+
+    video_path = models.CharField(
+        max_length=255, default=None, null=True, blank=True,
+        help_text="Youtube id, vimeo id, others"
         )
 
     def __str__(self):
@@ -614,7 +639,7 @@ class LearningUnit(models.Model):
                                on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, null=True, blank=True,
                              on_delete=models.CASCADE)
-    check_prerequisite = models.BooleanField(default=True)
+    check_prerequisite = models.BooleanField(default=False)
 
     def get_lesson_or_quiz(self):
         unit = None
@@ -693,7 +718,7 @@ class LearningModule(models.Model):
     order = models.IntegerField(default=0)
     creator = models.ForeignKey(User, related_name="module_creator",
                                 on_delete=models.CASCADE)
-    check_prerequisite = models.BooleanField(default=True)
+    check_prerequisite = models.BooleanField(default=False)
     check_prerequisite_passes = models.BooleanField(default=False)
     html_data = models.TextField(null=True, blank=True)
     active = models.BooleanField(default=True)
@@ -1078,6 +1103,25 @@ class Course(models.Model):
             learning_units.extend(module.get_learning_units())
         return learning_units
 
+    def get_lesson_posts(self):
+        learning_units = self.get_learning_units()
+        comments = []
+        for unit in learning_units:
+            if unit.lesson is not None:
+                lesson_ct = ContentType.objects.get_for_model(unit.lesson)
+                title = unit.lesson.name
+                try:
+                    post = Post.objects.get(
+                        target_ct=lesson_ct,
+                        target_id=unit.lesson.id,
+                        active=True, title=title
+                    )
+                except Post.DoesNotExist:
+                    post = None
+                if post is not None:
+                    comments.append(post)
+        return comments
+
     def remove_trial_modules(self):
         learning_modules = self.learning_module.all()
         for module in learning_modules:
@@ -1336,6 +1380,8 @@ class Question(models.Model):
 
     # Solution for the question.
     solution = models.TextField(blank=True)
+
+    content = GenericRelation("TableOfContents")
 
     tc_code_types = {
         "python": [
@@ -1665,11 +1711,16 @@ class Answer(models.Model):
     # Whether skipped or not.
     skipped = models.BooleanField(default=False)
 
+    comment = models.TextField(null=True, blank=True)
+
     def set_marks(self, marks):
         if marks > self.question.points:
             self.marks = self.question.points
         else:
             self.marks = marks
+
+    def set_comment(self, comments):
+        self.comment = comments
 
     def __str__(self):
         return "Answer for question {0}".format(self.question.summary)
@@ -1769,6 +1820,8 @@ class QuestionPaper(models.Model):
         for question in questions:
             marks += question.points
         for question_set in self.random_questions.all():
+            question_set.marks = question_set.questions.first().points
+            question_set.save()
             marks += question_set.marks * question_set.num_questions
         self.total_marks = marks
         self.save()
@@ -2312,6 +2365,11 @@ class AnswerPaper(models.Model):
         self.end_time = datetime
         self.save()
 
+    def get_answer_comment(self, question_id):
+        answer = self.answers.filter(question_id=question_id).last()
+        if answer:
+            return answer.comment
+
     def get_question_answers(self):
         """
             Return a dictionary with keys as questions and a list of the
@@ -2331,15 +2389,24 @@ class AnswerPaper(models.Model):
                     'error_list': [e for e in json.loads(answer.error)]
                 }]
 
+        q_a.update(
+            { q: [] for q in self.questions_unanswered.all() }
+        )
+
         for question, answers in q_a.items():
             answers = q_a[question]
-            q_a[question].append({
-                'marks': max([
-                    answer['answer'].marks
-                    for answer in answers
-                    if question == answer['answer'].question
-                ])
-            })
+            if answers:
+                q_a[question].append({
+                    'marks': max([
+                        answer['answer'].marks
+                        for answer in answers
+                        if question == answer['answer'].question
+                    ]),
+                })
+            else:
+                q_a[question].append({
+                    'marks': 0.0,
+                })
 
         return q_a
 
@@ -2722,12 +2789,20 @@ class ForumBase(models.Model):
     image = models.ImageField(upload_to=get_image_dir, blank=True,
                               null=True, validators=[validate_image])
     active = models.BooleanField(default=True)
+    anonymous = models.BooleanField(default=False)
 
 
 class Post(ForumBase):
     title = models.CharField(max_length=200)
-    course = models.ForeignKey(Course,
-                               on_delete=models.CASCADE, related_name='post')
+    target_ct = models.ForeignKey(ContentType,
+                                  blank=True,
+                                  null=True,
+                                  related_name='target_obj',
+                                  on_delete=models.CASCADE)
+    target_id = models.PositiveIntegerField(null=True,
+                                            blank=True,
+                                            db_index=True)
+    target = GenericForeignKey('target_ct', 'target_id')
 
     def __str__(self):
         return self.title
@@ -2746,6 +2821,255 @@ class Comment(ForumBase):
     def __str__(self):
         return 'Comment by {0}: {1}'.format(self.creator.username,
                                             self.post_field.title)
+
+
+class TOCManager(models.Manager):
+
+    def get_data(self, course_id, lesson_id):
+        contents = TableOfContents.objects.filter(
+            course_id=course_id, lesson_id=lesson_id, content__in=[2, 3, 4]
+        )
+        data = {}
+        for toc in contents:
+            data[toc] = LessonQuizAnswer.objects.filter(
+                toc_id=toc.id).values_list(
+                "student_id", flat=True).distinct().count()
+        return data
+
+    def get_question_stats(self, toc_id):
+        answers = LessonQuizAnswer.objects.get_queryset().filter(
+            toc_id=toc_id).order_by('id')
+        question = TableOfContents.objects.get(id=toc_id).content_object
+        if answers.exists():
+            answers = answers.values(
+                "student__first_name", "student__last_name", "student__email",
+                "student_id", "toc_id"
+                )
+            df = pd.DataFrame(answers)
+            answers = df.drop_duplicates().to_dict(orient='records')
+        return question, answers
+
+    def get_per_tc_ans(self, toc_id, question_type, is_percent=True):
+        answers = LessonQuizAnswer.objects.filter(toc_id=toc_id).values(
+            "student_id", "answer__answer"
+        ).order_by("id")
+        data = None
+        if answers.exists():
+            df = pd.DataFrame(answers)
+            grp = df.groupby(["student_id"]).tail(1)
+            total_count = grp.count().answer__answer
+            data = grp.groupby(["answer__answer"]).count().to_dict().get(
+                "student_id")
+            if question_type == "mcc":
+                tc_ids = []
+                mydata = {}
+                for i in data.keys():
+                    tc_ids.extend(literal_eval(i))
+                for j in tc_ids:
+                    if j not in mydata:
+                        mydata[j] = 1
+                    else:
+                        mydata[j] +=1
+                data = mydata.copy()
+            if is_percent:
+                for key, value in data.items():
+                    data[key] = (value/total_count)*100
+        return data, total_count
+
+    def get_answer(self, toc_id, user_id):
+        submission = LessonQuizAnswer.objects.filter(
+            toc_id=toc_id, student_id=user_id).last()
+        question = submission.toc.content_object
+        attempted_answer = submission.answer
+        if question.type == "mcq":
+            submitted_answer = literal_eval(attempted_answer.answer)
+            answers = [
+                tc.options
+                for tc in question.get_test_cases(id=submitted_answer)
+            ]
+            answer = ",".join(answers)
+        elif question.type == "mcc":
+            submitted_answer = literal_eval(attempted_answer.answer)
+            answers = [
+                tc.options
+                for tc in question.get_test_cases(id__in=submitted_answer)
+            ]
+            answer = ",".join(answers)
+        else:
+            answer = attempted_answer.answer
+        return answer, attempted_answer.correct
+
+    def add_contents(self, course_id, lesson_id, user, contents):
+        toc = []
+        messages = []
+        for content in contents:
+            name = content.get('name') or content.get('summary')
+            if "content_type" not in content or "time" not in content:
+                messages.append(
+                    (False,
+                     f"content_type or time key is missing in {name}")
+                )
+            else:
+                content_type = content.pop('content_type')
+                time = content.pop('time')
+                if not is_valid_time_format(time):
+                    messages.append(
+                        (False,
+                        f"Invalid time format in {name}. "
+                         "Format should be 00:00:00")
+                    )
+                else:
+                    if content_type == 1:
+                        topic = Topic.objects.create(**content)
+                        toc.append(TableOfContents(
+                            course_id=course_id, lesson_id=lesson_id, time=time,
+                            content_object=topic, content=content_type 
+                        ))
+                        messages.append((True, f"{topic.name} added successfully"))
+                    else:
+                        content['user'] = user
+                        test_cases = content.pop("testcase")
+                        que_type = content.get('type')
+                        if "files" in content:
+                            content.pop("files")
+                        if "tags" in content:
+                            content.pop("tags")
+                        if (que_type in ['code', 'upload']):
+                            messages.append(
+                                (False, f"{que_type} question is not allowed. "
+                                 f"{content.get('summary')} is not added")
+                            )
+                        else:
+                            que = Question.objects.create(**content)
+                            for test_case in test_cases:
+                                test_case_type = test_case.pop('test_case_type')
+                                model_class = get_model_class(test_case_type)
+                                model_class.objects.get_or_create(
+                                    question=que, **test_case, type=test_case_type
+                                )
+                            toc.append(TableOfContents(
+                                course_id=course_id, lesson_id=lesson_id,
+                                time=time, content_object=que,
+                                content=content_type
+                            ))
+                        messages.append(
+                            (True, f"{que.summary} added successfully")
+                        )
+        if toc:
+            TableOfContents.objects.bulk_create(toc)
+        return messages
+
+
+class TableOfContents(models.Model):
+    toc_types = ((1, "Topic"), (2, "Graded Quiz"), (3, "Exercise"), (4, "Poll"))
+    course = models.ForeignKey(Course, on_delete=models.CASCADE,
+                               related_name='course')
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE,
+                               related_name='contents')
+    time = models.CharField(max_length=100, default=0)
+    content = models.IntegerField(choices=toc_types)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey()
+
+    objects = TOCManager()
+
+    class Meta:
+        verbose_name_plural = "Table Of Contents"
+
+    def get_toc_text(self):
+        if self.content == 1:
+            content_name =  self.content_object.name
+        else:
+            content_name = self.content_object.summary
+        return content_name
+
+    def __str__(self):
+        return f"TOC for {self.lesson.name} with {self.get_content_display()}"
+
+
+class Topic(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    content = GenericRelation(TableOfContents)
+
+    def __str__(self):
+        return f"{self.name}"
+
+
+class LessonQuizAnswer(models.Model):
+    toc = models.ForeignKey(TableOfContents, on_delete=models.CASCADE)
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+
+    def check_answer(self, user_answer):
+        result = {'success': False, 'error': ['Incorrect answer'],
+                  'weight': 0.0}
+        question = self.toc.content_object
+        if question.type == 'mcq':
+            expected_answer = question.get_test_case(correct=True).id
+            if user_answer.strip() == str(expected_answer).strip():
+                result['success'] = True
+                result['error'] = ['Correct answer']
+
+        elif question.type == 'mcc':
+            expected_answers = [
+                str(opt.id) for opt in question.get_test_cases(correct=True)
+            ]
+            if set(user_answer) == set(expected_answers):
+                result['success'] = True
+                result['error'] = ['Correct answer']
+
+        elif question.type == 'integer':
+            expected_answers = [
+                int(tc.correct) for tc in question.get_test_cases()
+            ]
+            if int(user_answer) in expected_answers:
+                result['success'] = True
+                result['error'] = ['Correct answer']
+
+        elif question.type == 'string':
+            tc_status = []
+            for tc in question.get_test_cases():
+                if tc.string_check == "lower":
+                    if tc.correct.lower().splitlines()\
+                       == user_answer.lower().splitlines():
+                        tc_status.append(True)
+                else:
+                    if tc.correct.splitlines()\
+                       == user_answer.splitlines():
+                        tc_status.append(True)
+            if any(tc_status):
+                result['success'] = True
+                result['error'] = ['Correct answer']
+
+        elif question.type == 'float':
+            user_answer = float(user_answer)
+            tc_status = []
+            for tc in question.get_test_cases():
+                if abs(tc.correct - user_answer) <= tc.error_margin:
+                    tc_status.append(True)
+            if any(tc_status):
+                result['success'] = True
+                result['error'] = ['Correct answer']
+
+        elif question.type == 'arrange':
+            testcase_ids = sorted(
+                              [tc.id for tc in question.get_test_cases()]
+                              )
+            if user_answer == testcase_ids:
+                result['success'] = True
+                result['error'] = ['Correct answer']
+        self.answer.error = result
+        ans_status = result.get("success")
+        self.answer.correct = ans_status
+        if ans_status:
+            self.answer.marks = self.answer.question.points
+        self.answer.save()
+        return result
+
+    def __str__(self):
+        return f"Lesson answer of {self.toc} by {self.student.get_full_name()}"
 
 
 class MicroManager(models.Model):

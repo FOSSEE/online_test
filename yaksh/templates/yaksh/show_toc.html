@@ -1,0 +1,74 @@
+{% load custom_filters %}
+{% has_lesson_video lesson_id as has_video %}
+{% if has_video %}
+    <div class="card">
+        <div class="card-body">
+            <a href="{% url 'yaksh:download_sample_toc' %}">
+                <i class="fa fa-download"></i>&nbsp;Download Sample
+            </a>
+            <hr>
+            <form action="" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="file" name="toc" required="">
+                <button class="btn btn-outline-success" id="upload_toc" name="upload_toc">
+                    <i class="fa fa-upload"></i>&nbsp;Upload TOC
+                </button>
+            </form>
+        </div>
+    </div>
+    <br>
+{% endif %}
+<table class="table table-responsive">
+{% for toc in contents %}
+    {% with toc.get_toc_text as toc_name %}
+    <tr>
+        <td width="30%">
+            {{ toc_name }}
+        </td>
+        <td>
+            {{toc.get_content_display}}   
+        </td>
+        <td>
+            {{toc.time}}
+        </td>
+        <td>
+            {% if toc.content == 1 %}
+                <a href="#" class="btn btn-outline-info" data-url="{% url 'yaksh:edit_topic' toc.content toc.course_id toc.lesson_id toc.id toc.object_id %}" id="edit-toc" onclick="edit_toc(this)">
+            {% else %}
+                <a href="#" class="btn btn-outline-info" data-url="{% url 'yaksh:edit_marker_quiz' toc.content toc.course_id toc.lesson_id toc.id toc.object_id %}" id="edit-toc" onclick="edit_toc(this)">
+            {% endif %}
+                    <i class="fa fa-edit"></i>&nbsp;Edit
+                </a>
+        </td>
+        <td>
+            <form action="{% url 'yaksh:delete_toc' toc.course_id toc.id %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="redirect_url" id="redirect_url" class="hidden">
+                <button class="btn btn-outline-danger" type="submit" onclick="return confirm('Are you sure you want to remove {{toc_name|capfirst}}?')">
+                    <i class="fa fa-trash"></i>&nbsp;Remove
+                </button>
+            </form>
+        </td>
+    </tr>
+    {% endwith %}
+{% empty %}
+    <center>
+        <span class="badge badge-warning">No Table of contents added</span>
+    </center>
+{% endfor %}
+</table>
+<script type="text/javascript">
+    $(document).ready(function() {
+        var divs = document.getElementsByClassName("hidden");
+        for(var i = 0; i < divs.length; i++)
+        {
+           divs[i].value = window.location.pathname;
+        }
+    });
+
+    function edit_toc(obj) {
+        var url = obj.getAttribute("data-url");
+        lock_screen();
+        ajax_call(url, "GET");
+    }
+</script>

@@ -10,6 +10,7 @@ from django.db import models
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
 from django.forms.models import inlineformset_factory
 from django.forms import fields
 from django.utils import timezone
@@ -24,6 +25,7 @@ import json
 from textwrap import dedent
 import zipfile
 import markdown
+import ruamel
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -38,14 +40,15 @@ from yaksh.models import (
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
     LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
-    MicroManager
+    Topic, TableOfContents, LessonQuizAnswer, MicroManager
 )
+from stats.models import TrackLesson
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
     QuestionFilterForm, CourseForm, ProfileForm,
     UploadFileForm, FileForm, QuestionPaperForm, LessonForm,
     LessonFileForm, LearningModuleForm, ExerciseForm, TestcaseForm,
-    SearchFilterForm, PostForm, CommentForm
+    SearchFilterForm, PostForm, CommentForm, TopicForm, VideoQuizForm
 )
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .settings import URL_ROOT
@@ -668,6 +671,7 @@ def show_question(request, question, paper, error_message=None,
     quiz = paper.question_paper.quiz
     quiz_type = 'Exam'
     can_skip = False
+    assignment_files = []
     if previous_question:
         delay_time = paper.time_left_on_question(previous_question)
     else:
@@ -709,6 +713,13 @@ def show_question(request, question, paper, error_message=None,
         test_cases = question.get_ordered_test_cases(paper)
     else:
         test_cases = question.get_test_cases()
+    if question.type == 'upload':
+        assignment_files = AssignmentUpload.objects.filter(
+                            assignmentQuestion_id=question.id,
+                            course_id=course_id,
+                            user=request.user,
+                            question_paper_id=paper.question_paper_id
+                        )
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
     course = Course.objects.get(id=course_id)
     module = course.learning_module.get(id=module_id)
@@ -728,6 +739,7 @@ def show_question(request, question, paper, error_message=None,
         'delay_time': delay_time,
         'quiz_type': quiz_type,
         'all_modules': all_modules,
+        'assignment_files': assignment_files,
     }
     answers = paper.get_previous_answers(question)
     if answers:
@@ -1807,7 +1819,10 @@ def _expand_questions(questions, field_list):
     field_list.remove('questions')
     for question in questions:
         field_list.insert(
-            i, '{0}-{1}'.format(question.summary, question.points))
+            i, 'Q-{0}-{1}-{2}-marks'.format(question.id, question.summary,
+                                            question.points))
+        field_list.insert(
+            i+1, 'Q-{0}-{1}-comments'.format(question.id, question.summary))
     return field_list
 
 
@@ -1867,8 +1882,18 @@ def download_quiz_csv(request, course_id, quiz_id):
             'status': 'answerpaper.status'}
     questions_scores = {}
     for question in questions:
-        questions_scores['{0}-{1}'.format(question.summary, question.points)] \
-                = 'answerpaper.get_per_question_score({0})'.format(question.id)
+        questions_scores['Q-{0}-{1}-{2}-marks'.format(
+            question.id, question.summary, question.points)] \
+            = 'answerpaper.get_per_question_score({0})'.format(question.id)
+        answer = question.answer_set.last()
+        comment = None
+        if answer:
+            comment = answer.comment
+        else:
+            comment = ''
+        questions_scores['Q-{0}-{1}-comments'.format(
+            question.id, question.summary)] \
+            = 'answerpaper.get_answer_comment({0})'.format(question.id)
     csv_fields_values.update(questions_scores)
 
     users = users.exclude(id=course.creator.id).exclude(
@@ -1920,8 +1945,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                 course.is_teacher(current_user):
             raise Http404('This course does not belong to you')
         has_quiz_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id__in=questionpaper_id
-                                ).exists()
+            course_id=course_id, question_paper_id__in=questionpaper_id
+            ).exists()
         context = {
             "users": user_details,
             "quiz_id": quiz_id,
@@ -1940,9 +1965,9 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             except IndexError:
                 raise Http404('No attempts for paper')
             has_user_assignments = AssignmentUpload.objects.filter(
-                                question_paper_id__in=questionpaper_id,
-                                user_id=user_id
-                                ).exists()
+                course_id=course_id, question_paper_id__in=questionpaper_id,
+                user_id=user_id
+                ).exists()
             user = User.objects.get(id=user_id)
             data = AnswerPaper.objects.get_user_data(
                 user, questionpaper_id, course_id, attempt_number
@@ -2203,12 +2228,12 @@ def view_answerpaper(request, questionpaper_id, course_id):
     if quiz.view_answerpaper and user in course.students.all():
         data = AnswerPaper.objects.get_user_data(user, questionpaper_id,
                                                  course_id)
-        has_user_assignment = AssignmentUpload.objects.filter(
+        has_user_assignments = AssignmentUpload.objects.filter(
             user=user, course_id=course.id,
             question_paper_id=questionpaper_id
         ).exists()
         context = {'data': data, 'quiz': quiz, 'course_id': course.id,
-                   "has_user_assignment": has_user_assignment}
+                   "has_user_assignments": has_user_assignments}
         return my_render_to_response(
             request, 'yaksh/view_answerpaper.html', context
         )
@@ -2573,7 +2598,23 @@ def download_sample_csv(request):
     with open(csv_file_path, 'rb') as csv_file:
         response = HttpResponse(csv_file.read(), content_type='text/csv')
         response['Content-Disposition'] = (
-            'attachment; filename="sample_user_upload"'
+            'attachment; filename="sample_user_upload.csv"'
+        )
+        return response
+
+
+@login_required
+@email_verified
+def download_sample_toc(request):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    csv_file_path = os.path.join(FIXTURES_DIR_PATH,
+                                 "sample_lesson_toc.yaml")
+    with open(csv_file_path, 'rb') as csv_file:
+        response = HttpResponse(csv_file.read(), content_type='text/yaml')
+        response['Content-Disposition'] = (
+            'attachment; filename="sample_lesson_toc.yaml"'
         )
         return response
 
@@ -2645,6 +2686,8 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
             raise Http404('This Lesson does not belong to you')
 
     context = {}
+    lesson_form = LessonForm(instance=lesson)
+    lesson_files_form = LessonFileForm()
     if request.method == "POST":
         if "Save" in request.POST:
             lesson_form = LessonForm(request.POST, request.FILES,
@@ -2684,10 +2727,6 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
                     reverse("yaksh:edit_lesson",
                             args=[course_id, module_id, lesson.id])
                     )
-            else:
-                context['lesson_form'] = lesson_form
-                context['error'] = lesson_form["video_file"].errors
-                context['lesson_file_form'] = lesson_file_form
 
         if 'Delete' in request.POST:
             remove_files_id = request.POST.getlist('delete_files')
@@ -2703,9 +2742,29 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
                     request, "Please select atleast one file to delete"
                 )
 
+        if 'upload_toc' in request.POST:
+            toc_file = request.FILES.get('toc')
+            file_extension = os.path.splitext(toc_file.name)[1][1:]
+            if file_extension not in ['yaml', 'yml']:
+                messages.warning(
+                    request, "Please upload yaml or yml type file"
+                )
+            else:
+                try:
+                    toc_data = ruamel.yaml.safe_load_all(toc_file.read())
+                    results = TableOfContents.objects.add_contents(
+                        course_id, lesson_id, user, toc_data)
+                    for status, msg in results:
+                        if status == True:
+                            messages.success(request, msg)
+                        else:
+                            messages.warning(request, msg)
+                except Exception as e:
+                    messages.warning(request, f"Error parsing yaml: {e}")
+
+    data = get_toc_contents(request, course_id, lesson_id)
+    context['toc'] = data
     lesson_files = LessonFile.objects.filter(lesson=lesson)
-    lesson_files_form = LessonFileForm()
-    lesson_form = LessonForm(instance=lesson)
     context['lesson_form'] = lesson_form
     context['lesson_file_form'] = lesson_files_form
     context['lesson_files'] = lesson_files
@@ -2748,16 +2807,54 @@ def show_lesson(request, lesson_id, module_id, course_id):
 
     # update course status with current unit
     _update_unit_status(course_id, user, learn_unit)
-
+    toc = TableOfContents.objects.filter(
+        course_id=course_id, lesson_id=lesson_id
+    ).order_by("time")
+    contents_by_time = json.dumps(
+        list(toc.values("id", "content", "time"))
+    )
     all_modules = course.get_learning_modules()
     if learn_unit.has_prerequisite():
         if not learn_unit.is_prerequisite_complete(user, learn_module, course):
             msg = "You have not completed previous Lesson/Quiz/Exercise"
             return view_module(request, learn_module.id, course_id, msg=msg)
+    track, created = TrackLesson.objects.get_or_create(
+        user_id=user.id, course_id=course_id, lesson_id=lesson_id
+        )
+
+    lesson_ct = ContentType.objects.get_for_model(learn_unit.lesson)
+    title = learn_unit.lesson.name
+    try:
+        post = Post.objects.get(
+            target_ct=lesson_ct, target_id=learn_unit.lesson.id,
+            active=True, title=title
+        )
+    except Post.DoesNotExist:
+        post = Post.objects.create(
+            target_ct=lesson_ct, target_id=learn_unit.lesson.id,
+            active=True, title=title, creator=user,
+            description=f'Discussion on {title} lesson',
+        )
+    if request.method == "POST":
+        form = CommentForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_comment = form.save(commit=False)
+            new_comment.creator = request.user
+            new_comment.post_field = post
+            new_comment.anonymous = request.POST.get('anonymous', '') == 'on'
+            new_comment.save()
+            return redirect(request.path_info)
+        else:
+            raise Http404(f'Post does not exist for lesson {title}')
+    else:
+        form = CommentForm()
+        comments = post.comment.filter(active=True)
     context = {'lesson': learn_unit.lesson, 'user': user,
                'course': course, 'state': "lesson", "all_modules": all_modules,
                'learning_units': learning_units, "current_unit": learn_unit,
-               'learning_module': learn_module}
+               'learning_module': learn_module, 'toc': toc,
+               'contents_by_time': contents_by_time, 'track_id': track.id,
+               'comments': comments, 'form': form, 'post': post}
     return my_render_to_response(request, 'yaksh/show_video.html', context)
 
 
@@ -2903,19 +3000,6 @@ def add_module(request, course_id=None, module_id=None):
     context['course_id'] = course_id
     context['status'] = "add"
     return my_render_to_response(request, "yaksh/add_module.html", context)
-
-
-@login_required
-@email_verified
-def preview_html_text(request):
-    user = request.user
-    if not is_moderator(user):
-        raise Http404('You are not allowed to view this page!')
-    response_kwargs = {}
-    response_kwargs['content_type'] = 'application/json'
-    request_data = json.loads(request.body.decode("utf-8"))
-    html_text = get_html_text(request_data['description'])
-    return HttpResponse(json.dumps({"data": html_text}), **response_kwargs)
 
 
 @login_required
@@ -3397,17 +3481,22 @@ def course_forum(request, course_id):
         base_template = 'manage.html'
         moderator = True
     course = get_object_or_404(Course, id=course_id)
+    course_ct = ContentType.objects.get_for_model(course)
     if (not course.is_creator(user) and not course.is_teacher(user)
             and not course.is_student(user)):
         raise Http404('You are not enrolled in {0} course'.format(course.name))
     search_term = request.GET.get('search_post')
     if search_term:
-        posts = course.post.get_queryset().filter(
-            active=True, title__icontains=search_term)
+        posts = Post.objects.filter(
+                Q(title__icontains=search_term) |
+                Q(description__icontains=search_term),
+                target_ct=course_ct, target_id=course.id, active=True
+            )
     else:
-        posts = course.post.get_queryset().filter(
-            active=True).order_by('-modified_at')
-    paginator = Paginator(posts, 1)
+        posts = Post.objects.filter(
+            target_ct=course_ct, target_id=course.id, active=True
+        ).order_by('-modified_at')
+    paginator = Paginator(posts, 10)
     page = request.GET.get('page')
     posts = paginator.get_page(page)
     if request.method == "POST":
@@ -3415,7 +3504,8 @@ def course_forum(request, course_id):
         if form.is_valid():
             new_post = form.save(commit=False)
             new_post.creator = user
-            new_post.course = course
+            new_post.target = course
+            new_post.anonymous = request.POST.get('anonymous', '') == 'on'
             new_post.save()
             return redirect('yaksh:post_comments',
                             course_id=course.id, uuid=new_post.uid)
@@ -3430,6 +3520,27 @@ def course_forum(request, course_id):
         'form': form,
         'user': user
         })
+
+
+@login_required
+@email_verified
+def lessons_forum(request, course_id):
+    user = request.user
+    base_template = 'user.html'
+    moderator = False
+    if is_moderator(user):
+        base_template = 'manage.html'
+        moderator = True
+    course = get_object_or_404(Course, id=course_id)
+    course_ct = ContentType.objects.get_for_model(course)
+    lesson_posts = course.get_lesson_posts()
+    return render(request, 'yaksh/lessons_forum.html', {
+        'user': user,
+        'base_template': base_template,
+        'moderator': moderator,
+        'course': course,
+        'posts': lesson_posts,
+    })
 
 
 @login_required
@@ -3452,6 +3563,7 @@ def post_comments(request, course_id, uuid):
             new_comment = form.save(commit=False)
             new_comment.creator = request.user
             new_comment.post_field = post
+            new_comment.anonymous = request.POST.get('anonymous', '') == 'on'
             new_comment.save()
             return redirect(request.path_info)
     return render(request, 'yaksh/post_comments.html', {
@@ -3459,7 +3571,8 @@ def post_comments(request, course_id, uuid):
         'comments': comments,
         'base_template': base_template,
         'form': form,
-        'user': user
+        'user': user,
+        'course': course
         })
 
 
@@ -3469,7 +3582,9 @@ def hide_post(request, course_id, uuid):
     user = request.user
     course = get_object_or_404(Course, id=course_id)
     if (not course.is_creator(user) and not course.is_teacher(user)):
-        raise Http404('You are not enrolled in {0} course'.format(course.name))
+        raise Http404(
+            'Only a course creator or a teacher can delete the post.'
+        )
     post = get_object_or_404(Post, uid=uuid)
     post.comment.active = False
     post.active = False
@@ -3481,14 +3596,85 @@ def hide_post(request, course_id, uuid):
 @email_verified
 def hide_comment(request, course_id, uuid):
     user = request.user
-    course = get_object_or_404(Course, id=course_id)
-    if (not course.is_creator(user) and not course.is_teacher(user)):
-        raise Http404('You are not enrolled in {0} course'.format(course.name))
+    if course_id:
+        course = get_object_or_404(Course, id=course_id)
+        if (not course.is_creator(user) and not course.is_teacher(user)):
+            raise Http404(
+                'Only a course creator or a teacher can delete the comments'
+            )
     comment = get_object_or_404(Comment, uid=uuid)
     post_uid = comment.post_field.uid
     comment.active = False
     comment.save()
     return redirect('yaksh:post_comments', course_id, post_uid)
+
+
+@login_required
+@email_verified
+def add_marker(request, course_id, lesson_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    content_type = request.POST.get("content")
+    question_type = request.POST.get("type")
+    if content_type == '1':
+        form = TopicForm()
+        template_name = 'yaksh/add_topic.html'
+        status = 1
+        formset = None
+        tc_class = None
+    else:
+        if not question_type:
+            question_type = "mcq"
+        form = VideoQuizForm(question_type=question_type)
+        formset, tc_class = get_tc_formset(question_type)
+        template_name = 'yaksh/add_video_quiz.html'
+        status = 2
+    context = {'form': form, 'course_id': course.id, 'lesson_id': lesson_id,
+               'formset': formset, 'tc_class': tc_class,
+               'content_type': content_type}
+    data = loader.render_to_string(
+        template_name, context=context, request=request
+    )
+    return JsonResponse(
+        {'success': True, 'data': data, 'content_type': content_type,
+         'status': status}
+    )
+
+
+def get_tc_formset(question_type, post=None, question=None):
+    tc, tc_class = McqTestCase, 'mcqtestcase'
+    if question_type == 'mcq' or question_type == 'mcc':
+        tc, tc_class = McqTestCase, 'mcqtestcase'
+    elif question_type == 'integer':
+        tc, tc_class = IntegerTestCase, 'integertestcase'
+    elif question_type == 'float':
+        tc, tc_class = FloatTestCase, 'floattestcase'
+    elif question_type == 'string':
+        tc, tc_class = StringTestCase, 'stringtestcase'
+    TestcaseFormset = inlineformset_factory(
+        Question, tc, form=TestcaseForm, extra=1, fields="__all__",
+    )
+    formset = TestcaseFormset(
+        post, initial=[{'type': tc_class}], instance=question
+    )
+    return formset, tc_class
+
+
+def get_toc_contents(request, course_id, lesson_id):
+    contents = TableOfContents.objects.filter(
+        course_id=course_id, lesson_id=lesson_id
+    ).order_by("time")
+    data = loader.render_to_string(
+        "yaksh/show_toc.html", context={
+            'contents': contents, 'lesson_id': lesson_id
+        },
+        request=request
+    )
+    return data
 
 
 @login_required
@@ -3534,6 +3720,138 @@ def allow_special_attempt(request, user_id, course_id, quiz_id):
 
 @login_required
 @email_verified
+def add_topic(request, content_type, course_id, lesson_id, toc_id=None,
+              topic_id=None):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    if topic_id:
+        topic = get_object_or_404(Topic, pk=topic_id)
+    else:
+        topic = None
+    if toc_id:
+        toc = get_object_or_404(TableOfContents, pk=toc_id)
+    else:
+        toc = None
+    context = {}
+    if request.method == "POST":
+        form = TopicForm(request.POST, instance=topic)
+        if form.is_valid():
+            form.save()
+            time = request.POST.get("timer")
+            if not topic:
+                TableOfContents.objects.create(
+                    content_object=form.instance, course_id=course_id,
+                    lesson_id=lesson_id, content=content_type,
+                    time=time
+                )
+            context['toc'] = get_toc_contents(request, course_id, lesson_id)
+            if toc:
+                toc.time = time
+                toc.save()
+            status_code = 200
+            context['success'] = True
+            context['message'] = 'Saved topic successfully'
+        else:
+            status_code = 400
+            context['success'] = False
+            context['message'] = form.errors.as_json()
+    else:
+        form = TopicForm(instance=topic, time=toc.time)
+        template_context = {'form': form, 'course_id': course.id,
+                   'lesson_id': lesson_id, 'content_type': content_type,
+                   'topic_id': topic_id, 'toc_id': toc_id}
+        data = loader.render_to_string(
+            "yaksh/add_topic.html", context=template_context, request=request
+        )
+        context['success'] = True
+        context['data'] = data
+        context['content_type'] = content_type
+        context['status'] = 1
+        status_code = 200
+    return JsonResponse(context, status=status_code)
+
+
+@login_required
+@email_verified
+def add_marker_quiz(request, content_type, course_id, lesson_id,
+                    toc_id=None, question_id=None):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    if question_id:
+        question = get_object_or_404(Question, pk=question_id)
+    else:
+        question = None
+    if toc_id:
+        toc = get_object_or_404(TableOfContents, pk=toc_id)
+    else:
+        toc = None
+    context = {}
+    if request.method == "POST":
+        qform = VideoQuizForm(request.POST, instance=question)
+        if qform.is_valid():
+            if not question_id:
+                qform.save(commit=False)
+                qform.instance.user = user
+            qform.save()
+            formset, tc_class = get_tc_formset(
+                qform.instance.type, request.POST, qform.instance
+            )
+            if formset.is_valid():
+                formset.save()
+                time = request.POST.get("timer")
+                if not question:
+                    TableOfContents.objects.create(
+                        content_object=qform.instance, course_id=course_id,
+                        lesson_id=lesson_id, content=content_type,
+                        time=time
+                    )
+                context['toc'] = get_toc_contents(request, course_id, lesson_id)
+                if toc:
+                    toc.time = time
+                    toc.save()
+                status_code = 200
+                context['success'] = True
+                context['message'] = 'Saved question successfully'
+                context['content_type'] = content_type
+            else:
+                status_code = 200
+                context['success'] = False
+                context['message'] = "Error in saving."\
+                                     " Please check the question test cases"
+        else:
+            status_code = 400
+            context['success'] = False
+            context['message'] = qform.errors.as_json()
+    else:
+        form = VideoQuizForm(instance=question, time=toc.time)
+        formset, tc_class = get_tc_formset(question.type, question=question)
+        template_context = {
+            'form': form, 'course_id': course.id, 'lesson_id': lesson_id,
+            'formset': formset, 'tc_class': tc_class, 'toc_id': toc_id,
+            'content_type': content_type, 'question_id': question_id
+        }
+        data = loader.render_to_string(
+            "yaksh/add_video_quiz.html", context=template_context,
+            request=request
+        )
+        context['success'] = True
+        context['data'] = data
+        context['content_type'] = content_type
+        context['status'] = 2
+        status_code = 200
+    return JsonResponse(context, status=status_code)
+
+
+@login_required
+@email_verified
 def revoke_special_attempt(request, micromanager_id):
     user = request.user
 
@@ -3550,6 +3868,25 @@ def revoke_special_attempt(request, micromanager_id):
     messages.info(request, msg)
     return redirect(
         'yaksh:monitor', micromanager.quiz.id, course.id)
+
+
+@login_required
+@email_verified
+def delete_toc(request, course_id, toc_id):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    toc = get_object_or_404(TableOfContents, pk=toc_id)
+    redirect_url = request.POST.get("redirect_url")
+    if toc.content == 1:
+        get_object_or_404(Topic, pk=toc.object_id).delete()
+    else:
+        get_object_or_404(Question, id=toc.object_id).delete()
+    messages.success(request, "Content deleted successfully")
+    return redirect(redirect_url)
 
 
 @login_required
@@ -3577,4 +3914,229 @@ def extend_time(request, paper_id):
         msg = 'Bad Request'
     messages.info(request, msg)
     return redirect(
-        'yaksh:monitor', anspaper.question_paper.quiz.id, course.id)
+        'yaksh:monitor', anspaper.question_paper.quiz.id, course.id
+    )
+
+
+@login_required
+@email_verified
+def get_marker_quiz(request, course_id, toc_id):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_student(user):
+        raise Http404("You are not allowed to view this page")
+    toc = get_object_or_404(TableOfContents, pk=toc_id)
+    question = toc.content_object
+    template_context = {
+        "question": question, "course_id": course_id, "toc": toc,
+        "test_cases": question.get_test_cases()
+    }
+    data = loader.render_to_string(
+        "yaksh/show_lesson_quiz.html", context=template_context,
+        request=request
+    )
+    context = {"data": data, "success": True}
+    return JsonResponse(context)
+
+
+@login_required
+@email_verified
+def submit_marker_quiz(request, course_id, toc_id):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_student(user):
+        raise Http404("You are not allowed to view this page")
+    toc = get_object_or_404(TableOfContents, pk=toc_id)
+    current_question = toc.content_object
+    if current_question.type == 'mcq':
+        user_answer = request.POST.get('answer')
+    elif current_question.type == 'integer':
+        try:
+            user_answer = int(request.POST.get('answer'))
+        except ValueError:
+            user_answer = None
+    elif current_question.type == 'float':
+        try:
+            user_answer = float(request.POST.get('answer'))
+        except ValueError:
+            user_answer = None
+    elif current_question.type == 'string':
+        user_answer = str(request.POST.get('answer'))
+    elif current_question.type == 'mcc':
+        user_answer = request.POST.getlist('answer')
+    elif current_question.type == 'arrange':
+        user_answer_ids = request.POST.get('answer').split(',')
+        user_answer = [int(ids) for ids in user_answer_ids]
+
+    def is_valid_answer(answer):
+        status = True
+        if ((current_question.type == "mcc" or
+                current_question.type == "arrange") and not answer):
+            status = False
+        elif answer is None or not str(answer):
+            status = False
+        return status
+
+    if is_valid_answer(user_answer):
+        success = True
+        # check if graded quiz and already attempted
+        has_attempts =  LessonQuizAnswer.objects.filter(
+            toc_id=toc_id, student_id=user.id).exists()
+        if ((toc.content == 2 and not has_attempts) or
+                toc.content == 3 or toc.content == 4):
+            answer = Answer.objects.create(
+                question_id=current_question.id, answer=user_answer,
+                correct=False, error=json.dumps([])
+            )
+            lesson_ans = LessonQuizAnswer.objects.create(
+                toc_id=toc_id, student=user, answer=answer
+            )
+            msg = "Answer saved successfully"
+            # call check answer only for graded quiz and exercise
+            if toc.content == 3 or toc.content == 2:
+                result = lesson_ans.check_answer(user_answer)
+                # if exercise then show custom message
+                if toc.content == 3:
+                    if result.get("success"):
+                        msg = "You answered the question correctly"
+                    else:
+                        success = False
+                        msg = "You have answered the question incorrectly. "\
+                              "Please refer the lesson again"
+        else:
+            msg = "You have already submitted the answer"
+    else:
+        success = False
+        msg = "Please submit a valid answer"
+    context = {"success": success, "message": msg}
+    return JsonResponse(context)
+
+
+@login_required
+@email_verified
+def lesson_statistics(request, course_id, lesson_id, toc_id=None):
+    user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page!')
+    course = get_object_or_404(Course, pk=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+    context = {}
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    data = TableOfContents.objects.get_data(course_id, lesson_id)
+    context['data'] = data
+    context['lesson'] = lesson
+    context['course_id'] = course_id
+    if toc_id:
+        per_que_data = TableOfContents.objects.get_question_stats(toc_id)
+        question = per_que_data[0]
+        answers = per_que_data[1]
+        is_percent_reqd = (
+            True if question.type == "mcq" or question.type == "mcc"
+                else False
+            )
+        per_tc_ans, total_count = TableOfContents.objects.get_per_tc_ans(
+            toc_id, question.type, is_percent_reqd
+        )
+        context['per_tc_ans'] = per_tc_ans
+        context['total_count'] = total_count
+        paginator = Paginator(answers, 50)
+        context['question'] = question
+        page = request.GET.get('page')
+        per_que_data = paginator.get_page(page)
+        context['is_que_data'] = True
+        context['objects'] = per_que_data
+    return render(request, 'yaksh/show_lesson_statistics.html', context)
+
+
+@login_required
+@email_verified
+def upload_marks(request, course_id, questionpaper_id):
+    user = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    question_paper = get_object_or_404(QuestionPaper, pk=questionpaper_id)
+    quiz = question_paper.quiz
+
+    if not (course.is_teacher(user) or course.is_creator(user)):
+        raise Http404('You are not allowed to view this page!')
+    if request.method == 'POST':
+        if 'csv_file' not in request.FILES:
+            messages.warning(request, "Please upload a CSV file.")
+            return redirect('yaksh:monitor', quiz.id, course_id)
+        csv_file = request.FILES['csv_file']
+        is_csv_file, dialect = is_csv(csv_file)
+        if not is_csv_file:
+            messages.warning(request, "The file uploaded is not a CSV file.")
+            return redirect('yaksh:monitor', quiz.id, course_id)
+        try:
+            reader = csv.DictReader(
+                csv_file.read().decode('utf-8').splitlines(),
+                dialect=dialect)
+        except TypeError:
+            messages.warning(request, "Bad CSV file")
+            return redirect('yaksh:monitor', quiz.id, course_id)
+        question_ids = _get_header_info(reader)
+        _read_marks_csv(request, reader, course, question_paper, question_ids)
+    return redirect('yaksh:monitor', quiz.id, course_id)
+
+
+def _get_header_info(reader):
+    user_ids, question_ids = [], []
+    fields = reader.fieldnames
+    for field in fields:
+        if field.startswith('Q') and field.count('-') > 0:
+            qid = int(field.split('-')[1])
+            if qid not in question_ids:
+                question_ids.append(qid)
+    return question_ids
+
+
+def _read_marks_csv(request, reader, course, question_paper, question_ids):
+    messages.info(request, 'Marks Uploaded!')
+    for row in reader:
+        username = row['username']
+        user = User.objects.filter(username=username).first()
+        if user:
+            answerpapers = question_paper.answerpaper_set.filter(course=course,
+                                                         user_id=user.id)
+        else:
+            messages.info(request, '{0} user not found!'.format(username))
+            continue
+        answerpaper = answerpapers.last()
+        if not answerpaper:
+            messages.info(request, '{0} has no answerpaper!'.format(username))
+            continue
+        answers = answerpaper.answers.all()
+        questions = answerpaper.questions.all().values_list('id', flat=True)
+        for qid in question_ids:
+            question = Question.objects.filter(id=qid).first()
+            if not question:
+                messages.info(request,
+                             '{0} is an invalid question id!'.format(qid))
+                continue
+            if qid in questions:
+                answer = answers.filter(question_id=qid).last()
+                if not answer:
+                    answer = Answer(question_id=qid, marks=0, correct=False,
+                                    answer='Created During Marks Update!',
+                                    error=json.dumps([]))
+                    answer.save()
+                    answerpaper.answers.add(answer)
+                key1 = 'Q-{0}-{1}-{2}-marks'.format(qid, question.summary,
+                                                    question.points)
+                key2 = 'Q-{0}-{1}-comments'.format(qid, question.summary,
+                                                   question.points)
+                if key1 in reader.fieldnames:
+                    try:
+                        answer.set_marks(float(row[key1]))
+                    except ValueError:
+                        messages.info(request,
+                                     '{0} invalid marks!'.format(row[key1]))
+                if key2 in reader.fieldnames:
+                    answer.set_comment(row[key2])
+                answer.save()
+        answerpaper.update_marks(state='completed')
+        answerpaper.save()
+        messages.info(request,
+            'Updated successfully for user: {0}, question: {1}'.format(
+            username, question.summary))

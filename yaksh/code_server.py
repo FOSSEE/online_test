@@ -17,7 +17,10 @@ import json
 from multiprocessing import Process, Queue, Manager
 import os
 from os.path import dirname, abspath
-import pwd
+try:
+    import pwd
+except ImportError:
+    pass
 import sys
 import time
 
