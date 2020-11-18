@@ -3,18 +3,39 @@
     <br>
     <strong>Overall Course Progress:</strong>
     <div class="progress">
-        {% if course_percentage <= 50 %}
-            <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="40"
-            aria-valuemin="0" aria-valuemax="100" style="width:{{course_percentage}}%">
+        {% if course_percentage == 0  %}
+            <b style="color: black;">{{course_percentage}}% Completed</b>
+        {% elif course_percentage <= 50 %}
+            <div
+                class="progress-bar progress-bar-danger"
+                role="progressbar"
+                aria-valuenow="40"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                style="width:{{course_percentage}}%">
+                    <b style="color: black;">{{course_percentage}}% Completed</b>
+            </div>
         {% elif course_percentage <= 75 %}
-            <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="40"
-            aria-valuemin="0" aria-valuemax="100" style="width:{{course_percentage}}%">
+            <div
+                class="progress-bar progress-bar-warning"
+                role="progressbar"
+                aria-valuenow="40"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                style="width:{{course_percentage}}%">
+                    <b style="color: black;">{{course_percentage}}% Completed</b>
+            </div>
         {% else %}
-            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40"
-            aria-valuemin="0" aria-valuemax="100" style="width:{{course_percentage}}%">
+            <div
+                class="progress-bar progress-bar-success"
+                role="progressbar"
+                aria-valuenow="40"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                style="width:{{course_percentage}}%">
+                    <b style="color: black;">{{course_percentage}}% Completed</b>
+            </div>
         {% endif %}
-        <b style="color: black;">{{course_percentage}}% Completed</b>
-        </div>
     </div>
     <br>
     <strong>Per Module Progress:</strong>
@@ -25,15 +46,39 @@
                 <td width="30%">{{ module.name }}</td>
                 <td>
                     <div class="progress">
-                        {% if percent <= 50 %}
-                        <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                        {% if percent == 0  %}
+                            <b style="color: black;">{{percent}}% Completed</b>
+                        {% elif percent <= 50 %}
+                            <div
+                                class="progress-bar progress-bar-danger"
+                                role="progressbar"
+                                aria-valuenow="40"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                                style="width:{{percent}}%">
+                                    <b style="color: black;">{{percent}}% Completed</b>
+                            </div>
                         {% elif percent <= 75 %}
-                        <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                            <div
+                                class="progress-bar progress-bar-warning"
+                                role="progressbar"
+                                aria-valuenow="40"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                                style="width:{{percent}}%">
+                                    <b style="color: black;">{{percent}}% Completed</b>
+                            </div>
                         {% else %}
-                        <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                            <div
+                                class="progress-bar progress-bar-success"
+                                role="progressbar"
+                                aria-valuenow="40"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                                style="width:{{percent}}%">
+                                    <b style="color: black;">{{percent}}% Completed</b>
+                            </div>
                         {% endif %}
-                        <b style="color: black;">{{percent}}% Completed</b>
-                        </div>
                     </div>
                 </td>
             </tr>
