@@ -1,7 +1,11 @@
+# Python Imports
+import pandas as pd
+
 # Django Imports
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.db.models import F
 
 # Local Imports
 from yaksh.models import Course, Lesson
@@ -92,6 +96,18 @@ class TrackLesson(models.Model):
             total_duration = hits * hit_duration
             return str(timezone.timedelta(seconds=total_duration))
         return self.get_current_time()
+
+    def get_no_of_vists(self):
+        lesson_logs = self.lessonlog_set.values("last_access_time").annotate(
+            visits=F('last_access_time')
+        )
+        df = pd.DataFrame(lesson_logs)
+        visits = 1
+        if not df.empty:
+            visits = df.groupby(
+                [df['visits'].dt.date]
+            ).first().count()['visits']
+        return visits
 
     def __str__(self):
         return (f"Track {self.lesson} in {self.course} "

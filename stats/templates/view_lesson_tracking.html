@@ -5,26 +5,29 @@
 <script type="text/javascript" src="{% static 'yaksh/js/jquery.tablesorter.min.js' %}">
 </script>
 <script type="text/javascript">
-    function get_time_in_seconds(time) {
-        var time = time.split(":");
-        var hh = parseInt(time[0]);
-        var mm = parseInt(time[1]);
-        var ss = parseInt(time[2]);
-        return hh * 3600 + mm * 60 + ss;
-    }
-
     $(document).ready(function() {
-        $("#stats-table").tablesorter({});
+        $.tablesorter.addWidget({
+            id: "numbering",
+            format: function(table) {
+                var c = table.config;
+                $("tr:visible", table.tBodies[0]).each(function(i) {
+                    $(this).find('td').eq(0).text(i + 1);
+                });
+            }
+        });
+        $("#stats-table").tablesorter({
+            headers: {0: { sorter: false }}, widgets: ['numbering']
+        });
     });
 </script>
 {% endblock %}
 {% block content %}
-<div class="container">
+<div class="container-fluid">
     {% with objects.object_list as trackings %}
     <center>
         <h3>Statistics for {% with trackings|first as entry %} {{entry.lesson}} {% endwith %}</h3>
     </center>
-    <a class="btn btn-primary" href="{% url 'yaksh:lesson_statistics' course_id lesson_id %}">
+    <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
         <i class="fa fa-arrow-left"></i>&nbsp;Back
     </a>
     <br><br>
@@ -43,19 +46,29 @@
                 <th>Percentage Watched&nbsp;<i class="fa fa-sort"></i></th>
                 <th>Watched Once Completely&nbsp;<i class="fa fa-sort"></i></th>
                 <th>Total Time Spent&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Total Visits&nbsp;<i class="fa fa-sort"></i></th>
             </tr>
         </thead>
         {% for track in trackings %}
             <tr>
-                <td>{{ forloop.counter0|add:objects.start_index }}</td>
+                <td>{{ forloop.counter0 }}</td>
                 <td>{{track.user.get_full_name}}</td>
                 <td>{{track.get_last_access_time}}</td>
                 <td>{{track.creation_time}}</td>
                 <td>{{track.get_current_time}}</td>
                 <td>{{track.get_video_duration}}</td>
                 <td>{{track.get_percentage_complete}}</td>
-                <td>{{track.get_watched}}</td>
+                <td>
+                    {% with track.get_watched as watched %}
+                        {% if watched %}
+                            <span class="badge-pill badge-success">{{watched}}</span>
+                        {% else %}
+                            <span class="badge-pill badge-success">{{watched}}</span>
+                        {% endif %}
+                    {% endwith %}
+                </td>
                 <td>{{track.time_spent}}</td>
+                <td>{{track.get_no_of_vists}}</td>
             </tr>
         {% endfor %}
     </table>
