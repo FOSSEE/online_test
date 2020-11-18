@@ -515,6 +515,22 @@ class QuestionPaperForm(forms.ModelForm):
 
 
 class LessonForm(forms.ModelForm):
+    video_options = (
+            ("---", "Select Video Option"), ("youtube", "Youtube"),
+            ("vimeo", "Vimeo"), ("others", "Others")
+        )
+    video_option = forms.ChoiceField(
+        choices=video_options, required=False,
+        help_text='Add videos from youtube, vimeo or other',
+        widget=forms.Select({'class': 'custom-select'}))
+    video_url = forms.CharField(
+        widget=forms.TextInput(
+            {'class': form_input_class,
+             'placeholder': 'Video ID for Youtube, Vimeo and URL for others'}
+            ),
+        required=False
+        )
+
     def __init__(self, *args, **kwargs):
         super(LessonForm, self).__init__(*args, **kwargs)
         des_msg = "Enter Lesson Description as Markdown text"
@@ -524,13 +540,14 @@ class LessonForm(forms.ModelForm):
         self.fields['description'].widget.attrs.update(
             {'class': form_input_class, 'placeholder': des_msg}
         )
-        self.fields['video_path'].widget.attrs.update(
-            {'class': form_input_class,
-             'placeholder': dedent("""\
-                {'youtube': '', 'vimeo': '', 'others': ''}
-                """),
-             }
-        )
+        self.fields['video_path'].widget = forms.HiddenInput()
+        try:
+            video = literal_eval(self.instance.video_path)
+            key = list(video.keys())[0]
+            self.fields['video_option'].initial = key
+            self.fields['video_url'].initial = video[key]
+        except ValueError:
+            pass
 
     class Meta:
         model = Lesson
