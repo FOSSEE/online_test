@@ -16,6 +16,25 @@ $(document).ready(function() {
           }
         );
     });
+    var completion_msg = "Add Youtube and Vimeo video ID, for Others add "+
+                         "video file url e.g https://example.com/video.mp4"
+    $("#video_msg").attr("title", completion_msg);
+    $("#video_msg").tooltip();
+    $("#submit-lesson").click(function() {
+        var video_option = $("#id_video_option").val();
+        var video_url = $("#id_video_url").val();
+        if(video_option != "---") {
+            if(!video_url.trim()) {
+                $('#id_video_url').prop('required', true);
+            }
+            else {
+                $("#id_video_path").val("{'"+video_option+"': '"+video_url+"'}");
+            }
+        } else {
+            $('#id_video_url').prop('required', false);
+            $("#id_video_path").val(null);
+        }
+    });
     const player = new Plyr('#player');
     var timer = $("#vtimer");
     var totalSeconds;
