@@ -1,3 +1,18 @@
+=== 0.29.2 (19-11-2020) ===
+
+* Add dropdown selection for lesson video options
+* Show total visits per student in lesson statistics.
+* Remove settimeout ajax calls for tracking video positions.
+* Show initial views per lesson in the course modules section.
+* Add tinymce editor for all the textareas.
+
+=== 0.29.1 (12-11-2020) ===
+
+* Fixed issue onclick toc jump to player time.
+* Used bootstrap modal instead of jquery dialog for responsive interface.
+* Disallow empty question submission for lesson quiz.
+* Fixed issue where the videos other than youtube does not get the duration.
+
 === 0.29.0 (07-11-2020) ===
 
 * Add feature to track lesson video views
