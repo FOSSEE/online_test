@@ -319,7 +319,6 @@ function searchNames() {
                     </thead>
                     <tbody>
                     {% for question, answers in paper.get_question_answers.items %}
-                      {% with answers|last as answer %}
                           <tr>
                           <td>
                             <a href="#question_{{question.id}}">
@@ -327,14 +326,13 @@ function searchNames() {
                             </a>
                           </td>
                           <td>{{ question.type }}</td>
-                          <td>{{ answer.marks }}</td>
+                          <td>{{ answers|last }}</td>
                           <td>
                             <a href="{% url 'yaksh:regrade_by_question' course_id quiz.questionpaper_set.get.id paper.id question.id %}" class="btn btn-outline-success">
                               <i class="fa fa-repeat"></i>&nbsp;Regrade
                             </a>
                           </td>
                           </tr>
-                      {% endwith %}
                     {% endfor %}
                     </tbody>
                 </table>
@@ -437,7 +435,10 @@ function searchNames() {
                             </center>
                           {% endif %} <!-- End has_user_assignments -->
                         {% else %}
-                        {% for ans in answers %}
+                        {% if answers|first is None %}
+                            <p> Did not attempt </p>
+                        {% else %}
+                        {% for ans in answers|slice:":-1" %}
                           <strong>
                             Attempt Number: {{forloop.counter}}
                           </strong>
@@ -559,6 +560,7 @@ function searchNames() {
                           </div>
                           <br>
                         {% endfor %} <!-- End for ans in answers -->
+                        {% endif %}<!-- check if attempted -->
                       </div>
                     </div>
                     {% endif %}
@@ -566,9 +568,7 @@ function searchNames() {
                     <div class="form-group">
                       <div class="col-md-2">
                         <label class="col-form-label" for="q{{ question.id }}">Marks:</label>
-                        {% with answers|last as answer %}
-                        <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answer.marks }}"><br><br>
-                        {% endwith %}
+                        <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answers|last }}"><br><br>
                       </div>
                     </div>
                     <hr/>

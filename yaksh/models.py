@@ -2321,14 +2321,20 @@ class AnswerPaper(models.Model):
             secs = dt.seconds + dt.days*24*3600
         return secs
 
+    def _get_marks_for_question(self, question):
+        marks = 0.0
+        answers = question.answer_set.filter(answerpaper=self)
+        if answers.exists():
+            marks = [answer.marks for answer in answers]
+            max_marks = max(marks)
+            marks = max_marks
+        return marks
+
     def _update_marks_obtained(self):
         """Updates the total marks earned by student for this paper."""
-        marks = 0
+        marks = 0.0
         for question in self.questions.all():
-            marks_list = [a.marks
-                          for a in self.answers.filter(question=question)]
-            max_marks = max(marks_list) if marks_list else 0.0
-            marks += max_marks
+            marks += self._get_marks_for_question(question)
         self.marks_obtained = marks
 
     def _update_percent(self):
@@ -2376,38 +2382,19 @@ class AnswerPaper(models.Model):
             corresponding answers.
         """
         q_a = {}
-        for answer in self.answers.all():
-            question = answer.question
-            if question in q_a:
-                q_a[question].append({
+        for question in self.questions.all():
+            answers = question.answer_set.filter(answerpaper=self)
+            if not answers.exists():
+                q_a[question] = [None, 0.0]
+                continue
+            ans_errs = []
+            for answer in answers:
+                ans_errs.append({
                     'answer': answer,
                     'error_list': [e for e in json.loads(answer.error)]
                 })
-            else:
-                q_a[question] = [{
-                    'answer': answer,
-                    'error_list': [e for e in json.loads(answer.error)]
-                }]
-
-        q_a.update(
-            { q: [] for q in self.questions_unanswered.all() }
-        )
-
-        for question, answers in q_a.items():
-            answers = q_a[question]
-            if answers:
-                q_a[question].append({
-                    'marks': max([
-                        answer['answer'].marks
-                        for answer in answers
-                        if question == answer['answer'].question
-                    ]),
-                })
-            else:
-                q_a[question].append({
-                    'marks': 0.0,
-                })
-
+            q_a[question] = ans_errs
+            q_a[question].append(self._get_marks_for_question(question))
         return q_a
 
     def get_latest_answer(self, question_id):
