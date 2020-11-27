@@ -43,4 +43,9 @@
         Current Teachers/TAs
         </a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link list-group-item {% if is_upload_download_md %} active {% endif %}" href="{% url 'yaksh:upload_download_course_md' course.id %}" data-toggle="tooltip" title="Upload / Download MD files" data-placement="top">
+        Upload / Download MD
+        </a>
+    </li>
 </ul>
