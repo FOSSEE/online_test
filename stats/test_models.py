@@ -8,28 +8,32 @@ from yaksh.models import Course, Lesson, LearningModule, LearningUnit
 class TrackLessonTestCase(TestCase):
     def setUp(self):
         creator = User.objects.create(username='creator', password='test',
-            email='test1@test.com')
+                                      email='test1@test.com')
         self.student = User.objects.create(username='student', password='test',
-            email='test2@test.com')
-        self.course = Course.objects.create(name="Test Course",
-            enrollment="Enroll Request", creator=creator)
-        learning_module = LearningModule.objects.create(name='LM',
-            description='module', creator=creator)
-        self.lesson = Lesson.objects.create(name='Lesson',
-            description='Video Lesson', creator=creator)
-        learning_unit = LearningUnit.objects.create(order=1,
-            lesson=self.lesson, type='lesson')
+                                           email='test2@test.com')
+        self.course = Course.objects.create(
+            name="Test Course", enrollment="Enroll Request", creator=creator
+        )
+        learning_module = LearningModule.objects.create(
+            name='LM', description='module', creator=creator
+        )
+        self.lesson = Lesson.objects.create(
+            name='Lesson', description='Video Lesson', creator=creator
+        )
+        learning_unit = LearningUnit.objects.create(order=1, type='lesson',
+                                                    lesson=self.lesson)
         learning_module.learning_unit.add(learning_unit)
         learning_module.save()
         self.course.learning_module.add(learning_module)
         self.course.students.add(self.student)
         self.course.save()
         self.tracker = TrackLesson.objects.create(user=self.student,
-            course=self.course, lesson=self.lesson)
+                                                  course=self.course,
+                                                  lesson=self.lesson)
         LessonLog.objects.create(track=self.tracker)
         self.last_access_time = timezone.now()
         LessonLog.objects.create(track=self.tracker,
-            last_access_time=self.last_access_time)
+                                 last_access_time=self.last_access_time)
 
     def tearDown(self):
         User.objects.all().delete()
