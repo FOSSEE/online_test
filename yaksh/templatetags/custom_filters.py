@@ -209,5 +209,5 @@ def get_tc_percent(tc_id, data):
 def get_lesson_views(course_id, lesson_id):
     course = Course.objects.get(id=course_id)
     return TrackLesson.objects.filter(
-        course_id=course_id, lesson_id=lesson_id
+        course_id=course_id, lesson_id=lesson_id, watched=True
     ).count(), course.students.count()

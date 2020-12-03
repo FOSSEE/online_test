@@ -1,6 +1,6 @@
 {% extends "manage.html" %}
 {% load static %}
-{% block title %} Lesson Views {% endblock %}
+{% block title %} Lesson Video Stats {% endblock %}
 {% block script %}
 <script type="text/javascript" src="{% static 'yaksh/js/jquery.tablesorter.min.js' %}">
 </script>
@@ -33,7 +33,58 @@
     <br><br>
     {% include "yaksh/paginator.html" %}
     <br>
-    <h4><strong>{{total}} student(s) viewed this lesson</strong></h4>
+        <div class="row">
+        <div class="col" id='barDiv1'></div>
+        <div class="col" id="barDiv2"></div>
+        <div class="col" id="barDiv3"></div>
+        </div>
+        <script type="text/javascript">
+            var config = {responsive: true}
+            var data = [
+                {
+                    x: ["Completed", "Not Completed"],
+                    y: ["{{completion.0}}", "{{completion.1}}"],
+                    type: 'bar'
+                }
+            ];
+            var layout = {
+                title: "Number of completions (Out of {{visits.2}})",
+                xaxis: {title: 'Completion status'},
+                yaxis: {title: 'Count'},
+                width: 400,
+                height: 400,
+            };
+            Plotly.newPlot('barDiv1', data, layout, config);
+            var data = [
+                {
+                    x: ["Visited", "Not Visited"],
+                    y: ["{{visits.0}}", "{{visits.1}}"],
+                    type: 'bar'
+                }
+            ];
+            var layout = {
+                title: "Number of visits (Out of {{visits.2}})",
+                xaxis: {title: 'Visit status'},
+                yaxis: {title: 'Count'},
+                width: 400,
+                height: 400,
+            };
+            Plotly.newPlot('barDiv2', data, layout, config);
+            var x_data = ["0-25", "25-50", "50-75", "75-100"], y_data = [];
+            {% for i, j in percentage_data.items %}
+                y_data.push("{{j}}")
+            {% endfor %}
+            var data = [{x: x_data, y: y_data, type: 'bar'}];
+            var layout = {
+                title: "Range wise completion (Out of {{total}})",
+                xaxis: {title: 'Percentage Range'},
+                yaxis: {title: 'Count'},
+                width: 400,
+                height: 400,
+            };
+            Plotly.newPlot('barDiv3', data, layout, config);
+        </script>
+    <br>
     <table class="table table-responsive" id="stats-table">
         <thead>
             <tr>
@@ -57,13 +108,13 @@
                 <td>{{track.creation_time}}</td>
                 <td>{{track.get_current_time}}</td>
                 <td>{{track.get_video_duration}}</td>
-                <td>{{track.get_percentage_complete}}</td>
+                <td>{{track.get_percentage_complete}} %</td>
                 <td>
                     {% with track.get_watched as watched %}
                         {% if watched %}
                             <span class="badge-pill badge-success">{{watched}}</span>
                         {% else %}
-                            <span class="badge-pill badge-success">{{watched}}</span>
+                            <span class="badge-pill badge-warning">{{watched}}</span>
                         {% endif %}
                     {% endwith %}
                 </td>

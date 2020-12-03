@@ -1,7 +1,7 @@
 {% extends "manage.html" %}
 {% load static %}
 {% load custom_filters %}
-{% block title %} Lesson Statistics {% endblock %}
+{% block title %} Lesson Quiz Stats {% endblock %}
 {% block pagetitle %} Statistics for {{lesson}} {% endblock %}
 {% block script %}
 <script type="text/javascript" src="{% static 'yaksh/js/jquery.tablesorter.min.js' %}">
@@ -135,8 +135,8 @@
                                 <div class="progress" style="width: 30%">
                                 {% if percent %}
                                     <div class="progress-bar bg-success" role="progressbar" aria-valuenow="{{percent}}"
-                                      aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
-                                        <b style="color: white;">{{percent}}%</b>
+                                      aria-valuemin="0" aria-valuemax="100" style="width:{{percent|floatformat}}%">
+                                        <b style="color: white;">{{percent|floatformat}}%</b>
                                     </div>
                                 {% else %}
                                     <b style="color: black;">0%</b>
