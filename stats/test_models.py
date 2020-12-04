@@ -70,7 +70,7 @@ class TrackLessonTestCase(TestCase):
     def test_get_current_time(self):
         # Given
         tracker = self.tracker
-        expected_time = 'just started'
+        expected_time = '00:00:00'
 
         # When
         current_time = tracker.get_current_time()
@@ -81,7 +81,7 @@ class TrackLessonTestCase(TestCase):
     def test_get_video_duration(self):
         # Given
         tracker = self.tracker
-        expected_duration = 'will be available after 25% completion'
+        expected_duration = '00:00:00'
 
         # When
         duration = tracker.get_video_duration()
@@ -117,7 +117,7 @@ class TrackLessonTestCase(TestCase):
     def test_get_percentage_complete(self):
         # Given
         tracker = self.tracker
-        expected_percentage = 'less than 25%'
+        expected_percentage = 0
 
         # When
         percentage = tracker.get_percentage_complete()
@@ -126,7 +126,7 @@ class TrackLessonTestCase(TestCase):
         self.assertEqual(percentage, expected_percentage)
 
         # Given
-        expected_percentage = 'approx 75 %'
+        expected_percentage = 75
 
         # When
         tracker.set_current_time('00:03:00')

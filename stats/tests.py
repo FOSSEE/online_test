@@ -131,8 +131,8 @@ class TestTrackLesson(TestCase):
         self.assertEqual(response_data.get('total'), 1)
         expected_tracker = list(TrackLesson.objects.filter(
             user_id=self.student.id, course_id=self.course.id,
-            lesson_id=self.lesson.id).values_list("id", flat=True))
+            lesson_id=self.lesson.id))
         obtained_tracker = list(response_data.get(
-            'objects').object_list.values_list("id", flat=True))
+            'objects').object_list)
         self.assertEqual(obtained_tracker, expected_tracker)
 
