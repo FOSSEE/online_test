@@ -57,15 +57,16 @@ class TrackLesson(models.Model):
             self.current_time = ct
 
     def get_percentage_complete(self):
-        if self.current_time == '00:00:00' and self.video_duration == '00:00:00':
+        ctime = self.current_time
+        vduration = self.video_duration
+        if ctime == '00:00:00' and vduration == '00:00:00':
             return 'less than 25%'
-        duration = str_to_time(self.video_duration)
-        watch_time = str_to_time(self.current_time)
+        duration = str_to_time(vduration)
+        watch_time = str_to_time(ctime)
         duration_seconds = time_to_seconds(duration)
         watched_seconds = time_to_seconds(watch_time)
         percentage = round((watched_seconds / duration_seconds) * 100)
         return 'approx {0} %'.format(percentage)
-
 
     def get_last_access_time(self):
         lesson_logs = self.lessonlog_set
@@ -75,9 +76,11 @@ class TrackLesson(models.Model):
         return last_access_time
 
     def set_watched(self):
-        if self.current_time != '00:00:00' and self.video_duration != '00:00:00':
-            duration = str_to_time(self.video_duration)
-            watch_time = (str_to_datetime(self.current_time) + timezone.timedelta(
+        ctime = self.current_time
+        vduration = self.video_duration
+        if ctime != '00:00:00' and vduration != '00:00:00':
+            duration = str_to_time(vduration)
+            watch_time = (str_to_datetime(ctime) + timezone.timedelta(
                 seconds=10)).time()
             self.watched = watch_time >= duration
 
@@ -86,7 +89,6 @@ class TrackLesson(models.Model):
             self.set_watched()
             self.save()
         return self.watched
-
 
     def time_spent(self):
         if self.video_duration != '00:00:00':
