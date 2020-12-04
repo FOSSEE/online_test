@@ -723,8 +723,8 @@ def show_question(request, question, paper, error_message=None,
                             question_paper_id=paper.question_paper_id
                         )
         handlers = QRcodeHandler.objects.filter(user=request.user,
-                                               question=question,
-                                               answerpaper=paper)
+                                                question=question,
+                                                answerpaper=paper)
         qrcode = None
         if handlers.exists():
             handler = handlers.last()
@@ -4104,8 +4104,8 @@ def _read_marks_csv(request, reader, course, question_paper, question_ids):
         username = row['username']
         user = User.objects.filter(username=username).first()
         if user:
-            answerpapers = question_paper.answerpaper_set.filter(course=course,
-                                                         user_id=user.id)
+            answerpapers = question_paper.answerpaper_set.filter(
+                course=course, user_id=user.id)
         else:
             messages.info(request, '{0} user not found!'.format(username))
             continue
@@ -4119,7 +4119,7 @@ def _read_marks_csv(request, reader, course, question_paper, question_ids):
             question = Question.objects.filter(id=qid).first()
             if not question:
                 messages.info(request,
-                             '{0} is an invalid question id!'.format(qid))
+                              '{0} is an invalid question id!'.format(qid))
                 continue
             if qid in questions:
                 answer = answers.filter(question_id=qid).last()
@@ -4138,13 +4138,14 @@ def _read_marks_csv(request, reader, course, question_paper, question_ids):
                         answer.set_marks(float(row[key1]))
                     except ValueError:
                         messages.info(request,
-                                     '{0} invalid marks!'.format(row[key1]))
+                                      '{0} invalid marks!'.format(row[key1]))
                 if key2 in reader.fieldnames:
                     answer.set_comment(row[key2])
                 answer.save()
         answerpaper.update_marks(state='completed')
         answerpaper.save()
-        messages.info(request,
+        messages.info(
+            request,
             'Updated successfully for user: {0}, question: {1}'.format(
             username, question.summary))
 
@@ -4172,7 +4173,7 @@ def generate_qrcode(request, answerpaper_id, question_id, module_id):
 def upload_file(request, key):
     qrcode = get_object_or_404(QRcode, short_key=key, active=True, used=False)
     handler = qrcode.handler
-    context = {'question' :  handler.question, 'key' : qrcode.short_key}
+    context = {'question': handler.question, 'key': qrcode.short_key}
     if not handler.can_use():
         context['success'] = True
         context['msg'] = 'Sorry, test time up!'
@@ -4195,7 +4196,8 @@ def upload_file(request, key):
                 if os.path.exists(assign_file.assignmentFile.path):
                     os.remove(assign_file.assignmentFile.path)
                 assign_file.delete()
-            AssignmentUpload.objects.create(user=handler.user,
+            AssignmentUpload.objects.create(
+                user=handler.user,
                 assignmentQuestion=handler.question,
                 course_id=handler.answerpaper.course.id, assignmentFile=fname,
                 question_paper=handler.answerpaper.question_paper)
@@ -4208,4 +4210,3 @@ def upload_file(request, key):
             context['msg'] = msg
             return render(request, 'yaksh/upload_file.html', context)
     return render(request, 'yaksh/upload_file.html', context)
-

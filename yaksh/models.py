@@ -3215,7 +3215,7 @@ class QRcode(models.Model):
             num = 5
             for i in range(40):
                 try:
-                    self.short_key = key[0 : num]
+                    self.short_key = key[0:num]
                     break
                 except django.db.IntegrityError:
                     num = num + 1
@@ -3233,7 +3233,6 @@ class QRcodeHandler(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     answerpaper = models.ForeignKey(AnswerPaper, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-
 
     def __str__(self):
         return 'QRcode Handler for  {0}'.format(self.user.username)
@@ -3253,4 +3252,3 @@ class QRcodeHandler(models.Model):
 
     def can_use(self):
         return self.answerpaper.is_attempt_inprogress()
-
