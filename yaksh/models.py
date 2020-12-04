@@ -30,7 +30,7 @@ import qrcode
 import hashlib
 
 # Django Imports
-from django.db import models
+from django.db import models, IntegrityError
 from django.contrib.auth.models import User, Group, Permission
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
@@ -3216,8 +3216,9 @@ class QRcode(models.Model):
             for i in range(40):
                 try:
                     self.short_key = key[0:num]
+                    self.save()
                     break
-                except django.db.IntegrityError:
+                except IntegrityError:
                     num = num + 1
 
     def generate_image(self, content):
