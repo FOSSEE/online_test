@@ -3507,6 +3507,7 @@ def course_forum(request, course_id):
             new_post.target = course
             new_post.anonymous = request.POST.get('anonymous', '') == 'on'
             new_post.save()
+            messages.success(request, "Added post successfully")
             return redirect('yaksh:post_comments',
                             course_id=course.id, uuid=new_post.uid)
     else:
@@ -3565,6 +3566,7 @@ def post_comments(request, course_id, uuid):
             new_comment.post_field = post
             new_comment.anonymous = request.POST.get('anonymous', '') == 'on'
             new_comment.save()
+            messages.success(request, "Added comment successfully")
             return redirect(request.path_info)
     return render(request, 'yaksh/post_comments.html', {
         'post': post,
@@ -3589,6 +3591,7 @@ def hide_post(request, course_id, uuid):
     post.comment.active = False
     post.active = False
     post.save()
+    messages.success(request, "Post deleted successfully")
     return redirect('yaksh:course_forum', course_id)
 
 
@@ -3606,6 +3609,7 @@ def hide_comment(request, course_id, uuid):
     post_uid = comment.post_field.uid
     comment.active = False
     comment.save()
+    messages.success(request, "Post comment deleted successfully")
     return redirect('yaksh:post_comments', course_id, post_uid)
 
 

@@ -27,14 +27,14 @@ def add_tracker(request, tracker_id):
     if current_time:
         track.set_current_time(current_time)
         track.video_duration = video_duration
-        LessonLog.objects.create(
-            track_id=track.id, current_time=current_time,
-            last_access_time=timezone.now()
-        )
         track.save()
         if not track.watched:
             track.set_watched()
             track.save()
+        LessonLog.objects.create(
+            track_id=track.id, current_time=current_time,
+            last_access_time=timezone.now()
+        )
         success = True
     else:
         success = False
@@ -46,16 +46,25 @@ def add_tracker(request, tracker_id):
 @email_verified
 def view_lesson_watch_stats(request, course_id, lesson_id):
     user = request.user
-    course = get_object_or_404(Course, pk=course_id)
+    course = get_object_or_404(
+        Course.objects.prefetch_related("students"), id=course_id
+    )
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
     trackings = TrackLesson.objects.get_queryset().filter(
         course_id=course_id, lesson_id=lesson_id
     ).order_by("id")
-    total = trackings.count()
+    percentage_data = TrackLesson.objects.get_percentage_data(trackings)
+    visited = trackings.count()
+    completed = trackings.filter(watched=True).count()
+    students_total = course.students.count()
     paginator = Paginator(trackings, 30)
     page = request.GET.get('page')
     trackings = paginator.get_page(page)
-    context = {'objects': trackings, 'total': total, 'course_id': course_id,
-               'lesson_id': lesson_id}
+    context = {
+        'objects': trackings, 'total': visited, 'course_id': course_id,
+        'lesson_id': lesson_id, "percentage_data": percentage_data,
+        'completion': [completed, students_total-completed, students_total],
+        'visits': [visited, students_total-visited, students_total]
+    }
     return render(request, 'view_lesson_tracking.html', context)

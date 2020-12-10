@@ -5,7 +5,6 @@
 {% endblock title %}
 {% block content %}
     <div id="wrapper" class="d-flex">
-        {% include "yaksh/sidebar.html" %}
         <div class="container" id="page-content-wrapper">
             <div>
                 <h2><center>{{course.name}}</center></h2>
@@ -68,6 +67,8 @@
                 </div>
               </div>
             </div>
+            <br>
+            {% include "yaksh/sidebar.html" %}
             <br>
             {% with objects as posts %}
                 {% if posts %}
