@@ -80,7 +80,6 @@
                 </thead>
                 <tbody>
                 {% for question, answers in paper.get_question_answers.items %}
-                  {% with answers|last as answer %}
                       <tr>
                       <td>
                         <a href="#question_{{question.id}}">
@@ -88,9 +87,8 @@
                         </a>
                       </td>
                       <td>{{ question.type }}</td>
-                      <td>{{ answer.answer.marks }}</td>
+                      <td>{{ answers|last  }}{{ answer.answer.marks }}</td>
                       </tr>
-                  {% endwith %}
                 {% endfor %}
                 </tbody>
             </table>
@@ -200,7 +198,10 @@
                       </center>
                     {% endif %} <!-- End has_user_assignments -->
                   {% else %}
-                  {% for ans in answers %}
+                  {% if answers|first is None %}
+                    <p> Did not attempt </p>
+                  {% else %}
+                  {% for ans in answers|slice:":-1" %}
                     <strong>
                       Attempt Number: {{forloop.counter}}
                     </strong>
@@ -324,6 +325,7 @@
                     </div>
                     <br>
                   {% endfor %} <!-- End for ans in answers -->
+                  {% endif %}<!-- check if attempted -->
                 </div>
               </div>
               {% endif %}
@@ -331,9 +333,7 @@
               <div class="form-group">
                 <div class="col-md-2">
                   <label class="col-form-label" for="q{{ question.id }}">Marks:</label>
-                  {% with answers|last as answer %}
-                  <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answer.answer.marks }}" readonly=""><br><br>
-                  {% endwith %}
+                  <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answers|last }}" readonly=""><br><br>
                 </div>
               </div>
               <hr/>
