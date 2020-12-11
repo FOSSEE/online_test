@@ -992,13 +992,13 @@ class Course(models.Model):
         return self.rejected.all()
 
     def is_enrolled(self, user):
-        return user in self.students.all()
+        return self.students.filter(id=user.id).exists()
 
     def is_creator(self, user):
         return self.creator == user
 
     def is_teacher(self, user):
-        return True if user in self.teachers.all() else False
+        return self.teachers.filter(id=user.id).exists()
 
     def is_self_enroll(self):
         return True if self.enrollment == enrollment_methods[1][0] else False
@@ -1062,7 +1062,7 @@ class Course(models.Model):
         return success
 
     def get_only_students(self):
-        teachers = list(self.teachers.all().values_list("id", flat=True))
+        teachers = list(self.teachers.values_list("id", flat=True))
         teachers.append(self.creator.id)
         students = self.students.exclude(id__in=teachers)
         return students
@@ -1181,7 +1181,7 @@ class Course(models.Model):
         return percentage
 
     def is_student(self, user):
-        return user in self.students.all()
+        return self.students.filter(id=user.id).exists()
 
     def create_zip(self, path, static_files):
         zip_file_name = string_io()
@@ -2212,15 +2212,27 @@ class AnswerPaper(models.Model):
                            'attempt_number', "course"
                            )
 
-    def get_per_question_score(self, question_id):
-        questions = self.get_questions().values_list('id', flat=True)
-        if question_id not in questions:
-            return 'NA'
-        answer = self.get_latest_answer(question_id)
-        if answer:
-            return answer.marks
-        else:
-            return 0
+    def get_per_question_score(self, question_ids):
+        que_ids = list(zip(*question_ids))[1]
+        answers = self.answers.filter(
+            question_id__in=que_ids).values("question_id", "marks")
+        que_data = {}
+        df = pd.DataFrame(answers)
+        ans_data = None
+        if not df.empty:
+            ans_data = df.groupby("question_id").tail(1)
+        for que_summary, que_id in question_ids:
+            if ans_data is not None:
+                ans = ans_data['question_id'].to_list()
+                marks = ans_data['marks'].to_list()
+                if que_id in ans:
+                    idx = ans.index(que_id)
+                    que_data[que_summary] = marks[idx]
+                else:
+                    que_data[que_summary] = 0
+            else:
+                que_data[que_summary] = 0
+        return que_data
 
     def current_question(self):
         """Returns the current active question to display."""

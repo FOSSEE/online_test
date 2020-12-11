@@ -26,6 +26,7 @@ from textwrap import dedent
 import zipfile
 import markdown
 import ruamel
+import pandas as pd
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -80,7 +81,10 @@ def is_moderator(user, group_name=MOD_GROUP_NAME):
     """Check if the user is having moderator rights"""
     try:
         group = Group.objects.get(name=group_name)
-        return user.profile.is_moderator and user in group.user_set.all()
+        return (
+                user.profile.is_moderator and
+                group.user_set.filter(id=user.id).exists()
+            )
     except Profile.DoesNotExist:
         return False
     except Group.DoesNotExist:
@@ -703,7 +707,7 @@ def show_question(request, question, paper, error_message=None,
             )
     else:
         quiz_type = 'Exercise'
-    if question in paper.questions_answered.all():
+    if paper.questions_answered.filter(id=question.id).exists():
         notification = (
             'You have already attempted this question successfully'
             if question.type == "code" else
@@ -1837,80 +1841,40 @@ def download_quiz_csv(request, course_id, quiz_id):
     if not course.is_creator(current_user) and \
             not course.is_teacher(current_user):
         raise Http404('The quiz does not belong to your course')
-    users = course.get_enrolled().order_by('first_name')
-    if not users:
-        return monitor(request, quiz_id)
-    csv_fields = []
-    attempt_number = None
     question_paper = quiz.questionpaper_set.last()
-    last_attempt_number = AnswerPaper.objects.get_attempt_numbers(
-        question_paper.id, course.id).last()
     if request.method == 'POST':
         csv_fields = request.POST.getlist('csv_fields')
-        attempt_number = request.POST.get('attempt_number',
-                                          last_attempt_number)
-    if not csv_fields:
-        csv_fields = CSV_FIELDS
-    if not attempt_number:
-        attempt_number = last_attempt_number
-
-    questions = question_paper.get_question_bank()
-    answerpapers = AnswerPaper.objects.filter(
-        question_paper=question_paper,
-        attempt_number=attempt_number, course_id=course_id)
-    if not answerpapers:
-        return monitor(request, quiz_id, course_id)
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = \
-        'attachment; filename="{0}-{1}-attempt{2}.csv"'.format(
-            course.name.replace('.', ''),  quiz.description.replace('.', ''),
-            attempt_number)
-    writer = csv.writer(response)
-    if 'questions' in csv_fields:
-        csv_fields = _expand_questions(questions, csv_fields)
-    writer.writerow(csv_fields)
-
-    csv_fields_values = {
-            'name': 'user.get_full_name().title()',
-            'roll_number': 'user.profile.roll_number',
-            'institute': 'user.profile.institute',
-            'department': 'user.profile.department',
-            'username': 'user.username',
-            'marks_obtained': 'answerpaper.marks_obtained',
-            'out_of': 'question_paper.total_marks',
-            'percentage': 'answerpaper.percent',
-            'status': 'answerpaper.status'}
-    questions_scores = {}
-    for question in questions:
-        questions_scores['Q-{0}-{1}-{2}-marks'.format(
-            question.id, question.summary, question.points)] \
-            = 'answerpaper.get_per_question_score({0})'.format(question.id)
-        answer = question.answer_set.last()
-        comment = None
-        if answer:
-            comment = answer.comment
-        else:
-            comment = ''
-        questions_scores['Q-{0}-{1}-comments'.format(
-            question.id, question.summary)] \
-            = 'answerpaper.get_answer_comment({0})'.format(question.id)
-    csv_fields_values.update(questions_scores)
-
-    users = users.exclude(id=course.creator.id).exclude(
-        id__in=course.teachers.all())
-    for user in users:
-        row = []
-        answerpaper = None
-        papers = answerpapers.filter(user=user)
-        if papers:
-            answerpaper = papers.first()
-        for field in csv_fields:
-            try:
-                row.append(eval(csv_fields_values[field]))
-            except AttributeError:
-                row.append('-')
-        writer.writerow(row)
-    return response
+        attempt_number = request.POST.get('attempt_number')
+        questions = question_paper.get_question_bank()
+        answerpapers = AnswerPaper.objects.select_related(
+            "user").select_related('question_paper').prefetch_related(
+            'answers').filter(
+            course_id=course_id, question_paper_id=question_paper.id,
+            attempt_number=attempt_number
+        ).order_by("user__first_name")
+        que_summaries = [
+            (f"{que.summary}-{que.points}-marks", que.id) for que in questions
+        ]
+        user_data = list(answerpapers.values(
+            "user__first_name", "user__last_name",
+            "user__profile__roll_number", "user__profile__institute",
+            "user__profile__department", "marks_obtained",
+            "question_paper__total_marks", "percent", "status"
+        ))
+        for idx, ap in enumerate(answerpapers):
+            que_data = ap.get_per_question_score(que_summaries)
+            user_data[idx].update(que_data)
+        df = pd.DataFrame(user_data)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = \
+            'attachment; filename="{0}-{1}-attempt-{2}.csv"'.format(
+                course.name.replace(' ', '_'),
+                quiz.description.replace(' ', '_'), attempt_number
+            )
+        output_file = df.to_csv(response, index=False)
+        return response
+    else:
+        return monitor(request, quiz_id)
 
 
 @login_required
