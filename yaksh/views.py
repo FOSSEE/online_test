@@ -2256,40 +2256,36 @@ def download_course_csv(request, course_id):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    course = Course.objects.prefetch_related("learning_module").get(
-        id=course_id)
+    course = get_object_or_404(
+        Course.objects.prefetch_related("learning_module"), id=course_id
+    )
     if not course.is_creator(user) and not course.is_teacher(user):
-        raise Http404('The question paper does not belong to your course')
-    students = course.get_only_students().annotate(
+        raise Http404('You are not allowed to view this course')
+    students = list(course.get_only_students().annotate(
         roll_number=F('profile__roll_number'),
         institute=F('profile__institute')
     ).values(
-        "id", "first_name", "last_name",
-        "email", "institute", "roll_number"
-    )
-    quizzes = course.get_quizzes()
-
+        "id", "first_name", "last_name", "email", "institute", "roll_number"
+    ))
+    que_pprs = [
+        quiz.questionpaper_set.values(
+            "id", "quiz__description", "total_marks")[0]
+        for quiz in course.get_quizzes()
+    ]
+    total_course_marks = sum([qp.get("total_marks", 0) for qp in que_pprs])
+    qp_ids = [
+        (qp.get("id"), qp.get("quiz__description"), qp.get("total_marks"))
+        for qp in que_pprs
+    ]
     for student in students:
-        total_course_marks = 0.0
         user_course_marks = 0.0
-        for quiz in quizzes:
-            quiz_best_marks = AnswerPaper.objects. \
-                get_user_best_of_attempts_marks(quiz, student["id"], course_id)
-            user_course_marks += quiz_best_marks
-            total_course_marks += quiz.questionpaper_set.values_list(
-                "total_marks", flat=True)[0]
-            student["{}".format(quiz.description)] = quiz_best_marks
-        student["total_scored"] = user_course_marks
+        AnswerPaper.objects.get_user_scores(qp_ids, student, course_id)
         student["out_of"] = total_course_marks
+    df = pd.DataFrame(students)
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(
-                                      (course.name).lower().replace('.', ''))
-    header = ['first_name', 'last_name', "roll_number", "email", "institute"]\
-        + [quiz.description for quiz in quizzes] + ['total_scored', 'out_of']
-    writer = csv.DictWriter(response, fieldnames=header, extrasaction='ignore')
-    writer.writeheader()
-    for student in students:
-        writer.writerow(student)
+                                      (course.name).lower().replace(' ', '_'))
+    output_file = df.to_csv(response, index=False)
     return response
 
 

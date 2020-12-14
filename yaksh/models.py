@@ -2134,10 +2134,37 @@ class AnswerPaperManager(models.Manager):
         best_attempt = 0.0
         papers = self.filter(question_paper__quiz_id=quiz.id,
                              course_id=course_id,
-                             user=user_id).values("marks_obtained")
-        if papers:
-            best_attempt = max([marks["marks_obtained"] for marks in papers])
+                             user=user_id).order_by("-marks_obtained").values(
+                             "marks_obtained")
+        if papers.exists():
+            best_attempt = papers[0]["marks_obtained"]
         return best_attempt
+
+    def get_user_scores(self, question_papers, user, course_id):
+        qp_ids = list(zip(*question_papers))[0]
+        papers = self.filter(
+            course_id=course_id, user_id=user.get("id"),
+            question_paper__id__in=qp_ids
+        ).values("question_paper_id", "marks_obtained")
+        df = pd.DataFrame(papers)
+        user_marks = 0
+        ap_data = None
+        if not df.empty:
+            ap_data = df.groupby("question_paper_id").tail(1)
+        for qp_id, quiz, quiz_marks in question_papers:
+            if ap_data is not None:
+                qp = ap_data['question_paper_id'].to_list()
+                marks = ap_data['marks_obtained'].to_list()
+                if qp_id in qp:
+                    idx = qp.index(qp_id)
+                    user_marks += marks[idx]
+                    user[f"{quiz}-{quiz_marks}-Marks"] = marks[idx]
+                else:
+                    user[f"{quiz}-{quiz_marks}-Marks"] = 0
+            else:
+                user[f"{quiz}-{quiz_marks}-Marks"] = 0
+        user.pop("id")
+        user["total_marks"] = user_marks
 
 
 ###############################################################################
