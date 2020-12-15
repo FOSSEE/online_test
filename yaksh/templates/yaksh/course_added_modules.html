@@ -46,6 +46,11 @@
                     <br>
                     {% with module.get_learning_units as units %}
                         {% if units %}
+                        {% if units|length > 5 %}
+                        <div class="table-responsive" style="height: 400px">
+                        {% else %}
+                        <div class="table-responsive">
+                        {% endif %}
                             <p><b><u>Lessons/Quizzes/Exercise</u></b><p>
                             <table class="table table-responsive-sm">
                                 {% for unit in units %}
@@ -136,6 +141,7 @@
                                     </tr>
                                 {% endfor %}
                             </table>
+                        </div>
                         {% else %}
                             <center>
                                 <span class="badge badge-warning">

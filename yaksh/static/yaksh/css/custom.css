@@ -15,15 +15,6 @@ body, .dropdown-menu {
     display: flex;
 }
 
-.course-detail, #result-table {
-    table-layout: fixed;
-    width: 100%;   
-}
-
-.course-detail, #result-table > th, td {
-    word-wrap: break-word;
-}
-
 #rendered_text{
 	width: 550px;
 }
@@ -73,7 +64,6 @@ body, .dropdown-menu {
 
 #sidebar .sidebar-header {
     padding: 20px;
-    background: #158CBA;
 }
 
 #sidebar ul.components {
@@ -175,14 +165,12 @@ body, .dropdown-menu {
 }
 
 ::-webkit-scrollbar {
-    // Width of vertical scroll bar
     width: 8px;
-    // Height of horizontal scroll bar
-    height: 10px;
-
+    height: 8px;
 }
+
 ::-webkit-scrollbar-thumb {
-    border-radius: 8px;
+    border-radius: 6px;
     background: #c2c9d2;
 }
 

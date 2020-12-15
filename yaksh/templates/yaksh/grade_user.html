@@ -308,16 +308,17 @@ function searchNames() {
                 </div>
               </div>
               <div class="card-body">
-                <table class="tablesorter table table-striped table-bordered table-responsive-sm" id='marks_table'>
-                  <thead>
+                <div class="table-responsive" style="height: 400px">
+                <table class="table table-dark table-responsive-sm" id='marks_table'>
+                  <thead class="thead-dark">
                     <tr>
                     <th>Questions</th>
                     <th>Type</th>
                     <th>Marks Obtained</th>
-                    <th>Regrade by question</th>
+                    <th>Regrade</th>
                     </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="list">
                     {% for question, answers in paper.get_question_answers.items %}
                           <tr>
                           <td>
@@ -336,6 +337,8 @@ function searchNames() {
                     {% endfor %}
                     </tbody>
                 </table>
+                </div>
+                <br>
                 <form name=frm id="q{{ paper.quiz.id }}_form"
                   action="{% url 'yaksh:grade_user' quiz_id user_id paper.attempt_number course_id %}"
                   method="post">
@@ -445,23 +448,23 @@ function searchNames() {
                           <div id="accordian">
                             <div class="card">
                               {% if ans.answer.correct %}
-                                <div class="card-header">
+                                <div class="card-header bg-success">
                                   <span class="badge badge-success">
                                     Correct answer:
                                   </span>
                                   <a class="card-link" data-toggle="collapse" href="#submitted_{{ans.answer.id}}">
-                                    <span class="pull-right">
+                                    <span class="pull-right text-white">
                                       Details&nbsp;<i class="fa fa-toggle-down"></i>
                                     </span>
                                   </a>
                                 </div>
                               {% else %}
-                                <div class="card-header">
+                                <div class="card-header bg-danger">
                                   <span class="badge badge-danger">
                                     Error:
                                   </span>
                                   <a class="card-link" data-toggle="collapse" href="#submitted_{{ans.answer.id}}">
-                                    <span class="pull-right">
+                                    <span class="pull-right text-white">
                                       Details&nbsp;<i class="fa fa-toggle-down"></i>
                                     </span>
                                   </a>

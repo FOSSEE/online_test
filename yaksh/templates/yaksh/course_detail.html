@@ -24,69 +24,68 @@
     <p id="error_msg"></p>
 </div>
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-3">
-            {% include "yaksh/course_detail_options.html" %}
-        </div>
-        <div class="col-md-9">
-            <div class="tab-content">
-                {% if messages %}
-                    {% for message in messages %}
-                    <div class="alert alert-dismissible alert-{{ message.tags }}">
-                        <button type="button" class="close" data-dismiss="alert">
-                            <i class="fa fa-close"></i>
-                        </button>
-                        <strong>{{ message }}</strong>
-                    </div>
-                    {% endfor %}
-                {% endif %}
-                {% if is_students %}
-                    {% include "yaksh/course_students.html" %}
-                {% elif is_mail %}
-                    {% include "yaksh/course_send_mail.html" %}
-                {% elif is_progress %}
-                    {% include "yaksh/course_progress.html" %}
-                {% elif is_modules %}
-                    {% include "yaksh/course_added_modules.html" %}
-                {% elif is_design_course %}
-                    {% include "yaksh/design_course_session.html" %}
-                {% elif is_add_teacher %}
-                    {% include "yaksh/addteacher.html" %}
-                {% elif is_teachers %}
-                    {% include "yaksh/course_teachers.html" %}
-                {% else %}
-                    <div class="jumbotron">
-                        <h1 class="display-4">Manage Course</h1>
-                        <hr class="my-4">
-                        <p>
-                            <ul>
-                                <li>
-                                    Students enrollments
-                                </li>
-                                <li>
-                                    Add and View Modules, Lessons and Quizzes
-                                </li>
-                                <li>
-                                    Send mail to the students
-                                </li>
-                                <li>
-                                    View Students course progress
-                                </li>
-                                <li>
-                                    Add and View Teachers/TAs
-                                </li>
-                            </ul>
-                        </p>
-                        <p class="lead">
-                            <a class="btn btn-primary btn-lg" href="https://yaksh.readthedocs.io/en/latest/moderator_docs/creating_course.html" role="button" target="blank">
-                                <i class="fa fa-info-circle"></i>
-                                Learn more
-                            </a>
-                        </p>
-                    </div>
-                {% endif %}
+    <div class="justify-content-center">
+        {% include "yaksh/course_detail_options.html" %}
+    </div>
+</div>
+<br><br>
+<div class="container">
+    <div class="tab-content">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-dismissible alert-{{ message.tags }}">
+                <button type="button" class="close" data-dismiss="alert">
+                    <i class="fa fa-close"></i>
+                </button>
+                <strong>{{ message }}</strong>
             </div>
-        </div>
+            {% endfor %}
+        {% endif %}
+        {% if is_students %}
+            {% include "yaksh/course_students.html" %}
+        {% elif is_mail %}
+            {% include "yaksh/course_send_mail.html" %}
+        {% elif is_progress %}
+            {% include "yaksh/course_progress.html" %}
+        {% elif is_modules %}
+            {% include "yaksh/course_added_modules.html" %}
+        {% elif is_design_course %}
+            {% include "yaksh/design_course_session.html" %}
+        {% elif is_add_teacher %}
+            {% include "yaksh/addteacher.html" %}
+        {% elif is_teachers %}
+            {% include "yaksh/course_teachers.html" %}
+        {% else %}
+            <div class="jumbotron">
+                <h1 class="display-4">Manage Course</h1>
+                <hr class="my-4">
+                <p>
+                    <ul>
+                        <li>
+                            Students enrollments
+                        </li>
+                        <li>
+                            Add and View Modules, Lessons and Quizzes
+                        </li>
+                        <li>
+                            Send mail to the students
+                        </li>
+                        <li>
+                            View Students course progress
+                        </li>
+                        <li>
+                            Add and View Teachers/TAs
+                        </li>
+                    </ul>
+                </p>
+                <p class="lead">
+                    <a class="btn btn-primary btn-lg" href="https://yaksh.readthedocs.io/en/latest/moderator_docs/creating_course.html" role="button" target="blank">
+                        <i class="fa fa-info-circle"></i>
+                        Learn more
+                    </a>
+                </p>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

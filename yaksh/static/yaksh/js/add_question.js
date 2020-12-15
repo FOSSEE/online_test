@@ -144,15 +144,6 @@ function textareaformat()
         }
    });
 
-    $('#id_file_field').on('change',function(){
-        //get the file name
-        var files = [];
-        for (var i = 0; i < $(this)[0].files.length; i++) {
-            files.push($(this)[0].files[i].name);
-        }
-        $(this).next('.custom-file-label').html(files.join(', '));
-    });
-
     $("#question_form").each(function(){
         $(this).find('textarea').addClass("form-control");
         $(this).find('input[type=number]').addClass("form-control");
