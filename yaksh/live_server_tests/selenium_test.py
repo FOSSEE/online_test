@@ -126,9 +126,16 @@ class SeleniumTest():
 
     def open_quiz(self):
         # open module link
-        self.driver.find_elements_by_partial_link_text(
-            'START')[0].click()
-        self.driver.find_element_by_link_text('START').click()
+        try:
+            self.driver.find_elements_by_partial_link_text(
+                'Start')[0].click()
+        except IndexError:
+            self.driver.find_elements_by_partial_link_text(
+                'Continue')[0].click()
+        try:
+            self.driver.find_element_by_link_text('Start').click()
+        except Exception:
+            self.driver.find_element_by_link_text('Continue').click()
         # open quiz link
         self.driver.find_element_by_link_text(self.quiz_name).click()
 
