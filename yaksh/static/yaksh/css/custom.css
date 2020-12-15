@@ -205,11 +205,9 @@ iframe {
 }
 
 .footer {
-   position: fixed;
-   z-index: 100;
-   bottom: 0;
-   width: 100%;
-   background-color: #61615F;
-   color: white;
-   text-align: center;
+  position: fixed;
+  z-index: 100;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
 }
