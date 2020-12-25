@@ -3780,7 +3780,7 @@ class TestCourseDetail(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()['user_data']
         self.assertIn("Student_First_Name Student_Last_Name", data)
-        self.assertIn("Overall Course Progress", data)
+        self.assertIn("Course completed", data)
         self.assertIn("Per Module Progress", data)
 
 

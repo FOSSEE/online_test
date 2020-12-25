@@ -2830,7 +2830,7 @@ class TOCManager(models.Manager):
         if answers.exists():
             answers = answers.values(
                 "student__first_name", "student__last_name", "student__email",
-                "student_id", "toc_id"
+                "student_id", "student__profile__roll_number", "toc_id"
                 )
             df = pd.DataFrame(answers)
             answers = df.drop_duplicates().to_dict(orient='records')
