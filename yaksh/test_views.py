@@ -5655,10 +5655,12 @@ class TestShowStatistics(TestCase):
                             "course_id": self.course.id}),
             follow=True
             )
+        question_stats = response.context['question_stats']
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/statistics_question.html')
+        self.assertIn(self.question, list(question_stats.keys()))
         self.assertSequenceEqual(
-            response.context['question_stats'][self.question], [1, 1]
+            list(question_stats.values())[0]['answered'], [1, 1]
             )
         self.assertEqual(response.context['attempts'][0], 1)
         self.assertEqual(response.context['total'], 1)
