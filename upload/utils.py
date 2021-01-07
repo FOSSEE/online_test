@@ -5,9 +5,6 @@ import json
 import yaml
 import requests
 import more_itertools
-
-import html2text
-import pypandoc
 import ruamel.yaml
 
 from django.core.exceptions import ObjectDoesNotExist
