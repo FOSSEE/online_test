@@ -55,14 +55,16 @@
                             {% for unit in module.get_learning_units %}
                                 {% get_unit_status course module unit user as status %}
                                 {% if unit.type == "quiz" %}
-                                    <a href="{% url 'yaksh:start_quiz' unit.quiz.questionpaper_set.get.id module.id course.id %}" class="list-group-item">
-                                        {% if status == "completed" %}
-                                          <i class="fa fa-check-square"></i>
-                                        {% else %}
-                                          <i class="fa fa-square-o"></i>
-                                        {% endif %}
-                                        {{ unit.quiz.description }}
-                                    </a>
+                                    {% if unit.quiz.questionpaper_set.get.id %}
+                                        <a href="{% url 'yaksh:start_quiz' unit.quiz.questionpaper_set.get.id module.id course.id %}" class="list-group-item">
+                                            {% if status == "completed" %}
+                                              <i class="fa fa-check-square"></i>
+                                            {% else %}
+                                              <i class="fa fa-square-o"></i>
+                                            {% endif %}
+                                            {{ unit.quiz.description }}
+                                        </a>
+                                    {% endif %}
                                 {% else %}
                                     <a href="{% url 'yaksh:show_lesson' unit.lesson.id module.id course.id %}" class="list-group-item">
                                         {% if status == "completed" %}
