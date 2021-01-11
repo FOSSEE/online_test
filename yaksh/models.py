@@ -321,7 +321,6 @@ class Lesson(models.Model):
         lesson_files = self.get_files()
         new_lesson = self
         new_lesson.id = None
-        new_lesson.name = "Copy of {0}".format(self.name)
         new_lesson.creator = user
         new_lesson.save()
         for _file in lesson_files:
@@ -600,7 +599,6 @@ class Quiz(models.Model):
         question_papers = self.questionpaper_set.all()
         new_quiz = self
         new_quiz.id = None
-        new_quiz.description = "Copy of {0}".format(self.description)
         new_quiz.creator = user
         new_quiz.save()
         for qp in question_papers:
@@ -846,12 +844,13 @@ class LearningModule(models.Model):
             percent = round((count / units.count()) * 100)
         return percent
 
-    def _create_module_copy(self, user, module_name):
+    def _create_module_copy(self, user, module_name=None):
         learning_units = self.learning_unit.order_by("order")
         new_module = self
         new_module.id = None
-        new_module.name = module_name
         new_module.creator = user
+        if module_name:
+            new_module.name = module_name
         new_module.save()
         for unit in learning_units:
             new_unit = unit._create_unit_copy(user)
@@ -957,8 +956,8 @@ class Course(models.Model):
         copy_course_name = "Copy Of {0}".format(self.name)
         new_course = self._create_duplicate_instance(user, copy_course_name)
         for module in learning_modules:
-            copy_module_name = "Copy of {0}".format(module.name)
-            new_module = module._create_module_copy(user, copy_module_name)
+            copy_module_name = module.name
+            new_module = module._create_module_copy(user)
             new_course.learning_module.add(new_module)
         return new_course
 

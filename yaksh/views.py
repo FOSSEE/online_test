@@ -230,6 +230,9 @@ def results_user(request):
 @email_verified
 def add_question(request, question_id=None):
     user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page !')
+
     test_case_type = None
 
     if question_id is not None:
