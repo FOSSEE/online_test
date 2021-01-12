@@ -1,3 +1,10 @@
+=== 0.30.0 (12-01-2021) ===
+
+* Add new UI skin.
+* Add feature to count number of times MCQ option has been selected.
+* Fix bug to delete and recreate fresh question papers when using god mode or user mode.
+* Add feature to show stats for number of times MCQ option has been selected.
+
 === 0.29.3 (10-12-2020) ===
 
 * Show the graphs for the lesson video statistics page.
