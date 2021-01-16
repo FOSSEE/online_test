@@ -255,7 +255,7 @@ def create_header(data, dtype):
         "type": dtype,
         "data": data
     }
-    yaml=YAML()
+    yaml=ruamel.yaml.YAML()
     yaml.default_flow_style = False
     io_obj = io.StringIO()
 

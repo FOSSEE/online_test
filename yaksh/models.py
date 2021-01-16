@@ -2940,7 +2940,7 @@ class TOCManager(models.Manager):
                         else:
                             que = Question.objects.create(**content)
                             for test_case in test_cases:
-                                test_case_type = test_case.pop('type')
+                                test_case_type = test_case.pop('test_case_type')
                                 model_class = get_model_class(test_case_type)
                                 model_class.objects.get_or_create(
                                     question=que, **test_case, type=test_case_type
