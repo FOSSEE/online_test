@@ -1380,7 +1380,7 @@ class Question(models.Model):
     # Solution for the question.
     solution = models.TextField(blank=True)
 
-    content = GenericRelation("TableOfContents")
+    content = GenericRelation("TableOfContents", related_query_name='questions')
 
     tc_code_types = {
         "python": [
@@ -2860,6 +2860,17 @@ class TOCManager(models.Manager):
                 "student_id", flat=True).distinct().count()
         return data
 
+    def get_all_tocs_as_yaml(self, course_id, lesson_id, file_path):
+        all_tocs = TableOfContents.objects.filter(
+            course_id=course_id, lesson_id=lesson_id,
+        )
+        if not all_tocs.exists():
+            return None
+        for toc in all_tocs:
+            toc.get_toc_as_yaml(file_path)
+        return file_path
+
+
     def get_question_stats(self, toc_id):
         answers = LessonQuizAnswer.objects.get_queryset().filter(
             toc_id=toc_id).order_by('id')
@@ -3008,6 +3019,39 @@ class TableOfContents(models.Model):
             content_name = self.content_object.summary
         return content_name
 
+    def get_toc_as_yaml(self, file_path):
+        data = {'content_type': self.content, 'time': self.time}
+        if self.topics.exists():
+            content = self.topics.first()
+            data.update(
+                {
+                    'name': content.name,
+                    'description': content.description,
+                }
+            )
+        elif self.questions.exists():
+            content = self.questions.first()
+            tc_data = []
+            for tc in content.get_test_cases():
+                _tc_as_dict = model_to_dict(
+                    tc, exclude=['id', 'testcase_ptr', 'question'],
+                )
+                tc_data.append(_tc_as_dict)
+            data.update(
+                {
+                    'summary': content.summary,
+                    'type': content.type,
+                    'language': content.language,
+                    'description': content.description,
+                    'points': content.points,
+                    'testcase': tc_data,
+                }
+            )
+        yaml_block = dict_to_yaml(data)
+        with open(file_path, "a") as yaml_file:
+            yaml_file.write(yaml_block)
+            return yaml_file
+
     def __str__(self):
         return f"TOC for {self.lesson.name} with {self.get_content_display()}"
 
@@ -3015,7 +3059,7 @@ class TableOfContents(models.Model):
 class Topic(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
-    content = GenericRelation(TableOfContents)
+    content = GenericRelation(TableOfContents, related_query_name='topics')
 
     def __str__(self):
         return f"{self.name}"

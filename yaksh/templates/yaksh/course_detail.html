@@ -55,6 +55,8 @@
             {% include "yaksh/addteacher.html" %}
         {% elif is_teachers %}
             {% include "yaksh/course_teachers.html" %}
+        {% elif is_upload_download_md %}
+            {% include "yaksh/upload_download_course_md.html" %}
         {% else %}
             <div class="jumbotron">
                 <h1 class="display-4">Manage Course</h1>

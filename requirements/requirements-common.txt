@@ -8,6 +8,7 @@ social-auth-app-django==3.1.0
 selenium==2.53.6
 coverage
 ruamel.yaml==0.16.10
+pyyaml==5.3.1
 markdown==2.6.9
 pygments==2.2.0
 celery==4.4.2
