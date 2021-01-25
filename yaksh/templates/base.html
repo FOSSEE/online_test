@@ -24,6 +24,8 @@
   <link rel="stylesheet" type="text/css" href="{% static 'yaksh/css/simplemde.min.css' %}">
   <link rel="stylesheet" href="{% static 'yaksh/css/toastr.min.css' %}" />
   <!-- https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css -->
+  <link rel="stylesheet" href="{% static 'yaksh/css/argon.css' %}" />
+  <link rel="stylesheet" href="{% static 'yaksh/css/argon.min.css' %}" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
 
 
@@ -46,6 +48,12 @@
   <script type="text/javascript" src="{% static 'yaksh/js/simplemde.min.js' %}">
   </script>
   <script type="text/javascript" src="{% static 'yaksh/js/toastr.min.js' %}">
+  </script>
+  <script type="text/javascript" src="{% static 'yaksh/js/js.cookie.js' %}">
+  </script>
+  <script type="text/javascript" src="{% static 'yaksh/js/argon.js' %}">
+  </script>
+  <script type="text/javascript" src="{% static 'yaksh/js/argon.min.js' %}">
   </script>
   <!-- The loading of KaTeX is deferred to speed up page rendering -->
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js" integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4" crossorigin="anonymous"></script>
@@ -99,32 +107,27 @@
   
   {% block nav %}
   {% endblock %}
-
-     <div class="base-content">
-         <div class="header">
-             <h3><center>{% block pagetitle %}{% endblock pagetitle %}</center></h3>
-         </div>
-         <h4><center>{% block subtitle %}{% endblock %}</center></h4>
-         {% block content %}
-         {% endblock %}
-     </div>
-     
-
-  {% block footer %}
+    <div class="base-content">
+       <div class="header">
+           <h3><center>{% block pagetitle %}{% endblock pagetitle %}</center></h3>
+       </div>
+       <h4><center>{% block subtitle %}{% endblock %}</center></h4>
+       {% block content %}
+       {% endblock %}
+       <br>
+    </div>
     <footer class="footer">
-          <div class="container">
-              <div class="row">
-                <div class="col">
-                  Developed by FOSSEE group, IIT Bombay
-                </div>
-                <div class="col">
-                  Contact: pythonsupport@fossee.in
-                </div>
-              </div>
-           </div>
+      <div class="container">
+        <div class="row">
+          <div class="col">
+            Developed by FOSSEE group, IIT Bombay
+          </div>
+          <div class="col">
+            Contact: pythonsupport@fossee.in
+          </div>
+        </div>
+      </div>
     </footer>
-  {% endblock %}
-
 </body>
 </html>
 

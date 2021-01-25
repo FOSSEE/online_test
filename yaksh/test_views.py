@@ -2168,7 +2168,8 @@ class TestCourses(TestCase):
         # Teacher Login
         # Given
         # Add files to a lesson
-        lesson_file = SimpleUploadedFile("file1.txt", b"Test")
+        file_content = b"Test"
+        lesson_file = SimpleUploadedFile("file1.txt", file_content)
         django_file = File(lesson_file)
         lesson_file_obj = LessonFile()
         lesson_file_obj.lesson = self.lesson
@@ -2203,18 +2204,18 @@ class TestCourses(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(courses.last().creator, self.teacher)
         self.assertEqual(courses.last().name, "Copy Of Python Course")
-        self.assertEqual(module.name, "Copy of demo module")
+        self.assertEqual(module.name, "demo module")
         self.assertEqual(module.creator, self.teacher)
         self.assertEqual(module.order, 0)
         self.assertEqual(len(units), 2)
-        self.assertEqual(cloned_lesson.name, "Copy of demo lesson")
+        self.assertEqual(cloned_lesson.name, "demo lesson")
         self.assertEqual(cloned_lesson.creator, self.teacher)
-        self.assertEqual(cloned_quiz.description, "Copy of demo quiz")
+        self.assertEqual(cloned_quiz.description, "demo quiz")
         self.assertEqual(cloned_quiz.creator, self.teacher)
         self.assertEqual(cloned_qp.__str__(),
-                         "Question Paper for Copy of demo quiz")
-        self.assertEqual(os.path.basename(expected_lesson_files[0].file.name),
-                         os.path.basename(actual_lesson_files[0].file.name))
+                         "Question Paper for demo quiz")
+        self.assertTrue(expected_lesson_files.exists())
+        self.assertEquals(expected_lesson_files[0].file.read(), file_content)
 
         for lesson_file in self.all_files:
             file_path = lesson_file.file.path
@@ -3780,7 +3781,7 @@ class TestCourseDetail(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()['user_data']
         self.assertIn("Student_First_Name Student_Last_Name", data)
-        self.assertIn("Overall Course Progress", data)
+        self.assertIn("Course completed", data)
         self.assertIn("Per Module Progress", data)
 
 
@@ -5655,10 +5656,12 @@ class TestShowStatistics(TestCase):
                             "course_id": self.course.id}),
             follow=True
             )
+        question_stats = response.context['question_stats']
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/statistics_question.html')
+        self.assertIn(self.question, list(question_stats.keys()))
         self.assertSequenceEqual(
-            response.context['question_stats'][self.question], [1, 1]
+            list(question_stats.values())[0]['answered'], [1, 1]
             )
         self.assertEqual(response.context['attempts'][0], 1)
         self.assertEqual(response.context['total'], 1)

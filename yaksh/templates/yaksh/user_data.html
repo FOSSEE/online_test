@@ -65,15 +65,15 @@
             Submission Details
           </div>
           <div class="card-body">
-            <table class="tablesorter table table-striped table-bordered table-responsive-sm" id='marks_table'>
-              <thead>
+            <table class="table table-dark table-responsive-sm" id='marks_table'>
+              <thead class="thead-dark">
                 <tr>
                 <th>Questions</th>
                 <th>Type</th>
                 <th>Marks Obtained</th>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody class="list">
                   {% for question, answers in paper.get_question_answers.items %}
                     <tr>
                       <td>{{question.summary}}</td>
@@ -83,6 +83,7 @@
                   {% endfor %}
                 </tbody>
             </table>
+            <br>
             {% for question, answers in paper.get_question_answers.items %}
               <div class="card" id="question_{{question.id}}">
                 <div class="card-header text-white bg-info">
@@ -188,23 +189,23 @@
                     <div id="accordian">
                       <div class="card">
                         {% if ans.answer.correct %}
-                          <div class="card-header">
+                          <div class="card-header bg-success">
                             <span class="badge badge-success">
                               Correct answer:
                             </span>
                             <a class="card-link" data-toggle="collapse" href="#submitted_{{ans.answer.id}}">
-                              <span class="pull-right">
+                              <span class="pull-right text-white">
                                 Details&nbsp;<i class="fa fa-toggle-down"></i>
                               </span>
                             </a>
                           </div>
                         {% else %}
-                          <div class="card-header">
+                          <div class="card-header bg-danger">
                             <span class="badge badge-danger">
                               Error:
                             </span>
                             <a class="card-link" data-toggle="collapse" href="#submitted_{{ans.answer.id}}">
-                              <span class="pull-right">
+                              <span class="pull-right text-white">
                                 Details&nbsp;<i class="fa fa-toggle-down"></i>
                               </span>
                             </a>

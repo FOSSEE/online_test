@@ -81,8 +81,8 @@
             {% else %}
                 <div class="card">
                     <div class="card-header">
-                        {{question.summary}}
-                        <div>
+                        <b>{{question.summary}}</b>
+                        <div style="font-size: 20px">
                         {% if question.language == "other" %}
                           <small class="text text-muted"><strong>Topic:</strong> <span class="badge badge-primary">{{question.topic}}</small></span>
                         {% else %}
@@ -132,15 +132,21 @@
                             {{tc.options}}
                             {% if per_tc_ans %}
                                 {% get_tc_percent tc.id per_tc_ans as percent %}
-                                <div class="progress" style="width: 30%">
-                                {% if percent %}
-                                    <div class="progress-bar bg-success" role="progressbar" aria-valuenow="{{percent}}"
-                                      aria-valuemin="0" aria-valuemax="100" style="width:{{percent|floatformat}}%">
-                                        <b style="color: white;">{{percent|floatformat}}%</b>
+                                <div class="progress-wrapper col-md-4">
+                                    <div class="progress-info">
+                                        <div class="progress-percentage">
+                                          <span>
+                                            {% if percent %} {{percent|floatformat}} {% else %} 0 {% endif %}%
+                                          </span>
+                                        </div>
                                     </div>
-                                {% else %}
-                                    <b style="color: black;">0%</b>
-                                {% endif %}
+                                    <div class="progress">
+                                        {% if percent %}
+                                            <div class="progress-bar bg-success" role="progressbar" aria-valuenow="{{percent}}"
+                                              aria-valuemin="0" aria-valuemax="100" style="width:{{percent|floatformat}}%">
+                                            </div>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             {% endif %}
                             {% elif question.type == "integer" %}
@@ -180,25 +186,36 @@
                     <br><br>
                 {% endif %}
                 {% include "yaksh/paginator.html" %}
-                <table class="table table-responsive" id="stats-table">
-                    <thead>
-                    <tr>
-                        <th>Sr No.</th>
-                        <th>Student Name&nbsp;<i class="fa fa-sort"></i></th>
-                        <th>Email&nbsp;<i class="fa fa-sort"></i></th>
-                        <th>Latest Submission&nbsp;<i class="fa fa-sort"></i></th>
-                    </tr>
-                    </thead>
-                    {% for data in objects.object_list %}
+                {% if objects.object_list|length > 10 %}
+                <div class="table-responsive" style="height: 700px">
+                {% else %}
+                <div class="table-responsive">
+                {% endif %}
+                    <table class="table table-dark table-responsive" id="stats-table">
+                        <thead class="thead-dark">
                         <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{data.student__first_name}} {{data.student__last_name}}</td>
-                            <td>{{data.student__email}}</td>
-                            {% get_answers data.toc_id data.student_id as user_answer %}
-                            <td>{{ user_answer.0 }}</td>
+                            <th>Sr No.</th>
+                            <th>Student Name&nbsp;<i class="fa fa-sort"></i></th>
+                            <th>Roll No&nbsp;<i class="fa fa-sort"></i></th>
+                            <th>Email&nbsp;<i class="fa fa-sort"></i></th>
+                            <th>Latest Submission&nbsp;<i class="fa fa-sort"></i></th>
                         </tr>
-                    {% endfor %}
-                </table>
+                        </thead>
+                        <tbody class="list">
+                        {% for data in objects.object_list %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{data.student__first_name}} {{data.student__last_name}}</td>
+                                <td>{{data.student__profile__roll_number}}</td>
+                                <td>{{data.student__email}}</td>
+                                {% get_answers data.toc_id data.student_id as user_answer %}
+                                <td>{{ user_answer.0 }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <br>
                 {% include "yaksh/paginator.html" %}
             {% endif %}
         </div>

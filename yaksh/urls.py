@@ -271,4 +271,6 @@ urlpatterns = [
          views.download_sample_toc, name='download_sample_toc'),
     path('manage/upload_marks/<int:course_id>/<int:questionpaper_id>/',
          views.upload_marks, name='upload_marks'),
+    path(r'manage/upload_download_course_md/<int:course_id>',
+        views.upload_download_course_md, name="upload_download_course_md"),
 ]

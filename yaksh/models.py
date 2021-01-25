@@ -321,7 +321,6 @@ class Lesson(models.Model):
         lesson_files = self.get_files()
         new_lesson = self
         new_lesson.id = None
-        new_lesson.name = "Copy of {0}".format(self.name)
         new_lesson.creator = user
         new_lesson.save()
         for _file in lesson_files:
@@ -600,7 +599,6 @@ class Quiz(models.Model):
         question_papers = self.questionpaper_set.all()
         new_quiz = self
         new_quiz.id = None
-        new_quiz.description = "Copy of {0}".format(self.description)
         new_quiz.creator = user
         new_quiz.save()
         for qp in question_papers:
@@ -846,12 +844,13 @@ class LearningModule(models.Model):
             percent = round((count / units.count()) * 100)
         return percent
 
-    def _create_module_copy(self, user, module_name):
+    def _create_module_copy(self, user, module_name=None):
         learning_units = self.learning_unit.order_by("order")
         new_module = self
         new_module.id = None
-        new_module.name = module_name
         new_module.creator = user
+        if module_name:
+            new_module.name = module_name
         new_module.save()
         for unit in learning_units:
             new_unit = unit._create_unit_copy(user)
@@ -957,8 +956,8 @@ class Course(models.Model):
         copy_course_name = "Copy Of {0}".format(self.name)
         new_course = self._create_duplicate_instance(user, copy_course_name)
         for module in learning_modules:
-            copy_module_name = "Copy of {0}".format(module.name)
-            new_module = module._create_module_copy(user, copy_module_name)
+            copy_module_name = module.name
+            new_module = module._create_module_copy(user)
             new_course.learning_module.add(new_module)
         return new_course
 
@@ -1381,7 +1380,7 @@ class Question(models.Model):
     # Solution for the question.
     solution = models.TextField(blank=True)
 
-    content = GenericRelation("TableOfContents")
+    content = GenericRelation("TableOfContents", related_query_name='questions')
 
     tc_code_types = {
         "python": [
@@ -1754,7 +1753,8 @@ class QuestionPaperManager(models.Manager):
 
     def create_trial_paper_to_test_quiz(self, trial_quiz, original_quiz_id):
         """Creates a trial question paper to test quiz."""
-        trial_quiz.questionpaper_set.all().delete()
+        if self.filter(quiz=trial_quiz).exists():
+            self.get(quiz=trial_quiz).delete()
         trial_questionpaper, trial_questions = \
             self._create_trial_from_questionpaper(original_quiz_id)
         trial_questionpaper.quiz = trial_quiz
@@ -1993,6 +1993,32 @@ class AnswerPaperManager(models.Manager):
             questions.append(question.id)
         return Counter(questions)
 
+    def get_per_answer_stats(self, questionpaper_id, attempt_number,
+                                   course_id, status='completed'):
+        papers = self.filter(question_paper_id=questionpaper_id,
+                             course_id=course_id,
+                             attempt_number=attempt_number, status=status)
+        questions = Question.objects.filter(
+            questions__id__in=papers,
+        ).distinct()
+
+        stats = {}
+        for question in questions:
+            answers = Answer.objects.filter(
+                answerpaper__id__in=papers, question=question.id
+            ).values('answer', 'question__id', 'answerpaper__id')
+            question_ans_count = {}
+            answerpaper_count = []
+            for ans in answers:
+                if ans.get('answerpaper__id'):
+                    if ans.get('answer') not in question_ans_count:
+                        question_ans_count[ans.get('answer')] = 1
+                    else:
+                        question_ans_count[ans.get('answer')] += 1
+                    answerpaper_count.append(ans.get('answerpaper__id'))
+            stats[question] = question_ans_count
+        return stats
+
     def get_all_questions_answered(self, questionpaper_id, attempt_number,
                                    course_id, status='completed'):
         ''' Return a dict of answered question id as key and count as value'''
@@ -2046,16 +2072,27 @@ class AnswerPaperManager(models.Manager):
                                                              course_id)
         questions = self.get_all_questions(questionpaper_id, attempt_number,
                                            course_id)
+        per_answer_stats = self.get_per_answer_stats(
+            questionpaper_id, attempt_number, course_id
+        )
         all_questions = Question.objects.filter(
                 id__in=set(questions),
                 active=True
             ).order_by('type')
         for question in all_questions:
             if question.id in questions_answered:
-                question_stats[question] = [questions_answered[question.id],
-                                            questions[question.id]]
+                question_stats[question] = {
+                        'answered': [questions_answered[question.id],
+                                            questions[question.id]],
+                        'per_answer': per_answer_stats[question],
+                    }
+
             else:
-                question_stats[question] = [0, questions[question.id]]
+                question_stats[question] = {
+                        'answered': [0, questions[question.id]],
+                        'per_answer': per_answer_stats[question],
+                    }
+
         return question_stats
 
     def _get_answerpapers_for_quiz(self, questionpaper_id, course_id,
@@ -2862,6 +2899,17 @@ class TOCManager(models.Manager):
                 "student_id", flat=True).distinct().count()
         return data
 
+    def get_all_tocs_as_yaml(self, course_id, lesson_id, file_path):
+        all_tocs = TableOfContents.objects.filter(
+            course_id=course_id, lesson_id=lesson_id,
+        )
+        if not all_tocs.exists():
+            return None
+        for toc in all_tocs:
+            toc.get_toc_as_yaml(file_path)
+        return file_path
+
+
     def get_question_stats(self, toc_id):
         answers = LessonQuizAnswer.objects.get_queryset().filter(
             toc_id=toc_id).order_by('id')
@@ -2869,7 +2917,7 @@ class TOCManager(models.Manager):
         if answers.exists():
             answers = answers.values(
                 "student__first_name", "student__last_name", "student__email",
-                "student_id", "toc_id"
+                "student_id", "student__profile__roll_number", "toc_id"
                 )
             df = pd.DataFrame(answers)
             answers = df.drop_duplicates().to_dict(orient='records')
@@ -3010,6 +3058,39 @@ class TableOfContents(models.Model):
             content_name = self.content_object.summary
         return content_name
 
+    def get_toc_as_yaml(self, file_path):
+        data = {'content_type': self.content, 'time': self.time}
+        if self.topics.exists():
+            content = self.topics.first()
+            data.update(
+                {
+                    'name': content.name,
+                    'description': content.description,
+                }
+            )
+        elif self.questions.exists():
+            content = self.questions.first()
+            tc_data = []
+            for tc in content.get_test_cases():
+                _tc_as_dict = model_to_dict(
+                    tc, exclude=['id', 'testcase_ptr', 'question'],
+                )
+                tc_data.append(_tc_as_dict)
+            data.update(
+                {
+                    'summary': content.summary,
+                    'type': content.type,
+                    'language': content.language,
+                    'description': content.description,
+                    'points': content.points,
+                    'testcase': tc_data,
+                }
+            )
+        yaml_block = dict_to_yaml(data)
+        with open(file_path, "a") as yaml_file:
+            yaml_file.write(yaml_block)
+            return yaml_file
+
     def __str__(self):
         return f"TOC for {self.lesson.name} with {self.get_content_display()}"
 
@@ -3017,7 +3098,7 @@ class TableOfContents(models.Model):
 class Topic(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
-    content = GenericRelation(TableOfContents)
+    content = GenericRelation(TableOfContents, related_query_name='topics')
 
     def __str__(self):
         return f"{self.name}"

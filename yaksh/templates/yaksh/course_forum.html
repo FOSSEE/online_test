@@ -94,8 +94,14 @@
                     <br>
                     {% include "yaksh/paginator.html" %}
                     <br>
-                    <table id="posts_table" class="tablesorter table">
-                        <thead class="thread-inverse">
+                    <div class="card">
+                    {% if posts|length > 10 %}
+                    <div class="table-responsive" style="height: 700px">
+                    {% else %}
+                    <div class="table-responsive">
+                    {% endif %}
+                    <table id="posts_table" class="table table-responsive-sm">
+                        <thead class="thread-inverse thead-light">
                             <tr>
                                 <th width="700">Posts</th>
                                 <th>Created by</th>
@@ -104,12 +110,12 @@
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="list">
                             {% for post in posts %}
                                 <tr>
                                     <td>
                                         <a href="{% url 'yaksh:post_comments' course.id post.uid %}">{{post.title}}</a>
-                                        <small class="text-muted d-block">{{ post.description|truncatewords:30 }}</small>
+                                        <small class="text-muted d-block">{{ post.description|truncatewords:10 }}</small>
                                         <small class="text-muted"><strong>Last updated: {{post.modified_at}}</strong></small>
                                     </td>
                                     <td>
@@ -138,6 +144,8 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    </div>
+                    </div>
                     <br>
                     {% include "yaksh/paginator.html" %}
                 {% else %}

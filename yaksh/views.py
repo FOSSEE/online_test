@@ -41,7 +41,7 @@ from yaksh.models import (
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
     LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
-    Topic, TableOfContents, LessonQuizAnswer, MicroManager
+    Topic, TableOfContents, LessonQuizAnswer, MicroManager, dict_to_yaml
 )
 from stats.models import TrackLesson
 from yaksh.forms import (
@@ -234,6 +234,9 @@ def results_user(request):
 @email_verified
 def add_question(request, question_id=None):
     user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page !')
+
     test_case_type = None
 
     if question_id is not None:
@@ -2581,6 +2584,23 @@ def download_sample_toc(request):
 
 @login_required
 @email_verified
+def download_toc(request, course_id, lesson_id):
+    user = request.user
+    tmp_file_path = tempfile.mkdtemp()
+    yaml_path = os.path.join(tmp_file_path, "lesson_toc.yaml")
+    TableOfContents.objects.get_all_tocs_as_yaml(course_id, lesson_id, yaml_path)
+
+    with open(yaml_path, 'r') as yml_file:
+        response = HttpResponse(yml_file.read(), content_type='text/yaml')
+        response['Content-Disposition'] = (
+            'attachment; filename="lesson_toc.yaml"'
+        )
+        return response
+
+
+
+@login_required
+@email_verified
 def duplicate_course(request, course_id):
     user = request.user
     course = Course.objects.get(id=course_id)
@@ -4104,3 +4124,25 @@ def _read_marks_csv(request, reader, course, question_paper, question_ids):
         messages.info(request,
             'Updated successfully for user: {0}, question: {1}'.format(
             username, question.summary))
+
+
+@login_required
+@email_verified
+def upload_download_course_md(request, course_id):
+    course = get_object_or_404(Course, pk=course_id)
+    if request.method == "POST":
+        from upload.views import upload_course_md
+        status, msg = upload_course_md(request)
+        if status:
+            messages.success(request, "MD File Successfully uploaded to course")
+        else:
+            messages.warning(request, "{0}".format(msg))
+        return redirect(
+            'yaksh:course_detail', course.id
+        )
+    else:
+        context = {
+            'course': course,
+            'is_upload_download_md': True,
+        }
+        return my_render_to_response(request, 'yaksh/course_detail.html', context)

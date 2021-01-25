@@ -88,14 +88,14 @@
       </div>
       <br>
       <div>
-          <table class="table table-bordered table-responsive-sm">
-            <thead>
+          <table class="table table-dark table-responsive-sm">
+            <thead class="thead-dark">
               <tr>
                 <th>Category</th>
                 <th>Question No.</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody class="list">
               {% for category, question_number in paper.get_categorized_question_indices.items %}
               <tr>
                 <td>

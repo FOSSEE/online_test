@@ -4,43 +4,37 @@
 {% block title %} Quit Quiz {% endblock %}
 
 {% block nav %} 
-<div class="container-fluid yakshnav">
-  <nav class="navbar fixed-top navbar-expand-lg yakshheading yakshnav">
-    <div class="container">
-        <a class="navbar-brand" href="{% url 'yaksh:index' %}">
-            <img src="{% static 'yaksh/images/yaksh_banner.png' %}" alt="YAKSH">
-        </a>
-    </div><!-- /.container -->
-  </nav><!-- /.navbar -->
-</div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <a class="navbar-brand" href="{% url 'yaksh:index' %}">
+        <img src="{% static 'yaksh/images/yaksh_banner.png' %}" alt="YAKSH">
+    </a>
+</nav>
 {% endblock %}
 
 {% block content %}
 <center>
 <div class="col-md-8">
     <h3>Submission Status</h3>
-    <table class="table table-bordered table-responsive-sm" >
-        <thead>
-            <tr class="text-center">
+    <table class="table table-dark table-responsive-sm" >
+        <thead class="thead-dark">
+            <tr>
                 <th> Question</th>
                 <th> Status </th>
             </tr>
         </thead>
-
+        <tbody class="list">
         {% for question in paper.questions.all %}
-            <tbody>
-                {% if question in paper.questions_answered.all %}
-                    <tr class="table-success">
-                    <td> {{ question.summary }} </td>
-                    <td> Attempted </td>
-                {% else %}
-                    <tr class="table-warning">
-                    <td> {{ question }} </td>
-                    <td> Not completed </td>
-                {% endif %}
-                </tr>
-            </tbody>
+            <tr>
+            {% if question in paper.questions_answered.all %}
+                <td> {{ question.summary }} </td>
+                <td> <span class="badge badge-success">Attempted</span> </td>
+            {% else %}
+                <td> {{ question }} </td>
+                <td> <span class="badge badge-warning">Not Attempted</span> </td>
+            {% endif %}
+            </tr>
         {% endfor %}
+        </tbody>
     </table>
 </div>
 </center>

@@ -38,40 +38,40 @@ $(document).ready(function()
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container-fluid">
   {% if quiz %}
     {% if papers %}
       <div class="card">
-          <div class="table-responsive">
-              <table id="course-detail" class="table">
-                  <tr>
-                      <td><b>Course Name:&nbsp</b></td>
-                      <td>{{course.name}}</td>
-                  </tr>
-                  <tr>
-                      <td><b>Quiz Name:&nbsp</b></td>
-                      <td>{{quiz.description}}</td>
-                  </tr>
-                  <tr>
-                      <td><b>Number of papers: &nbsp</b></td>
-                      <td>{{papers|length}}</td>
-                  </tr>
-                  <tr>
-                      <td><b>Papers Completed: &nbsp</b></td>
-                      <td>
-                          {% completed papers as completed_papers %}
-                          <b>{{completed_papers}}</b>
-                      </td>
-                  </tr>
-                  <tr>
-                      <td><b>Papers in progress: &nbsp</b></td>
-                      <td>
-                          {% inprogress papers as inprogress_papers %}
-                          <b>{{ inprogress_papers }}</b>
-                      </td>
-                  </tr>
-              </table>
-          </div>
+        <div class="table-responsive">
+            <table id="course-detail" class="table">
+                <tr>
+                    <td><b>Course Name:&nbsp</b></td>
+                    <td>{{course.name}}</td>
+                </tr>
+                <tr>
+                    <td><b>Quiz Name:&nbsp</b></td>
+                    <td>{{quiz.description}}</td>
+                </tr>
+                <tr>
+                    <td><b>Number of papers: &nbsp</b></td>
+                    <td>{{papers|length}}</td>
+                </tr>
+                <tr>
+                    <td><b>Papers Completed: &nbsp</b></td>
+                    <td>
+                        {% completed papers as completed_papers %}
+                        <b>{{completed_papers}}</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td><b>Papers in progress: &nbsp</b></td>
+                    <td>
+                        {% inprogress papers as inprogress_papers %}
+                        <b>{{ inprogress_papers }}</b>
+                    </td>
+                </tr>
+            </table>
+        </div>
       </div>
       <br>
           <br>
@@ -105,7 +105,7 @@ $(document).ready(function()
       </div>
       <hr>
       <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-4">
         <p>
         <b>
         - Download the CSV file from the button above<br />
@@ -116,38 +116,34 @@ $(document).ready(function()
         <div class="col-md-6">
         <form id="upload_users" action="{% url 'yaksh:upload_marks' course.id papers.0.question_paper.id %}" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            <div class="input-group mb-3">
-                <div class="custom-file">
-                    <input type="file" class="custom-file-input" name="csv_file" id="upload"/>
-                    <label class="custom-file-label" for="upload">Select</label>
-                </div>
-                <div class="input-group-append">
-                    <button class="btn btn-outline-primary" type="submit">
-                        <i class="fa fa-upload"></i>
-                        Upload
-                    </button>
-                </div>
+            <div class="input-group">
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" name="csv_file" id="upload"/>
+                <label class="custom-file-label" for="upload">Select</label>
             </div>
-              <script>
-                  $('#upload').on('change',function(){
-                      //get the file name
-                      var fileName = $(this).val();
-                      //replace the "Choose a file" label
-                      $(this).next('.custom-file-label').html(fileName);
-                  })
-              </script>
+            <div class="input-group-append">
+                <button class="btn btn-outline-primary" type="submit">
+                    <i class="fa fa-upload"></i>
+                    Upload
+                </button>
+            </div>
+            </div>
         </form>
         </div>
       </div>
       <br>
-      <table id="result-table" class="tablesorter table table-striped table-responsive-sm">
-          <thead>
+      <div class="card">
+        {% if latest_attempts|length > 10 %}
+        <div class="table-responsive" style="height: 800px">
+        {% else %}
+        <div class="table-responsive">
+        {% endif %}
+        <table id="result-table" class="table table-dark table-responsive-sm">
+          <thead class="thead-dark">
           <tr>
             <th> Sr No. </th>
             <th> Name&nbsp;<i class="fa fa-sort"></i> </th>
-            <th> Username&nbsp;<i class="fa fa-sort"></i> </th>
             <th> Roll No&nbsp;<i class="fa fa-sort"></i> </th>
-            <th> Institute&nbsp;<i class="fa fa-sort"></i> </th>
             <th> Marks&nbsp;<i class="fa fa-sort"></i> </th>
             <th> Attempts&nbsp;<i class="fa fa-sort"></i> </th>
             <th> Time Left&nbsp;<i class="fa fa-sort"></i> </th>
@@ -156,39 +152,42 @@ $(document).ready(function()
             <th> Special Attempt&nbsp;<i class="fa fa-sort"></i> </th>
           </tr>
           </thead>
-          <tbody>
+          <tbody class="list">
           {% for paper in latest_attempts %}
           <tr>
               <td>{{forloop.counter}}</td>
               <td> <a href="{% url 'yaksh:user_data' paper.user.id paper.question_paper.id course.id %}">
               {{ paper.user.get_full_name.title }}</a> </td>
-              <td> {{ paper.user.username }} </td>
               <td> {{ paper.user.profile.roll_number }} </td>
-              <td> {{ paper.user.profile.institute }} </td>
               <td> {{ paper.marks_obtained }} </td>
               <td> {{ paper.answers.count }} </td>
               <td id="time_left{{forloop.counter0}}"> {{ paper.time_left }} </td>
               <td> {% if paper.is_attempt_inprogress %}
-                        <span class="badge badge-secondary"> Inprogress </span>
+                        <span class="badge badge-warning"> Inprogress </span>
                     {% else %}
-                        <span class="badge badge-secondary"> Completed </span>
+                        <span class="badge badge-success"> Completed </span>
                    {% endif %}
               </td>
-              <td>
-                   <form method="post" action="{% url 'yaksh:extend_time' paper.id %}">
-                       {% csrf_token %}
-                       <div class="form-group">
-                            <label for="extra_time"> Time in mins </label>
-                            <input type="number" step="any" class="form-control" id="extra_time" name="extra_time" required>
-                       </div>
-                       <button type="submit" class="btn btn-primary">Extend Time</button>
-                   </form>
+              <td width="15%">
+                <form method="post" action="{% url 'yaksh:extend_time' paper.id %}">
+                  {% csrf_token %}
+                    <div class="input-group mb-3">
+                    <input type="number" step="any" class="form-control" id="extra_time" name="extra_time" required>
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary" type="submit" width="10">
+                        <i class="fa fa-plus"></i>
+                      </button>
+                    </div>
+                    </div>
+                </form>
               </td>
               <td>{% specail_attempt_monitor paper.user.id course.id quiz.id %}</td>
           </tr>
           {% endfor %}
           </tbody>
-      </table>
+        </table>
+        </div>
+      </div>
       <!-- CSV Modal -->
       <div class="modal fade" id="csvModal" role="dialog">
           <div class="modal-dialog">
@@ -252,5 +251,4 @@ $(document).ready(function()
   {% else %}
     <h4>No Quiz Found</h4>
   {% endif %}
-</div>
 {% endblock %}
