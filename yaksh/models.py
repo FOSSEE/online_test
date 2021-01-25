@@ -2178,6 +2178,8 @@ class AnswerPaperManager(models.Manager):
         return best_attempt
 
     def get_user_scores(self, question_papers, user, course_id):
+        if not question_papers:
+            return None
         qp_ids = list(zip(*question_papers))[0]
         papers = self.filter(
             course_id=course_id, user_id=user.get("id"),
@@ -2277,6 +2279,8 @@ class AnswerPaper(models.Model):
                            )
 
     def get_per_question_score(self, question_ids):
+        if not question_ids:
+            return None
         que_ids = list(zip(*question_ids))[1]
         answers = self.answers.filter(
             question_id__in=que_ids).values("question_id", "marks")

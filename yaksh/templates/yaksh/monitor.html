@@ -202,23 +202,9 @@ $(document).ready(function()
           <form action="{% url 'yaksh:download_quiz_csv' course.id quiz.id %}" method="post">
           {% csrf_token %}
           <div class="modal-body">
-            <b>Uncheck unwanted columns</b>
-            <br>
-              {% for field in csv_fields %}
-              <div class="form-check form-check-inline">
-                <label class="form-check-label">
-                    {% if field == 'username' or field == 'questions' %}
-                    <input class="form-check-input" name="csv_fields" type="checkbox" value="{{ field }}" checked onclick="return false"> {{ field }}
-                    {% else %}
-                    <input class="form-check-input" name="csv_fields" type="checkbox" value="{{ field }}" checked> {{ field }}
-                    {% endif %}
-                </label>
-              </div>
-              <br>
-              {% endfor %}
               <b>Select Attempt Number: Default latest attempt</b>
               <select class="form-control" name = "attempt_number">
-                  {%for attempt_number in attempt_numbers %}
+                  {% for attempt_number in attempt_numbers %}
                   {% if forloop.last %}
                   <option value="{{ attempt_number }}" selected>{{ attempt_number }} (Latest)</option>
                   {% else %}

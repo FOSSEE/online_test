@@ -4955,6 +4955,14 @@ class TestDownloadCsv(TestCase):
             total_marks=1.0, fixed_question_order=str(self.question.id)
             )
         self.question_paper.fixed_questions.add(self.question)
+        self.learning_unit = LearningUnit.objects.create(
+            order=1, type="quiz", quiz=self.quiz)
+        self.learning_module = LearningModule.objects.create(
+            order=1, name="download module", description="download module",
+            check_prerequisite=False, creator=self.user)
+        self.learning_module.learning_unit.add(self.learning_unit.id)
+        self.course.learning_module.add(self.learning_module)
+
 
         # student answerpaper
         user_answer = "def add(a, b)\n\treturn a+b"
@@ -5056,7 +5064,9 @@ class TestDownloadCsv(TestCase):
                     kwargs={'course_id': self.course.id}),
             follow=True
             )
-        file_name = "{0}.csv".format(self.course.name.lower())
+        file_name = "{0}.csv".format(
+            self.course.name.replace(" ", "_").lower()
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
                          'attachment; filename="{0}"'.format(file_name))
@@ -5089,15 +5099,16 @@ class TestDownloadCsv(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(
+        response = self.client.post(
             reverse('yaksh:download_quiz_csv',
                     kwargs={"course_id": self.course.id,
                             "quiz_id": self.quiz.id}),
+            data={"attempt_number": 1},
             follow=True
             )
-        file_name = "{0}-{1}-attempt{2}.csv".format(
-            self.course.name.replace('.', ''),
-            self.quiz.description.replace('.', ''), 1
+        file_name = "{0}-{1}-attempt-{2}.csv".format(
+            self.course.name.replace(' ', '_'),
+            self.quiz.description.replace(' ', '_'), 1
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),

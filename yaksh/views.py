@@ -103,10 +103,6 @@ def add_as_moderator(users, group_name=MOD_GROUP_NAME):
             user.profile.save()
 
 
-CSV_FIELDS = ['name', 'username', 'roll_number', 'institute', 'department',
-              'questions', 'marks_obtained', 'out_of', 'percentage', 'status']
-
-
 def get_html_text(md_text):
     """Takes markdown text and converts it to html"""
     return markdown.markdown(
@@ -1400,13 +1396,11 @@ def monitor(request, quiz_id=None, course_id=None):
                     attempt_number=last_attempt['last_attempt_num']
                 )
             )
-    csv_fields = CSV_FIELDS
     context = {
         "papers": papers,
         "quiz": quiz,
         "msg": "Quiz Results",
         "latest_attempts": latest_attempts,
-        "csv_fields": csv_fields,
         "attempt_numbers": attempt_numbers,
         "course": course
     }
@@ -1821,18 +1815,6 @@ def user_data(request, user_id, questionpaper_id=None, course_id=None):
     return my_render_to_response(request, 'yaksh/user_data.html', context)
 
 
-def _expand_questions(questions, field_list):
-    i = field_list.index('questions')
-    field_list.remove('questions')
-    for question in questions:
-        field_list.insert(
-            i, 'Q-{0}-{1}-{2}-marks'.format(question.id, question.summary,
-                                            question.points))
-        field_list.insert(
-            i+1, 'Q-{0}-{1}-comments'.format(question.id, question.summary))
-    return field_list
-
-
 @login_required
 @email_verified
 def download_quiz_csv(request, course_id, quiz_id):
@@ -1840,13 +1822,12 @@ def download_quiz_csv(request, course_id, quiz_id):
     if not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
     course = get_object_or_404(Course, id=course_id)
-    quiz = get_object_or_404(Quiz, id=quiz_id)
     if not course.is_creator(current_user) and \
             not course.is_teacher(current_user):
         raise Http404('The quiz does not belong to your course')
+    quiz = get_object_or_404(Quiz, id=quiz_id)
     question_paper = quiz.questionpaper_set.last()
     if request.method == 'POST':
-        csv_fields = request.POST.getlist('csv_fields')
         attempt_number = request.POST.get('attempt_number')
         questions = question_paper.get_question_bank()
         answerpapers = AnswerPaper.objects.select_related(
@@ -1874,10 +1855,10 @@ def download_quiz_csv(request, course_id, quiz_id):
                 course.name.replace(' ', '_'),
                 quiz.description.replace(' ', '_'), attempt_number
             )
-        output_file = df.to_csv(response, index=False)
+        df.to_csv(response, index=False)
         return response
     else:
-        return monitor(request, quiz_id)
+        return monitor(request, quiz_id, course_id)
 
 
 @login_required
