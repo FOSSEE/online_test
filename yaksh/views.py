@@ -3217,7 +3217,7 @@ def course_status(request, course_id):
 
     stud_details = [(student, course.get_grade(student),
                      course.get_completion_percent(student),
-                     course.get_current_unit(student))
+                     course.get_current_unit(student.id))
                     for student in students.object_list]
     context = {
         'course': course, 'objects': students, 'is_progress': True,
@@ -3400,19 +3400,22 @@ def download_course_progress(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
-    students = course.students.order_by("-id")
-    stud_details = [(student.get_full_name(), course.get_grade(student),
-                     course.get_completion_percent(student),
-                     course.get_current_unit(student))
-                     for student in students]
+    students = course.students.order_by("-id").values_list("id")
+    stud_details = list(CourseStatus.objects.filter(
+        course_id=course_id, user_id__in=students
+    ).values(
+        "user_id", "user__first_name", "user__last_name",
+        "grade", "percent_completed"
+    ))
+    for student in stud_details:
+        student["current_unit"] = course.get_current_unit(
+            student.pop("user_id")
+        )
+    df = pd.DataFrame(stud_details)
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(
                                       (course.name).lower().replace(' ', '_'))
-    header = ['Name', 'Grade', 'Completion Percent', 'Current Unit']
-    writer = csv.writer(response)
-    writer.writerow(header)
-    for student in stud_details:
-        writer.writerow(student)
+    df.to_csv(response, index=False)
     return response
 
 

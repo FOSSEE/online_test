@@ -1159,7 +1159,7 @@ class Course(models.Model):
         return grade
 
     def get_current_unit(self, user):
-        course_status = CourseStatus.objects.filter(course=self, user=user)
+        course_status = CourseStatus.objects.filter(course=self, user_id=user)
         if course_status.exists():
             return course_status.first().current_unit
 
