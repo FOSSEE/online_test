@@ -214,7 +214,7 @@ def get_lesson_views(course_id, lesson_id):
 
 
 @register.simple_tag
-def get_dict_value(dictionary, key):
-    return dictionary.get(key, None)
+def get_percent_value(dictionary, key, total):
+    return round((dictionary.get(str(key), 0)/total)*100)
     
 

@@ -5671,11 +5671,9 @@ class TestShowStatistics(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/statistics_question.html')
         self.assertIn(self.question, list(question_stats.keys()))
-        self.assertSequenceEqual(
-            list(question_stats.values())[0]['answered'], [1, 1]
-            )
-        self.assertEqual(response.context['attempts'][0], 1)
-        self.assertEqual(response.context['total'], 1)
+        q_data = list(question_stats.values())[0]
+        self.assertSequenceEqual(q_data[0:2], [1, 1])
+        self.assertEqual(100, q_data[2])
 
 
 class TestQuestionPaper(TestCase):

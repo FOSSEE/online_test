@@ -1326,10 +1326,10 @@ def show_statistics(request, questionpaper_id, attempt_number=None,
     attempt_numbers = AnswerPaper.objects.get_attempt_numbers(
         questionpaper_id, course_id)
     quiz = get_object_or_404(QuestionPaper, pk=questionpaper_id).quiz
+    context = {'quiz': quiz, 'attempts': attempt_numbers,
+               'questionpaper_id': questionpaper_id,
+               'course_id': course_id}
     if attempt_number is None:
-        context = {'quiz': quiz, 'attempts': attempt_numbers,
-                   'questionpaper_id': questionpaper_id,
-                   'course_id': course_id}
         return my_render_to_response(
             request, 'yaksh/statistics_question.html', context
         )
@@ -1338,7 +1338,10 @@ def show_statistics(request, questionpaper_id, attempt_number=None,
                                                   course_id)
     if not AnswerPaper.objects.has_attempt(questionpaper_id, attempt_number,
                                            course_id):
-        return my_redirect('/exam/manage/')
+        messages.warning(request, "No answerpapers found")
+        return my_render_to_response(
+            request, 'yaksh/statistics_question.html', context
+        )
     question_stats = AnswerPaper.objects.get_question_statistics(
         questionpaper_id, attempt_number, course_id
     )

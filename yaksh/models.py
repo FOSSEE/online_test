@@ -2063,36 +2063,45 @@ class AnswerPaperManager(models.Manager):
     def get_question_statistics(self, questionpaper_id, attempt_number,
                                 course_id, status='completed'):
         ''' Return dict with question object as key and list as value
-            The list contains two value, first the number of times a question
-            was answered correctly, and second the number of times a question
-            appeared in a quiz'''
+            The list contains four values, first total attempts, second correct
+            attempts, third correct percentage, fourth per test case answers
+            a question
+        '''
         question_stats = {}
-        questions_answered = self.get_all_questions_answered(questionpaper_id,
-                                                             attempt_number,
-                                                             course_id)
-        questions = self.get_all_questions(questionpaper_id, attempt_number,
-                                           course_id)
-        per_answer_stats = self.get_per_answer_stats(
-            questionpaper_id, attempt_number, course_id
+        qp = QuestionPaper.objects.get(id=questionpaper_id)
+        all_questions = qp.get_question_bank()
+        que_ids = [que.id for que in all_questions]
+        papers = self.filter(
+            question_paper_id=questionpaper_id, course_id=course_id,
+            attempt_number=attempt_number
+        ).values_list("id", flat=True)
+        answers = Answer.objects.filter(
+            answerpaper__id__in=papers, question_id__in=que_ids
+        ).order_by("id").values(
+            "answerpaper__id", "question_id", "correct", "answer"
         )
-        all_questions = Question.objects.filter(
-                id__in=set(questions),
-                active=True
-            ).order_by('type')
-        for question in all_questions:
-            if question.id in questions_answered:
-                question_stats[question] = {
-                        'answered': [questions_answered[question.id],
-                                            questions[question.id]],
-                        'per_answer': per_answer_stats[question],
-                    }
-
-            else:
-                question_stats[question] = {
-                        'answered': [0, questions[question.id]],
-                        'per_answer': per_answer_stats[question],
-                    }
-
+        def _get_per_tc_data(answers, q_type):
+            tc = []
+            for answer in answers["answer"]:
+                ans = literal_eval(answer) if answer else None
+                tc.extend(ans) if q_type == "mcc" else tc.append(str(ans))
+            return dict(Counter(tc))
+        df = pd.DataFrame(answers)
+        if not df.empty:
+            for question in all_questions:
+                que = df[df["question_id"]==question.id].groupby(
+                        "answerpaper__id").tail(1)
+                if not que.empty:
+                    total_attempts = que.shape[0]
+                    correct_attempts = que[que["correct"]==True].shape[0]
+                    per_tc_ans = {}
+                    if question.type in ["mcq", "mcc"]:
+                        per_tc_ans = _get_per_tc_data(que, question.type)
+                    question_stats[question] = (
+                        total_attempts, correct_attempts,
+                        round((correct_attempts/total_attempts)*100),
+                        per_tc_ans
+                    )
         return question_stats
 
     def _get_answerpapers_for_quiz(self, questionpaper_id, course_id,
