@@ -1953,6 +1953,12 @@ class QuestionPaper(models.Model):
                     list(self.random_questions.all())
         return len(questions) > 0
 
+    def get_questions_count(self):
+        que_count = self.fixed_questions.count()
+        for r_set in self.random_questions.all():
+            que_count += r_set.num_questions
+        return que_count
+
     def __str__(self):
         return "Question Paper for " + self.quiz.description
 
@@ -2214,6 +2220,17 @@ class AnswerPaperManager(models.Manager):
         user.pop("id")
         user["total_marks"] = user_marks
 
+    def get_questions_attempted(self, answerpaper_ids):
+        answers = Answer.objects.filter(
+            answerpaper__id__in=answerpaper_ids
+        ).values("question_id", "answerpaper__id")
+        df = pd.DataFrame(answers)
+        answerpapers = df.groupby("answerpaper__id")
+        question_attempted = {}
+        for ap in answerpapers:
+            question_attempted[ap[0]] = len(ap[1]["question_id"].unique())
+        return question_attempted
+
 
 ###############################################################################
 class AnswerPaper(models.Model):
@@ -2472,7 +2489,7 @@ class AnswerPaper(models.Model):
         """
         q_a = {}
         for question in self.questions.all():
-            answers = question.answer_set.filter(answerpaper=self)
+            answers = question.answer_set.filter(answerpaper=self).distinct()
             if not answers.exists():
                 q_a[question] = [None, 0.0]
                 continue

@@ -614,10 +614,7 @@ class TestMonitor(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/monitor.html")
-        self.assertEqual(response.context['msg'], "Quiz Results")
         self.assertEqual(response.context['papers'][0], self.answerpaper)
-        self.assertEqual(response.context['latest_attempts'][0],
-                         self.answerpaper)
 
     def test_get_quiz_user_data(self):
         """

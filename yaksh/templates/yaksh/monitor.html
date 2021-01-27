@@ -39,9 +39,20 @@ $(document).ready(function()
 
 {% block content %}
 <div class="container-fluid">
+  {% if messages %}
+      {% for message in messages %}
+      <div class="alert alert-dismissible alert-{{ message.tags }}">
+          <button type="button" class="close" data-dismiss="alert">
+              <i class="fa fa-close"></i>
+          </button>
+          <strong>{{ message }}</strong>
+      </div>
+      {% endfor %}
+  {% endif %}
   {% if quiz %}
     {% if papers %}
-      <div class="card">
+    <div class="row">
+      <div class="card col">
         <div class="table-responsive">
             <table id="course-detail" class="table">
                 <tr>
@@ -52,40 +63,32 @@ $(document).ready(function()
                     <td><b>Quiz Name:&nbsp</b></td>
                     <td>{{quiz.description}}</td>
                 </tr>
-                <tr>
-                    <td><b>Number of papers: &nbsp</b></td>
-                    <td>{{papers|length}}</td>
-                </tr>
-                <tr>
-                    <td><b>Papers Completed: &nbsp</b></td>
-                    <td>
-                        {% completed papers as completed_papers %}
-                        <b>{{completed_papers}}</b>
-                    </td>
-                </tr>
-                <tr>
-                    <td><b>Papers in progress: &nbsp</b></td>
-                    <td>
-                        {% inprogress papers as inprogress_papers %}
-                        <b>{{ inprogress_papers }}</b>
-                    </td>
-                </tr>
             </table>
         </div>
       </div>
-      <br>
-          <br>
-          {% if messages %}
-              {% for message in messages %}
-              <div class="alert alert-dismissible alert-{{ message.tags }}">
-                  <button type="button" class="close" data-dismiss="alert">
-                      <i class="fa fa-close"></i>
-                  </button>
-                  <strong>{{ message }}</strong>
-              </div>
-              {% endfor %}
-          {% endif %}
-          <br>
+      <div class="card col">
+        <div class="table-responsive">
+          <table id="course-detail" class="table">
+              <tr>
+                  <td><b>Number of papers: &nbsp</b></td>
+                  <td>{{total_papers}}</td>
+              </tr>
+              <tr>
+                  <td><b>Papers Completed: &nbsp</b></td>
+                  <td>
+                      <b>{{completed_papers}}</b>
+                  </td>
+              </tr>
+              <tr>
+                  <td><b>Papers in progress: &nbsp</b></td>
+                  <td>
+                      <b>{{ inprogress_papers }}</b>
+                  </td>
+              </tr>
+          </table>
+        </div>
+      </div>
+    </div>
       <div class="row">
         <div class="col-md-4">
           <button type="button" class="btn btn-info" data-toggle="modal" data-target="#csvModal">
@@ -133,7 +136,7 @@ $(document).ready(function()
       </div>
       <br>
       <div class="card">
-        {% if latest_attempts|length > 10 %}
+        {% if total_papers > 10 %}
         <div class="table-responsive" style="height: 800px">
         {% else %}
         <div class="table-responsive">
@@ -145,7 +148,7 @@ $(document).ready(function()
             <th> Name&nbsp;<i class="fa fa-sort"></i> </th>
             <th> Roll No&nbsp;<i class="fa fa-sort"></i> </th>
             <th> Marks&nbsp;<i class="fa fa-sort"></i> </th>
-            <th> Attempts&nbsp;<i class="fa fa-sort"></i> </th>
+            <th> Questions Attempted&nbsp;<i class="fa fa-sort"></i> </th>
             <th> Time Left&nbsp;<i class="fa fa-sort"></i> </th>
             <th> Status&nbsp;<i class="fa fa-sort"></i> </th>
             <th> Extend time&nbsp;<i class="fa fa-sort"></i> </th>
@@ -153,14 +156,19 @@ $(document).ready(function()
           </tr>
           </thead>
           <tbody class="list">
-          {% for paper in latest_attempts %}
+          {% for paper in papers %}
           <tr>
               <td>{{forloop.counter}}</td>
-              <td> <a href="{% url 'yaksh:user_data' paper.user.id paper.question_paper.id course.id %}">
-              {{ paper.user.get_full_name.title }}</a> </td>
-              <td> {{ paper.user.profile.roll_number }} </td>
+              {% with paper.user as student %}
+              <td> <a href="{% url 'yaksh:user_data' paper.user_id paper.question_paper_id course.id %}">
+              {{ student.get_full_name.title }}</a> </td>
+              <td> {{ student.profile.roll_number }} </td>
+              {% endwith %}
               <td> {{ paper.marks_obtained }} </td>
-              <td> {{ paper.answers.count }} </td>
+              <td>
+                {% get_dict_value questions_attempted paper.id as que_attempt %}
+                {{que_attempt}} out of {{questions_count}}
+              </td>
               <td id="time_left{{forloop.counter0}}"> {{ paper.time_left }} </td>
               <td> {% if paper.is_attempt_inprogress %}
                         <span class="badge badge-warning"> Inprogress </span>
@@ -229,7 +237,7 @@ $(document).ready(function()
       <div class="col-md-12">
         <div class="alert alert-warning">
           <center>
-            <h4>No Users Found for {{ quiz.description }}</h4>
+            <p>No Users Found for {{ quiz.description }}</p>
           </center>
         </div>
       </div>

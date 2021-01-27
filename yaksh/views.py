@@ -1363,49 +1363,42 @@ def monitor(request, quiz_id=None, course_id=None):
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
-    # quiz_id is not None.
-    try:
-        quiz = get_object_or_404(Quiz, id=quiz_id)
-        course = get_object_or_404(Course, id=course_id)
-        if not course.is_creator(user) and not course.is_teacher(user):
-            raise Http404('This course does not belong to you')
-        q_paper = QuestionPaper.objects.filter(quiz__is_trial=False,
-                                               quiz_id=quiz_id).distinct()
-    except (QuestionPaper.DoesNotExist, Course.DoesNotExist):
-        papers = []
-        q_paper = None
-        latest_attempts = []
-        attempt_numbers = []
+    course = get_object_or_404(Course, id=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    q_paper = QuestionPaper.objects.filter(quiz__is_trial=False,
+                                           quiz_id=quiz_id).distinct().last()
+    attempt_numbers = AnswerPaper.objects.get_attempt_numbers(
+        q_paper.id, course.id
+    )
+    latest_attempt_num = max(list(attempt_numbers)) if attempt_numbers else 0
+    questions_count = 0
+    questions_attempted = {}
+    completed_papers = 0
+    inprogress_papers = 0
+    papers = AnswerPaper.objects.filter(
+        question_paper_id=q_paper.id,
+        course_id=course_id, attempt_number=latest_attempt_num
+        ).order_by('user__first_name')
+    if not papers.exists():
+        messages.warning(request, "No AnswerPapers found")
     else:
-        if q_paper:
-            attempt_numbers = AnswerPaper.objects.get_attempt_numbers(
-                q_paper.last().id, course.id)
-        else:
-            attempt_numbers = []
-        latest_attempts = []
-        papers = AnswerPaper.objects.filter(
-            question_paper_id=q_paper.first().id,
-            course_id=course_id).order_by(
-                'user__profile__roll_number'
+        questions_count = q_paper.get_questions_count()
+        questions_attempted = AnswerPaper.objects.get_questions_attempted(
+            papers.values_list("id", flat=True)
         )
-        users = papers.values_list('user').distinct()
-        for auser in users:
-            last_attempt = papers.filter(user__in=auser).aggregate(
-                last_attempt_num=Max('attempt_number')
-            )
-            latest_attempts.append(
-                papers.get(
-                    user__in=auser,
-                    attempt_number=last_attempt['last_attempt_num']
-                )
-            )
+        completed_papers = papers.filter(status="completed").count()
+        inprogress_papers = papers.filter(status="inprogress").count()
     context = {
-        "papers": papers,
-        "quiz": quiz,
-        "msg": "Quiz Results",
-        "latest_attempts": latest_attempts,
+        "papers": papers, "quiz": quiz,
+        "inprogress_papers": inprogress_papers,
         "attempt_numbers": attempt_numbers,
-        "course": course
+        "course": course, "total_papers": papers.count(),
+        "completed_papers": completed_papers,
+        "questions_attempted": questions_attempted,
+        "questions_count": questions_count
     }
     return my_render_to_response(request, 'yaksh/monitor.html', context)
 

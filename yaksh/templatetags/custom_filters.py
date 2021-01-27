@@ -218,3 +218,6 @@ def get_percent_value(dictionary, key, total):
     return round((dictionary.get(str(key), 0)/total)*100)
     
 
+@register.simple_tag
+def get_dict_value(dictionary, key):
+    return dictionary.get(key, 0)
