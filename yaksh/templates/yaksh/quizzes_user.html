@@ -67,7 +67,7 @@
                             </div>
                             <div class="col-md-2">
                                 {% if user in course.data.requests.all %}
-                                    <span class="badge badge-warning badge-pill">
+                                    <span class="badge badge-primary badge-pill">
                                         Request Pending
                                     </span>
                                 {% elif user in course.data.rejected.all %}
@@ -94,7 +94,7 @@
                                             {% endif %}
                                         {% else %}
                                             <span class="badge badge-danger badge-pill">
-                                                Enrollment Closed
+                                                No Enrollments allowed
                                             </span>
                                         {% endif %}
                                     {% else %}

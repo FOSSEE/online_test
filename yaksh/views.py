@@ -681,8 +681,9 @@ def show_question(request, question, paper, error_message=None,
         delay_time = paper.time_left_on_question(question)
 
     if previous_question and quiz.is_exercise:
-        if (delay_time <= 0 or previous_question in
-                paper.questions_answered.all()):
+        is_prev_que_answered = paper.questions_answered.filter(
+            id=previous_question.id).exists()
+        if (delay_time <= 0 or is_prev_que_answered):
             can_skip = True
         question = previous_question
     if not question:
@@ -798,6 +799,14 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
         course_id=course_id
     )
     current_question = get_object_or_404(Question, pk=q_id)
+    def is_valid_answer(answer):
+        status = True
+        if ((current_question.type == "mcc" or
+                current_question.type == "arrange") and not answer):
+            status = False
+        elif answer is None or not str(answer):
+            status = False
+        return status
 
     if request.method == 'POST':
         # Add the answer submitted, regardless of it being correct or not.
@@ -877,7 +886,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                                      previous_question=current_question)
         else:
             user_answer = request.POST.get('answer')
-        if not str(user_answer):
+        if not is_valid_answer(user_answer):
             msg = "Please submit a valid answer."
             return show_question(
                 request, current_question, paper, notification=msg,

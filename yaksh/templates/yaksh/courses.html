@@ -213,13 +213,15 @@
                                         {{course.name}}  
                                     </div>
                                     <div class="col-md-3">
-                                        <span class="badge badge-pill badge-info">
-                                            {% if user.id != course.creator.id %}
+                                        {% if user.id != course.creator.id %}
+                                            <span class="badge badge-pill badge-warning">
                                                 Allotted Course
-                                            {% else %}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-pill badge-primary">
                                                 Created Course
-                                            {% endif %}
-                                        </span>
+                                            </span>
+                                        {% endif %}
                                     </div>
                                     <div class="col-md-2">
                                         {% if course.active %}
