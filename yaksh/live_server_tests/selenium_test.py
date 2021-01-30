@@ -5,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 import multiprocessing
 import argparse
+import os
 
 
 class ElementDisplay(object):
@@ -28,7 +29,7 @@ class SeleniumTest():
     def __init__(self, url, quiz_name, module_name, course_name):
         self.driver = webdriver.Firefox()
         self.driver.set_window_position(0, 0)
-        self.driver.set_window_size(1024, 768)
+        self.driver.set_window_size(1024, 1920)
         self.quiz_name = quiz_name
         self.module_name = module_name
         self.course_name = course_name
@@ -45,7 +46,7 @@ class SeleniumTest():
             self.logout()
             self.driver.close()
         except Exception as e:
-            self.driver.close()
+            # self.driver.close()
             msg = ("An Error occurred while running the Selenium load"
                    " test on Yaksh!\n"
                    "Error:\n{0}".format(e))
@@ -74,7 +75,7 @@ class SeleniumTest():
             submit_answer_elem.click()
             WebDriverWait(self.driver, 90).until(ElementDisplay(
                 (By.XPATH, "//*[@id='ontop']")))
-            self.driver.execute_script("scrollBy(0,-1000);")
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
     def test_c_question(self, question_label):
         # Incorrect Answer
@@ -124,6 +125,18 @@ class SeleniumTest():
         answer = '\"#!/bin/bash\\necho Hello, World!\"'
         self.submit_answer(question_label, answer, loop_count)
 
+    def test_upload_question(self, question_label):
+        self.driver.implicitly_wait(2)
+        for _ in range(0, 10):
+            self.driver.find_element_by_link_text(question_label).click()
+            self.driver.find_element_by_id("assignment").send_keys(
+                os.sep.join((os.getcwd(), "new.txt"))
+            )
+            self.driver.find_element_by_id("check").click()
+            WebDriverWait(self.driver, 90).until(ElementDisplay(
+                (By.XPATH, "//*[@id='ontop']")))
+            self.driver.execute_script("scrollBy(0,-1000);")
+
     def open_quiz(self):
         # open module link
         try:
@@ -133,9 +146,13 @@ class SeleniumTest():
             self.driver.find_elements_by_partial_link_text(
                 'Continue')[0].click()
         try:
-            self.driver.find_element_by_link_text('Start').click()
+            self.driver.find_elements_by_partial_link_text(
+                'Start')[0].click()
+            # self.driver.find_element_by_link_text('Start').click()
         except Exception:
-            self.driver.find_element_by_link_text('Continue').click()
+            self.driver.find_elements_by_partial_link_text(
+                'Start')[0].click()
+            # self.driver.find_element_by_link_text('Continue').click()
         # open quiz link
         self.driver.find_element_by_link_text(self.quiz_name).click()
 
@@ -144,10 +161,11 @@ class SeleniumTest():
             EC.presence_of_element_located((By.NAME, "start"))
         )
         start_exam_elem.click()
+        self.test_upload_question(question_label=7)
 
-        self.test_c_question(question_label=6)
-        self.test_python_question(question_label=4)
-        self.test_bash_question(question_label=10)
+        # self.test_c_question(question_label=6)
+        # self.test_python_question(question_label=4)
+        # self.test_bash_question(question_label=10)
 
     def quit_quiz(self):
         quit_link_elem = WebDriverWait(self.driver, 5).until(

@@ -276,15 +276,7 @@ question_type = "{{ question.type }}";
           {% if question.type == "upload" %}
             <p>Upload assignment file for the said question<p>
             <input type=file id="assignment" name="assignment" multiple="">
-            {% if assignment_files %}
-                <ul class="list-group">
-                {% for as_file in assignment_files %}
-                    <li class="list-group-item">
-                      <a href="{{as_file.assignmentFile.url}}" target="_blank">{{ as_file.assignmentFile.name|file_title }}</a>
-                    </li>
-                {% endfor %}
-                </ul>
-            {% endif %}
+            
           {% endif %}
 
           <!-- Arrange type question -->
