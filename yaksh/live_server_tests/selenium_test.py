@@ -75,7 +75,7 @@ class SeleniumTest():
             submit_answer_elem.click()
             WebDriverWait(self.driver, 90).until(ElementDisplay(
                 (By.XPATH, "//*[@id='ontop']")))
-            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            self.driver.execute_script("scrollBy(0, -1000);")
 
     def test_c_question(self, question_label):
         # Incorrect Answer
@@ -130,12 +130,12 @@ class SeleniumTest():
         for _ in range(0, 10):
             self.driver.find_element_by_link_text(question_label).click()
             self.driver.find_element_by_id("assignment").send_keys(
-                os.sep.join((os.getcwd(), "new.txt"))
+                os.sep.join((os.getcwd(), "new.pdf"))
             )
             self.driver.find_element_by_id("check").click()
             WebDriverWait(self.driver, 90).until(ElementDisplay(
                 (By.XPATH, "//*[@id='ontop']")))
-            self.driver.execute_script("scrollBy(0,-1000);")
+            self.driver.execute_script("scrollBy(0, -1000);")
 
     def open_quiz(self):
         # open module link
