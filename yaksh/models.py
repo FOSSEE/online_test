@@ -1985,58 +1985,6 @@ class QuestionSet(models.Model):
 
 ###############################################################################
 class AnswerPaperManager(models.Manager):
-    def get_all_questions(self, questionpaper_id, attempt_number, course_id,
-                          status='completed'):
-        ''' Return a dict of question id as key and count as value'''
-        papers = self.filter(question_paper_id=questionpaper_id,
-                             course_id=course_id,
-                             attempt_number=attempt_number, status=status)
-        all_questions = list()
-        questions = list()
-        for paper in papers:
-            all_questions += paper.get_questions()
-        for question in all_questions:
-            questions.append(question.id)
-        return Counter(questions)
-
-    def get_per_answer_stats(self, questionpaper_id, attempt_number,
-                                   course_id, status='completed'):
-        papers = self.filter(question_paper_id=questionpaper_id,
-                             course_id=course_id,
-                             attempt_number=attempt_number, status=status)
-        questions = Question.objects.filter(
-            questions__id__in=papers,
-        ).distinct()
-
-        stats = {}
-        for question in questions:
-            answers = Answer.objects.filter(
-                answerpaper__id__in=papers, question=question.id
-            ).values('answer', 'question__id', 'answerpaper__id')
-            question_ans_count = {}
-            answerpaper_count = []
-            for ans in answers:
-                if ans.get('answerpaper__id'):
-                    if ans.get('answer') not in question_ans_count:
-                        question_ans_count[ans.get('answer')] = 1
-                    else:
-                        question_ans_count[ans.get('answer')] += 1
-                    answerpaper_count.append(ans.get('answerpaper__id'))
-            stats[question] = question_ans_count
-        return stats
-
-    def get_all_questions_answered(self, questionpaper_id, attempt_number,
-                                   course_id, status='completed'):
-        ''' Return a dict of answered question id as key and count as value'''
-        papers = self.filter(question_paper_id=questionpaper_id,
-                             course_id=course_id,
-                             attempt_number=attempt_number, status=status)
-        questions_answered = list()
-        for paper in papers:
-            for question in filter(None, paper.get_questions_answered()):
-                if paper.is_answer_correct(question):
-                    questions_answered.append(question.id)
-        return Counter(questions_answered)
 
     def get_attempt_numbers(self, questionpaper_id, course_id,
                             status='completed'):

@@ -387,7 +387,7 @@ class QuestionFilterForm(forms.Form):
 class SearchFilterForm(forms.Form):
     search_tags = forms.CharField(
         label='Search Tags',
-        widget=forms.TextInput(attrs={'placeholder': 'Search',
+        widget=forms.TextInput(attrs={'placeholder': 'Search by course name',
                                       'class': form_input_class, }),
         required=False
         )
