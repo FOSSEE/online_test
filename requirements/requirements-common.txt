@@ -20,3 +20,4 @@ djangorestframework==3.11.0
 django-cors-headers==3.1.0
 Pillow
 pandas
+more-itertools==8.4.0

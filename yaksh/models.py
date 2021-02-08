@@ -1067,7 +1067,7 @@ class Course(models.Model):
         return students
 
     def get_learning_modules(self):
-        return self.learning_module.order_by("order")
+        return self.learning_module.filter(is_trial=False).order_by("order")
 
     def get_learning_module(self, quiz):
         modules = self.get_learning_modules()
