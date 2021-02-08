@@ -991,13 +991,13 @@ class Course(models.Model):
         return self.rejected.all()
 
     def is_enrolled(self, user):
-        return user in self.students.all()
+        return self.students.filter(id=user.id).exists()
 
     def is_creator(self, user):
         return self.creator == user
 
     def is_teacher(self, user):
-        return True if user in self.teachers.all() else False
+        return self.teachers.filter(id=user.id).exists()
 
     def is_self_enroll(self):
         return True if self.enrollment == enrollment_methods[1][0] else False
@@ -1061,7 +1061,7 @@ class Course(models.Model):
         return success
 
     def get_only_students(self):
-        teachers = list(self.teachers.all().values_list("id", flat=True))
+        teachers = list(self.teachers.values_list("id", flat=True))
         teachers.append(self.creator.id)
         students = self.students.exclude(id__in=teachers)
         return students
@@ -1159,7 +1159,7 @@ class Course(models.Model):
         return grade
 
     def get_current_unit(self, user):
-        course_status = CourseStatus.objects.filter(course=self, user=user)
+        course_status = CourseStatus.objects.filter(course=self, user_id=user)
         if course_status.exists():
             return course_status.first().current_unit
 
@@ -1180,7 +1180,7 @@ class Course(models.Model):
         return percentage
 
     def is_student(self, user):
-        return user in self.students.all()
+        return self.students.filter(id=user.id).exists()
 
     def create_zip(self, path, static_files):
         zip_file_name = string_io()
@@ -1953,6 +1953,12 @@ class QuestionPaper(models.Model):
                     list(self.random_questions.all())
         return len(questions) > 0
 
+    def get_questions_count(self):
+        que_count = self.fixed_questions.count()
+        for r_set in self.random_questions.all():
+            que_count += r_set.num_questions
+        return que_count
+
     def __str__(self):
         return "Question Paper for " + self.quiz.description
 
@@ -1979,58 +1985,6 @@ class QuestionSet(models.Model):
 
 ###############################################################################
 class AnswerPaperManager(models.Manager):
-    def get_all_questions(self, questionpaper_id, attempt_number, course_id,
-                          status='completed'):
-        ''' Return a dict of question id as key and count as value'''
-        papers = self.filter(question_paper_id=questionpaper_id,
-                             course_id=course_id,
-                             attempt_number=attempt_number, status=status)
-        all_questions = list()
-        questions = list()
-        for paper in papers:
-            all_questions += paper.get_questions()
-        for question in all_questions:
-            questions.append(question.id)
-        return Counter(questions)
-
-    def get_per_answer_stats(self, questionpaper_id, attempt_number,
-                                   course_id, status='completed'):
-        papers = self.filter(question_paper_id=questionpaper_id,
-                             course_id=course_id,
-                             attempt_number=attempt_number, status=status)
-        questions = Question.objects.filter(
-            questions__id__in=papers,
-        ).distinct()
-
-        stats = {}
-        for question in questions:
-            answers = Answer.objects.filter(
-                answerpaper__id__in=papers, question=question.id
-            ).values('answer', 'question__id', 'answerpaper__id')
-            question_ans_count = {}
-            answerpaper_count = []
-            for ans in answers:
-                if ans.get('answerpaper__id'):
-                    if ans.get('answer') not in question_ans_count:
-                        question_ans_count[ans.get('answer')] = 1
-                    else:
-                        question_ans_count[ans.get('answer')] += 1
-                    answerpaper_count.append(ans.get('answerpaper__id'))
-            stats[question] = question_ans_count
-        return stats
-
-    def get_all_questions_answered(self, questionpaper_id, attempt_number,
-                                   course_id, status='completed'):
-        ''' Return a dict of answered question id as key and count as value'''
-        papers = self.filter(question_paper_id=questionpaper_id,
-                             course_id=course_id,
-                             attempt_number=attempt_number, status=status)
-        questions_answered = list()
-        for paper in papers:
-            for question in filter(None, paper.get_questions_answered()):
-                if paper.is_answer_correct(question):
-                    questions_answered.append(question.id)
-        return Counter(questions_answered)
 
     def get_attempt_numbers(self, questionpaper_id, course_id,
                             status='completed'):
@@ -2063,36 +2017,45 @@ class AnswerPaperManager(models.Manager):
     def get_question_statistics(self, questionpaper_id, attempt_number,
                                 course_id, status='completed'):
         ''' Return dict with question object as key and list as value
-            The list contains two value, first the number of times a question
-            was answered correctly, and second the number of times a question
-            appeared in a quiz'''
+            The list contains four values, first total attempts, second correct
+            attempts, third correct percentage, fourth per test case answers
+            a question
+        '''
         question_stats = {}
-        questions_answered = self.get_all_questions_answered(questionpaper_id,
-                                                             attempt_number,
-                                                             course_id)
-        questions = self.get_all_questions(questionpaper_id, attempt_number,
-                                           course_id)
-        per_answer_stats = self.get_per_answer_stats(
-            questionpaper_id, attempt_number, course_id
+        qp = QuestionPaper.objects.get(id=questionpaper_id)
+        all_questions = qp.get_question_bank()
+        que_ids = [que.id for que in all_questions]
+        papers = self.filter(
+            question_paper_id=questionpaper_id, course_id=course_id,
+            attempt_number=attempt_number
+        ).values_list("id", flat=True)
+        answers = Answer.objects.filter(
+            answerpaper__id__in=papers, question_id__in=que_ids
+        ).order_by("id").values(
+            "answerpaper__id", "question_id", "correct", "answer"
         )
-        all_questions = Question.objects.filter(
-                id__in=set(questions),
-                active=True
-            ).order_by('type')
-        for question in all_questions:
-            if question.id in questions_answered:
-                question_stats[question] = {
-                        'answered': [questions_answered[question.id],
-                                            questions[question.id]],
-                        'per_answer': per_answer_stats[question],
-                    }
-
-            else:
-                question_stats[question] = {
-                        'answered': [0, questions[question.id]],
-                        'per_answer': per_answer_stats[question],
-                    }
-
+        def _get_per_tc_data(answers, q_type):
+            tc = []
+            for answer in answers["answer"]:
+                ans = literal_eval(answer) if answer else None
+                tc.extend(ans) if q_type == "mcc" else tc.append(str(ans))
+            return dict(Counter(tc))
+        df = pd.DataFrame(answers)
+        if not df.empty:
+            for question in all_questions:
+                que = df[df["question_id"]==question.id].groupby(
+                        "answerpaper__id").tail(1)
+                if not que.empty:
+                    total_attempts = que.shape[0]
+                    correct_attempts = que[que["correct"]==True].shape[0]
+                    per_tc_ans = {}
+                    if question.type in ["mcq", "mcc"]:
+                        per_tc_ans = _get_per_tc_data(que, question.type)
+                    question_stats[question] = (
+                        total_attempts, correct_attempts,
+                        round((correct_attempts/total_attempts)*100),
+                        per_tc_ans
+                    )
         return question_stats
 
     def _get_answerpapers_for_quiz(self, questionpaper_id, course_id,
@@ -2171,10 +2134,50 @@ class AnswerPaperManager(models.Manager):
         best_attempt = 0.0
         papers = self.filter(question_paper__quiz_id=quiz.id,
                              course_id=course_id,
-                             user=user_id).values("marks_obtained")
-        if papers:
-            best_attempt = max([marks["marks_obtained"] for marks in papers])
+                             user=user_id).order_by("-marks_obtained").values(
+                             "marks_obtained")
+        if papers.exists():
+            best_attempt = papers[0]["marks_obtained"]
         return best_attempt
+
+    def get_user_scores(self, question_papers, user, course_id):
+        if not question_papers:
+            return None
+        qp_ids = list(zip(*question_papers))[0]
+        papers = self.filter(
+            course_id=course_id, user_id=user.get("id"),
+            question_paper__id__in=qp_ids
+        ).values("question_paper_id", "marks_obtained")
+        df = pd.DataFrame(papers)
+        user_marks = 0
+        ap_data = None
+        if not df.empty:
+            ap_data = df.groupby("question_paper_id").tail(1)
+        for qp_id, quiz, quiz_marks in question_papers:
+            if ap_data is not None:
+                qp = ap_data['question_paper_id'].to_list()
+                marks = ap_data['marks_obtained'].to_list()
+                if qp_id in qp:
+                    idx = qp.index(qp_id)
+                    user_marks += marks[idx]
+                    user[f"{quiz}-{quiz_marks}-Marks"] = marks[idx]
+                else:
+                    user[f"{quiz}-{quiz_marks}-Marks"] = 0
+            else:
+                user[f"{quiz}-{quiz_marks}-Marks"] = 0
+        user.pop("id")
+        user["total_marks"] = user_marks
+
+    def get_questions_attempted(self, answerpaper_ids):
+        answers = Answer.objects.filter(
+            answerpaper__id__in=answerpaper_ids
+        ).values("question_id", "answerpaper__id")
+        df = pd.DataFrame(answers)
+        answerpapers = df.groupby("answerpaper__id")
+        question_attempted = {}
+        for ap in answerpapers:
+            question_attempted[ap[0]] = len(ap[1]["question_id"].unique())
+        return question_attempted
 
 
 ###############################################################################
@@ -2249,15 +2252,29 @@ class AnswerPaper(models.Model):
                            'attempt_number', "course"
                            )
 
-    def get_per_question_score(self, question_id):
-        questions = self.get_questions().values_list('id', flat=True)
-        if question_id not in questions:
-            return 'NA'
-        answer = self.get_latest_answer(question_id)
-        if answer:
-            return answer.marks
-        else:
-            return 0
+    def get_per_question_score(self, question_ids):
+        if not question_ids:
+            return None
+        que_ids = list(zip(*question_ids))[1]
+        answers = self.answers.filter(
+            question_id__in=que_ids).values("question_id", "marks")
+        que_data = {}
+        df = pd.DataFrame(answers)
+        ans_data = None
+        if not df.empty:
+            ans_data = df.groupby("question_id").tail(1)
+        for que_summary, que_id in question_ids:
+            if ans_data is not None:
+                ans = ans_data['question_id'].to_list()
+                marks = ans_data['marks'].to_list()
+                if que_id in ans:
+                    idx = ans.index(que_id)
+                    que_data[que_summary] = marks[idx]
+                else:
+                    que_data[que_summary] = 0
+            else:
+                que_data[que_summary] = 0
+        return que_data
 
     def current_question(self):
         """Returns the current active question to display."""
@@ -2420,7 +2437,7 @@ class AnswerPaper(models.Model):
         """
         q_a = {}
         for question in self.questions.all():
-            answers = question.answer_set.filter(answerpaper=self)
+            answers = question.answer_set.filter(answerpaper=self).distinct()
             if not answers.exists():
                 q_a[question] = [None, 0.0]
                 continue

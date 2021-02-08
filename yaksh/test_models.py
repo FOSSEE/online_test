@@ -1416,27 +1416,34 @@ class AnswerPaperTestCases(unittest.TestCase):
     def test_get_per_question_score(self):
         # Given
         question_id = self.question4.id
-        expected_score = 1
+        question_name = self.question4.summary
+        expected_score = {"Q4": 1.0}
         # When
         score = self.answerpaper_single_question.get_per_question_score(
-            question_id
+            [(question_name, question_id)]
             )
         # Then
         self.assertEqual(score, expected_score)
 
         # Given
         question_id = self.question2.id
-        expected_score = 0
+        question_name = self.question2.summary
+        expected_score = {"Q2": 0.0}
         # When
-        score = self.answerpaper.get_per_question_score(question_id)
+        score = self.answerpaper.get_per_question_score(
+            [(question_name, question_id)]
+        )
         # Then
         self.assertEqual(score, expected_score)
 
         # Given
         question_id = 131
-        expected_score = 'NA'
+        question_name = "NA"
+        expected_score = {'NA': 0}
         # When
-        score = self.answerpaper.get_per_question_score(question_id)
+        score = self.answerpaper.get_per_question_score(
+            [(question_name, question_id)]
+        )
         # Then
         self.assertEqual(score, expected_score)
 

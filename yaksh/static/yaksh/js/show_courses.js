@@ -36,4 +36,11 @@ window.onload = function() {
         $('#gridbtn').addClass('active');
         $('#listbtn').removeClass('active');
     }
+    if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      $("#course-list").removeClass("col-9");
+      $("#course-list").addClass("col");
+    } else{
+      $("#course-list").addClass("col-9");
+      $("#course-list").removeClass("col");
+    }
 }

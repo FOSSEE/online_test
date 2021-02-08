@@ -10,112 +10,237 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-8">
-                <ul class="nav nav-pills" id="course_tabs">
-                    <li class="nav-item">
-                        <a class="nav-link {% if created %}active{% endif %}" href="{% url 'yaksh:courses' %}">
-                            My Courses
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'yaksh:add_course' %}">
-                            Add/Edit Course
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'grades:grading_systems'%}" class="nav-link" >
-                            Add/View Grading Systems
-                        </a>
-                    </li>
-                </ul>
-            </div>
+    <div class="row">
+        <div class="col-md-8">
+            <ul class="nav nav-pills" id="course_tabs">
+                <li class="nav-item">
+                    <a class="nav-link {% if created %}active{% endif %}" href="{% url 'yaksh:courses' %}">
+                        My Courses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'yaksh:add_course' %}">
+                        Add/Edit Course
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'grades:grading_systems'%}" class="nav-link" >
+                        Add/View Grading Systems
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
-    <div class="container">
+    <br>
+    <div>
         {% if not objects %}
             <br><br>
             <div class="alert alert-info">
                 <center> <h3> No Courses Found </h3> </center>
             </div>
         {% else %}
-            <hr>
-            <form name=frm action="" method="get">
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Search/Filter Courses</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                {{ form.search_tags }}
+            <div class="row">
+                <div class="col">
+                    <form name=frm action="" method="get">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Search/Filter Courses</h3>
                             </div>
-                            <div class="col-md-3">
-                                {{ form.search_status }}
+                            <div class="card-body">
+                                <div>
+                                    {{form.search_tags}}
+                                    <br>
+                                    {{form.search_status}}
+                                </div>
+                                <br>
+                                <button class="btn btn-outline-success" type="submit">
+                                    <i class="fa fa-search"></i>&nbsp;Search
+                                </button>
+                                <a class="btn btn-outline-danger" href="{% url 'yaksh:courses' %}">
+                                    <i class="fa fa-times"></i>&nbsp;Clear
+                                </a>
                             </div>
                         </div>
-                        <br>
-                        <button class="btn btn-outline-success" type="submit">
-                            <i class="fa fa-search"></i>&nbsp;Search
-                        </button>
-                        <a class="btn btn-outline-danger" href="{% url 'yaksh:courses' %}">
-                            <i class="fa fa-times"></i>&nbsp;Clear
-                        </a>
-                    </div>
+                    </form>
                 </div>
-            </form>
-            <hr>
-            <center><h4 class="badge badge-success">{{ courses_found }} Course(s) Available</h4></center>
+                <div id="course-list">
+                    <center><h4 class="badge badge-success">{{ courses_found }} Course(s) Available</h4></center>
 
-            {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-dismissible alert-{{ message.tags }}">
-                    <button type="button" class="close" data-dismiss="alert">
-                        <i class="fa fa-close"></i>
-                    </button>
-                    <strong>{{ message }}</strong>
-                </div>
-                {% endfor %}
-            {% endif %}
-            {% with objects as courses %}
-            <div class="row">
-                <div class="col-md-4">
-                    {% include "yaksh/paginator.html" %}
-                </div>
-                <div class="ml-auto">
-                    <div class="nav nav-pills" role="tablist" aria-orientation="vertical">
-                        <a  id="listbtn" class="nav-link"  data-toggle="pill" role="tab" aria-controls="show" aria-selected="true">
-                            <i class="fa fa-list"></i>
-                        </a>
-                        <a  id="gridbtn" class="nav-link" data-toggle="pill" role="tab" aria-controls="updown" aria-selected="false">
-                            <i class="fa fa-columns"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="tab-content">
-                <div class="tab-pane active" id="gridview" role="tabpanel" aria-labelledby="gridbtn">
-                    <!-- GridView -->
-                    <br>
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-dismissible alert-{{ message.tags }}">
+                            <button type="button" class="close" data-dismiss="alert">
+                                <i class="fa fa-close"></i>
+                            </button>
+                            <strong>{{ message }}</strong>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    {% with objects as courses %}
                     <div class="row">
-                        <br>
-                        {% for course in courses %}
-                            <div class="col-md-6">
-                                <div class="card border-primary">
-                                    <div class="card-header" style="height: 150px">
-                                        {{course.name}}
-                                        <div>
-                                            {% if user.id != course.creator.id %}
-                                            <span class="badge badge-pill badge-warning">
-                                                Allotted Course
-                                            </span>
-                                            {% else %}
-                                            <span class="badge badge-pill badge-primary">
-                                                Created Course
-                                            </span>
-                                            {% endif %}
+                        <div class="col-md-4">
+                            {% include "yaksh/paginator.html" %}
+                        </div>
+                        <div class="ml-auto">
+                            <div class="nav nav-pills" role="tablist" aria-orientation="vertical">
+                                <a  id="listbtn" class="nav-link"  data-toggle="pill" role="tab" aria-controls="show" aria-selected="true">
+                                    <i class="fa fa-list"></i>
+                                </a>
+                                <a  id="gridbtn" class="nav-link" data-toggle="pill" role="tab" aria-controls="updown" aria-selected="false">
+                                    <i class="fa fa-columns"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="gridview" role="tabpanel" aria-labelledby="gridbtn">
+                            <!-- GridView -->
+                            <br>
+                            <div class="row">
+                                <br>
+                                {% for course in courses %}
+                                    <div class="col-md-6">
+                                        <div class="card border-primary">
+                                            <div class="card-header" style="height: 150px">
+                                                {{course.name}}
+                                                <div>
+                                                    {% if user.id != course.creator.id %}
+                                                    <span class="badge badge-pill badge-warning">
+                                                        Allotted Course
+                                                    </span>
+                                                    {% else %}
+                                                    <span class="badge badge-pill badge-primary">
+                                                        Created Course
+                                                    </span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <strong>Starts On:</strong>
+                                                        {{course.start_enroll_time}}
+                                                        <br>
+                                                        <strong>Ends On:</strong>
+                                                        {{course.end_enroll_time}}
+                                                    </div>
+                                                </div>
+                                                <hr>
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        {% if course.active %}
+                                                            <span class="badge badge-pill badge-success">
+                                                            Active
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge badge-pill badge-danger">
+                                                            Inactive
+                                                            </span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <a href="{% url 'yaksh:toggle_course_status' course.id %}">
+                                                        {% if course.active %}
+                                                            <i class="fa fa-toggle-on fa-2x"></i>
+                                                        {% else %}
+                                                            <i class="fa fa-toggle-off fa-2x"></i>
+                                                        {% endif %}
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                <hr>
+                                                <div class="row">
+                                                    <div class="col-md-5">
+                                                        <a href="{% url 'yaksh:edit_course' course.id %}" class="btn btn-info">
+                                                            <i class="fa fa-edit"></i>
+                                                            Edit
+                                                        </a>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
+                                                            <i class="fa fa-tasks"></i>
+                                                            Manage
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                <br>
+                                                <div class="row">
+                                                    <div class="col-md-5">
+                                                        <a href="{% url 'yaksh:duplicate_course' course.id %}" class="btn btn-secondary">
+                                                            <i class="fa fa-clone"></i>
+                                                            Clone
+                                                        </a>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+                                                        <button type="button" class="btn btn-secondary">
+                                                            <i class="fa fa-download"></i>
+                                                            Download
+                                                        </button>
+                                                        <div class="btn-group" role="group">
+                                                        <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                                        <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
+                                                        <a class="dropdown-item" href="{% url 'yaksh:download_course_csv' course.id %}">
+                                                            CSV
+                                                        </a>
+                                                        <a class="dropdown-item" href="{% url 'yaksh:download_course' course.id %}">
+                                                            Course
+                                                        </a>
+                                                        </div>
+                                                        </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <br>
+                                    </div>
+                                {% endfor %}
+                                <br>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="listview" role="tabpanel" aria-labelledby="gridbtn">
+                            <!-- ListView -->
+                            <br>
+                            {% for course in courses %}
+                                <div class="card">
+                                    <div class="card-header bg-secondary">
+                                        <div class="row">
+                                            <div class="col-md-5">
+                                                {{course.name}}
+                                            </div>
+                                            <div class="col-md-3">
+                                                {% if user.id != course.creator.id %}
+                                                    <span class="badge badge-pill badge-warning">
+                                                        Allotted Course
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge badge-pill badge-primary">
+                                                        Created Course
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-2">
+                                                {% if course.active %}
+                                                    <span class="badge badge-pill badge-success">
+                                                    Active
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge badge-pill badge-danger">
+                                                    Inactive
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-2">
+                                                <a href="{% url 'yaksh:toggle_course_status' course.id %}">
+                                                {% if course.active %}
+                                                    <i class="fa fa-toggle-on fa-2x"></i>
+                                                {% else %}
+                                                    <i class="fa fa-toggle-off fa-2x"></i>
+                                                {% endif %}
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="card-body">
@@ -131,177 +256,54 @@
                                         <hr>
                                         <div class="row">
                                             <div class="col-md-3">
-                                                {% if course.active %}
-                                                    <span class="badge badge-pill badge-success">
-                                                    Active
-                                                    </span>
-                                                {% else %}
-                                                    <span class="badge badge-pill badge-danger">
-                                                    Inactive
-                                                    </span>
-                                                {% endif %}
-                                            </div>
-                                            <div class="col-md-4">
-                                                <a href="{% url 'yaksh:toggle_course_status' course.id %}">
-                                                {% if course.active %}
-                                                    <i class="fa fa-toggle-on fa-2x"></i>
-                                                {% else %}
-                                                    <i class="fa fa-toggle-off fa-2x"></i>
-                                                {% endif %}
-                                                </a>
-                                            </div>
-                                        </div>
-                                        <hr>
-                                        <div class="row">
-                                            <div class="col-md-5">
                                                 <a href="{% url 'yaksh:edit_course' course.id %}" class="btn btn-info">
                                                     <i class="fa fa-edit"></i>
-                                                    Edit Course
+                                                    Edit
                                                 </a>
                                             </div>
-                                            <div class="col-md-5">
+                                            <div class="col-md-3">
                                                 <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
                                                     <i class="fa fa-tasks"></i>
-                                                    Manage Course
+                                                    Manage
                                                 </a>
                                             </div>
-                                        </div>
-                                        <br>
-                                        <div class="row">
-                                            <div class="col-md-5">
+                                            <div class="col-md-3">
                                                 <a href="{% url 'yaksh:duplicate_course' course.id %}" class="btn btn-secondary">
                                                     <i class="fa fa-clone"></i>
-                                                    Clone Course
+                                                    Clone
                                                 </a>
                                             </div>
-                                            <div class="col-md-5">
+                                            <div class="col-md-3">
                                                 <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
-                                                <button type="button" class="btn btn-secondary">
-                                                    <i class="fa fa-download"></i>
-                                                    Download
-                                                </button>
-                                                <div class="btn-group" role="group">
-                                                <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-                                                <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
-                                                <a class="dropdown-item" href="{% url 'yaksh:download_course_csv' course.id %}">
-                                                    CSV
-                                                </a>
-                                                <a class="dropdown-item" href="{% url 'yaksh:download_course' course.id %}">
-                                                    Course
-                                                </a>
-                                                </div>
-                                                </div>
+                                                    <button type="button" class="btn btn-secondary">
+                                                        <i class="fa fa-download"></i>
+                                                        Download
+                                                    </button>
+                                                    <div class="btn-group" role="group">
+                                                    <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                                    <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
+                                                    <a class="dropdown-item" href="{% url 'yaksh:download_course_csv' course.id %}">
+                                                        CSV
+                                                    </a>
+                                                    <a class="dropdown-item" href="{% url 'yaksh:download_course' course.id %}">
+                                                        Course
+                                                    </a>
+                                                    </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <br>
-                            </div>
-                        {% endfor %}
-                        <br>
-                    </div>
-                </div>
-                <div class="tab-pane" id="listview" role="tabpanel" aria-labelledby="gridbtn">
-                    <!-- ListView -->
-                    <br>
-                    {% for course in courses %}
-                        <div class="card">
-                            <div class="card-header bg-secondary">
-                                <div class="row">
-                                    <div class="col-md-5">
-                                        {{course.name}}  
-                                    </div>
-                                    <div class="col-md-3">
-                                        <span class="badge badge-pill badge-info">
-                                            {% if user.id != course.creator.id %}
-                                                Allotted Course
-                                            {% else %}
-                                                Created Course
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                    <div class="col-md-2">
-                                        {% if course.active %}
-                                            <span class="badge badge-pill badge-success">
-                                            Active
-                                            </span>
-                                        {% else %}
-                                            <span class="badge badge-pill badge-danger">
-                                            Inactive
-                                            </span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="{% url 'yaksh:toggle_course_status' course.id %}">
-                                        {% if course.active %}
-                                            <i class="fa fa-toggle-on fa-2x"></i>
-                                        {% else %}
-                                            <i class="fa fa-toggle-off fa-2x"></i>
-                                        {% endif %}
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col">
-                                        <strong>Starts On:</strong>
-                                        {{course.start_enroll_time}}
-                                        <br>
-                                        <strong>Ends On:</strong>
-                                        {{course.end_enroll_time}}
-                                    </div>
-                                </div>
-                                <hr>
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <a href="{% url 'yaksh:edit_course' course.id %}" class="btn btn-info">
-                                            <i class="fa fa-edit"></i>
-                                            Edit Course
-                                        </a>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
-                                            <i class="fa fa-tasks"></i>
-                                            Manage Course
-                                        </a>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
-                                            <button type="button" class="btn btn-secondary">
-                                                <i class="fa fa-download"></i>
-                                                Download
-                                            </button>
-                                            <div class="btn-group" role="group">
-                                            <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-                                            <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
-                                            <a class="dropdown-item" href="{% url 'yaksh:download_course_csv' course.id %}">
-                                                CSV
-                                            </a>
-                                            <a class="dropdown-item" href="{% url 'yaksh:download_course' course.id %}">
-                                                Course
-                                            </a>
-                                            </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <a href="{% url 'yaksh:duplicate_course' course.id %}" class="btn btn-secondary">
-                                            <i class="fa fa-clone"></i>
-                                            Clone Course
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
+                            {% endfor %}
+                            <br>
                         </div>
-                        <br>
-                    {% endfor %}
-                    <br>
+                    </div>
+                    {% include "yaksh/paginator.html" %}
+                    {% endwith %}
                 </div>
             </div>
-            {% include "yaksh/paginator.html" %}
-            {% endwith %}
         {% endif %}
     </div>
 </div>
