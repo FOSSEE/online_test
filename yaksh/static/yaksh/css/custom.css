@@ -211,3 +211,5 @@ iframe {
   width: 100%;
   text-align: center;
 }
+
+.dropdown:hover .dropdown-menu {display: block;}
