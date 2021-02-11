@@ -124,6 +124,22 @@ $(document).ready(function()
           </div>
         </div>
         <br>
+        <div class="row">
+          <div class="col-md-3">
+            <b>Select Attempt number:</b>
+          </div>
+          <div class="col-md-2">
+            <select id="attempt" onchange="window.location.href=this.value" class="custom-select">
+              <option selected="">Select</option>
+              {% for attempt in attempt_numbers %}
+                <option value="{% url 'yaksh:monitor' quiz.id course.id attempt %}">
+              {{attempt}}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <br>
         <div class="card">
           {% if total_papers > 10 %}
           <div class="table-responsive" style="height: 800px">
