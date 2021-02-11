@@ -202,7 +202,7 @@ def has_lesson_video(lesson_id):
 
 @register.simple_tag
 def get_tc_percent(tc_id, data):
-    return data.get(str(tc_id), 0)
+    return data.get(str(tc_id), 0) if data else None
 
 
 @register.simple_tag
@@ -215,9 +215,9 @@ def get_lesson_views(course_id, lesson_id):
 
 @register.simple_tag
 def get_percent_value(dictionary, key, total):
-    return round((dictionary.get(str(key), 0)/total)*100)
+    return round((dictionary.get(str(key), 0)/total)*100) if dictionary else None
 
 
 @register.simple_tag
 def get_dict_value(dictionary, key):
-    return dictionary.get(key, 0)
+    return dictionary.get(key, 0) if dictionary else None
