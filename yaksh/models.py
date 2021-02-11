@@ -2027,7 +2027,7 @@ class AnswerPaperManager(models.Manager):
         que_ids = [que.id for que in all_questions]
         papers = self.filter(
             question_paper_id=questionpaper_id, course_id=course_id,
-            attempt_number=attempt_number
+            attempt_number=attempt_number, status=status
         ).values_list("id", flat=True)
         answers = Answer.objects.filter(
             answerpaper__id__in=papers, question_id__in=que_ids
@@ -2173,11 +2173,12 @@ class AnswerPaperManager(models.Manager):
             answerpaper__id__in=answerpaper_ids
         ).values("question_id", "answerpaper__id")
         df = pd.DataFrame(answers)
-        answerpapers = df.groupby("answerpaper__id")
-        question_attempted = {}
-        for ap in answerpapers:
-            question_attempted[ap[0]] = len(ap[1]["question_id"].unique())
-        return question_attempted
+        if not df.empty and "answerpaper__id" in df.columns:
+            answerpapers = df.groupby("answerpaper__id")
+            question_attempted = {}
+            for ap in answerpapers:
+                question_attempted[ap[0]] = len(ap[1]["question_id"].unique())
+            return question_attempted
 
 
 ###############################################################################

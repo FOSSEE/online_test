@@ -52,8 +52,9 @@ $(document).ready(function()
   {% if quiz %}
     {% if papers %}
     <div class="row">
-      <div class="card col">
-        <div class="table-responsive">
+      <div class="card col-md-3">
+        <div class="card-body">
+          <div class="table-responsive">
             <table id="course-detail" class="table">
                 <tr>
                     <td><b>Course Name:&nbsp</b></td>
@@ -63,186 +64,180 @@ $(document).ready(function()
                     <td><b>Quiz Name:&nbsp</b></td>
                     <td>{{quiz.description}}</td>
                 </tr>
-            </table>
-        </div>
-      </div>
-      <div class="card col">
-        <div class="table-responsive">
-          <table id="course-detail" class="table">
-              <tr>
+                <tr>
                   <td><b>Number of papers: &nbsp</b></td>
                   <td>{{total_papers}}</td>
-              </tr>
-              <tr>
-                  <td><b>Papers Completed: &nbsp</b></td>
-                  <td>
-                      <b>{{completed_papers}}</b>
-                  </td>
-              </tr>
-              <tr>
-                  <td><b>Papers in progress: &nbsp</b></td>
-                  <td>
-                      <b>{{ inprogress_papers }}</b>
-                  </td>
-              </tr>
-          </table>
-        </div>
-      </div>
-    </div>
-      <div class="row">
-        <div class="col-md-4">
-          <button type="button" class="btn btn-info" data-toggle="modal" data-target="#csvModal">
-            <i class="fa fa-download"></i>&nbsp;Download CSV
-          </button>
-        </div>
-        <div class="col-md-4">
-          <a href="{% url 'yaksh:show_statistics' papers.0.question_paper.id course.id %}" class="btn btn-primary">
-            <i class="fa fa-line-chart"></i>&nbsp;Question Statistics
-          </a>
-        </div>
-        <div class="col-md-4">
-          <div class="badge badge-info">
-            Auto-Refreshes every 5 minutes
+                </tr>
+                <tr>
+                    <td><b>Papers Completed: &nbsp</b></td>
+                    <td>
+                        <b>{{completed_papers}}</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td><b>Papers in progress: &nbsp</b></td>
+                    <td>
+                        <b>{{ inprogress_papers }}</b>
+                    </td>
+                </tr>
+            </table>
           </div>
         </div>
       </div>
-      <hr>
-      <div class="row">
-        <div class="col-md-4">
-        <p>
-        <b>
-        - Download the CSV file from the button above<br />
-        - Edit and upload the same <br />
-        </b>
-        </p>
-        </div>
-        <div class="col-md-6">
-        <form id="upload_users" action="{% url 'yaksh:upload_marks' course.id papers.0.question_paper.id %}" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="input-group">
-            <div class="custom-file">
-                <input type="file" class="custom-file-input" name="csv_file" id="upload"/>
-                <label class="custom-file-label" for="upload">Select</label>
-            </div>
-            <div class="input-group-append">
-                <button class="btn btn-outline-primary" type="submit">
-                    <i class="fa fa-upload"></i>
-                    Upload
-                </button>
-            </div>
-            </div>
-        </form>
-        </div>
-      </div>
-      <br>
-      <div class="card">
-        {% if total_papers > 10 %}
-        <div class="table-responsive" style="height: 800px">
-        {% else %}
-        <div class="table-responsive">
-        {% endif %}
-        <table id="result-table" class="table table-dark table-responsive-sm">
-          <thead class="thead-dark">
-          <tr>
-            <th> Sr No. </th>
-            <th> Name&nbsp;<i class="fa fa-sort"></i> </th>
-            <th> Roll No&nbsp;<i class="fa fa-sort"></i> </th>
-            <th> Marks&nbsp;<i class="fa fa-sort"></i> </th>
-            <th> Questions Attempted&nbsp;<i class="fa fa-sort"></i> </th>
-            <th> Time Left&nbsp;<i class="fa fa-sort"></i> </th>
-            <th> Status&nbsp;<i class="fa fa-sort"></i> </th>
-            <th> Extend time&nbsp;<i class="fa fa-sort"></i> </th>
-            <th> Special Attempt&nbsp;<i class="fa fa-sort"></i> </th>
-          </tr>
-          </thead>
-          <tbody class="list">
-          {% for paper in papers %}
-          <tr>
-              <td>{{forloop.counter}}</td>
-              {% with paper.user as student %}
-              <td> <a href="{% url 'yaksh:user_data' paper.user_id paper.question_paper_id course.id %}">
-              {{ student.get_full_name.title }}</a> </td>
-              <td> {{ student.profile.roll_number }} </td>
-              {% endwith %}
-              <td> {{ paper.marks_obtained }} </td>
-              <td>
-                {% get_dict_value questions_attempted paper.id as que_attempt %}
-                {{que_attempt}} out of {{questions_count}}
-              </td>
-              <td id="time_left{{forloop.counter0}}"> {{ paper.time_left }} </td>
-              <td> {% if paper.is_attempt_inprogress %}
-                        <span class="badge badge-warning"> Inprogress </span>
-                    {% else %}
-                        <span class="badge badge-success"> Completed </span>
-                   {% endif %}
-              </td>
-              <td width="15%">
-                <form method="post" action="{% url 'yaksh:extend_time' paper.id %}">
-                  {% csrf_token %}
-                    <div class="input-group mb-3">
-                    <input type="number" step="any" class="form-control" id="extra_time" name="extra_time" required>
-                    <div class="input-group-append">
-                      <button class="btn btn-outline-secondary" type="submit" width="10">
-                        <i class="fa fa-plus"></i>
-                      </button>
-                    </div>
-                    </div>
-                </form>
-              </td>
-              <td>{% specail_attempt_monitor paper.user.id course.id quiz.id %}</td>
-          </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-        </div>
-      </div>
-      <!-- CSV Modal -->
-      <div class="modal fade" id="csvModal" role="dialog">
-          <div class="modal-dialog">
-          <!-- Modal content-->
-          <div class="modal-content">
-          <div class="modal-header">
-            <h3 class="modal-title">Download CSV for {{quiz.description}} </h3>
-            <button type="button" class="close" data-dismiss="modal">
-              <i class="fa fa-close"></i>
+      <div class="col-md-9">
+        <div class="row">
+          <div class="col-md-4">
+            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#csvModal">
+              <i class="fa fa-download"></i>&nbsp;Download CSV
             </button>
           </div>
-          <form action="{% url 'yaksh:download_quiz_csv' course.id quiz.id %}" method="post">
-          {% csrf_token %}
-          <div class="modal-body">
-              <b>Select Attempt Number: Default latest attempt</b>
-              <select class="form-control" name = "attempt_number">
-                  {% for attempt_number in attempt_numbers %}
-                  {% if forloop.last %}
-                  <option value="{{ attempt_number }}" selected>{{ attempt_number }} (Latest)</option>
-                  {% else %}
-                  <option value = "{{ attempt_number }}"> {{ attempt_number }}</option>
-                  {% endif %}
-                  {% endfor %}
-              </select>
+          <div class="col-md-4">
+            <a href="{% url 'yaksh:show_statistics' papers.0.question_paper.id course.id %}" class="btn btn-primary">
+              <i class="fa fa-line-chart"></i>&nbsp;Question Statistics
+            </a>
           </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-success">
-              <span class="fa fa-save"></span>&nbsp;Download
-            </button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">
-              Close
-            </button>
+          <div class="col-md-4">
+            <div class="badge badge-info">
+              Auto-Refreshes every 5 minutes
+            </div>
           </div>
+        </div>
+        <hr>
+        <div class="row">
+          <div class="col-md-4">
+          <p>
+          <b>
+          - Download the CSV file from the button above<br />
+          - Edit and upload the same <br />
+          </b>
+          </p>
+          </div>
+          <div class="col-md-6">
+          <form id="upload_users" action="{% url 'yaksh:upload_marks' course.id papers.0.question_paper.id %}" method="POST" enctype="multipart/form-data">
+              {% csrf_token %}
+              <input type="file" class="custom-file-input" name="csv_file" id="upload"/>
+              <button class="btn btn-outline-primary" type="submit">
+                  <i class="fa fa-upload"></i>
+                  Upload
+              </button>
           </form>
           </div>
-          </div>
-      </div>
-    {% else %}
-      <div class="col-md-12">
-        <div class="alert alert-warning">
-          <center>
-            <p>No Users Found for {{ quiz.description }}</p>
-          </center>
         </div>
-      </div>
-    {% endif %} {# if papers #}
-  {% else %}
-    <h4>No Quiz Found</h4>
-  {% endif %}
+        <br>
+        <div class="card">
+          {% if total_papers > 10 %}
+          <div class="table-responsive" style="height: 800px">
+          {% else %}
+          <div class="table-responsive">
+          {% endif %}
+          <table id="result-table" class="table table-dark table-responsive-sm">
+            <thead class="thead-dark">
+            <tr>
+              <th> Sr No. </th>
+              <th> Name&nbsp;<i class="fa fa-sort"></i> </th>
+              <th> Roll No&nbsp;<i class="fa fa-sort"></i> </th>
+              <th> Marks&nbsp;<i class="fa fa-sort"></i> </th>
+              <th> Questions Attempted&nbsp;<i class="fa fa-sort"></i> </th>
+              <th> Time Left&nbsp;<i class="fa fa-sort"></i> </th>
+              <th> Status&nbsp;<i class="fa fa-sort"></i> </th>
+              <th> Time Extension&nbsp;<i class="fa fa-sort"></i> </th>
+              <th> Special Attempt&nbsp;<i class="fa fa-sort"></i> </th>
+            </tr>
+            </thead>
+            <tbody class="list">
+            {% for paper in papers %}
+            <tr>
+                <td>{{forloop.counter}}</td>
+                {% with paper.user as student %}
+                <td>
+                  <i class="fa fa-edit"></i>
+                  <a href="{% url 'yaksh:user_data' paper.user_id paper.question_paper_id course.id %}" class="text-white">
+                    {{ student.get_full_name.title }}
+                  </a>
+                </td>
+                <td> {{ student.profile.roll_number }} </td>
+                {% endwith %}
+                <td> {{ paper.marks_obtained }} </td>
+                <td>
+                  {% get_dict_value questions_attempted paper.id as que_attempt %}
+                  {{que_attempt}} out of {{questions_count}}
+                </td>
+                <td id="time_left{{forloop.counter0}}"> {{ paper.time_left }} </td>
+                <td> {% if paper.is_attempt_inprogress %}
+                          <span class="badge badge-warning"> Inprogress </span>
+                      {% else %}
+                          <span class="badge badge-success"> Completed </span>
+                     {% endif %}
+                </td>
+                <td>
+                  <form method="post" action="{% url 'yaksh:extend_time' paper.id %}">
+                    {% csrf_token %}
+                      <div class="input-group">
+                      <input type="number" step="any" class="form-control form-control-sm" id="extra_time" name="extra_time" required>
+                      <div class="input-group-append">
+                        <button class="btn btn-outline-success btn-sm" type="submit">
+                          <i class="fa fa-plus"></i>
+                        </button>
+                      </div>
+                      </div>
+                  </form>
+                </td>
+                <td>{% specail_attempt_monitor paper.user.id course.id quiz.id %}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+          </div>
+        </div>
+        <!-- CSV Modal -->
+        <div class="modal fade" id="csvModal" role="dialog">
+            <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+            <div class="modal-header">
+              <h3 class="modal-title">Download CSV for {{quiz.description}} </h3>
+              <button type="button" class="close" data-dismiss="modal">
+                <i class="fa fa-close"></i>
+              </button>
+            </div>
+            <form action="{% url 'yaksh:download_quiz_csv' course.id quiz.id %}" method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+                <b>Select Attempt Number: Default latest attempt</b>
+                <select class="form-control" name = "attempt_number">
+                    {% for attempt_number in attempt_numbers %}
+                    {% if forloop.last %}
+                    <option value="{{ attempt_number }}" selected>{{ attempt_number }} (Latest)</option>
+                    {% else %}
+                    <option value = "{{ attempt_number }}"> {{ attempt_number }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-success">
+                <span class="fa fa-save"></span>&nbsp;Download
+              </button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                Close
+              </button>
+            </div>
+            </form>
+            </div>
+            </div>
+        </div>
+      {% else %}
+        <div class="col-md-12">
+          <div class="alert alert-warning">
+            <center>
+              <p>No Users Found for {{ quiz.description }}</p>
+            </center>
+          </div>
+        </div>
+      {% endif %} {# if papers #}
+    {% else %}
+      <h4>No Quiz Found</h4>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

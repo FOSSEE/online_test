@@ -2137,7 +2137,7 @@ def test_mode(user, godmode=False, questions_list=None, quiz_id=None,
             order=1, type="quiz", quiz=trial_quiz,
             check_prerequisite=False)
         module, created = LearningModule.objects.get_or_create(
-            order=1, creator=user, check_prerequisite=False,
+            order=1, creator=user, check_prerequisite=False, is_trial=True,
             name="Trial for {0}".format(trial_course.name))
         module.learning_unit.add(trial_unit)
         trial_course.learning_module.add(module.id)
@@ -2164,12 +2164,16 @@ def test_quiz(request, mode, quiz_id, course_id=None):
             request,
             "{0} is either expired or inactive".format(quiz.description)
         )
-        return my_redirect('/exam/manage')
+        return my_redirect(reverse("yaksh:index"))
 
     trial_questionpaper, trial_course, trial_module = test_mode(
         current_user, godmode, None, quiz_id, course_id)
-    return my_redirect("/exam/start/{0}/{1}/{2}".format(
-        trial_questionpaper.id, trial_module.id, trial_course.id))
+    return my_redirect(
+        reverse(
+            "yaksh:start_quiz",
+            args=[trial_questionpaper.id, trial_module.id,  trial_course.id]
+            )
+        )
 
 
 @login_required
