@@ -2037,8 +2037,11 @@ class AnswerPaperManager(models.Manager):
         def _get_per_tc_data(answers, q_type):
             tc = []
             for answer in answers["answer"]:
-                ans = literal_eval(answer) if answer else None
-                tc.extend(ans) if q_type == "mcc" else tc.append(str(ans))
+                try:
+                    ans = literal_eval(answer) if answer else None
+                    tc.extend(ans) if q_type == "mcc" else tc.append(str(ans))
+                except Exception:
+                    pass
             return dict(Counter(tc))
         df = pd.DataFrame(answers)
         if not df.empty:

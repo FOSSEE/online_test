@@ -1365,7 +1365,7 @@ def show_statistics(request, questionpaper_id, attempt_number=None,
 
 @login_required
 @email_verified
-def monitor(request, quiz_id=None, course_id=None):
+def monitor(request, quiz_id=None, course_id=None, attempt_number=1):
     """Monitor the progress of the papers taken so far."""
 
     user = request.user
@@ -1382,15 +1382,15 @@ def monitor(request, quiz_id=None, course_id=None):
     attempt_numbers = AnswerPaper.objects.get_attempt_numbers(
         q_paper.id, course.id
     )
-    latest_attempt_num = max(list(attempt_numbers)) if attempt_numbers else 0
     questions_count = 0
     questions_attempted = {}
     completed_papers = 0
     inprogress_papers = 0
     papers = AnswerPaper.objects.filter(
-        question_paper_id=q_paper.id,
-        course_id=course_id, attempt_number=latest_attempt_num
+        question_paper_id=q_paper.id, attempt_number=attempt_number,
+        course_id=course_id
         ).order_by('user__first_name')
+    papers = papers.filter(attempt_number=attempt_number)
     if not papers.exists():
         messages.warning(request, "No AnswerPapers found")
     else:
@@ -1842,10 +1842,10 @@ def download_quiz_csv(request, course_id, quiz_id):
             attempt_number=attempt_number
         ).order_by("user__first_name")
         que_summaries = [
-            (f"{que.summary}-{que.points}-marks", que.id) for que in questions
+            (f"Q-{que.id}-{que.summary}-{que.points}-marks", que.id) for que in questions
         ]
         user_data = list(answerpapers.values(
-            "user__first_name", "user__last_name",
+            "user__username", "user__first_name", "user__last_name",
             "user__profile__roll_number", "user__profile__institute",
             "user__profile__department", "marks_obtained",
             "question_paper__total_marks", "percent", "status"
