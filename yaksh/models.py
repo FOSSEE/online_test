@@ -2173,11 +2173,12 @@ class AnswerPaperManager(models.Manager):
             answerpaper__id__in=answerpaper_ids
         ).values("question_id", "answerpaper__id")
         df = pd.DataFrame(answers)
-        answerpapers = df.groupby("answerpaper__id")
-        question_attempted = {}
-        for ap in answerpapers:
-            question_attempted[ap[0]] = len(ap[1]["question_id"].unique())
-        return question_attempted
+        if not df.empty and "answerpaper__id" in df.columns:
+            answerpapers = df.groupby("answerpaper__id")
+            question_attempted = {}
+            for ap in answerpapers:
+                question_attempted[ap[0]] = len(ap[1]["question_id"].unique())
+            return question_attempted
 
 
 ###############################################################################
