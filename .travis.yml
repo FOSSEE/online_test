@@ -29,11 +29,14 @@ before_script:
 # command to run tests and coverage
 script:
   - coverage erase
+  - celery multi start 1 -A online_test worker -B
   - coverage run -p manage.py test -v 2 yaksh
   - coverage run -p manage.py test -v 2 stats
   - coverage run -p manage.py test -v 2 grades
   - coverage run -p manage.py test -v 2 yaksh.live_server_tests.load_test
   - coverage run -p manage.py test -v 2 api
+  - celery multi stop 1
+  - find . -type f -name "*.pid" -exec rm -f {} \;
 
 after_success:
   - coverage combine
