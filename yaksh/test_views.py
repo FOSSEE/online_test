@@ -23,7 +23,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files import File
 from django.contrib.messages import get_messages
 from django.contrib.contenttypes.models import ContentType
-from celery.contrib.testing.worker import start_worker
 from django.test import SimpleTestCase
 
 
@@ -40,6 +39,8 @@ from yaksh.decorators import user_has_profile
 from online_test.celery_settings import app
 
 from notifications_plugin.models import Notification
+
+app.conf.update(CELERY_ALWAYS_EAGER=True)
 
 
 class TestUserRegistration(TestCase):
@@ -4418,9 +4419,6 @@ class TestGrader(SimpleTestCase):
             end_time=timezone.now()+timezone.timedelta(minutes=20),
             )
 
-        self.celery_worker = start_worker(app)
-        self.celery_worker.__enter__()
-
     def tearDown(self):
         User.objects.all().delete()
         Course.objects.all().delete()
@@ -4429,7 +4427,6 @@ class TestGrader(SimpleTestCase):
         QuestionPaper.objects.all().delete()
         AnswerPaper.objects.all().delete()
         self.mod_group.delete()
-        self.celery_worker.__exit__(None, None, None)
 
     def test_regrade_denies_anonymous(self):
         # Given

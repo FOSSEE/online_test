@@ -2267,7 +2267,7 @@ class AnswerPaper(models.Model):
         ans_data = None
         if not df.empty:
             ans_data = df.groupby("question_id").tail(1)
-        for que_summary, que_id in question_ids:
+        for que_summary, que_id, que_comments in question_ids:
             if ans_data is not None:
                 ans = ans_data['question_id'].to_list()
                 marks = ans_data['marks'].to_list()
@@ -2278,6 +2278,7 @@ class AnswerPaper(models.Model):
                     que_data[que_summary] = 0
             else:
                 que_data[que_summary] = 0
+            que_data[que_comments] = "NA"
         return que_data
 
     def current_question(self):
@@ -2576,25 +2577,17 @@ class AnswerPaper(models.Model):
                 self.user, self.question_paper.quiz.description,
                 question_id
             )
-            return False, msg + 'Question not in the answer paper.'
+            return False, f'{msg} Question not in the answer paper.'
         user_answer = self.answers.filter(question=question).last()
-        if not user_answer:
-            return False, msg + 'Did not answer.'
+        if not user_answer or not user_answer.answer:
+            return False, f'{msg} Did not answer.'
         if question.type in ['mcc', 'arrange']:
             try:
                 answer = literal_eval(user_answer.answer)
                 if type(answer) is not list:
-                    return (False,
-                            msg + '{0} answer not a list.'.format(
-                                                            question.type
-                                                            )
-                            )
+                    return (False, f'{msg} {question.type} answer not a list.')
             except Exception:
-                return (False,
-                        msg + '{0} answer submission error'.format(
-                                                             question.type
-                                                             )
-                        )
+                return (False, f'{msg} {question.type} answer submission error')
         else:
             answer = user_answer.answer
         json_data = question.consolidate_answer_data(answer) \

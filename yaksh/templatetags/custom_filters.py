@@ -84,12 +84,15 @@ def get_answer_for_arrange_options(ans, question):
         ans = ans.decode("utf-8")
     else:
         ans = str(ans)
-    answer = literal_eval(ans)
-    testcases = []
-    for answer_id in answer:
-        tc = question.get_test_case(id=int(answer_id))
-        testcases.append(tc)
-    return testcases
+    try:
+        answer = literal_eval(ans)
+        testcases = []
+        for answer_id in answer:
+            tc = question.get_test_case(id=int(answer_id))
+            testcases.append(tc)
+        return testcases
+    except Exception:
+        return None
 
 
 @register.filter(name='replace_spaces')
