@@ -722,7 +722,7 @@ def show_question(request, question, paper, error_message=None,
                             assignmentQuestion_id=question.id,
                             course_id=course_id,
                             user=request.user,
-                            question_paper_id=paper.question_paper_id
+                            answer_paper=paper
                         )
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
     course = Course.objects.get(id=course_id)
@@ -861,7 +861,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                 assignment_files = AssignmentUpload.objects.filter(
                     assignmentQuestion=current_question, course_id=course_id,
                     assignmentFile__icontains=fname, user=user,
-                    question_paper=questionpaper_id)
+                    answer_paper=paper.id)
                 if assignment_files.exists():
                     assign_file = assignment_files.first()
                     if os.path.exists(assign_file.assignmentFile.path):
@@ -870,7 +870,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                 AssignmentUpload.objects.create(
                     user=user, assignmentQuestion=current_question,
                     course_id=course_id,
-                    assignmentFile=fname, question_paper_id=questionpaper_id
+                    assignmentFile=fname, answer_paper_id=paper.id
                 )
             user_answer = 'ASSIGNMENT UPLOADED'
             if not current_question.grade_assignment_upload:

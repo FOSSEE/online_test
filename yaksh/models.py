@@ -122,7 +122,7 @@ MOD_GROUP_NAME = 'moderator'
 
 def get_assignment_dir(instance, filename):
     folder_name = instance.course.name.replace(" ", "_")
-    sub_folder_name = instance.question_paper.quiz.description.replace(
+    sub_folder_name = instance.answer_paper.question_paper.quiz.description.replace(
         " ", "_")
     return os.sep.join((folder_name, sub_folder_name, instance.user.username,
                         str(instance.assignmentQuestion.id),
@@ -2661,9 +2661,10 @@ class AssignmentUploadManager(models.Manager):
 class AssignmentUpload(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     assignmentQuestion = models.ForeignKey(Question, on_delete=models.CASCADE)
-    assignmentFile = models.FileField(upload_to=get_assignment_dir, max_length=255)
-    question_paper = models.ForeignKey(QuestionPaper, blank=True, null=True,
-                                       on_delete=models.CASCADE)
+    assignmentFile = models.FileField(upload_to=get_assignment_dir,
+                                      max_length=255)
+    answer_paper = models.ForeignKey(AnswerPaper, blank=True, null=True,
+                                     on_delete=models.CASCADE)
     course = models.ForeignKey(Course, null=True, blank=True,
                                on_delete=models.CASCADE)
     objects = AssignmentUploadManager()
