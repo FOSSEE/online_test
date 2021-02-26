@@ -121,10 +121,10 @@ MOD_GROUP_NAME = 'moderator'
 
 
 def get_assignment_dir(instance, filename):
-    folder_name = instance.course.name.replace(" ", "_")
-    sub_folder_name = instance.answer_paper.question_paper.quiz.description.replace(
-        " ", "_")
-    return os.sep.join((folder_name, sub_folder_name, instance.user.username,
+    folder = str(instance.answer_paper.course.id)
+    sub_folder = str(instance.answer_paper.question_paper.quiz.id)
+    user = instance.answer_paper.user.username
+    return os.sep.join((folder, sub_folder, user,
                         str(instance.assignmentQuestion.id),
                         filename
                         ))
@@ -1439,7 +1439,7 @@ class Question(models.Model):
                                       for file in files]
         if self.type == "upload":
             assignment_files = AssignmentUpload.objects.filter(
-                assignmentQuestion=self, user=user
+                assignmentQuestion=self
                 )
             if assignment_files:
                 metadata['assign_files'] = [(file.assignmentFile.path, False)
@@ -2642,16 +2642,16 @@ class AssignmentUploadManager(models.Manager):
     def get_assignments(self, qp, que_id=None, user_id=None, course_id=None):
         if que_id and user_id:
             assignment_files = AssignmentUpload.objects.filter(
-                        assignmentQuestion_id=que_id, user_id=user_id,
-                        question_paper=qp, course_id=course_id
+                        assignmentQuestion_id=que_id, answer_paper__user_id=user_id,
+                        answer_paper__question_paper=qp, answer_paper__course_id=course_id
                         )
             file_name = User.objects.get(id=user_id).get_full_name()
         else:
             assignment_files = AssignmentUpload.objects.filter(
-                        question_paper=qp, course_id=course_id
+                        answer_paper__question_paper=qp, answer_paper__course_id=course_id
                         )
             file_name = "{0}_Assignment_files".format(
-                            assignment_files[0].course.name
+                            assignment_files[0].answer_paper.course.name
                             )
 
         return assignment_files, file_name
@@ -2659,15 +2659,17 @@ class AssignmentUploadManager(models.Manager):
 
 ##############################################################################
 class AssignmentUpload(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
     assignmentQuestion = models.ForeignKey(Question, on_delete=models.CASCADE)
     assignmentFile = models.FileField(upload_to=get_assignment_dir,
                                       max_length=255)
     answer_paper = models.ForeignKey(AnswerPaper, blank=True, null=True,
                                      on_delete=models.CASCADE)
-    course = models.ForeignKey(Course, null=True, blank=True,
-                               on_delete=models.CASCADE)
+    upload_date = models.DateTimeField(auto_now=True)
+
     objects = AssignmentUploadManager()
+
+    def __str__(self):
+        return f'Assignment File of the user {self.answer_paper.user}'
 
 
 ##############################################################################

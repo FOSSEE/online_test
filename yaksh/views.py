@@ -720,8 +720,6 @@ def show_question(request, question, paper, error_message=None,
     if question.type == 'upload':
         assignment_files = AssignmentUpload.objects.filter(
                             assignmentQuestion_id=question.id,
-                            course_id=course_id,
-                            user=request.user,
                             answer_paper=paper
                         )
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
@@ -856,22 +854,15 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                     course_id=course_id, module_id=module_id,
                     previous_question=current_question
                 )
+            uploaded_files = []
             for fname in assignment_filename:
                 fname._name = fname._name.replace(" ", "_")
-                assignment_files = AssignmentUpload.objects.filter(
-                    assignmentQuestion=current_question, course_id=course_id,
-                    assignmentFile__icontains=fname, user=user,
-                    answer_paper=paper.id)
-                if assignment_files.exists():
-                    assign_file = assignment_files.first()
-                    if os.path.exists(assign_file.assignmentFile.path):
-                        os.remove(assign_file.assignmentFile.path)
-                    assign_file.delete()
-                AssignmentUpload.objects.create(
-                    user=user, assignmentQuestion=current_question,
-                    course_id=course_id,
-                    assignmentFile=fname, answer_paper_id=paper.id
-                )
+                uploaded_files.append(AssignmentUpload(
+                                    assignmentQuestion=current_question,
+                                    assignmentFile=fname,
+                                    answer_paper_id=paper.id
+                                ))
+            AssignmentUpload.objects.bulk_create(uploaded_files)
             user_answer = 'ASSIGNMENT UPLOADED'
             if not current_question.grade_assignment_upload:
                 new_answer = Answer(
@@ -1874,6 +1865,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
     and update all their marks and also give comments for each paper.
     """
     current_user = request.user
+    papers = AnswerPaper.objects.filter(user=current_user)
+    print('Paper: ', papers)
     if not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
     if not course_id:
@@ -1898,7 +1891,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                 course.is_teacher(current_user):
             raise Http404('This course does not belong to you')
         has_quiz_assignments = AssignmentUpload.objects.filter(
-            course_id=course_id, question_paper_id__in=questionpaper_id
+                answer_paper__course_id=course_id,
+                answer_paper__question_paper_id__in=questionpaper_id
             ).exists()
         context = {
             "users": user_details,
@@ -1917,9 +1911,11 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                     attempt_number = attempts[0].attempt_number
             except IndexError:
                 raise Http404('No attempts for paper')
+
             has_user_assignments = AssignmentUpload.objects.filter(
-                course_id=course_id, question_paper_id__in=questionpaper_id,
-                user_id=user_id
+                answer_paper__course_id=course_id,
+                answer_paper__question_paper_id__in=questionpaper_id,
+                answer_paper__user_id=user_id
                 ).exists()
             user = User.objects.get(id=user_id)
             data = AnswerPaper.objects.get_user_data(
@@ -2383,7 +2379,7 @@ def download_assignment_file(request, quiz_id, course_id,
     zipfile_name = string_io()
     zip_file = zipfile.ZipFile(zipfile_name, "w")
     for f_name in assignment_files:
-        folder = f_name.user.get_full_name().replace(" ", "_")
+        folder = f_name.answer_paper.user.get_full_name().replace(" ", "_")
         sub_folder = f_name.assignmentQuestion.summary.replace(" ", "_")
         folder_name = os.sep.join((folder, sub_folder, os.path.basename(
                         f_name.assignmentFile.name))
