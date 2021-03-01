@@ -51,6 +51,8 @@ from yaksh.code_server import (
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .file_utils import extract_files, delete_files
 from grades.models import GradingSystem
+from yaksh.storage_backends import PublicMediaStorage
+
 
 languages = (
         ("python", "Python"),
@@ -1442,8 +1444,9 @@ class Question(models.Model):
                 assignmentQuestion=self, user=user
                 )
             if assignment_files:
-                metadata['assign_files'] = [(file.assignmentFile.path, False)
+                metadata['assign_files'] = [(file.assignmentFile.url, False)
                                             for file in assignment_files]
+                print(metadata['assign_files'])
         question_data['metadata'] = metadata
 
         return json.dumps(question_data)
@@ -2661,7 +2664,9 @@ class AssignmentUploadManager(models.Manager):
 class AssignmentUpload(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     assignmentQuestion = models.ForeignKey(Question, on_delete=models.CASCADE)
-    assignmentFile = models.FileField(upload_to=get_assignment_dir, max_length=255)
+    assignmentFile = models.FileField(
+        upload_to=get_assignment_dir, max_length=255
+    )
     question_paper = models.ForeignKey(QuestionPaper, blank=True, null=True,
                                        on_delete=models.CASCADE)
     course = models.ForeignKey(Course, null=True, blank=True,

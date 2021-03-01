@@ -52,7 +52,8 @@ INSTALLED_APPS = (
     'rest_framework',
     'api',
     'corsheaders',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'storages'
 )
 
 MIDDLEWARE = (
@@ -162,7 +163,7 @@ PRODUCTION_URL = 'your_project_url'
 IS_DEVELOPMENT = True
 
 # Video File upload size
-MAX_UPLOAD_SIZE = 52428800
+MAX_UPLOAD_SIZE = 524288000
 
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
@@ -250,3 +251,32 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+
+# AWS Credentials
+USE_AWS = False
+if USE_AWS:
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
+
+    AWS_ACCESS_KEY_ID = "access-key"
+    AWS_SECRET_ACCESS_KEY = "secret-key"
+    AWS_S3_REGION_NAME = "ap-south-1"
+    AWS_STORAGE_BUCKET_NAME = "yaksh-django"
+    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+    AWS_S3_ADDRESSING_STYLE = "virtual"
+
+    # Static Location
+    AWS_STATIC_LOCATION = 'static'
+    STATICFILES_STORAGE = 'yaksh.storage_backends.StaticStorage'
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
+
+    # Media Public
+    AWS_PUBLIC_MEDIA_LOCATION = 'media/public'
+    DEFAULT_FILE_STORAGE = 'yaksh.storage_backends.PublicMediaStorage'
+
+    # Media Private
+    AWS_PRIVATE_MEDIA_LOCATION = 'media/private'
+    PRIVATE_FILE_STORAGE = 'yaksh.storage_backends.PrivateMediaStorage'

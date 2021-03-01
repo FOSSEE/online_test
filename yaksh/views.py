@@ -858,15 +858,15 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                 )
             for fname in assignment_filename:
                 fname._name = fname._name.replace(" ", "_")
-                assignment_files = AssignmentUpload.objects.filter(
-                    assignmentQuestion=current_question, course_id=course_id,
-                    assignmentFile__icontains=fname, user=user,
-                    question_paper=questionpaper_id)
-                if assignment_files.exists():
-                    assign_file = assignment_files.first()
-                    if os.path.exists(assign_file.assignmentFile.path):
-                        os.remove(assign_file.assignmentFile.path)
-                    assign_file.delete()
+                # assignment_files = AssignmentUpload.objects.filter(
+                #     assignmentQuestion=current_question, course_id=course_id,
+                #     assignmentFile__icontains=fname, user=user,
+                #     question_paper=questionpaper_id)
+                # if assignment_files.exists():
+                #     assign_file = assignment_files.first()
+                #     if os.path.exists(assign_file.assignmentFile.path):
+                #         os.remove(assign_file.assignmentFile.path)
+                #     assign_file.delete()
                 AssignmentUpload.objects.create(
                     user=user, assignmentQuestion=current_question,
                     course_id=course_id,
