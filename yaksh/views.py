@@ -2182,8 +2182,8 @@ def view_answerpaper(request, questionpaper_id, course_id):
         data = AnswerPaper.objects.get_user_data(user, questionpaper_id,
                                                  course_id)
         has_user_assignments = AssignmentUpload.objects.filter(
-            user=user, course_id=course.id,
-            question_paper_id=questionpaper_id
+            answer_paper__user=user, answer_paper__course_id=course.id,
+            answer_paper__question_paper_id=questionpaper_id
         ).exists()
         context = {'data': data, 'quiz': quiz, 'course_id': course.id,
                    "has_user_assignments": has_user_assignments}

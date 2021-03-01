@@ -938,18 +938,22 @@ class TestDownloadAssignment(TestCase):
             )
         self.question_paper.fixed_questions.add(self.question)
 
+        attempt = 1
+        ip = '127.0.0.1'
+        self.answerpaper1 = self.question_paper.make_answerpaper(
+                self.student1, ip, attempt, self.course.id
+            )
+
         # create assignment file
         assignment_file1 = SimpleUploadedFile("file1.txt", b"Test")
         assignment_file2 = SimpleUploadedFile("file2.txt", b"Test")
         self.assignment1 = AssignmentUpload.objects.create(
-            user=self.student1, assignmentQuestion=self.question,
-            course=self.course,
-            assignmentFile=assignment_file1, question_paper=self.question_paper
+            assignmentQuestion=self.question,
+            assignmentFile=assignment_file1, answer_paper=self.answerpaper1
             )
         self.assignment2 = AssignmentUpload.objects.create(
-            user=self.student2, assignmentQuestion=self.question,
-            course=self.course,
-            assignmentFile=assignment_file2, question_paper=self.question_paper
+            assignmentQuestion=self.question,
+            assignmentFile=assignment_file2, answer_paper=self.answerpaper1
             )
 
     def tearDown(self):
@@ -1037,7 +1041,8 @@ class TestDownloadAssignment(TestCase):
         zip_file = string_io(response.content)
         zipped_file = zipfile.ZipFile(zip_file, 'r')
         self.assertIsNone(zipped_file.testzip())
-        self.assertIn('file2.txt', zipped_file.namelist()[0])
+        self.assertIn('file1.txt', zipped_file.namelist()[0])
+
         zip_file.close()
         zipped_file.close()
 
