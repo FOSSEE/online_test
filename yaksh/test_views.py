@@ -944,9 +944,14 @@ class TestDownloadAssignment(TestCase):
                 self.student1, ip, attempt, self.course.id
             )
 
+        self.answerpaper2 = self.question_paper.make_answerpaper(
+                self.student2, ip, attempt, self.course.id
+            )
+
         # create assignment file
         assignment_file1 = SimpleUploadedFile("file1.txt", b"Test")
         assignment_file2 = SimpleUploadedFile("file2.txt", b"Test")
+
         self.assignment1 = AssignmentUpload.objects.create(
             assignmentQuestion=self.question,
             assignmentFile=assignment_file1, answer_paper=self.answerpaper1
@@ -956,22 +961,15 @@ class TestDownloadAssignment(TestCase):
             assignmentFile=assignment_file2, answer_paper=self.answerpaper1
             )
 
-    def tearDown(self):
-        self.client.logout()
-        self.user.delete()
-        self.student1.delete()
-        self.student2.delete()
-        self.assignment1.delete()
-        self.assignment2.delete()
-        self.quiz.delete()
-        self.course.delete()
-        self.learning_module.delete()
-        self.learning_unit.delete()
-        self.mod_group.delete()
-        dir_name = self.course.name.replace(" ", "_")
-        file_path = os.sep.join((settings.MEDIA_ROOT, dir_name))
-        if os.path.exists(file_path):
-            shutil.rmtree(file_path)
+        self.assignment1 = AssignmentUpload.objects.create(
+            assignmentQuestion=self.question,
+            assignmentFile=assignment_file1, answer_paper=self.answerpaper2
+            )
+        self.assignment2 = AssignmentUpload.objects.create(
+            assignmentQuestion=self.question,
+            assignmentFile=assignment_file2, answer_paper=self.answerpaper2
+            )
+
 
     def test_download_assignment_denies_student(self):
         """
@@ -1042,9 +1040,25 @@ class TestDownloadAssignment(TestCase):
         zipped_file = zipfile.ZipFile(zip_file, 'r')
         self.assertIsNone(zipped_file.testzip())
         self.assertIn('file1.txt', zipped_file.namelist()[0])
-
         zip_file.close()
         zipped_file.close()
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.student1.delete()
+        self.student2.delete()
+        self.assignment1.delete()
+        self.assignment2.delete()
+        self.quiz.delete()
+        self.learning_module.delete()
+        self.learning_unit.delete()
+        self.mod_group.delete()
+        dir_name = f'{self.course.name.replace(" ", "_")}_{self.course.id}'
+        file_path = os.sep.join((settings.MEDIA_ROOT, dir_name))
+        if os.path.exists(file_path):
+            shutil.rmtree(file_path)
+        self.course.delete()
 
 
 class TestAddQuiz(TestCase):

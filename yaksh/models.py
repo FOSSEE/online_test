@@ -121,14 +121,15 @@ MOD_GROUP_NAME = 'moderator'
 
 
 def get_assignment_dir(instance, filename):
-    folder = str(instance.answer_paper.course_id)
-    sub_folder = str(instance.answer_paper.question_paper.quiz_id)
+    course = instance.answer_paper.course
+    quiz = instance.answer_paper.question_paper.quiz
+    folder = f'{course.name.replace(" ", "_")}_{course.id}'
+    sub_folder = f'{quiz.description.replace(" ","_")}_{quiz.id}'
     user = instance.answer_paper.user.username
     return os.sep.join((folder, sub_folder, user,
                         str(instance.assignmentQuestion.id),
                         filename
                         ))
-
 
 def get_model_class(model):
     ctype = ContentType.objects.get(app_label="yaksh", model=model)

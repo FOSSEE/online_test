@@ -1866,7 +1866,6 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
     """
     current_user = request.user
     papers = AnswerPaper.objects.filter(user=current_user)
-    print('Paper: ', papers)
     if not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
     if not course_id:
