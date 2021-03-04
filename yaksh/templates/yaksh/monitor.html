@@ -52,7 +52,8 @@ $(document).ready(function()
   {% if quiz %}
     {% if papers %}
     <div class="row">
-      <div class="card col-md-3">
+      <div class="col-md-3">
+      <div class="card">
         <div class="card-body">
           <div class="table-responsive">
             <table id="course-detail" class="table">
@@ -83,34 +84,41 @@ $(document).ready(function()
             </table>
           </div>
         </div>
-      </div>
-      <div class="col-md-9">
-        <div class="row">
-          <div class="col-md-4">
-            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#csvModal">
-              <i class="fa fa-download"></i>&nbsp;Download CSV
-            </button>
-          </div>
-          <div class="col-md-4">
-            <a href="{% url 'yaksh:show_statistics' papers.0.question_paper.id course.id %}" class="btn btn-primary">
-              <i class="fa fa-line-chart"></i>&nbsp;Question Statistics
-            </a>
-          </div>
-          <div class="col-md-4">
+        <div class="card-body">
+          <div class="col">
             <div class="badge badge-info">
               Auto-Refreshes every 5 minutes
             </div>
           </div>
+          <br>
+          <div class="col">
+            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#csvModal">
+              <i class="fa fa-download"></i>&nbsp;Download CSV
+            </button>
+          </div>
+          <br>
+          <div class="col">
+            <a href="{% url 'yaksh:show_statistics' papers.0.question_paper.id course.id %}" class="btn btn-primary">
+              <i class="fa fa-line-chart"></i>&nbsp;Question Statistics
+            </a>
+          </div>
         </div>
-        <hr>
+      </div>
+      </div>
+      <div class="col-md-9">
         <div class="row">
-          <div class="col-md-4">
-          <p>
-          <b>
-          - Download the CSV file from the button above<br />
-          - Edit and upload the same <br />
-          </b>
-          </p>
+          <div class="col-md-5">
+            <ul>
+              <li>
+                Download the CSV file from the button
+              </li>
+              <li>
+                Edit and upload the same
+              </li>
+              <li>
+                <b>Note: Do not change the CSV Headers</b>
+              </li>
+            </ul>
           </div>
           <div class="col-md-6">
           <form id="upload_users" action="{% url 'yaksh:upload_marks' course.id papers.0.question_paper.id %}" method="POST" enctype="multipart/form-data">
@@ -123,7 +131,7 @@ $(document).ready(function()
           </form>
           </div>
         </div>
-        <br>
+        <hr>
         <div class="row">
           <div class="col-md-3">
             <b>Select Attempt number:</b>

@@ -284,8 +284,9 @@ class LearningModuleTestCases(unittest.TestCase):
         self.learning_module_two = LearningModule.objects.get(name='LM2')
         self.creator = User.objects.get(username='creator')
         self.student = User.objects.get(username='course_user')
-        self.learning_unit_one = LearningUnit.objects.get(id=1)
-        self.learning_unit_two = LearningUnit.objects.get(id=2)
+        learning_units = self.learning_module.learning_unit.order_by("order")
+        self.learning_unit_one = learning_units[0]
+        self.learning_unit_two = learning_units[1]
         self.quiz = Quiz.objects.get(description='demo quiz 1')
         self.lesson = Lesson.objects.get(name='L1')
         self.course = Course.objects.get(name='Python Course')
@@ -1420,10 +1421,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         expected_score = {"Q4": 1.0}
         # When
         score = self.answerpaper_single_question.get_per_question_score(
-            [(question_name, question_id)]
+            [(question_name, question_id, f"{question_id}-comments")]
             )
         # Then
-        self.assertEqual(score, expected_score)
+        self.assertEqual(score['Q4'], expected_score['Q4'])
 
         # Given
         question_id = self.question2.id
@@ -1431,10 +1432,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         expected_score = {"Q2": 0.0}
         # When
         score = self.answerpaper.get_per_question_score(
-            [(question_name, question_id)]
+            [(question_name, question_id, f"{question_id}-comments")]
         )
         # Then
-        self.assertEqual(score, expected_score)
+        self.assertEqual(score["Q2"], expected_score["Q2"])
 
         # Given
         question_id = 131
@@ -1442,10 +1443,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         expected_score = {'NA': 0}
         # When
         score = self.answerpaper.get_per_question_score(
-            [(question_name, question_id)]
+            [(question_name, question_id, f"{question_id}-comments")]
         )
         # Then
-        self.assertEqual(score, expected_score)
+        self.assertEqual(score["NA"], expected_score["NA"])
 
     def test_returned_question_is_not_none(self):
         # Test add_completed_question and next_question

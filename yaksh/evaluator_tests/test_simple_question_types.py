@@ -662,16 +662,8 @@ class ArrangeQuestionTestCases(unittest.TestCase):
         regrade_answer.answer = 1
         regrade_answer.save()
         details = self.answerpaper.regrade(self.question1.id)
-        err_msg = dedent("""\
-                          User: {0}; Quiz: {1}; Question: {2}.
-                          {3} answer not a list.""".format(
-                                                     self.user.username,
-                                                     self.quiz.description,
-                                                     self.question1.summary,
-                                                     self.question1.type
-                        ))
         self.assertFalse(details[0])
-        self.assertEqual(details[1], err_msg)
+        self.assertIn("arrange answer not a list", details[1])
 
         # Try regrade with incorrect answer
         # When
