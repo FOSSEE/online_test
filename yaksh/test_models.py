@@ -107,6 +107,7 @@ def setUpModule():
     MicroManager.objects.create(manager=user, course=course, quiz=quiz,
                                 student=course_user)
 
+
 def tearDownModule():
     User.objects.all().delete()
     Question.objects.all().delete()
@@ -284,8 +285,9 @@ class LearningModuleTestCases(unittest.TestCase):
         self.learning_module_two = LearningModule.objects.get(name='LM2')
         self.creator = User.objects.get(username='creator')
         self.student = User.objects.get(username='course_user')
-        self.learning_unit_one = LearningUnit.objects.get(id=1)
-        self.learning_unit_two = LearningUnit.objects.get(id=2)
+        learning_units = self.learning_module.learning_unit.order_by("order")
+        self.learning_unit_one = learning_units[0]
+        self.learning_unit_two = learning_units[1]
         self.quiz = Quiz.objects.get(description='demo quiz 1')
         self.lesson = Lesson.objects.get(name='L1')
         self.course = Course.objects.get(name='Python Course')
@@ -1420,10 +1422,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         expected_score = {"Q4": 1.0}
         # When
         score = self.answerpaper_single_question.get_per_question_score(
-            [(question_name, question_id)]
+            [(question_name, question_id, f"{question_id}-comments")]
             )
         # Then
-        self.assertEqual(score, expected_score)
+        self.assertEqual(score['Q4'], expected_score['Q4'])
 
         # Given
         question_id = self.question2.id
@@ -1431,10 +1433,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         expected_score = {"Q2": 0.0}
         # When
         score = self.answerpaper.get_per_question_score(
-            [(question_name, question_id)]
+            [(question_name, question_id, f"{question_id}-comments")]
         )
         # Then
-        self.assertEqual(score, expected_score)
+        self.assertEqual(score["Q2"], expected_score["Q2"])
 
         # Given
         question_id = 131
@@ -1442,10 +1444,10 @@ class AnswerPaperTestCases(unittest.TestCase):
         expected_score = {'NA': 0}
         # When
         score = self.answerpaper.get_per_question_score(
-            [(question_name, question_id)]
+            [(question_name, question_id, f"{question_id}-comments")]
         )
         # Then
-        self.assertEqual(score, expected_score)
+        self.assertEqual(score["NA"], expected_score["NA"])
 
     def test_returned_question_is_not_none(self):
         # Test add_completed_question and next_question
@@ -2201,17 +2203,37 @@ class TestCaseTestCases(unittest.TestCase):
 
 
 class AssignmentUploadTestCases(unittest.TestCase):
+
     def setUp(self):
-        self.user1 = User.objects.get(username="creator")
-        self.user1.first_name = "demo"
-        self.user1.last_name = "user"
-        self.user1.save()
-        self.user2 = User.objects.get(username="demo_user3")
-        self.user2.first_name = "demo"
-        self.user2.last_name = "user3"
-        self.user2.save()
-        self.quiz = Quiz.objects.get(description="demo quiz 1")
-        self.course = Course.objects.get(name="Python Course")
+        self.user1 = User.objects.create_user(
+            username='creator1',
+            password='demo',
+            email='demo@test1.com'
+        )
+        self.user2 = User.objects.create_user(
+            username='creator2',
+            password='demo',
+            email='demo@test2.com'
+        )
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(
+                2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc
+            ),
+            end_date_time=datetime(
+                2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc
+            ),
+            duration=30, active=True,
+            attempts_allowed=1, time_between_attempts=0,
+            description='demo quiz 1', pass_criteria=0,
+            instructions="Demo Instructions"
+        )
+
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request",
+            creator=self.user1
+        )
+
         self.questionpaper = QuestionPaper.objects.create(
             quiz=self.quiz, total_marks=0.0, shuffle_questions=True
         )
@@ -2223,17 +2245,22 @@ class AssignmentUploadTestCases(unittest.TestCase):
         self.questionpaper.fixed_question_order = "{0}".format(
             self.question.id)
         self.questionpaper.fixed_questions.add(self.question)
+
+        attempt = 1
+        ip = '127.0.0.1'
+        self.answerpaper1 = self.questionpaper.make_answerpaper(
+                self.user1, ip, attempt, self.course.id
+            )
+
         file_path1 = os.path.join(tempfile.gettempdir(), "upload1.txt")
         file_path2 = os.path.join(tempfile.gettempdir(), "upload2.txt")
         self.assignment1 = AssignmentUpload.objects.create(
-            user=self.user1, assignmentQuestion=self.question,
-            assignmentFile=file_path1, question_paper=self.questionpaper,
-            course=self.course
+            assignmentQuestion=self.question,
+            assignmentFile=file_path1, answer_paper=self.answerpaper1,
             )
         self.assignment2 = AssignmentUpload.objects.create(
-            user=self.user2, assignmentQuestion=self.question,
-            assignmentFile=file_path2, question_paper=self.questionpaper,
-            course=self.course
+            assignmentQuestion=self.question,
+            assignmentFile=file_path2, answer_paper=self.answerpaper1,
             )
 
     def test_get_assignments_for_user_files(self):
@@ -2242,7 +2269,7 @@ class AssignmentUploadTestCases(unittest.TestCase):
                                     self.user1.id, self.course.id
                                     )
         self.assertIn("upload1.txt", assignment_files[0].assignmentFile.name)
-        self.assertEqual(assignment_files[0].user, self.user1)
+        self.assertEqual(assignment_files[0].answer_paper.user, self.user1)
         actual_file_name = self.user1.get_full_name().replace(" ", "_")
         file_name = file_name.replace(" ", "_")
         self.assertEqual(file_name, actual_file_name)
@@ -2253,13 +2280,22 @@ class AssignmentUploadTestCases(unittest.TestCase):
             )
         files = [os.path.basename(file.assignmentFile.name)
                  for file in assignment_files]
-        question_papers = [file.question_paper for file in assignment_files]
+        question_papers = [
+            file.answer_paper.question_paper for file in assignment_files]
         self.assertIn("upload1.txt", files)
         self.assertIn("upload2.txt", files)
         self.assertEqual(question_papers[0].quiz, self.questionpaper.quiz)
         actual_file_name = self.course.name.replace(" ", "_")
         file_name = file_name.replace(" ", "_")
         self.assertIn(actual_file_name, file_name)
+
+    def tearDown(self):
+        self.questionpaper.delete()
+        self.question.delete()
+        self.course.delete()
+        self.quiz.delete()
+        self.user2.delete()
+        self.user1.delete()
 
 
 class CourseStatusTestCases(unittest.TestCase):

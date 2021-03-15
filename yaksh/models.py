@@ -123,11 +123,13 @@ MOD_GROUP_NAME = 'moderator'
 
 
 def get_assignment_dir(instance, filename):
-    folder_name = instance.course.name.replace(" ", "_")
-    sub_folder_name = instance.question_paper.quiz.description.replace(
-        " ", "_")
-    return os.sep.join((folder_name, sub_folder_name, instance.user.username,
-                        str(instance.assignmentQuestion.id),
+    course_id = instance.answer_paper.course_id
+    quiz_id = instance.answer_paper.question_paper.quiz_id
+    folder = f'Course_{course_id}'
+    sub_folder = f'Quiz_{quiz_id}'
+    user = instance.answer_paper.user.username
+    return os.sep.join((folder, sub_folder, user,
+                        str(instance.assignmentQuestion_id),
                         filename
                         ))
 
@@ -1382,7 +1384,9 @@ class Question(models.Model):
     # Solution for the question.
     solution = models.TextField(blank=True)
 
-    content = GenericRelation("TableOfContents", related_query_name='questions')
+    content = GenericRelation(
+        "TableOfContents", related_query_name='questions'
+    )
 
     tc_code_types = {
         "python": [
@@ -1441,7 +1445,7 @@ class Question(models.Model):
                                       for file in files]
         if self.type == "upload":
             assignment_files = AssignmentUpload.objects.filter(
-                assignmentQuestion=self, user=user
+                assignmentQuestion=self
                 )
             if assignment_files:
                 metadata['assign_files'] = [(file.assignmentFile.url, False)
@@ -1840,7 +1844,8 @@ class QuestionPaper(models.Model):
             all_questions = questions
         return all_questions
 
-    def make_answerpaper(self, user, ip, attempt_num, course_id, special=False):
+    def make_answerpaper(self,
+                         user, ip, attempt_num, course_id, special=False):
         """Creates an answer paper for the user to attempt the quiz"""
         try:
             ans_paper = AnswerPaper.objects.get(user=user,
@@ -2037,6 +2042,7 @@ class AnswerPaperManager(models.Manager):
         ).order_by("id").values(
             "answerpaper__id", "question_id", "correct", "answer"
         )
+
         def _get_per_tc_data(answers, q_type):
             tc = []
             for answer in answers["answer"]:
@@ -2049,11 +2055,11 @@ class AnswerPaperManager(models.Manager):
         df = pd.DataFrame(answers)
         if not df.empty:
             for question in all_questions:
-                que = df[df["question_id"]==question.id].groupby(
+                que = df[df["question_id"] == question.id].groupby(
                         "answerpaper__id").tail(1)
                 if not que.empty:
                     total_attempts = que.shape[0]
-                    correct_attempts = que[que["correct"]==True].shape[0]
+                    correct_attempts = que[que["correct"] == True].shape[0]
                     per_tc_ans = {}
                     if question.type in ["mcq", "mcc"]:
                         per_tc_ans = _get_per_tc_data(que, question.type)
@@ -2270,7 +2276,7 @@ class AnswerPaper(models.Model):
         ans_data = None
         if not df.empty:
             ans_data = df.groupby("question_id").tail(1)
-        for que_summary, que_id in question_ids:
+        for que_summary, que_id, que_comments in question_ids:
             if ans_data is not None:
                 ans = ans_data['question_id'].to_list()
                 marks = ans_data['marks'].to_list()
@@ -2281,6 +2287,7 @@ class AnswerPaper(models.Model):
                     que_data[que_summary] = 0
             else:
                 que_data[que_summary] = 0
+            que_data[que_comments] = "NA"
         return que_data
 
     def current_question(self):
@@ -2579,25 +2586,17 @@ class AnswerPaper(models.Model):
                 self.user, self.question_paper.quiz.description,
                 question_id
             )
-            return False, msg + 'Question not in the answer paper.'
+            return False, f'{msg} Question not in the answer paper.'
         user_answer = self.answers.filter(question=question).last()
-        if not user_answer:
-            return False, msg + 'Did not answer.'
+        if not user_answer or not user_answer.answer:
+            return False, f'{msg} Did not answer.'
         if question.type in ['mcc', 'arrange']:
             try:
                 answer = literal_eval(user_answer.answer)
                 if type(answer) is not list:
-                    return (False,
-                            msg + '{0} answer not a list.'.format(
-                                                            question.type
-                                                            )
-                            )
+                    return (False, f'{msg} {question.type} answer not a list.')
             except Exception:
-                return (False,
-                        msg + '{0} answer submission error'.format(
-                                                             question.type
-                                                             )
-                        )
+                return (False, f'{msg} {question.type} answer submission error')
         else:
             answer = user_answer.answer
         json_data = question.consolidate_answer_data(answer) \
@@ -2645,16 +2644,19 @@ class AssignmentUploadManager(models.Manager):
     def get_assignments(self, qp, que_id=None, user_id=None, course_id=None):
         if que_id and user_id:
             assignment_files = AssignmentUpload.objects.filter(
-                        assignmentQuestion_id=que_id, user_id=user_id,
-                        question_paper=qp, course_id=course_id
+                        assignmentQuestion_id=que_id,
+                        answer_paper__user_id=user_id,
+                        answer_paper__question_paper=qp,
+                        answer_paper__course_id=course_id
                         )
             file_name = User.objects.get(id=user_id).get_full_name()
         else:
             assignment_files = AssignmentUpload.objects.filter(
-                        question_paper=qp, course_id=course_id
+                        answer_paper__question_paper=qp,
+                        answer_paper__course_id=course_id
                         )
             file_name = "{0}_Assignment_files".format(
-                            assignment_files[0].course.name
+                            assignment_files[0].answer_paper.course.name
                             )
 
         return assignment_files, file_name
@@ -2662,16 +2664,17 @@ class AssignmentUploadManager(models.Manager):
 
 ##############################################################################
 class AssignmentUpload(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
     assignmentQuestion = models.ForeignKey(Question, on_delete=models.CASCADE)
-    assignmentFile = models.FileField(
-        upload_to=get_assignment_dir, max_length=255
-    )
-    question_paper = models.ForeignKey(QuestionPaper, blank=True, null=True,
-                                       on_delete=models.CASCADE)
-    course = models.ForeignKey(Course, null=True, blank=True,
-                               on_delete=models.CASCADE)
+    assignmentFile = models.FileField(upload_to=get_assignment_dir,
+                                      max_length=255)
+    answer_paper = models.ForeignKey(AnswerPaper, blank=True, null=True,
+                                     on_delete=models.CASCADE)
+    upload_date = models.DateTimeField(auto_now=True)
+
     objects = AssignmentUploadManager()
+
+    def __str__(self):
+        return f'Assignment File of the user {self.answer_paper.user}'
 
 
 ##############################################################################
@@ -2896,7 +2899,6 @@ class TOCManager(models.Manager):
             toc.get_toc_as_yaml(file_path)
         return file_path
 
-
     def get_question_stats(self, toc_id):
         answers = LessonQuizAnswer.objects.get_queryset().filter(
             toc_id=toc_id).order_by('id')
@@ -2930,7 +2932,7 @@ class TOCManager(models.Manager):
                     if j not in mydata:
                         mydata[j] = 1
                     else:
-                        mydata[j] +=1
+                        mydata[j] += 1
                 data = mydata.copy()
             if is_percent:
                 for key, value in data.items():
@@ -2976,17 +2978,20 @@ class TOCManager(models.Manager):
                 if not is_valid_time_format(time):
                     messages.append(
                         (False,
-                        f"Invalid time format in {name}. "
+                         f"Invalid time format in {name}. "
                          "Format should be 00:00:00")
-                    )
+                        )
                 else:
                     if content_type == 1:
                         topic = Topic.objects.create(**content)
                         toc.append(TableOfContents(
-                            course_id=course_id, lesson_id=lesson_id, time=time,
-                            content_object=topic, content=content_type 
+                            course_id=course_id,
+                            lesson_id=lesson_id, time=time,
+                            content_object=topic, content=content_type
                         ))
-                        messages.append((True, f"{topic.name} added successfully"))
+                        messages.append(
+                            (True, f"{topic.name} added successfully")
+                        )
                     else:
                         content['user'] = user
                         test_cases = content.pop("testcase")
@@ -3003,10 +3008,13 @@ class TOCManager(models.Manager):
                         else:
                             que = Question.objects.create(**content)
                             for test_case in test_cases:
-                                test_case_type = test_case.pop('test_case_type')
+                                test_case_type = test_case.pop(
+                                    'test_case_type'
+                                )
                                 model_class = get_model_class(test_case_type)
                                 model_class.objects.get_or_create(
-                                    question=que, **test_case, type=test_case_type
+                                    question=que,
+                                    **test_case, type=test_case_type
                                 )
                             toc.append(TableOfContents(
                                 course_id=course_id, lesson_id=lesson_id,
@@ -3022,7 +3030,12 @@ class TOCManager(models.Manager):
 
 
 class TableOfContents(models.Model):
-    toc_types = ((1, "Topic"), (2, "Graded Quiz"), (3, "Exercise"), (4, "Poll"))
+    toc_types = (
+        (1, "Topic"),
+        (2, "Graded Quiz"),
+        (3, "Exercise"),
+        (4, "Poll")
+    )
     course = models.ForeignKey(Course, on_delete=models.CASCADE,
                                related_name='course')
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE,
@@ -3040,7 +3053,7 @@ class TableOfContents(models.Model):
 
     def get_toc_text(self):
         if self.content == 1:
-            content_name =  self.content_object.name
+            content_name = self.content_object.name
         else:
             content_name = self.content_object.summary
         return content_name

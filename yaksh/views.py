@@ -33,6 +33,7 @@ except ImportError:
     from io import BytesIO as string_io
 import re
 # Local imports.
+from online_test.celery_settings import app
 from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, FloatTestCase,
@@ -57,7 +58,7 @@ from .file_utils import extract_files, is_csv
 from .send_emails import (send_user_mail,
                           generate_activation_key, send_bulk_mail)
 from .decorators import email_verified, has_profile
-from .tasks import regrade_papers
+from .tasks import regrade_papers, update_user_marks
 from notifications_plugin.models import Notification
 
 
@@ -720,9 +721,7 @@ def show_question(request, question, paper, error_message=None,
     if question.type == 'upload':
         assignment_files = AssignmentUpload.objects.filter(
                             assignmentQuestion_id=question.id,
-                            course_id=course_id,
-                            user=request.user,
-                            question_paper_id=paper.question_paper_id
+                            answer_paper=paper
                         )
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
     course = Course.objects.get(id=course_id)
@@ -856,22 +855,15 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                     course_id=course_id, module_id=module_id,
                     previous_question=current_question
                 )
+            uploaded_files = []
             for fname in assignment_filename:
                 fname._name = fname._name.replace(" ", "_")
-                # assignment_files = AssignmentUpload.objects.filter(
-                #     assignmentQuestion=current_question, course_id=course_id,
-                #     assignmentFile__icontains=fname, user=user,
-                #     question_paper=questionpaper_id)
-                # if assignment_files.exists():
-                #     assign_file = assignment_files.first()
-                #     if os.path.exists(assign_file.assignmentFile.path):
-                #         os.remove(assign_file.assignmentFile.path)
-                #     assign_file.delete()
-                AssignmentUpload.objects.create(
-                    user=user, assignmentQuestion=current_question,
-                    course_id=course_id,
-                    assignmentFile=fname, question_paper_id=questionpaper_id
-                )
+                uploaded_files.append(AssignmentUpload(
+                                    assignmentQuestion=current_question,
+                                    assignmentFile=fname,
+                                    answer_paper_id=paper.id
+                                ))
+            AssignmentUpload.objects.bulk_create(uploaded_files)
             user_answer = 'ASSIGNMENT UPLOADED'
             if not current_question.grade_assignment_upload:
                 new_answer = Answer(
@@ -1842,7 +1834,10 @@ def download_quiz_csv(request, course_id, quiz_id):
             attempt_number=attempt_number
         ).order_by("user__first_name")
         que_summaries = [
-            (f"Q-{que.id}-{que.summary}-{que.points}-marks", que.id) for que in questions
+            (f"Q-{que.id}-{que.summary}-{que.points}-marks", que.id,
+                f"Q-{que.id}-{que.summary}-comments"
+                )
+            for que in questions
         ]
         user_data = list(answerpapers.values(
             "user__username", "user__first_name", "user__last_name",
@@ -1874,6 +1869,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
     and update all their marks and also give comments for each paper.
     """
     current_user = request.user
+    papers = AnswerPaper.objects.filter(user=current_user)
     if not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
     if not course_id:
@@ -1898,7 +1894,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                 course.is_teacher(current_user):
             raise Http404('This course does not belong to you')
         has_quiz_assignments = AssignmentUpload.objects.filter(
-            course_id=course_id, question_paper_id__in=questionpaper_id
+                answer_paper__course_id=course_id,
+                answer_paper__question_paper_id__in=questionpaper_id
             ).exists()
         context = {
             "users": user_details,
@@ -1917,9 +1914,11 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                     attempt_number = attempts[0].attempt_number
             except IndexError:
                 raise Http404('No attempts for paper')
+
             has_user_assignments = AssignmentUpload.objects.filter(
-                course_id=course_id, question_paper_id__in=questionpaper_id,
-                user_id=user_id
+                answer_paper__course_id=course_id,
+                answer_paper__question_paper_id__in=questionpaper_id,
+                answer_paper__user_id=user_id
                 ).exists()
             user = User.objects.get(id=user_id)
             data = AnswerPaper.objects.get_user_data(
@@ -2186,8 +2185,8 @@ def view_answerpaper(request, questionpaper_id, course_id):
         data = AnswerPaper.objects.get_user_data(user, questionpaper_id,
                                                  course_id)
         has_user_assignments = AssignmentUpload.objects.filter(
-            user=user, course_id=course.id,
-            question_paper_id=questionpaper_id
+            answer_paper__user=user, answer_paper__course_id=course.id,
+            answer_paper__question_paper_id=questionpaper_id
         ).exists()
         context = {'data': data, 'quiz': quiz, 'course_id': course.id,
                    "has_user_assignments": has_user_assignments}
@@ -2224,20 +2223,24 @@ def regrade(request, course_id, questionpaper_id, question_id=None,
                                   course.is_teacher(user)):
         raise Http404('You are not allowed to view this page!')
     questionpaper = get_object_or_404(QuestionPaper, pk=questionpaper_id)
-    details = []
     quiz = questionpaper.quiz
     data = {"user_id": user.id, "course_id": course_id,
             "questionpaper_id": questionpaper_id, "question_id": question_id,
             "answerpaper_id": answerpaper_id, "quiz_id": quiz.id,
             "quiz_name": quiz.description, "course_name": course.name
             }
-    regrade_papers.delay(data)
-    msg = dedent("""
-            {0} is submitted for re-evaluation. You will receive a
-            notification for the re-evaluation status
-            """.format(quiz.description)
-        )
-    messages.info(request, msg)
+    is_celery_alive = app.control.ping()
+    if is_celery_alive:
+        regrade_papers.delay(data)
+        msg = dedent("""
+                {0} is submitted for re-evaluation. You will receive a
+                notification for the re-evaluation status
+                """.format(quiz.description)
+            )
+        messages.info(request, msg)
+    else:
+        msg = "Unable to submit for regrade. Please contact admin"
+        messages.warning(request, msg)
     return redirect(
         reverse("yaksh:grade_user", args=[quiz.id, course_id])
     )
@@ -2383,7 +2386,7 @@ def download_assignment_file(request, quiz_id, course_id,
     zipfile_name = string_io()
     zip_file = zipfile.ZipFile(zipfile_name, "w")
     for f_name in assignment_files:
-        folder = f_name.user.get_full_name().replace(" ", "_")
+        folder = f_name.answer_paper.user.get_full_name().replace(" ", "_")
         sub_folder = f_name.assignmentQuestion.summary.replace(" ", "_")
         folder_name = os.sep.join((folder, sub_folder, os.path.basename(
                         f_name.assignmentFile.name))
@@ -4045,78 +4048,24 @@ def upload_marks(request, course_id, questionpaper_id):
         if not is_csv_file:
             messages.warning(request, "The file uploaded is not a CSV file.")
             return redirect('yaksh:monitor', quiz.id, course_id)
-        try:
-            reader = csv.DictReader(
-                csv_file.read().decode('utf-8').splitlines(),
-                dialect=dialect)
-        except TypeError:
-            messages.warning(request, "Bad CSV file")
-            return redirect('yaksh:monitor', quiz.id, course_id)
-        question_ids = _get_header_info(reader)
-        _read_marks_csv(request, reader, course, question_paper, question_ids)
-    return redirect('yaksh:monitor', quiz.id, course_id)
-
-
-def _get_header_info(reader):
-    user_ids, question_ids = [], []
-    fields = reader.fieldnames
-    for field in fields:
-        if field.startswith('Q') and field.count('-') > 0:
-            qid = int(field.split('-')[1])
-            if qid not in question_ids:
-                question_ids.append(qid)
-    return question_ids
-
-
-def _read_marks_csv(request, reader, course, question_paper, question_ids):
-    messages.info(request, 'Marks Uploaded!')
-    for row in reader:
-        username = row['username']
-        user = User.objects.filter(username=username).first()
-        if user:
-            answerpapers = question_paper.answerpaper_set.filter(course=course,
-                                                         user_id=user.id)
+        data = {
+            "course_id": course_id, "questionpaper_id": questionpaper_id,
+            "csv_data": csv_file.read().decode('utf-8').splitlines(),
+            "user_id": request.user.id
+        }
+        is_celery_alive = app.control.ping()
+        if is_celery_alive:
+            update_user_marks.delay(data)
+            msg = dedent("""
+                {0} is submitted for marks update. You will receive a
+                notification for the update status
+                """.format(quiz.description)
+            )
+            messages.info(request, msg)
         else:
-            messages.info(request, '{0} user not found!'.format(username))
-            continue
-        answerpaper = answerpapers.last()
-        if not answerpaper:
-            messages.info(request, '{0} has no answerpaper!'.format(username))
-            continue
-        answers = answerpaper.answers.all()
-        questions = answerpaper.questions.all().values_list('id', flat=True)
-        for qid in question_ids:
-            question = Question.objects.filter(id=qid).first()
-            if not question:
-                messages.info(request,
-                             '{0} is an invalid question id!'.format(qid))
-                continue
-            if qid in questions:
-                answer = answers.filter(question_id=qid).last()
-                if not answer:
-                    answer = Answer(question_id=qid, marks=0, correct=False,
-                                    answer='Created During Marks Update!',
-                                    error=json.dumps([]))
-                    answer.save()
-                    answerpaper.answers.add(answer)
-                key1 = 'Q-{0}-{1}-{2}-marks'.format(qid, question.summary,
-                                                    question.points)
-                key2 = 'Q-{0}-{1}-comments'.format(qid, question.summary,
-                                                   question.points)
-                if key1 in reader.fieldnames:
-                    try:
-                        answer.set_marks(float(row[key1]))
-                    except ValueError:
-                        messages.info(request,
-                                     '{0} invalid marks!'.format(row[key1]))
-                if key2 in reader.fieldnames:
-                    answer.set_comment(row[key2])
-                answer.save()
-        answerpaper.update_marks(state='completed')
-        answerpaper.save()
-        messages.info(request,
-            'Updated successfully for user: {0}, question: {1}'.format(
-            username, question.summary))
+            msg = "Unable to submit for marks update. Please check with admin"
+            messages.warning(request, msg)
+    return redirect('yaksh:monitor', quiz.id, course_id)
 
 
 @login_required

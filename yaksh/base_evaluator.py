@@ -44,7 +44,7 @@ class BaseEvaluator(object):
         """Returns a string without any null and substitute characters"""
         stripped = ""
         for c in string:
-            if ord(c) is not 26 and ord(c) is not 0:
+            if ord(c) != 26 and ord(c) != 0:
                 stripped = stripped + c
         return ''.join(stripped)
 
