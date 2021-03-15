@@ -121,13 +121,13 @@ MOD_GROUP_NAME = 'moderator'
 
 
 def get_assignment_dir(instance, filename):
-    course = instance.answer_paper.course
-    quiz = instance.answer_paper.question_paper.quiz
-    folder = f'Course_{course.id}'
-    sub_folder = f'Quiz_{quiz.id}'
+    course_id = instance.answer_paper.course_id
+    quiz_id = instance.answer_paper.question_paper.quiz_id
+    folder = f'Course_{course_id}'
+    sub_folder = f'Quiz_{quiz_id}'
     user = instance.answer_paper.user.username
     return os.sep.join((folder, sub_folder, user,
-                        str(instance.assignmentQuestion.id),
+                        str(instance.assignmentQuestion_id),
                         filename
                         ))
 
