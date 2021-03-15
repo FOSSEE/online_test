@@ -1054,7 +1054,7 @@ class TestDownloadAssignment(TestCase):
         self.learning_module.delete()
         self.learning_unit.delete()
         self.mod_group.delete()
-        dir_name = f'{self.course.name.replace(" ", "_")}_{self.course.id}'
+        dir_name = f'Course_{self.course.id}'
         file_path = os.sep.join((settings.MEDIA_ROOT, dir_name))
         if os.path.exists(file_path):
             shutil.rmtree(file_path)

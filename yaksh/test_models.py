@@ -107,6 +107,7 @@ def setUpModule():
     MicroManager.objects.create(manager=user, course=course, quiz=quiz,
                                 student=course_user)
 
+
 def tearDownModule():
     User.objects.all().delete()
     Question.objects.all().delete()
@@ -2203,23 +2204,34 @@ class TestCaseTestCases(unittest.TestCase):
 class AssignmentUploadTestCases(unittest.TestCase):
 
     def setUp(self):
-        self.user1 = User.objects.create_user(username='creator1',
-                                    password='demo',
-                                    email='demo@test1.com')
-        self.user2 = User.objects.create_user(username='creator2',
-                                    password='demo',
-                                    email='demo@test2.com')
+        self.user1 = User.objects.create_user(
+            username='creator1',
+            password='demo',
+            email='demo@test1.com'
+        )
+        self.user2 = User.objects.create_user(
+            username='creator2',
+            password='demo',
+            email='demo@test2.com'
+        )
         self.quiz = Quiz.objects.create(
-        start_date_time=datetime(2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
-        end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc),
-        duration=30, active=True,
-        attempts_allowed=1, time_between_attempts=0,
-        description='demo quiz 1', pass_criteria=0,
-        instructions="Demo Instructions")
+            start_date_time=datetime(
+                2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc
+            ),
+            end_date_time=datetime(
+                2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc
+            ),
+            duration=30, active=True,
+            attempts_allowed=1, time_between_attempts=0,
+            description='demo quiz 1', pass_criteria=0,
+            instructions="Demo Instructions"
+        )
 
-
-        self.course = Course.objects.create(name="Python Course",
-                                   enrollment="Enroll Request", creator=self.user1)
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request",
+            creator=self.user1
+        )
 
         self.questionpaper = QuestionPaper.objects.create(
             quiz=self.quiz, total_marks=0.0, shuffle_questions=True
@@ -2249,7 +2261,6 @@ class AssignmentUploadTestCases(unittest.TestCase):
             assignmentQuestion=self.question,
             assignmentFile=file_path2, answer_paper=self.answerpaper1,
             )
-
 
     def test_get_assignments_for_user_files(self):
         assignment_files, file_name = AssignmentUpload.objects.get_assignments(

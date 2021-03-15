@@ -131,6 +131,7 @@ def get_assignment_dir(instance, filename):
                         filename
                         ))
 
+
 def get_model_class(model):
     ctype = ContentType.objects.get(app_label="yaksh", model=model)
     model_class = ctype.model_class()
@@ -1381,7 +1382,9 @@ class Question(models.Model):
     # Solution for the question.
     solution = models.TextField(blank=True)
 
-    content = GenericRelation("TableOfContents", related_query_name='questions')
+    content = GenericRelation(
+        "TableOfContents", related_query_name='questions'
+    )
 
     tc_code_types = {
         "python": [
@@ -1838,7 +1841,8 @@ class QuestionPaper(models.Model):
             all_questions = questions
         return all_questions
 
-    def make_answerpaper(self, user, ip, attempt_num, course_id, special=False):
+    def make_answerpaper(self,
+                         user, ip, attempt_num, course_id, special=False):
         """Creates an answer paper for the user to attempt the quiz"""
         try:
             ans_paper = AnswerPaper.objects.get(user=user,
@@ -2035,6 +2039,7 @@ class AnswerPaperManager(models.Manager):
         ).order_by("id").values(
             "answerpaper__id", "question_id", "correct", "answer"
         )
+
         def _get_per_tc_data(answers, q_type):
             tc = []
             for answer in answers["answer"]:
@@ -2047,11 +2052,11 @@ class AnswerPaperManager(models.Manager):
         df = pd.DataFrame(answers)
         if not df.empty:
             for question in all_questions:
-                que = df[df["question_id"]==question.id].groupby(
+                que = df[df["question_id"] == question.id].groupby(
                         "answerpaper__id").tail(1)
                 if not que.empty:
                     total_attempts = que.shape[0]
-                    correct_attempts = que[que["correct"]==True].shape[0]
+                    correct_attempts = que[que["correct"] == True].shape[0]
                     per_tc_ans = {}
                     if question.type in ["mcq", "mcc"]:
                         per_tc_ans = _get_per_tc_data(que, question.type)
@@ -2643,13 +2648,16 @@ class AssignmentUploadManager(models.Manager):
     def get_assignments(self, qp, que_id=None, user_id=None, course_id=None):
         if que_id and user_id:
             assignment_files = AssignmentUpload.objects.filter(
-                        assignmentQuestion_id=que_id, answer_paper__user_id=user_id,
-                        answer_paper__question_paper=qp, answer_paper__course_id=course_id
+                        assignmentQuestion_id=que_id,
+                        answer_paper__user_id=user_id,
+                        answer_paper__question_paper=qp,
+                        answer_paper__course_id=course_id
                         )
             file_name = User.objects.get(id=user_id).get_full_name()
         else:
             assignment_files = AssignmentUpload.objects.filter(
-                        answer_paper__question_paper=qp, answer_paper__course_id=course_id
+                        answer_paper__question_paper=qp,
+                        answer_paper__course_id=course_id
                         )
             file_name = "{0}_Assignment_files".format(
                             assignment_files[0].answer_paper.course.name
@@ -2895,7 +2903,6 @@ class TOCManager(models.Manager):
             toc.get_toc_as_yaml(file_path)
         return file_path
 
-
     def get_question_stats(self, toc_id):
         answers = LessonQuizAnswer.objects.get_queryset().filter(
             toc_id=toc_id).order_by('id')
@@ -2929,7 +2936,7 @@ class TOCManager(models.Manager):
                     if j not in mydata:
                         mydata[j] = 1
                     else:
-                        mydata[j] +=1
+                        mydata[j] += 1
                 data = mydata.copy()
             if is_percent:
                 for key, value in data.items():
@@ -2975,17 +2982,20 @@ class TOCManager(models.Manager):
                 if not is_valid_time_format(time):
                     messages.append(
                         (False,
-                        f"Invalid time format in {name}. "
+                         f"Invalid time format in {name}. "
                          "Format should be 00:00:00")
-                    )
+                        )
                 else:
                     if content_type == 1:
                         topic = Topic.objects.create(**content)
                         toc.append(TableOfContents(
-                            course_id=course_id, lesson_id=lesson_id, time=time,
-                            content_object=topic, content=content_type 
+                            course_id=course_id,
+                            lesson_id=lesson_id, time=time,
+                            content_object=topic, content=content_type
                         ))
-                        messages.append((True, f"{topic.name} added successfully"))
+                        messages.append(
+                            (True, f"{topic.name} added successfully")
+                        )
                     else:
                         content['user'] = user
                         test_cases = content.pop("testcase")
@@ -3002,10 +3012,13 @@ class TOCManager(models.Manager):
                         else:
                             que = Question.objects.create(**content)
                             for test_case in test_cases:
-                                test_case_type = test_case.pop('test_case_type')
+                                test_case_type = test_case.pop(
+                                    'test_case_type'
+                                )
                                 model_class = get_model_class(test_case_type)
                                 model_class.objects.get_or_create(
-                                    question=que, **test_case, type=test_case_type
+                                    question=que,
+                                    **test_case, type=test_case_type
                                 )
                             toc.append(TableOfContents(
                                 course_id=course_id, lesson_id=lesson_id,
@@ -3021,7 +3034,12 @@ class TOCManager(models.Manager):
 
 
 class TableOfContents(models.Model):
-    toc_types = ((1, "Topic"), (2, "Graded Quiz"), (3, "Exercise"), (4, "Poll"))
+    toc_types = (
+        (1, "Topic"),
+        (2, "Graded Quiz"),
+        (3, "Exercise"),
+        (4, "Poll")
+    )
     course = models.ForeignKey(Course, on_delete=models.CASCADE,
                                related_name='course')
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE,
@@ -3039,7 +3057,7 @@ class TableOfContents(models.Model):
 
     def get_toc_text(self):
         if self.content == 1:
-            content_name =  self.content_object.name
+            content_name = self.content_object.name
         else:
             content_name = self.content_object.summary
         return content_name
