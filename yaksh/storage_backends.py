@@ -3,16 +3,16 @@ from storages.backends.s3boto3 import S3Boto3Storage
 
 
 class StaticStorage(S3Boto3Storage):
-    location = settings.AWS_STATIC_LOCATION if settings.USE_AWS else settings.STATIC_URL
+    if settings.USE_AWS:
+        location = settings.AWS_STATIC_LOCATION
+    else:
+        pass
 
 
 class PublicMediaStorage(S3Boto3Storage):
-    location = settings.AWS_PUBLIC_MEDIA_LOCATION if settings.USE_AWS else settings.MEDIA_URL
-    file_overwrite = False
-
-
-class PrivateMediaStorage(S3Boto3Storage):
-    location = settings.AWS_PRIVATE_MEDIA_LOCATION if settings.USE_AWS else settings.MEDIA_URL
-    default_acl = 'private'
-    file_overwrite = False
-    custom_domain = False
+    if settings.USE_AWS:
+        location = settings.AWS_PUBLIC_MEDIA_LOCATION
+        file_overwrite = True
+        default_acl = 'public-read'
+    else:
+        pass

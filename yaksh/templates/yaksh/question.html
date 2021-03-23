@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="{% static 'yaksh/css/question.css' %}" type="text/css" />
 <link rel="stylesheet" href="{% static 'yaksh/css/codemirror/lib/codemirror.css' %}" type="text/css" />
 <link rel="stylesheet" href="{% static 'yaksh/css/exam.css' %}" type="text/css" />
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.8.1/dropzone.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.8.1/basic.min.css">
 <style>
     .CodeMirror{
         border-style: groove;
@@ -21,6 +23,7 @@
 {% block script %}
 
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.8.1/min/dropzone.min.js"></script>
 <script src="{% static 'yaksh/js/requesthandler.js' %}"></script>
 <script src="{% static 'yaksh/js/codemirror/lib/codemirror.js' %}"></script>
 <script src="{% static 'yaksh/js/codemirror/mode/python/python.js' %}"></script>
@@ -29,6 +32,7 @@
 <script src="{% static 'yaksh/js/codemirror/mode/r/r.js' %}"></script>
 <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
 <script src="{% static 'yaksh/js/jquery-sortable.js' %}"></script>
+
 <script>
 init_val = '{{ last_attempt|escape_quotes|safe }}';
 lang = "{{ question.language }}"
@@ -142,7 +146,6 @@ question_type = "{{ question.type }}";
         </div>
       {% endif %}
     </center>
-  </div>
   <form id="code" action="{% url 'yaksh:check' question.id paper.attempt_number module.id paper.question_paper.id course.id %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <input type=hidden name="question_id" id="question_id" value="{{ question.id }}"></input>
@@ -174,6 +177,9 @@ question_type = "{{ question.type }}";
               <small><strong>Marks: {{ question.points }}</strong></small>
             </span>
           </div>
+          <div class="badge badge-warning">
+            Last submitted answer is considered for evaluation
+          </div>
         </div>
       </div>
       <div class="card-body">
@@ -181,10 +187,10 @@ question_type = "{{ question.type }}";
           {{ question.description|safe }}
         </div>
         {% if files %}
-          <div class="col-md-5">
+          <div class="col-md-8">
               <div class="card">
                 <div class="card-header">
-                  <span> Files to download for this question </span>
+                  <span class="badge badge-info"> Files to download for this question </span>
                 </div>
                 <div class="card-body">
                   {% for f_name in files %}
@@ -265,8 +271,16 @@ question_type = "{{ question.type }}";
           <!-- Upload type question -->
           {% if question.type == "upload" %}
             <p>Upload assignment file for the said question<p>
-            <input type=file id="assignment" name="assignment" multiple="">
+            <div class="dropzone needsclick dz-clickable" id="dropzone_file">
+              <div class="dz-message needsclick">    
+                <button type="button" class="dz-button">
+                  Drop files here or click to upload.
+                </button>
+              </div>
+            </div>
+            <br>
             {% if assignment_files %}
+            <div>
                 <ul class="list-group">
                 {% for as_file in assignment_files %}
                     <li class="list-group-item">
@@ -274,6 +288,7 @@ question_type = "{{ question.type }}";
                     </li>
                 {% endfor %}
                 </ul>
+            </div>
             {% endif %}
           {% endif %}
 

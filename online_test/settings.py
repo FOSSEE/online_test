@@ -30,6 +30,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# This is a required field
+DOMAIN_HOST = "http://127.0.0.1:8000"
+
 URL_ROOT = ''
 
 # Application definition
@@ -256,9 +259,6 @@ CORS_ALLOW_CREDENTIALS = True
 # AWS Credentials
 USE_AWS = False
 if USE_AWS:
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
-
     AWS_ACCESS_KEY_ID = "access-key"
     AWS_SECRET_ACCESS_KEY = "secret-key"
     AWS_S3_REGION_NAME = "ap-south-1"
@@ -272,11 +272,7 @@ if USE_AWS:
     AWS_STATIC_LOCATION = 'static'
     STATICFILES_STORAGE = 'yaksh.storage_backends.StaticStorage'
     STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
-
     # Media Public
     AWS_PUBLIC_MEDIA_LOCATION = 'media/public'
     DEFAULT_FILE_STORAGE = 'yaksh.storage_backends.PublicMediaStorage'
 
-    # Media Private
-    AWS_PRIVATE_MEDIA_LOCATION = 'media/private'
-    PRIVATE_FILE_STORAGE = 'yaksh.storage_backends.PrivateMediaStorage'
