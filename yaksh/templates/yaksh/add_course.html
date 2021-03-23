@@ -6,13 +6,15 @@
 {% endblock %}
 
 {% block script %}
+<script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'yaksh/js/jquery.datetimepicker.full.min.js' %}">
 </script>
+<script type="text/javascript" src="{% static 'yaksh/js/add_course.js' %}"></script>
 {% endblock %}
 {% block title %} Add Course {% endblock %}
 {% block pagetitle %} Add Course {% endblock %}
 {% block content %}
-<div class="container">
+<div class="container-fluid">
     <div class="row">
         <div class="col-md-8">
             <ul class="nav nav-pills" id="course_tabs">
@@ -35,10 +37,11 @@
         </div>
     </div>
     <hr>
+    <div class="container">
     <form name=frm id=frm action="" method="post" >
         {% csrf_token %}
         <center>
-        <table class="table table-bordered table-responsive-sm">
+        <table class="table table-responsive-sm">
         {{ form.as_table }}
         </table>
         <br/>
@@ -58,5 +61,6 @@
         </center>
         <br>
     </form>
+    </div>
 </div>
 {% endblock %}

@@ -64,13 +64,11 @@
       <tr>
         <td> File: </td>
         <td>
-          <div class="input-group mb-3">
-            <div class="custom-file">
-              {{ fileform.file_field }}{{ fileform.file_field.errors }}
-                <label class="custom-file-label" for="id_file_field">
-                    Choose file
-                </label>
-            </div>
+          <div class="custom-file">
+            {{ fileform.file_field }}{{ fileform.file_field.errors }}
+              <label class="custom-file-label" for="id_file_field">
+                  Choose file
+              </label>
           </div>
         </td>
       </tr>
@@ -136,15 +134,15 @@
           <div id="accordion">
             {% for form in formset %}
               <div class="card">
-                <div class="card-header">
+                <div class="card-header bg-success">
                   <div class="row">
                     <div class="col-md-4">
-                      <span class="badge badge-info">
+                      <span class="badge badge-success">
                         Test case {{forloop.counter}}.
                       </span>
                     </div>
                     <div class="ml-auto">
-                      <a class="card-link" data-toggle="collapse" href="#collapse{{form.instance.id}}">
+                      <a class="card-link text-white" data-toggle="collapse" href="#collapse{{form.instance.id}}">
                         Details&nbsp;<i class="fa fa-angle-down"></i></i>
                       </a>
                     </div>

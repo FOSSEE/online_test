@@ -24,22 +24,50 @@ $(document).ready(function() {
     var totalSeconds;
     store_video_time(contents_by_time);
     var time_arr_length = video_time.length;
+    var total_duration;
+    player.on('ready loadedmetadata', event => {
+        total_duration = parseInt(player.duration);
+        store_tracker_time(total_duration);
+        $("#video_duration").val(get_time_in_hrs(total_duration));
+    });
+
     player.on('timeupdate', event => {
-        if (time_arr_length > 0 && player.currentTime >= video_time[loc]) {
+        var current_time = player.currentTime;
+        $("#current_video_time").val(get_time_in_hrs(current_time));
+        if (time_arr_length > 0 && current_time >= video_time[loc]) {
             var content = contents_by_time[loc]; 
             loc += 1;
             if(content.content == 1) {
                 show_topic($("#toc_desc_"+content.id).val(), false);
             }
             else {
-                player.pause();
                 if(player.fullscreen.active) player.fullscreen.exit();
+                player.pause()
                 url = $("#toc_"+content.id).val();
-                ajax_call(url, "GET");
+                ajax_call(url, "GET", screen_lock=true);
             }
         }
+        if(markers.length > 0 && current_time >= markers[track_count]) {
+            track_count++;
+            var csrf = document.getElementById("track-form").elements[0].value;
+            ajax_call($("#track-form").attr("action"), $("#track-form").attr("method"),
+                      $("#track-form").serialize(), csrf, screen_lock=false);
+        }
+    });
+    player.on('ended', event => {
+        var csrf = document.getElementById("track-form").elements[0].value;
+        ajax_call($("#track-form").attr("action"), $("#track-form").attr("method"),
+                  $("#track-form").serialize(), csrf, screen_lock=false);
+        window.location.href = $("#next_unit").attr("href");
     });
 });
+
+function store_tracker_time(duration) {
+    marker = duration / 4;
+    for(var i = marker; i <= duration - marker; i = i + marker) {
+        markers.push(i);
+    }
+}
 
 function show_topic(description, override) {
     var topic_div = $("#topic-description");
@@ -51,8 +79,10 @@ function show_topic(description, override) {
 }
 
 function store_video_time(contents) {
-    for (var j = 0; j < contents.length; j++)
-    video_time.push(get_time_in_seconds(contents[j].time));
+    if(contents) {
+        for (var j = 0; j < contents.length; j++)
+        video_time.push(get_time_in_seconds(contents[j].time));
+    }
 }
 
 function get_time_in_seconds(time) {
@@ -61,6 +91,18 @@ function get_time_in_seconds(time) {
     var mm = parseInt(time[1]);
     var ss = parseInt(time[2]);
     return hh * 3600 + mm * 60 + ss;
+}
+
+function get_time_in_hrs(time) {
+    totalSeconds = parseInt(time)
+    hours = Math.floor(totalSeconds / 3600);
+    totalSeconds %= 3600;
+    minutes = Math.floor(totalSeconds / 60);
+    seconds = totalSeconds % 60;
+    hours = hours < 10 ? "0" + hours : hours;
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    seconds = seconds < 10 ? "0" + seconds : seconds;
+    return hours + ":" + minutes + ":" + seconds;
 }
 
 function lock_screen() {
@@ -78,23 +120,21 @@ function unlock_screen() {
 }
 
 function show_question(data) {
-    $("#dialog").html(data);
-    $("#dialog").dialog({
-        width: 800,
-        height: 500,
-    });
+    $("#myModal").modal({backdrop: 'static', keyboard: false});
+    $("#lesson_quiz_question").html(data)
     $("#submit-quiz-form").submit(function(e) {
         e.preventDefault();
         lock_screen();
         var csrf = document.getElementById("submit-quiz-form").elements[0].value;
-        ajax_call($(this).attr("action"), $(this).attr("method"), $(this).serialize(), csrf);
+        ajax_call($(this).attr("action"), $(this).attr("method"),
+                  $(this).serialize(), csrf, screen_lock=true);
     });
 }
 
 function select_toc(element) {
     var toc_id = element.getAttribute("data-toc"); 
     var content_type = element.getAttribute("data-toc-type");
-    var toc_time = $("#toc_time_"+toc_id).val();
+    var toc_time = $("#toc_time_"+toc_id).html().trim();
     player.currentTime = get_time_in_seconds(toc_time);
     if (content_type == 1) {
         show_topic($("#toc_desc_"+toc_id).val(), true);
@@ -140,8 +180,8 @@ function show_message(message, msg_type) {
     }
 }
 
-function ajax_call(url, method, data, csrf) {
-    lock_screen();
+function ajax_call(url, method, data, csrf, screen_lock=true) {
+    if(screen_lock) {lock_screen();}
     $.ajax({
         url: url,
         timeout: 15000,
@@ -158,8 +198,8 @@ function ajax_call(url, method, data, csrf) {
                 show_question(msg.data);
             }
             if (msg.message) {
+                $("#myModal").modal('hide');
                 if (msg.success) {
-                    $("#dialog").dialog("close");
                     show_message(msg.message, "success");
                 }
                 else {

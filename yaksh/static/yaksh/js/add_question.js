@@ -144,15 +144,6 @@ function textareaformat()
         }
    });
 
-    $('#id_file_field').on('change',function(){
-        //get the file name
-        var files = [];
-        for (var i = 0; i < $(this)[0].files.length; i++) {
-            files.push($(this)[0].files[i].name);
-        }
-        $(this).next('.custom-file-label').html(files.join(', '));
-    });
-
     $("#question_form").each(function(){
         $(this).find('textarea').addClass("form-control");
         $(this).find('input[type=number]').addClass("form-control");
@@ -220,11 +211,4 @@ $(document).ready(() => {
             $('#id_language').children("option[value='other']").show();
         }
     })
-    $('#add_more').click(function() {
-        var form_idx = $(tc_type).val();
-        $('#form_set').append($('#empty_form').html().replace(/__prefix__/g, form_idx));
-        $(tc_type).val(parseInt(form_idx) + 1);
-        var form_type = "#id_"+'{{tc_class}}'+"_set-"+form_idx+"-type";
-        $(form_type).val($("#id_"+'{{tc_class}}'+"_set-0-type").val());
-    });
 });

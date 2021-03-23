@@ -23,7 +23,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files import File
 from django.contrib.messages import get_messages
 from django.contrib.contenttypes.models import ContentType
-from celery.contrib.testing.worker import start_worker
 from django.test import SimpleTestCase
 
 
@@ -40,6 +39,8 @@ from yaksh.decorators import user_has_profile
 from online_test.celery_settings import app
 
 from notifications_plugin.models import Notification
+
+app.conf.update(CELERY_ALWAYS_EAGER=True)
 
 
 class TestUserRegistration(TestCase):
@@ -614,10 +615,7 @@ class TestMonitor(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/monitor.html")
-        self.assertEqual(response.context['msg'], "Quiz Results")
         self.assertEqual(response.context['papers'][0], self.answerpaper)
-        self.assertEqual(response.context['latest_attempts'][0],
-                         self.answerpaper)
 
     def test_get_quiz_user_data(self):
         """
@@ -941,36 +939,38 @@ class TestDownloadAssignment(TestCase):
             )
         self.question_paper.fixed_questions.add(self.question)
 
+        attempt = 1
+        ip = '127.0.0.1'
+        self.answerpaper1 = self.question_paper.make_answerpaper(
+                self.student1, ip, attempt, self.course.id
+            )
+
+        self.answerpaper2 = self.question_paper.make_answerpaper(
+                self.student2, ip, attempt, self.course.id
+            )
+
         # create assignment file
         assignment_file1 = SimpleUploadedFile("file1.txt", b"Test")
         assignment_file2 = SimpleUploadedFile("file2.txt", b"Test")
+
         self.assignment1 = AssignmentUpload.objects.create(
-            user=self.student1, assignmentQuestion=self.question,
-            course=self.course,
-            assignmentFile=assignment_file1, question_paper=self.question_paper
+            assignmentQuestion=self.question,
+            assignmentFile=assignment_file1, answer_paper=self.answerpaper1
             )
         self.assignment2 = AssignmentUpload.objects.create(
-            user=self.student2, assignmentQuestion=self.question,
-            course=self.course,
-            assignmentFile=assignment_file2, question_paper=self.question_paper
+            assignmentQuestion=self.question,
+            assignmentFile=assignment_file2, answer_paper=self.answerpaper1
             )
 
-    def tearDown(self):
-        self.client.logout()
-        self.user.delete()
-        self.student1.delete()
-        self.student2.delete()
-        self.assignment1.delete()
-        self.assignment2.delete()
-        self.quiz.delete()
-        self.course.delete()
-        self.learning_module.delete()
-        self.learning_unit.delete()
-        self.mod_group.delete()
-        dir_name = self.course.name.replace(" ", "_")
-        file_path = os.sep.join((settings.MEDIA_ROOT, dir_name))
-        if os.path.exists(file_path):
-            shutil.rmtree(file_path)
+        self.assignment1 = AssignmentUpload.objects.create(
+            assignmentQuestion=self.question,
+            assignmentFile=assignment_file1, answer_paper=self.answerpaper2
+            )
+        self.assignment2 = AssignmentUpload.objects.create(
+            assignmentQuestion=self.question,
+            assignmentFile=assignment_file2, answer_paper=self.answerpaper2
+            )
+
 
     def test_download_assignment_denies_student(self):
         """
@@ -1040,9 +1040,26 @@ class TestDownloadAssignment(TestCase):
         zip_file = string_io(response.content)
         zipped_file = zipfile.ZipFile(zip_file, 'r')
         self.assertIsNone(zipped_file.testzip())
-        self.assertIn('file2.txt', zipped_file.namelist()[0])
+        self.assertIn('file1.txt', zipped_file.namelist()[0])
         zip_file.close()
         zipped_file.close()
+
+    def tearDown(self):
+        self.client.logout()
+        self.user.delete()
+        self.student1.delete()
+        self.student2.delete()
+        self.assignment1.delete()
+        self.assignment2.delete()
+        self.quiz.delete()
+        self.learning_module.delete()
+        self.learning_unit.delete()
+        self.mod_group.delete()
+        dir_name = f'Course_{self.course.id}'
+        file_path = os.sep.join((settings.MEDIA_ROOT, dir_name))
+        if os.path.exists(file_path):
+            shutil.rmtree(file_path)
+        self.course.delete()
 
 
 class TestAddQuiz(TestCase):
@@ -2168,7 +2185,8 @@ class TestCourses(TestCase):
         # Teacher Login
         # Given
         # Add files to a lesson
-        lesson_file = SimpleUploadedFile("file1.txt", b"Test")
+        file_content = b"Test"
+        lesson_file = SimpleUploadedFile("file1.txt", file_content)
         django_file = File(lesson_file)
         lesson_file_obj = LessonFile()
         lesson_file_obj.lesson = self.lesson
@@ -2203,18 +2221,18 @@ class TestCourses(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(courses.last().creator, self.teacher)
         self.assertEqual(courses.last().name, "Copy Of Python Course")
-        self.assertEqual(module.name, "Copy of demo module")
+        self.assertEqual(module.name, "demo module")
         self.assertEqual(module.creator, self.teacher)
         self.assertEqual(module.order, 0)
         self.assertEqual(len(units), 2)
-        self.assertEqual(cloned_lesson.name, "Copy of demo lesson")
+        self.assertEqual(cloned_lesson.name, "demo lesson")
         self.assertEqual(cloned_lesson.creator, self.teacher)
-        self.assertEqual(cloned_quiz.description, "Copy of demo quiz")
+        self.assertEqual(cloned_quiz.description, "demo quiz")
         self.assertEqual(cloned_quiz.creator, self.teacher)
         self.assertEqual(cloned_qp.__str__(),
-                         "Question Paper for Copy of demo quiz")
-        self.assertEqual(os.path.basename(expected_lesson_files[0].file.name),
-                         os.path.basename(actual_lesson_files[0].file.name))
+                         "Question Paper for demo quiz")
+        self.assertTrue(expected_lesson_files.exists())
+        self.assertEquals(expected_lesson_files[0].file.read(), file_content)
 
         for lesson_file in self.all_files:
             file_path = lesson_file.file.path
@@ -3780,7 +3798,7 @@ class TestCourseDetail(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()['user_data']
         self.assertIn("Student_First_Name Student_Last_Name", data)
-        self.assertIn("Overall Course Progress", data)
+        self.assertIn("Course completed", data)
         self.assertIn("Per Module Progress", data)
 
 
@@ -4420,9 +4438,6 @@ class TestGrader(SimpleTestCase):
             end_time=timezone.now()+timezone.timedelta(minutes=20),
             )
 
-        self.celery_worker = start_worker(app)
-        self.celery_worker.__enter__()
-
     def tearDown(self):
         User.objects.all().delete()
         Course.objects.all().delete()
@@ -4431,7 +4446,6 @@ class TestGrader(SimpleTestCase):
         QuestionPaper.objects.all().delete()
         AnswerPaper.objects.all().delete()
         self.mod_group.delete()
-        self.celery_worker.__exit__(None, None, None)
 
     def test_regrade_denies_anonymous(self):
         # Given
@@ -4954,6 +4968,14 @@ class TestDownloadCsv(TestCase):
             total_marks=1.0, fixed_question_order=str(self.question.id)
             )
         self.question_paper.fixed_questions.add(self.question)
+        self.learning_unit = LearningUnit.objects.create(
+            order=1, type="quiz", quiz=self.quiz)
+        self.learning_module = LearningModule.objects.create(
+            order=1, name="download module", description="download module",
+            check_prerequisite=False, creator=self.user)
+        self.learning_module.learning_unit.add(self.learning_unit.id)
+        self.course.learning_module.add(self.learning_module)
+
 
         # student answerpaper
         user_answer = "def add(a, b)\n\treturn a+b"
@@ -5055,7 +5077,9 @@ class TestDownloadCsv(TestCase):
                     kwargs={'course_id': self.course.id}),
             follow=True
             )
-        file_name = "{0}.csv".format(self.course.name.lower())
+        file_name = "{0}.csv".format(
+            self.course.name.replace(" ", "_").lower()
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
                          'attachment; filename="{0}"'.format(file_name))
@@ -5088,15 +5112,16 @@ class TestDownloadCsv(TestCase):
             username=self.user.username,
             password=self.user_plaintext_pass
         )
-        response = self.client.get(
+        response = self.client.post(
             reverse('yaksh:download_quiz_csv',
                     kwargs={"course_id": self.course.id,
                             "quiz_id": self.quiz.id}),
+            data={"attempt_number": 1},
             follow=True
             )
-        file_name = "{0}-{1}-attempt{2}.csv".format(
-            self.course.name.replace('.', ''),
-            self.quiz.description.replace('.', ''), 1
+        file_name = "{0}-{1}-attempt-{2}.csv".format(
+            self.course.name.replace(' ', '_'),
+            self.quiz.description.replace(' ', '_'), 1
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
@@ -5655,13 +5680,13 @@ class TestShowStatistics(TestCase):
                             "course_id": self.course.id}),
             follow=True
             )
+        question_stats = response.context['question_stats']
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/statistics_question.html')
-        self.assertSequenceEqual(
-            response.context['question_stats'][self.question], [1, 1]
-            )
-        self.assertEqual(response.context['attempts'][0], 1)
-        self.assertEqual(response.context['total'], 1)
+        self.assertIn(self.question, list(question_stats.keys()))
+        q_data = list(question_stats.values())[0]
+        self.assertSequenceEqual(q_data[0:2], [1, 1])
+        self.assertEqual(100, q_data[2])
 
 
 class TestQuestionPaper(TestCase):

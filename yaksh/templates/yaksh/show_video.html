@@ -9,24 +9,20 @@
     var contents_by_time = JSON.parse('{{ contents_by_time|safe }}');
     var loc = 0;
     var video_time = [];
+    var markers = [];
+    var track_count = 0;
 </script>
-<script type="text/javascript" src="{% static 'yaksh/js/jquery-ui.js' %}"></script>
 <script type="text/javascript" src="{% static 'yaksh/js/show_toc.js' %}">
 </script>
 <script src="{% static 'yaksh/js/jquery-sortable.js' %}"></script>
-<script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML">
-</script>
 <script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
-{% endblock %}
-{% block css %}
-<link rel="stylesheet" href="{% static 'yaksh/css/jquery-ui/jquery-ui.css' %}">
 {% endblock %}
 {% block main %}
 <div class="wrapper">
     <!-- Sidebar  -->
     <nav id="sidebar">
-        <div class="sidebar-header">
-            <a class="text-light" href="{% url 'yaksh:course_modules' course.id %}">
+        <div class="sidebar-header bg-info">
+            <a class="text-white" href="{% url 'yaksh:course_modules' course.id %}">
                 {{course.name}}
             </a>
         </div>
@@ -59,14 +55,16 @@
                             {% for unit in module.get_learning_units %}
                                 {% get_unit_status course module unit user as status %}
                                 {% if unit.type == "quiz" %}
-                                    <a href="{% url 'yaksh:start_quiz' unit.quiz.questionpaper_set.get.id module.id course.id %}" class="list-group-item">
-                                        {% if status == "completed" %}
-                                          <i class="fa fa-check-square"></i>
-                                        {% else %}
-                                          <i class="fa fa-square-o"></i>
-                                        {% endif %}
-                                        {{ unit.quiz.description }}
-                                    </a>
+                                    {% if unit.quiz.questionpaper_set.get.id %}
+                                        <a href="{% url 'yaksh:start_quiz' unit.quiz.questionpaper_set.get.id module.id course.id %}" class="list-group-item">
+                                            {% if status == "completed" %}
+                                              <i class="fa fa-check-square"></i>
+                                            {% else %}
+                                              <i class="fa fa-square-o"></i>
+                                            {% endif %}
+                                            {{ unit.quiz.description }}
+                                        </a>
+                                    {% endif %}
                                 {% else %}
                                     <a href="{% url 'yaksh:show_lesson' unit.lesson.id module.id course.id %}" class="list-group-item">
                                         {% if status == "completed" %}
@@ -196,6 +194,11 @@
                     {% endif %}
                 {% endif %}
                 <div class="col-md-8">
+                    <form action="{% url 'stats:add_tracker' track_id %}" method="POST" id="track-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="video_duration" id="video_duration">
+                        <input type="hidden" name="current_video_time" id="current_video_time">
+                    </form>
                     <div class="card">
                         <div class="card-header"><h3><strong>Lesson Description</strong></h3></div>
                         <div class="card-body">
@@ -226,7 +229,7 @@
                 </div>
             </div>
             <br>
-            <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" >
+            <a href="{% url 'yaksh:next_unit' course.id learning_module.id current_unit.id %}" class="btn btn-info btn-lg" id="next_unit">
                     Next&nbsp;<i class="fa fa-step-forward"></i>
             </a>
         {% endif %}
@@ -276,6 +279,12 @@
         {% endif %}
     </div>
 </div>
-<div id="dialog"></div>
+<div class="modal" tabindex="-1" role="dialog" id="myModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-body" id="lesson_quiz_question"></div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 

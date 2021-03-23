@@ -100,6 +100,8 @@ urlpatterns = [
     url(r'^manage/monitor/$', views.monitor, name="monitor"),
     url(r'^manage/monitor/(?P<quiz_id>\d+)/(?P<course_id>\d+)/$',
         views.monitor, name="monitor"),
+    url(r'^manage/monitor/(?P<quiz_id>\d+)/(?P<course_id>\d+)/(?P<attempt_number>\d+)/$',
+        views.monitor, name="monitor"),
     url(r'^manage/user_data/(?P<user_id>\d+)/(?P<questionpaper_id>\d+)/'
         '(?P<course_id>\d+)/$',
         views.user_data, name="user_data"),
@@ -274,4 +276,6 @@ urlpatterns = [
          views.download_sample_toc, name='download_sample_toc'),
     path('manage/upload_marks/<int:course_id>/<int:questionpaper_id>/',
          views.upload_marks, name='upload_marks'),
+    path(r'manage/upload_download_course_md/<int:course_id>',
+        views.upload_download_course_md, name="upload_download_course_md"),
 ]

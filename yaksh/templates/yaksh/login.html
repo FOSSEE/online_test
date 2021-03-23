@@ -4,7 +4,7 @@
 {% block title %} Login {% endblock %}
 
 {% block nav %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <a class="navbar-brand" href="{% url 'yaksh:index' %}">
         <img src="{% static 'yaksh/images/yaksh_banner.png' %}" alt="YAKSH">
     </a>
@@ -12,71 +12,86 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-md-offset-6">
-            <div class="card border-primary">
-                <div class="card-header">
-                    <h3>Log in to Your Account</h3>
-                </div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <form action="" method="post">
-                        {% csrf_token %}
-
-                        <center>
-                            <table class="table table-borderless">
-                            {% if form.errors %}
-                                {% for field in form %}
-                                    {% for error in field.errors %}
-                                        <div class="alert alert-dismissible alert-danger">
-                                            <button type="button" class="close" data-dismiss="alert">
-                                                <i class="fa fa-close"></i>
-                                            </button>
-                                            <strong>{{ error|escape }}</strong>
-                                        </div>
-                                    {% endfor %}
-                                {% endfor %}
-                                {% for error in form.non_field_errors %}
-                                    <div class="alert alert-dismissible alert-danger">
-                                        <button type="button" class="close" data-dismiss="alert">
-                                            <i class="fa fa-close"></i>
-                                        </button>
-                                        <strong>{{ error|escape }}</strong>
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
-                            {{form.username}}
-                            <br>
-                            {{form.password}}
-                            </table>
-                        </center>
-                        <div class="row justify-content-center">
-                            <button class="btn btn-lg btn-success btn-block" type="submit" id="login-btn">
-                                <i class="fa fa-sign-in"></i>&nbsp;Login
-                            </button>
-                            <a href="{% url 'yaksh:register' %}" class="btn btn-lg btn-primary btn-block" id="signup-btn">
-                                <i class="fa fa-user-plus"></i>&nbsp;NEW USER? SIGN UP
-                            </a>
-                            <a class="btn btn-lg btn-primary btn-block" href="{% url 'password_reset' %}" id="forgot-btn">
-                                Forgot Password?
-                            </a>
-                        </div>
-                        <hr>
-                        <center><h1> OR </h1></center>
-                        Login with
-                        <a class="btn btn-social-icon btn-google" href="{% url 'social:begin' 'google-oauth2' %}">
-                            <span class="fa fa-google" style="font-size:32px;color:red" ></span>
-                        </a>
-                        <a class="btn btn-social-icon btn-facebook"  href="{% url 'social:begin' 'facebook' %}">
-                            <span class="fa fa-facebook-square" style="font-size:32px"></span>
-                        </a>
-                        </form>
-                        </br>
-                    </div>
-                </div>
-            </div>
+<br><br>
+<div class="container mt--8 pb-5">
+   <div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7">
+      <div class="card bg-secondary border-0 mb-0">
+        <div class="card-header bg-transparent pb-5">
+          <div class="text-muted text-center mt-2 mb-3"><small>Sign in with</small></div>
+          <div class="btn-wrapper text-center">
+            <a href="{% url 'social:begin' 'google-oauth2' %}" class="btn btn-neutral btn-icon">
+              <span class="btn-inner--icon">
+                <span class="fa fa-google" style="color: red;"></span>
+              </span>
+              <span class="btn-inner--text" style="color: red;">Google</span>
+            </a>
+            <a href="{% url 'social:begin' 'facebook' %}" class="btn btn-neutral btn-icon">
+              <span class="btn-inner--icon">
+                  <span class="fa fa-facebook-square">
+              </span>
+              <span class="btn-inner--text">Facebook</span>
+            </a>
+          </div>
         </div>
+        <div class="card-body px-lg-5 py-lg-5">
+          <div class="text-center text-muted mb-4">
+            <small>Or Sign in with credentials</small>
+          </div>
+          <form role="form" action="" method="post">
+            {% csrf_token %}
+            {% if form.errors %}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-dismissible alert-danger">
+                            <button type="button" class="close" data-dismiss="alert">
+                                <i class="fa fa-close"></i>
+                            </button>
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <div class="alert alert-dismissible alert-danger">
+                        <button type="button" class="close" data-dismiss="alert">
+                            <i class="fa fa-close"></i>
+                        </button>
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            <div class="form-group mb-3">
+              <div class="input-group input-group-merge input-group-alternative">
+                <div class="input-group-prepend">
+                  <span class="input-group-text"><i class="fa fa-user"></i></span>
+                </div>
+                {{form.username}}
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="input-group input-group-merge input-group-alternative">
+                <div class="input-group-prepend">
+                  <span class="input-group-text"><i class="fa fa-lock"></i></span>
+                </div>
+                {{form.password}}
+              </div>
+            </div>
+            <div class="text-center">
+              <button type="submit" class="btn btn-primary my-4">Sign in</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-6">
+          <a href="{% url 'password_reset' %}" class="text-muted"><small>Forgot password?</small></a>
+        </div>
+        <div class="col-6 text-right">
+          <a href="{% url 'yaksh:register' %}" class="text-muted"><small>Create new account</small>
+          </a>
+        </div>
+      </div>
     </div>
-</div>     
+   </div>
+</div>
 {% endblock content %}

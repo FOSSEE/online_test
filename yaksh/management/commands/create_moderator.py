@@ -10,6 +10,7 @@ from django.contrib.auth.models import User, Group, Permission
 
 # local imports
 from yaksh.models import create_group
+from yaksh.views import _create_or_update_profile
 
 
 class Command(BaseCommand):
@@ -43,6 +44,10 @@ class Command(BaseCommand):
                         )
                     )
                 else:
+                    if not hasattr(user, 'profile'):
+                        _create_or_update_profile(user,
+                                                  {'is_email_verified': True}
+                                                  )
                     user.profile.is_moderator = True
                     user.profile.save()
                     self.stdout.write(

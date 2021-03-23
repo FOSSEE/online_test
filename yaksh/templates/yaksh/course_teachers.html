@@ -5,12 +5,21 @@
     <form action="{% url 'yaksh:remove_teacher' course.id %}" method="post">
     {% csrf_token %}
     <div class="container">
-        <table class="table table-responsive-sm course-detail">
+        <div class="card">
+        {% if teachers|length > 10 %}
+        <div class="table-responsive" style="height: 700px">
+        {% else %}
+        <div class="table-responsive">
+        {% endif %}
+        <table class="table table-responsive-sm table-dark course-detail">
+            <thead class="thead-dark">
             <tr>
                 <th>Select</th>
                 <th>Name</th>
                 <th>Email</th>
             </tr>
+            </thead>
+            <tbody class="list">
             {% for teacher in teachers %}
                 <tr>
                     <td><input type="checkbox" name="remove" value="{{ teacher.id }}"></td>
@@ -18,7 +27,10 @@
                     <td>{{ teacher.email }}</td>
                 </tr>
             {% endfor %}
-        <table>
+            </tbody>
+        </table>
+        </div>
+        </div>
     </div>
     <br>
     <button class="btn btn-danger" type="submit" data-toggle="tooltip" title="Remove Selected Teachers from this course">

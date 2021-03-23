@@ -12,6 +12,7 @@
 {% block script %}
 
 <script src="{% static 'yaksh/js/jquery-3.3.1.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
 <script src="{% static 'yaksh/js/add_quiz.js' %}"></script>
 <script src="{% static 'yaksh/js/jquery.datetimepicker.full.min.js' %}"></script>
 <script type="text/javascript">
@@ -87,7 +88,6 @@
         </button>
       </div>
       <div class="modal-body">
-        <p>
           <b>Try as student:</b> Attempt quiz the way students will attempt i.e. -
               <ul class="list-group list-group-flush">
                 <li class="list-group-item">Quiz will have the same duration as that of the original quiz.</li>
@@ -95,7 +95,6 @@
                 <li class="list-group-item">You will be notified about quiz prerequisites.(You can still attempt the quiz though)</li>
               </ul>
           <b>Try as teacher:</b> Attempt quiz without any time or eligibilty constraints.
-        </p>
       </div>
     </div>
   </div>

@@ -70,17 +70,16 @@
             Submission Details
           </div>
           <div class="card-body">
-            <table class="tablesorter table table-striped table-bordered table-responsive-sm" id='marks_table'>
-              <thead>
+            <table class="table table-dark table-responsive-sm" id='marks_table'>
+              <thead class="thead-dark">
                 <tr>
                 <th>Questions</th>
                 <th>Type</th>
                 <th>Marks Obtained</th>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody class="list">
                 {% for question, answers in paper.get_question_answers.items %}
-                  {% with answers|last as answer %}
                       <tr>
                       <td>
                         <a href="#question_{{question.id}}">
@@ -88,12 +87,12 @@
                         </a>
                       </td>
                       <td>{{ question.type }}</td>
-                      <td>{{ answer.answer.marks }}</td>
+                      <td>{{ answers|last  }}{{ answer.answer.marks }}</td>
                       </tr>
-                  {% endwith %}
                 {% endfor %}
                 </tbody>
             </table>
+            <br>
             {% for question, answers in paper.get_question_answers.items %}
               <div class="card" id="question_{{question.id}}">
                 <div class="card-header text-white bg-info">
@@ -200,30 +199,33 @@
                       </center>
                     {% endif %} <!-- End has_user_assignments -->
                   {% else %}
-                  {% for ans in answers %}
+                  {% if answers|first is None %}
+                    <p> Did not attempt </p>
+                  {% else %}
+                  {% for ans in answers|slice:":-1" %}
                     <strong>
                       Attempt Number: {{forloop.counter}}
                     </strong>
                     <div id="accordian">
                       <div class="card">
                         {% if ans.answer.correct %}
-                          <div class="card-header">
+                          <div class="card-header bg-success">
                             <span class="badge badge-success">
                               Correct answer:
                             </span>
                             <a class="card-link" data-toggle="collapse" href="#submitted_{{ans.answer.id}}">
-                              <span class="pull-right">
+                              <span class="pull-right text-white">
                                 Details&nbsp;<i class="fa fa-toggle-down"></i>
                               </span>
                             </a>
                           </div>
                         {% else %}
-                          <div class="card-header">
+                          <div class="card-header bg-danger">
                             <span class="badge badge-danger">
                               Error:
                             </span>
                             <a class="card-link" data-toggle="collapse" href="#submitted_{{ans.answer.id}}">
-                              <span class="pull-right">
+                              <span class="pull-right text-white">
                                 Details&nbsp;<i class="fa fa-toggle-down"></i>
                               </span>
                             </a>
@@ -324,6 +326,7 @@
                     </div>
                     <br>
                   {% endfor %} <!-- End for ans in answers -->
+                  {% endif %}<!-- check if attempted -->
                 </div>
               </div>
               {% endif %}
@@ -331,9 +334,7 @@
               <div class="form-group">
                 <div class="col-md-2">
                   <label class="col-form-label" for="q{{ question.id }}">Marks:</label>
-                  {% with answers|last as answer %}
-                  <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answer.answer.marks }}" readonly=""><br><br>
-                  {% endwith %}
+                  <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answers|last }}" readonly=""><br><br>
                 </div>
               </div>
               <hr/>

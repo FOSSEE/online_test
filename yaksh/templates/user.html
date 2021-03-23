@@ -15,6 +15,16 @@
             <li class="nav-item"><a class="nav-link" href="{% url 'yaksh:index' %}"><i class="fa fa-home" style="size: 18px"></i>&nbsp;Home</a></li>
         </ul>
         <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'yaksh:view_notifications' %}">
+                <i class="fa fa-bell" style="size: 18px"></i>&nbsp;Notifications
+                {% if request.custom_notifications > 0 %}
+                    <span class="badge badge-success badge-pill">
+                        {{request.custom_notifications}}
+                    </span>
+                {% endif %}
+              </a>
+            </li>
             <li class="nav-item dropdown my-lg-0" style="font-size: 1.2rem">
                 <a class="dropdown-toggle nav-link" id="user_dropdown" data-toggle="dropdown" href="#">{{user.get_full_name|title}}
                 </a>
@@ -43,14 +53,6 @@
     </nav>
 </div>
 {% endblock %}
-<script type="text/javascript">
-    $(document).ready(function() {
-        $(".alert").delay(2000).slideUp(200, function() {
-            $(this).alert('close');
-        });
-    });
-</script>
-
 {% block content %}  
   {% block main %}
     {% block navtab %}

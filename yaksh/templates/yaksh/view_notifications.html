@@ -38,7 +38,7 @@
                               <span class="fa fa-check" aria-hidden="true" title="Mark as read"></span>
                             </a>
                         </div>
-                        <div class="toast-body">
+                        <div class="toast-body bg-white">
                             {% if user.id != message.creator.id %}
                                 <p><b>From: </b>{{message.creator.get_full_name}}</p>
                             {% endif %}

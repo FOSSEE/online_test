@@ -11,7 +11,11 @@ except ImportError:
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
+
+# Local Imports
 from yaksh.models import User, Course, Quiz, TableOfContents, Lesson
+from stats.models import TrackLesson
+
 
 register = template.Library()
 
@@ -80,12 +84,15 @@ def get_answer_for_arrange_options(ans, question):
         ans = ans.decode("utf-8")
     else:
         ans = str(ans)
-    answer = literal_eval(ans)
-    testcases = []
-    for answer_id in answer:
-        tc = question.get_test_case(id=int(answer_id))
-        testcases.append(tc)
-    return testcases
+    try:
+        answer = literal_eval(ans)
+        testcases = []
+        for answer_id in answer:
+            tc = question.get_test_case(id=int(answer_id))
+            testcases.append(tc)
+        return testcases
+    except Exception:
+        return None
 
 
 @register.filter(name='replace_spaces')
@@ -198,5 +205,22 @@ def has_lesson_video(lesson_id):
 
 @register.simple_tag
 def get_tc_percent(tc_id, data):
-    return data.get(str(tc_id), 0)
+    return data.get(str(tc_id), 0) if data else None
 
+
+@register.simple_tag
+def get_lesson_views(course_id, lesson_id):
+    course = Course.objects.get(id=course_id)
+    return TrackLesson.objects.filter(
+        course_id=course_id, lesson_id=lesson_id, watched=True
+    ).count(), course.students.count()
+
+
+@register.simple_tag
+def get_percent_value(dictionary, key, total):
+    return round((dictionary.get(str(key), 0)/total)*100) if dictionary else None
+
+
+@register.simple_tag
+def get_dict_value(dictionary, key):
+    return dictionary.get(key, 0) if dictionary else None

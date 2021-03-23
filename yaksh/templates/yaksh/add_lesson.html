@@ -11,6 +11,7 @@
 </script>
 <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML">
 </script>
+
 {% endblock %}
 
 {% block css %}
@@ -74,7 +75,9 @@
                                 <h3>Description Preview</h3>
                             </center>
                         </div>
-                        <div class="card-body" id="description_body" style="max-height: 400px; overflow-y: auto;">
+                        <div class="card-body">
+                        <div id="description_body" style="max-height: 400px; overflow-y: auto;">
+                        </div>
                         </div>
                     </div>
                     <br>
@@ -83,9 +86,12 @@
                     Active:&nbsp;{{lesson_form.active}}
                     <br><br>
                     Video Path:
-                    <span class="badge badge-info">
-                        {{lesson_form.video_path.help_text}}    
-                    </span>
+                    <a data-toggle="tooltip" id="video_msg">
+                        <i class="fa fa-question-circle"></i>
+                    </a>
+                    {{lesson_form.video_option}}
+                    <br><br>
+                    {{lesson_form.video_url}}
                     {{lesson_form.video_path}}
                     <br>
                     Video File:
@@ -132,12 +138,13 @@
                     </center>
                     {% endif %}
                     <center>
-                        <button class="btn btn-success btn-lg" type="submit" id="submit" name="Save">
+                        <button class="btn btn-success btn-lg" type="submit" id="submit-lesson" name="Save">
                             <i class="fa fa-save"></i>
                             Save
                         </button>
                         {% if lesson_files %}
-                        <button class="btn btn-danger btn-lg" type="submit" id="submit" name="Delete"> <i class="fa fa-trash"></i>&nbsp;Delete Files
+                        <button class="btn btn-danger btn-lg" type="submit" name="Delete">
+                            <i class="fa fa-trash"></i>&nbsp;Delete Files
                         </button>
                         {% endif %}
                     </center>

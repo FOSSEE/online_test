@@ -123,11 +123,13 @@ MOD_GROUP_NAME = 'moderator'
 
 
 def get_assignment_dir(instance, filename):
-    folder_name = instance.course.name.replace(" ", "_")
-    sub_folder_name = instance.question_paper.quiz.description.replace(
-        " ", "_")
-    return os.sep.join((folder_name, sub_folder_name, instance.user.username,
-                        str(instance.assignmentQuestion.id),
+    course_id = instance.answer_paper.course_id
+    quiz_id = instance.answer_paper.question_paper.quiz_id
+    folder = f'Course_{course_id}'
+    sub_folder = f'Quiz_{quiz_id}'
+    user = instance.answer_paper.user.username
+    return os.sep.join((folder, sub_folder, user,
+                        str(instance.assignmentQuestion_id),
                         filename
                         ))
 
@@ -323,7 +325,6 @@ class Lesson(models.Model):
         lesson_files = self.get_files()
         new_lesson = self
         new_lesson.id = None
-        new_lesson.name = "Copy of {0}".format(self.name)
         new_lesson.creator = user
         new_lesson.save()
         for _file in lesson_files:
@@ -602,7 +603,6 @@ class Quiz(models.Model):
         question_papers = self.questionpaper_set.all()
         new_quiz = self
         new_quiz.id = None
-        new_quiz.description = "Copy of {0}".format(self.description)
         new_quiz.creator = user
         new_quiz.save()
         for qp in question_papers:
@@ -848,12 +848,13 @@ class LearningModule(models.Model):
             percent = round((count / units.count()) * 100)
         return percent
 
-    def _create_module_copy(self, user, module_name):
+    def _create_module_copy(self, user, module_name=None):
         learning_units = self.learning_unit.order_by("order")
         new_module = self
         new_module.id = None
-        new_module.name = module_name
         new_module.creator = user
+        if module_name:
+            new_module.name = module_name
         new_module.save()
         for unit in learning_units:
             new_unit = unit._create_unit_copy(user)
@@ -959,8 +960,8 @@ class Course(models.Model):
         copy_course_name = "Copy Of {0}".format(self.name)
         new_course = self._create_duplicate_instance(user, copy_course_name)
         for module in learning_modules:
-            copy_module_name = "Copy of {0}".format(module.name)
-            new_module = module._create_module_copy(user, copy_module_name)
+            copy_module_name = module.name
+            new_module = module._create_module_copy(user)
             new_course.learning_module.add(new_module)
         return new_course
 
@@ -994,13 +995,13 @@ class Course(models.Model):
         return self.rejected.all()
 
     def is_enrolled(self, user):
-        return user in self.students.all()
+        return self.students.filter(id=user.id).exists()
 
     def is_creator(self, user):
         return self.creator == user
 
     def is_teacher(self, user):
-        return True if user in self.teachers.all() else False
+        return self.teachers.filter(id=user.id).exists()
 
     def is_self_enroll(self):
         return True if self.enrollment == enrollment_methods[1][0] else False
@@ -1064,13 +1065,13 @@ class Course(models.Model):
         return success
 
     def get_only_students(self):
-        teachers = list(self.teachers.all().values_list("id", flat=True))
+        teachers = list(self.teachers.values_list("id", flat=True))
         teachers.append(self.creator.id)
         students = self.students.exclude(id__in=teachers)
         return students
 
     def get_learning_modules(self):
-        return self.learning_module.order_by("order")
+        return self.learning_module.filter(is_trial=False).order_by("order")
 
     def get_learning_module(self, quiz):
         modules = self.get_learning_modules()
@@ -1162,7 +1163,7 @@ class Course(models.Model):
         return grade
 
     def get_current_unit(self, user):
-        course_status = CourseStatus.objects.filter(course=self, user=user)
+        course_status = CourseStatus.objects.filter(course=self, user_id=user)
         if course_status.exists():
             return course_status.first().current_unit
 
@@ -1183,7 +1184,7 @@ class Course(models.Model):
         return percentage
 
     def is_student(self, user):
-        return user in self.students.all()
+        return self.students.filter(id=user.id).exists()
 
     def create_zip(self, path, static_files):
         zip_file_name = string_io()
@@ -1333,7 +1334,7 @@ class Profile(models.Model):
         super(Profile, self).save(*args, **kwargs)
 
     def __str__(self):
-        return '%s' % (self.user.get_full_name())
+        return '%s' % (self.user.get_full_name() or self.user.username)
 
 
 ###############################################################################
@@ -1383,7 +1384,9 @@ class Question(models.Model):
     # Solution for the question.
     solution = models.TextField(blank=True)
 
-    content = GenericRelation("TableOfContents")
+    content = GenericRelation(
+        "TableOfContents", related_query_name='questions'
+    )
 
     tc_code_types = {
         "python": [
@@ -1442,7 +1445,7 @@ class Question(models.Model):
                                       for file in files]
         if self.type == "upload":
             assignment_files = AssignmentUpload.objects.filter(
-                assignmentQuestion=self, user=user
+                assignmentQuestion=self
                 )
             if assignment_files:
                 metadata['assign_files'] = [(file.assignmentFile.path, False)
@@ -1756,7 +1759,8 @@ class QuestionPaperManager(models.Manager):
 
     def create_trial_paper_to_test_quiz(self, trial_quiz, original_quiz_id):
         """Creates a trial question paper to test quiz."""
-        trial_quiz.questionpaper_set.all().delete()
+        if self.filter(quiz=trial_quiz).exists():
+            self.get(quiz=trial_quiz).delete()
         trial_questionpaper, trial_questions = \
             self._create_trial_from_questionpaper(original_quiz_id)
         trial_questionpaper.quiz = trial_quiz
@@ -1839,7 +1843,8 @@ class QuestionPaper(models.Model):
             all_questions = questions
         return all_questions
 
-    def make_answerpaper(self, user, ip, attempt_num, course_id, special=False):
+    def make_answerpaper(self,
+                         user, ip, attempt_num, course_id, special=False):
         """Creates an answer paper for the user to attempt the quiz"""
         try:
             ans_paper = AnswerPaper.objects.get(user=user,
@@ -1955,6 +1960,12 @@ class QuestionPaper(models.Model):
                     list(self.random_questions.all())
         return len(questions) > 0
 
+    def get_questions_count(self):
+        que_count = self.fixed_questions.count()
+        for r_set in self.random_questions.all():
+            que_count += r_set.num_questions
+        return que_count
+
     def __str__(self):
         return "Question Paper for " + self.quiz.description
 
@@ -1981,32 +1992,6 @@ class QuestionSet(models.Model):
 
 ###############################################################################
 class AnswerPaperManager(models.Manager):
-    def get_all_questions(self, questionpaper_id, attempt_number, course_id,
-                          status='completed'):
-        ''' Return a dict of question id as key and count as value'''
-        papers = self.filter(question_paper_id=questionpaper_id,
-                             course_id=course_id,
-                             attempt_number=attempt_number, status=status)
-        all_questions = list()
-        questions = list()
-        for paper in papers:
-            all_questions += paper.get_questions()
-        for question in all_questions:
-            questions.append(question.id)
-        return Counter(questions)
-
-    def get_all_questions_answered(self, questionpaper_id, attempt_number,
-                                   course_id, status='completed'):
-        ''' Return a dict of answered question id as key and count as value'''
-        papers = self.filter(question_paper_id=questionpaper_id,
-                             course_id=course_id,
-                             attempt_number=attempt_number, status=status)
-        questions_answered = list()
-        for paper in papers:
-            for question in filter(None, paper.get_questions_answered()):
-                if paper.is_answer_correct(question):
-                    questions_answered.append(question.id)
-        return Counter(questions_answered)
 
     def get_attempt_numbers(self, questionpaper_id, course_id,
                             status='completed'):
@@ -2039,25 +2024,49 @@ class AnswerPaperManager(models.Manager):
     def get_question_statistics(self, questionpaper_id, attempt_number,
                                 course_id, status='completed'):
         ''' Return dict with question object as key and list as value
-            The list contains two value, first the number of times a question
-            was answered correctly, and second the number of times a question
-            appeared in a quiz'''
+            The list contains four values, first total attempts, second correct
+            attempts, third correct percentage, fourth per test case answers
+            a question
+        '''
         question_stats = {}
-        questions_answered = self.get_all_questions_answered(questionpaper_id,
-                                                             attempt_number,
-                                                             course_id)
-        questions = self.get_all_questions(questionpaper_id, attempt_number,
-                                           course_id)
-        all_questions = Question.objects.filter(
-                id__in=set(questions),
-                active=True
-            ).order_by('type')
-        for question in all_questions:
-            if question.id in questions_answered:
-                question_stats[question] = [questions_answered[question.id],
-                                            questions[question.id]]
-            else:
-                question_stats[question] = [0, questions[question.id]]
+        qp = QuestionPaper.objects.get(id=questionpaper_id)
+        all_questions = qp.get_question_bank()
+        que_ids = [que.id for que in all_questions]
+        papers = self.filter(
+            question_paper_id=questionpaper_id, course_id=course_id,
+            attempt_number=attempt_number, status=status
+        ).values_list("id", flat=True)
+        answers = Answer.objects.filter(
+            answerpaper__id__in=papers, question_id__in=que_ids
+        ).order_by("id").values(
+            "answerpaper__id", "question_id", "correct", "answer"
+        )
+
+        def _get_per_tc_data(answers, q_type):
+            tc = []
+            for answer in answers["answer"]:
+                try:
+                    ans = literal_eval(answer) if answer else None
+                    tc.extend(ans) if q_type == "mcc" else tc.append(str(ans))
+                except Exception:
+                    pass
+            return dict(Counter(tc))
+        df = pd.DataFrame(answers)
+        if not df.empty:
+            for question in all_questions:
+                que = df[df["question_id"] == question.id].groupby(
+                        "answerpaper__id").tail(1)
+                if not que.empty:
+                    total_attempts = que.shape[0]
+                    correct_attempts = que[que["correct"] == True].shape[0]
+                    per_tc_ans = {}
+                    if question.type in ["mcq", "mcc"]:
+                        per_tc_ans = _get_per_tc_data(que, question.type)
+                    question_stats[question] = (
+                        total_attempts, correct_attempts,
+                        round((correct_attempts/total_attempts)*100),
+                        per_tc_ans
+                    )
         return question_stats
 
     def _get_answerpapers_for_quiz(self, questionpaper_id, course_id,
@@ -2136,10 +2145,51 @@ class AnswerPaperManager(models.Manager):
         best_attempt = 0.0
         papers = self.filter(question_paper__quiz_id=quiz.id,
                              course_id=course_id,
-                             user=user_id).values("marks_obtained")
-        if papers:
-            best_attempt = max([marks["marks_obtained"] for marks in papers])
+                             user=user_id).order_by("-marks_obtained").values(
+                             "marks_obtained")
+        if papers.exists():
+            best_attempt = papers[0]["marks_obtained"]
         return best_attempt
+
+    def get_user_scores(self, question_papers, user, course_id):
+        if not question_papers:
+            return None
+        qp_ids = list(zip(*question_papers))[0]
+        papers = self.filter(
+            course_id=course_id, user_id=user.get("id"),
+            question_paper__id__in=qp_ids
+        ).values("question_paper_id", "marks_obtained")
+        df = pd.DataFrame(papers)
+        user_marks = 0
+        ap_data = None
+        if not df.empty:
+            ap_data = df.groupby("question_paper_id").tail(1)
+        for qp_id, quiz, quiz_marks in question_papers:
+            if ap_data is not None:
+                qp = ap_data['question_paper_id'].to_list()
+                marks = ap_data['marks_obtained'].to_list()
+                if qp_id in qp:
+                    idx = qp.index(qp_id)
+                    user_marks += marks[idx]
+                    user[f"{quiz}-{quiz_marks}-Marks"] = marks[idx]
+                else:
+                    user[f"{quiz}-{quiz_marks}-Marks"] = 0
+            else:
+                user[f"{quiz}-{quiz_marks}-Marks"] = 0
+        user.pop("id")
+        user["total_marks"] = user_marks
+
+    def get_questions_attempted(self, answerpaper_ids):
+        answers = Answer.objects.filter(
+            answerpaper__id__in=answerpaper_ids
+        ).values("question_id", "answerpaper__id")
+        df = pd.DataFrame(answers)
+        if not df.empty and "answerpaper__id" in df.columns:
+            answerpapers = df.groupby("answerpaper__id")
+            question_attempted = {}
+            for ap in answerpapers:
+                question_attempted[ap[0]] = len(ap[1]["question_id"].unique())
+            return question_attempted
 
 
 ###############################################################################
@@ -2214,15 +2264,30 @@ class AnswerPaper(models.Model):
                            'attempt_number', "course"
                            )
 
-    def get_per_question_score(self, question_id):
-        questions = self.get_questions().values_list('id', flat=True)
-        if question_id not in questions:
-            return 'NA'
-        answer = self.get_latest_answer(question_id)
-        if answer:
-            return answer.marks
-        else:
-            return 0
+    def get_per_question_score(self, question_ids):
+        if not question_ids:
+            return None
+        que_ids = list(zip(*question_ids))[1]
+        answers = self.answers.filter(
+            question_id__in=que_ids).values("question_id", "marks")
+        que_data = {}
+        df = pd.DataFrame(answers)
+        ans_data = None
+        if not df.empty:
+            ans_data = df.groupby("question_id").tail(1)
+        for que_summary, que_id, que_comments in question_ids:
+            if ans_data is not None:
+                ans = ans_data['question_id'].to_list()
+                marks = ans_data['marks'].to_list()
+                if que_id in ans:
+                    idx = ans.index(que_id)
+                    que_data[que_summary] = marks[idx]
+                else:
+                    que_data[que_summary] = 0
+            else:
+                que_data[que_summary] = 0
+            que_data[que_comments] = "NA"
+        return que_data
 
     def current_question(self):
         """Returns the current active question to display."""
@@ -2323,14 +2388,20 @@ class AnswerPaper(models.Model):
             secs = dt.seconds + dt.days*24*3600
         return secs
 
+    def _get_marks_for_question(self, question):
+        marks = 0.0
+        answers = question.answer_set.filter(answerpaper=self)
+        if answers.exists():
+            marks = [answer.marks for answer in answers]
+            max_marks = max(marks)
+            marks = max_marks
+        return marks
+
     def _update_marks_obtained(self):
         """Updates the total marks earned by student for this paper."""
-        marks = 0
+        marks = 0.0
         for question in self.questions.all():
-            marks_list = [a.marks
-                          for a in self.answers.filter(question=question)]
-            max_marks = max(marks_list) if marks_list else 0.0
-            marks += max_marks
+            marks += self._get_marks_for_question(question)
         self.marks_obtained = marks
 
     def _update_percent(self):
@@ -2378,38 +2449,19 @@ class AnswerPaper(models.Model):
             corresponding answers.
         """
         q_a = {}
-        for answer in self.answers.all():
-            question = answer.question
-            if question in q_a:
-                q_a[question].append({
+        for question in self.questions.all():
+            answers = question.answer_set.filter(answerpaper=self).distinct()
+            if not answers.exists():
+                q_a[question] = [None, 0.0]
+                continue
+            ans_errs = []
+            for answer in answers:
+                ans_errs.append({
                     'answer': answer,
                     'error_list': [e for e in json.loads(answer.error)]
                 })
-            else:
-                q_a[question] = [{
-                    'answer': answer,
-                    'error_list': [e for e in json.loads(answer.error)]
-                }]
-
-        q_a.update(
-            { q: [] for q in self.questions_unanswered.all() }
-        )
-
-        for question, answers in q_a.items():
-            answers = q_a[question]
-            if answers:
-                q_a[question].append({
-                    'marks': max([
-                        answer['answer'].marks
-                        for answer in answers
-                        if question == answer['answer'].question
-                    ]),
-                })
-            else:
-                q_a[question].append({
-                    'marks': 0.0,
-                })
-
+            q_a[question] = ans_errs
+            q_a[question].append(self._get_marks_for_question(question))
         return q_a
 
     def get_latest_answer(self, question_id):
@@ -2533,25 +2585,17 @@ class AnswerPaper(models.Model):
                 self.user, self.question_paper.quiz.description,
                 question_id
             )
-            return False, msg + 'Question not in the answer paper.'
+            return False, f'{msg} Question not in the answer paper.'
         user_answer = self.answers.filter(question=question).last()
-        if not user_answer:
-            return False, msg + 'Did not answer.'
+        if not user_answer or not user_answer.answer:
+            return False, f'{msg} Did not answer.'
         if question.type in ['mcc', 'arrange']:
             try:
                 answer = literal_eval(user_answer.answer)
                 if type(answer) is not list:
-                    return (False,
-                            msg + '{0} answer not a list.'.format(
-                                                            question.type
-                                                            )
-                            )
+                    return (False, f'{msg} {question.type} answer not a list.')
             except Exception:
-                return (False,
-                        msg + '{0} answer submission error'.format(
-                                                             question.type
-                                                             )
-                        )
+                return (False, f'{msg} {question.type} answer submission error')
         else:
             answer = user_answer.answer
         json_data = question.consolidate_answer_data(answer) \
@@ -2599,16 +2643,19 @@ class AssignmentUploadManager(models.Manager):
     def get_assignments(self, qp, que_id=None, user_id=None, course_id=None):
         if que_id and user_id:
             assignment_files = AssignmentUpload.objects.filter(
-                        assignmentQuestion_id=que_id, user_id=user_id,
-                        question_paper=qp, course_id=course_id
+                        assignmentQuestion_id=que_id,
+                        answer_paper__user_id=user_id,
+                        answer_paper__question_paper=qp,
+                        answer_paper__course_id=course_id
                         )
             file_name = User.objects.get(id=user_id).get_full_name()
         else:
             assignment_files = AssignmentUpload.objects.filter(
-                        question_paper=qp, course_id=course_id
+                        answer_paper__question_paper=qp,
+                        answer_paper__course_id=course_id
                         )
             file_name = "{0}_Assignment_files".format(
-                            assignment_files[0].course.name
+                            assignment_files[0].answer_paper.course.name
                             )
 
         return assignment_files, file_name
@@ -2616,14 +2663,17 @@ class AssignmentUploadManager(models.Manager):
 
 ##############################################################################
 class AssignmentUpload(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
     assignmentQuestion = models.ForeignKey(Question, on_delete=models.CASCADE)
-    assignmentFile = models.FileField(upload_to=get_assignment_dir, max_length=255)
-    question_paper = models.ForeignKey(QuestionPaper, blank=True, null=True,
-                                       on_delete=models.CASCADE)
-    course = models.ForeignKey(Course, null=True, blank=True,
-                               on_delete=models.CASCADE)
+    assignmentFile = models.FileField(upload_to=get_assignment_dir,
+                                      max_length=255)
+    answer_paper = models.ForeignKey(AnswerPaper, blank=True, null=True,
+                                     on_delete=models.CASCADE)
+    upload_date = models.DateTimeField(auto_now=True)
+
     objects = AssignmentUploadManager()
+
+    def __str__(self):
+        return f'Assignment File of the user {self.answer_paper.user}'
 
 
 ##############################################################################
@@ -2838,6 +2888,16 @@ class TOCManager(models.Manager):
                 "student_id", flat=True).distinct().count()
         return data
 
+    def get_all_tocs_as_yaml(self, course_id, lesson_id, file_path):
+        all_tocs = TableOfContents.objects.filter(
+            course_id=course_id, lesson_id=lesson_id,
+        )
+        if not all_tocs.exists():
+            return None
+        for toc in all_tocs:
+            toc.get_toc_as_yaml(file_path)
+        return file_path
+
     def get_question_stats(self, toc_id):
         answers = LessonQuizAnswer.objects.get_queryset().filter(
             toc_id=toc_id).order_by('id')
@@ -2845,7 +2905,7 @@ class TOCManager(models.Manager):
         if answers.exists():
             answers = answers.values(
                 "student__first_name", "student__last_name", "student__email",
-                "student_id", "toc_id"
+                "student_id", "student__profile__roll_number", "toc_id"
                 )
             df = pd.DataFrame(answers)
             answers = df.drop_duplicates().to_dict(orient='records')
@@ -2871,7 +2931,7 @@ class TOCManager(models.Manager):
                     if j not in mydata:
                         mydata[j] = 1
                     else:
-                        mydata[j] +=1
+                        mydata[j] += 1
                 data = mydata.copy()
             if is_percent:
                 for key, value in data.items():
@@ -2917,17 +2977,20 @@ class TOCManager(models.Manager):
                 if not is_valid_time_format(time):
                     messages.append(
                         (False,
-                        f"Invalid time format in {name}. "
+                         f"Invalid time format in {name}. "
                          "Format should be 00:00:00")
-                    )
+                        )
                 else:
                     if content_type == 1:
                         topic = Topic.objects.create(**content)
                         toc.append(TableOfContents(
-                            course_id=course_id, lesson_id=lesson_id, time=time,
+                            course_id=course_id,
+                            lesson_id=lesson_id, time=time,
                             content_object=topic, content=content_type
                         ))
-                        messages.append((True, f"{topic.name} added successfully"))
+                        messages.append(
+                            (True, f"{topic.name} added successfully")
+                        )
                     else:
                         content['user'] = user
                         test_cases = content.pop("testcase")
@@ -2944,10 +3007,13 @@ class TOCManager(models.Manager):
                         else:
                             que = Question.objects.create(**content)
                             for test_case in test_cases:
-                                test_case_type = test_case.pop('test_case_type')
+                                test_case_type = test_case.pop(
+                                    'test_case_type'
+                                )
                                 model_class = get_model_class(test_case_type)
                                 model_class.objects.get_or_create(
-                                    question=que, **test_case, type=test_case_type
+                                    question=que,
+                                    **test_case, type=test_case_type
                                 )
                             toc.append(TableOfContents(
                                 course_id=course_id, lesson_id=lesson_id,
@@ -2963,7 +3029,12 @@ class TOCManager(models.Manager):
 
 
 class TableOfContents(models.Model):
-    toc_types = ((1, "Topic"), (2, "Graded Quiz"), (3, "Exercise"), (4, "Poll"))
+    toc_types = (
+        (1, "Topic"),
+        (2, "Graded Quiz"),
+        (3, "Exercise"),
+        (4, "Poll")
+    )
     course = models.ForeignKey(Course, on_delete=models.CASCADE,
                                related_name='course')
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE,
@@ -2981,10 +3052,43 @@ class TableOfContents(models.Model):
 
     def get_toc_text(self):
         if self.content == 1:
-            content_name =  self.content_object.name
+            content_name = self.content_object.name
         else:
             content_name = self.content_object.summary
         return content_name
+
+    def get_toc_as_yaml(self, file_path):
+        data = {'content_type': self.content, 'time': self.time}
+        if self.topics.exists():
+            content = self.topics.first()
+            data.update(
+                {
+                    'name': content.name,
+                    'description': content.description,
+                }
+            )
+        elif self.questions.exists():
+            content = self.questions.first()
+            tc_data = []
+            for tc in content.get_test_cases():
+                _tc_as_dict = model_to_dict(
+                    tc, exclude=['id', 'testcase_ptr', 'question'],
+                )
+                tc_data.append(_tc_as_dict)
+            data.update(
+                {
+                    'summary': content.summary,
+                    'type': content.type,
+                    'language': content.language,
+                    'description': content.description,
+                    'points': content.points,
+                    'testcase': tc_data,
+                }
+            )
+        yaml_block = dict_to_yaml(data)
+        with open(file_path, "a") as yaml_file:
+            yaml_file.write(yaml_block)
+            return yaml_file
 
     def __str__(self):
         return f"TOC for {self.lesson.name} with {self.get_content_display()}"
@@ -2993,7 +3097,7 @@ class TableOfContents(models.Model):
 class Topic(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
-    content = GenericRelation(TableOfContents)
+    content = GenericRelation(TableOfContents, related_query_name='topics')
 
     def __str__(self):
         return f"{self.name}"

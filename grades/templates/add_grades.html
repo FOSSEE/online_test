@@ -1,9 +1,14 @@
 {% extends "manage.html" %}
+{% load static %}
 {% load custom_filters %}
 {% block title %} Add/Edit Grading {% endblock %}
 {% block pagetitle %} Add/Edit Grading {% endblock %}
-{% block main %}
-<html>
+{% block script %}
+    <script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'yaksh/js/add_grades.js' %}"></script>
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
 <div class="row">
     <div class="col-md-8">
         <ul class="nav nav-pills" id="course_tabs">
@@ -26,6 +31,7 @@
     </div>
 </div>
 <hr>
+<div class="container">
 <a href="{% url 'grades:grading_systems'%}" class="btn btn-primary btn-lg">
     View Grading Systems
 </a>
@@ -84,7 +90,6 @@
                     {{ hidden }}
                 {% endfor %}
                 <b><u>Grade Range {{forloop.counter}}.</u></b>
-                <div class="container">
                     <div class="row">
                     {% for field in form.visible_fields  %}
                       <div class="col-sm-3">
@@ -95,7 +100,6 @@
                       </div>
                     {% endfor %}
                     </div>
-                </div>
             {% endfor %}
         </div>
     </table>
@@ -109,5 +113,6 @@
     {% endif %}
     <br><br>
 </form>
-</html>
+</div>
+</div>
 {% endblock %}

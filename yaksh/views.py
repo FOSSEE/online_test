@@ -26,12 +26,14 @@ from textwrap import dedent
 import zipfile
 import markdown
 import ruamel
+import pandas as pd
 try:
     from StringIO import StringIO as string_io
 except ImportError:
     from io import BytesIO as string_io
 import re
 # Local imports.
+from online_test.celery_settings import app
 from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, FloatTestCase,
@@ -41,8 +43,9 @@ from yaksh.models import (
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
     LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
     Topic, TableOfContents, LessonQuizAnswer, MicroManager, QRcode,
-    QRcodeHandler
+    QRcodeHandler, dict_to_yaml
 )
+from stats.models import TrackLesson
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
     QuestionFilterForm, CourseForm, ProfileForm,
@@ -56,7 +59,7 @@ from .file_utils import extract_files, is_csv
 from .send_emails import (send_user_mail,
                           generate_activation_key, send_bulk_mail)
 from .decorators import email_verified, has_profile
-from .tasks import regrade_papers
+from .tasks import regrade_papers, update_user_marks
 from notifications_plugin.models import Notification
 import hashlib
 
@@ -81,7 +84,10 @@ def is_moderator(user, group_name=MOD_GROUP_NAME):
     """Check if the user is having moderator rights"""
     try:
         group = Group.objects.get(name=group_name)
-        return user.profile.is_moderator and user in group.user_set.all()
+        return (
+                user.profile.is_moderator and
+                group.user_set.filter(id=user.id).exists()
+            )
     except Profile.DoesNotExist:
         return False
     except Group.DoesNotExist:
@@ -98,10 +104,6 @@ def add_as_moderator(users, group_name=MOD_GROUP_NAME):
         if not is_moderator(user):
             user.profile.is_moderator = True
             user.profile.save()
-
-
-CSV_FIELDS = ['name', 'username', 'roll_number', 'institute', 'department',
-              'questions', 'marks_obtained', 'out_of', 'percentage', 'status']
 
 
 def get_html_text(md_text):
@@ -231,6 +233,9 @@ def results_user(request):
 @email_verified
 def add_question(request, question_id=None):
     user = request.user
+    if not is_moderator(user):
+        raise Http404('You are not allowed to view this page !')
+
     test_case_type = None
 
     if question_id is not None:
@@ -680,8 +685,9 @@ def show_question(request, question, paper, error_message=None,
         delay_time = paper.time_left_on_question(question)
 
     if previous_question and quiz.is_exercise:
-        if (delay_time <= 0 or previous_question in
-                paper.questions_answered.all()):
+        is_prev_que_answered = paper.questions_answered.filter(
+            id=previous_question.id).exists()
+        if (delay_time <= 0 or is_prev_que_answered):
             can_skip = True
         question = previous_question
     if not question:
@@ -705,7 +711,7 @@ def show_question(request, question, paper, error_message=None,
             )
     else:
         quiz_type = 'Exercise'
-    if question in paper.questions_answered.all():
+    if paper.questions_answered.filter(id=question.id).exists():
         notification = (
             'You have already attempted this question successfully'
             if question.type == "code" else
@@ -718,9 +724,7 @@ def show_question(request, question, paper, error_message=None,
     if question.type == 'upload':
         assignment_files = AssignmentUpload.objects.filter(
                             assignmentQuestion_id=question.id,
-                            course_id=course_id,
-                            user=request.user,
-                            question_paper_id=paper.question_paper_id
+                            answer_paper=paper
                         )
         handlers = QRcodeHandler.objects.filter(user=request.user,
                                                 question=question,
@@ -805,6 +809,14 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
         course_id=course_id
     )
     current_question = get_object_or_404(Question, pk=q_id)
+    def is_valid_answer(answer):
+        status = True
+        if ((current_question.type == "mcc" or
+                current_question.type == "arrange") and not answer):
+            status = False
+        elif answer is None or not str(answer):
+            status = False
+        return status
 
     if request.method == 'POST':
         # Add the answer submitted, regardless of it being correct or not.
@@ -854,22 +866,15 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                     course_id=course_id, module_id=module_id,
                     previous_question=current_question
                 )
+            uploaded_files = []
             for fname in assignment_filename:
                 fname._name = fname._name.replace(" ", "_")
-                assignment_files = AssignmentUpload.objects.filter(
-                    assignmentQuestion=current_question, course_id=course_id,
-                    assignmentFile__icontains=fname, user=user,
-                    question_paper=questionpaper_id)
-                if assignment_files.exists():
-                    assign_file = assignment_files.first()
-                    if os.path.exists(assign_file.assignmentFile.path):
-                        os.remove(assign_file.assignmentFile.path)
-                    assign_file.delete()
-                AssignmentUpload.objects.create(
-                    user=user, assignmentQuestion=current_question,
-                    course_id=course_id,
-                    assignmentFile=fname, question_paper_id=questionpaper_id
-                )
+                uploaded_files.append(AssignmentUpload(
+                                    assignmentQuestion=current_question,
+                                    assignmentFile=fname,
+                                    answer_paper_id=paper.id
+                                ))
+            AssignmentUpload.objects.bulk_create(uploaded_files)
             user_answer = 'ASSIGNMENT UPLOADED'
             if not current_question.grade_assignment_upload:
                 new_answer = Answer(
@@ -884,7 +889,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                                      previous_question=current_question)
         else:
             user_answer = request.POST.get('answer')
-        if not str(user_answer):
+        if not is_valid_answer(user_answer):
             msg = "Please submit a valid answer."
             return show_question(
                 request, current_question, paper, notification=msg,
@@ -1333,10 +1338,10 @@ def show_statistics(request, questionpaper_id, attempt_number=None,
     attempt_numbers = AnswerPaper.objects.get_attempt_numbers(
         questionpaper_id, course_id)
     quiz = get_object_or_404(QuestionPaper, pk=questionpaper_id).quiz
+    context = {'quiz': quiz, 'attempts': attempt_numbers,
+               'questionpaper_id': questionpaper_id,
+               'course_id': course_id}
     if attempt_number is None:
-        context = {'quiz': quiz, 'attempts': attempt_numbers,
-                   'questionpaper_id': questionpaper_id,
-                   'course_id': course_id}
         return my_render_to_response(
             request, 'yaksh/statistics_question.html', context
         )
@@ -1345,7 +1350,10 @@ def show_statistics(request, questionpaper_id, attempt_number=None,
                                                   course_id)
     if not AnswerPaper.objects.has_attempt(questionpaper_id, attempt_number,
                                            course_id):
-        return my_redirect('/exam/manage/')
+        messages.warning(request, "No answerpapers found")
+        return my_render_to_response(
+            request, 'yaksh/statistics_question.html', context
+        )
     question_stats = AnswerPaper.objects.get_question_statistics(
         questionpaper_id, attempt_number, course_id
     )
@@ -1360,58 +1368,49 @@ def show_statistics(request, questionpaper_id, attempt_number=None,
 
 @login_required
 @email_verified
-def monitor(request, quiz_id=None, course_id=None):
+def monitor(request, quiz_id=None, course_id=None, attempt_number=1):
     """Monitor the progress of the papers taken so far."""
 
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
 
-    # quiz_id is not None.
-    try:
-        quiz = get_object_or_404(Quiz, id=quiz_id)
-        course = get_object_or_404(Course, id=course_id)
-        if not course.is_creator(user) and not course.is_teacher(user):
-            raise Http404('This course does not belong to you')
-        q_paper = QuestionPaper.objects.filter(quiz__is_trial=False,
-                                               quiz_id=quiz_id).distinct()
-    except (QuestionPaper.DoesNotExist, Course.DoesNotExist):
-        papers = []
-        q_paper = None
-        latest_attempts = []
-        attempt_numbers = []
+    course = get_object_or_404(Course, id=course_id)
+    if not course.is_creator(user) and not course.is_teacher(user):
+        raise Http404('This course does not belong to you')
+
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    q_paper = QuestionPaper.objects.filter(quiz__is_trial=False,
+                                           quiz_id=quiz_id).distinct().last()
+    attempt_numbers = AnswerPaper.objects.get_attempt_numbers(
+        q_paper.id, course.id
+    )
+    questions_count = 0
+    questions_attempted = {}
+    completed_papers = 0
+    inprogress_papers = 0
+    papers = AnswerPaper.objects.filter(
+        question_paper_id=q_paper.id, attempt_number=attempt_number,
+        course_id=course_id
+        ).order_by('user__first_name')
+    papers = papers.filter(attempt_number=attempt_number)
+    if not papers.exists():
+        messages.warning(request, "No AnswerPapers found")
     else:
-        if q_paper:
-            attempt_numbers = AnswerPaper.objects.get_attempt_numbers(
-                q_paper.last().id, course.id)
-        else:
-            attempt_numbers = []
-        latest_attempts = []
-        papers = AnswerPaper.objects.filter(
-            question_paper_id=q_paper.first().id,
-            course_id=course_id).order_by(
-                'user__profile__roll_number'
+        questions_count = q_paper.get_questions_count()
+        questions_attempted = AnswerPaper.objects.get_questions_attempted(
+            papers.values_list("id", flat=True)
         )
-        users = papers.values_list('user').distinct()
-        for auser in users:
-            last_attempt = papers.filter(user__in=auser).aggregate(
-                last_attempt_num=Max('attempt_number')
-            )
-            latest_attempts.append(
-                papers.get(
-                    user__in=auser,
-                    attempt_number=last_attempt['last_attempt_num']
-                )
-            )
-    csv_fields = CSV_FIELDS
+        completed_papers = papers.filter(status="completed").count()
+        inprogress_papers = papers.filter(status="inprogress").count()
     context = {
-        "papers": papers,
-        "quiz": quiz,
-        "msg": "Quiz Results",
-        "latest_attempts": latest_attempts,
-        "csv_fields": csv_fields,
+        "papers": papers, "quiz": quiz,
+        "inprogress_papers": inprogress_papers,
         "attempt_numbers": attempt_numbers,
-        "course": course
+        "course": course, "total_papers": papers.count(),
+        "completed_papers": completed_papers,
+        "questions_attempted": questions_attempted,
+        "questions_count": questions_count
     }
     return my_render_to_response(request, 'yaksh/monitor.html', context)
 
@@ -1824,18 +1823,6 @@ def user_data(request, user_id, questionpaper_id=None, course_id=None):
     return my_render_to_response(request, 'yaksh/user_data.html', context)
 
 
-def _expand_questions(questions, field_list):
-    i = field_list.index('questions')
-    field_list.remove('questions')
-    for question in questions:
-        field_list.insert(
-            i, 'Q-{0}-{1}-{2}-marks'.format(question.id, question.summary,
-                                            question.points))
-        field_list.insert(
-            i+1, 'Q-{0}-{1}-comments'.format(question.id, question.summary))
-    return field_list
-
-
 @login_required
 @email_verified
 def download_quiz_csv(request, course_id, quiz_id):
@@ -1843,84 +1830,46 @@ def download_quiz_csv(request, course_id, quiz_id):
     if not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
     course = get_object_or_404(Course, id=course_id)
-    quiz = get_object_or_404(Quiz, id=quiz_id)
     if not course.is_creator(current_user) and \
             not course.is_teacher(current_user):
         raise Http404('The quiz does not belong to your course')
-    users = course.get_enrolled().order_by('first_name')
-    if not users:
-        return monitor(request, quiz_id)
-    csv_fields = []
-    attempt_number = None
+    quiz = get_object_or_404(Quiz, id=quiz_id)
     question_paper = quiz.questionpaper_set.last()
-    last_attempt_number = AnswerPaper.objects.get_attempt_numbers(
-        question_paper.id, course.id).last()
     if request.method == 'POST':
-        csv_fields = request.POST.getlist('csv_fields')
-        attempt_number = request.POST.get('attempt_number',
-                                          last_attempt_number)
-    if not csv_fields:
-        csv_fields = CSV_FIELDS
-    if not attempt_number:
-        attempt_number = last_attempt_number
-
-    questions = question_paper.get_question_bank()
-    answerpapers = AnswerPaper.objects.filter(
-        question_paper=question_paper,
-        attempt_number=attempt_number, course_id=course_id)
-    if not answerpapers:
+        attempt_number = request.POST.get('attempt_number')
+        questions = question_paper.get_question_bank()
+        answerpapers = AnswerPaper.objects.select_related(
+            "user").select_related('question_paper').prefetch_related(
+            'answers').filter(
+            course_id=course_id, question_paper_id=question_paper.id,
+            attempt_number=attempt_number
+        ).order_by("user__first_name")
+        que_summaries = [
+            (f"Q-{que.id}-{que.summary}-{que.points}-marks", que.id,
+                f"Q-{que.id}-{que.summary}-comments"
+                )
+            for que in questions
+        ]
+        user_data = list(answerpapers.values(
+            "user__username", "user__first_name", "user__last_name",
+            "user__profile__roll_number", "user__profile__institute",
+            "user__profile__department", "marks_obtained",
+            "question_paper__total_marks", "percent", "status"
+        ))
+        for idx, ap in enumerate(answerpapers):
+            que_data = ap.get_per_question_score(que_summaries)
+            user_data[idx].update(que_data)
+        df = pd.DataFrame(user_data)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = \
+            'attachment; filename="{0}-{1}-attempt-{2}.csv"'.format(
+                course.name.replace(' ', '_'),
+                quiz.description.replace(' ', '_'), attempt_number
+            )
+        df.to_csv(response, index=False)
+        return response
+    else:
         return monitor(request, quiz_id, course_id)
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = \
-        'attachment; filename="{0}-{1}-attempt{2}.csv"'.format(
-            course.name.replace('.', ''),  quiz.description.replace('.', ''),
-            attempt_number)
-    writer = csv.writer(response)
-    if 'questions' in csv_fields:
-        csv_fields = _expand_questions(questions, csv_fields)
-    writer.writerow(csv_fields)
-
-    csv_fields_values = {
-            'name': 'user.get_full_name().title()',
-            'roll_number': 'user.profile.roll_number',
-            'institute': 'user.profile.institute',
-            'department': 'user.profile.department',
-            'username': 'user.username',
-            'marks_obtained': 'answerpaper.marks_obtained',
-            'out_of': 'question_paper.total_marks',
-            'percentage': 'answerpaper.percent',
-            'status': 'answerpaper.status'}
-    questions_scores = {}
-    for question in questions:
-        questions_scores['Q-{0}-{1}-{2}-marks'.format(
-            question.id, question.summary, question.points)] \
-            = 'answerpaper.get_per_question_score({0})'.format(question.id)
-        answer = question.answer_set.last()
-        comment = None
-        if answer:
-            comment = answer.comment
-        else:
-            comment = ''
-        questions_scores['Q-{0}-{1}-comments'.format(
-            question.id, question.summary)] \
-            = 'answerpaper.get_answer_comment({0})'.format(question.id)
-    csv_fields_values.update(questions_scores)
-
-    users = users.exclude(id=course.creator.id).exclude(
-        id__in=course.teachers.all())
-    for user in users:
-        row = []
-        answerpaper = None
-        papers = answerpapers.filter(user=user)
-        if papers:
-            answerpaper = papers.first()
-        for field in csv_fields:
-            try:
-                row.append(eval(csv_fields_values[field]))
-            except AttributeError:
-                row.append('-')
-        writer.writerow(row)
-    return response
 
 
 @login_required
@@ -1931,6 +1880,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
     and update all their marks and also give comments for each paper.
     """
     current_user = request.user
+    papers = AnswerPaper.objects.filter(user=current_user)
     if not is_moderator(current_user):
         raise Http404('You are not allowed to view this page!')
     if not course_id:
@@ -1955,7 +1905,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                 course.is_teacher(current_user):
             raise Http404('This course does not belong to you')
         has_quiz_assignments = AssignmentUpload.objects.filter(
-            course_id=course_id, question_paper_id__in=questionpaper_id
+                answer_paper__course_id=course_id,
+                answer_paper__question_paper_id__in=questionpaper_id
             ).exists()
         context = {
             "users": user_details,
@@ -1974,9 +1925,11 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                     attempt_number = attempts[0].attempt_number
             except IndexError:
                 raise Http404('No attempts for paper')
+
             has_user_assignments = AssignmentUpload.objects.filter(
-                course_id=course_id, question_paper_id__in=questionpaper_id,
-                user_id=user_id
+                answer_paper__course_id=course_id,
+                answer_paper__question_paper_id__in=questionpaper_id,
+                answer_paper__user_id=user_id
                 ).exists()
             user = User.objects.get(id=user_id)
             data = AnswerPaper.objects.get_user_data(
@@ -2194,7 +2147,7 @@ def test_mode(user, godmode=False, questions_list=None, quiz_id=None,
             order=1, type="quiz", quiz=trial_quiz,
             check_prerequisite=False)
         module, created = LearningModule.objects.get_or_create(
-            order=1, creator=user, check_prerequisite=False,
+            order=1, creator=user, check_prerequisite=False, is_trial=True,
             name="Trial for {0}".format(trial_course.name))
         module.learning_unit.add(trial_unit)
         trial_course.learning_module.add(module.id)
@@ -2221,12 +2174,16 @@ def test_quiz(request, mode, quiz_id, course_id=None):
             request,
             "{0} is either expired or inactive".format(quiz.description)
         )
-        return my_redirect('/exam/manage')
+        return my_redirect(reverse("yaksh:index"))
 
     trial_questionpaper, trial_course, trial_module = test_mode(
         current_user, godmode, None, quiz_id, course_id)
-    return my_redirect("/exam/start/{0}/{1}/{2}".format(
-        trial_questionpaper.id, trial_module.id, trial_course.id))
+    return my_redirect(
+        reverse(
+            "yaksh:start_quiz",
+            args=[trial_questionpaper.id, trial_module.id,  trial_course.id]
+            )
+        )
 
 
 @login_required
@@ -2239,8 +2196,8 @@ def view_answerpaper(request, questionpaper_id, course_id):
         data = AnswerPaper.objects.get_user_data(user, questionpaper_id,
                                                  course_id)
         has_user_assignments = AssignmentUpload.objects.filter(
-            user=user, course_id=course.id,
-            question_paper_id=questionpaper_id
+            answer_paper__user=user, answer_paper__course_id=course.id,
+            answer_paper__question_paper_id=questionpaper_id
         ).exists()
         context = {'data': data, 'quiz': quiz, 'course_id': course.id,
                    "has_user_assignments": has_user_assignments}
@@ -2277,20 +2234,24 @@ def regrade(request, course_id, questionpaper_id, question_id=None,
                                   course.is_teacher(user)):
         raise Http404('You are not allowed to view this page!')
     questionpaper = get_object_or_404(QuestionPaper, pk=questionpaper_id)
-    details = []
     quiz = questionpaper.quiz
     data = {"user_id": user.id, "course_id": course_id,
             "questionpaper_id": questionpaper_id, "question_id": question_id,
             "answerpaper_id": answerpaper_id, "quiz_id": quiz.id,
             "quiz_name": quiz.description, "course_name": course.name
             }
-    regrade_papers.delay(data)
-    msg = dedent("""
-            {0} is submitted for re-evaluation. You will receive a
-            notification for the re-evaluation status
-            """.format(quiz.description)
-        )
-    messages.info(request, msg)
+    is_celery_alive = app.control.ping()
+    if is_celery_alive:
+        regrade_papers.delay(data)
+        msg = dedent("""
+                {0} is submitted for re-evaluation. You will receive a
+                notification for the re-evaluation status
+                """.format(quiz.description)
+            )
+        messages.info(request, msg)
+    else:
+        msg = "Unable to submit for regrade. Please contact admin"
+        messages.warning(request, msg)
     return redirect(
         reverse("yaksh:grade_user", args=[quiz.id, course_id])
     )
@@ -2302,40 +2263,36 @@ def download_course_csv(request, course_id):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    course = Course.objects.prefetch_related("learning_module").get(
-        id=course_id)
+    course = get_object_or_404(
+        Course.objects.prefetch_related("learning_module"), id=course_id
+    )
     if not course.is_creator(user) and not course.is_teacher(user):
-        raise Http404('The question paper does not belong to your course')
-    students = course.get_only_students().annotate(
+        raise Http404('You are not allowed to view this course')
+    students = list(course.get_only_students().annotate(
         roll_number=F('profile__roll_number'),
         institute=F('profile__institute')
     ).values(
-        "id", "first_name", "last_name",
-        "email", "institute", "roll_number"
-    )
-    quizzes = course.get_quizzes()
-
+        "id", "first_name", "last_name", "email", "institute", "roll_number"
+    ))
+    que_pprs = [
+        quiz.questionpaper_set.values(
+            "id", "quiz__description", "total_marks")[0]
+        for quiz in course.get_quizzes()
+    ]
+    total_course_marks = sum([qp.get("total_marks", 0) for qp in que_pprs])
+    qp_ids = [
+        (qp.get("id"), qp.get("quiz__description"), qp.get("total_marks"))
+        for qp in que_pprs
+    ]
     for student in students:
-        total_course_marks = 0.0
         user_course_marks = 0.0
-        for quiz in quizzes:
-            quiz_best_marks = AnswerPaper.objects. \
-                get_user_best_of_attempts_marks(quiz, student["id"], course_id)
-            user_course_marks += quiz_best_marks
-            total_course_marks += quiz.questionpaper_set.values_list(
-                "total_marks", flat=True)[0]
-            student["{}".format(quiz.description)] = quiz_best_marks
-        student["total_scored"] = user_course_marks
+        AnswerPaper.objects.get_user_scores(qp_ids, student, course_id)
         student["out_of"] = total_course_marks
+    df = pd.DataFrame(students)
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(
-                                      (course.name).lower().replace('.', ''))
-    header = ['first_name', 'last_name', "roll_number", "email", "institute"]\
-        + [quiz.description for quiz in quizzes] + ['total_scored', 'out_of']
-    writer = csv.DictWriter(response, fieldnames=header, extrasaction='ignore')
-    writer.writeheader()
-    for student in students:
-        writer.writerow(student)
+                                      (course.name).lower().replace(' ', '_'))
+    output_file = df.to_csv(response, index=False)
     return response
 
 
@@ -2440,7 +2397,7 @@ def download_assignment_file(request, quiz_id, course_id,
     zipfile_name = string_io()
     zip_file = zipfile.ZipFile(zipfile_name, "w")
     for f_name in assignment_files:
-        folder = f_name.user.get_full_name().replace(" ", "_")
+        folder = f_name.answer_paper.user.get_full_name().replace(" ", "_")
         sub_folder = f_name.assignmentQuestion.summary.replace(" ", "_")
         folder_name = os.sep.join((folder, sub_folder, os.path.basename(
                         f_name.assignmentFile.name))
@@ -2627,6 +2584,23 @@ def download_sample_toc(request):
             'attachment; filename="sample_lesson_toc.yaml"'
         )
         return response
+
+
+@login_required
+@email_verified
+def download_toc(request, course_id, lesson_id):
+    user = request.user
+    tmp_file_path = tempfile.mkdtemp()
+    yaml_path = os.path.join(tmp_file_path, "lesson_toc.yaml")
+    TableOfContents.objects.get_all_tocs_as_yaml(course_id, lesson_id, yaml_path)
+
+    with open(yaml_path, 'r') as yml_file:
+        response = HttpResponse(yml_file.read(), content_type='text/yaml')
+        response['Content-Disposition'] = (
+            'attachment; filename="lesson_toc.yaml"'
+        )
+        return response
+
 
 
 @login_required
@@ -2828,6 +2802,9 @@ def show_lesson(request, lesson_id, module_id, course_id):
         if not learn_unit.is_prerequisite_complete(user, learn_module, course):
             msg = "You have not completed previous Lesson/Quiz/Exercise"
             return view_module(request, learn_module.id, course_id, msg=msg)
+    track, created = TrackLesson.objects.get_or_create(
+        user_id=user.id, course_id=course_id, lesson_id=lesson_id
+        )
 
     lesson_ct = ContentType.objects.get_for_model(learn_unit.lesson)
     title = learn_unit.lesson.name
@@ -2860,7 +2837,7 @@ def show_lesson(request, lesson_id, module_id, course_id):
                'course': course, 'state': "lesson", "all_modules": all_modules,
                'learning_units': learning_units, "current_unit": learn_unit,
                'learning_module': learn_module, 'toc': toc,
-               'contents_by_time': contents_by_time,
+               'contents_by_time': contents_by_time, 'track_id': track.id,
                'comments': comments, 'form': form, 'post': post}
     return my_render_to_response(request, 'yaksh/show_video.html', context)
 
@@ -3244,7 +3221,7 @@ def course_status(request, course_id):
 
     stud_details = [(student, course.get_grade(student),
                      course.get_completion_percent(student),
-                     course.get_current_unit(student))
+                     course.get_current_unit(student.id))
                     for student in students.object_list]
     context = {
         'course': course, 'objects': students, 'is_progress': True,
@@ -3427,19 +3404,22 @@ def download_course_progress(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
-    students = course.students.order_by("-id")
-    stud_details = [(student.get_full_name(), course.get_grade(student),
-                     course.get_completion_percent(student),
-                     course.get_current_unit(student))
-                     for student in students]
+    students = course.students.order_by("-id").values_list("id")
+    stud_details = list(CourseStatus.objects.filter(
+        course_id=course_id, user_id__in=students
+    ).values(
+        "user_id", "user__first_name", "user__last_name",
+        "grade", "percent_completed"
+    ))
+    for student in stud_details:
+        student["current_unit"] = course.get_current_unit(
+            student.pop("user_id")
+        )
+    df = pd.DataFrame(stud_details)
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="{0}.csv"'.format(
                                       (course.name).lower().replace(' ', '_'))
-    header = ['Name', 'Grade', 'Completion Percent', 'Current Unit']
-    writer = csv.writer(response)
-    writer.writerow(header)
-    for student in stud_details:
-        writer.writerow(student)
+    df.to_csv(response, index=False)
     return response
 
 
@@ -3514,6 +3494,7 @@ def course_forum(request, course_id):
             new_post.target = course
             new_post.anonymous = request.POST.get('anonymous', '') == 'on'
             new_post.save()
+            messages.success(request, "Added post successfully")
             return redirect('yaksh:post_comments',
                             course_id=course.id, uuid=new_post.uid)
     else:
@@ -3572,6 +3553,7 @@ def post_comments(request, course_id, uuid):
             new_comment.post_field = post
             new_comment.anonymous = request.POST.get('anonymous', '') == 'on'
             new_comment.save()
+            messages.success(request, "Added comment successfully")
             return redirect(request.path_info)
     return render(request, 'yaksh/post_comments.html', {
         'post': post,
@@ -3596,6 +3578,7 @@ def hide_post(request, course_id, uuid):
     post.comment.active = False
     post.active = False
     post.save()
+    messages.success(request, "Post deleted successfully")
     return redirect('yaksh:course_forum', course_id)
 
 
@@ -3613,6 +3596,7 @@ def hide_comment(request, course_id, uuid):
     post_uid = comment.post_field.uid
     comment.active = False
     comment.save()
+    messages.success(request, "Post comment deleted successfully")
     return redirect('yaksh:post_comments', course_id, post_uid)
 
 
@@ -4075,15 +4059,23 @@ def upload_marks(request, course_id, questionpaper_id):
         if not is_csv_file:
             messages.warning(request, "The file uploaded is not a CSV file.")
             return redirect('yaksh:monitor', quiz.id, course_id)
-        try:
-            reader = csv.DictReader(
-                csv_file.read().decode('utf-8').splitlines(),
-                dialect=dialect)
-        except TypeError:
-            messages.warning(request, "Bad CSV file")
-            return redirect('yaksh:monitor', quiz.id, course_id)
-        question_ids = _get_header_info(reader)
-        _read_marks_csv(request, reader, course, question_paper, question_ids)
+        data = {
+            "course_id": course_id, "questionpaper_id": questionpaper_id,
+            "csv_data": csv_file.read().decode('utf-8').splitlines(),
+            "user_id": request.user.id
+        }
+        is_celery_alive = app.control.ping()
+        if is_celery_alive:
+            update_user_marks.delay(data)
+            msg = dedent("""
+                {0} is submitted for marks update. You will receive a
+                notification for the update status
+                """.format(quiz.description)
+            )
+            messages.info(request, msg)
+        else:
+            msg = "Unable to submit for marks update. Please check with admin"
+            messages.warning(request, msg)
     return redirect('yaksh:monitor', quiz.id, course_id)
 
 
@@ -4210,3 +4202,25 @@ def upload_file(request, key):
             context['msg'] = msg
             return render(request, 'yaksh/upload_file.html', context)
     return render(request, 'yaksh/upload_file.html', context)
+
+
+@login_required
+@email_verified
+def upload_download_course_md(request, course_id):
+    course = get_object_or_404(Course, pk=course_id)
+    if request.method == "POST":
+        from upload.views import upload_course_md
+        status, msg = upload_course_md(request)
+        if status:
+            messages.success(request, "MD File Successfully uploaded to course")
+        else:
+            messages.warning(request, "{0}".format(msg))
+        return redirect(
+            'yaksh:course_detail', course.id
+        )
+    else:
+        context = {
+            'course': course,
+            'is_upload_download_md': True,
+        }
+        return my_render_to_response(request, 'yaksh/course_detail.html', context)

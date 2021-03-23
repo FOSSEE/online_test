@@ -1,0 +1,140 @@
+{% extends "manage.html" %}
+{% load static %}
+{% block title %} Lesson Video Stats {% endblock %}
+{% block script %}
+<script type="text/javascript" src="{% static 'yaksh/js/jquery.tablesorter.min.js' %}">
+</script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $.tablesorter.addWidget({
+            id: "numbering",
+            format: function(table) {
+                var c = table.config;
+                $("tr:visible", table.tBodies[0]).each(function(i) {
+                    $(this).find('td').eq(0).text(i + 1);
+                });
+            }
+        });
+        $("#stats-table").tablesorter({
+            headers: {0: { sorter: false }}, widgets: ['numbering']
+        });
+    });
+</script>
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    {% with objects.object_list as trackings %}
+    <center>
+        <h3>Statistics for {% with trackings|first as entry %} {{entry.lesson}} {% endwith %}</h3>
+    </center>
+    <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
+        <i class="fa fa-arrow-left"></i>&nbsp;Back
+    </a>
+    <br><br>
+    <div class="row">
+        <div class="card" style="margin: 1%">
+            <div class="col" id='barDiv1'></div>
+        </div>
+        <div class="card" style="margin: 1%">
+            <div class="col" id="barDiv2"></div>
+        </div>
+        <div class="card" style="margin: 1%">
+            <div class="col" id="barDiv3"></div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var config = {responsive: true, displayModeBar: false}
+        var data = [
+            {
+                x: ["Completed", "Not Completed"],
+                y: ["{{completion.0}}", "{{completion.1}}"],
+                type: 'bar'
+            }
+        ];
+        var layout = {
+            title: "Number of completions (Out of {{visits.2}})",
+            xaxis: {title: 'Completion status'},
+            yaxis: {title: 'Count'},
+            width: 400,
+            height: 400,
+        };
+        Plotly.newPlot('barDiv1', data, layout, config);
+        var data = [
+            {
+                x: ["Visited", "Not Visited"],
+                y: ["{{visits.0}}", "{{visits.1}}"],
+                type: 'bar'
+            }
+        ];
+        var layout = {
+            title: "Number of visits (Out of {{visits.2}})",
+            xaxis: {title: 'Visit status'},
+            yaxis: {title: 'Count'},
+            width: 400,
+            height: 400,
+        };
+        Plotly.newPlot('barDiv2', data, layout, config);
+        var x_data = ["0-25", "25-50", "50-75", "75-100"], y_data = [];
+        {% for i, j in percentage_data.items %}
+            y_data.push("{{j}}")
+        {% endfor %}
+        var data = [{x: x_data, y: y_data, type: 'bar'}];
+        var layout = {
+            title: "Range wise completion (Out of {{total}})",
+            xaxis: {title: 'Percentage Range'},
+            yaxis: {title: 'Count'},
+            width: 400,
+            height: 400,
+        };
+        Plotly.newPlot('barDiv3', data, layout, config);
+    </script>
+    <br>
+    {% include "yaksh/paginator.html" %}
+    <br>
+    <div class="table-responsive">
+    <table class="table table-dark table-responsive-sm" id="stats-table">
+        <thead class="thead-dark">
+            <tr>
+                <th>Sr No.</th>
+                <th>Student Name&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Last access on&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Started on&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Current Duration&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Video Duration&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Percentage&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Watched&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Total Time Spent&nbsp;<i class="fa fa-sort"></i></th>
+                <th>Total Visits&nbsp;<i class="fa fa-sort"></i></th>
+            </tr>
+        </thead>
+        <tbody class="list">
+        {% for track in trackings %}
+            <tr>
+                <td>{{ forloop.counter0 }}</td>
+                <td>{{track.user.get_full_name}}</td>
+                <td>{{track.get_last_access_time}}</td>
+                <td>{{track.creation_time}}</td>
+                <td>{{track.get_current_time}}</td>
+                <td>{{track.get_video_duration}}</td>
+                <td>{{track.get_percentage_complete}} %</td>
+                <td>
+                    {% with track.get_watched as watched %}
+                        {% if watched %}
+                            <span class="badge-pill badge-success">{{watched}}</span>
+                        {% else %}
+                            <span class="badge-pill badge-warning">{{watched}}</span>
+                        {% endif %}
+                    {% endwith %}
+                </td>
+                <td>{{track.time_spent}}</td>
+                <td>{{track.get_no_of_vists}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% endwith %}
+    <br>
+    {% include "yaksh/paginator.html" %}
+</div>
+{% endblock %}
