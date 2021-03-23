@@ -2392,21 +2392,12 @@ def download_assignment_file(request, quiz_id, course_id,
     for f_name in assignment_files:
         folder = f_name.answer_paper.user.get_full_name().replace(" ", "_")
         sub_folder = f_name.assignmentQuestion.summary.replace(" ", "_")
-        if settings.USE_AWS:
-            folder_name = os.sep.join((folder, sub_folder))
-            download_url = f_name.assignmentFile.url
-            zip_file.writestr(
-                os.path.join(folder_name, os.path.basename(download_url)),
-                f_name.assignmentFile.read()
-            )
-        else:
-            folder_name = os.sep.join((folder, sub_folder, os.path.basename(
-                            f_name.assignmentFile.name))
-                            )
-            zip_file.write(
-                f_name.assignmentFile.path, folder_name
-            )
-
+        folder_name = os.sep.join((folder, sub_folder))
+        download_url = f_name.assignmentFile.url
+        zip_file.writestr(
+            os.path.join(folder_name, os.path.basename(download_url)),
+            f_name.assignmentFile.read()
+        )
     zip_file.close()
     zipfile_name.seek(0)
     response = HttpResponse(content_type='application/zip')
