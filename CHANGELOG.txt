@@ -1,3 +1,7 @@
+=== 0.31.1 (24-03-2021) ===
+
+* Add support for QR code generation in local or S3 storage
+
 === 0.31.0 (24-03-2021) ===
 
 * Add support for S3 file upload.
