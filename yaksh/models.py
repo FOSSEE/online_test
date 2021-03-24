@@ -2269,7 +2269,7 @@ class AnswerPaper(models.Model):
     percent = models.FloatField(null=True, default=0.0)
 
     # Result of the quiz, True if student passes the exam.
-    passed = models.NullBooleanField()
+    passed = models.BooleanField(null=True)
 
     # Status of the quiz attempt
     status = models.CharField(
