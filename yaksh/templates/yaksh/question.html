@@ -290,12 +290,13 @@ question_type = "{{ question.type }}";
                 </ul>
             </div>
             {% endif %}
+            <br>
             {% if qrcode %}
-                <img src="{{ qrcode.image.url }}">
+                <img src="{{ qrcode.image.url }}" width="200" height="200">
             {% else %}
-              <a class="active btn btn-outline-primary " href="#"data-toggle="tooltip"
-                  title="Upload from any device using the QR Code"
-                  onclick="call_skip('{% url 'yaksh:generate_qrcode' paper.id question.id module.id %}')">Generate QR Code</a>
+              <br>
+              <a class="active btn btn-outline-primary " href="{% url 'yaksh:generate_qrcode' paper.id question.id module.id %}" data-toggle="tooltip"
+                  title="Upload from any device using the QR Code">Generate QR Code</a>
             {% endif %}
             <p></p>
           {% endif %}

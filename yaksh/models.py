@@ -3360,8 +3360,10 @@ class QRcode(models.Model):
 
     def generate_image(self, content):
         img = qrcode.make(content)
-        path = os.path.join(settings.MEDIA_ROOT, 'qrcode',
-                            '{0}.png'.format(self.short_key))
+        qr_dir = os.path.join(settings.MEDIA_ROOT, 'qrcode')
+        if not os.path.exists(qr_dir):
+            os.makedirs(qr_dir)
+        path = os.path.join(qr_dir, f'{self.short_key}.png')
         img.save(path)
         self.image = os.path.join('qrcode', '{0}.png'.format(self.short_key))
         self.activate()
