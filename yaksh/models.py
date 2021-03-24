@@ -3368,8 +3368,10 @@ class QRcode(models.Model):
             os.makedirs(qr_dir)
         path = os.path.join(qr_dir, f'{self.short_key}.png')
         img.save(path)
-        self.image = os.path.join('qrcode', '{0}.png'.format(self.short_key))
-        self.activate()
+        with open(path, "rb") as qr_file:
+            django_file = File(qr_file)
+            self.activate()
+            self.image.save(os.path.basename(path), django_file, save=True)
 
 
 class QRcodeHandler(models.Model):
