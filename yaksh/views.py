@@ -21,6 +21,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from taggit.models import Tag
 from django.urls import reverse
+from django.conf import settings
 import json
 from textwrap import dedent
 import zipfile
@@ -251,9 +252,7 @@ def add_question(request, question_id=None):
         extract_files_id = request.POST.getlist('extract')
         hide_files_id = request.POST.getlist('hide')
         if remove_files_id:
-            files = FileUpload.objects.filter(id__in=remove_files_id)
-            for file in files:
-                file.remove()
+            files = FileUpload.objects.filter(id__in=remove_files_id).delete()
         if extract_files_id:
             files = FileUpload.objects.filter(id__in=extract_files_id)
             for file in files:
@@ -847,8 +846,11 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
         elif current_question.type == 'upload':
             # if time-up at upload question then the form is submitted without
             # validation
-            assignment_filename = request.FILES.getlist('assignment')
-            if not assignment_filename:
+            assign_files = []
+            assignments = request.FILES
+            for i in range(len(assignments)):
+                assign_files.append(assignments[f"assignment[{i}]"])
+            if not assign_files:
                 msg = "Please upload assignment file"
                 return show_question(
                     request, current_question, paper, notification=msg,
@@ -856,26 +858,29 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                     previous_question=current_question
                 )
             uploaded_files = []
-            for fname in assignment_filename:
+            AssignmentUpload.objects.filter(
+                assignmentQuestion_id=current_question.id,
+                answer_paper_id=paper.id
+                ).delete()
+            for fname in assign_files:
                 fname._name = fname._name.replace(" ", "_")
                 uploaded_files.append(AssignmentUpload(
-                                    assignmentQuestion=current_question,
+                                    assignmentQuestion_id=current_question.id,
                                     assignmentFile=fname,
                                     answer_paper_id=paper.id
                                 ))
             AssignmentUpload.objects.bulk_create(uploaded_files)
             user_answer = 'ASSIGNMENT UPLOADED'
-            if not current_question.grade_assignment_upload:
-                new_answer = Answer(
-                    question=current_question, answer=user_answer,
-                    correct=False, error=json.dumps([])
-                )
-                new_answer.save()
-                paper.answers.add(new_answer)
-                next_q = paper.add_completed_question(current_question.id)
-                return show_question(request, next_q, paper,
-                                     course_id=course_id, module_id=module_id,
-                                     previous_question=current_question)
+            new_answer = Answer(
+                question=current_question, answer=user_answer,
+                correct=False, error=json.dumps([])
+            )
+            new_answer.save()
+            paper.answers.add(new_answer)
+            next_q = paper.add_completed_question(current_question.id)
+            return show_question(request, next_q, paper,
+                                 course_id=course_id, module_id=module_id,
+                                 previous_question=current_question)
         else:
             user_answer = request.POST.get('answer')
         if not is_valid_answer(user_answer):
@@ -902,12 +907,11 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
         json_data = current_question.consolidate_answer_data(
-            user_answer, user) if current_question.type == 'code' or \
-            current_question.type == 'upload' else None
+            user_answer, user) if current_question.type == 'code' else None
         result = paper.validate_answer(
             user_answer, current_question, json_data, uid
         )
-        if current_question.type in ['code', 'upload']:
+        if current_question.type == 'code':
             if (paper.time_left() <= 0 and not
                     paper.question_paper.quiz.is_exercise):
                 url = '{0}:{1}'.format(SERVER_HOST_NAME, SERVER_POOL_PORT)
@@ -2388,11 +2392,11 @@ def download_assignment_file(request, quiz_id, course_id,
     for f_name in assignment_files:
         folder = f_name.answer_paper.user.get_full_name().replace(" ", "_")
         sub_folder = f_name.assignmentQuestion.summary.replace(" ", "_")
-        folder_name = os.sep.join((folder, sub_folder, os.path.basename(
-                        f_name.assignmentFile.name))
-                        )
-        zip_file.write(
-            f_name.assignmentFile.path, folder_name
+        folder_name = os.sep.join((folder, sub_folder))
+        download_url = f_name.assignmentFile.url
+        zip_file.writestr(
+            os.path.join(folder_name, os.path.basename(download_url)),
+            f_name.assignmentFile.read()
         )
     zip_file.close()
     zipfile_name.seek(0)

@@ -43,7 +43,8 @@ from django.template import Context, Template
 from django.conf import settings
 from django.forms.models import model_to_dict
 from django.db.models import Count
-
+from django.db.models.signals import pre_delete
+from django.db.models.fields.files import FieldFile
 # Local Imports
 from yaksh.code_server import (
     submit, get_result as get_result_from_code_server
@@ -51,6 +52,7 @@ from yaksh.code_server import (
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .file_utils import extract_files, delete_files
 from grades.models import GradingSystem
+
 
 languages = (
         ("python", "Python"),
@@ -269,6 +271,17 @@ def is_valid_time_format(time):
         status = False
     return status
 
+
+def file_cleanup(sender, instance, *args, **kwargs):
+    '''
+        Deletes the file(s) associated with a model instance. The model
+        is not saved after deletion of the file(s) since this is meant
+        to be used with the pre_delete signal.
+    '''
+    for field_name, _ in instance.__dict__.items():
+        field = getattr(instance, field_name)
+        if issubclass(field.__class__, FieldFile) and field.name:
+            field.delete(save=False)
 
 ###############################################################################
 class CourseManager(models.Manager):
@@ -1422,11 +1435,10 @@ class Question(models.Model):
         ]
     }
 
-    def consolidate_answer_data(self, user_answer, user=None):
+    def consolidate_answer_data(self, user_answer, user=None, regrade=False):
         question_data = {}
         metadata = {}
         test_case_data = []
-
         test_cases = self.get_test_cases()
 
         for test in test_cases:
@@ -1439,18 +1451,33 @@ class Question(models.Model):
         metadata['partial_grading'] = self.partial_grading
         files = FileUpload.objects.filter(question=self)
         if files:
-            metadata['file_paths'] = [(file.file.path, file.extract)
-                                      for file in files]
-        if self.type == "upload":
-            assignment_files = AssignmentUpload.objects.filter(
-                assignmentQuestion=self
-                )
-            if assignment_files:
-                metadata['assign_files'] = [(file.assignmentFile.path, False)
-                                            for file in assignment_files]
+            if settings.USE_AWS:
+                metadata['file_paths'] = [
+                    (file.file.url, file.extract)
+                     for file in files
+                ]
+            else:
+                metadata['file_paths'] = [
+                    (self.get_file_url(file.file.url), file.extract)
+                     for file in files
+                ]
+        if self.type == "upload" and regrade:
+            file = AssignmentUpload.objects.only(
+                "assignmentFile").filter(
+                assignmentQuestion_id=self.id, answer_paper__user_id=user.id
+                ).order_by("-id").first()
+            if file:
+                if settings.USE_AWS:
+                    metadata['assign_files'] = [file.assignmentFile.url]
+                else:
+                    metadata['assign_files'] = [
+                        self.get_file_url(file.assignmentFile.url)
+                    ]
         question_data['metadata'] = metadata
-
         return json.dumps(question_data)
+
+    def get_file_url(self, path):
+        return f'{settings.DOMAIN_HOST}{path}'
 
     def dump_questions(self, question_ids, user):
         questions = Question.objects.filter(id__in=question_ids,
@@ -1690,7 +1717,7 @@ class FileUpload(models.Model):
     def get_filename(self):
         return os.path.basename(self.file.name)
 
-
+pre_delete.connect(file_cleanup, sender=FileUpload)
 ###############################################################################
 class Answer(models.Model):
     """Answers submitted by the users."""
@@ -2596,7 +2623,7 @@ class AnswerPaper(models.Model):
                 return (False, f'{msg} {question.type} answer submission error')
         else:
             answer = user_answer.answer
-        json_data = question.consolidate_answer_data(answer) \
+        json_data = question.consolidate_answer_data(answer, self.user, True) \
             if question.type == 'code' else None
         result = self.validate_answer(answer, question,
                                       json_data, user_answer.id,
@@ -2646,7 +2673,11 @@ class AssignmentUploadManager(models.Manager):
                         answer_paper__question_paper=qp,
                         answer_paper__course_id=course_id
                         )
-            file_name = User.objects.get(id=user_id).get_full_name()
+            user_name = assignment_files.values_list(
+                "answer_paper__user__first_name",
+                "answer_paper__user__last_name"
+            )[0]
+            file_name = "_".join(user_name)
         else:
             assignment_files = AssignmentUpload.objects.filter(
                         answer_paper__question_paper=qp,
@@ -2672,6 +2703,8 @@ class AssignmentUpload(models.Model):
 
     def __str__(self):
         return f'Assignment File of the user {self.answer_paper.user}'
+
+pre_delete.connect(file_cleanup, sender=AssignmentUpload)
 
 
 ##############################################################################
