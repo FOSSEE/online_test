@@ -43,7 +43,8 @@ from yaksh.models import (
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
     LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
-    Topic, TableOfContents, LessonQuizAnswer, MicroManager, dict_to_yaml
+    Topic, TableOfContents, LessonQuizAnswer, MicroManager, QRcode,
+    QRcodeHandler, dict_to_yaml
 )
 from stats.models import TrackLesson
 from yaksh.forms import (
@@ -61,6 +62,7 @@ from .send_emails import (send_user_mail,
 from .decorators import email_verified, has_profile
 from .tasks import regrade_papers, update_user_marks
 from notifications_plugin.models import Notification
+import hashlib
 
 
 def my_redirect(url):
@@ -675,6 +677,7 @@ def show_question(request, question, paper, error_message=None,
     quiz_type = 'Exam'
     can_skip = False
     assignment_files = []
+    qrcode = []
     if previous_question:
         delay_time = paper.time_left_on_question(previous_question)
     else:
@@ -722,6 +725,13 @@ def show_question(request, question, paper, error_message=None,
                             assignmentQuestion_id=question.id,
                             answer_paper=paper
                         )
+        handlers = QRcodeHandler.objects.filter(user=request.user,
+                                                question=question,
+                                                answerpaper=paper)
+        qrcode = None
+        if handlers.exists():
+            handler = handlers.last()
+            qrcode = handler.qrcode_set.filter(active=True, used=False).last()
     files = FileUpload.objects.filter(question_id=question.id, hide=False)
     course = Course.objects.get(id=course_id)
     module = course.learning_module.get(id=module_id)
@@ -742,6 +752,7 @@ def show_question(request, question, paper, error_message=None,
         'quiz_type': quiz_type,
         'all_modules': all_modules,
         'assignment_files': assignment_files,
+        'qrcode': qrcode,
     }
     answers = paper.get_previous_answers(question)
     if answers:
@@ -4070,6 +4081,150 @@ def upload_marks(request, course_id, questionpaper_id):
             msg = "Unable to submit for marks update. Please check with admin"
             messages.warning(request, msg)
     return redirect('yaksh:monitor', quiz.id, course_id)
+
+
+def _get_header_info(reader):
+    user_ids, question_ids = [], []
+    fields = reader.fieldnames
+    for field in fields:
+        if field.startswith('Q') and field.count('-') > 0:
+            qid = int(field.split('-')[1])
+            if qid not in question_ids:
+                question_ids.append(qid)
+    return question_ids
+
+
+def _read_marks_csv(request, reader, course, question_paper, question_ids):
+    messages.info(request, 'Marks Uploaded!')
+    for row in reader:
+        username = row['username']
+        user = User.objects.filter(username=username).first()
+        if user:
+            answerpapers = question_paper.answerpaper_set.filter(
+                course=course, user_id=user.id)
+        else:
+            messages.info(request, '{0} user not found!'.format(username))
+            continue
+        answerpaper = answerpapers.last()
+        if not answerpaper:
+            messages.info(request, '{0} has no answerpaper!'.format(username))
+            continue
+        answers = answerpaper.answers.all()
+        questions = answerpaper.questions.all().values_list('id', flat=True)
+        for qid in question_ids:
+            question = Question.objects.filter(id=qid).first()
+            if not question:
+                messages.info(request,
+                              '{0} is an invalid question id!'.format(qid))
+                continue
+            if qid in questions:
+                answer = answers.filter(question_id=qid).last()
+                if not answer:
+                    answer = Answer(question_id=qid, marks=0, correct=False,
+                                    answer='Created During Marks Update!',
+                                    error=json.dumps([]))
+                    answer.save()
+                    answerpaper.answers.add(answer)
+                key1 = 'Q-{0}-{1}-{2}-marks'.format(qid, question.summary,
+                                                    question.points)
+                key2 = 'Q-{0}-{1}-comments'.format(qid, question.summary,
+                                                   question.points)
+                if key1 in reader.fieldnames:
+                    try:
+                        answer.set_marks(float(row[key1]))
+                    except ValueError:
+                        messages.info(request,
+                                      '{0} invalid marks!'.format(row[key1]))
+                if key2 in reader.fieldnames:
+                    answer.set_comment(row[key2])
+                answer.save()
+        answerpaper.update_marks(state='completed')
+        answerpaper.save()
+        messages.info(
+            request,
+            'Updated successfully for user: {0}, question: {1}'.format(
+            username, question.summary))
+
+
+@login_required
+@email_verified
+def generate_qrcode(request, answerpaper_id, question_id, module_id):
+    user = request.user
+    answerpaper = get_object_or_404(AnswerPaper, pk=answerpaper_id)
+    question = get_object_or_404(Question, pk=question_id)
+
+    if not answerpaper.is_attempt_inprogress():
+        pass
+    handler = QRcodeHandler.objects.get_or_create(user=user, question=question,
+                                                  answerpaper=answerpaper)[0]
+    qrcode = handler.get_qrcode()
+    if not qrcode.is_qrcode_available():
+        content = request.build_absolute_uri(
+            reverse("yaksh:upload_file", args=[qrcode.short_key])
+        )
+        qrcode.generate_image(content)
+        qrcode.save()
+    return redirect(
+        reverse(
+            'yaksh:skip_question',
+            kwargs={'q_id': question_id, 'next_q': question_id,
+                    'attempt_num': answerpaper.attempt_number,
+                    'module_id': module_id,
+                    'questionpaper_id': answerpaper.question_paper.id,
+                    'course_id': answerpaper.course_id}
+        )
+    )
+
+
+def upload_file(request, key):
+    qrcode = get_object_or_404(QRcode, short_key=key, active=True, used=False)
+    handler = qrcode.handler
+    context = {'question': handler.question, 'key': qrcode.short_key}
+    if not handler.can_use():
+        context['success'] = True
+        context['msg'] = 'Sorry, test time up!'
+        return render(request, 'yaksh/upload_file.html', context)
+    if request.method == 'POST':
+        assign_files = []
+        assignments = request.FILES
+        for i in range(len(assignments)):
+            assign_files.append(assignments[f"assignment[{i}]"])
+        if not assign_files:
+            msg = 'Please upload assignment file'
+            context['msg'] = msg
+            return render(request, 'yaksh/upload_file.html', context)
+        AssignmentUpload.objects.filter(
+            assignmentQuestion_id=handler.question_id,
+            answer_paper_id=handler.answerpaper_id
+            ).delete()
+        uploaded_files = []
+        for fname in assign_files:
+            fname._name = fname._name.replace(" ", "_")
+            uploaded_files.append(
+                AssignmentUpload(
+                    assignmentQuestion_id=handler.question_id,
+                    assignmentFile=fname,
+                    answer_paper_id=handler.answerpaper_id)
+                )
+        AssignmentUpload.objects.bulk_create(uploaded_files)
+        user_answer = 'ASSIGNMENT UPLOADED'
+        new_answer = Answer(
+            question=handler.question, answer=user_answer,
+            correct=False, error=json.dumps([])
+        )
+        new_answer.save()
+        paper = handler.answerpaper
+        paper.answers.add(new_answer)
+        next_q = paper.add_completed_question(handler.question_id)
+        qrcode.set_used()
+        qrcode.deactivate()
+        qrcode.save()
+        context['success'] = True
+        msg = "File Uploaded Successfully! Reload the (test)question "\
+              "page to see the uploaded file"
+        context['msg'] = msg
+        return render(request, 'yaksh/upload_file.html', context)
+    return render(request, 'yaksh/upload_file.html', context)
 
 
 @login_required

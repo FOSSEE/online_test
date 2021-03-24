@@ -6,7 +6,8 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
-    create_group, legend_display_types, Post, Comment, MicroManager
+    create_group, legend_display_types, Post, Comment, MicroManager, QRcode, \
+    QRcodeHandler
 from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
@@ -23,6 +24,7 @@ import zipfile
 import os
 import shutil
 import tempfile
+import hashlib
 from threading import Thread
 from collections import defaultdict
 from yaksh import settings
@@ -122,7 +124,6 @@ def tearDownModule():
     AnswerPaper.objects.all().delete()
     MicroManager.objects.all().delete()
     Group.objects.all().delete()
-
 
 ###############################################################################
 class GlobalMethodsTestCases(unittest.TestCase):
@@ -2495,3 +2496,161 @@ class PostModelTestCases(unittest.TestCase):
         self.user3.delete()
         self.course.delete()
         self.post1.delete()
+
+
+class QRcodeTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        quiz = Quiz.objects.get(description='demo quiz 1')
+        cls.questionpaper = QuestionPaper.objects.create(quiz=quiz)
+        question = Question.objects.get(summary='Q1')
+        question.type = 'upload'
+        question.save()
+        cls.questionpaper.fixed_questions.add(question)
+        cls.questionpaper.update_total_marks()
+        student = User.objects.get(username='course_user')
+        course = Course.objects.get(name='Python Course')
+        attempt = 1
+        ip = '127.0.0.1'
+        answerpaper = cls.questionpaper.make_answerpaper(
+            student, ip, attempt, course.id)
+        cls.qrcode_handler = QRcodeHandler.objects.create(
+            user=student, answerpaper=answerpaper, question=question)
+        cls.old_qrcode = cls.qrcode_handler._create_qrcode()
+        cls.old_qrcode.set_used()
+        cls.old_qrcode.save()
+        cls.qrcode = cls.qrcode_handler.get_qrcode()
+        cls.answerpaper = answerpaper
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.qrcode.image.delete()
+        cls.qrcode.delete()
+        cls.qrcode_handler.delete()
+        cls.answerpaper.delete()
+        cls.questionpaper.delete()
+        QRcode.objects.all().delete()
+        QRcodeHandler.objects.all().delete()
+
+    def test_active(self):
+        # Given
+        qrcode = self.qrcode
+
+        # Then
+        self.assertFalse(qrcode.is_active())
+
+        # When
+        qrcode.activate()
+        qrcode.save()
+
+        # Then
+        self.assertTrue(qrcode.is_active())
+
+        # When
+        qrcode.deactivate()
+        qrcode.save()
+
+        # Then
+        self.assertFalse(qrcode.is_active())
+
+    def test_used(self):
+        # Given
+        qrcode = self.qrcode
+
+        # Then
+        self.assertFalse(qrcode.is_used())
+
+        # When
+        qrcode.set_used()
+        qrcode.save()
+
+        # Then
+        self.assertTrue(qrcode.is_used())
+
+        # When
+        qrcode.used = False
+        qrcode.save()
+
+        # Then
+        self.assertFalse(qrcode.is_used())
+
+    def test_random_key(self):
+        # Given
+        qrcode = self.qrcode
+
+        # When
+        expect_key = hashlib.sha1('{0}'.format(qrcode.id).encode()).hexdigest()
+
+        # Then
+        self.assertEqual(qrcode.random_key, expect_key)
+        self.assertEqual(len(qrcode.random_key), 40)
+
+    def test_short_key(self):
+        # Given
+        qrcode = self.qrcode
+
+        # When
+        expect_key = hashlib.sha1('{0}'.format(qrcode.id).encode()).hexdigest()
+
+        # Then
+        self.assertEqual(qrcode.short_key, expect_key[0:5])
+        self.assertEqual(len(qrcode.short_key), 5)
+
+        # Given
+        old_qrcode = self.old_qrcode
+        old_qrcode.random_key = qrcode.random_key
+        old_qrcode.save()
+
+        # When
+        old_qrcode.set_short_key()
+
+        # Then
+        self.assertEqual(old_qrcode.short_key, expect_key[0:6])
+        self.assertEqual(len(old_qrcode.short_key), 6)
+
+    def test_generate_image(self):
+        # Given
+        qrcode = self.qrcode
+        image_name = 'qrcode/{0}.png'.format(qrcode.short_key)
+
+        # When
+        qrcode.generate_image('test')
+
+        # Then
+        self.assertTrue(qrcode.is_active())
+        self.assertEqual(qrcode.image.name, image_name)
+
+    def test_get_qrcode(self):
+        # Given
+        handler = self.qrcode_handler
+        self.qrcode.activate()
+        self.qrcode.save()
+        expected_qrcode = self.qrcode
+
+        # When
+        qrcode = handler.get_qrcode()
+
+        # Then
+        self.assertEqual(qrcode, expected_qrcode)
+        self.qrcode.deactivate()
+        self.qrcode.save()
+
+    def test_can_use(self):
+        # Given
+        handler = self.qrcode_handler
+
+        # When
+        can_use = handler.can_use()
+
+        # Then
+        self.assertTrue(can_use)
+
+        # Given
+        answerpaper = self.answerpaper
+
+        # When
+        answerpaper.update_marks(state='complete')
+        can_use = handler.can_use()
+
+        # Then
+        self.assertFalse(can_use)

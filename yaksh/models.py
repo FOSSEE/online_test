@@ -26,9 +26,11 @@ import tempfile
 from textwrap import dedent
 from ast import literal_eval
 import pandas as pd
+import qrcode
+import hashlib
 
 # Django Imports
-from django.db import models
+from django.db import models, IntegrityError
 from django.contrib.auth.models import User, Group, Permission
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
@@ -2267,7 +2269,7 @@ class AnswerPaper(models.Model):
     percent = models.FloatField(null=True, default=0.0)
 
     # Result of the quiz, True if student passes the exam.
-    passed = models.NullBooleanField()
+    passed = models.BooleanField(null=True)
 
     # Status of the quiz attempt
     status = models.CharField(
@@ -3312,3 +3314,84 @@ class MicroManager(models.Model):
     def __str__(self):
         return 'MicroManager for {0} - {1}'.format(self.student.username,
                                                    self.course.name)
+
+
+class QRcode(models.Model):
+    random_key = models.CharField(max_length=128, blank=True)
+    short_key = models.CharField(max_length=128, null=True, unique=True)
+    image = models.ImageField(upload_to='qrcode', blank=True)
+    used = models.BooleanField(default=False)
+    active = models.BooleanField(default=False)
+    handler = models.ForeignKey('QRcodeHandler', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return 'QRcode {0}'.format(self.short_key)
+
+    def is_active(self):
+        return self.active
+
+    def is_used(self):
+        return self.used
+
+    def deactivate(self):
+        self.active = False
+
+    def activate(self):
+        self.active = True
+
+    def set_used(self):
+        self.used = True
+
+    def set_random_key(self):
+        key = hashlib.sha1('{0}'.format(self.id).encode()).hexdigest()
+        self.random_key = key
+
+    def set_short_key(self):
+        key = self.random_key
+        if key:
+            num = 5
+            for i in range(40):
+                try:
+                    self.short_key = key[0:num]
+                    self.save()
+                    break
+                except IntegrityError:
+                    num = num + 1
+
+    def is_qrcode_available(self):
+        return self.active and not self.used and self.image is not None
+
+    def generate_image(self, content):
+        img = qrcode.make(content)
+        qr_dir = os.path.join(settings.MEDIA_ROOT, 'qrcode')
+        if not os.path.exists(qr_dir):
+            os.makedirs(qr_dir)
+        path = os.path.join(qr_dir, f'{self.short_key}.png')
+        img.save(path)
+        self.image = os.path.join('qrcode', '{0}.png'.format(self.short_key))
+        self.activate()
+
+
+class QRcodeHandler(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    answerpaper = models.ForeignKey(AnswerPaper, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return 'QRcode Handler for  {0}'.format(self.user.username)
+
+    def get_qrcode(self):
+        qrcodes = self.qrcode_set.filter(active=True, used=False)
+        if qrcodes.exists():
+            return qrcodes.last()
+        else:
+            return self._create_qrcode()
+
+    def _create_qrcode(self):
+        qrcode = QRcode.objects.create(handler=self)
+        qrcode.set_random_key()
+        qrcode.set_short_key()
+        return qrcode
+
+    def can_use(self):
+        return self.answerpaper.is_attempt_inprogress()

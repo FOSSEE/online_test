@@ -270,15 +270,6 @@ question_type = "{{ question.type }}";
 
           <!-- Upload type question -->
           {% if question.type == "upload" %}
-            <p>Upload assignment file for the said question<p>
-            <div class="dropzone needsclick dz-clickable" id="dropzone_file">
-              <div class="dz-message needsclick">    
-                <button type="button" class="dz-button">
-                  Drop files here or click to upload.
-                </button>
-              </div>
-            </div>
-            <br>
             {% if assignment_files %}
             <div>
                 <ul class="list-group">
@@ -290,6 +281,32 @@ question_type = "{{ question.type }}";
                 </ul>
             </div>
             {% endif %}
+            <br />
+            <div class="row">
+                <div class="col-md-8">
+                    <p>Upload assignment file for the said question.
+                    <br>
+                    <span class="badge badge-primary">
+                    </u> <strong>You can upload using the file browser below or via the QR code.</strong></u>
+                    </span>
+                    </p>
+                    <div class="dropzone needsclick dz-clickable" id="dropzone_file">
+                      <div class="dz-message needsclick">
+                        <button type="button" class="dz-button">
+                          Drop files here or click to upload.
+                        </button>
+                      </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    {% if qrcode %}
+                        <img src="{{ qrcode.image.url }}" width="200" height="200">
+                    {% else %}
+                      <a class="active btn btn-outline-primary " href="{% url 'yaksh:generate_qrcode' paper.id question.id module.id %}" data-toggle="tooltip"
+                          title="Upload from any device using the QR Code">Generate QR Code</a>
+                    {% endif %}
+                </div>
+            </div>
           {% endif %}
 
           <!-- Arrange type question -->
@@ -370,7 +387,6 @@ question_type = "{{ question.type }}";
   {% if question.type == 'code' or question.type == 'upload' %}
   <div id="error_panel"></div>
   {% endif %}
-         
   <!-- Modal -->
   <div class="modal" id="upload_alert" >
     <div class="modal-dialog">
