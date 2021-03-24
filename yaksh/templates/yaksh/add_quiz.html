@@ -65,11 +65,11 @@
         <br>
         <br>
         <h4>You can check the quiz by attempting it in the following modes:</h4>
-          <a class="btn btn-outline-info" name="button" href="{% url 'yaksh:test_quiz' 'usermode' quiz.id course_id %}" target="blank">
+          <a class="btn btn-outline-info" name="button" href="{% url 'yaksh:test_quiz' 'usermode' quiz.id course_id %}" target="_blank">
             Try as student
           </a>
 
-          <a class="btn btn-outline-primary" name="button" href="{% url 'yaksh:test_quiz' 'godmode' quiz.id course_id %}" target="blank">
+          <a class="btn btn-outline-primary" name="button" href="{% url 'yaksh:test_quiz' 'godmode' quiz.id course_id %}" target="_blank">
             Try as teacher
           </a>
         <a data-toggle="modal" data-target="#help">

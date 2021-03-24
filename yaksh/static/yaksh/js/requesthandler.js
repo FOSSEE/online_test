@@ -145,8 +145,49 @@ var global_editor = {};
 var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
 var err_lineno;
 var marker;
+Dropzone.autoDiscover = false;
+var submitfiles;
 $(document).ready(function(){
-  if(is_exercise == "True" && can_skip == "False"){
+  var filezone = $("div#dropzone_file").dropzone({
+    url: $("#code").attr("action"),
+    parallelUploads: 10,
+    uploadMultiple: true,
+    maxFiles:20,
+    paramName: "assignment",
+    autoProcessQueue: false,
+    init: function() {
+      var submitButton = document.querySelector("#check");
+      myDropzone = this;
+      submitButton.addEventListener("click", function(e) {
+        if (myDropzone.getQueuedFiles().length === 0) {
+          $("#upload_alert").modal("show");
+          e.preventDefault();
+          return;
+        }
+        if (myDropzone.getAcceptedFiles().length > 0) {
+          if (submitfiles === true) {
+              submitfiles = false;
+              return;
+          }
+          e.preventDefault();
+          myDropzone.processQueue();
+          myDropzone.on("complete", function () {
+              submitfiles = true;
+              $('#check').trigger('click');
+          });
+        }
+      });
+    },
+    success: function (file, response) {
+      document.open();
+      document.write(response);
+      document.close();
+    },
+    headers: {
+        "X-CSRFToken": document.getElementById("code").elements[0].value
+    }
+  });
+  if(is_exercise == "True" && can_skip == "False") {
       setTimeout(function() {show_solution();}, delay_time*1000);
   }
   // Codemirror object, language modes and initial content

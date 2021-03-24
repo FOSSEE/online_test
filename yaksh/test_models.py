@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 import pytz
 from django.db import IntegrityError
+from django.conf import settings as dj_settings
 from django.core.files import File
 from textwrap import dedent
 import zipfile
@@ -549,12 +550,12 @@ class QuestionTestCases(unittest.TestCase):
         # create a temp directory and add files for dumping questions test
         self.dump_tmp_path = tempfile.mkdtemp()
         shutil.copy(file_path, self.dump_tmp_path)
-        file2 = os.path.join(self.dump_tmp_path, "test.txt")
-        upload_file = open(file2, "r")
-        django_file = File(upload_file)
-        FileUpload.objects.create(file=django_file,
-                                  question=self.question2
-                                  )
+        file2 = os.path.join(dj_settings.MEDIA_ROOT, "test.txt")
+        with open(file2, "w") as upload_file:
+            django_file = File(upload_file)
+            FileUpload.objects.create(file=file2,
+                                      question=self.question2
+                                      )
 
         self.question1.tags.add('python', 'function')
         self.assertion_testcase = StandardTestCase(
@@ -687,7 +688,7 @@ class QuestionTestCases(unittest.TestCase):
         tags = question_data.tags.all().values_list("name", flat=True)
         self.assertListEqual(list(tags), ['yaml_demo'])
         self.assertEqual(question_data.snippet, 'def fact()')
-        self.assertEqual(os.path.basename(file.file.path), "test.txt")
+        self.assertEqual(os.path.basename(file.file.url), "test.txt")
         self.assertEqual([case.get_field_value() for case in test_case],
                          self.test_case_upload_data
                          )
@@ -1546,7 +1547,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # When
         json_data = self.question1.consolidate_answer_data(
-            user_answer, user
+            user_answer, user, regrade=True
             )
         get_result = self.answerpaper.validate_answer(user_answer,
                                                       self.question1,
@@ -2209,12 +2210,14 @@ class AssignmentUploadTestCases(unittest.TestCase):
         self.user1 = User.objects.create_user(
             username='creator1',
             password='demo',
-            email='demo@test1.com'
+            email='demo@test1.com',
+            first_name="dummy1", last_name="dummy1"
         )
         self.user2 = User.objects.create_user(
             username='creator2',
             password='demo',
-            email='demo@test2.com'
+            email='demo@test2.com',
+            first_name="dummy1", last_name="dummy1"
         )
         self.quiz = Quiz.objects.create(
             start_date_time=datetime(
@@ -2253,8 +2256,8 @@ class AssignmentUploadTestCases(unittest.TestCase):
                 self.user1, ip, attempt, self.course.id
             )
 
-        file_path1 = os.path.join(tempfile.gettempdir(), "upload1.txt")
-        file_path2 = os.path.join(tempfile.gettempdir(), "upload2.txt")
+        file_path1 = os.path.join(dj_settings.MEDIA_ROOT, "upload1.txt")
+        file_path2 = os.path.join(dj_settings.MEDIA_ROOT, "upload2.txt")
         self.assignment1 = AssignmentUpload.objects.create(
             assignmentQuestion=self.question,
             assignmentFile=file_path1, answer_paper=self.answerpaper1,
@@ -2412,8 +2415,6 @@ class FileUploadTestCases(unittest.TestCase):
         self.assertEqual(self.file_upload.get_filename(), self.filename)
 
     def tearDown(self):
-        if os.path.isfile(self.file_upload.file.path):
-            os.remove(self.file_upload.file.path)
         self.file_upload.delete()
 
 
