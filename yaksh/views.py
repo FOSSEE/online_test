@@ -4163,7 +4163,6 @@ def generate_qrcode(request, answerpaper_id, question_id, module_id):
             reverse("yaksh:upload_file", args=[qrcode.short_key])
         )
         qrcode.generate_image(content)
-        qrcode.save()
     return redirect(
         reverse(
             'yaksh:skip_question',
