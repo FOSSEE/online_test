@@ -4158,14 +4158,22 @@ def generate_qrcode(request, answerpaper_id, question_id, module_id):
     handler = QRcodeHandler.objects.get_or_create(user=user, question=question,
                                                   answerpaper=answerpaper)[0]
     qrcode = handler.get_qrcode()
-    content = request.build_absolute_uri(
-        reverse("yaksh:upload_file", args=[qrcode.short_key])
+    if not qrcode.is_qrcode_available():
+        content = request.build_absolute_uri(
+            reverse("yaksh:upload_file", args=[qrcode.short_key])
+        )
+        qrcode.generate_image(content)
+        qrcode.save()
+    return redirect(
+        reverse(
+            'yaksh:skip_question',
+            kwargs={'q_id': question_id, 'next_q': question_id,
+                    'attempt_num': answerpaper.attempt_number,
+                    'module_id': module_id,
+                    'questionpaper_id': answerpaper.question_paper.id,
+                    'course_id': answerpaper.course_id}
+        )
     )
-    qrcode.generate_image(content)
-    qrcode.save()
-    return show_question(request, question, answerpaper,
-                         course_id=answerpaper.course_id, module_id=module_id,
-                         previous_question=question)
 
 
 def upload_file(request, key):
@@ -4199,6 +4207,15 @@ def upload_file(request, key):
                     answer_paper_id=handler.answerpaper_id)
                 )
         AssignmentUpload.objects.bulk_create(uploaded_files)
+        user_answer = 'ASSIGNMENT UPLOADED'
+        new_answer = Answer(
+            question=handler.question, answer=user_answer,
+            correct=False, error=json.dumps([])
+        )
+        new_answer.save()
+        paper = handler.answerpaper
+        paper.answers.add(new_answer)
+        next_q = paper.add_completed_question(handler.question_id)
         qrcode.set_used()
         qrcode.deactivate()
         qrcode.save()

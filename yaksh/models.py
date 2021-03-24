@@ -3358,6 +3358,9 @@ class QRcode(models.Model):
                 except IntegrityError:
                     num = num + 1
 
+    def is_qrcode_available(self):
+        return self.active and not self.used and self.image is not None
+
     def generate_image(self, content):
         img = qrcode.make(content)
         qr_dir = os.path.join(settings.MEDIA_ROOT, 'qrcode')
