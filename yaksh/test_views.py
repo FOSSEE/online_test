@@ -4352,7 +4352,7 @@ class TestSelfEnroll(TestCase):
 
 
 
-class TestGrader(SimpleTestCase):
+class TestGrader(TestCase):
     allow_database_queries = True
 
     def setUp(self):
