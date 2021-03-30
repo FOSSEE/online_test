@@ -169,7 +169,7 @@ def user_logout(request):
     """Show a page to inform user that the quiz has been compeleted."""
     logout(request)
     context = {'message': "You have been logged out successfully"}
-    return my_render_to_response(request, 'yaksh/complete.html', context)
+    return render(request, 'yaksh/complete.html', context)
 
 
 @login_required
@@ -186,35 +186,45 @@ def quizlist_user(request, enrolled=None, msg=None):
         courses = hidden_courses
         title = 'Search Results'
     else:
-        enrolled_courses = user.students.filter(is_trial=False).order_by('-id')
-        remaining_courses = list(Course.objects.filter(
+        enrolled_courses = user.students.select_related(
+            'creator').prefetch_related(
+            'students',
+            'requests',
+            'rejected').filter(is_trial=False).order_by('-id')
+
+        remaining_courses = Course.objects.filter(
             active=True, is_trial=False, hidden=False
         ).exclude(
             id__in=enrolled_courses.values_list("id", flat=True)
-            ).order_by('-id'))
+            ).order_by('-id')
+
         courses = list(enrolled_courses)
         courses.extend(remaining_courses)
+
         title = 'All Courses'
 
-    for course in courses:
-        if course.students.filter(id=user.id).exists():
-            _percent = course.get_completion_percent(user)
+    course_status = CourseStatus.objects.filter(
+            user_id=user.id
+        ).values_list("course_id", "percent_completed")
+
+    course_status_dict = {}
+    for status in course_status:
+        if status[0] not in course_status_dict.keys():
+              course_status_dict[status[0]] = status[1]
         else:
-            _percent = None
-        courses_data.append(
-            {
-                'data': course,
-                'completion_percentage': _percent,
-            }
-        )
+            if status[1]:
+                course_status_dict[status[0]] = max(
+                    course_status_dict.get(status[0]), status[1]
+                )
 
     messages.info(request, msg)
     context = {
-        'user': user, 'courses': courses_data,
-        'title': title
+        'user': user, 'courses': courses,
+        'title': title,
+        'course_status': course_status_dict
     }
 
-    return my_render_to_response(request, "yaksh/quizzes_user.html", context)
+    return render(request, "yaksh/quizzes_user.html", context)
 
 
 @login_required
@@ -224,7 +234,7 @@ def results_user(request):
     user = request.user
     papers = AnswerPaper.objects.get_user_answerpapers(user)
     context = {'papers': papers}
-    return my_render_to_response(request, "yaksh/results_user.html", context)
+    return render(request, "yaksh/results_user.html", context)
 
 
 @login_required
@@ -2058,7 +2068,6 @@ def toggle_moderator_role(request):
     """ Allow moderator to switch to student and back """
 
     user = request.user
-
     try:
         group = Group.objects.get(name='moderator')
     except Group.DoesNotExist:
@@ -2072,7 +2081,7 @@ def toggle_moderator_role(request):
     else:
         group.user_set.remove(user)
 
-    return my_redirect('/exam/')
+    return redirect("yaksh:index")
 
 
 @login_required
@@ -2296,7 +2305,7 @@ def activate_user(request, key):
     context['success'] = False
     if profile.is_email_verified:
         context['activation_msg'] = "Your account is already verified"
-        return my_render_to_response(
+        return render(
             request, 'yaksh/activation_status.html', context
         )
 
@@ -2310,7 +2319,7 @@ def activate_user(request, key):
         profile.is_email_verified = True
         profile.save()
         context['msg'] = "Your account is activated"
-    return my_render_to_response(
+    return render(
         request, 'yaksh/activation_status.html', context
     )
 
@@ -2319,20 +2328,19 @@ def new_activation(request, email=None):
     context = {}
     if request.method == "POST":
         email = request.POST.get('email')
-
     try:
         user = User.objects.get(email=email)
     except MultipleObjectsReturned:
         context['email_err_msg'] = "Multiple entries found for this email "\
                                     "Please change your email"
-        return my_render_to_response(
+        return render(
             request, 'yaksh/activation_status.html', context
         )
     except ObjectDoesNotExist:
         context['success'] = False
         context['msg'] = "Your account is not verified. \
                             Please verify your account"
-        return my_render_to_response(
+        return render(
             request, 'yaksh/activation_status.html', context
             )
 
@@ -2352,7 +2360,7 @@ def new_activation(request, email=None):
     else:
         context['activation_msg'] = "Your account is already verified"
 
-    return my_render_to_response(
+    return render(
         request, 'yaksh/activation_status.html', context
     )
 
@@ -2368,9 +2376,7 @@ def update_email(request):
         return new_activation(request, email)
     else:
         context['email_err_msg'] = "Please Update your email"
-        return my_render_to_response(
-            request, 'yaksh/activation_status.html', context
-        )
+        return render(request, 'yaksh/activation_status.html', context)
 
 
 @login_required
@@ -3175,7 +3181,7 @@ def view_module(request, module_id, course_id, msg=None):
 def course_modules(request, course_id, msg=None):
     user = request.user
     course = Course.objects.get(id=course_id)
-    if user not in course.students.all():
+    if not course.is_student(user):
         msg = 'You are not enrolled for this course!'
         return quizlist_user(request, msg=msg)
 
@@ -3189,7 +3195,7 @@ def course_modules(request, course_id, msg=None):
     context['modules'] = [
         (module, module.get_module_complete_percent(course, user))
         for module in learning_modules
-        ]
+    ]
     if course_status.exists():
         course_status = course_status.first()
         if not course_status.grade:
