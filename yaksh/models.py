@@ -1172,15 +1172,25 @@ class Course(models.Model):
         return remaining_days
 
     def get_completion_percent(self, user):
-        course_status = CourseStatus.objects.filter(course=self, user=user)
-        if course_status.exists():
-            percentage = course_status.first().percent_completed
+        course_status = list(CourseStatus.objects.filter(
+                    course=self, user=user).values('percent_completed'))
+        if course_status:
+            percentage = course_status[0]['percent_completed']
         else:
             percentage = 0
         return percentage
 
     def is_student(self, user):
         return self.students.filter(id=user.id).exists()
+
+    def is_requested(self, user):
+        return self.requests.filter(id=user.id).exists()
+
+    def is_rejected(self, user):
+        return self.rejected.filter(id=user.id).exists()
+
+    def get_modules_name(self):
+        return self.learning_module.values_list("name")
 
     def create_zip(self, path, static_files):
         zip_file_name = string_io()
