@@ -28,6 +28,7 @@ from ast import literal_eval
 import pandas as pd
 import qrcode
 import hashlib
+import urllib
 
 # Django Imports
 from django.db import models, IntegrityError
@@ -47,6 +48,7 @@ from django.forms.models import model_to_dict
 from django.db.models import Count
 from django.db.models.signals import pre_delete
 from django.db.models.fields.files import FieldFile
+from django.core.exceptions import SuspiciousFileOperation
 # Local Imports
 from yaksh.code_server import (
     submit, get_result as get_result_from_code_server
@@ -283,7 +285,10 @@ def file_cleanup(sender, instance, *args, **kwargs):
     for field_name, _ in instance.__dict__.items():
         field = getattr(instance, field_name)
         if issubclass(field.__class__, FieldFile) and field.name:
-            field.delete(save=False)
+            try:
+                field.delete(save=False)
+            except SuspiciousFileOperation:
+                pass
 
 ###############################################################################
 class CourseManager(models.Manager):
@@ -397,7 +402,7 @@ class LessonFile(models.Model):
                 os.rmdir(os.path.dirname(self.file.path))
         self.delete()
 
-
+pre_delete.connect(file_cleanup, sender=LessonFile)
 ###############################################################################
 class QuizManager(models.Manager):
     def get_active_quizzes(self):
@@ -1437,7 +1442,7 @@ class Question(models.Model):
         ]
     }
 
-    def consolidate_answer_data(self, user_answer, user=None, regrade=False):
+    def consolidate_answer_data(self, user_answer, user, paper_id):
         question_data = {}
         metadata = {}
         test_case_data = []
@@ -1451,35 +1456,17 @@ class Question(models.Model):
         metadata['user_answer'] = user_answer
         metadata['language'] = self.language
         metadata['partial_grading'] = self.partial_grading
-        files = FileUpload.objects.filter(question=self)
-        if files:
-            if settings.USE_AWS:
-                metadata['file_paths'] = [
-                    (file.file.url, file.extract)
-                     for file in files
-                ]
-            else:
-                metadata['file_paths'] = [
-                    (self.get_file_url(file.file.url), file.extract)
-                     for file in files
-                ]
-        if self.type == "upload" and regrade:
-            file = AssignmentUpload.objects.only(
+        if self.type == "upload" and self.grade_assignment_upload:
+            assignments = AssignmentUpload.objects.only(
                 "assignmentFile").filter(
-                assignmentQuestion_id=self.id, answer_paper__user_id=user.id
-                ).order_by("-id").first()
-            if file:
-                if settings.USE_AWS:
-                    metadata['assign_files'] = [file.assignmentFile.url]
-                else:
-                    metadata['assign_files'] = [
-                        self.get_file_url(file.assignmentFile.url)
-                    ]
+                assignmentQuestion_id=self.id, answer_paper_id=paper_id
+                )
+            if assignments.exists():
+                metadata['assign_files'] = [
+                    assignment.get_file_url() for assignment in assignments
+                ]
         question_data['metadata'] = metadata
         return json.dumps(question_data)
-
-    def get_file_url(self, path):
-        return f'{settings.DOMAIN_HOST}{path}'
 
     def dump_questions(self, question_ids, user):
         questions = Question.objects.filter(id__in=question_ids,
@@ -1596,13 +1583,12 @@ class Question(models.Model):
         files = FileUpload.objects.filter(question=self)
         files_list = []
         for f in files:
-            zip_file.write(f.file.path, os.path.join("additional_files",
-                                                     os.path.basename(
-                                                        f.file.path
-                                                        )
-                                                     )
-                           )
-            files_list.append(((os.path.basename(f.file.path)), f.extract))
+            zip_file.writestr(
+                os.path.join("additional_files",
+                    os.path.basename(f.file.url)),
+                f.file.read()
+            )
+            files_list.append(((os.path.basename(f.file.url)), f.extract))
         return files_list
 
     def _add_files_to_db(self, file_names, path):
@@ -1718,6 +1704,12 @@ class FileUpload(models.Model):
 
     def get_filename(self):
         return os.path.basename(self.file.name)
+
+    def get_file_url(self):
+        url = self.file.url
+        if not settings.USE_AWS:
+            url = urllib.parse.urljoin(settings.DOMAIN_HOST, url)
+        return url
 
 pre_delete.connect(file_cleanup, sender=FileUpload)
 ###############################################################################
@@ -2625,8 +2617,11 @@ class AnswerPaper(models.Model):
                 return (False, f'{msg} {question.type} answer submission error')
         else:
             answer = user_answer.answer
-        json_data = question.consolidate_answer_data(answer, self.user, True) \
-            if question.type == 'code' else None
+        if question.type in ['code', 'upload']:
+            json_data = question.consolidate_answer_data(
+                answer, self.user, self.id)
+        else:
+            json_data = None
         result = self.validate_answer(answer, question,
                                       json_data, user_answer.id,
                                       server_port=server_port
@@ -2702,6 +2697,12 @@ class AssignmentUpload(models.Model):
     upload_date = models.DateTimeField(auto_now=True)
 
     objects = AssignmentUploadManager()
+
+    def get_file_url(self):
+        url = self.assignmentFile.url
+        if not settings.USE_AWS:
+            url = urllib.parse.urljoin(settings.DOMAIN_HOST, url)
+        return url
 
     def __str__(self):
         return f'Assignment File of the user {self.answer_paper.user}'

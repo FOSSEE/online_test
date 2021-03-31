@@ -95,15 +95,6 @@ var timeinterval = setInterval(updateClock,1000);
 
 }
 
-function validate(){
-    uploaded_file = document.getElementById("assignment").value;
-    if(uploaded_file == ""){
-        $("#upload_alert").modal("show");
-        return false;
-    }
-    return true;
-}
-
 function call_skip(url)
 {
     form = document.forms["code"]
@@ -270,8 +261,8 @@ question_type = "{{ question.type }}";
 
           <!-- Upload type question -->
           {% if question.type == "upload" %}
+            <div id="file_uploads">
             {% if assignment_files %}
-            <div>
                 <ul class="list-group">
                 {% for as_file in assignment_files %}
                     <li class="list-group-item">
@@ -279,8 +270,8 @@ question_type = "{{ question.type }}";
                     </li>
                 {% endfor %}
                 </ul>
-            </div>
             {% endif %}
+            </div>
             <br />
             <div class="row">
                 <div class="col-md-8">
@@ -292,14 +283,16 @@ question_type = "{{ question.type }}";
                       </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    {% if qrcode %}
-                        <img src="{{ qrcode.image.url }}" width="200" height="200">
-                    {% else %}
-                      <a class="active btn btn-outline-primary " href="{% url 'yaksh:generate_qrcode' paper.id question.id module.id %}" data-toggle="tooltip"
-                          title="Upload from any device using the QR Code">Generate QR Code</a>
-                    {% endif %}
-                </div>
+                {% if not question.grade_assignment_upload %}
+                  <div class="col-md-4">
+                      {% if qrcode %}
+                          <img src="{{ qrcode.image.url }}" width="200" height="200">
+                      {% else %}
+                        <a class="active btn btn-outline-primary " href="{% url 'yaksh:generate_qrcode' paper.id question.id module.id %}" data-toggle="tooltip"
+                            title="Upload from any device using the QR Code">Generate QR Code</a>
+                      {% endif %}
+                  </div>
+                {% endif %}
             </div>
           {% endif %}
 
@@ -344,7 +337,7 @@ question_type = "{{ question.type }}";
             {% if question.type == "mcq" or  question.type == "mcc" or question.type == "integer" or question.type == "float" or question.type ==  "string" %}
               <br><button class="btn btn-success" type="submit" name="check" id="check">Submit Answer</button>
             {% elif question.type == "upload" %}
-              <br><button class="btn btn-success" type="submit" name="check" id="check" onClick="return validate();">Upload</button>
+              <br><button class="btn btn-success" type="submit" name="check" id="check">Upload</button>
             {% elif question.type == "arrange" %}
               <br><button class="btn btn-success" type="submit" name="check" id="check" onClick="return user_arranged_options();">Submit Answer</button>
             {% else %}

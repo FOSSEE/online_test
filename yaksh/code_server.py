@@ -33,6 +33,7 @@ import urllib
 # Local imports
 from .settings import N_CODE_SERVERS, SERVER_POOL_PORT
 from .grader import Grader
+from .file_utils import delete_files, Downloader
 
 
 MY_DIR = abspath(dirname(__file__))
@@ -91,6 +92,7 @@ class ServerPool(object):
 
     def _make_app(self):
         app = Application([
+            (r"/files", FileHandler),
             (r"/.*", MainHandler, dict(server=self)),
         ])
         app.listen(self.my_port)
@@ -186,6 +188,29 @@ class MainHandler(RequestHandler):
         user_dir = self.get_argument('user_dir')
         self.server.submit(uid, json_data, user_dir)
         self.write('OK')
+
+
+class FileHandler(RequestHandler):
+
+    def get(self):
+        self.write("Submit the file urls and path to download/delete")
+
+    def post(self):
+        try:
+            files = self.get_arguments("files")
+            path = self.get_argument("path")
+            # Action is download or delete
+            action = self.get_argument("action")
+            if action == "download":
+                Downloader().main(files, path)
+            elif action == "delete":
+                delete_files(files, path)
+            else:
+                self.write(
+                    "Please add action download or delete in the post data"
+                )
+        except Exception as e:
+            self.write(e)
 
 
 def submit(url, uid, json_data, user_dir):

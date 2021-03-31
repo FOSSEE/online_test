@@ -5,7 +5,7 @@ import os
 import psutil
 
 # Local imports
-from .file_utils import copy_files, delete_files
+from .file_utils import copy_files, delete_files, Downloader
 from .base_evaluator import BaseEvaluator
 from .grader import TimeoutException
 from .error_messages import prettify_exceptions
@@ -55,10 +55,10 @@ class HookEvaluator(BaseEvaluator):
         Returns (False, error_msg, 0.0): If mandatory arguments are not files
         or if the required permissions are not given to the file(s).
         """
-        if self.file_paths:
-            self.files = copy_files(self.file_paths)
         if self.assignment_files:
-            self.assign_files = copy_files(self.assignment_files)
+            self.assign_files = Downloader().main(
+                self.assignment_files, os.getcwd()
+            )
         success = False
         mark_fraction = 0.0
         try:

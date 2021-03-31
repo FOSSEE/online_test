@@ -3,7 +3,8 @@ from __future__ import absolute_import, unicode_literals
 from textwrap import dedent
 import csv
 import json
-
+import requests
+from urllib import parse
 # Django and celery imports
 from celery import shared_task
 from django.urls import reverse
@@ -12,9 +13,10 @@ from django.shortcuts import get_object_or_404
 # Local imports
 from .models import (
     Course, QuestionPaper, Quiz, AnswerPaper, CourseStatus, User, Question,
-    Answer
+    Answer, FileUpload
 )
 from notifications_plugin.models import NotificationMessage, Notification
+from yaksh.settings import SERVER_HOST_NAME, SERVER_POOL_PORT
 
 
 @shared_task
@@ -194,3 +196,33 @@ def _read_marks_csv(
     notification = Notification.objects.add_single_notification(
         request_user, nm.id
     )
+
+
+@shared_task
+def send_files_to_code_server(data):
+    ap_id = data.get("answerpaper_id", 0)
+    action = data.get("action", None)
+    path = data.get("path", None)
+    if path is None or action is None:
+        pass
+    else:
+        ap = get_object_or_404(
+            AnswerPaper.objects.prefetch_related("questions"), id=ap_id
+        )
+        questions = ap.questions.values_list("id", flat=True)
+        uploads = FileUpload.objects.only("file").filter(
+            question_id__in=questions)
+        if uploads.exists():
+            post_url = parse.urljoin(
+                f"{SERVER_HOST_NAME}:{SERVER_POOL_PORT}", "files"
+            )
+            if action == "download":
+                files = [file.get_file_url() for file in uploads]
+            else:
+                files = [file.get_filename() for file in uploads]
+            data = {"files": files, "action": action, "path": path}
+            response = requests.post(post_url, data=data)
+            if response.status_code == 200:
+                print("Successfully downloaded/deleted files")
+            else:
+                print("Download failed\n", response.content)

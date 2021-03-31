@@ -3,6 +3,10 @@ import os
 import zipfile
 import tempfile
 import csv
+import asyncio
+import os
+import aiohttp
+import async_timeout
 
 
 def copy_files(file_paths):
@@ -28,7 +32,7 @@ def delete_files(files, file_path=None):
         if file_path:
             file = os.path.join(file_path, file_name)
         else:
-            file = file_name
+            file = os.path.join(os.getcwd(), file_name)
         if os.path.exists(file):
             if os.path.isfile(file):
                 os.remove(file)
@@ -66,3 +70,26 @@ def is_csv(document):
     except (csv.Error, UnicodeDecodeError):
         return False, None
     return True, dialect
+
+
+class Downloader:
+    async def get_url(self, url, path, session):
+        file_name = url.split("/")[-1]
+        if not os.path.exists(path):
+            os.makedirs(path)
+        async with async_timeout.timeout(120):
+            async with session.get(url) as response:
+                with open(os.path.join(path, file_name), 'wb') as fd:
+                    async for data in response.content.iter_chunked(1024):
+                        fd.write(data)
+        return file_name
+
+    async def download(self, urls, path):
+        async with aiohttp.ClientSession() as session:
+            tasks = [self.get_url(url, path, session) for url in urls]
+            return await asyncio.gather(*tasks)
+
+    def main(self, urls, download_path):
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self.download(urls, download_path))
+
