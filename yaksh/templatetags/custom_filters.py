@@ -54,13 +54,28 @@ def file_title(name):
 
 
 @register.simple_tag
-def get_unit_status(course, module, unit, user):
-    return course.get_unit_completion_status(module, user, unit)
+def get_unit_status(user, course, course_status, unit):
+    return unit.get_completion_status(user, course, course_status)
 
 
 @register.simple_tag
-def get_module_status(user, module, course):
-    return module.get_status(user, course)
+def get_module_status(user, module, units, course, course_status):
+
+    status = {}
+    for unit in units:
+        status[unit] = unit.get_completion_status(user, course, course_status)
+
+    if not status:
+        default_status = "no units"
+    elif all([status == "completed" for unit, status in status.items()]):
+        default_status = "completed"
+    elif all([status == "not attempted" for unit, status in status.items()]):
+        default_status = "not attempted"
+    else:
+        default_status = "inprogress"
+
+    return (default_status, status)
+    
 
 
 @register.simple_tag
@@ -69,9 +84,14 @@ def get_course_details(course):
 
 
 @register.simple_tag
-def module_completion_percent(course, module, user):
-    return module.get_module_complete_percent(course, user)
+def module_completion_percent(units, status_list):
+    if not units:
+        percent = 0.0
+    else:
+        count = sum(map(('completed').__eq__, status_list.values()))
+        percent = round((count / units.count()) * 100)
 
+    return percent    
 
 @register.simple_tag
 def get_ordered_testcases(question, answerpaper):

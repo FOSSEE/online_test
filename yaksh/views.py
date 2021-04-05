@@ -3204,16 +3204,34 @@ def course_modules(request, course_id, msg=None):
         return quizlist_user(request, msg=msg)
     learning_modules = course.get_learning_modules()
     context = {"course": course, "user": user, "msg": msg}
-    course_status = CourseStatus.objects.filter(course=course, user=user)
-    context['course_percentage'] = course.get_completion_percent(user)
-    context['modules'] = [
-        (module, module.get_module_complete_percent(course, user))
-        for module in learning_modules
-        ]
-    if course_status.exists():
-        course_status = course_status.first()
+    course_status = list(CourseStatus.objects.select_related(
+            'current_unit'
+        ).prefetch_related(
+            'completed_units'
+        ).filter(
+            course=course, user=user
+        ))
+    context['course_status'] = course_status
+    context['course_percentage'] = course_status[0].percent_completed
+
+    # context['modules'] = [
+    #     (module, module.get_module_complete_percent(course, user))
+    #     for module in learning_modules
+    #     ]
+
+    module_learning_units = {}
+    for module in learning_modules:
+        module_learning_units[module] = module.learning_unit.select_related(
+            'lesson', 'quiz'
+        ).prefetch_related('quiz__questionpaper_set').order_by("order")
+
+    context['modules'] = module_learning_units
+
+    if course_status:
+        course_status = course_status[0]
         if not course_status.grade:
-            course_status.set_grade()
+            pass
+            # course_status.set_grade()
         context['grade'] = course_status.get_grade()
     return my_render_to_response(request, 'yaksh/course_modules.html', context)
 
