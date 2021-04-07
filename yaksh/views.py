@@ -181,7 +181,8 @@ def user_logout(request):
 def quizlist_user(request, enrolled=None, msg=None):
     """Show All Quizzes that is available to logged-in user."""
     user = request.user
-    courses_data = []
+    context = {}
+    courses_data = {}
 
     if request.method == "POST":
         course_code = request.POST.get('course_code')
@@ -189,33 +190,30 @@ def quizlist_user(request, enrolled=None, msg=None):
         courses = hidden_courses
         title = 'Search Results'
     else:
-        enrolled_courses = user.students.filter(is_trial=False).order_by('-id')
-        remaining_courses = list(Course.objects.filter(
+        enrolled_courses = user.students.select_related('creator').prefetch_related(
+            'students',
+            'requests',
+            'rejected',
+            'learning_module',
+        ).filter(
+            is_trial=False
+        ).order_by("-id")
+        remaining_courses = Course.objects.filter(
             active=True, is_trial=False, hidden=False
         ).exclude(
             id__in=enrolled_courses.values_list("id", flat=True)
-            ).order_by('-id'))
-        courses = list(enrolled_courses)
-        courses.extend(remaining_courses)
+        ).order_by("-id")
+
+
+        context['enrolled_courses'] = enrolled_courses
+        context['remaining_courses'] = remaining_courses
+
         title = 'All Courses'
 
-    for course in courses:
-        if course.students.filter(id=user.id).exists():
-            _percent = course.get_completion_percent(user)
-        else:
-            _percent = None
-        courses_data.append(
-            {
-                'data': course,
-                'completion_percentage': _percent,
-            }
-        )
-
     messages.info(request, msg)
-    context = {
-        'user': user, 'courses': courses_data,
-        'title': title
-    }
+
+    context['user'] = user
+    context['title'] = title
 
     return my_render_to_response(request, "yaksh/quizzes_user.html", context)
 

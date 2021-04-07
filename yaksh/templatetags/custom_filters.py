@@ -84,6 +84,17 @@ def get_course_details(course):
 
 
 @register.simple_tag
+def get_course_completion_percent(courses_status, user):
+    course_status = courses_status.filter(
+        user=user
+    ).values('percent_completed')
+    if course_status:
+        return course_status.first()['percent_completed']
+    else:
+        return 0
+
+
+@register.simple_tag
 def module_completion_percent(units, status_list):
     if not units:
         percent = 0.0
@@ -190,9 +201,8 @@ def to_str(text):
 
 
 @register.inclusion_tag('yaksh/micromanaged.html')
-def show_special_attempt(user_id, course_id):
-    user = User.objects.get(pk=user_id)
-    micromanagers = user.micromanaged.filter(course_id=course_id)
+def show_special_attempt(user, course):
+    micromanagers = user.micromanaged.filter(course_id=course.id)
     context = {'micromanagers': micromanagers}
     return context
 
