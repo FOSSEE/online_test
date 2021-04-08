@@ -24,3 +24,4 @@ qrcode
 more-itertools==8.4.0
 django-storages==1.11.1
 boto3==1.17.17
+aiohttp==3.7.4.post0
