@@ -1,6 +1,6 @@
 -r requirements-codeserver.txt
 invoke==0.21.0
-django==3.0.7
+django==3.1.7
 django-taggit==1.2.0
 pytz==2019.3
 requests-oauthlib>=0.6.1
@@ -16,7 +16,7 @@ redis==3.4.1
 notifications-plugin==0.1.2
 django-celery-beat==2.0.0
 django-celery-results==1.2.1
-djangorestframework==3.11.0
+djangorestframework==3.11.2
 django-cors-headers==3.1.0
 Pillow
 pandas
