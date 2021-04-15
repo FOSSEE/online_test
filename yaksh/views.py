@@ -2719,9 +2719,7 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
         if 'Delete' in request.POST:
             remove_files_id = request.POST.getlist('delete_files')
             if remove_files_id:
-                files = LessonFile.objects.filter(id__in=remove_files_id)
-                for file in files:
-                    file.remove()
+                LessonFile.objects.filter(id__in=remove_files_id).delete()
                 messages.success(
                     request, "Deleted files successfully"
                 )

@@ -47,6 +47,7 @@ from django.forms.models import model_to_dict
 from django.db.models import Count
 from django.db.models.signals import pre_delete
 from django.db.models.fields.files import FieldFile
+from django.core.files.base import ContentFile
 # Local Imports
 from yaksh.code_server import (
     submit, get_result as get_result_from_code_server
@@ -165,9 +166,9 @@ def dict_to_yaml(dictionary):
 
 def get_file_dir(instance, filename):
     if isinstance(instance, LessonFile):
-        upload_dir = instance.lesson.name.replace(" ", "_")
+        upload_dir = f"Lesson_{instance.lesson.id}"
     else:
-        upload_dir = instance.name.replace(" ", "_")
+        upload_dir = f"Lesson_{instance.id}"
     return os.sep.join((upload_dir, filename))
 
 
@@ -332,7 +333,7 @@ class Lesson(models.Model):
         return "{0}".format(self.name)
 
     def get_files(self):
-        return LessonFile.objects.filter(lesson=self)
+        return LessonFile.objects.filter(lesson_id=self.id)
 
     def _create_lesson_copy(self, user):
         lesson_files = self.get_files()
@@ -341,20 +342,19 @@ class Lesson(models.Model):
         new_lesson.creator = user
         new_lesson.save()
         for _file in lesson_files:
-            file_name = os.path.basename(_file.file.name)
-            if os.path.exists(_file.file.path):
-                lesson_file = open(_file.file.path, "rb")
-                django_file = File(lesson_file)
-                lesson_file_obj = LessonFile()
-                lesson_file_obj.lesson = new_lesson
-                lesson_file_obj.file.save(file_name, django_file, save=True)
+            try:
+                file_name = os.path.basename(_file.file.name)
+                lesson_file = ContentFile(_file.file.read())
+                new_lesson_file = LessonFile()
+                new_lesson_file.lesson_id=self.id
+                new_lesson_file.file.save(file_name, lesson_file, save=True)
+                new_lesson_file.save()
+            except FileNotFoundError:
+                pass
         return new_lesson
 
     def remove_file(self):
-        if self.video_file:
-            file_path = self.video_file.path
-            if os.path.exists(file_path):
-                os.remove(file_path)
+        self.video_file.delete()
 
     def _add_lesson_to_zip(self, next_unit, module, course, zip_file, path):
         lesson_name = self.name.replace(" ", "_")
@@ -383,6 +383,7 @@ class Lesson(models.Model):
         write_templates_to_zip(zip_file, unit_file_path, lesson_data,
                                lesson_name, sub_folder_name)
 
+pre_delete.connect(file_cleanup, sender=Lesson)
 
 #############################################################################
 class LessonFile(models.Model):
@@ -397,6 +398,7 @@ class LessonFile(models.Model):
                 os.rmdir(os.path.dirname(self.file.path))
         self.delete()
 
+pre_delete.connect(file_cleanup, sender=LessonFile)
 
 ###############################################################################
 class QuizManager(models.Manager):
@@ -1596,13 +1598,11 @@ class Question(models.Model):
         files = FileUpload.objects.filter(question=self)
         files_list = []
         for f in files:
-            zip_file.write(f.file.path, os.path.join("additional_files",
-                                                     os.path.basename(
-                                                        f.file.path
-                                                        )
-                                                     )
-                           )
-            files_list.append(((os.path.basename(f.file.path)), f.extract))
+            zip_file.writestr(
+                os.path.join("additional_files", os.path.basename(f.file.name)),
+                f.file.read()
+            )
+            files_list.append(((os.path.basename(f.file.name)), f.extract))
         return files_list
 
     def _add_files_to_db(self, file_names, path):
