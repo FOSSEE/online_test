@@ -2234,11 +2234,7 @@ class TestCourses(TestCase):
         self.assertTrue(expected_lesson_files.exists())
         self.assertEquals(expected_lesson_files[0].file.read(), file_content)
 
-        for lesson_file in self.all_files:
-            file_path = lesson_file.file.path
-            if os.path.exists(file_path):
-                os.remove(file_path)
-                shutil.rmtree(os.path.dirname(file_path))
+        self.all_files.delete()
 
     def test_download_course_offline(self):
         """ Test to download course with lessons offline"""

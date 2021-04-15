@@ -1420,6 +1420,7 @@ def monitor(request, quiz_id=None, course_id=None, attempt_number=1):
 
 
 def _get_questions(user, question_type, marks):
+    questions = None
     if question_type is None and marks is None:
         return None
     if question_type:
@@ -1447,6 +1448,7 @@ def _remove_already_present(questionpaper_id, questions):
 
 def _get_questions_from_tags(question_tags, user, active=True, questions=None):
     search_tags = []
+    search = None
     for tags in question_tags:
         search_tags.extend(re.split('[; |, |\*|\n]', tags))
     if questions:
@@ -2719,9 +2721,7 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
         if 'Delete' in request.POST:
             remove_files_id = request.POST.getlist('delete_files')
             if remove_files_id:
-                files = LessonFile.objects.filter(id__in=remove_files_id)
-                for file in files:
-                    file.remove()
+                LessonFile.objects.filter(id__in=remove_files_id).delete()
                 messages.success(
                     request, "Deleted files successfully"
                 )
