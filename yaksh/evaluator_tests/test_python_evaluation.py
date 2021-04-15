@@ -33,9 +33,8 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
                                 "test_case":  'assert(add(-1,-2)==-3)',
                                 'weight': 0.0, 'hidden': True},
                                ]
-        self.timeout_msg = ("Code took more than {0} seconds to run. "
-                            "You probably have an infinite loop in"
-                            " your code.").format(SERVER_TIMEOUT)
+        self.timeout_msg = ("You probably have an infinite loop in"
+                            " your code.")
         self.file_paths = None
 
     def tearDown(self):
@@ -650,9 +649,8 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
             "expected_output": "3",
             "weight": 0.0
             }]
-        timeout_msg = ("Code took more than {0} seconds to run. "
-                       "You probably have an infinite loop in"
-                       " your code.").format(SERVER_TIMEOUT)
+        timeout_msg = ("You probably have an infinite loop in"
+                       " your code.")
         user_answer = "while True:\n\tpass"
 
         kwargs = {'metadata': {
@@ -731,9 +729,8 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
         self.in_dir = tmp_in_dir_path
-        self.timeout_msg = ("Code took more than {0} seconds to run. "
-                            "You probably have an infinite loop in"
-                            " your code.").format(SERVER_TIMEOUT)
+        self.timeout_msg = ("You probably have an infinite loop in"
+                            " your code.")
         self.file_paths = None
 
     def tearDown(self):
@@ -952,7 +949,7 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
         kwargs = {'metadata': {
                   'user_answer': user_answer,
                   'file_paths': self.file_paths,
-                  'assign_files': [(self.tmp_file, False)],
+                  'assign_files': [self.tmp_file],
                   'partial_grading': False,
                   'language': 'python'},
                   'test_case_data': test_case_data,
