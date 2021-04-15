@@ -391,13 +391,6 @@ class LessonFile(models.Model):
                                on_delete=models.CASCADE)
     file = models.FileField(upload_to=get_file_dir, default=None)
 
-    def remove(self):
-        if os.path.exists(self.file.path):
-            os.remove(self.file.path)
-            if os.listdir(os.path.dirname(self.file.path)) == []:
-                os.rmdir(os.path.dirname(self.file.path))
-        self.delete()
-
 pre_delete.connect(file_cleanup, sender=LessonFile)
 
 ###############################################################################
@@ -1694,13 +1687,6 @@ class FileUpload(models.Model):
                                  on_delete=models.CASCADE)
     extract = models.BooleanField(default=False)
     hide = models.BooleanField(default=False)
-
-    def remove(self):
-        if os.path.exists(self.file.path):
-            os.remove(self.file.path)
-            if os.listdir(os.path.dirname(self.file.path)) == []:
-                os.rmdir(os.path.dirname(self.file.path))
-        self.delete()
 
     def set_extract_status(self):
         if self.extract:
