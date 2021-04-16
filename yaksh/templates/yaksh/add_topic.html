@@ -1,0 +1,12 @@
+{% if topic_id %}
+<form class="form-group" method="POST" action="{% url 'yaksh:edit_topic' content_type course_id lesson_id toc_id topic_id %}" id="topic-form">
+{% else %}
+<form class="form-group" method="POST" action="{% url 'yaksh:add_topic' content_type course_id lesson_id %}" id="topic-form">
+{% endif %}
+    {% csrf_token %}
+    {{ form.as_p }}
+    <br>
+    <button type="submit" class="btn btn-success">
+        <i class="fa fa-save"></i>&nbsp;Save
+    </button>
+</form>

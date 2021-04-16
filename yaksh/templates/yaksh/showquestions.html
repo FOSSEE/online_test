@@ -43,7 +43,7 @@
           </p>
         </div>
         <div class="card-body">
-          <form action="" method="post"  enctype="multipart/form-data">
+          <form action="{% url 'yaksh:show_questions' %}" method="post"  enctype="multipart/form-data">
             {% csrf_token %}
               <div class="form-group col-md-6">
                   <a class="btn btn-info" href="{% url 'yaksh:download_yaml_template' %}">
@@ -51,26 +51,17 @@
                   <br><br>
                   <h4> Or </h4>
                   <br>
-                  <div class="input-group mb-3">
                       <div class="custom-file">
-                          {{ upload_form }}
+                          {{ upload_form.file }}
                           <label class="custom-file-label" for="id_file">
                               Choose file
                           </label>
                       </div>
+                      <br><br>
                       <div class="input-group-append">
                         <button class="btn btn-outline-primary" type="submit" name="upload" value="upload"><i class="fa fa-upload"></i>&nbsp;Upload File</button>
                       </div>
-                  </div>
               </div>
-              <script>
-                  $('#id_file').on('change',function(){
-                      //get the file name
-                      var fileName = $(this).val();
-                      //replace the "Choose a file" label
-                      $(this).next('.custom-file-label').html(fileName);
-                  })
-              </script>
           </form>
         </div>
       </div>
@@ -87,119 +78,128 @@
           </div>
           {% endfor %}
         {% endif %}
-        <div class="card">
-          <div class="card-body">
-            <!-- Filter Questions -->
-            <h4>Filters Questions: </h4>
-            <form method="GET" action="{% url 'yaksh:questions_filter' %}">
-
-              <div class="row">
-                  <div class="col-md-4">{{ form.question_type }}</div>
-                  <div class="col-md-4">{{ form.language }}</div>
-                  <div class="col-md-4">{{ form.marks }}</div>
-                  <br><br>
-                  <div class="col">
-                    <button class="btn btn-outline-success">
-                      <i class="fa fa-filter"></i>&nbsp;Filter
+        <div class="row">
+          <div class="col">
+          <div class="card">
+            <div class="card-body">
+              <!-- Filter Questions -->
+              <h4>Filters Questions: </h4>
+              <form method="GET" action="{% url 'yaksh:questions_filter' %}">
+                {{form.as_table}}
+                <br><br>
+                <button class="btn btn-outline-success">
+                  <i class="fa fa-filter"></i>&nbsp;Filter
+                </button>
+              </form>
+              <!-- End Filter Questions -->
+              <hr>
+              <h4>OR</h4>
+              <!-- Search by Tags -->
+              <h4>Search using Tags: </h4>
+              <select class="form-control" id="sel1" onchange="append_tag(this);">
+                {% if all_tags %}
+                 <option value="" disabled selected>Available Tags</option>
+                {% for tag in all_tags %}
+                <option>
+                    {{tag}}
+                </option>
+                {% endfor %}
+                {% else %}
+                 <option value="" disabled selected>No Available Tags</option>
+                {% endif %}
+              </select>
+              <br>
+              <form method="GET" action="{% url 'yaksh:search_questions_by_tags' %}">
+                <div class="input-group">
+                  <input type="text" name="question_tags" id="question_tags" class="form-control" type="search"  placeholder="Search questions using comma separated Tags">
+                  <span class="input-group-append">
+                    <button class="btn btn-outline-success" type="submit">
+                      <i class="fa fa-search"></i>
                     </button>
-                  </div>
-              </div>
-            </form>
-            <!-- End Filter Questions -->
-            <hr>
-            <!-- Search by Tags -->
-            <h4 >Search using Tags: </h4>
-            <div class="row">
-              <div class="col">
-                <form method="GET" action="{% url 'yaksh:search_questions_by_tags' %}">
-                  <div class="input-group">
-                    <input type="text" name="question_tags" id="question_tags" class="form-control" type="search"  placeholder="Search questions using comma separated Tags">
-                    <span class="input-group-append">
-                      <button class="btn btn-outline-success" type="submit">
-                        <i class="fa fa-search"></i>&nbsp;Search
-                      </button>
-                    </span>
-                  </div>
-                </form>
-              </div>
-              <div class="col">
-                <select class="form-control" id="sel1" onchange="append_tag(this);">
-                  {% if all_tags %}
-                   <option value="" disabled selected>Available Tags</option>
-                  {% for tag in all_tags %}
-                  <option>
-                      {{tag}}
-                  </option>
-                  {% endfor %}
-                  {% else %}
-                   <option value="" disabled selected>No Available Tags</option>
-                  {% endif %}
-                </select>
-              </div>
+                  </span>
+                </div>
+              </form>
+              <br>
+              <!-- End Search by Tags -->
+              <a class="btn btn-outline-danger" href="{% url 'yaksh:show_questions' %}">
+                <i class="fa fa-times"></i>&nbsp;Clear
+              </a>
             </div>
-            <br>
-            <!-- End Search by Tags -->
-            <a class="btn btn-outline-danger" href="{% url 'yaksh:show_questions' %}">
-              <i class="fa fa-times"></i>&nbsp;Clear
-            </a>
+            <!-- End Card body -->
           </div>
-          <!-- End Card body -->
         </div>
+        <div id="question-list">
         <!-- End card filters and search -->
         <form name=frm action="{% url 'yaksh:show_questions' %}" method="post">
           {% csrf_token %}
           <div id="filtered-questions">
             <br>
-            <a class="btn btn-lg btn-success" href="{% url 'yaksh:add_question' %}">
-              <i class="fa fa-plus-circle"></i>&nbsp;Add Question</a>
             {% if objects %}
-              <div>
-                <br>
+              <div class="row">
+                <div class="col">
                 {% include "yaksh/paginator.html" %}
-                <br>
-                <h5><input id="checkall" type="checkbox"> Select All </h5>
-                 <div class="table-wrapper-2">
-                    <table id="questions-table" class="tablesorter table  table-striped table-responsive-sm">
-                      <thead>
-                        <tr>
-                          <th> Select </th>
-                          <th> Sr No. </th>
-                          <th> Summary&nbsp;<i class="fa fa-sort"></i> </th>
-                          <th> Language&nbsp;<i class="fa fa-sort"></i> </th>
-                          <th> Type&nbsp;<i class="fa fa-sort"></i> </th>
-                          <th> Marks&nbsp;<i class="fa fa-sort"></i> </th>
-                          <th>Test</th>
-                          <th>Download</th>
-                          <th>Delete</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {% for question in objects %}
-                        <tr>
-                          <td>
-                           <input type="checkbox" name="question" value="{{ question.id }}">
-                          </td>
-                          <td>{{forloop.counter}}</td>
-                          <td><a href="{% url 'yaksh:add_question' question.id %}">{{question.summary|capfirst}}</a></td>
-                          <td>{{question.language|capfirst}}</td>
-                          <td>{{question.type|capfirst}}</td>
-                          <td>{{question.points}}</td>
-                          <td>
-                            <a href="{% url 'yaksh:test_question' question.id %}" class="btn btn-info">
-                              Test
-                            </a>
-                          </td>
-                          <td><a href="{% url 'yaksh:download_question' question.id %}" class="btn btn-primary">
-                            <i class="fa fa-download"></i>&nbsp;Download</a></td>
-                          <td><a href="{% url 'yaksh:delete_question' question.id %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete {{question.summary|capfirst}}?')">
-                          <i class="fa fa-trash"></i>&nbsp;Delete</a></td>
-                        </tr>
-                        {% endfor %}
-                      </tbody>
-                    </table>
-                  </div>
+                </div>
+                <div class="col">
+                  <a class="btn btn-lg btn-success" href="{% url 'yaksh:add_question' %}">
+                    <i class="fa fa-plus-circle"></i>&nbsp;Add Question
+                  </a>
+                </div>
               </div>
-            {% include "yaksh/paginator.html" %}
+              <br>
+              <h5><input id="checkall" type="checkbox"> Select All </h5>
+                <div class="card">
+                  {% if requested_users|length > 10 %}
+                  <div class="table-responsive" style="height: 700px">
+                  {% else %}
+                  <div class="table-responsive">
+                  {% endif %}
+                  <table id="questions-table" class="table table-dark table-responsive-sm">
+                    <thead class="thead-dark">
+                      <tr>
+                        <th> Select </th>
+                        <th> Sr No.</th>
+                        <th> Summary&nbsp;<i class="fa fa-sort"></i> </th>
+                        <th> Language&nbsp;<i class="fa fa-sort"></i> </th>
+                        <th> Type&nbsp;<i class="fa fa-sort"></i> </th>
+                        <th> Marks&nbsp;<i class="fa fa-sort"></i> </th>
+                        <th>Test</th>
+                        <th>Download</th>
+                        <th>Delete</th>
+                      </tr>
+                    </thead>
+                    <tbody class="list">
+                      {% for question in objects %}
+                      <tr>
+                        <td>
+                         <input type="checkbox" name="question" value="{{ question.id }}">
+                        </td>
+                        <td>
+                          {{forloop.counter}}
+                        </td>
+                        <td>
+                          <a href="{% url 'yaksh:add_question' question.id %}" class="text-white">
+                            {{question.summary|capfirst}}
+                          </a>
+                        </td>
+                        <td>{{question.language|capfirst}}</td>
+                        <td>{{question.type|capfirst}}</td>
+                        <td>{{question.points}}</td>
+                        <td>
+                          <a href="{% url 'yaksh:test_question' question.id %}" class="btn btn-info">
+                            Test
+                          </a>
+                        </td>
+                        <td><a href="{% url 'yaksh:download_question' question.id %}" class="btn btn-primary">
+                          <i class="fa fa-download"></i></a></td>
+                        <td><a href="{% url 'yaksh:delete_question' question.id %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete {{question.summary|capfirst}}?')">
+                        <i class="fa fa-trash"></i></a></td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                  </div>
+                </div>
+              {% include "yaksh/paginator.html" %}
             {% else %}
               <br><br>
               <div class="alert alert-info">
@@ -217,6 +217,8 @@
             {% endif %}
           </center>
         </form>
+        </div>
+      </div>
       </div>
     </div>
   </div>

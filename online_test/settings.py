@@ -30,6 +30,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# This is a required field
+DOMAIN_HOST = "http://127.0.0.1:8000"
+
 URL_ROOT = ''
 
 # Application definition
@@ -45,10 +48,15 @@ INSTALLED_APPS = (
     'taggit',
     'social_django',
     'grades',
+    'stats',
+    'django_celery_beat',
+    'django_celery_results',
+    'notifications_plugin',
     'rest_framework',
     'api',
     'corsheaders',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'storages'
 )
 
 MIDDLEWARE = (
@@ -58,6 +66,7 @@ MIDDLEWARE = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'yaksh.middleware.one_session_per_user.OneSessionPerUserMiddleware',
+    'yaksh.middleware.get_notifications.NotificationMiddleware',
     'yaksh.middleware.user_time_zone.TimezoneMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -156,6 +165,10 @@ PRODUCTION_URL = 'your_project_url'
 # If this variable is kept <True> in production, email will not be verified.
 IS_DEVELOPMENT = True
 
+# Video File upload size
+MAX_UPLOAD_SIZE = 524288000
+
+
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 TEMPLATES = [
@@ -215,6 +228,16 @@ AUTH_PASSWORD_VALIDATORS = [
 
 TAGGIT_CASE_INSENSITIVE = True
 
+
+# Celery parameters
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TIMEZONE = 'Asia/Kolkata'
+CELERY_BROKER_URL = 'redis://localhost'
+CELERY_RESULT_BACKEND = 'django-db'
+
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
@@ -231,3 +254,25 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+
+# AWS Credentials
+USE_AWS = False
+if USE_AWS:
+    AWS_ACCESS_KEY_ID = "access-key"
+    AWS_SECRET_ACCESS_KEY = "secret-key"
+    AWS_S3_REGION_NAME = "ap-south-1"
+    AWS_STORAGE_BUCKET_NAME = "yaksh-django"
+    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+    AWS_S3_ADDRESSING_STYLE = "virtual"
+
+    # Static Location
+    AWS_STATIC_LOCATION = 'static'
+    STATICFILES_STORAGE = 'yaksh.storage_backends.StaticStorage'
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/"
+    # Media Public
+    AWS_PUBLIC_MEDIA_LOCATION = 'media/public'
+    DEFAULT_FILE_STORAGE = 'yaksh.storage_backends.PublicMediaStorage'
+

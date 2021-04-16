@@ -52,8 +52,9 @@ $(document).ready(function(){
     $(function() {
         tinymce.init({ 
             selector: 'textarea#email_body',
-            max_height: 200,
-            height: 200
+            max_height: 400,
+            height: 400,
+            plugins: "code image link"
         });
     });
 
@@ -89,8 +90,9 @@ $(document).ready(function(){
         course_id = data.split("+")[0];
         student_id = data.split("+")[1];
         var status_div = $("#show_status_"+course_id+"_"+student_id);
-        if(!status_div.is(":visible")){
+        if(!status_div.is(":visible")) {
             var get_url = $("#url-"+student_id).attr("data-url");
+            lock_screen();
             $.ajax({
                 url: get_url,
                 timeout: 8000,
@@ -98,10 +100,12 @@ $(document).ready(function(){
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
                 success: function(data) {
+                    unlock_screen();
                     status_div.toggle();
                     status_div.html(data.user_data);
                     },
                 error: function(jqXHR, textStatus) {
+                    unlock_screen();
                     alert("Unable to get user data. Please Try again later.");
                 } 
             });
@@ -129,3 +133,11 @@ $(document).ready(function(){
     });
 
 }); // end document ready
+
+function lock_screen() {
+    document.getElementById("loader").style.display = "block";
+}
+
+function unlock_screen() {
+    document.getElementById("loader").style.display = "none";
+}

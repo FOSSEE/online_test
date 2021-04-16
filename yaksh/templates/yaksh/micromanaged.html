@@ -1,0 +1,22 @@
+{% if micromanagers %}
+<hr>
+<div class="row">
+    {% for micromanager in micromanagers %}
+    {% if micromanager.attempts_permitted > 0 %}
+             <div class="col-md-8">
+               <p> You have been given a special attempt to the  {{ micromanager.quiz.description }} by the course creator</p>
+             </div>
+             <div class="col-md-3">
+            {% if micromanager.can_student_attempt %}
+               <a class="btn btn-success" href="{% url 'yaksh:special_start' micromanager.id %}">
+                Start Special Attempt
+               </a>
+            {% else %}
+                <span class="badge badge-warning badge-pill">Exhausted</span>
+            {% endif %}
+             </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+

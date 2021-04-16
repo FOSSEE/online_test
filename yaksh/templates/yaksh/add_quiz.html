@@ -12,6 +12,7 @@
 {% block script %}
 
 <script src="{% static 'yaksh/js/jquery-3.3.1.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'yaksh/js/tinymce/js/tinymce/tinymce.min.js' %}"></script>
 <script src="{% static 'yaksh/js/add_quiz.js' %}"></script>
 <script src="{% static 'yaksh/js/jquery.datetimepicker.full.min.js' %}"></script>
 <script type="text/javascript">
@@ -55,7 +56,7 @@
   {% if quiz and course_id %}
       {% if quiz.questionpaper_set.get.id %}
       <center>
-        <a href="{% url 'yaksh:designquestionpaper' quiz.id quiz.questionpaper_set.get.id course_id %}" class="btn btn-primary">
+        <a href="{% url 'yaksh:designquestionpaper' course_id quiz.id quiz.questionpaper_set.get.id %}" class="btn btn-primary">
           <i class="fa fa-edit"></i> Edit Question Paper
         </a>
         <a href="{% url 'yaksh:preview_questionpaper' quiz.questionpaper_set.get.id %}" class="btn btn-info" target="_blank">
@@ -64,12 +65,12 @@
         <br>
         <br>
         <h4>You can check the quiz by attempting it in the following modes:</h4>
-          <a class="btn btn-outline-info" name="button" href="{% url 'yaksh:test_quiz' 'usermode' quiz.id course_id %}" target="blank">
-            User Mode
+          <a class="btn btn-outline-info" name="button" href="{% url 'yaksh:test_quiz' 'usermode' quiz.id course_id %}" target="_blank">
+            Try as student
           </a>
 
-          <a class="btn btn-outline-info" name="button" href="{% url 'yaksh:test_quiz' 'godmode' quiz.id course_id %}" target="blank">
-            God Mode
+          <a class="btn btn-outline-primary" name="button" href="{% url 'yaksh:test_quiz' 'godmode' quiz.id course_id %}" target="_blank">
+            Try as teacher
           </a>
         <a data-toggle="modal" data-target="#help">
         <span class="text-info"><i class="fa fa-info-circle"></i> Help</span></a>
@@ -87,15 +88,13 @@
         </button>
       </div>
       <div class="modal-body">
-        <p>
-          <b>User Mode:</b> Attempt quiz the way normal users will attempt i.e. -
+          <b>Try as student:</b> Attempt quiz the way students will attempt i.e. -
               <ul class="list-group list-group-flush">
                 <li class="list-group-item">Quiz will have the same duration as that of the original quiz.</li>
                 <li class="list-group-item">Quiz won't start if the course is inactive or the quiz time has expired.</li>
                 <li class="list-group-item">You will be notified about quiz prerequisites.(You can still attempt the quiz though)</li>
               </ul>
-          <b>God Mode:</b> Attempt quiz without any time or eligibilty constraints.
-        </p>
+          <b>Try as teacher:</b> Attempt quiz without any time or eligibilty constraints.
       </div>
     </div>
   </div>

@@ -12,13 +12,33 @@
 
     <div class="collapse navbar-collapse" id="navbarColor01">
     <ul class="navbar-nav mr-auto">
-        <li class="nav-item"><a class="nav-link" href="{% url 'yaksh:show_questions' %}">Questions</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'yaksh:courses' %}">Courses</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'yaksh:monitor' %}">Monitor</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'yaksh:grade_user' %}">Grade User</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'yaksh:grader' %}"> Regrade </a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'yaksh:show_questions' %}">
+            Questions
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'yaksh:courses' %}">
+            Courses
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'yaksh:grade_user' %}">
+            Quizzes
+          </a>
+        </li>
     </ul>
     <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'yaksh:view_notifications' %}">
+            <i class="fa fa-bell" style="size: 18px"></i>&nbsp;Notifications
+            {% if request.custom_notifications > 0 %}
+                <span class="badge badge-success badge-pill">
+                    {{request.custom_notifications}}
+                </span>
+            {% endif %}
+          </a>
+        </li>
         <li class="nav-item dropdown my-lg-0" style="font-size: 1.2rem">
             <a class="dropdown-toggle nav-link" id="user_dropdown" data-toggle="dropdown" href="#">{{user.get_full_name|title}}
             </a>
@@ -45,37 +65,6 @@
     </ul>
     </div>
 </nav>
-
-<!-- iframe div for video embed -->
-<div id="iframe_div" style="display: none;">
-  <iframe class="embed-responsive-item" id="video_frame" width="640" height="480" allowfullscreen>
-  </iframe>
-</div>
-<!-- end iframe div -->
-
-<!-- Dialog to video embed -->
-<div id="dialog_iframe" title="Embed Video URL" style="display: none;">
-  <div class="input-group mb-3">
-    <input id="url" name="url" type="text" required="true" class="form-control" placeholder="Enter video link">
-    <div class="input-group-append">
-        <input type="button" id="submit_info" name="submit_info" class="btn btn-primary" value="Submit" />
-    </div>
-  </div>
-  <div id="error_div" style="display: none;">
-      <b> Please enter URL</b>
-  </div>
-  <div id="copy_div">
-      <br>
-      <label>Paste HTML to embed in website:</label>
-      <textarea id="html_text" class="form-control" rows="5" cols="100"></textarea>
-      <br>
-      <a class="btn btn-secondary" id="copy" data-toggle="tooltip" title="Copy to Clipboard">
-          <i class="fa fa-clipboard" aria-hidden="true"></i>
-      </a>
-  </div>
-</div>
-<!-- end dialog -->
-
 {% endblock %}
 {% block content %}
 <div class="container">

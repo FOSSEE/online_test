@@ -1,0 +1,9 @@
+{% if micromanager %}
+    {% if micromanager.can_student_attempt %}
+        <a class="btn btn-danger btn-sm" href="{% url 'yaksh:revoke_special_attempt' micromanager.id %}">Revoke</a>
+    {% else %}
+        <a class="btn btn-success btn-sm" href="{% url 'yaksh:allow_special_attempt' user_id course_id quiz_id %}">Allow </a>
+    {% endif %}
+{% else %}
+    <a class="btn btn-success btn-sm" href="{% url 'yaksh:allow_special_attempt' user_id course_id quiz_id %}">Allow </a>
+{% endif %}

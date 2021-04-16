@@ -1,11 +1,13 @@
 import unittest
 from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     QuestionSet, AnswerPaper, Answer, Course, StandardTestCase,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
-    create_group, legend_display_types, Post, Comment
+    create_group, legend_display_types, Post, Comment, MicroManager, QRcode, \
+    QRcodeHandler
 from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
@@ -15,19 +17,22 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 import pytz
 from django.db import IntegrityError
+from django.conf import settings as dj_settings
 from django.core.files import File
 from textwrap import dedent
 import zipfile
 import os
 import shutil
 import tempfile
+import hashlib
 from threading import Thread
 from collections import defaultdict
 from yaksh import settings
 
 
 def setUpModule():
-    Group.objects.create(name='moderator')
+    Group.objects.get_or_create(name='moderator')
+
     # create user profile
     user = User.objects.create_user(username='creator',
                                     password='demo',
@@ -102,6 +107,8 @@ def setUpModule():
     course.save()
     LessonFile.objects.create(lesson=lesson)
     CourseStatus.objects.create(course=course, user=course_user)
+    MicroManager.objects.create(manager=user, course=course, quiz=quiz,
+                                student=course_user)
 
 
 def tearDownModule():
@@ -115,8 +122,8 @@ def tearDownModule():
     LearningUnit.objects.all().delete()
     LearningModule.objects.all().delete()
     AnswerPaper.objects.all().delete()
+    MicroManager.objects.all().delete()
     Group.objects.all().delete()
-
 
 ###############################################################################
 class GlobalMethodsTestCases(unittest.TestCase):
@@ -128,6 +135,141 @@ class GlobalMethodsTestCases(unittest.TestCase):
 
 
 ###############################################################################
+class MicroManagerTestCase(unittest.TestCase):
+    def setUp(self):
+        self.micromanager = MicroManager.objects.first()
+        self.course = self.micromanager.course
+        quiz = self.micromanager.quiz
+        self.questionpaper = QuestionPaper.objects.create(quiz=quiz)
+        question = Question.objects.get(summary='Q1')
+        self.questionpaper.fixed_questions.add(question)
+        self.questionpaper.update_total_marks()
+        self.student = User.objects.get(username='course_user')
+
+    def tearDown(self):
+        self.questionpaper.delete()
+
+    def test_micromanager(self):
+        # Given
+        user = User.objects.get(username='creator')
+        course = Course.objects.get(name='Python Course', creator=user)
+        quiz = Quiz.objects.get(description='demo quiz 1')
+        student = User.objects.get(username='course_user')
+
+        # When
+        micromanager = MicroManager.objects.first()
+
+        # Then
+        self.assertIsNotNone(micromanager)
+        self.assertEqual(micromanager.manager, user)
+        self.assertEqual(micromanager.student, student)
+        self.assertEqual(micromanager.course, course)
+        self.assertEqual(micromanager.quiz, quiz)
+        self.assertFalse(micromanager.special_attempt)
+        self.assertEqual(micromanager.attempts_permitted, 0)
+        self.assertEqual(micromanager.attempts_utilised, 0)
+        self.assertEqual(micromanager.wait_time, 0)
+        self.assertEqual(micromanager.attempt_valid_for, 90)
+        self.assertEqual(user.micromanaging.first(), micromanager)
+        self.assertEqual(student.micromanaged.first(), micromanager)
+
+    def test_set_wait_time(self):
+        # Given
+        micromanager = self.micromanager
+
+        # When
+        micromanager.set_wait_time(days=2)
+
+        # Then
+        self.assertEqual(micromanager.wait_time, 2)
+
+    def self_increment_attempts_permitted(self):
+        # Given
+        micromanager = self.micromanager
+
+        # When
+        micromanager.increment_attempts_permitted()
+
+        # Then
+        self.assertEqual(micromanager.attempts_permitted, 1)
+
+    def test_update_permitted_time(self):
+        # Given
+        micromanager = self.micromanager
+        permit_time = timezone.now()
+
+        # When
+        micromanager.update_permitted_time(permit_time)
+
+        # Then
+        self.assertEqual(micromanager.permitted_time, permit_time)
+
+    def test_has_student_attempts_exhausted(self):
+        # Given
+        micromanager = self.micromanager
+
+        # Then
+        self.assertFalse(micromanager.has_student_attempts_exhausted())
+
+    def test_has_quiz_time_exhausted(self):
+        # Given
+        micromanager = self.micromanager
+
+        # Then
+        self.assertFalse(micromanager.has_quiz_time_exhausted())
+
+    def test_is_special_attempt_required(self):
+        # Given
+        micromanager = self.micromanager
+        attempt = 1
+        ip = '127.0.0.1'
+
+        # Then
+        self.assertFalse(micromanager.is_special_attempt_required())
+
+        # When
+        answerpaper = self.questionpaper.make_answerpaper(self.student, ip,
+                                                          attempt,
+                                                          self.course.id)
+        answerpaper.update_marks(state='completed')
+
+        # Then
+        self.assertTrue(micromanager.is_special_attempt_required())
+
+        answerpaper.delete()
+
+    def test_allow_special_attempt(self):
+        # Given
+        micromanager = self.micromanager
+
+        # When
+        micromanager.allow_special_attempt()
+
+        # Then
+        self.assertFalse(micromanager.special_attempt)
+
+    def test_has_special_attempt(self):
+        # Given
+        micromanager = self.micromanager
+
+        # Then
+        self.assertFalse(micromanager.has_special_attempt())
+
+    def test_is_attempt_time_valid(self):
+        # Given
+        micromanager = self.micromanager
+
+        # Then
+        self.assertTrue(micromanager.is_attempt_time_valid())
+
+    def test_can_student_attempt(self):
+        # Given
+        micromanager = self.micromanager
+
+        # Then
+        self.assertFalse(micromanager.can_student_attempt())
+
+
 class LessonTestCases(unittest.TestCase):
     def setUp(self):
         self.lesson = Lesson.objects.get(name='L1')
@@ -145,8 +287,9 @@ class LearningModuleTestCases(unittest.TestCase):
         self.learning_module_two = LearningModule.objects.get(name='LM2')
         self.creator = User.objects.get(username='creator')
         self.student = User.objects.get(username='course_user')
-        self.learning_unit_one = LearningUnit.objects.get(id=1)
-        self.learning_unit_two = LearningUnit.objects.get(id=2)
+        learning_units = self.learning_module.learning_unit.order_by("order")
+        self.learning_unit_one = learning_units[0]
+        self.learning_unit_two = learning_units[1]
         self.quiz = Quiz.objects.get(description='demo quiz 1')
         self.lesson = Lesson.objects.get(name='L1')
         self.course = Course.objects.get(name='Python Course')
@@ -198,7 +341,7 @@ class LearningModuleTestCases(unittest.TestCase):
     def test_learning_module(self):
         self.assertEqual(self.learning_module.description, 'module one')
         self.assertEqual(self.learning_module.creator, self.creator)
-        self.assertTrue(self.learning_module.check_prerequisite)
+        self.assertFalse(self.learning_module.check_prerequisite)
         self.assertEqual(self.learning_module.order, 0)
 
     def test_prerequisite_passes(self):
@@ -233,16 +376,16 @@ class LearningModuleTestCases(unittest.TestCase):
         self.assertEqual(module_quiz_lesson, quiz_lessons)
 
     def test_toggle_check_prerequisite(self):
-        self.assertTrue(self.learning_module.check_prerequisite)
+        self.assertFalse(self.learning_module.check_prerequisite)
         # When
         self.learning_module.toggle_check_prerequisite()
         # Then
-        self.assertFalse(self.learning_module.check_prerequisite)
+        self.assertTrue(self.learning_module.check_prerequisite)
 
         # When
         self.learning_module.toggle_check_prerequisite()
         # Then
-        self.assertTrue(self.learning_module.check_prerequisite)
+        self.assertFalse(self.learning_module.check_prerequisite)
 
     def test_get_next_unit(self):
         # Given
@@ -328,8 +471,8 @@ class LearningUnitTestCases(unittest.TestCase):
         )
         self.assertIsNone(self.learning_unit_one.quiz)
         self.assertIsNone(self.learning_unit_two.lesson)
-        self.assertTrue(self.learning_unit_one.check_prerequisite)
-        self.assertTrue(self.learning_unit_two.check_prerequisite)
+        self.assertFalse(self.learning_unit_one.check_prerequisite)
+        self.assertFalse(self.learning_unit_two.check_prerequisite)
 
 
 class ProfileTestCases(unittest.TestCase):
@@ -407,12 +550,12 @@ class QuestionTestCases(unittest.TestCase):
         # create a temp directory and add files for dumping questions test
         self.dump_tmp_path = tempfile.mkdtemp()
         shutil.copy(file_path, self.dump_tmp_path)
-        file2 = os.path.join(self.dump_tmp_path, "test.txt")
-        upload_file = open(file2, "r")
-        django_file = File(upload_file)
-        FileUpload.objects.create(file=django_file,
-                                  question=self.question2
-                                  )
+        file2 = os.path.join(dj_settings.MEDIA_ROOT, "test.txt")
+        with open(file2, "w") as upload_file:
+            django_file = File(upload_file)
+            FileUpload.objects.create(file=file2,
+                                      question=self.question2
+                                      )
 
         self.question1.tags.add('python', 'function')
         self.assertion_testcase = StandardTestCase(
@@ -430,7 +573,8 @@ class QuestionTestCases(unittest.TestCase):
         self.test_case_upload_data = [{"test_case": "assert fact(3)==6",
                                        "test_case_type": "standardtestcase",
                                        "test_case_args": "",
-                                       "weight": 1.0
+                                       "weight": 1.0,
+                                       "hidden": False
                                        }]
         questions_data = [{"snippet": "def fact()", "active": True,
                            "points": 1.0,
@@ -544,7 +688,7 @@ class QuestionTestCases(unittest.TestCase):
         tags = question_data.tags.all().values_list("name", flat=True)
         self.assertListEqual(list(tags), ['yaml_demo'])
         self.assertEqual(question_data.snippet, 'def fact()')
-        self.assertEqual(os.path.basename(file.file.path), "test.txt")
+        self.assertEqual(os.path.basename(file.file.url), "test.txt")
         self.assertEqual([case.get_field_value() for case in test_case],
                          self.test_case_upload_data
                          )
@@ -840,7 +984,11 @@ class QuestionPaperTestCases(unittest.TestCase):
                 total_marks=0.0,
                 shuffle_questions=True
             )
-
+        self.question_paper_with_time_between_attempts.fixed_question_order = \
+            "{0}, {1}".format(self.questions[3].id, self.questions[5].id)
+        self.question_paper_with_time_between_attempts.fixed_questions.add(
+            self.questions[3], self.questions[5]
+            )
         self.question_paper.fixed_question_order = "{0}, {1}".format(
                 self.questions[3].id, self.questions[5].id
                 )
@@ -851,7 +999,7 @@ class QuestionPaperTestCases(unittest.TestCase):
         # create two QuestionSet for random questions
         # QuestionSet 1
         self.question_set_1 = QuestionSet.objects.create(
-            marks=2, num_questions=2
+            marks=1, num_questions=2
         )
 
         # add pool of questions for random sampling
@@ -864,7 +1012,7 @@ class QuestionPaperTestCases(unittest.TestCase):
 
         # QuestionSet 2
         self.question_set_2 = QuestionSet.objects.create(
-            marks=3, num_questions=3
+            marks=1, num_questions=3
         )
 
         # add pool of questions
@@ -931,7 +1079,7 @@ class QuestionPaperTestCases(unittest.TestCase):
         """ Test update_total_marks() method of Question Paper"""
         self.assertEqual(self.question_paper.total_marks, 0)
         self.question_paper.update_total_marks()
-        self.assertEqual(self.question_paper.total_marks, 15)
+        self.assertEqual(self.question_paper.total_marks, 7.0)
 
     def test_get_random_questions(self):
         """ Test get_random_questions() method of Question Paper"""
@@ -1028,7 +1176,7 @@ class QuestionPaperTestCases(unittest.TestCase):
         qu_list = [str(self.questions_list[0]), str(self.questions_list[1])]
         trial_paper = \
             QuestionPaper.objects.create_trial_paper_to_test_quiz(
-                self.trial_quiz, self.quiz.id
+                self.trial_quiz, self.quiz_with_time_between_attempts.id
                 )
         trial_paper.random_questions.add(self.question_set_1)
         trial_paper.random_questions.add(self.question_set_2)
@@ -1272,29 +1420,36 @@ class AnswerPaperTestCases(unittest.TestCase):
     def test_get_per_question_score(self):
         # Given
         question_id = self.question4.id
-        expected_score = 1
+        question_name = self.question4.summary
+        expected_score = {"Q4": 1.0}
         # When
         score = self.answerpaper_single_question.get_per_question_score(
-            question_id
+            [(question_name, question_id, f"{question_id}-comments")]
             )
         # Then
-        self.assertEqual(score, expected_score)
+        self.assertEqual(score['Q4'], expected_score['Q4'])
 
         # Given
         question_id = self.question2.id
-        expected_score = 0
+        question_name = self.question2.summary
+        expected_score = {"Q2": 0.0}
         # When
-        score = self.answerpaper.get_per_question_score(question_id)
+        score = self.answerpaper.get_per_question_score(
+            [(question_name, question_id, f"{question_id}-comments")]
+        )
         # Then
-        self.assertEqual(score, expected_score)
+        self.assertEqual(score["Q2"], expected_score["Q2"])
 
         # Given
         question_id = 131
-        expected_score = 'NA'
+        question_name = "NA"
+        expected_score = {'NA': 0}
         # When
-        score = self.answerpaper.get_per_question_score(question_id)
+        score = self.answerpaper.get_per_question_score(
+            [(question_name, question_id, f"{question_id}-comments")]
+        )
         # Then
-        self.assertEqual(score, expected_score)
+        self.assertEqual(score["NA"], expected_score["NA"])
 
     def test_returned_question_is_not_none(self):
         # Test add_completed_question and next_question
@@ -1392,7 +1547,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # When
         json_data = self.question1.consolidate_answer_data(
-            user_answer, user
+            user_answer, user, regrade=True
             )
         get_result = self.answerpaper.validate_answer(user_answer,
                                                       self.question1,
@@ -1700,18 +1855,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         """ Test get_question_answer() method of Answer Paper"""
         questions = self.answerpaper.questions.all()
         answered = self.answerpaper.get_question_answers()
-        for question in questions:
-            answers_saved = Answer.objects.filter(question=question)
-            error_list = [json.loads(ans.error) for ans in answers_saved]
-            if answers_saved:
-                self.assertEqual(len(answered[question]), len(answers_saved))
-                ans = []
-                err = []
-                for val in answered[question]:
-                    ans.append(val.get('answer'))
-                    err.append(val.get('error_list'))
-                self.assertEqual(set(ans), set(answers_saved))
-                self.assertEqual(error_list, err)
+        self.assertEqual(list(questions), list(answered.keys()))
 
     def test_is_answer_correct(self):
         self.assertTrue(self.answerpaper.is_answer_correct(self.questions[0]))
@@ -2118,7 +2262,8 @@ class TestCaseTestCases(unittest.TestCase):
                        {'test_case': 'assert myfunc(12, 13) == 15',
                         'test_case_type': 'standardtestcase',
                         'test_case_args': "",
-                        'weight': 1.0
+                        'weight': 1.0,
+                        'hidden': False
                         }]
                        }
         self.answer_data_json = json.dumps(answer_data)
@@ -2150,17 +2295,39 @@ class TestCaseTestCases(unittest.TestCase):
 
 
 class AssignmentUploadTestCases(unittest.TestCase):
+
     def setUp(self):
-        self.user1 = User.objects.get(username="creator")
-        self.user1.first_name = "demo"
-        self.user1.last_name = "user"
-        self.user1.save()
-        self.user2 = User.objects.get(username="demo_user3")
-        self.user2.first_name = "demo"
-        self.user2.last_name = "user3"
-        self.user2.save()
-        self.quiz = Quiz.objects.get(description="demo quiz 1")
-        self.course = Course.objects.get(name="Python Course")
+        self.user1 = User.objects.create_user(
+            username='creator1',
+            password='demo',
+            email='demo@test1.com',
+            first_name="dummy1", last_name="dummy1"
+        )
+        self.user2 = User.objects.create_user(
+            username='creator2',
+            password='demo',
+            email='demo@test2.com',
+            first_name="dummy1", last_name="dummy1"
+        )
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(
+                2015, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc
+            ),
+            end_date_time=datetime(
+                2199, 10, 9, 10, 8, 15, 0, tzinfo=pytz.utc
+            ),
+            duration=30, active=True,
+            attempts_allowed=1, time_between_attempts=0,
+            description='demo quiz 1', pass_criteria=0,
+            instructions="Demo Instructions"
+        )
+
+        self.course = Course.objects.create(
+            name="Python Course",
+            enrollment="Enroll Request",
+            creator=self.user1
+        )
+
         self.questionpaper = QuestionPaper.objects.create(
             quiz=self.quiz, total_marks=0.0, shuffle_questions=True
         )
@@ -2172,17 +2339,22 @@ class AssignmentUploadTestCases(unittest.TestCase):
         self.questionpaper.fixed_question_order = "{0}".format(
             self.question.id)
         self.questionpaper.fixed_questions.add(self.question)
-        file_path1 = os.path.join(tempfile.gettempdir(), "upload1.txt")
-        file_path2 = os.path.join(tempfile.gettempdir(), "upload2.txt")
+
+        attempt = 1
+        ip = '127.0.0.1'
+        self.answerpaper1 = self.questionpaper.make_answerpaper(
+                self.user1, ip, attempt, self.course.id
+            )
+
+        file_path1 = os.path.join(dj_settings.MEDIA_ROOT, "upload1.txt")
+        file_path2 = os.path.join(dj_settings.MEDIA_ROOT, "upload2.txt")
         self.assignment1 = AssignmentUpload.objects.create(
-            user=self.user1, assignmentQuestion=self.question,
-            assignmentFile=file_path1, question_paper=self.questionpaper,
-            course=self.course
+            assignmentQuestion=self.question,
+            assignmentFile=file_path1, answer_paper=self.answerpaper1,
             )
         self.assignment2 = AssignmentUpload.objects.create(
-            user=self.user2, assignmentQuestion=self.question,
-            assignmentFile=file_path2, question_paper=self.questionpaper,
-            course=self.course
+            assignmentQuestion=self.question,
+            assignmentFile=file_path2, answer_paper=self.answerpaper1,
             )
 
     def test_get_assignments_for_user_files(self):
@@ -2191,7 +2363,7 @@ class AssignmentUploadTestCases(unittest.TestCase):
                                     self.user1.id, self.course.id
                                     )
         self.assertIn("upload1.txt", assignment_files[0].assignmentFile.name)
-        self.assertEqual(assignment_files[0].user, self.user1)
+        self.assertEqual(assignment_files[0].answer_paper.user, self.user1)
         actual_file_name = self.user1.get_full_name().replace(" ", "_")
         file_name = file_name.replace(" ", "_")
         self.assertEqual(file_name, actual_file_name)
@@ -2202,13 +2374,22 @@ class AssignmentUploadTestCases(unittest.TestCase):
             )
         files = [os.path.basename(file.assignmentFile.name)
                  for file in assignment_files]
-        question_papers = [file.question_paper for file in assignment_files]
+        question_papers = [
+            file.answer_paper.question_paper for file in assignment_files]
         self.assertIn("upload1.txt", files)
         self.assertIn("upload2.txt", files)
         self.assertEqual(question_papers[0].quiz, self.questionpaper.quiz)
         actual_file_name = self.course.name.replace(" ", "_")
         file_name = file_name.replace(" ", "_")
         self.assertIn(actual_file_name, file_name)
+
+    def tearDown(self):
+        self.questionpaper.delete()
+        self.question.delete()
+        self.course.delete()
+        self.quiz.delete()
+        self.user2.delete()
+        self.user1.delete()
 
 
 class CourseStatusTestCases(unittest.TestCase):
@@ -2324,8 +2505,6 @@ class FileUploadTestCases(unittest.TestCase):
         self.assertEqual(self.file_upload.get_filename(), self.filename)
 
     def tearDown(self):
-        if os.path.isfile(self.file_upload.file.path):
-            os.remove(self.file_upload.file.path)
         self.file_upload.delete()
 
 
@@ -2375,9 +2554,10 @@ class PostModelTestCases(unittest.TestCase):
             enrollment='Enroll Request',
             creator=self.user3
         )
+        course_ct = ContentType.objects.get_for_model(self.course)
         self.post1 = Post.objects.create(
             title='Post 1',
-            course=self.course,
+            target_ct=course_ct, target_id=self.course.id,
             creator=self.user1,
             description='Post 1 description'
         )
@@ -2400,9 +2580,6 @@ class PostModelTestCases(unittest.TestCase):
         count = self.post1.get_comments_count()
         self.assertEquals(count, 2)
 
-    def test__str__(self):
-        self.assertEquals(str(self.post1.title), self.post1.title)
-
     def tearDown(self):
         self.user1.delete()
         self.user2.delete()
@@ -2411,45 +2588,159 @@ class PostModelTestCases(unittest.TestCase):
         self.post1.delete()
 
 
-class CommentModelTestCases(unittest.TestCase):
-    def setUp(self):
-        self.user1 = User.objects.create(
-            username='bart',
-            password='bart',
-            email='bart@test.com'
-        )
-        Profile.objects.create(
-            user=self.user1,
-            roll_number=1,
-            institute='IIT',
-            department='Chemical',
-            position='Student'
-        )
-        self.course = Course.objects.create(
-            name='Python Course',
-            enrollment='Enroll Request',
-            creator=self.user1
-        )
-        self.post1 = Post.objects.create(
-            title='Post 1',
-            course=self.course,
-            creator=self.user1,
-            description='Post 1 description'
-        )
-        self.comment1 = Comment.objects.create(
-            post_field=self.post1,
-            creator=self.user1,
-            description='Post 1 comment 1'
-        )
+class QRcodeTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        quiz = Quiz.objects.get(description='demo quiz 1')
+        cls.questionpaper = QuestionPaper.objects.create(quiz=quiz)
+        question = Question.objects.get(summary='Q1')
+        question.type = 'upload'
+        question.save()
+        cls.questionpaper.fixed_questions.add(question)
+        cls.questionpaper.update_total_marks()
+        student = User.objects.get(username='course_user')
+        course = Course.objects.get(name='Python Course')
+        attempt = 1
+        ip = '127.0.0.1'
+        answerpaper = cls.questionpaper.make_answerpaper(
+            student, ip, attempt, course.id)
+        cls.qrcode_handler = QRcodeHandler.objects.create(
+            user=student, answerpaper=answerpaper, question=question)
+        cls.old_qrcode = cls.qrcode_handler._create_qrcode()
+        cls.old_qrcode.set_used()
+        cls.old_qrcode.save()
+        cls.qrcode = cls.qrcode_handler.get_qrcode()
+        cls.answerpaper = answerpaper
 
-    def test__str__(self):
-        self.assertEquals(
-            str(self.comment1.post_field.title),
-            self.comment1.post_field.title
-    )
+    @classmethod
+    def tearDownClass(cls):
+        cls.qrcode.image.delete()
+        cls.qrcode.delete()
+        cls.qrcode_handler.delete()
+        cls.answerpaper.delete()
+        cls.questionpaper.delete()
+        QRcode.objects.all().delete()
+        QRcodeHandler.objects.all().delete()
 
-    def tearDown(self):
-        self.user1.delete()
-        self.course.delete()
-        self.post1.delete()
-        self.comment1.delete()
+    def test_active(self):
+        # Given
+        qrcode = self.qrcode
+
+        # Then
+        self.assertFalse(qrcode.is_active())
+
+        # When
+        qrcode.activate()
+        qrcode.save()
+
+        # Then
+        self.assertTrue(qrcode.is_active())
+
+        # When
+       qrcode.deactivate()
+        qrcode.save()
+
+        # Then
+        self.assertFalse(qrcode.is_active())
+
+    def test_used(self):
+        # Given
+        qrcode = self.qrcode
+
+        # Then
+        self.assertFalse(qrcode.is_used())
+
+        # When
+        qrcode.set_used()
+        qrcode.save()
+
+        # Then
+        self.assertTrue(qrcode.is_used())
+
+        # When
+        qrcode.used = False
+        qrcode.save()
+
+        # Then
+        self.assertFalse(qrcode.is_used())
+
+    def test_random_key(self):
+        # Given
+        qrcode = self.qrcode
+
+        # When
+        expect_key = hashlib.sha1('{0}'.format(qrcode.id).encode()).hexdigest()
+
+        # Then
+        self.assertEqual(qrcode.random_key, expect_key)
+        self.assertEqual(len(qrcode.random_key), 40)
+
+    def test_short_key(self):
+        # Given
+        qrcode = self.qrcode
+
+        # When
+        expect_key = hashlib.sha1('{0}'.format(qrcode.id).encode()).hexdigest()
+
+        # Then
+        self.assertEqual(qrcode.short_key, expect_key[0:5])
+        self.assertEqual(len(qrcode.short_key), 5)
+
+        # Given
+        old_qrcode = self.old_qrcode
+        old_qrcode.random_key = qrcode.random_key
+        old_qrcode.save()
+
+        # When
+        old_qrcode.set_short_key()
+
+        # Then
+        self.assertEqual(old_qrcode.short_key, expect_key[0:6])
+        self.assertEqual(len(old_qrcode.short_key), 6)
+
+    def test_generate_image(self):
+        # Given
+        qrcode = self.qrcode
+        image_name = qrcode.short_key
+
+        # When
+        qrcode.generate_image('test')
+
+        # Then
+        self.assertTrue(qrcode.is_active())
+        self.assertIn(image_name, qrcode.image.name)
+
+    def test_get_qrcode(self):
+        # Given
+        handler = self.qrcode_handler
+        self.qrcode.activate()
+        self.qrcode.save()
+        expected_qrcode = self.qrcode
+
+        # When
+        qrcode = handler.get_qrcode()
+
+        # Then
+        self.assertEqual(qrcode, expected_qrcode)
+        self.qrcode.deactivate()
+        self.qrcode.save()
+
+    def test_can_use(self):
+        # Given
+        handler = self.qrcode_handler
+
+        # When
+        can_use = handler.can_use()
+
+        # Then
+        self.assertTrue(can_use)
+
+        # Given
+        answerpaper = self.answerpaper
+
+        # When
+        answerpaper.update_marks(state='complete')
+        can_use = handler.can_use()
+
+        # Then
+        self.assertFalse(can_use)

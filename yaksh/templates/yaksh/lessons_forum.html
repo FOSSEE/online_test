@@ -1,0 +1,104 @@
+{% extends base_template %}
+{% load static %}
+{% block title %}
+    {{course.name}}: Lessons Forum
+{% endblock title %}
+{% block content %}
+    <div id="wrapper" class="d-flex">
+        <div class="container" id="page-content-wrapper">
+            <div>
+                <h2><center>{{course.name}}</center></h2>
+                <center>Discussion Forum</center>
+            </div>
+            <div class="d-flex p-2 bd-highlight">
+                <div class="col-md-4">
+                    {% if moderator %}
+                        <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
+                            <i class="fa fa-arrow-left"></i>&nbsp;Back
+                        </a>
+                    {% else %}
+                        <a href="{% url 'yaksh:course_modules' course.id %}" class="btn btn-primary">
+                            <i class="fa fa-arrow-left"></i>&nbsp;Back
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% if messages %}
+                <div>
+                  <center>
+                      {% for message in messages %}
+                          <div class="alert alert-dismissible alert-{{ message.tags }}">
+                              <button type="button" class="close" data-dismiss="alert">
+                                  <i class="fa fa-close"></i>
+                              </button>
+                              <strong>{{ message }}</strong>
+                          </div>
+                      {% endfor %}
+                  </center>
+               </div>
+            {% endif %}
+            <br>
+            {% include "yaksh/sidebar.html" %}
+            <br>
+            {% if posts %}
+                <div class="card">
+                {% if posts|length > 10 %}
+                <div class="table-responsive" style="height: 700px">
+                {% else %}
+                <div class="table-responsive">
+                {% endif %}
+                <table class="table table-responsive-sm">
+                    <thead class="thread-inverse thead-light">
+                        <tr>
+                            <th width="700">Posts</th>
+                            <th>Created by</th>
+                            <th>Replies</th>
+                            <th>Last reply</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody class="list">
+                        {% for post in posts %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'yaksh:post_comments' course.id post.uid %}">{{post.title}}</a>
+                                    <small class="text-muted d-block">{{ post.description|safe|truncatewords:10 }}</small>
+                                    <small class="text-muted"><strong>Last updated: {{post.modified_at}}</strong></small>
+                                </td>
+                                <td>
+                                    {% if post.anonymouse %}
+                                        Anonymous
+                                    {% else %}
+                                        {{post.creator.username}}
+                                    {% endif %}
+                                </td>
+                                <td>{{post.get_comments_count}}</td>
+                                <td>
+                                    {% with post.get_last_comment as last_comment %}
+                                        {% if last_comment %}
+                                            {{last_comment.creator}}
+                                        {% else %}
+                                            None
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td>
+                                    {% if user == course.creator or user in course.get_teachers %}
+                                        <small><a href="{% url 'yaksh:hide_post' course.id post.uid %}" class="pull-right fa fa-trash"></i></a></small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+                </div>
+            {% else %}
+                <div>
+                    <center>No Lesson posts here. They will appear when someone comments on video lessons.</center>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock content %}
+

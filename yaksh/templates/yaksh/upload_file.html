@@ -1,0 +1,78 @@
+{% load static %}
+<html>
+<title> Upload File </title>
+<script language="JavaScript" type="text/javascript" src="{% static 'yaksh/js/jquery-3.3.1.min.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.8.1/dropzone.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.8.1/basic.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.8.1/min/dropzone.min.js"></script>
+<style>
+div, input, button {
+    font-size: x-large;
+        text-align: center;
+}
+</style>
+<div>
+{% if success %}
+    <p> {{ msg }}</p>
+{% else %}
+  <form id="code" action="{% url 'yaksh:upload_file' key %}" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+        <h3>Upload assignment file for {{ question.summary }}</h3>
+        <div class="dropzone needsclick dz-clickable" id="dropzone_file">
+          <div class="dz-message needsclick">
+            <button type="button" class="dz-button">
+              Drop files here or click to upload.
+            </button>
+          </div>
+        </div>
+        <br>
+        <button class="btn btn-success" type="submit" name="check" id="check">Upload</button>
+  </form>
+{% endif %}
+</div>
+</html>
+<script>
+    Dropzone.autoDiscover = false;
+    var submitfiles;
+    $(document).ready(function(){
+        var filezone = $("div#dropzone_file").dropzone({
+            url: $("#code").attr("action"),
+            parallelUploads: 10,
+            uploadMultiple: true,
+            maxFiles:20,
+            paramName: "assignment",
+            autoProcessQueue: false,
+            init: function() {
+              var submitButton = document.querySelector("#check");
+              myDropzone = this;
+              submitButton.addEventListener("click", function(e) {
+                if (myDropzone.getQueuedFiles().length === 0) {
+                  alert("Please select a file and upload");
+                  e.preventDefault();
+                  return;
+                }
+                if (myDropzone.getAcceptedFiles().length > 0) {
+                  if (submitfiles === true) {
+                      submitfiles = false;
+                      return;
+                  }
+                  e.preventDefault();
+                  myDropzone.processQueue();
+                  myDropzone.on("complete", function () {
+                      submitfiles = true;
+                      $('#check').trigger('click');
+                  });
+                }
+              });
+            },
+            success: function (file, response) {
+              document.open();
+              document.write(response);
+              document.close();
+            },
+            headers: {
+                "X-CSRFToken": document.getElementById("code").elements[0].value
+            }
+        });
+    });
+</script>

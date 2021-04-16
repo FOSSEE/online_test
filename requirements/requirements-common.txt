@@ -1,6 +1,6 @@
 -r requirements-codeserver.txt
 invoke==0.21.0
-django==3.0.3
+django==3.1.7
 django-taggit==1.2.0
 pytz==2019.3
 requests-oauthlib>=0.6.1
@@ -8,8 +8,19 @@ social-auth-app-django==3.1.0
 selenium==2.53.6
 coverage
 ruamel.yaml==0.16.10
+pyyaml==5.3.1
 markdown==2.6.9
 pygments==2.2.0
-djangorestframework==3.11.0
+celery==4.4.2
+redis==3.4.1
+notifications-plugin==0.1.2
+django-celery-beat==2.0.0
+django-celery-results==1.2.1
+djangorestframework==3.11.2
 django-cors-headers==3.1.0
 Pillow
+pandas
+qrcode
+more-itertools==8.4.0
+django-storages==1.11.1
+boto3==1.17.17

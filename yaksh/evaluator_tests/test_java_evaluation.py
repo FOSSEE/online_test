@@ -62,7 +62,7 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.test_case_data = [
             {"test_case": self.tc_data,
              "test_case_type": "standardtestcase",
-             "weight": 0.0
+             "weight": 0.0, "hidden": False
              }
         ]
         self.in_dir = tmp_in_dir_path
@@ -119,6 +119,7 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.assertFalse(result.get('success'))
         for error in errors:
             self.assertEqual(error.get('exception'), 'AssertionError')
+            self.assertFalse(error.get('hidden'))
 
     def test_error(self):
         # Given
@@ -140,6 +141,7 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.assertFalse(result.get("success"))
         for error in errors:
             self.assertEqual(error.get('exception'), 'CompilationError')
+            self.assertFalse(result.get('hidden'))
 
     def test_infinite_loop(self):
         # Given
@@ -276,7 +278,7 @@ class JavaAssertionEvaluationTestCases(EvaluatorBaseTest):
                        "{\n\treturn a;\n\t}\n}")
         self.test_case_data = [{"test_case": self.tc_data,
                                 "test_case_type": "standardtestcase",
-                                "weight": 0.0
+                                "weight": 0.0, "hidden": True
                                 }]
         kwargs = {
                   'metadata': {
@@ -408,6 +410,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
         # Then
         lines_of_error = len(result.get('error')[0].get('error_line_numbers'))
         result_error = result.get('error')[0].get('error_msg')
+        self.assertFalse(result.get('error')[0].get('hidden'))
         self.assertFalse(result.get('success'))
         self.assert_correct_output("Incorrect", result_error)
         self.assertTrue(lines_of_error > 0)
@@ -437,6 +440,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
         self.assertFalse(result.get("success"))
         for error in errors:
             self.assertEqual(error.get('exception'), 'CompilationError')
+            self.assertFalse(error.get('hidden'))
 
     def test_infinite_loop(self):
         # Given
@@ -474,7 +478,7 @@ class JavaStdIOEvaluationTestCases(EvaluatorBaseTest):
         # Given
         self.test_case_data = [{'expected_output': '11',
                                 'test_case_type': 'stdiobasedtestcase',
-                                'weight': 0.0
+                                'weight': 0.0, 'hidden': False
                                 }]
         user_answer = dedent("""
         class Test
@@ -677,7 +681,8 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                             """)
 
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code, "weight": 1.0
+                           "hook_code": hook_code, "weight": 1.0,
+                           "hidden": True
                            }]
         kwargs = {
                   'metadata': {
@@ -693,8 +698,10 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
         result = grader.evaluate(kwargs)
 
         # Then
+        self.assertTrue(result.get('error')[0]['hidden'])
         self.assertFalse(result.get('success'))
-        self.assert_correct_output('Incorrect Answer', result.get('error'))
+        self.assert_correct_output('Incorrect Answer',
+                                   result.get('error')[0]['message'])
 
     def test_assert_with_hook(self):
         # Given
@@ -875,7 +882,7 @@ class JavaHookEvaluationTestCases(EvaluatorBaseTest):
                             """)
 
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code, "weight": 1.0
+                           "hook_code": hook_code, "weight": 1.0,
                            }]
 
         kwargs = {

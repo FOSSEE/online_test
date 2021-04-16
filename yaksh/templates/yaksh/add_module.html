@@ -1,6 +1,8 @@
 {% extends "manage.html" %}
 {% load static %}
-{% block title %}Create/Edit Learning Module{% endblock %}
+{% block title %}
+    Create/Edit Learning Module
+{% endblock %}
 
 {% block script %}
 <script type="text/javascript" src="{% static 'yaksh/js/jquery-3.3.1.min.js' %}">
@@ -19,17 +21,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
-{% if messages %}
-    {% for message in messages %}
-    <div class="alert alert-dismissible alert-{{ message.tags }}">
-        <button type="button" class="close" data-dismiss="alert">
-            <i class="fa fa-close"></i>
-        </button>
-        <strong>{{ message }}</strong>
-    </div>
-    {% endfor %}
-{% endif %}
+<div class="container-fluid">
 {% if course_id %}
     <a class="btn btn-primary" href="{% url 'yaksh:get_course_modules' course_id %}">
         <i class="fa fa-arrow-left"></i>
@@ -43,10 +35,23 @@
 {% endif %}
 </div>
 <br>
-{% if status == "add" %}
 <div class="container">
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-dismissible alert-{{ message.tags }}">
+        <button type="button" class="close" data-dismiss="alert">
+            <i class="fa fa-close"></i>
+        </button>
+        <strong>{{ message }}</strong>
+    </div>
+    {% endfor %}
+{% endif %}
+</div>
+<br>
+{% if status == "add" %}
+<div class="container-fluid">
     <div class="row justify-content-center form-group">
-        <div class="col-md-9 col-md-offset-4">
+        <div class="col-md-5 col-md-offset-4">
             <form name=frm id=frm action="" method="post">
                 <fieldset>
                     {% csrf_token %}
@@ -57,7 +62,7 @@
                                     <button type="button" class="close" data-dismiss="alert">
                                         <i class="fa fa-close"></i>
                                     </button>
-                                    <strong>{{ error|escape }}</strong>
+                                    <strong>{{field.label}} : {{ error|escape }}</strong>
                                 </div>
                             {% endfor %}
                         {% endfor %}
@@ -66,43 +71,38 @@
                                 <button type="button" class="close" data-dismiss="alert">
                                     <i class="fa fa-close"></i>
                                 </button>
-                                <strong>{{ error|escape }}</strong>
+                                <strong>{{field.label}} : {{ error|escape }}</strong>
                             </div>
                         {% endfor %}
                     {% endif %}
                     {{module_form.name}}
                     <br>
-                    {{module_form.description}}
-                    <br>
                     Active:&nbsp;{{module_form.active}}
+                    <br>
+                    <br>
+                    {{module_form.description}}
                     <br>
                     <center>
                         <button class="btn btn-success btn-lg" type="submit" id="submit" name="Save">
                             <i class="fa fa-save"></i>
                             Save
                         </button>
-                        <button class="btn btn-outline-primary btn-lg" type="button" name="button" id="preview">
-                            <i class="fa fa-eye"></i>
-                            Preview Description
-                        </button>
-                        <button class="btn btn-outline-primary btn-lg" type="button" name="button" id="embed">
-                            <i class="fa fa-angle-left"></i>&nbsp;<i class="fa fa-angle-right"></i>
-                            Embed Video link
-                        </button>
                     </center>
                     </form>
                     <hr>
-                    <div class="card" id="preview_text_div" style="display: none;">
-                        <div class="card-heading">
-                            <center>
-                                <h3>Description Preview</h3>
-                            </center>
-                        </div>
-                        <div class="card-body" id="description_body">
-                        </div>
-                    </div>
                 </fieldset>
             </form>
+        </div>
+        <div class="col-md-5">
+            <div class="card" id="preview_text_div">
+                <div class="card-header">
+                    <center>
+                        <h3>Description Preview</h3>
+                    </center>
+                </div>
+                <div class="card-body" id="description_body">
+                </div>
+            </div>
         </div>
     </div>
 </div>

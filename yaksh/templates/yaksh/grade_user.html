@@ -2,9 +2,9 @@
 {% load custom_filters %}
 {% load static %}
 
-{% block title %} Grade User {% endblock %}
+{% block title %} Quizzes {% endblock %}
 
-{% block pagetitle %} Grade User {% endblock pagetitle %}
+{% block pagetitle %} Quizzes {% endblock pagetitle %}
 
 {% block script %}
 <script type="text/javascript" src="{% static 'yaksh/js/jquery.tablesorter.min.js' %}">
@@ -15,7 +15,24 @@ $(document).ready(function()
 {
   $("#marks_table").tablesorter({sortList: [[2,1]]});
 });
+function searchNames() {
+  var input, filter, ul, li, a, i, txtValue;
+  input = document.getElementById('myInput');
+  filter = input.value.toUpperCase();
+  $("#myUL").toggle();
+  ul = document.getElementById("myUL");
+  li = ul.getElementsByTagName('li');
 
+  for (i = 0; i < li.length; i++) {
+    a = li[i].getElementsByTagName("a")[0];
+    txtValue = a.textContent || a.innerText;
+    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+      li[i].style.display = "";
+    } else {
+      li[i].style.display = "none";
+    }
+  }
+}
 </script>
 {% endblock script %}
 
@@ -34,7 +51,7 @@ $(document).ready(function()
                           </h5>
                       </div>
                       <div class="col-md">
-                          <a class="card-link btn btn-info" data-toggle="collapse" href="#collapse{{course.id}}">
+                          <a class="card-link btn btn-outline-success" data-toggle="collapse" href="#collapse{{course.id}}">
                               Details
                               <i class="fa fa-toggle-down" id="toggle_course_{{course.id}}"></i>
                           </a>
@@ -53,7 +70,12 @@ $(document).ready(function()
                                         {{quiz.description}}
                                       </div>
                                       <div class="col-md-2">
-                                        <a href="{% url 'yaksh:grade_user' quiz.id course.id%}" class="btn btn-primary">
+                                        <a href="{% url 'yaksh:monitor' quiz.id course.id%}" class="btn btn-primary">
+                                            Monitor
+                                          </a>
+                                      </div>
+                                      <div class="col-md-2">
+                                        <a href="{% url 'yaksh:grade_user' quiz.id course.id%}" class="btn btn-info">
                                           Grade
                                         </a>
                                       </div>
@@ -87,16 +109,17 @@ $(document).ready(function()
   <div class="row">
     {% if status == "grade" %}
       {% if users %}
-        <div id="student" class="col-md-3">
-          <ul class="nav nav-pills list-group">
-            {% for user in users %}
-              <li class="nav-item">
-                <a href="{% url 'yaksh:grade_user' quiz_id user.user__id course_id %}" class="list-group-item{% if user.user__id == data.user.id %} active {% endif %}">
-                  {{user.user__first_name}} {{user.user__last_name}}
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
+        <div id="student" class="col-lg-3">
+          <div class="students-list">
+            <select onchange="window.location.href=this.value" class="custom-select">
+              <option value="">Select student</option>
+              {% for user in users %}
+                 <option value="{% url 'yaksh:grade_user' quiz_id user.user__id course_id %}" {% if user.user__id == data.user.id %} selected {% endif %} title="{{user.user__first_name|upper}} {{user.user__last_name|upper}}">
+                   {{user.user__first_name|upper}} {{user.user__last_name|truncatechars:5|upper}}
+                 </option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
       {% else %}
         <div class="col-md-1"></div>
@@ -110,12 +133,52 @@ $(document).ready(function()
       {% endif %}
     {% endif %}
 
-    <div id="paper" class="col-md-9">
+    <div id="paper" class="col-lg-9">
       {% if has_quiz_assignments %}
         <a href="{% url 'yaksh:download_quiz_assignment' quiz_id course_id %}" class="btn btn-outline-info">
           <i class="fa fa-download"></i>&nbsp;Download All Assignments
         </a>
         <br><br>
+      {% endif %}
+      {% if status == 'grade' and users %}
+        <div id="accordian-questions" class="card">
+        <div class="card-header">
+            <a class="card-link" data-toggle="collapse" href="#questions">
+              Regrade papers by questions&nbsp;<i class="fa fa-angle-down"></i>
+            </a>
+        </div>
+        <div id="questions" class="collapse hide" data-parent="#accordion-questions">
+          {% with quiz.questionpaper_set.get as qp %}
+            <div class="card-body">
+              <table class="table table-responsive-sm">
+                <thead>
+                  <tr>
+                  <th>Questions</th>
+                  <th>Type</th>
+                  <th>Marks</th>
+                  <th>Regrade</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  {% for question in qp.get_question_bank %}
+                    <tr>
+                    <td>{{ question.summary }}</td>
+                    <td>{{ question.get_type_display }}</td>
+                    <td>{{ question.points }}</td>
+                    <td>
+                      <a href="{% url 'yaksh:regrade_by_quiz' course_id quiz.questionpaper_set.get.id question.id %}" class="btn btn-outline-success">
+                        <i class="fa fa-repeat"></i>&nbsp;Regrade
+                      </a>
+                    </td>
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+              </table>
+            </div>
+          {% endwith %}
+        </div>
+      </div>
+      <br>
       {% endif %}
 
       {% if messages %}
@@ -128,8 +191,22 @@ $(document).ready(function()
         </div>
         {% endfor %}
       {% endif %}
+      {% if status == "grade" and users %}
+        <input type="text" id="myInput" onkeyup="searchNames()" placeholder="Type to search for names" class="form-control">
+        <ul class="nav nav-pills list-group" style="display: none;" id="myUL">
+          {% for user in users %}
+            <li class="nav-item">
+              <a href="{% url 'yaksh:grade_user' quiz_id user.user__id course_id %}" class="list-group-item">
+                {{user.user__first_name|upper}} {{user.user__last_name|upper}}
+              </a>
+            </li>
+          {% endfor %}
+          <br>
+        </ul>
+      {% endif %}
 
       {% if data %}
+        <hr>
         <div class="card">
           <div class="card-header">
             Student Details
@@ -219,20 +296,30 @@ $(document).ready(function()
             {% if paper.answers.count %}
             <div class="card">
               <div class="card-header">
-                Submission Details
+                <div class="row">
+                  <div class="col-md-6">
+                    Submission Details                    
+                  </div>
+                  <div class="col-md-4">
+                    <a href="{% url 'yaksh:regrade_by_user' course_id quiz.questionpaper_set.get.id paper.id %}" class="btn btn-outline-success">
+                      <i class="fa fa-repeat"></i>&nbsp;Regrade Whole Paper
+                    </a>
+                  </div>
+                </div>
               </div>
               <div class="card-body">
-                <table class="tablesorter table table-striped table-bordered table-responsive-sm" id='marks_table'>
-                  <thead>
+                <div class="table-responsive" style="height: 400px">
+                <table class="table table-dark table-responsive-sm" id='marks_table'>
+                  <thead class="thead-dark">
                     <tr>
                     <th>Questions</th>
                     <th>Type</th>
                     <th>Marks Obtained</th>
+                    <th>Regrade</th>
                     </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="list">
                     {% for question, answers in paper.get_question_answers.items %}
-                      {% with answers|last as answer %}
                           <tr>
                           <td>
                             <a href="#question_{{question.id}}">
@@ -240,12 +327,18 @@ $(document).ready(function()
                             </a>
                           </td>
                           <td>{{ question.type }}</td>
-                          <td>{{ answer.answer.marks }}</td>
+                          <td>{{ answers|last }}</td>
+                          <td>
+                            <a href="{% url 'yaksh:regrade_by_question' course_id quiz.questionpaper_set.get.id paper.id question.id %}" class="btn btn-outline-success">
+                              <i class="fa fa-repeat"></i>&nbsp;Regrade
+                            </a>
+                          </td>
                           </tr>
-                      {% endwith %}
                     {% endfor %}
                     </tbody>
                 </table>
+                </div>
+                <br>
                 <form name=frm id="q{{ paper.quiz.id }}_form"
                   action="{% url 'yaksh:grade_user' quiz_id user_id paper.attempt_number course_id %}"
                   method="post">
@@ -255,7 +348,8 @@ $(document).ready(function()
                       <div class="card-header text-white bg-info">
                         <strong>
                           Details: {{forloop.counter}}. {{ question.summary }}
-                          <span class="marks pull-right"> Mark(s): {{ question.points }} </span>
+                          <span class="marks pull-right"> Mark(s): {{ question.points }}
+                          </span>
                         </strong>
                       </div>
                       <div class="card-body">
@@ -344,30 +438,33 @@ $(document).ready(function()
                             </center>
                           {% endif %} <!-- End has_user_assignments -->
                         {% else %}
-                        {% for ans in answers %}
+                        {% if answers|first is None %}
+                            <p> Did not attempt </p>
+                        {% else %}
+                        {% for ans in answers|slice:":-1" %}
                           <strong>
                             Attempt Number: {{forloop.counter}}
                           </strong>
                           <div id="accordian">
                             <div class="card">
                               {% if ans.answer.correct %}
-                                <div class="card-header">
+                                <div class="card-header bg-success">
                                   <span class="badge badge-success">
                                     Correct answer:
                                   </span>
                                   <a class="card-link" data-toggle="collapse" href="#submitted_{{ans.answer.id}}">
-                                    <span class="pull-right">
+                                    <span class="pull-right text-white">
                                       Details&nbsp;<i class="fa fa-toggle-down"></i>
                                     </span>
                                   </a>
                                 </div>
                               {% else %}
-                                <div class="card-header">
+                                <div class="card-header bg-danger">
                                   <span class="badge badge-danger">
                                     Error:
                                   </span>
                                   <a class="card-link" data-toggle="collapse" href="#submitted_{{ans.answer.id}}">
-                                    <span class="pull-right">
+                                    <span class="pull-right text-white">
                                       Details&nbsp;<i class="fa fa-toggle-down"></i>
                                     </span>
                                   </a>
@@ -462,10 +559,14 @@ $(document).ready(function()
                                   {% endif %}
                                 </div>
                               </div>
+                              <br>
+                              <b>Comment:</b>
+                              <textarea class="form-control" readonly="">{{ans.answer.comment}}</textarea>
                             </div>
                           </div>
                           <br>
                         {% endfor %} <!-- End for ans in answers -->
+                        {% endif %}<!-- check if attempted -->
                       </div>
                     </div>
                     {% endif %}
@@ -473,9 +574,7 @@ $(document).ready(function()
                     <div class="form-group">
                       <div class="col-md-2">
                         <label class="col-form-label" for="q{{ question.id }}">Marks:</label>
-                        {% with answers|last as answer %}
-                        <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answer.answer.marks }}"><br><br>
-                        {% endwith %}
+                        <input id="q{{ question.id }}" type="text" name="q{{ question.id }}_marks" size="4" class="form-control" value="{{ answers|last }}"><br><br>
                       </div>
                     </div>
                     <hr/>
@@ -501,4 +600,40 @@ $(document).ready(function()
     </div>
   </div>
 </div>
+{% if details %}
+  <div class="modal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Regrade</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-responsive-sm">
+            <tbody>
+              {% for detail in details %}
+                {% if detail.0 %}
+                  <tr class="table-success">
+                    <td> Graded Successfully </td>
+                {% else%}
+                  <tr class="table-danger">
+                    <td> Did not Grade </td>
+                {% endif %}
+                    <td> {{ detail.1|linebreaks }} </td>
+                  </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
 {% endblock%}

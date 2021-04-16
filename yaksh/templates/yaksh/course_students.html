@@ -3,7 +3,7 @@
 <div id="accordian-upload" class="card">
     <div class="card-header">
         <a class="card-link" data-toggle="collapse" href="#upload_users_csv">
-            Upload Users&nbsp;<i class="fa fa-angle-down"></i>
+            Upload Users <i class="fa fa-angle-down"></i>
         </a>
     </div>
 </div>
@@ -11,17 +11,16 @@
     <div class="card-body">
         <form id="upload_users" action="{% url 'yaksh:upload_users' course.id %}" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            <div class="input-group mb-3">
-                <div class="custom-file">
-                    <input type="file" class="custom-file-input" name="csv_file" id="upload"/>
-                    <label class="custom-file-label" for="upload">Choose file</label>
-                </div>
-                <div class="input-group-append">
-                    <button class="btn btn-outline-primary" type="submit">
-                        <i class="fa fa-upload"></i>
-                        Upload
-                    </button>
-                </div>
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" name="csv_file" id="upload"/>
+                <label class="custom-file-label" for="upload">Choose file</label>
+            </div>
+            <br><br>
+            <div class="input-group-append">
+                <button class="btn btn-outline-primary" type="submit">
+                    <i class="fa fa-upload"></i>
+                    Upload
+                </button>
             </div>
         </form>
         <hr>
@@ -48,60 +47,69 @@
 <div id="accordian-request" class="card">
     <div class="card-header">
         <a class="card-link" data-toggle="collapse" href="#requested">
-            Requested Students&nbsp;<i class="fa fa-angle-down"></i>
+            Requested Students <i class="fa fa-angle-down"></i>
         </a>
     </div>
 </div>
 <div id="requested" class="collapse show" data-parent="#accordion-request">
-    {% if requested %}
+    {% if requested_users %}
         <br>
-        <input type="checkbox" class="checkall"/>&nbsp;
-        <font size="5">Select all</font>
+        <input type="checkbox" class="checkall"/> Select all
         <div id="enroll-all">
-            <form action="{% url 'yaksh:enroll_users' course.id %}" method="post">
+            <form action="{% url 'yaksh:enroll_reject_user' course.id %}" method="post">
                 {% csrf_token %}
-                <table id="requested_table" class="tablesorter table table-striped table-responsive-sm course-detail" data-sortlist="[1,0]">
-                    <thead>
+                <div class="card">
+                    {% if requested_users|length > 10 %}
+                    <div class="table-responsive" style="height: 700px">
+                    {% else %}
+                    <div class="table-responsive">
+                    {% endif %}
+                <table id="requested_table" class="table table-responsive-sm table-dark course-detail" data-sortlist="[1,0]">
+                    <thead class="thead-dark">
                         <th></th>
-                        <th>Full Name&nbsp;<i class="fa fa-sort"></i></th>
-                        <th>Email&nbsp;<i class="fa fa-sort"></i></th>
-                        <th>Roll Number&nbsp;<i class="fa fa-sort"></i></th>
-                        <th>Institute&nbsp;<i class="fa fa-sort"></i></th>
-                        <th>Department&nbsp;<i class="fa fa-sort"></i></th>
+                        <th>Full Name <i class="fa fa-sort"></i></th>
+                        <th>Email <i class="fa fa-sort"></i></th>
+                        <th>Roll Number <i class="fa fa-sort"></i></th>
+                        <th>Institute <i class="fa fa-sort"></i></th>
+                        <th>Department <i class="fa fa-sort"></i></th>
                         <th>Enroll/Reject</th>
                     </thead>
-                    <tbody>
-                        {% for request in requested %}
+                    <tbody class="list">
+                        {% for user in requested_users %}
                         <tr>
                         <td>
                             {{ forloop.counter }}.
-                            <input type="checkbox" name="check" value="{{ request.id }}">
+                            <input type="checkbox" name="check" value="{{ user.id }}">
                         </td>
-                        <td>{{request.get_full_name}}</td>
-                        <td> {{request.email}}</td>
-                        {% with request.profile as request_profile %}
-                            <td> {{request_profile.roll_number}}</td>
-                            <td> {{request_profile.institute}}</td>
-                            <td> {{request_profile.department}}</td>
+                        <td>{{user.get_full_name}}</td>
+                        <td> {{user.email}}</td>
+                        {% with user.profile as user_profile %}
+                            <td> {{user_profile.roll_number}}</td>
+                            <td> {{user_profile.institute}}</td>
+                            <td> {{user_profile.department}}</td>
                         {% endwith %}
                         <td>
-                            <a class="btn btn-success"
-                            href="{% url 'yaksh:enroll_user' course.id request.id %}">
-                            <i class="fa fa-plus-square"></i>
-                            Enroll </a>
-                            <a class="btn btn-danger"
-                            href="{% url 'yaksh:reject_user' course.id request.id %}">
-                            <i class="fa fa-minus-square"></i>
-                            Reject </a>
+                            <a class="btn btn-success" href="{% url 'yaksh:enroll_user' course.id user.id %}">
+                                <i class="fa fa-plus-square"></i>
+                                Enroll 
+                            </a>
+                            <a class="btn btn-danger" href="{% url 'yaksh:reject_user' course.id user.id %}">
+                                <i class="fa fa-minus-square"></i> 
+                                Reject 
+                            </a>
                         </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-                <button class="btn btn-success btn-lg" type="submit" name='enroll' value='enroll'>
-                    <i class="fa fa-plus-square"></i>
-                    Enroll Selected
-                </button> <br>
+                </div>
+                </div>
+                <button class="btn btn-danger" type="submit" name="reject">
+                    <i class="fa fa-minus-square"></i>&nbsp;Reject selected
+                </button>
+                <button class="btn btn-success" type="submit" name="enroll">
+                    <i class="fa fa-plus-square"></i>&nbsp;Enroll selected
+                </button>
             </form>                                   
         </div>
     {% else %}
@@ -116,45 +124,49 @@
 <div id="accordian-enrolled" class="card">
     <div class="card-header">
         <a class="card-link" data-toggle="collapse" href="#enrolled">
-            Enrolled Students&nbsp;<i class="fa fa-angle-down"></i>
+            Enrolled Students <i class="fa fa-angle-down"></i>
         </a>
     </div>
 </div>
 <div id="enrolled" class="collapse hide" data-parent="#accordion-enrolled">
-    {% if enrolled %}
+    {% if enrolled_users %}
         <br>
-        <input type="checkbox" class="reject"/>&nbsp;
-        <font size="5">Select all</font>
+        <input type="checkbox" class="reject"/> Select all
         <div id="reject">
-            <form action="{% url 'yaksh:reject_users' course.id %}" method="post" id="reject-form">
+            <form action="{% url 'yaksh:reject_enrolled_users' course.id %}" method="post" id="reject-form">
                 {% csrf_token %}
-                <table id="enrolled_table" class="tablesorter table table-striped table-responsive-sm course-detail" data-sortlist="[1,0]" style="width: 100%">
-                    <thead>
+                <div class="card">
+                    {% if enrolled_users|length > 10 %}
+                    <div class="table-responsive" style="height: 700px">
+                    {% else %}
+                    <div class="table-responsive">
+                    {% endif %}
+                <table id="enrolled_table" class="table table-responsive-sm table-dark" data-sortlist="[1,0]">
+                    <thead class="thead-dark">
                     <th></th>
-                    <th>Full Name&nbsp;<i class="fa fa-sort"></i></th>
-                    <th>Email&nbsp;<i class="fa fa-sort"></i></th>
-                    <th>Roll Number&nbsp;<i class="fa fa-sort"></i></th>
-                    <th>Institute&nbsp;<i class="fa fa-sort"></i></th>
-                    <th>Department&nbsp;<i class="fa fa-sort"></i></th>
+                    <th>Full Name <i class="fa fa-sort"></i></th>
+                    <th>Email <i class="fa fa-sort"></i></th>
+                    <th>Roll Number <i class="fa fa-sort"></i></th>
+                    <th>Institute <i class="fa fa-sort"></i></th>
+                    <th>Department <i class="fa fa-sort"></i></th>
                     <th>Reject</th>
                     </thead>
-                    <tbody>
-                    {% for enroll in enrolled %}
+                    <tbody class="list">
+                    {% for user in enrolled_users %}
                         <tr>
                         <td>
                             {{ forloop.counter }}.
-                            <input type="checkbox" name="check" value="{{ enroll.id }}">
+                            <input type="checkbox" name="check" value="{{ user.id }}">
                         </td>
-                        <td> {{ enroll.get_full_name|title }} </td>
-                        <td> {{enroll.email}}</td>
-                        {% with enroll.profile as enroll_profile %}
-                            <td> {{enroll_profile.roll_number}}</td>
-                            <td> {{enroll_profile.institute}}</td>
-                            <td> {{enroll_profile.department}}</td>
+                        <td> {{ user.get_full_name|title }} </td>
+                        <td> {{user.email}}</td>
+                        {% with user.profile as user_profile %}
+                            <td> {{user_profile.roll_number}}</td>
+                            <td> {{user_profile.institute}}</td>
+                            <td> {{user_profile.department}}</td>
                         {% endwith %}
                         <td>
-                            <a class="btn btn-danger"
-                            href="{% url 'yaksh:reject_user' course.id enroll.id %}">
+                            <a class="btn btn-danger" href="{% url 'yaksh:reject_enrolled_user' course.id user.id %}">
                                 <i class="fa fa-minus-square"></i>
                                 Reject
                             </a>
@@ -163,10 +175,11 @@
                     {% endfor %}
                     </tbody>
                 </table>
-                <button class="btn btn-danger btn-lg" type="submit" name='reject' value='reject'>
-                    <i class="fa fa-minus-square"></i>
-                    Reject Selected
-                </button> <br>
+                </div>
+                </div>
+                <button class="btn btn-danger" type="submit" name="reject">
+                    <i class="fa fa-minus-square"></i>&nbsp;Reject selected
+                </button>
             </form>
         </div>
     {% else %}
@@ -182,55 +195,62 @@
 <div id="accordian-rejected" class="card">
     <div class="card-header">
         <a class="card-link" data-toggle="collapse" href="#rejected">
-            Rejected Students&nbsp;<i class="fa fa-angle-down"></i>
+            Rejected Students <i class="fa fa-angle-down"></i>
         </a>
     </div>
 </div>
 <div id="rejected" class="collapse hide" data-parent="#accordion-rejected">
-    {% if rejected %}
+    {% if rejected_users %}
     <br>
-    <input type="checkbox" class="enroll"/>&nbsp;
-    <font size="5">Select all</font>
+    <input type="checkbox" class="enroll"/> Select all
     <div id="enroll">
-        <form action="{% url 'yaksh:enroll_rejected' course.id %}" method="post">
+        <form action="{% url 'yaksh:enroll_rejected_users' course.id %}" method="post">
             {% csrf_token %}
-            <table id="rejected_table" class="tablesorter table table-striped table-responsive-sm course-detail" data-sortlist="[1,0]">
-                <thead>
-                    <th>Full Name&nbsp;<i class="fa fa-sort"></i></th>
-                    <th>Email&nbsp;<i class="fa fa-sort"></i></th>
-                    <th>Roll Number&nbsp;<i class="fa fa-sort"></i></th>
-                    <th>Institute&nbsp;<i class="fa fa-sort"></i></th>
-                    <th>Department&nbsp;<i class="fa fa-sort"></i></th>
+            <div class="card">
+                {% if rejected_users|length > 10 %}
+                <div class="table-responsive" style="height: 700px">
+                {% else %}
+                <div class="table-responsive">
+                {% endif %}
+            <table id="rejected_table" class="table table-responsive-sm table-dark course-detail" data-sortlist="[1,0]">
+                <thead class="thead-dark">
+                    <th></th>
+                    <th>Full Name <i class="fa fa-sort"></i></th>
+                    <th>Email <i class="fa fa-sort"></i></th>
+                    <th>Roll Number <i class="fa fa-sort"></i></th>
+                    <th>Institute <i class="fa fa-sort"></i></th>
+                    <th>Department <i class="fa fa-sort"></i></th>
                     <th>Enroll</th>
                 </thead>
-                <tbody>
-                    {% for reject in rejected %}
+                <tbody class="list">
+                    {% for user in rejected_users %}
                         <tr>
                         <td>
                             {{ forloop.counter }}.
-                            <input type="checkbox" name="check" value="{{ reject.id }}">
+                            <input type="checkbox" name="check" value="{{ user.id }}">
                         </td>
-                        <td>{{reject.get_full_name|title}}</td>
-                        <td> {{reject.email}}</td>
-                        {% with reject.profile as reject_profile %}
-                            <td> {{reject_profile.roll_number}}</td>
-                            <td> {{reject_profile.institute}}</td>
-                            <td> {{reject_profile.department}}</td>
+                        <td>{{user.get_full_name|title}}</td>
+                        <td> {{user.email}}</td>
+                        {% with user.profile as user_profile %}
+                            <td> {{user_profile.roll_number}}</td>
+                            <td> {{user_profile.institute}}</td>
+                            <td> {{user_profile.department}}</td>
                         {% endwith %}
                         <td>
-                            <a class="btn btn-success"
-                            href="{% url 'yaksh:enroll_rejected' course.id reject.id %}">
-                            <i class="fa fa-plus-square"></i>
-                            Enroll </a>
+                            <a class="btn btn-success" href="{% url 'yaksh:enroll_rejected_user' course.id user.id %}">
+                                <i class="fa fa-plus-square"></i>
+                                Enroll 
+                            </a>
                         </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
+            </div>
             <br>
-            <button class="btn btn-success btn-lg" type="submit" name='enroll' value='enroll'>
-                <i class="fa fa-plus-square"></i>
-                Enroll Selected
+            <button class="btn btn-success" type="submit" name="enroll">
+                <i class="fa fa-plus-square"></i>&nbsp;Enroll selected
             </button>
             <br>                         
         </form>

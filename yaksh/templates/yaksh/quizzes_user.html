@@ -1,4 +1,5 @@
 {% extends "user.html" %}
+{% load custom_filters %}
 {% block title %} Student Dashboard {% endblock %}
 
 {% block script %}
@@ -27,7 +28,7 @@
         </div>
         {% if "Search" in title %}
         <div class="col-md-4">
-            <a href="{% url 'yaksh:quizlist_user' %}" class="btn btn-primary">
+            <a href="{% url 'yaksh:quizlist_user' %}" class="btn btn-outline-danger">
                 <i class="fa fa-times"></i>&nbsp;Clear search
             </a>
         </div>
@@ -60,13 +61,13 @@
                         <div class="row">
                             <div class="col-md-7">{{course.data.name}}</div>
                             <div class="col-md-2">
-                                <a class="card-link btn btn-info" data-toggle="collapse" href="#collapse{{course.data.id}}">
+                                <a class="card-link btn btn-outline-info" data-toggle="collapse" href="#collapse{{course.data.id}}">
                                     Details&nbsp;<i class="fa fa-toggle-down" id="toggle_course_{{course.id}}"></i>
                                 </a>
                             </div>
                             <div class="col-md-2">
                                 {% if user in course.data.requests.all %}
-                                    <span class="badge badge-warning badge-pill">
+                                    <span class="badge badge-primary badge-pill">
                                         Request Pending
                                     </span>
                                 {% elif user in course.data.rejected.all %}
@@ -93,7 +94,7 @@
                                             {% endif %}
                                         {% else %}
                                             <span class="badge badge-danger badge-pill">
-                                                Enrollment Closed
+                                                No Enrollments allowed
                                             </span>
                                         {% endif %}
                                     {% else %}
@@ -104,6 +105,7 @@
                                 {% endif %}
                             </div>
                         </div>
+                        {% show_special_attempt user.id course.data.id %}
                     </div>
                     <div id="collapse{{course.data.id}}" class="collapse hide" data-parent="#accordion">
                         <div class="card-body">
@@ -133,24 +135,34 @@
                                     <p><b>Starts On:</b> {{course.data.start_enroll_time}}</p>
                                     <p><b>Ends On:</b> {{course.data.end_enroll_time}}</p>
                                     {% with course.completion_percentage as percent %}
-                                    <p><b>Course Progress:</b></p>
-                                    <div class="progress">
-                                        {% if percent %}
-                                            {% if percent <= 50 %}
-                                                <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="{{percent}}"
-                                                aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
-                                            {% elif percent <= 75 %}
-                                                <div class="progress-bar bg-warning" role="progressbar" aria-valuenow="{{percent}}"
-                                                aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
-                                            {% else %}
-                                                <div class="progress-bar bg-success" role="progressbar" aria-valuenow="{{percent}}"
-                                                aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
-                                            {% endif %}
-                                            <b style="color: white;">{{percent}}% completed</b>
+                                    <div class="progress-wrapper">
+                                        <div class="progress-info">
+                                            <div class="progress-label">
+                                              <span>Course completed</span>
                                             </div>
-                                        {% else %}
-                                            <b style="color: black;">0% completed</b>
-                                        {% endif %}
+                                            <div class="progress-percentage">
+                                              <span>
+                                                {% if percent %} {{percent}} {% else %} 0 {% endif %}%
+                                              </span>
+                                            </div>
+                                        </div>
+                                        <div class="progress">
+                                            {% if percent %}
+                                                {% if percent <= 50 %}
+                                                    <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="{{percent}}"
+                                                    aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                                    </div>
+                                                {% elif percent <= 75 %}
+                                                    <div class="progress-bar bg-warning" role="progressbar" aria-valuenow="{{percent}}"
+                                                    aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                                    </div>
+                                                {% else %}
+                                                    <div class="progress-bar bg-success" role="progressbar" aria-valuenow="{{percent}}"
+                                                    aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                                                    </div>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
                                     </div>
                                     {% endwith %}
                                 </div>

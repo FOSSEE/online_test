@@ -1,0 +1,16 @@
+<!-- Sidebar -->
+<div>
+  <ul class="nav nav-pills">
+    <li class="nav-item">
+        <a href="{% url 'yaksh:course_forum' course.id %}" class="nav-link {% if '/course_forum/' in request.path %}active{% endif %}">
+            Course Forum
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'yaksh:lessons_forum' course.id %}" class="nav-link {% if '/lessons_forum/' in request.path %}active{% endif %}">
+            Lessons Forum
+        </a>
+    </li>
+  </ul>
+</div>
+<!-- /#sidebar-wrapper -->

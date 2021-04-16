@@ -1,0 +1,136 @@
+{% load custom_filters %}
+<script type="text/javascript">
+    $(document).ready(function() {
+      renderMathInElement(
+        document.body,
+        {
+          delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "$", right: "$", display: false},
+          ]
+        }
+      );
+    });
+    function user_arranged_options() {
+        var temp_array = []
+        var add_array = document.getElementById("arrange_order");
+        var ans_array = order_array.children().get()
+        var answer_is = $.each(ans_array, function(index, value) {
+          temp_array.push(value.id);
+        });
+        add_array.value = temp_array
+    }
+</script>
+<form id="submit-quiz-form" method="POST" action="{% url 'yaksh:submit_marker_quiz' course_id toc.id %}">
+    {% csrf_token %}
+    <div class="card">
+        <div class="card-header">
+            <div>
+              <div>
+                <h2>{{ question.summary }}</h2>
+              </div>
+              <div>
+                {% if question.language == "other" %}
+                  <small class="text text-muted"><strong>Topic:</strong> <span class="badge badge-primary">{{question.topic}}</small></span>
+                {% else %}
+                  <small class="textx text-muted"><strong>Language:</strong> <span class="badge badge-primary">{{question.language}}</span></small>
+                {% endif %}
+                <small class="text text-muted"><strong>Type:</strong>
+                <span class="badge badge-primary">
+                  {{question.get_type_display}}
+                  {% if question.type == "string" %}
+                    {% if testcase.string_check == "lower" %}
+                        (CASE INSENSITIVE)
+                    {% else %}
+                        (CASE SENSITIVE)
+                    {% endif %}
+                  {% endif %}
+                </span>
+              </small>
+                <span class="badge badge-info pull-right">
+                  <small><strong>Points: {{ question.points }}</strong></small>
+                </span>
+              </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div>
+              {{ question.description|safe }}
+            </div>
+            <br>
+            {% if question.type == "mcq" %}
+            <!-- Single correct choice type Question -->
+                {% for test_case in test_cases %}
+                  {% if last_attempt and last_attempt|to_int == test_case.id %}
+                  <input name="answer" type="radio" value="{{ test_case.id }}" checked />
+                    {{ test_case.options|safe }} <br/>
+                  {% else %}
+                  <input name="answer" type="radio" value="{{ test_case.id }}" required="" />
+                    {{ test_case.options|safe }} <br/>
+                  {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            {% if question.type == "integer" %}
+            <!-- Integer type Question -->
+                Enter Integer:<br/>
+                <input autofocus class="form-control" name="answer" type="number" id="integer" value="{{ last_attempt|to_integer }}" required=""/>
+                <br><br>
+            {% endif %}
+
+            {% if question.type == "string" %}
+            <!-- String type question -->
+                Enter Text:<br/>
+                <textarea autofocus name="answer" id="string" class="form-control" style="width: 100%" required="">{{ last_attempt|to_str }}</textarea>
+                <br/><br/>
+            {% endif %}
+
+            {% if question.type == "float" %}
+            <!-- Float type question -->
+                Enter Decimal Value :<br/>
+                <input autofocus class="form-control" name="answer" type="number" step="any" id="float" value="{{ last_attempt|to_float }}" required=""/>
+                <br/><br/>
+            {% endif %}
+
+            {% if question.type == "mcc" %}
+            <!-- MCC type question -->
+                {% for test_case in test_cases %}
+                  {% if last_attempt and test_case.id|safe in last_attempt|safe %}
+                  <input name="answer" type="checkbox" value="{{ test_case.id }}" checked/>
+                    {{ test_case.options| safe }}
+                  <br>
+                  {% else %}
+                  <input name="answer" type="checkbox" value="{{ test_case.id }}">
+                    {{ test_case.options| safe }}
+                  <br>
+                  {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            {% if question.type == "arrange" %}
+            <!-- Arrange options type question -->
+                {% if last_attempt %}
+                  {% get_answer_for_arrange_options last_attempt question as test_cases %}
+                {% endif %}
+                <input name="answer" type="hidden" id='arrange_order'/>
+                <div class="list-group">
+                <ol class="arrange">
+                {% for test_case in test_cases %}
+                <li class="list-group-item" id={{test_case.id}}>
+                  {{test_case.options| safe }}</li> {% endfor %}
+                </ol>
+                </div>
+                <script type="text/javascript">
+                  var arrange = $("ol.arrange");
+                  var order_array = $(arrange).sortable(['serialize']);
+                </script>
+            {% endif %}
+            {% if question.type == "arrange" %}
+              <br><button class="btn btn-success" type="submit" name="check" id="check" onClick="return user_arranged_options();">Submit</button>
+            {% else %}
+              <br><button class="btn btn-success" type="submit" name="check" id="check">Submit
+              </button>
+            {% endif %}
+        </div>
+    </div>
+</form>

@@ -76,9 +76,7 @@ function textareaformat()
     document.getElementById('id_tags').setAttribute('class','form-control');
     $("[id*="+'test_case_args'+"]").attr('placeholder',
                                          'Command Line arguments for bash only');
-    var desc_preview = "<p id='desc_preview' align='justify'></p>";
     var sol_preview = "<p id='sol_preview' align='justify'></p>";
-    $(desc_preview).insertBefore("#id_description");
     $(sol_preview).insertBefore("#id_solution");
 
     $('#id_snippet').bind('keydown', function( event ){
@@ -126,8 +124,6 @@ function textareaformat()
         language.style.border = '1px solid #ccc';
     });
 
-
-    document.getElementById('desc_preview').innerHTML = document.getElementById('id_description').value ; 
     document.getElementById('sol_preview').innerHTML = document.getElementById('id_solution').value ;
 
     var question_type = document.getElementById('id_type').value
@@ -148,15 +144,6 @@ function textareaformat()
         }
    });
 
-    $('#id_file_field').on('change',function(){
-        //get the file name
-        var files = [];
-        for (var i = 0; i < $(this)[0].files.length; i++) {
-            files.push($(this)[0].files[i].name);
-        }
-        $(this).next('.custom-file-label').html(files.join(', '));
-    });
-
     $("#question_form").each(function(){
         $(this).find('textarea').addClass("form-control");
         $(this).find('input[type=number]').addClass("form-control");
@@ -170,8 +157,10 @@ function textareaformat()
                      tinymce.triggerSave();
                   });
             },
-            max_height: 200,
-            height: 200
+            max_height: 400,
+            height: 400,
+            plugins: "image code link",
+            convert_urls: false
         });
     });
 }
@@ -192,3 +181,34 @@ function autosubmit()
         }
 
 }
+
+$(document).ready(() => {
+    let option = $('#id_language').val();
+    if(option === 'other') {
+        $('#id_topic').closest('tr').show();
+        $('#id_topic').prop("required", true);
+    } else {
+        $('#id_topic').prop("required", false);
+        $('#id_topic').closest('tr').hide();
+    }
+    $('#id_language').change(function() {
+        let value = $(this).val();
+        if (value === "other") {
+            $('#id_topic').closest('tr').show();
+            $('#id_topic').prop("required", true);
+            $('#id_type').children("option[value='code']").hide();
+        } else {
+            $('#id_topic').closest('tr').hide();
+            $('#id_topic').prop("required", false);
+            $('#id_type').children("option[value='code']").show();
+        }
+    });
+    $('#id_type').change(function() {
+        let value = $(this).val();
+        if (value === "code") {
+            $('#id_language').children("option[value='other']").hide();
+        } else {
+            $('#id_language').children("option[value='other']").show();
+        }
+    })
+});

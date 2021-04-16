@@ -61,4 +61,11 @@ $(document).ready(function() {
                 });
         }
     });
+    if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      $("#question-list").removeClass("col-9");
+      $("#question-list").addClass("col");
+    } else{
+      $("#question-list").addClass("col-9");
+      $("#question-list").removeClass("col");
+    }
 });

@@ -1,13 +1,15 @@
 from django import forms
 from yaksh.models import (
     get_model_class, Profile, Quiz, Question, Course, QuestionPaper, Lesson,
-    LearningModule, TestCase, languages, question_types, Post, Comment
+    LearningModule, TestCase, languages, question_types, Post, Comment,
+    Topic
 )
 from grades.models import GradingSystem
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils import timezone
+from django.template.defaultfilters import filesizeformat
 from textwrap import dedent
 try:
     from string import letters
@@ -15,6 +17,8 @@ except ImportError:
     from string import ascii_letters as letters
 from string import punctuation, digits
 import pytz
+from ast import literal_eval
+
 from .send_emails import generate_activation_key
 
 languages = (("", "Select Language"),) + languages
@@ -298,6 +302,9 @@ class QuestionForm(forms.ModelForm):
         self.fields['language'].widget.attrs.update(
             {'class': 'custom-select'}
         )
+        self.fields['topic'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Topic name'}
+        )
         self.fields['type'].widget.attrs.update(
             {'class': 'custom-select'}
         )
@@ -380,7 +387,7 @@ class QuestionFilterForm(forms.Form):
 class SearchFilterForm(forms.Form):
     search_tags = forms.CharField(
         label='Search Tags',
-        widget=forms.TextInput(attrs={'placeholder': 'Search',
+        widget=forms.TextInput(attrs={'placeholder': 'Search by course name',
                                       'class': form_input_class, }),
         required=False
         )
@@ -508,6 +515,22 @@ class QuestionPaperForm(forms.ModelForm):
 
 
 class LessonForm(forms.ModelForm):
+    video_options = (
+            ("---", "Select Video Option"), ("youtube", "Youtube"),
+            ("vimeo", "Vimeo"), ("others", "Others")
+        )
+    video_option = forms.ChoiceField(
+        choices=video_options, required=False,
+        help_text='Add videos from youtube, vimeo or other',
+        widget=forms.Select({'class': 'custom-select'}))
+    video_url = forms.CharField(
+        widget=forms.TextInput(
+            {'class': form_input_class,
+             'placeholder': 'Video ID for Youtube, Vimeo and URL for others'}
+            ),
+        required=False
+        )
+
     def __init__(self, *args, **kwargs):
         super(LessonForm, self).__init__(*args, **kwargs)
         des_msg = "Enter Lesson Description as Markdown text"
@@ -517,9 +540,14 @@ class LessonForm(forms.ModelForm):
         self.fields['description'].widget.attrs.update(
             {'class': form_input_class, 'placeholder': des_msg}
         )
-        self.fields['video_file'].widget.attrs.update(
-            {'class': "custom-file-input"}
-        )
+        self.fields['video_path'].widget = forms.HiddenInput()
+        try:
+            video = literal_eval(self.instance.video_path)
+            key = list(video.keys())[0]
+            self.fields['video_option'].initial = key
+            self.fields['video_url'].initial = video[key]
+        except ValueError:
+            pass
 
     class Meta:
         model = Lesson
@@ -535,7 +563,33 @@ class LessonForm(forms.ModelForm):
                     "Please upload video files in {0} format".format(
                         ", ".join(actual_extension))
                     )
+            if file.size > settings.MAX_UPLOAD_SIZE:
+                raise forms.ValidationError(
+                    f"Video file size must be less than "\
+                    f"{filesizeformat(settings.MAX_UPLOAD_SIZE)}. "
+                    f"Current size is {filesizeformat(file.size)}"
+                )
         return file
+
+    def clean_video_path(self):
+        path = self.cleaned_data.get("video_path")
+        if path:
+            try:
+                value = literal_eval(path)
+                if not isinstance(value, dict):
+                    raise forms.ValidationError(
+                        "Value must be dictionary e.g {'youtube': 'video-id'}"
+                    )
+                else:
+                    if len(value) > 1:
+                        raise forms.ValidationError(
+                            "Only one type of video path is allowed"
+                        )
+            except ValueError:
+                raise forms.ValidationError(
+                    "Value must be dictionary e.g {'youtube': 'video-id'}"
+                )
+        return path
 
 
 class LessonFileForm(forms.Form):
@@ -576,7 +630,7 @@ class TestcaseForm(forms.ModelForm):
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ["title", "description", "image"]
+        fields = ["title", "description", "image", "anonymous"]
         widgets = {
             'title': forms.TextInput(
                 attrs={
@@ -599,7 +653,7 @@ class PostForm(forms.ModelForm):
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
-        fields = ["description", "image"]
+        fields = ["description", "image", "anonymous"]
         widgets = {
             'description': forms.Textarea(
                 attrs={
@@ -612,3 +666,92 @@ class CommentForm(forms.ModelForm):
                 }
             )
         }
+
+
+class TopicForm(forms.ModelForm):
+
+    timer = forms.CharField()
+
+    def __init__(self, *args, **kwargs):
+        time = kwargs.pop("time") if "time" in kwargs else None
+        super(TopicForm, self).__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Name'}
+        )
+        self.fields['timer'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Time'}
+        )
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Description'}
+        )
+        self.fields['timer'].initial = time
+
+    class Meta:
+        model = Topic
+        fields = "__all__"
+
+    def clean_timer(self):
+        timer = self.cleaned_data.get("timer")
+        if timer:
+            try:
+                hh, mm, ss = timer.split(":")
+            except ValueError:
+                raise forms.ValidationError(
+                    "Marker time should be in the format hh:mm:ss"
+                )
+        return timer
+
+
+class VideoQuizForm(forms.ModelForm):
+
+    type = forms.CharField()
+
+    timer = forms.CharField()
+
+    def __init__(self, *args, **kwargs):
+        if 'question_type' in kwargs:
+            question_type = kwargs.pop('question_type')
+        else:
+            question_type = "mcq"
+        time = kwargs.pop("time") if "time" in kwargs else None
+        super(VideoQuizForm, self).__init__(*args, **kwargs)
+        self.fields['summary'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Summary'}
+        )
+        self.fields['language'].widget.attrs.update(
+            {'class': 'custom-select'}
+        )
+        self.fields['topic'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Question topic name'}
+        )
+        self.fields['points'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Points'}
+        )
+        self.fields['type'].widget.attrs.update(
+            {'class': form_input_class, 'readonly': True}
+        )
+        self.fields['type'].initial = question_type
+        self.fields['description'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Description',
+             'id': 'que_description'}
+        )
+        self.fields['timer'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Quiz Time'}
+        )
+        self.fields['timer'].initial = time
+
+    class Meta:
+        model = Question
+        fields = ['summary', 'description', 'points',
+                  'language', 'type', 'topic']
+
+    def clean_timer(self):
+        timer = self.cleaned_data.get("timer")
+        if timer:
+            try:
+                hh, mm, ss = timer.split(":")
+            except ValueError:
+                raise forms.ValidationError(
+                    "Marker time should be in the format hh:mm:ss"
+                )
+        return timer

@@ -20,59 +20,58 @@
     </div>
 </center>
 {% endif %}
-{% csrf_token %}
-    {% if paper.questions_answered.all or paper.questions_unanswered.all %}
-        <center>
-        <div class="col-md-8">
-            <h3>Submission Status</h3>
-            <table class="table table-bordered table-responsive-sm" >
-                <thead>
-                    <tr class="text-center">
-                        <th> Question</th>
-                        <th> Status </th>
-                    </tr>
-                </thead>
-
-                {% for question in paper.questions.all %}
-                    <tbody>
-                        {% if question in paper.questions_answered.all %}
-                            <tr class="table-success">
-                            <td> {{ question.summary }} </td>
-                            <td> Attempted </td>
-                        {% else %}
-                            <tr class="table-warning">
-                            <td> {{ question }} </td>
-                            <td> Not completed </td>
-                        {% endif %}
-                        </tr>
-                    </tbody>
-                {% endfor %}
-            </table>
-        </div>
-        </center>
-    {% endif %}
-    <br><br>
-	<center class="container">
-        <h5>
-            <span class="alert alert-success">{{message}}</span>
-        </h5>
-    </center>
+{% if paper.questions_answered.all or paper.questions_unanswered.all %}
     <center>
-    <br>
-    {% if module_id and not paper.course.is_trial %}
-        {% if first_unit %}
-            <a href="{% url 'yaksh:next_unit' course_id module_id learning_unit.id '1' %}" class="btn btn-info btn-lg" id="Next"> Next
-                <span class="fa fa-step-forward">
-                </span>
-            </a>
-        {% else %}
-            <a href="{% url 'yaksh:next_unit' course_id module_id learning_unit.id %}" class="btn btn-info btn-lg" id="Next"> Next
-                <span class="fa fa-step-forward">
-                </span>
-            </a>
-        {% endif %}
-    {% else %}
-        <a href="{% url 'yaksh:index' %}" id="home" class="btn btn-primary btn-lg"> Home </a>
-    {% endif %}
+    <div class="col-md-8">
+        <h3>Submission Status</h3>
+        <table class="table table-dark table-responsive-sm" >
+            <thead class="thead-dark">
+                <tr>
+                    <th> Question</th>
+                    <th> Status </th>
+                </tr>
+            </thead>
+            <tbody class="list">
+            {% for question in paper.questions.all %}
+                {% if question in paper.questions_answered.all %}
+                    <tr>
+                    <td> {{ question.summary }} </td>
+                    <td> <span class="badge badge-success">Attempted</span> </td>
+                {% else %}
+                    <tr>
+                    <td> {{ question }} </td>
+                    <td> <span class="badge badge-warning">Not Attempted</span> </td>
+                {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
     </center>
+{% endif %}
+<br><br>
+<center class="container">
+    <h5>
+        <span class="alert alert-success">{{message}}</span>
+    </h5>
+</center>
+<center>
+<br>
+{% if module_id and not paper.course.is_trial %}
+    {% if first_unit %}
+        <a href="{% url 'yaksh:next_unit' course_id module_id learning_unit.id '1' %}" class="btn btn-info btn-lg" id="Next"> Next
+            <span class="fa fa-step-forward">
+            </span>
+        </a>
+    {% else %}
+        <a href="{% url 'yaksh:next_unit' course_id module_id learning_unit.id %}" class="btn btn-info btn-lg" id="Next"> Next
+            <span class="fa fa-step-forward">
+            </span>
+        </a>
+    {% endif %}
+{% else %}
+    <a href="{% url 'yaksh:index' %}" id="home" class="btn btn-primary btn-lg"> Home </a>
+{% endif %}
+</center>
+<br><br>
 {% endblock content %}

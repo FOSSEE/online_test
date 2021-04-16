@@ -1,3 +1,136 @@
+=== 0.31.1 (24-03-2021) ===
+
+* Add support for QR code generation in local or S3 storage
+
+=== 0.31.0 (24-03-2021) ===
+
+* Add support for S3 file upload.
+* Add JS client dropzone to make file upload easier.
+* Fix a issue in assignment upload where older files were shown for new attempt in quiz.
+
+=== 0.30.1 (08-02-2021) ===
+
+* UI changes in course and questions page.
+* Refactor code in some parts and optimize.
+* Fix a issue where student interface shows error without question paper in quiz.
+* Fix a minor bug where trial modules are shown.
+
+=== 0.30.0 (12-01-2021) ===
+
+* Add new UI skin.
+* Add feature to count number of times MCQ option has been selected.
+* Fix bug to delete and recreate fresh question papers when using god mode or user mode.
+* Add feature to show stats for number of times MCQ option has been selected.
+
+=== 0.29.3 (10-12-2020) ===
+
+* Show the graphs for the lesson video statistics page.
+* Show the completed students counts in course modules page.
+* Add and show django messages in discussion forum page.
+* Remove Sidebar in the discussion forum page instead used bootstrap nav pills.
+* Optimisation in retrieving and rendering the data
+* Avoids the arrange type question's custom filter error
+
+=== 0.29.2 (19-11-2020) ===
+
+* Add dropdown selection for lesson video options
+* Show total visits per student in lesson statistics.
+* Remove settimeout ajax calls for tracking video positions.
+* Show initial views per lesson in the course modules section.
+* Add tinymce editor for all the textareas.
+
+=== 0.29.1 (12-11-2020) ===
+
+* Fixed issue onclick toc jump to player time.
+* Used bootstrap modal instead of jquery dialog for responsive interface.
+* Disallow empty question submission for lesson quiz.
+* Fixed issue where the videos other than youtube does not get the duration.
+
+=== 0.29.0 (07-11-2020) ===
+
+* Add feature to track lesson video views
+* Fix post and comments deletion
+
+=== 0.28.0 (04-11-2020) ===
+
+* Add ability for added teachers to delete posts and comments
+* Add feature to update marks using CSV upload
+* Add feature to visualise in lesson questions
+* Fix katex render to allow math inline
+
+=== 0.27.0 (08-10-2020) ===
+
+* Fix template footer CSS
+* Add lesson comments feature
+
+=== 0.26.0 (07-10-2020) ===
+
+* Fix bug that sets module and lesson prerequisites to false
+* Add video lesson feature
+* Show assignment upload file in view answerpaper 
+
+=== 0.25.0 (14-09-2020) ===
+
+* Fix bug to show missing marks in grade user
+* Recalculate and save total marks of paper after saving or changing
+* Remove MathJax references and replace Katex CDN
+* Add feature to allow to extend time even if the paper is completed
+
+=== 0.24.0 (09-09-2020) ===
+
+* Fix rendering of the quiz list
+* Fix bug to show maximum marks for all attempts in answerpaper
+* Fix bug to show only distinct answered questions
+
+=== 0.23.0 (09-09-2020) ===
+
+* Allow a single user or multiple users to reattempt a quiz
+
+=== 0.22.1 (28-08-2020) ===
+
+* Avoid duplicate user entry with same email address during upload.
+* Fix a bug where user cannot submit zero as answer
+* Fix UI in question statistics.
+* Fix a bug where the trial question paper was not updated.
+* Fix a bug where answers for fill in the blanks type is not shown.
+
+=== 0.22.0 (27-08-2020) ===
+
+* Fix zero division error if the course does not have any quizzes.
+* Improve question statistics
+* Add Mathjax support to lesson and module.
+
+=== 0.21.0 (02-07-2020) ===
+
+* Added support for hiding test cases for code questions
+
+=== 0.20.2 (02-06-2020) ===
+
+* Added a custom filter to convert str objects to int in templates
+* Fixed a bug that prevented users from seeing the last submitted MCQ answers
+* Updated the TinyMCE editor with multiple plugins
+* Fixed issue in question file upload for empty question instance
+* Changed variable name for uploaded file to avoid conflict with the queryset variable
+* Display question solution in view answer paper
+* Fixed bug to check if attempts are allowed and spare time is available before answer is checked 
+
+=== 0.20.1 (21-05-2020) ===
+
+* Rename celery.py to celery_settings.py to avoid conflicts with the celery app
+
+=== 0.20.0 (20-05-2020) ===
+
+* Added a discussion forum feature
+* Added a reject select button to reject mulitple students from a course
+* Added a celery task to regrade the papers
+* Merge monitor, grade user and regrade dashboard into a single consolidated dashboard
+* Fixed pagination and other issues while searching courses, questions
+* Added a search and a dropdown in grade user section
+* Added more tests for start quiz view function
+* Added a additional option "other" in language for a question which supports all types of question except the coding type
+* Fixed search in discussion forum
+* Added API for yaksh
+
 === 0.14.0 (07-04-2020) ===
 
 * Added search bar for searching course

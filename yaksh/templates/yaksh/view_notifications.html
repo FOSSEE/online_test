@@ -1,0 +1,62 @@
+{% extends template %}
+{% block title %} Notifications {% endblock %}
+{% block pagetitle %} Notifications {% endblock %}
+
+{% block main %}
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-dismissible alert-{{ message.tags }}">
+                <button type="button" class="close" data-dismiss="alert">
+                    <i class="fa fa-close"></i>
+                </button>
+                <strong>{{ message }}</strong>
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% if notifications %}
+        <form method="post" action="{% url 'yaksh:mark_notification' %}">
+        {% csrf_token %}
+        <button href="{% url 'yaksh:mark_notification' %}" class="btn btn-outline-success">
+            <i class="fa fa-check"></i>&nbsp;Mark all as read
+        </button>
+        <br><br>
+        <div class="row">
+            {% for notification in notifications %}
+            <div class="col-md-4">
+                <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                    {% with notification.message as message %}
+                        <input type="hidden" name="uid" value="{{message.uid}}">
+                        <div class="toast-header bg-{{message.message_type}}">
+                            <strong class="mr-auto text-white">
+                                {{message.summary}}
+                            </strong>
+                            <small class="text-white">
+                                {{notification.timestamp|timesince:current_date_time}}
+                            </small>
+                            <a href="{% url 'yaksh:mark_notification' message.uid %}" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                              <span class="fa fa-check" aria-hidden="true" title="Mark as read"></span>
+                            </a>
+                        </div>
+                        <div class="toast-body bg-white">
+                            {% if user.id != message.creator.id %}
+                                <p><b>From: </b>{{message.creator.get_full_name}}</p>
+                            {% endif %}
+                            <p><b>Description:</b></p>
+                            {{message.description|safe}}
+                        </div>
+                    {% endwith %}
+                </div>
+                <br>
+            </div>
+            {% endfor %}
+        </div>
+        </form>
+        {% else %}
+            <br>
+            <div class="alert alert-info">
+                <center>No Notifications Found</center>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

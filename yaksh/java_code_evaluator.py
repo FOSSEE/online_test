@@ -8,6 +8,7 @@ import subprocess
 from .base_evaluator import BaseEvaluator
 from .file_utils import copy_files, delete_files
 from .grader import CompilationError, TestCaseError
+from .error_messages import prettify_exceptions
 
 
 class JavaCodeEvaluator(BaseEvaluator):
@@ -27,6 +28,7 @@ class JavaCodeEvaluator(BaseEvaluator):
         # Set test case data values
         self.test_case = test_case_data.get('test_case')
         self.weight = test_case_data.get('weight')
+        self.hidden = test_case_data.get('hidden')
 
     def teardown(self):
         # Delete the created file.
@@ -150,7 +152,8 @@ class JavaCodeEvaluator(BaseEvaluator):
                     mark_fraction = 1.0 if self.partial_grading else 0.0
                 else:
                     err = stdout + "\n" + stderr
-                    raise AssertionError(err)
+                    err = prettify_exceptions('AssertionError', err)
+                    return success, err, mark_fraction
             else:
                 err = "Test case Error:"
                 try:

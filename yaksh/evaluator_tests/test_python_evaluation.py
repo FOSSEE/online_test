@@ -25,13 +25,13 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.in_dir = tmp_in_dir_path
         self.test_case_data = [{"test_case_type": "standardtestcase",
                                 "test_case": 'assert(add(1,2)==3)',
-                                'weight': 0.0},
+                                'weight': 0.0, 'hidden': True},
                                {"test_case_type": "standardtestcase",
                                 "test_case": 'assert(add(-1,2)==1)',
-                                'weight': 0.0},
+                                'weight': 0.0, 'hidden': True},
                                {"test_case_type": "standardtestcase",
                                 "test_case":  'assert(add(-1,-2)==-3)',
-                                'weight': 0.0},
+                                'weight': 0.0, 'hidden': True},
                                ]
         self.timeout_msg = ("Code took more than {0} seconds to run. "
                             "You probably have an infinite loop in"
@@ -80,6 +80,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         given_test_case_list = [tc["test_case"] for tc in self.test_case_data]
         for error in result.get("error"):
             self.assertEqual(error['exception'], 'AssertionError')
+            self.assertTrue(error['hidden'])
             self.assertEqual(
                 error['message'],
                 "Expected answer from the test case did not match the output"
@@ -92,13 +93,13 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         user_answer = "def add(a,b):\n\treturn abs(a) + abs(b)"
         test_case_data = [{"test_case_type": "standardtestcase",
                            "test_case": 'assert(add(-1,2)==1)',
-                           'weight': 1.0},
+                           'weight': 1.0, 'hidden': False},
                           {"test_case_type": "standardtestcase",
                            "test_case":  'assert(add(-1,-2)==-3)',
-                           'weight': 1.0},
+                           'weight': 1.0, 'hidden': False},
                           {"test_case_type": "standardtestcase",
                            "test_case": 'assert(add(1,2)==3)',
-                           'weight': 2.0}
+                           'weight': 2.0, 'hidden': False}
                           ]
         kwargs = {'metadata': {
                   'user_answer': user_answer,
@@ -119,6 +120,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         given_test_case_list.remove('assert(add(1,2)==3)')
         for error in result.get("error"):
             self.assertEqual(error['exception'], 'AssertionError')
+            self.assertFalse(error['hidden'])
             self.assertEqual(
                 error['message'],
                 "Expected answer from the test case did not match the output"
@@ -489,7 +491,7 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
 
     def test_correct_answer_integer(self):
         # Given
-        self.test_case_data = [{"test_case_type": "stdiobasedtestcase",
+        test_case_data = [{"test_case_type": "stdiobasedtestcase",
                                 "expected_input": "1\n2",
                                 "expected_output": "3",
                                 "weight": 0.0
@@ -505,7 +507,7 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                   'file_paths': self.file_paths,
                   'partial_grading': False,
                   'language': 'python'},
-                  'test_case_data': self.test_case_data
+                  'test_case_data': test_case_data
                   }
 
         # When
@@ -517,7 +519,7 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
 
     def test_correct_answer_list(self):
         # Given
-        self.test_case_data = [{"test_case_type": "stdiobasedtestcase",
+        test_case_data = [{"test_case_type": "stdiobasedtestcase",
                                 "expected_input": "1,2,3\n5,6,7",
                                 "expected_output": "[1, 2, 3, 5, 6, 7]",
                                 "weight": 0.0
@@ -536,7 +538,7 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                   'file_paths': self.file_paths,
                   'partial_grading': False,
                   'language': 'python'},
-                  'test_case_data': self.test_case_data
+                  'test_case_data': test_case_data
                   }
 
         # When
@@ -548,7 +550,7 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
 
     def test_correct_answer_string(self):
         # Given
-        self.test_case_data = [{
+        test_case_data = [{
             "test_case_type": "stdiobasedtestcase",
             "expected_input": ("the quick brown fox jumps over "
                                "the lazy dog\nthe"),
@@ -567,7 +569,7 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                   'file_paths': self.file_paths,
                   'partial_grading': False,
                   'language': 'python'},
-                  'test_case_data': self.test_case_data
+                  'test_case_data': test_case_data
                   }
 
         # When
@@ -579,10 +581,10 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
 
     def test_incorrect_answer_integer(self):
         # Given
-        self.test_case_data = [{"test_case_type": "stdiobasedtestcase",
+        test_case_data = [{"test_case_type": "stdiobasedtestcase",
                                 "expected_input": "1\n2",
                                 "expected_output": "3",
-                                "weight": 0.0
+                                "weight": 0.0, 'hidden': True
                                 }]
         user_answer = dedent("""
                                 a = int(input())
@@ -595,7 +597,7 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                   'file_paths': self.file_paths,
                   'partial_grading': False,
                   'language': 'python'},
-                  'test_case_data': self.test_case_data
+                  'test_case_data': test_case_data
                   }
 
         # When
@@ -604,6 +606,7 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get('success'))
+        self.assertTrue(result.get('error')[0].get('hidden'))
         self.assert_correct_output(
             "Incorrect Answer: Line number(s) 1 did not match.",
             result.get('error')[0].get('error_msg')
@@ -611,7 +614,7 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
 
     def test_file_based_answer(self):
         # Given
-        self.test_case_data = [{"test_case_type": "stdiobasedtestcase",
+        test_case_data = [{"test_case_type": "stdiobasedtestcase",
                                 "expected_input": "",
                                 "expected_output": "2",
                                 "weight": 0.0
@@ -629,7 +632,7 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
                   'file_paths': self.file_paths,
                   'partial_grading': False,
                   'language': 'python'},
-                  'test_case_data': self.test_case_data
+                  'test_case_data': test_case_data
                   }
 
         # When
@@ -786,7 +789,8 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
                            )
 
         test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code, "weight": 1.0
+                           "hook_code": hook_code, "weight": 1.0,
+                           "hidden": True
                            }]
 
         kwargs = {'metadata': {
@@ -803,7 +807,9 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
 
         # Then
         self.assertFalse(result.get('success'))
-        self.assert_correct_output('Incorrect Answer', result.get('error'))
+        self.assertTrue(result.get('error')[0]['hidden'])
+        self.assert_correct_output('Incorrect Answer',
+                                   result.get('error')[0]['message'])
 
     def test_assert_with_hook(self):
         # Given

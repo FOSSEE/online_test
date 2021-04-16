@@ -15,15 +15,6 @@ body, .dropdown-menu {
     display: flex;
 }
 
-.course-detail, #result-table {
-    table-layout: fixed;
-    width: 100%;   
-}
-
-.course-detail, #result-table > th, td {
-    word-wrap: break-word;
-}
-
 #rendered_text{
 	width: 550px;
 }
@@ -73,7 +64,6 @@ body, .dropdown-menu {
 
 #sidebar .sidebar-header {
     padding: 20px;
-    background: #158CBA;
 }
 
 #sidebar ul.components {
@@ -98,16 +88,60 @@ body, .dropdown-menu {
     transition: all 0.3s;
 }
 
+@media (min-width: 1024px) {
+
+  .students-list {
+    position: fixed !important;
+  }
+}
+
 /* ---------------------------------------------------
     FORUM STYLE
 ----------------------------------------------------- */
 
-.brown-light {
-    background: #f4a460;
-    padding-left: 0.3em;
-    padding-right: 0.3em;
-    padding-top: 0.2em;
-    padding-bottom: 0.2em;
+ #wrapper {
+    overflow-x: hidden;
+ }
+
+#sidebar-wrapper {
+  min-height: 100vh;
+  margin-left: -15rem;
+  -webkit-transition: margin .25s ease-out;
+  -moz-transition: margin .25s ease-out;
+  -o-transition: margin .25s ease-out;
+  transition: margin .25s ease-out;
+}
+
+#sidebar-wrapper .sidebar-heading {
+  padding: 0.875rem 1.25rem;
+  font-size: 1.2rem;
+}
+
+#sidebar-wrapper .list-group {
+  width: 15rem;
+}
+
+#page-content-wrapper {
+  min-width: 100vw;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+  margin-left: 0;
+}
+
+@media (min-width: 768px) {
+  #sidebar-wrapper {
+    margin-left: 0;
+  }
+
+  #page-content-wrapper {
+    min-width: 0;
+    width: 100%;
+  }
+
+  #wrapper.toggled #sidebar-wrapper {
+    margin-left: -15rem;
+  }
 }
 
 .post_image, .comment_image {
@@ -118,3 +152,64 @@ body, .dropdown-menu {
 .description {
     font-size: 16px;
 }
+/* ---------------------------------------------------
+    Quiz question style
+----------------------------------------------------- */
+#question_card {
+    border: none;
+}
+
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 6px;
+    background: #c2c9d2;
+}
+
+iframe {
+    display:block;
+    width:100%;
+}
+
+#loader {
+    position: fixed;
+    display: none;
+    width: 100%;
+    height: 100%;
+    top:0;
+    bottom: 0;
+    left:0;
+    right: 0;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1001; /* 1001 coz sidebar is 1000. So will be on top of sidebar*/
+}
+
+#state1 {
+    position: absolute;
+    top: 40%;
+    left: 45%;
+    font-size: 30px;
+    color: white;
+}
+
+.toast-top-center {
+    padding-top: 5em;
+}
+
+.footer {
+  position: fixed;
+  z-index: 100;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+}
+
+.dropdown:hover .dropdown-menu {display: block;}
