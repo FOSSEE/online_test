@@ -1358,13 +1358,6 @@ class Question(models.Model):
     # Number of points for the question.
     points = models.FloatField(default=1.0)
 
-    # Negative marks for the question
-    negative_marks = models.FloatField(
-        default=0.0,
-        help_text='In Percentage eg: 25, '
-        'means 0.25 will be negative marks if question is for 1 mark'
-    )
-
     # The language for question.
     language = models.CharField(max_length=24,
                                 choices=languages)
@@ -1373,6 +1366,14 @@ class Question(models.Model):
 
     # The type of question.
     type = models.CharField(max_length=24, choices=question_types)
+
+    # Negative marks for the question
+    negative_marks = models.FloatField(
+        default=0.0,
+        help_text='In Percentage eg: 25, '
+        'means 0.25 will be negative marks if question is for 1 mark'
+    )
+
 
     # Is this question active or not. If it is inactive it will not be used
     # when creating a QuestionPaper.
@@ -1739,11 +1740,15 @@ class Answer(models.Model):
     comment = models.TextField(null=True, blank=True)
 
     def set_marks(self, marks):
-        if marks > self.question.points:
-            marks = self.question.points
-        wrong_fraction = self.question.points - marks
-        negative_marks = wrong_fraction * (self.question.negative_marks/100)
-        self.marks = marks - negative_marks
+        points = self.question.points
+        qtype = self.question.type
+        if marks > points:
+            marks = points
+        if qtype == 'mcq' or qtype == 'mcc':
+            wrong_fraction = points - marks
+            negative_marks = wrong_fraction * (self.question.negative_marks/100)
+            marks = marks - negative_marks
+        self.marks = marks
         self.save()
 
     def set_comment(self, comments):

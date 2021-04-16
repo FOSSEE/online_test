@@ -1882,6 +1882,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         question = self.answer_wrong.question
         question.negative_marks = 25
         question.save()
+
         # When
         self.answer_wrong.set_marks(1)
         # Then
@@ -1908,6 +1909,26 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.answer_wrong.set_marks(0)
         # Then
         self.assertEqual(self.answer_wrong.marks, 0)
+
+    def test_no_negative_marks_except_mcq_mcc(self):
+        # Given
+        code_question = self.answer1.question
+        marks = self.answer1.marks
+        code_question.negative_marks = 25
+        code_question.save()
+
+        # When
+        self.answer1.set_marks(1)
+        # Then
+        self.assertEqual(self.answer1.marks, 1)
+
+        # When
+        self.answer1.set_marks(0)
+        # Then
+        self.assertEqual(self.answer1.marks, 0)
+
+        self.answer1.marks = marks
+        self.answer1.save()
 
     def test_get_latest_answer(self):
         latest_answer = self.answerpaper.get_latest_answer(self.question1.id)
@@ -2637,7 +2658,7 @@ class QRcodeTestCase(unittest.TestCase):
         self.assertTrue(qrcode.is_active())
 
         # When
-       qrcode.deactivate()
+        qrcode.deactivate()
         qrcode.save()
 
         # Then
