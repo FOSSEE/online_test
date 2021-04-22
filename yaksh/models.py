@@ -667,12 +667,12 @@ class LearningUnit(models.Model):
 
     def get_completion_status(self, user, course, course_status):
         state = "not attempted"
-        if course_status:
-            if course_status[0].completed_units.filter(id=self.id):
+        if course_status.exists():
+            if course_status.first().completed_units.filter(id=self.id):
                 state = "completed"
             elif self.type == "quiz":
                 state = self.quiz.get_answerpaper_status(user, course)
-            elif course_status[0].current_unit == self:
+            elif course_status.first().current_unit == self:
                 state = "inprogress"
         return state
 
@@ -768,23 +768,23 @@ class LearningModule(models.Model):
             next_index = 0
         return ordered_units.get(id=ordered_units_ids[next_index])
 
-    # def get_status(self, user, course):
-    #     """ Get module status if completed, inprogress or not attempted"""
-    #     learning_module = course.learning_module.prefetch_related(
-    #         "learning_unit").get(id=self.id)
-    #     ordered_units = learning_module.learning_unit.order_by("order")
-    #     status_list = [unit.get_completion_status(user, course)
-    #                    for unit in ordered_units]
+    def get_status(self, user, course, course_status):
+        """ Get module status if completed, inprogress or not attempted"""
+        learning_module = course.learning_module.prefetch_related(
+            "learning_unit").get(id=self.id)
+        ordered_units = learning_module.learning_unit.order_by("order")
+        status_list = [unit.get_completion_status(user, course, course_status)
+                       for unit in ordered_units]
 
-    #     if not status_list:
-    #         default_status = "no units"
-    #     elif all([status == "completed" for status in status_list]):
-    #         default_status = "completed"
-    #     elif all([status == "not attempted" for status in status_list]):
-    #         default_status = "not attempted"
-    #     else:
-    #         default_status = "inprogress"
-    #     return default_status
+        if not status_list:
+            default_status = "no units"
+        elif all([status == "completed" for status in status_list]):
+            default_status = "completed"
+        elif all([status == "not attempted" for status in status_list]):
+            default_status = "not attempted"
+        else:
+            default_status = "inprogress"
+        return default_status
 
     def is_prerequisite_complete(self, user, course):
         """ Check if prerequisite module is completed """
@@ -842,12 +842,12 @@ class LearningModule(models.Model):
     def has_prerequisite(self):
         return self.check_prerequisite
 
-    def get_module_complete_percent(self, course, user):
+    def get_module_complete_percent(self, course, user, course_status):
         units = self.get_learning_units()
         if not units:
             percent = 0.0
         else:
-            status_list = [unit.get_completion_status(user, course)
+            status_list = [unit.get_completion_status(user, course, course_status)
                            for unit in units]
             count = status_list.count("completed")
             percent = round((count / units.count()) * 100)
@@ -1090,10 +1090,8 @@ class Course(models.Model):
                     break
         return module
 
-    def get_unit_completion_status(self, module, user, unit):
-        course_module = self.learning_module.get(id=module.id)
-        learning_unit = course_module.learning_unit.get(id=unit.id)
-        return learning_unit.get_completion_status(user, self)
+    def get_unit_completion_status(self, unit, user, course_status):
+        return unit.get_completion_status(user, self, course_status)
 
     def get_quizzes(self):
         learning_modules = self.learning_module.all()
@@ -1154,10 +1152,12 @@ class Course(models.Model):
         return modules.get(id=module_ids[next_index])
 
     def percent_completed(self, user, modules):
+        course_status = CourseStatus.objects.filter(
+            course_id=self.id, user_id=user.id)
         if not modules:
             percent = 0.0
         else:
-            status_list = [module.get_module_complete_percent(self, user)
+            status_list = [module.get_module_complete_percent(self, user, course_status)
                            for module in modules]
             count = sum(status_list)
             percent = round((count / modules.count()))
@@ -1244,8 +1244,8 @@ class CourseStatus(models.Model):
     def get_grade(self):
         return self.grade
 
-    def set_grade(self):
-        if self.is_course_complete():
+    def set_grade(self, course_status, module_learning_units):
+        if self.is_course_complete(course_status, module_learning_units):
             self.calculate_percentage()
             if self.course.grading_system is None:
                 grading_system = GradingSystem.objects.get(
@@ -1271,14 +1271,14 @@ class CourseStatus(models.Model):
             self.percentage = (sum/total_weightage)*100
             self.save()
 
-    # def is_course_complete(self):
-    #     modules = self.course.get_learning_modules()
-    #     complete = False
-    #     for module in modules:
-    #         complete = module.get_status(self.user, self.course) == 'completed'
-    #         if not complete:
-    #             break
-    #     return complete
+    def is_course_complete(self, course_status, module_learning_units):
+        modules = module_learning_units.keys()
+        complete = False
+        for module in modules:
+            complete = module.get_status(self.user, self.course, course_status) == 'completed'
+            if not complete:
+                break
+        return complete
 
     def set_current_unit(self, unit):
         self.current_unit = unit

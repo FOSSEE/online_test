@@ -2778,10 +2778,13 @@ def show_lesson(request, lesson_id, module_id, course_id):
     if not course.active or not course.is_active_enrollment():
         msg = "{0} is either expired or not active".format(course.name)
         return quizlist_user(request, msg=msg)
-    learn_module = course.learning_module.get(id=module_id)
-    learn_unit = learn_module.learning_unit.get(lesson_id=lesson_id)
+    learn_module = LearningModule.objects.get(id=module_id)
+    learn_unit = LearningUnit.objects.get(lesson_id=lesson_id)
+    
     learning_units = learn_module.get_learning_units()
-
+    course_status = CourseStatus.objects.filter(
+            course_id=course.id, user_id=user.id)
+    
     if not learn_module.active:
         return view_module(request, module_id, course_id)
 
@@ -2810,6 +2813,12 @@ def show_lesson(request, lesson_id, module_id, course_id):
         list(toc.values("id", "content", "time"))
     )
     all_modules = course.get_learning_modules()
+    module_learning_units = {}
+    for module in all_modules:
+        module_learning_units[module] = module.learning_unit.select_related(
+            'lesson', 'quiz'
+        ).prefetch_related('quiz__questionpaper_set').order_by("order")
+
     if learn_unit.has_prerequisite():
         if not learn_unit.is_prerequisite_complete(user, learn_module, course):
             msg = "You have not completed previous Lesson/Quiz/Exercise"
@@ -2846,9 +2855,11 @@ def show_lesson(request, lesson_id, module_id, course_id):
         form = CommentForm()
         comments = post.comment.filter(active=True)
     context = {'lesson': learn_unit.lesson, 'user': user,
-               'course': course, 'state': "lesson", "all_modules": all_modules,
+               'course': course, 'state': "lesson", 
+               'all_modules': module_learning_units, 
                'learning_units': learning_units, "current_unit": learn_unit,
-               'learning_module': learn_module, 'toc': toc,
+               'learning_module': learn_module, 'toc': toc, 
+               'course_status': course_status, 
                'contents_by_time': contents_by_time, 'track_id': track.id,
                'comments': comments, 'form': form, 'post': post}
     return my_render_to_response(request, 'yaksh/show_video.html', context)
@@ -3177,10 +3188,20 @@ def view_module(request, module_id, course_id, msg=None):
             return course_modules(request, course_id, msg)
 
     learning_units = learning_module.get_learning_units()
+    course_status = CourseStatus.objects.filter(
+            course_id=course.id, user_id=user.id)
+
+    module_learning_units = {}
+    for module in all_modules:
+        module_learning_units[module] = module.learning_unit.select_related(
+            'lesson', 'quiz'
+        ).prefetch_related('quiz__questionpaper_set').order_by("order")
+
+    context['all_modules'] = module_learning_units
+    context['course_status'] = course_status
     context['learning_units'] = learning_units
     context['learning_module'] = learning_module
     context['first_unit'] = learning_units.first()
-    context['all_modules'] = all_modules
     context['user'] = user
     context['course'] = course
     context['state'] = "module"
@@ -3202,20 +3223,15 @@ def course_modules(request, course_id, msg=None):
         return quizlist_user(request, msg=msg)
     learning_modules = course.get_learning_modules()
     context = {"course": course, "user": user, "msg": msg}
-    course_status = list(CourseStatus.objects.select_related(
+    course_status = CourseStatus.objects.select_related(
             'current_unit'
         ).prefetch_related(
             'completed_units'
         ).filter(
             course=course, user=user
-        ))
+        )
     context['course_status'] = course_status
-    context['course_percentage'] = course_status[0].percent_completed
-
-    # context['modules'] = [
-    #     (module, module.get_module_complete_percent(course, user))
-    #     for module in learning_modules
-    #     ]
+    context['course_percentage'] = course_status.first().percent_completed
 
     module_learning_units = {}
     for module in learning_modules:
@@ -3225,12 +3241,11 @@ def course_modules(request, course_id, msg=None):
 
     context['modules'] = module_learning_units
 
-    if course_status:
-        course_status = course_status[0]
-        if not course_status.grade:
+    if course_status.exists():
+        if not course_status.first().grade:
+            course_status.first().set_grade(course_status, module_learning_units)
             pass
-            # course_status.set_grade()
-        context['grade'] = course_status.get_grade()
+        context['grade'] = course_status.first().get_grade()
     return my_render_to_response(request, 'yaksh/course_modules.html', context)
 
 

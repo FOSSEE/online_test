@@ -54,8 +54,8 @@ def file_title(name):
 
 
 @register.simple_tag
-def get_unit_status(user, course, course_status, unit):
-    return unit.get_completion_status(user, course, course_status)
+def get_unit_status(course, unit, user, course_status):
+    return course.get_unit_completion_status(unit, user, course_status)
 
 
 @register.simple_tag
@@ -88,7 +88,7 @@ def get_course_completion_percent(courses_status, user):
     course_status = courses_status.filter(
         user=user
     ).values('percent_completed')
-    if course_status:
+    if course_status.exists():
         return course_status.first()['percent_completed']
     else:
         return 0
