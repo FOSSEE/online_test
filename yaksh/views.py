@@ -537,7 +537,9 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     user = request.user
     # check conditions
     try:
-        quest_paper = QuestionPaper.objects.get(id=questionpaper_id)
+        quest_paper = QuestionPaper.objects.select_related(
+            'quiz'
+        ).get(id=questionpaper_id)
     except QuestionPaper.DoesNotExist:
         msg = 'Quiz not found, please contact your '\
             'instructor/administrator.'
@@ -553,7 +555,10 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
         return view_module(request, module_id=module_id, course_id=course_id,
                            msg=msg)
     course = Course.objects.get(id=course_id)
-    learning_module = course.learning_module.get(id=module_id)
+    if module_id:
+       learning_module = LearningModule.objects.get(id=module_id)
+    else:
+        learning_module = course.learning_module.get(id=module_id)
     learning_unit = learning_module.learning_unit.get(quiz=quest_paper.quiz.id)
 
     # unit module active status
