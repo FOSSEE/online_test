@@ -46,9 +46,8 @@ class RAssertionEvaluationTestCase(EvaluatorBaseTest):
                                 "test_case_type": "standardtestcase",
                                 "weight": 0.0, "hidden": True
                                 }]
-        self.timeout_msg = ("Code took more than {0} seconds to run. "
-                            "You probably have an infinite loop in"
-                            " your code.").format(SERVER_TIMEOUT)
+        self.timeout_msg = ("You probably have an infinite loop in"
+                            " your code.")
         self.file_paths = None
 
     def tearDown(self):

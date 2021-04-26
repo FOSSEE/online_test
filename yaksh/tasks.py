@@ -222,7 +222,7 @@ def send_files_to_code_server(data):
                 files = [file.get_filename() for file in uploads]
             data = {"files": files, "action": action, "path": path}
             response = requests.post(post_url, data=data)
+            message = response.content
             if response.status_code == 200:
-                print("Successfully downloaded/deleted files")
-            else:
-                print("Download failed\n", response.content)
+                message = "Successfully downloaded/deleted files"
+            return message
