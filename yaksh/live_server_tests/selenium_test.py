@@ -6,7 +6,8 @@ from selenium.webdriver.support import expected_conditions as EC
 import multiprocessing
 import argparse
 import os
-
+from datetime import datetime
+import time
 
 class ElementDisplay(object):
     '''Custom expected condition '''
@@ -27,9 +28,10 @@ class SeleniumTestError(Exception):
 
 class SeleniumTest():
     def __init__(self, url, quiz_name, module_name, course_name):
-        self.driver = webdriver.Firefox()
-        self.driver.set_window_position(0, 0)
-        self.driver.set_window_size(1024, 1920)
+        # self.driver = webdriver.Firefox()
+        self.driver = webdriver.Edge("msedgedriver.exe")
+        # self.driver.set_window_position(0, 0)
+        self.driver.maximize_window()
         self.quiz_name = quiz_name
         self.module_name = module_name
         self.course_name = course_name
@@ -47,6 +49,10 @@ class SeleniumTest():
             self.driver.close()
         except Exception as e:
             # self.driver.close()
+            write_image_path = os.path.join(
+                "Screenshots", datetime.now().strftime("%d_%m_%y_%H_%M_%S")+".png"
+            )
+            self.driver.save_screenshot(f"{write_image_path}")
             msg = ("An Error occurred while running the Selenium load"
                    " test on Yaksh!\n"
                    "Error:\n{0}".format(e))
@@ -66,7 +72,7 @@ class SeleniumTest():
         submit_login_elem.click()
 
     def submit_answer(self, question_label, answer, loop_count=1):
-        self.driver.implicitly_wait(2)
+        self.driver.implicitly_wait(4)
         for count in range(loop_count):
             self.driver.find_element_by_link_text(question_label).click()
             submit_answer_elem = self.driver.find_element_by_id("check")
@@ -126,16 +132,20 @@ class SeleniumTest():
         self.submit_answer(question_label, answer, loop_count)
 
     def test_upload_question(self, question_label):
-        self.driver.implicitly_wait(2)
+        self.driver.implicitly_wait(4)
         for _ in range(0, 10):
-            self.driver.find_element_by_link_text(question_label).click()
-            self.driver.find_element_by_id("assignment").send_keys(
+            self.driver.execute_script("window.scrollTo(0, 0);")
+            self.driver.implicitly_wait(4)
+            self.driver.find_element_by_link_text(str(question_label)).click()
+            self.driver.find_element_by_css_selector('.dz-hidden-input').send_keys(
                 os.sep.join((os.getcwd(), "new.pdf"))
             )
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             self.driver.find_element_by_id("check").click()
-            WebDriverWait(self.driver, 90).until(ElementDisplay(
-                (By.XPATH, "//*[@id='ontop']")))
-            self.driver.execute_script("scrollBy(0, -1000);")
+            WebDriverWait(self.driver, 90).until(
+                EC.invisibility_of_element_located((By.CSS_SELECTOR, "dz-preview"))
+            )
+
 
     def open_quiz(self):
         # open module link
@@ -172,13 +182,14 @@ class SeleniumTest():
             EC.presence_of_element_located((By.NAME, "quit"))
         )
         quit_link_elem.click()
-
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         quit_link_elem = WebDriverWait(self.driver, 5).until(
             EC.presence_of_element_located((By.NAME, "yes"))
         )
         quit_link_elem.click()
 
     def close_quiz(self):
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         quit_link_elem = WebDriverWait(self.driver, 5).until(
             EC.presence_of_element_located((By.ID, "Next"))
         )
@@ -199,8 +210,13 @@ def user_gen(url, ids):
 
 
 def wrap_run_load_test(args):
-    url = "http://yaksh.fossee.aero.iitb.ac.in/exam/"
-    selenium_test = SeleniumTest(url=url, quiz_name=quiz_name)
+    url = "http://yaksh-nvli.fossee.in"
+    quiz_name = "Yaksh Demo quiz"
+    module_name = "Demo Module"
+    course_name = "Yaksh Demo course"
+    selenium_test = SeleniumTest(url=url, quiz_name=quiz_name,
+                                 module_name=module_name,
+                                 course_name=course_name)
     return selenium_test.run_load_test(*args)
 
 
@@ -215,12 +231,12 @@ if __name__ == '__main__':
     )
     opts = parser.parse_args()
 
-    quiz_name = "Demo quiz"
-    module_name = "Demo Module"
-    course_name = "Yaksh Demo course"
-    selenium_test = SeleniumTest(url=opts.url, quiz_name=quiz_name,
-                                 module_name=module_name,
-                                 course_name=course_name)
+    # quiz_name = "Demo quiz"
+    # module_name = "Demo Module"
+    # course_name = "Yaksh Demo course"
+    # selenium_test = SeleniumTest(url=opts.url, quiz_name=quiz_name,
+    #                              module_name=module_name,
+    #                              course_name=course_name)
     pool = multiprocessing.Pool(opts.number)
     pool.map(
         wrap_run_load_test,
