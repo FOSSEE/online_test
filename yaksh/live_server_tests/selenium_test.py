@@ -2,12 +2,14 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 import multiprocessing
 import argparse
 import os
 from datetime import datetime
 import time
+
 
 class ElementDisplay(object):
     '''Custom expected condition '''
@@ -135,16 +137,17 @@ class SeleniumTest():
         self.driver.implicitly_wait(4)
         for _ in range(0, 10):
             self.driver.execute_script("window.scrollTo(0, 0);")
-            self.driver.implicitly_wait(4)
             self.driver.find_element_by_link_text(str(question_label)).click()
             self.driver.find_element_by_css_selector('.dz-hidden-input').send_keys(
                 os.sep.join((os.getcwd(), "new.pdf"))
             )
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             self.driver.find_element_by_id("check").click()
-            WebDriverWait(self.driver, 90).until(
-                EC.invisibility_of_element_located((By.CSS_SELECTOR, "dz-preview"))
-            )
+            try:
+                WebDriverWait(self.driver, 40).until(ElementDisplay(
+                    (By.XPATH, "//*[@class='dz-progress']")))
+            except TimeoutException:
+                pass
 
 
     def open_quiz(self):
