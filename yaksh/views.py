@@ -115,9 +115,13 @@ def get_html_text(md_text):
 
 
 def formfield_callback(field):
-    if (isinstance(field, models.TextField) and field.name == 'expected_input'):
-        return fields.CharField(strip=False, required = False)
-    if (isinstance(field, models.TextField) and field.name == 'expected_output'):
+    if (
+        isinstance(field, models.TextField) and field.name == 'expected_input'
+    ):
+        return fields.CharField(strip=False, required=False)
+    if (
+        isinstance(field, models.TextField) and field.name == 'expected_output'
+    ):
         return fields.CharField(strip=False)
     return field.formfield()
 
@@ -187,14 +191,16 @@ def quizlist_user(request, enrolled=None, msg=None):
     if request.method == "POST":
         course_code = request.POST.get('course_code')
         hidden_courses = Course.objects.get_hidden_courses(code=course_code)
-        courses = hidden_courses
+        context['remaining_courses'] = hidden_courses
         title = 'Search Results'
     else:
-        enrolled_courses = user.students.select_related('creator').prefetch_related(
-            'students',
-            'requests',
-            'rejected',
-            'learning_module',
+        enrolled_courses = user.students.select_related(
+            'creator'
+            ).prefetch_related(
+                'students',
+                'requests',
+                'rejected',
+                'learning_module',
         ).filter(
             is_trial=False
         ).order_by("-id")
@@ -204,10 +210,8 @@ def quizlist_user(request, enrolled=None, msg=None):
             id__in=enrolled_courses.values_list("id", flat=True)
         ).order_by("-id")
 
-
         context['enrolled_courses'] = enrolled_courses
         context['remaining_courses'] = remaining_courses
-
         title = 'All Courses'
 
     messages.info(request, msg)
@@ -535,6 +539,9 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     """Check the user cedentials and if any quiz is available,
     start the exam."""
     user = request.user
+    course = Course.objects.get(id=course_id)
+    course_status = CourseStatus.objects.filter(
+            course_id=course.id, user_id=user.id)
     # check conditions
     try:
         quest_paper = QuestionPaper.objects.select_related(
@@ -554,9 +561,9 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
             return prof_manage(request, msg=msg)
         return view_module(request, module_id=module_id, course_id=course_id,
                            msg=msg)
-    course = Course.objects.get(id=course_id)
+
     if module_id:
-       learning_module = LearningModule.objects.get(id=module_id)
+        learning_module = LearningModule.objects.get(id=module_id)
     else:
         learning_module = course.learning_module.get(id=module_id)
     learning_unit = learning_module.learning_unit.get(quiz=quest_paper.quiz.id)
@@ -567,7 +574,9 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
 
     # unit module prerequiste check
     if learning_module.has_prerequisite():
-        if not learning_module.is_prerequisite_complete(user, course):
+        if not learning_module.is_prerequisite_complete(
+            user, course, course_status
+        ):
             msg = "You have not completed the module previous to {0}".format(
                 learning_module.name)
             return course_modules(request, course_id, msg)
@@ -811,6 +820,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
         course_id=course_id
     )
     current_question = get_object_or_404(Question, pk=q_id)
+
     def is_valid_answer(answer):
         status = True
         if ((current_question.type == "mcc" or
@@ -1687,12 +1697,9 @@ def show_all_questions(request):
                     user, False, question_ids, None)
                 trial_paper.update_total_marks()
                 trial_paper.save()
-                return my_redirect(
-                    reverse("yaksh:start_quiz",
-                            args=[1, trial_module.id, trial_paper.id,
-                                  trial_course.id]
-                        )
-                    )
+                return my_redirect(reverse("yaksh:start_quiz", args=[
+                    1, trial_module.id, trial_paper.id,
+                    trial_course.id]))
             else:
                 message = "Please select atleast one question to test"
 
@@ -1863,10 +1870,9 @@ def download_quiz_csv(request, course_id, quiz_id):
             course_id=course_id, question_paper_id=question_paper.id,
             attempt_number=attempt_number
         ).order_by("user__first_name")
-        que_summaries = [
-            (f"Q-{que.id}-{que.summary}-{que.points}-marks", que.id,
-                f"Q-{que.id}-{que.summary}-comments"
-                )
+        que_summaries = [(
+            f"Q-{que.id}-{que.summary}-{que.points}-marks",
+            que.id, f"Q-{que.id}-{que.summary}-comments")
             for que in questions
         ]
         user_data = list(answerpapers.values(
@@ -2262,11 +2268,10 @@ def regrade(request, course_id, questionpaper_id, question_id=None,
     is_celery_alive = app.control.ping()
     if is_celery_alive:
         regrade_papers.delay(data)
-        msg = dedent("""
-                {0} is submitted for re-evaluation. You will receive a
-                notification for the re-evaluation status
-                """.format(quiz.description)
-            )
+        msg = dedent(
+                """{0} is submitted for re-evaluation. You will receive a
+                notification for the re-evaluation status""".format(
+                    quiz.description))
         messages.info(request, msg)
     else:
         msg = "Unable to submit for regrade. Please contact admin"
@@ -2611,7 +2616,9 @@ def download_toc(request, course_id, lesson_id):
     user = request.user
     tmp_file_path = tempfile.mkdtemp()
     yaml_path = os.path.join(tmp_file_path, "lesson_toc.yaml")
-    TableOfContents.objects.get_all_tocs_as_yaml(course_id, lesson_id, yaml_path)
+    TableOfContents.objects.get_all_tocs_as_yaml(
+        course_id, lesson_id, yaml_path
+    )
 
     with open(yaml_path, 'r') as yml_file:
         response = HttpResponse(yml_file.read(), content_type='text/yaml')
@@ -2619,7 +2626,6 @@ def download_toc(request, course_id, lesson_id):
             'attachment; filename="lesson_toc.yaml"'
         )
         return response
-
 
 
 @login_required
@@ -2756,7 +2762,7 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
                     results = TableOfContents.objects.add_contents(
                         course_id, lesson_id, user, toc_data)
                     for status, msg in results:
-                        if status == True:
+                        if status:
                             messages.success(request, msg)
                         else:
                             messages.warning(request, msg)
@@ -2785,11 +2791,11 @@ def show_lesson(request, lesson_id, module_id, course_id):
         return quizlist_user(request, msg=msg)
     learn_module = LearningModule.objects.get(id=module_id)
     learn_unit = LearningUnit.objects.get(lesson_id=lesson_id)
-    
+
     learning_units = learn_module.get_learning_units()
     course_status = CourseStatus.objects.filter(
             course_id=course.id, user_id=user.id)
-    
+
     if not learn_module.active:
         return view_module(request, module_id, course_id)
 
@@ -2797,7 +2803,9 @@ def show_lesson(request, lesson_id, module_id, course_id):
         msg = "{0} is not active".format(learn_unit.lesson.name)
         return view_module(request, module_id, course_id, msg)
     if learn_module.has_prerequisite():
-        if not learn_module.is_prerequisite_complete(user, course):
+        if not learn_module.is_prerequisite_complete(
+            user, course, course_status
+        ):
             msg = "You have not completed the module previous to {0}".format(
                 learn_module.name)
             return view_module(request, module_id, course_id, msg)
@@ -2859,14 +2867,16 @@ def show_lesson(request, lesson_id, module_id, course_id):
     else:
         form = CommentForm()
         comments = post.comment.filter(active=True)
-    context = {'lesson': learn_unit.lesson, 'user': user,
-               'course': course, 'state': "lesson", 
-               'all_modules': module_learning_units, 
-               'learning_units': learning_units, "current_unit": learn_unit,
-               'learning_module': learn_module, 'toc': toc, 
-               'course_status': course_status, 
-               'contents_by_time': contents_by_time, 'track_id': track.id,
-               'comments': comments, 'form': form, 'post': post}
+    context = {
+        'lesson': learn_unit.lesson, 'user': user,
+        'course': course, 'state': "lesson",
+        'all_modules': module_learning_units,
+        'learning_units': learning_units, "current_unit": learn_unit,
+        'learning_module': learn_module, 'toc': toc,
+        'course_status': course_status,
+        'contents_by_time': contents_by_time, 'track_id': track.id,
+        'comments': comments, 'form': form, 'post': post
+    }
     return my_render_to_response(request, 'yaksh/show_video.html', context)
 
 
@@ -3166,6 +3176,9 @@ def design_course(request, course_id):
 def view_module(request, module_id, course_id, msg=None):
     user = request.user
     course = Course.objects.get(id=course_id)
+    course_status = CourseStatus.objects.filter(
+            course_id=course.id, user_id=user.id)
+
     if user not in course.students.all():
         raise Http404('You are not enrolled for this course!')
     context = {}
@@ -3179,7 +3192,9 @@ def view_module(request, module_id, course_id, msg=None):
         return course_modules(request, course_id, msg)
     all_modules = course.get_learning_modules()
     if learning_module.has_prerequisite():
-        if not learning_module.is_prerequisite_complete(user, course):
+        if not learning_module.is_prerequisite_complete(
+            user, course, course_status
+        ):
             msg = "You have not completed the module previous to {0}".format(
                 learning_module.name)
             return course_modules(request, course_id, msg)
@@ -3193,8 +3208,6 @@ def view_module(request, module_id, course_id, msg=None):
             return course_modules(request, course_id, msg)
 
     learning_units = learning_module.get_learning_units()
-    course_status = CourseStatus.objects.filter(
-            course_id=course.id, user_id=user.id)
 
     module_learning_units = {}
     for module in all_modules:
@@ -3235,8 +3248,9 @@ def course_modules(request, course_id, msg=None):
         ).filter(
             course=course, user=user
         )
-    context['course_status'] = course_status
-    context['course_percentage'] = course_status.first().percent_completed
+    if course_status.exists():
+        context['course_status'] = course_status
+        context['course_percentage'] = course_status.first().percent_completed
 
     module_learning_units = {}
     for module in learning_modules:
@@ -3248,7 +3262,9 @@ def course_modules(request, course_id, msg=None):
 
     if course_status.exists():
         if not course_status.first().grade:
-            course_status.first().set_grade(course_status, module_learning_units)
+            course_status.first().set_grade(
+                course_status, module_learning_units
+            )
             pass
         context['grade'] = course_status.first().get_grade()
     return my_render_to_response(request, 'yaksh/course_modules.html', context)
@@ -3324,6 +3340,9 @@ def get_user_data(request, course_id, student_id):
     response_kwargs = {}
     response_kwargs['content_type'] = 'application/json'
     course = Course.objects.get(id=course_id)
+    course_status = CourseStatus.objects.filter(
+        course_id=course_id, user_id=user.id
+    )
     if not is_moderator(user):
         data['msg'] = 'You are not a moderator'
         data['status'] = False
@@ -3339,8 +3358,11 @@ def get_user_data(request, course_id, student_id):
         student = User.objects.get(id=student_id)
         data['status'] = True
         modules = course.get_learning_modules()
-        module_percent = [
-            (module, module.get_module_complete_percent(course, student))
+        module_percent = [(
+            module, module.get_module_complete_percent(
+               course, student, course_status
+                )
+            )
             for module in modules
             ]
         data['modules'] = module_percent
@@ -3779,9 +3801,11 @@ def add_topic(request, content_type, course_id, lesson_id, toc_id=None,
             context['message'] = form.errors.as_json()
     else:
         form = TopicForm(instance=topic, time=toc.time)
-        template_context = {'form': form, 'course_id': course.id,
-                   'lesson_id': lesson_id, 'content_type': content_type,
-                   'topic_id': topic_id, 'toc_id': toc_id}
+        template_context = {
+            'form': form, 'course_id': course.id,
+            'lesson_id': lesson_id, 'content_type': content_type,
+            'topic_id': topic_id, 'toc_id': toc_id
+        }
         data = loader.render_to_string(
             "yaksh/add_topic.html", context=template_context, request=request
         )
@@ -3831,7 +3855,9 @@ def add_marker_quiz(request, content_type, course_id, lesson_id,
                         lesson_id=lesson_id, content=content_type,
                         time=time
                     )
-                context['toc'] = get_toc_contents(request, course_id, lesson_id)
+                context['toc'] = get_toc_contents(
+                    request, course_id, lesson_id
+                )
                 if toc:
                     toc.time = time
                     toc.save()
@@ -3998,7 +4024,7 @@ def submit_marker_quiz(request, course_id, toc_id):
     if is_valid_answer(user_answer):
         success = True
         # check if graded quiz and already attempted
-        has_attempts =  LessonQuizAnswer.objects.filter(
+        has_attempts = LessonQuizAnswer.objects.filter(
             toc_id=toc_id, student_id=user.id).exists()
         if ((toc.content == 2 and not has_attempts) or
                 toc.content == 3 or toc.content == 4):
@@ -4050,8 +4076,7 @@ def lesson_statistics(request, course_id, lesson_id, toc_id=None):
         question = per_que_data[0]
         answers = per_que_data[1]
         is_percent_reqd = (
-            True if question.type == "mcq" or question.type == "mcc"
-                else False
+            True if question.type == "mcq" or question.type == "mcc" else False
             )
         per_tc_ans, total_count = TableOfContents.objects.get_per_tc_ans(
             toc_id, question.type, is_percent_reqd
@@ -4097,8 +4122,7 @@ def upload_marks(request, course_id, questionpaper_id):
             msg = dedent("""
                 {0} is submitted for marks update. You will receive a
                 notification for the update status
-                """.format(quiz.description)
-            )
+                """.format(quiz.description))
             messages.info(request, msg)
         else:
             msg = "Unable to submit for marks update. Please check with admin"
@@ -4166,7 +4190,8 @@ def _read_marks_csv(request, reader, course, question_paper, question_ids):
         messages.info(
             request,
             'Updated successfully for user: {0}, question: {1}'.format(
-            username, question.summary))
+                username, question.summary)
+        )
 
 
 @login_required
@@ -4257,7 +4282,9 @@ def upload_download_course_md(request, course_id):
         from upload.views import upload_course_md
         status, msg = upload_course_md(request)
         if status:
-            messages.success(request, "MD File Successfully uploaded to course")
+            messages.success(
+                request, "MD File Successfully uploaded to course"
+            )
         else:
             messages.warning(request, "{0}".format(msg))
         return redirect(
@@ -4268,4 +4295,6 @@ def upload_download_course_md(request, course_id):
             'course': course,
             'is_upload_download_md': True,
         }
-        return my_render_to_response(request, 'yaksh/course_detail.html', context)
+        return my_render_to_response(
+            request, 'yaksh/course_detail.html', context
+        )

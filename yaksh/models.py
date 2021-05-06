@@ -30,7 +30,7 @@ import qrcode
 import hashlib
 
 # Django Imports
-from django.db import models, IntegrityError
+from django.db import models, IntegrityError, transaction
 from django.contrib.auth.models import User, Group, Permission
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
@@ -786,7 +786,7 @@ class LearningModule(models.Model):
             default_status = "inprogress"
         return default_status
 
-    def is_prerequisite_complete(self, user, course):
+    def is_prerequisite_complete(self, user, course, course_status):
         """ Check if prerequisite module is completed """
         ordered_modules = course.learning_module.order_by("order")
         ordered_modules_ids = list(ordered_modules.values_list(
@@ -797,7 +797,7 @@ class LearningModule(models.Model):
         else:
             prev_module = ordered_modules.get(
                 id=ordered_modules_ids[current_module_index-1])
-            status = prev_module.get_status(user, course)
+            status = prev_module.get_status(user, course, course_status)
             if status == "completed":
                 success = True
             else:
@@ -1246,7 +1246,7 @@ class CourseStatus(models.Model):
 
     def set_grade(self, course_status, module_learning_units):
         if self.is_course_complete(course_status, module_learning_units):
-            self.calculate_percentage()
+            self.calculate_percentage(course_status, module_learning_units)
             if self.course.grading_system is None:
                 grading_system = GradingSystem.objects.get(
                     name__contains='default'
@@ -1257,9 +1257,9 @@ class CourseStatus(models.Model):
             self.grade = grade
             self.save()
 
-    def calculate_percentage(self):
+    def calculate_percentage(self, course_status, module_learning_units):
         quizzes = self.course.get_quizzes()
-        if self.is_course_complete() and quizzes:
+        if self.is_course_complete(course_status, module_learning_units) and quizzes:
             total_weightage = 0
             sum = 0
             for quiz in quizzes:
@@ -3340,7 +3340,8 @@ class QRcode(models.Model):
             for i in range(40):
                 try:
                     self.short_key = key[0:num]
-                    self.save()
+                    with transaction.atomic():
+                        self.save()
                     break
                 except IntegrityError:
                     num = num + 1
