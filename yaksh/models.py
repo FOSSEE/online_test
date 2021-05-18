@@ -1107,10 +1107,10 @@ class Course(models.Model):
                 for quiz in self.get_quizzes()]
 
     def get_learning_units(self):
-        learning_modules = self.learning_module.all()
+        learning_modules = self.get_learning_modules()
         learning_units = []
         for module in learning_modules:
-            learning_units.extend(module.get_learning_units())
+            learning_units.extend(module.learning_unit.select_related('lesson'))
         return learning_units
 
     def get_lesson_posts(self):

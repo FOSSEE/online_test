@@ -3569,7 +3569,6 @@ def lessons_forum(request, course_id):
         base_template = 'manage.html'
         moderator = True
     course = get_object_or_404(Course, id=course_id)
-    course_ct = ContentType.objects.get_for_model(course)
     lesson_posts = course.get_lesson_posts()
     return render(request, 'yaksh/lessons_forum.html', {
         'user': user,
