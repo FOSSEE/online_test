@@ -122,38 +122,54 @@
                                                 </div>
                                                 <div>
                                                     <div class="nav-item dropdown">
-                                                        <a class="dropdown-toggle nav-link" data-toggle="dropdown" href="#" style="color: blue;">More
+                                                        <a
+                                                            class="dropdown-toggle nav-link"
+                                                            data-toggle="dropdown"
+                                                            href="#"
+                                                            style="color: blue;"
+                                                            >
+                                                            More
                                                         </a>
                                                         <div class="dropdown-menu dropdown-menu-right">
-                                                        <a class="dropdown-item" href="{% url 'yaksh:toggle_course_status' course.id %}">
-                                                        {% if course.active %}
-                                                            <i class="fa fa-toggle-on fa-2x"></i>
-                                                            Deactivate Course
-                                                        {% else %}
-                                                            <i class="fa fa-toggle-off fa-2x"></i>
-                                                            Activate Course
-                                                        {% endif %}
-                                                        </a>
-                                                        <div class="dropdown-divider"></div>
-                                                        <a class="dropdown-item" href="{% url 'yaksh:course_detail' course.id %}">
-                                                            <i class="fa fa-tasks"></i>
-                                                            Manage Course
-                                                        </a>
-                                                        <div class="dropdown-divider"></div>
-                                                        <a class="dropdown-item" href="{% url 'yaksh:duplicate_course' course.id %}">
-                                                            <i class="fa fa-clone"></i>
-                                                            Clone Course
-                                                        </a>
-                                                        <div class="dropdown-divider"></div>
-                                                        <a class="dropdown-item" href="{% url 'yaksh:download_course_csv' course.id %}">
-                                                            <i class="fa fa-download"></i>
-                                                            Download CSV
-                                                        </a>
-                                                        <div class="dropdown-divider"></div>
-                                                        <a class="dropdown-item" href="{% url 'yaksh:download_course' course.id %}">
-                                                            <i class="fa fa-download"></i>
-                                                            Download Course
-                                                        </a>
+                                                            <a
+                                                                class="dropdown-item"
+                                                                href="{% url 'yaksh:course_detail' course.id %}">
+                                                                <i class="fa fa-tasks"></i>
+                                                                Manage Course
+                                                            </a>
+                                                            <div class="dropdown-divider"></div>
+                                                            <a
+                                                                class="dropdown-item"
+                                                                href="{% url 'yaksh:duplicate_course' course.id %}">
+                                                                <i class="fa fa-clone"></i>
+                                                                Clone Course
+                                                            </a>
+                                                            <div class="dropdown-divider"></div>
+                                                            <a
+                                                                class="dropdown-item"
+                                                                href="{% url 'yaksh:download_course_csv' course.id %}">
+                                                                <i class="fa fa-download"></i>
+                                                                Download CSV
+                                                            </a>
+                                                            <div class="dropdown-divider"></div>
+                                                            <a
+                                                                class="dropdown-item"
+                                                                href="{% url 'yaksh:download_course' course.id %}">
+                                                                <i class="fa fa-download"></i>
+                                                                Download Course
+                                                            </a>
+                                                            <div class="dropdown-divider"></div>
+                                                            <a
+                                                                class="dropdown-item"
+                                                                href="{% url 'yaksh:toggle_course_status' course.id %}">
+                                                                {% if course.active %}
+                                                                    <i class="fa fa-toggle-on fa-2x"></i>
+                                                                    Deactivate Course
+                                                                {% else %}
+                                                                    <i class="fa fa-toggle-off fa-2x"></i>
+                                                                    Activate Course
+                                                                {% endif %}
+                                                            </a>
                                                         </div>
                                                     </div>
                                                 </div>
