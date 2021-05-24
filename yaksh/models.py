@@ -2230,7 +2230,7 @@ class AnswerPaper(models.Model):
     end_time = models.DateTimeField()
 
     # User's IP which is logged.
-    user_ip = models.CharField(max_length=15)
+    user_ip = models.CharField(max_length=255)
 
     # The questions unanswered
     questions_unanswered = models.ManyToManyField(
