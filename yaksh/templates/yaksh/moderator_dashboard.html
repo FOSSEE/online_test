@@ -5,117 +5,113 @@
 {% block pagetitle %} <h2>My Dashboard</h2> {% endblock %}
 
 {% block content %}
-<div class="container">
-    <center>
-        <h4>
-            List of quizzes! Click on the given links to have a look at answer papers for a quiz
-        </h4>
-    </center>
-    <hr>
-    <center>
-        <a href="{% url 'yaksh:add_course' %}" class="btn btn-success btn-lg">
-            <span class=" fa fa-plus-circle"></span>&nbsp;Add Course
-        </a>
-        <a href="{% url 'yaksh:create_demo_course' %}" class="btn btn-primary btn-lg">
-            Create Demo Course
-        </a>
-        <br><br>
-        {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-dismissible alert-{{ message.tags }}">
-                <button type="button" class="close" data-dismiss="alert">
-                    <i class="fa fa-close"></i>
-                </button>
-                <strong>{{ message }}</strong>
-            </div>
-            {% endfor %}
-        {% endif %}
-    </center>
-    {% with objects as courses %}
-    <br>
-    {% if not courses %}
-        <div class="alert alert-info">
-          No Courses found. Add a new course or Create demo course
-        </div>
-    {% else %}
-        {% include "yaksh/paginator.html" %}
-        <br>
-        <div id="accordion">
-            {% for course in courses %}
-                <div class="card">
-                    <div class="card-header">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <h4 data-toggle="tooltip" title="{{course.name}}">
-                                    {{ course.name | truncatechars:40 }}
-                                </h4>
-                            </div>
-                            <div class="col-md-2">
-                                {% if course.active %}
-                                    <span class="badge badge-pill badge-success">
-                                        Active
-                                    </span>
-                                {% else %}
-                                    <span class="badge badge-pill badge-danger">
-                                        Inactive
-                                    </span>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
-                                    <i class="fa fa-tasks"></i>
-                                    Manage Course
-                                </a>
-                            </div>
-                            <div class="col-md">
-                                <a class="card-link btn btn-outline-info" data-toggle="collapse" href="#collapse{{course.id}}">
-                                    Details
-                                    <i class="fa fa-toggle-down" id="toggle_course_{{course.id}}"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="collapse{{course.id}}" class="collapse hide" data-parent="#accordion">
-                        <div class="card-body">
-                            <strong>{{ course.name }}</strong>
-                            {% get_course_details course as course_details %}
-                            {% if course_details %}
-                                <table class="table table-responsive-sm">
-                                    <tr>
-                                        <th>Quiz</th>
-                                        <th>Taken By</th>
-                                        <th>No. of users Passed</th>
-                                        <th>No. of users Failed</th>
-                                    </tr>
-                                    {% for quiz, users_no, passed, failed in course_details %}
-                                    <tr>
-                                        <td>
-                                            <a href="{% url 'yaksh:monitor' quiz.id course.id %}">
-                                                {{ quiz.description }}
-                                            </a>
-                                        </td>
-                                        <td>{{users_no}} user(s)</td>
-                                        <td>{{passed}}</td>
-                                        <td>{{failed}}</td>
-                                      </tr>
-                                    {% endfor %}
-                                </table>
-                            {% else %}
-                                <br><br>
-                                <div class="alert alert-info">
-                                    <strong>No Quizzes</strong>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
+    <div class="container">
+        <center>
+            <h4>
+                List of quizzes! Click on the given links to have a look at answer papers for a quiz
+            </h4>
+        </center>
+        <hr>
+        <center>
+            <a href="{% url 'yaksh:add_course' %}" class="btn btn-success btn-lg">
+                <span class=" fa fa-plus-circle"></span>&nbsp;Add Course
+            </a>
+            <a href="{% url 'yaksh:create_demo_course' %}" class="btn btn-primary btn-lg">
+                Create Demo Course
+            </a>
+            <br><br>
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-dismissible alert-{{ message.tags }}">
+                    <button type="button" class="close" data-dismiss="alert">
+                        <i class="fa fa-close"></i>
+                    </button>
+                    <strong>{{ message }}</strong>
                 </div>
-                <br>
-            {% endfor %}
-        </div>
-        {% include "yaksh/paginator.html" %}
-        <br>
-    {% endif %}
-    {% endwith %}
-</div>
-{% endblock %}
-
+                {% endfor %}
+            {% endif %}
+        </center>
+        {% with objects as courses %}
+            <br/>
+            {% if not courses %}
+                <div class="alert alert-info">
+                    No Courses found. Add a new course or Create a Demo Course
+                </div>
+            {% else %}
+                {% include 'yaksh/paginator.html' %}
+                <br/>
+                <div id="accordian">
+                    {% for course in courses %}
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h4 data-toggle="tooltip" title="{{course.name}}">
+                                            {{ course.name | truncatechars:40 }}
+                                        </h4>
+                                    </div>
+                                    <div class="col-md-2">
+                                        {% if course.active %}
+                                            <span class="badge badge-pill badge-success">
+                                                Active
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-pill badge-danger">
+                                                Inactive
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="{% url 'yaksh:course_detail' course.id %}" class="btn btn-primary">
+                                            <i class="fa fa-tasks"></i>
+                                            Manage Course
+                                        </a>
+                                    </div>
+                                    <div class="col-md">
+                                        <a class="card-link btn btn-outline-info" data-toggle="collapse" href="#collapse{{course.id}}">
+                                            Details
+                                            <i class="fa fa-toggle-down" id="toggle_course_{{course.id}}"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="collapse{{course.id}}" class="collapse hide" data-parent="#accordian">
+                                <div class="card-body">
+                                    <strong>{{course.name}}</strong>
+                                    {% get_course_details course as course_details %}
+                                    {% if course_details %}
+                                        <table class="table table-responsive-sm">
+                                            <tr>
+                                                <th>Quiz</th>
+                                                <th>Taken By</th>
+                                                <th>No. of users Passed</th>
+                                                <th>No. of users Failed</th>
+                                            </tr>
+                                            {% for unit, total, passed, failed in course_details %}
+                                            <tr>
+                                                <td>
+                                                    <a href="{% url 'yaksh:monitor' unit.quiz.id course.id %}">
+                                                        {{ unit.quiz.description }}
+                                                    </a>
+                                                </td>
+                                                <td>{{total}} user(s)</td>
+                                                <td>{{passed}}</td>
+                                                <td>{{failed}}</td>
+                                              </tr>
+                                            {% endfor %}
+                                        </table>
+                                    {% else %}
+                                        <br><br>
+                                        <div class="alert alert-info">
+                                            <strong>No Quizzes</strong>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}s
+        {% endwith %}
+    </div>
+{% endblock content %}

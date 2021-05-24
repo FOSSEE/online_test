@@ -559,27 +559,7 @@ class Quiz(models.Model):
         return AnswerPaper.objects.filter(
                 question_paper=qp,
                 course=course
-            ).values_list("user", flat=True).distinct().count()
-
-    def get_passed_students(self, course):
-        try:
-            qp = self.questionpaper_set.get().id
-        except QuestionPaper.DoesNotExist:
-            qp = None
-        return AnswerPaper.objects.filter(
-                question_paper=qp,
-                course=course, passed=True
-            ).values_list("user", flat=True).distinct().count()
-
-    def get_failed_students(self, course):
-        try:
-            qp = self.questionpaper_set.get().id
-        except QuestionPaper.DoesNotExist:
-            qp = None
-        return AnswerPaper.objects.filter(
-                question_paper=qp,
-                course=course, passed=False
-            ).values_list("user", flat=True).distinct().count()
+            )
 
     def get_answerpaper_status(self, user, course):
         try:
@@ -732,8 +712,7 @@ class LearningModule(models.Model):
     is_trial = models.BooleanField(default=False)
 
     def get_quiz_units(self):
-        return [unit.quiz for unit in self.learning_unit.filter(
-                type="quiz")]
+        return self.learning_unit.filter(type="quiz")
 
     def get_lesson_units(self):
         return [unit.lesson for unit in self.learning_unit.filter(
@@ -1094,17 +1073,23 @@ class Course(models.Model):
         return unit.get_completion_status(user, self, course_status)
 
     def get_quizzes(self):
-        learning_modules = self.learning_module.all()
-        quiz_list = []
+        learning_modules = self.get_learning_modules()
+        unit_list = []
         for module in learning_modules:
-            quiz_list.extend(module.get_quiz_units())
-        return quiz_list
+            unit_list.extend(module.learning_unit.filter(type='quiz'))
+        return unit_list
 
     def get_quiz_details(self):
-        return [(quiz, quiz.get_total_students(self),
-                 quiz.get_passed_students(self),
-                 quiz.get_failed_students(self))
-                for quiz in self.get_quizzes()]
+        unit_list = self.get_quizzes()
+
+        quiz_data = []
+        for unit in unit_list:
+            total_students = unit.quiz.get_total_students(self)
+            t_students = total_students.distinct().count()
+            p_students = total_students.filter(passed=True).distinct().count()
+            f_students = total_students.filter(passed=False).distinct().count()
+            quiz_data.append((unit, t_students, p_students, f_students))
+        return quiz_data
 
     def get_learning_units(self):
         learning_modules = self.get_learning_modules()

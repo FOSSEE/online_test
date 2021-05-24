@@ -452,11 +452,11 @@ def prof_manage(request, msg=None):
         return my_redirect('/exam/login')
     if not is_moderator(user):
         return my_redirect('/exam/')
-    courses = Course.objects.get_queryset().filter(
+    courses = Course.objects.filter(
         Q(creator=user) | Q(teachers=user),
         is_trial=False).distinct().order_by("-active")
 
-    paginator = Paginator(courses, 20)
+    paginator = Paginator(courses, 15)
     page = request.GET.get('page')
     courses = paginator.get_page(page)
     messages.info(request, msg)
