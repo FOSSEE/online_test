@@ -1218,7 +1218,7 @@ def enroll_user(request, course_id, user_id=None, was_rejected=False):
             'instructor/administrator.'
         )
         messages.warning(request, msg)
-        return redirect('yaksh:course_students', course_id=course_id)
+        return redirect('yaksh:course_detail', course_id=course_id)
 
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
@@ -1226,7 +1226,7 @@ def enroll_user(request, course_id, user_id=None, was_rejected=False):
     user = User.objects.get(id=user_id)
     course.enroll(was_rejected, user)
     messages.success(request, 'Enrolled student successfully')
-    return redirect('yaksh:course_students', course_id=course_id)
+    return redirect('yaksh:course_detail', course_id=course_id)
 
 
 @login_required
@@ -1241,7 +1241,7 @@ def reject_user(request, course_id, user_id=None, was_enrolled=False):
     user = User.objects.get(id=user_id)
     course.reject(was_enrolled, user)
     messages.success(request, "Rejected students successfully")
-    return redirect('yaksh:course_students', course_id=course_id)
+    return redirect('yaksh:course_detail', course_id=course_id)
 
 
 @login_required
@@ -1260,7 +1260,7 @@ def enroll_reject_user(request,
             'instructor/administrator.'
         )
         messages.warning(request, msg)
-        return redirect('yaksh:course_students', course_id=course_id)
+        return redirect('yaksh:course_detail', course_id=course_id)
 
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
@@ -1270,21 +1270,21 @@ def enroll_reject_user(request,
             enroll_ids = request.POST.getlist('check')
             if not enroll_ids:
                 messages.warning(request, "Please select atleast one student")
-                return redirect('yaksh:course_students', course_id=course_id)
+                return redirect('yaksh:course_detail', course_id=course_id)
             users = User.objects.filter(id__in=enroll_ids)
             course.enroll(was_rejected, *users)
             messages.success(request, "Enrolled student(s) successfully")
-            return redirect('yaksh:course_students', course_id=course_id)
+            return redirect('yaksh:course_detail', course_id=course_id)
         if 'reject' in request.POST:
             reject_ids = request.POST.getlist('check')
             if not reject_ids:
                 messages.warning(request, "Please select atleast one student")
-                return redirect('yaksh:course_students', course_id=course_id)
+                return redirect('yaksh:course_detail', course_id=course_id)
             users = User.objects.filter(id__in=reject_ids)
             course.reject(was_enrolled, *users)
             messages.success(request, "Rejected students successfully")
-            return redirect('yaksh:course_students', course_id=course_id)
-    return redirect('yaksh:course_students', course_id=course_id)
+            return redirect('yaksh:course_detail', course_id=course_id)
+    return redirect('yaksh:course_detail', course_id=course_id)
 
 
 @login_required
@@ -2441,13 +2441,13 @@ def upload_users(request, course_id):
     if request.method == 'POST':
         if 'csv_file' not in request.FILES:
             messages.warning(request, "Please upload a CSV file.")
-            return my_redirect(reverse('yaksh:course_students',
+            return my_redirect(reverse('yaksh:course_detail',
                                        args=[course_id]))
         csv_file = request.FILES['csv_file']
         is_csv_file, dialect = is_csv(csv_file)
         if not is_csv_file:
             messages.warning(request, "The file uploaded is not a CSV file.")
-            return my_redirect(reverse('yaksh:course_students',
+            return my_redirect(reverse('yaksh:course_detail',
                                        args=[course_id]))
         required_fields = ['firstname', 'lastname', 'email']
         try:
@@ -2456,7 +2456,7 @@ def upload_users(request, course_id):
                 dialect=dialect)
         except TypeError:
             messages.warning(request, "Bad CSV file")
-            return my_redirect(reverse('yaksh:course_students',
+            return my_redirect(reverse('yaksh:course_detail',
                                        args=[course_id]))
         stripped_fieldnames = [
             field.strip().lower() for field in reader.fieldnames]
@@ -2464,11 +2464,11 @@ def upload_users(request, course_id):
             if field not in stripped_fieldnames:
                 msg = "The CSV file does not contain the required headers"
                 messages.warning(request, msg)
-                return my_redirect(reverse('yaksh:course_students',
+                return my_redirect(reverse('yaksh:course_detail',
                                            args=[course_id]))
         reader.fieldnames = stripped_fieldnames
         _read_user_csv(request, reader, course)
-    return my_redirect(reverse('yaksh:course_students', args=[course_id]))
+    return my_redirect(reverse('yaksh:course_detail', args=[course_id]))
 
 
 def _read_user_csv(request, reader, course):
