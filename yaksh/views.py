@@ -1179,7 +1179,7 @@ def courses(request):
         raise Http404('You are not allowed to view this page')
     courses = Course.objects.filter(
         Q(creator=user) | Q(teachers=user),
-        is_trial=False).order_by('-active').distinct()
+        is_trial=False).order_by('-active').select_related('creator').distinct()
 
     tags = request.GET.get('search_tags')
     status = request.GET.get('search_status')
