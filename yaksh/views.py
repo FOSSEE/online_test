@@ -5,7 +5,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template import Context, Template, loader
 from django.http import Http404
-from django.db.models import Max, Q, F
+from django.db.models import Max, Q, F, Prefetch
 from django.db import models
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -452,9 +452,23 @@ def prof_manage(request, msg=None):
         return my_redirect('/exam/login')
     if not is_moderator(user):
         return my_redirect('/exam/')
+
     courses = Course.objects.filter(
         Q(creator=user) | Q(teachers=user),
-        is_trial=False).distinct().order_by("-active")
+        is_trial=False
+    ).distinct().order_by("-active").prefetch_related(
+        Prefetch('learning_module', LearningModule.objects.filter(
+                is_trial=False
+            ).prefetch_related(Prefetch(
+                    'learning_unit', LearningUnit.objects.filter(
+                        type='quiz'
+                    ).select_related('quiz').prefetch_related(
+                        Prefetch('quiz__questionpaper_set')
+                    )
+                )
+            )
+        )
+    )
 
     paginator = Paginator(courses, 15)
     page = request.GET.get('page')
@@ -1912,7 +1926,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
         courses = Course.objects.filter(
             Q(creator=current_user) | Q(teachers=current_user), is_trial=False
             ).order_by("-active").distinct()
-        paginator = Paginator(courses, 30)
+        paginator = Paginator(courses, 15)
         page = request.GET.get('page')
         courses = paginator.get_page(page)
         context = {"objects": courses, "msg": "grade"}

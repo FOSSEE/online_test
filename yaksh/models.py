@@ -1073,10 +1073,10 @@ class Course(models.Model):
         return unit.get_completion_status(user, self, course_status)
 
     def get_quizzes(self):
-        learning_modules = self.get_learning_modules()
+        learning_modules = self.learning_module.all()
         unit_list = []
         for module in learning_modules:
-            unit_list.extend(module.learning_unit.filter(type='quiz'))
+            unit_list.extend(module.learning_unit.all())
         return unit_list
 
     def get_quiz_details(self):
