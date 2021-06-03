@@ -63,19 +63,19 @@ function searchNames() {
                       {% with course.get_quizzes as quizzes %}
                           {% if quizzes %}
                               <ul class="list-group">
-                                {% for quiz in quizzes %}
+                                {% for unit in quizzes %}
                                   <li class="list-group-item">
                                     <div class="row">
                                       <div class="col-md-8">
-                                        {{quiz}}
+                                        {{unit}}
                                       </div>
                                       <div class="col-md-2">
-                                        <a href="{% url 'yaksh:monitor' quiz.id course.id%}" class="btn btn-primary">
+                                        <a href="{% url 'yaksh:monitor' unit.quiz.id course.id%}" class="btn btn-primary">
                                             Monitor
                                           </a>
                                       </div>
                                       <div class="col-md-2">
-                                        <a href="{% url 'yaksh:grade_user' quiz.id course.id%}" class="btn btn-info">
+                                        <a href="{% url 'yaksh:grade_user' unit.quiz.id course.id%}" class="btn btn-info">
                                           Grade
                                         </a>
                                       </div>

@@ -1924,13 +1924,23 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
         raise Http404('You are not allowed to view this page!')
     if not course_id:
         courses = Course.objects.filter(
-            Q(creator=current_user) | Q(teachers=current_user), is_trial=False
-            ).order_by("-active").distinct()
-        paginator = Paginator(courses, 15)
+            Q(creator=current_user) | Q(teachers=current_user),
+            is_trial=False
+        ).distinct().order_by("-active").prefetch_related(
+            Prefetch('learning_module', LearningModule.objects.filter(
+                    is_trial=False
+                ).prefetch_related(Prefetch(
+                        'learning_unit', LearningUnit.objects.filter(
+                            type='quiz'
+                        ).select_related('quiz')
+                    )
+                )
+            )
+        )
+        paginator = Paginator(courses, 30)
         page = request.GET.get('page')
         courses = paginator.get_page(page)
         context = {"objects": courses, "msg": "grade"}
-
     if quiz_id is not None:
         questionpaper_id = QuestionPaper.objects.filter(
             quiz_id=quiz_id
