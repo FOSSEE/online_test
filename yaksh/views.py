@@ -460,9 +460,10 @@ def prof_manage(request, msg=None):
         Prefetch('learning_module', LearningModule.objects.filter(
                 is_trial=False
             ).prefetch_related(Prefetch(
-                    'learning_unit', LearningUnit.objects.filter(
-                        type='quiz'
-                    ).select_related('quiz').prefetch_related(
+                    'learning_unit',
+                    queryset=LearningUnit.objects.filter(
+                    type='quiz'
+                ).select_related('quiz').prefetch_related(
                         Prefetch('quiz__questionpaper_set')
                     )
                 )
@@ -3459,12 +3460,27 @@ def get_course_modules(request, course_id):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    course = get_object_or_404(Course, pk=course_id)
+    course = Course.objects.prefetch_related(
+        'learning_module', 'students'
+    ).get(id=course_id)
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404("You are not allowed to view {0}".format(
             course.name))
-    modules = course.get_learning_modules()
-    context = {"modules": modules, "is_modules": True, "course": course}
+    modules = course.learning_module.prefetch_related('learning_unit')
+    module_units = {}
+    for module in modules:
+        module_units[module] = module.learning_unit.select_related(
+                'lesson', 'quiz'
+            ).prefetch_related(Prefetch(
+                    'lesson__tracklesson_set',
+                    queryset=TrackLesson.objects.filter(watched=True)
+                )
+            )
+    context = {
+        "module_units": module_units,
+        "is_modules": True,
+        "course": course,
+    }
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
 

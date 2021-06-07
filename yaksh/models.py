@@ -1055,9 +1055,7 @@ class Course(models.Model):
         return students
 
     def get_learning_modules(self):
-        return self.learning_module.select_related(
-                None
-            ).prefetch_related(
+        return self.learning_module.prefetch_related(
                 'learning_unit'
             ).filter(is_trial=False).order_by("order")
 
