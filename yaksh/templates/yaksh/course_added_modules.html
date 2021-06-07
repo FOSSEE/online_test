@@ -108,13 +108,56 @@
                         {{views.0}} completed out of {{views.1}}
                       {% endif %}
                     </td>
+                    <td>
+                      {% if unit.type == "quiz" %}
+                        {% if unit.quiz.questionpaper_set.get.id %}
+                          <a href="{% url 'yaksh:show_statistics' unit.quiz.questionpaper_set.get.id course.id %}" class="btn btn-outline-primary">
+                            <i class="fa fa-line-chart"></i>
+                            Statistics
+                          </a>
+                        {% else %}
+                          ----
+                        {% endif %}
+                      {% else %}
+                        <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+                          <button type="button" class="btn btn-outline-primary">
+                            <i class="fa fa-line-chart"></i>
+                            Statistics
+                          </button>
+                          <div class="btn-group" role="group">
+                            <button id="btnGroupDrop1" type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                            <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="">
+                              <a class="dropdown-item" href="{% url 'stats:view_lesson_watch_stats' course.id unit.lesson.id %}">
+                                Video Views
+                              </a>
+                              <a class="dropdown-item" href="{% url 'yaksh:lesson_statistics' course.id unit.lesson.id %}">
+                                Quiz Submissions
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      {% endif %}
+                    </td>
                   </tr>
                 {% endfor %}
               </table>
             </div>
+          {% else %}
+            <center>
+              <span class="badge badge-warning">
+                <big>No lesson/quiz added</big>
+              </span>
+            </center>
           {% endif %}
         </div>
       </div>
+      <br>
     {% endfor %}
+  {% else %}
+    <center>
+      <span class="badge badge-warning">
+        <big>No learning modules</big>
+      </span>
+    </center>
   {% endif %}
 {% endif %}
