@@ -3256,7 +3256,9 @@ def view_module(request, module_id, course_id, msg=None):
 @email_verified
 def course_modules(request, course_id, msg=None):
     user = request.user
-    course = Course.objects.get(id=course_id)
+    course = Course.objects.prefetch_related(
+        'learning_module'
+    ).get(id=course_id)
     if user not in course.students.all():
         msg = 'You are not enrolled for this course!'
         return quizlist_user(request, msg=msg)
@@ -3264,8 +3266,11 @@ def course_modules(request, course_id, msg=None):
     if not course.active or not course.is_active_enrollment():
         msg = "{0} is either expired or not active".format(course.name)
         return quizlist_user(request, msg=msg)
-    learning_modules = course.get_learning_modules()
+    learning_modules = course.learning_module.prefetch_related(
+        'learning_unit'
+    )
     context = {"course": course, "user": user, "msg": msg}
+
     course_status = CourseStatus.objects.select_related(
             'current_unit'
         ).prefetch_related(
@@ -3273,22 +3278,23 @@ def course_modules(request, course_id, msg=None):
         ).filter(
             course=course, user=user
         )
+
     if course_status.exists():
         context['course_status'] = course_status
         context['course_percentage'] = course_status.first().percent_completed
 
-    module_learning_units = {}
+    module_units = {}
     for module in learning_modules:
-        module_learning_units[module] = module.learning_unit.select_related(
+        module_units[module] = module.learning_unit.select_related(
             'lesson', 'quiz'
         ).prefetch_related('quiz__questionpaper_set').order_by("order")
 
-    context['modules'] = module_learning_units
+    context['modules'] = module_units
 
     if course_status.exists():
         if not course_status.first().grade:
             course_status.first().set_grade(
-                course_status, module_learning_units
+                course_status, module_units
             )
             pass
         context['grade'] = course_status.first().get_grade()
