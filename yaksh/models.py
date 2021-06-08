@@ -44,7 +44,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.template import Context, Template
 from django.conf import settings
 from django.forms.models import model_to_dict
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 from django.db.models.signals import pre_delete
 from django.db.models.fields.files import FieldFile
 from django.core.files.base import ContentFile

@@ -3107,18 +3107,25 @@ def design_course(request, course_id):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    course = Course.objects.get(id=course_id)
+    course = Course.objects.prefetch_related(
+        Prefetch(
+            'learning_module',
+            queryset=LearningModule.objects.filter(
+                is_trial=False
+            ).order_by("order")
+        )
+    ).get(id=course_id)
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
     context = {}
+    course_modules = course.learning_module.prefetch_related('learning_unit')
     if request.method == "POST":
         if "Add" in request.POST:
             add_values = request.POST.getlist("module_list")
             to_add_list = []
             if add_values:
-                ordered_modules = course.get_learning_modules()
-                if ordered_modules.exists():
-                    start_val = ordered_modules.last().order + 1
+                if course_modules.exists():
+                    start_val = course_modules.last().order + 1
                 else:
                     start_val = 1
                 for order, value in enumerate(add_values, start_val):
@@ -3182,13 +3189,20 @@ def design_course(request, course_id):
             else:
                 messages.warning(request, "Please select atleast one module")
 
-    added_learning_modules = course.get_learning_modules()
-    all_learning_modules = LearningModule.objects.filter(
-        creator=user, is_trial=False)
+    learning_modules = LearningModule.objects.filter(
+        creator=user, is_trial=False
+    ).prefetch_related(
+        'learning_unit'
+    ).exclude(id__in=course_modules.values_list('id', flat=True))
 
-    learning_modules = set(all_learning_modules) - set(added_learning_modules)
-    context['added_learning_modules'] = added_learning_modules
-    context['learning_modules'] = learning_modules
+    module_units = {}
+    for module in learning_modules:
+        module_units[module] = module.learning_unit.select_related(
+            'lesson', 'quiz'
+        )
+
+    context['added_module_units'] = course_modules
+    context['module_units'] = module_units
     context['course'] = course
     context['is_design_course'] = True
     return my_render_to_response(
