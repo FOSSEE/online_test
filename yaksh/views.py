@@ -3318,26 +3318,42 @@ def course_modules(request, course_id, msg=None):
 @login_required
 @email_verified
 def course_status(request, course_id):
+    context = {}
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    course = get_object_or_404(Course, pk=course_id)
+    course = Course.objects.prefetch_related(
+        'students', 'coursestatus_set'
+    ).get(id=course_id)
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404('This course does not belong to you')
-    students = course.students.order_by("-id")
-    students_no = students.count()
+    students = course.students.select_related('profile').order_by("-id")
+    total_students = students.count()
     paginator = Paginator(students, 100)
     page = request.GET.get('page')
     students = paginator.get_page(page)
 
-    stud_details = [(student, course.get_grade(student),
-                     course.get_completion_percent(student),
-                     course.get_current_unit(student.id))
-                    for student in students.object_list]
-    context = {
-        'course': course, 'objects': students, 'is_progress': True,
-        'student_details': stud_details, 'students_no': students_no
-    }
+    course_statuses = course.coursestatus_set.select_related(
+        'current_unit', 'current_unit__lesson', 'current_unit__quiz'
+    )
+    user_course_status = {}
+    for status in course_statuses:
+        user_course_status[status.user.id] = status
+
+    stud_details = []
+    for student in students:
+        course_status = user_course_status.get(student.id)
+        grade = course.get_grade(student, course_status)
+        percent = course.get_completion_percent(student, course_status)
+        unit = course.get_current_unit(student, course_status)
+        stud_details.append((student, grade, percent, unit))
+
+    context['objects'] = students
+    context['total_students'] = total_students
+    context['stud_details'] = stud_details
+    context['is_progress'] = True
+    context['course'] = course
+
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
 

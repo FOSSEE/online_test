@@ -1146,18 +1146,16 @@ class Course(models.Model):
             percent = round((count / modules.count()))
         return percent
 
-    def get_grade(self, user):
-        course_status = CourseStatus.objects.filter(course=self, user=user)
-        if course_status.exists():
-            grade = course_status.first().get_grade()
+    def get_grade(self, user, course_status):
+        if course_status:
+            grade = course_status.get_grade()
         else:
             grade = "NA"
         return grade
 
-    def get_current_unit(self, user):
-        course_status = CourseStatus.objects.filter(course=self, user_id=user)
-        if course_status.exists():
-            return course_status.first().current_unit
+    def get_current_unit(self, user, course_status):
+        if course_status:
+            return course_status.current_unit
 
     def days_before_start(self):
         """ Get the days remaining for the start of the course """
@@ -1167,10 +1165,9 @@ class Course(models.Model):
             remaining_days = 0
         return remaining_days
 
-    def get_completion_percent(self, user):
-        course_status = CourseStatus.objects.filter(course=self, user=user)
-        if course_status.exists():
-            percentage = course_status.first().percent_completed
+    def get_completion_percent(self, user, course_status):
+        if course_status:
+            percentage = course_status.percent_completed
         else:
             percentage = 0
         return percentage
