@@ -3481,7 +3481,10 @@ def course_teachers(request, course_id):
     user = request.user
     if not is_moderator(user):
         raise Http404('You are not allowed to view this page!')
-    course = get_object_or_404(Course, pk=course_id)
+
+    course = Course.objects.prefetch_related(
+        'students', 'requests', 'rejected'
+    ).get(id=course_id)
     if not course.is_creator(user) and not course.is_teacher(user):
         raise Http404("You are not allowed to view {0}".format(
             course.name))

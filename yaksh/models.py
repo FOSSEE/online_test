@@ -953,7 +953,7 @@ class Course(models.Model):
         self.requests.add(*users)
 
     def get_requests(self):
-        return self.requests.all()
+        return self.requests.select_related('profile')
 
     def is_active_enrollment(self):
         return self.start_enroll_time <= timezone.now() < self.end_enroll_time
@@ -966,7 +966,7 @@ class Course(models.Model):
             self.rejected.remove(*users)
 
     def get_enrolled(self):
-        return self.students.all()
+        return self.students.select_related('profile')
 
     def reject(self, was_enrolled, *users):
         self.rejected.add(*users)
@@ -976,7 +976,7 @@ class Course(models.Model):
             self.students.remove(*users)
 
     def get_rejected(self):
-        return self.rejected.all()
+        return self.rejected.select_related('profile')
 
     def is_enrolled(self, user):
         return self.students.filter(id=user.id).exists()
