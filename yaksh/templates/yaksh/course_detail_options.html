@@ -1,51 +1,104 @@
-<a href="{% url 'yaksh:courses' %}" class="btn btn-primary" title="View all the courses" data-placement="top" data-toggle="tooltip">
-    <i class="fa fa-arrow-left"></i>&nbsp;Back
+<a
+    href="{% url 'yaksh:courses' %}"
+    class="btn btn-primary"
+    title="View all the courses"
+    data-placement="top"
+    data-toggle="tooltip">
+        <i class="fa fa-arrow-left"></i>&nbsp;Back
 </a>
 <br><br>
-<ul class="nav nav-pills nav-fill flex-column flex-sm-row" role="tablist">
-    <li class="nav-item">
-        <a href="{% url 'yaksh:course_students' course.id %}" id="enroll-students" class="nav-link  {% if is_students %} active {% endif %}" title="View the course requested, rejected and enrolled students" data-placement="top" data-toggle="tooltip">
-            Enrollments
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link {% if is_modules %} active {% endif %}" href="{% url 'yaksh:get_course_modules' course.id %}" title="View modules added to the course" data-placement="top" data-toggle="tooltip">
-        Course Modules
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link {% if is_design_course %} active {% endif %}" href="{% url 'yaksh:design_course' course.id %}" title="Additional course settings" data-placement="top" data-toggle="tooltip">
-        Design Course
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{% url 'yaksh:course_status' course.id %}" class="nav-link {% if is_progress %} active {% endif %}" title="View Students course progress" data-placement="top" data-toggle="tooltip">
-            Course Progress
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{% url 'yaksh:send_mail' course.id %}" class="nav-link {% if is_mail %} active {% endif %}" title="Send mail to course students" data-placement="top" data-toggle="tooltip">
-            Send Mail
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{% url 'yaksh:course_forum' course.id %}" class="nav-link" title="Discussion forum of this course" data-placement="top" data-toggle="tooltip">
-            Discussion Forum
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link {% if is_add_teacher %} active {% endif %}" href="{% url 'yaksh:search_teacher' course.id %}" data-toggle="tooltip" title="Add Teachers/TAs to this course" data-placement="top">
-        Add Teachers/TAs
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link {% if is_teachers %} active {% endif %}" href="{% url 'yaksh:course_teachers' course.id %}" data-toggle="tooltip" title="View all the Teachers/TAs for this course" data-placement="top">
-        Current Teachers/TAs
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link list-group-item {% if is_upload_download_md %} active {% endif %}" href="{% url 'yaksh:upload_download_course_md' course.id %}" data-toggle="tooltip" title="Upload / Download MD files" data-placement="top">
-        Upload / Download MD
-        </a>
-    </li>
+<ul
+    class="nav nav-pills nav-fill flex-column flex-sm-row"
+    role="tablist">
+        <li class="nav-item">
+            <a
+                href="{% url 'yaksh:course_detail' course.id %}"
+                id="enroll-students"
+                class="nav-link  {% if is_students %} active {% endif %}"
+                title="View the course requested, rejected and enrolled students"
+                data-placement="top"
+                data-toggle="tooltip">
+                Enrollments
+            </a>
+        </li>
+        <li class="nav-item">
+            <a
+                class="nav-link {% if is_modules %} active {% endif %}"
+                href="{% url 'yaksh:get_course_modules' course.id %}"
+                title="View modules added to the course"
+                data-placement="top"
+                data-toggle="tooltip">
+                Course Modules
+            </a>
+        </li>
+        <li class="nav-item">
+            <a
+                class="nav-link {% if is_design_course %} active {% endif %}"
+                href="{% url 'yaksh:design_course' course.id %}"
+                title="Additional course settings"
+                data-placement="top"
+                data-toggle="tooltip">
+                Design Course
+            </a>
+        </li>
+        <li class="nav-item">
+            <a
+                href="{% url 'yaksh:course_status' course.id %}"
+                class="nav-link {% if is_progress %} active {% endif %}"
+                title="View Students course progress"
+                data-placement="top"
+                data-toggle="tooltip">
+                Course Progress
+            </a>
+        </li>
+        <li class="nav-item">
+            <a
+                href="{% url 'yaksh:send_mail' course.id %}"
+                class="nav-link {% if is_mail %} active {% endif %}"
+                title="Send mail to course students"
+                data-placement="top"
+                data-toggle="tooltip">
+                Send Mail
+            </a>
+        </li>
+        <li class="nav-item">
+            <a
+                href="{% url 'yaksh:course_forum' course.id %}"
+                class="nav-link"
+                title="Discussion forum of this course"
+                data-placement="top"
+                data-toggle="tooltip">
+                Discussion Forum
+            </a>
+        </li>
+        <li class="nav-item">
+            <a
+                class="nav-link {% if is_add_teacher %} active {% endif %}"
+                href="{% url 'yaksh:search_teacher' course.id %}"
+                data-toggle="tooltip"
+                title="Add Teachers/TAs to this course"
+                data-placement="top">
+                Add Teachers/TAs
+            </a>
+        </li>
+        <li class="nav-item">
+            <a
+                class="nav-link {% if is_teachers %} active {% endif %}"
+                href="{% url 'yaksh:course_teachers' course.id %}"
+                data-toggle="tooltip"
+                title="View all the Teachers/TAs for this course"
+                data-placement="top">
+                Current Teachers/TAs
+            </a>
+        </li>
+        <li class="nav-item">
+            <a
+                class="nav-link list-group-item {% if is_upload_download_md %} active {% endif %}"
+                href="{% url 'yaksh:upload_download_course_md' course.id %}"
+                data-toggle="tooltip"
+                title="Upload / Download MD files"
+                data-placement="top">
+                Upload / Download MD
+            </a>
+        </li>
 </ul>

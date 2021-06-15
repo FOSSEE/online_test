@@ -3886,7 +3886,7 @@ class TestCourseStudents(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        url = reverse('yaksh:course_students', kwargs={
+        url = reverse('yaksh:course_detail', kwargs={
             'course_id': self.user1_course.id
         })
         response = self.client.get(url)
@@ -3898,7 +3898,7 @@ class TestCourseStudents(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        url = reverse('yaksh:course_students', kwargs={
+        url = reverse('yaksh:course_detail', kwargs={
             'course_id': self.user1_course.id
         })
         response = self.client.get(url)
@@ -3910,7 +3910,7 @@ class TestCourseStudents(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        url = reverse('yaksh:course_students', kwargs={
+        url = reverse('yaksh:course_detail', kwargs={
             'course_id': self.user1_course.id
         })
         response = self.client.get(url)
@@ -3922,7 +3922,7 @@ class TestCourseStudents(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        url = reverse('yaksh:course_students', kwargs={
+        url = reverse('yaksh:course_detail', kwargs={
             'course_id': self.user1_course.id
         })
         response = self.client.get(url)
@@ -3936,7 +3936,7 @@ class TestCourseStudents(TestCase):
             username=self.user2.username,
             password=self.user2_plaintext_pass
         )
-        url = reverse('yaksh:course_students', kwargs={
+        url = reverse('yaksh:course_detail', kwargs={
             'course_id': self.user1_course.id,
         })
         response = self.client.get(url)
@@ -3947,7 +3947,7 @@ class TestCourseStudents(TestCase):
             username=self.student1,
             password=self.student1_plaintext_pass
         )
-        url = reverse('yaksh:course_students', kwargs={
+        url = reverse('yaksh:course_detail', kwargs={
             'course_id': self.user1_course.id,
         })
         response = self.client.get(url)
