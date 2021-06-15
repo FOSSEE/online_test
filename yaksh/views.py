@@ -1981,7 +1981,7 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                 answer_paper__question_paper_id__in=questionpaper_id,
                 answer_paper__user_id=user_id
                 ).exists()
-            user = User.objects.get(id=user_id)
+            user = User.objects.select_related('profile').get(id=user_id)
             data = AnswerPaper.objects.get_user_data(
                 user, questionpaper_id, course_id, attempt_number
             )

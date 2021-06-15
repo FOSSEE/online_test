@@ -2118,12 +2118,20 @@ class AnswerPaperManager(models.Manager):
     def get_user_data(self, user, questionpaper_id, course_id,
                       attempt_number=None):
         if attempt_number is not None:
-            papers = self.filter(user_id=user.id,
-                                 question_paper_id__in=questionpaper_id,
-                                 course_id=course_id,
-                                 attempt_number=attempt_number)
+            papers = self.select_related(
+                'course', 'question_paper__quiz'
+            ).prefetch_related(
+                'answers', 'questions'
+            ).filter(user_id=user.id,
+                     question_paper_id__in=questionpaper_id,
+                     course_id=course_id,
+                     attempt_number=attempt_number)
         else:
-            papers = self.filter(
+            papers = self.select_related(
+                'course', 'question_paper__quiz'
+            ).prefetch_related(
+                'answers', 'questions'
+            ).filter(
                 user=user, question_paper_id=questionpaper_id,
                 course_id=course_id
             ).order_by("-attempt_number")
