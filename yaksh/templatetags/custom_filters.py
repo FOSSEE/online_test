@@ -208,11 +208,10 @@ def show_special_attempt(user, course):
 
 
 @register.inclusion_tag('yaksh/micromonitor.html')
-def specail_attempt_monitor(user_id, course_id, quiz_id):
-    user = User.objects.get(pk=user_id)
+def special_attempt_monitor(user, course_id, quiz_id):
     micromanagers = user.micromanaged.filter(course_id=course_id,
                                              quiz_id=quiz_id)
-    context = {'user_id': user_id, 'course_id': course_id, 'quiz_id': quiz_id}
+    context = {'user_id': user.id, 'course_id': course_id, 'quiz_id': quiz_id}
     if micromanagers.exists():
         context['micromanager'] = micromanagers.first()
     return context

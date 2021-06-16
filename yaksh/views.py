@@ -1431,7 +1431,9 @@ def monitor(request, quiz_id=None, course_id=None, attempt_number=1):
     questions_attempted = {}
     completed_papers = 0
     inprogress_papers = 0
-    papers = AnswerPaper.objects.filter(
+    papers = AnswerPaper.objects.select_related(
+        'user', 'user__profile', 'question_paper__quiz'
+    ).filter(
         question_paper_id=q_paper.id, attempt_number=attempt_number,
         course_id=course_id
         ).order_by('user__first_name')
