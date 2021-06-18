@@ -410,8 +410,8 @@ class CourseForm(forms.ModelForm):
         model = Course
         fields = [
             'name', 'enrollment', 'active', 'code', 'instructions',
-            'start_enroll_time', 'end_enroll_time', 'grading_system',
-            'view_grade'
+            'start_enroll_time', 'end_enroll_time', 'start_date_time',
+            'end_date_time', 'grading_system', 'view_grade'
         ]
 
     def save(self, commit=True, *args, **kwargs):
@@ -440,9 +440,15 @@ class CourseForm(forms.ModelForm):
             {'class': form_input_class, 'placeholder': 'Course instructions'}
         )
         self.fields['start_enroll_time'].widget.attrs.update(
-            {'class': form_input_class, 'placeholder': 'Course Start DateTime'}
+            {'class': form_input_class, 'placeholder': 'Enrollment Start DateTime'}
         )
         self.fields['end_enroll_time'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Enrollment End DateTime'}
+        )
+        self.fields['start_date_time'].widget.attrs.update(
+            {'class': form_input_class, 'placeholder': 'Course Start DateTime'}
+        )
+        self.fields['end_date_time'].widget.attrs.update(
             {'class': form_input_class, 'placeholder': 'Course End DateTime'}
         )
         self.fields['grading_system'].widget.attrs.update(

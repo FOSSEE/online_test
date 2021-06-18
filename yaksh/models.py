@@ -950,6 +950,23 @@ class Course(models.Model):
         null=True
     )
 
+    # The start date of the course enrollment.
+    start_date_time = models.DateTimeField(
+        "Start Date and Time of the course",
+        default=timezone.now,
+        null=True
+    )
+
+    # The end date and time of the course enrollment
+    end_date_time = models.DateTimeField(
+        "End Date and Time of the course",
+        default=datetime(
+            2199, 1, 1,
+            tzinfo=pytz.timezone(timezone.get_current_timezone_name())
+        ),
+        null=True
+    )
+
     grading_system = models.ForeignKey(GradingSystem, null=True, blank=True,
                                        on_delete=models.CASCADE)
 
@@ -981,6 +998,11 @@ class Course(models.Model):
 
     def is_active_enrollment(self):
         return self.start_enroll_time <= timezone.now() < self.end_enroll_time
+
+    def is_active(self):
+        return self.active and (
+            self.start_date_time <= timezone.now() < self.end_date_time
+        )
 
     def enroll(self, was_rejected, *users):
         self.students.add(*users)
@@ -3256,7 +3278,7 @@ class MicroManager(models.Model):
         return not self.quiz.active or self.quiz.is_expired()
 
     def is_course_exhausted(self):
-        return not self.course.active or not self.course.is_active_enrollment()
+        return not self.course.active or not self.course.is_active()
 
     def is_special_attempt_required(self):
         return (self.has_student_attempts_exhausted() or
