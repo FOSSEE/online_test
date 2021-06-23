@@ -2326,9 +2326,9 @@ def download_course_csv(request, course_id):
         "id", "first_name", "last_name", "email", "institute", "roll_number"
     ))
     que_pprs = [
-        quiz.questionpaper_set.values(
+        unit.quiz.questionpaper_set.values(
             "id", "quiz__description", "total_marks")[0]
-        for quiz in course.get_quizzes()
+        for unit in course.get_quizzes() if unit.quiz
     ]
     total_course_marks = sum([qp.get("total_marks", 0) for qp in que_pprs])
     qp_ids = [
@@ -3430,7 +3430,7 @@ def get_user_data(request, course_id, student_id):
             ]
         data['modules'] = module_percent
         _update_course_percent(course, student)
-        data['course_percentage'] = course.get_completion_percent(student)
+        data['course_percentage'] = course.get_completion_percent(student, course_status)
         data['student'] = student
     template_path = os.path.join(
         os.path.dirname(__file__), "templates", "yaksh", "user_status.html"

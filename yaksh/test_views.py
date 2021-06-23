@@ -3728,7 +3728,7 @@ class TestCourseDetail(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['is_progress'])
         self.assertEqual(response.context['course'], self.user1_course)
-        student_details = response.context['student_details'][0]
+        student_details = response.context['stud_details'][0]
         student, grade, percent, current_unit = student_details
         self.assertEqual(student.username, "demo_student")
         self.assertEqual(grade, "NA")
@@ -3743,7 +3743,7 @@ class TestCourseDetail(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['is_progress'])
         self.assertEqual(response.context['course'], self.user1_course)
-        student_details = response.context['student_details'][0]
+        student_details = response.context['stud_details'][0]
         student, grade, percent, current_unit = student_details
         self.assertEqual(student.username, "demo_student")
         self.assertIsNone(grade)
