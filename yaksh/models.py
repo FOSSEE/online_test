@@ -1238,17 +1238,17 @@ class CourseStatus(models.Model):
             self.save()
 
     def calculate_percentage(self, course_status, module_learning_units):
-        quizzes = self.course.get_quizzes()
-        if self.is_course_complete(course_status, module_learning_units) and quizzes:
+        units = self.course.get_quizzes()
+        if self.is_course_complete(course_status, module_learning_units) and units:
             total_weightage = 0
             sum = 0
-            for quiz in quizzes:
-                total_weightage += quiz.weightage
+            for unit in units:
+                total_weightage += unit.quiz.weightage
                 marks = AnswerPaper.objects.get_user_best_of_attempts_marks(
-                        quiz, self.user.id, self.course.id)
-                out_of = quiz.questionpaper_set.first().total_marks
-                sum += (marks/out_of)*quiz.weightage
-            self.percentage = (sum/total_weightage)*100
+                        unit.quiz, self.user.id, self.course.id)
+                out_of = unit.quiz.questionpaper_set.first().total_marks
+                sum += (marks / out_of) * unit.quiz.weightage
+            self.percentage = (sum / total_weightage) * 100
             self.save()
 
     def is_course_complete(self, course_status, module_learning_units):

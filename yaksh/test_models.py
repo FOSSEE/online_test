@@ -353,12 +353,8 @@ class LearningModuleTestCases(TestCase):
         )
 
     def test_get_quiz_units(self):
-        # Given
-        quizzes = [self.quiz]
-        # When
-        module_quizzes = self.learning_module.get_quiz_units()
-        # Then
-        self.assertSequenceEqual(module_quizzes, quizzes)
+        module_quizzes = self.learning_module.get_quiz_units().first().quiz
+        self.assertEqual(module_quizzes, self.quiz)
 
     def test_get_learning_units(self):
         # Given
@@ -850,22 +846,44 @@ class QuizTestCases(TestCase):
         self.question_paper3.delete()
 
     def test_get_total_students(self):
-        self.assertEqual(self.quiz3.get_total_students(self.course), 2)
+        total_students = self.quiz3.get_total_students(
+            self.course
+        ).distinct().count()
+        self.assertEqual(total_students, 2)
 
     def test_get_total_students_without_questionpaper(self):
-        self.assertEqual(self.quiz4.get_total_students(self.course), 0)
+        total_students = self.quiz4.get_total_students(
+            self.course
+        ).distinct().count()
+        self.assertEqual(total_students, 0)
 
     def test_get_passed_students(self):
-        self.assertEqual(self.quiz3.get_passed_students(self.course), 1)
+        total_students = self.quiz3.get_total_students(self.course)
+        passed_students = total_students.filter(
+            passed=True
+        ).distinct().count()
+        self.assertEqual(passed_students, 1)
 
     def test_get_passed_students_without_questionpaper(self):
-        self.assertEqual(self.quiz4.get_passed_students(self.course), 0)
+        total_students = self.quiz4.get_total_students(self.course)
+        passed_students = total_students.filter(
+            passed=True
+        ).distinct().count()
+        self.assertEqual(passed_students, 0)
 
     def test_get_failed_students(self):
-        self.assertEqual(self.quiz3.get_failed_students(self.course), 1)
+        total_students = self.quiz3.get_total_students(self.course)
+        failed_students = total_students.filter(
+            passed=False
+        ).distinct().count()
+        self.assertEqual(failed_students, 1)
 
     def test_get_failed_students_without_questionpaper(self):
-        self.assertEqual(self.quiz4.get_failed_students(self.course), 0)
+        total_students = self.quiz4.get_total_students(self.course)
+        failed_students = total_students.filter(
+            passed=False
+        ).distinct().count()
+        self.assertEqual(failed_students, 0)
 
     def test_quiz(self):
         """ Test Quiz"""
@@ -1999,12 +2017,8 @@ class CourseTestCases(TestCase):
         self.assertSequenceEqual(list(course_modules), modules)
 
     def test_get_quizzes(self):
-        # Given
-        quizzes = [self.quiz1]
-        # When
-        course_quizzes = self.course.get_quizzes()
-        # Then
-        self.assertSequenceEqual(course_quizzes, quizzes)
+        course_quizzes = self.course.get_quizzes()[1].quiz
+        self.assertEqual(course_quizzes, self.quiz1)
 
     def test_get_learning_units(self):
         # Given
@@ -2386,7 +2400,6 @@ class CourseStatusTestCases(TestCase):
         )
 
         # When
-        # print(self.module_learning_units)
         self.course_status.completed_units.add(self.unit_1_quiz)
         # Then
         self.assertFalse(self.course_status.is_course_complete(
@@ -2435,7 +2448,11 @@ class CourseStatusTestCases(TestCase):
         self.assertEqual(self.course_status.get_grade(), 'B')
 
         # Test get course grade after completion
-        self.assertEqual(self.course.get_grade(self.answerpaper1.user), 'B')
+        self.assertEqual(
+            self.course.get_grade(
+                self.answerpaper1.user, self.course_status
+            ), 'B'
+        )
 
 
 class FileUploadTestCases(TestCase):
