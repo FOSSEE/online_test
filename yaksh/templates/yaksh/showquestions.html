@@ -130,6 +130,11 @@
         </div>
         <div id="question-list">
         <!-- End card filters and search -->
+        <div class="col">
+            <a class="btn btn-lg btn-success" href="{% url 'yaksh:add_question' %}">
+              <i class="fa fa-plus-circle"></i>&nbsp;Add Question
+            </a>
+          </div>
         <form name=frm action="{% url 'yaksh:show_questions' %}" method="post">
           {% csrf_token %}
           <div id="filtered-questions">
@@ -139,11 +144,7 @@
                 <div class="col">
                 {% include "yaksh/paginator.html" %}
                 </div>
-                <div class="col">
-                  <a class="btn btn-lg btn-success" href="{% url 'yaksh:add_question' %}">
-                    <i class="fa fa-plus-circle"></i>&nbsp;Add Question
-                  </a>
-                </div>
+            
               </div>
               <br>
               <h5><input id="checkall" type="checkbox"> Select All </h5>
