@@ -54,7 +54,7 @@ def course_forum(request, course_id):
                             course_id=course.id, uuid=new_post.uid)
     else:
         form = PostForm()
-    return render(request, 'yaksh/course_forum.html', {
+    return render(request, 'forum/course_forum.html', {
         'user': user,
         'course': course,
         'base_template': base_template,
@@ -77,7 +77,7 @@ def lessons_forum(request, course_id):
     course = get_object_or_404(Course, id=course_id)
     course_ct = ContentType.objects.get_for_model(course)
     lesson_posts = course.get_lesson_posts()
-    return render(request, 'yaksh/lessons_forum.html', {
+    return render(request, 'forum/lessons_forum.html', {
         'user': user,
         'base_template': base_template,
         'moderator': moderator,
@@ -110,7 +110,7 @@ def post_comments(request, course_id, uuid):
             new_comment.save()
             messages.success(request, "Added comment successfully")
             return redirect(request.path_info)
-    return render(request, 'yaksh/post_comments.html', {
+    return render(request, 'forum/post_comments.html', {
         'post': post,
         'comments': comments,
         'base_template': base_template,
